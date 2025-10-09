@@ -1,5 +1,7 @@
 export const NODE_ENV = process.env.NODE_ENV
 export const APP_NAME = 'rentloop'
+export const APP_DOMAIN =
+	NODE_ENV === 'production' ? 'rentloop.app' : 'localhost'
 
 export const GITHUB_REPO_URL = 'https://github.com/Bendomey/rent-loop'
 export const MYLES_PUDO_URL = 'https://mylespudo.com'

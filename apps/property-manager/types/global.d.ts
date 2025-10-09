@@ -1,4 +1,3 @@
-
 type PossiblyUndefined<T> = T | undefined
 type Nullable<T> = T | null
 type StringList = Array<string>
@@ -54,10 +53,10 @@ interface FetchMultipleDataResponse<T> {
 	rows: T[]
 	total: number
 	page: number
-	pageSize: number
-	totalPages: number
-	prevPage: Nullable<number>
-	nextPage: Nullable<number>
+	page_size: number
+	total_pages: number
+	prev_page: Nullable<number>
+	next_page: Nullable<number>
 }
 
 interface ApiConfigForServerConfig {
