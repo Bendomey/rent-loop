@@ -10,6 +10,7 @@ Rentloop Engine is a modular property rental management service designed to prov
 - **Sentry**: Error tracking and monitoring.
 - **Validator**: Input validation for API requests.
 - **Reflex**: Hot-reload utility for development.
+- **Swago**: [API Documentation](https://github.com/swaggo/http-swagger)
 
 ## Environment Setup
 1. **Clone the repository:**
