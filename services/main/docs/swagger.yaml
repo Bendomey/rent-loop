@@ -1,0 +1,16 @@
+basePath: /v1
+host: https://api.rentloop.com
+info:
+  contact:
+    email: domeybenjamin1@gmail.com
+    name: Domey Benjamin
+    url: https://www.linkedin.com/in/benjamin-armah-kesey-domey/
+  description: This is the RentLoop API documentation.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://rentloop.com/terms
+  title: RentLoop API
+  version: "1.0"
+paths: {}
+swagger: "2.0"

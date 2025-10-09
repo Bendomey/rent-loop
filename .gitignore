@@ -1,0 +1,8 @@
+.envrc
+.env
+
+yarn.lock
+!apps/property-manager/yarn.lock
+node_modules
+
+.idea
