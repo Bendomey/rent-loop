@@ -1,3 +1,6 @@
+import dayjs from 'dayjs'
+import localizedFormat from 'dayjs/plugin/localizedFormat.js'
+import 'dayjs/locale/en-gb.js'
 import {
 	isRouteErrorResponse,
 	Links,
@@ -9,6 +12,9 @@ import {
 
 import { type Route } from './+types/root'
 import './app.css'
+
+dayjs.locale('en-gb')
+dayjs.extend(localizedFormat)
 
 export const links: Route.LinksFunction = () => [
 	{ rel: 'preconnect', href: 'https://fonts.googleapis.com' },
