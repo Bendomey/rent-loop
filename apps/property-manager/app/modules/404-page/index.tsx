@@ -14,16 +14,16 @@ export const NotFoundModule = ({ status = 404, title, message }: Props) => {
 			<header className="mx-auto w-full max-w-7xl px-6 pt-6 sm:pt-10 lg:col-span-2 lg:col-start-1 lg:row-start-1 lg:px-8">
 				<Link prefetch="intent" to="/" className="-m-1.5 p-1.5">
 					<div className="flex flex-row items-end">
-						<span className="text-4xl font-extrabold text-blue-700">
-							{APP_NAME.slice(0, 1)}
+						<span className="text-4xl font-extrabold text-rose-700">
+							{APP_NAME.slice(0, 4)}
 						</span>
-						<span className="text-4xl font-extrabold">{APP_NAME.slice(1)}</span>
+						<span className="text-4xl font-extrabold">{APP_NAME.slice(4)}</span>
 					</div>
 				</Link>
 			</header>
 			<main className="mx-auto w-full max-w-7xl px-6 py-24 sm:py-32 lg:col-span-2 lg:col-start-1 lg:row-start-2 lg:px-8">
 				<div className="max-w-lg">
-					<p className="text-base leading-8 font-semibold text-blue-600">
+					<p className="text-base leading-8 font-semibold text-rose-600">
 						{status}
 					</p>
 					<h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
@@ -36,7 +36,7 @@ export const NotFoundModule = ({ status = 404, title, message }: Props) => {
 						<Link
 							to="/"
 							prefetch="intent"
-							className="text-sm leading-7 font-semibold text-blue-600"
+							className="text-sm leading-7 font-semibold text-rose-600"
 						>
 							<span aria-hidden="true">&larr;</span> Back to home
 						</Link>

@@ -1,12 +1,14 @@
 import { redirect } from 'react-router'
-import { type Route } from './+types/login'
+import type { Route } from './+types/login'
 
-import { getAuthSession, saveAuthSession } from '~/lib/actions/auth.session.server'
+import {
+	getAuthSession,
+	saveAuthSession,
+} from '~/lib/actions/auth.session.server'
 import { APP_NAME } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { LoginModule } from '~/modules'
-
 
 export async function loader({ request }: Route.LoaderArgs) {
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
@@ -42,7 +44,7 @@ export async function action({ request }: Route.ActionArgs) {
 	})
 }
 
-export function meta({ loaderData }: Route.MetaArgs) {
+export function meta({ loaderData, location }: Route.MetaArgs) {
 	const meta = getSocialMetas({
 		title: `Login - ${APP_NAME}`,
 		url: getDisplayUrl({

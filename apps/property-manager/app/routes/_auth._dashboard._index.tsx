@@ -1,10 +1,7 @@
-import { type Route } from './+types/_index'
-import { authMiddleware } from '~/lib/actions/auth.middleware.server'
+import type { Route } from './+types/_auth._dashboard._index'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { DashboardModule } from '~/modules'
-
-export const middleware = [authMiddleware]
 
 export async function loader({ request }: Route.LoaderArgs) {
 	return {
@@ -12,7 +9,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 	}
 }
 
-export function meta({ loaderData }: Route.MetaArgs) {
+export function meta({ loaderData, location }: Route.MetaArgs) {
 	const meta = getSocialMetas({
 		url: getDisplayUrl({
 			origin: loaderData.origin,
