@@ -1,5 +1,5 @@
 import { ChevronRight, type LucideIcon } from 'lucide-react'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 
 import {
 	Collapsible,
@@ -20,8 +20,10 @@ import {
 export function NavMain({
 	items,
 	title,
+	baseRoute = '',
 }: {
 	title?: string
+	baseRoute?: string
 	items: {
 		title: string
 		url: string
@@ -33,17 +35,24 @@ export function NavMain({
 		}[]
 	}[]
 }) {
+	const location = useLocation()
 	return (
 		<SidebarGroup>
-			<SidebarGroupLabel>{title ?? 'Overview'}</SidebarGroupLabel>
+			<SidebarGroupLabel>{title ?? 'Main Navigation'}</SidebarGroupLabel>
 			<SidebarMenu>
 				{items.map((item) => {
 					if (item?.items?.length) {
+						// const url = `${baseRoute}${item.url}`;
+						const isActive =
+							item.isActive ||
+							item.items?.some(
+								(i) => location.pathname === `${baseRoute}${item.url}${i.url}`,
+							)
 						return (
 							<Collapsible
 								key={item.title}
 								asChild
-								defaultOpen={item.isActive}
+								defaultOpen={isActive}
 								className="group/collapsible"
 							>
 								<SidebarMenuItem>
@@ -56,15 +65,22 @@ export function NavMain({
 									</CollapsibleTrigger>
 									<CollapsibleContent>
 										<SidebarMenuSub>
-											{item.items?.map((subItem) => (
-												<SidebarMenuSubItem key={subItem.title}>
-													<SidebarMenuSubButton asChild>
-														<Link to={subItem.url}>
-															<span>{subItem.title}</span>
-														</Link>
-													</SidebarMenuSubButton>
-												</SidebarMenuSubItem>
-											))}
+											{item.items?.map((subItem) => {
+												const isActive =
+													location.pathname ===
+													`${baseRoute}${item.url}${subItem.url}`
+												return (
+													<SidebarMenuSubItem key={subItem.title}>
+														<SidebarMenuSubButton asChild isActive={isActive}>
+															<Link
+																to={`${baseRoute}${item.url}${subItem.url}`}
+															>
+																<span>{subItem.title}</span>
+															</Link>
+														</SidebarMenuSubButton>
+													</SidebarMenuSubItem>
+												)
+											})}
 										</SidebarMenuSub>
 									</CollapsibleContent>
 								</SidebarMenuItem>
@@ -72,10 +88,16 @@ export function NavMain({
 						)
 					}
 
+					const url = `${baseRoute}${item.url}`
+					const isActive = location.pathname === url || item.isActive
 					return (
 						<SidebarMenuItem key={item.title}>
-							<SidebarMenuButton tooltip={item.title} asChild>
-								<Link to={item.url}>
+							<SidebarMenuButton
+								isActive={isActive}
+								tooltip={item.title}
+								asChild
+							>
+								<Link to={`${baseRoute}${item.url}`}>
 									{item.icon && <item.icon />}
 									<span>{item.title}</span>
 								</Link>

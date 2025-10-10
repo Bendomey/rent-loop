@@ -23,14 +23,14 @@ export function PropertySwitcher({
 }: {
 	properties: {
 		name: string
+		slug: string
 		logo: React.ElementType
-		plan: string
 	}[]
 }) {
 	const { isMobile } = useSidebar()
-	const [activeTeam, setActiveTeam] = React.useState(properties[0])
+	const [activeProperty, setActiveProperty] = React.useState(properties[0])
 
-	if (!activeTeam) {
+	if (!activeProperty) {
 		return null
 	}
 
@@ -44,11 +44,13 @@ export function PropertySwitcher({
 							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground mx-auto"
 						>
 							<div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-								<activeTeam.logo className="size-4" />
+								<activeProperty.logo className="size-4" />
 							</div>
 							<div className="grid flex-1 text-left text-sm leading-tight">
-								<span className="truncate font-medium">{activeTeam.name}</span>
-								<span className="truncate text-xs">{activeTeam.plan}</span>
+								<span className="truncate font-medium">
+									{activeProperty.name}
+								</span>
+								<span className="truncate text-xs">{activeProperty.slug}</span>
 							</div>
 							<ChevronsUpDown className="ml-auto" />
 						</SidebarMenuButton>
@@ -62,18 +64,19 @@ export function PropertySwitcher({
 						<DropdownMenuLabel className="text-muted-foreground text-xs">
 							Properties
 						</DropdownMenuLabel>
-						{properties.map((team, index) => (
-							<DropdownMenuItem
-								key={team.name}
-								onClick={() => setActiveTeam(team)}
-								className="gap-2 p-2"
-							>
-								<div className="flex size-6 items-center justify-center rounded-md border">
-									<team.logo className="size-3.5 shrink-0" />
-								</div>
-								{team.name}
-								<DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
-							</DropdownMenuItem>
+						{properties.map((property, index) => (
+							<Link key={property.name} to={`/properties/${property.slug}`}>
+								<DropdownMenuItem
+									onClick={() => setActiveProperty(property)}
+									className="gap-2 p-2"
+								>
+									<div className="flex size-6 items-center justify-center rounded-md border">
+										<property.logo className="size-3.5 shrink-0" />
+									</div>
+									{property.name}
+									<DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
+								</DropdownMenuItem>
+							</Link>
 						))}
 						<DropdownMenuSeparator />
 						<Link to="/properties/new">

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import * as React from 'react'
 
-import { Link } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { NavMain } from '~/components/nav-main'
 import { NavSecondary } from '~/components/nav-secondary'
 import { NavUser } from '~/components/nav-user'
@@ -27,7 +27,6 @@ import {
 } from '~/components/ui/sidebar'
 import { APP_NAME } from '~/lib/constants'
 
-// This is sample data.
 const data = {
 	user: {
 		name: 'shadcn',
@@ -38,33 +37,32 @@ const data = {
 		{
 			name: 'Mikasa',
 			logo: Frame,
-			plan: 'mikasa-ent',
+			slug: 'mikasa-ent',
 		},
 		{
 			name: "Domey's Villas",
 			logo: Frame,
-			plan: 'domey-villas',
+			slug: 'domey-villas',
 		},
 	],
 	navMain: [
 		{
 			title: 'Insights',
-			url: '/',
+			url: '',
 			icon: PieChart,
 		},
 		{
 			title: 'Assets',
 			url: '/assets',
 			icon: House,
-			isActive: true,
 			items: [
 				{
 					title: 'Apartments/Units',
-					url: '/assets/units',
+					url: '/units',
 				},
 				{
 					title: 'Facilities',
-					url: '/assets/facilities',
+					url: '/facilities',
 				},
 			],
 		},
@@ -75,11 +73,11 @@ const data = {
 			items: [
 				{
 					title: 'All Tenants',
-					url: '/tenants',
+					url: '',
 				},
 				{
 					title: 'Applications',
-					url: '/tenants/applications',
+					url: '/applications',
 				},
 			],
 		},
@@ -90,19 +88,19 @@ const data = {
 			items: [
 				{
 					title: 'Maintenance Requests',
-					url: '/activities/rent-payments',
+					url: '/maintenance-requests',
 				},
 				{
 					title: 'Announcements',
-					url: '/activities/expenses',
+					url: '/announcements',
 				},
 				{
 					title: 'Inspections',
-					url: '/activities/reports',
+					url: '/inspections',
 				},
 				{
 					title: 'Polls',
-					url: '/activities/reports',
+					url: '/polls',
 				},
 			],
 		},
@@ -113,15 +111,15 @@ const data = {
 			items: [
 				{
 					title: 'Rent Payments',
-					url: '/transactions/rent-payments',
+					url: '/rent-payments',
 				},
 				{
 					title: 'Expenses',
-					url: '/transactions/expenses',
+					url: '/expenses',
 				},
 				{
 					title: 'Reports',
-					url: '/transactions/reports',
+					url: '/reports',
 				},
 			],
 		},
@@ -137,22 +135,19 @@ const data = {
 			items: [
 				{
 					title: 'General',
-					url: '/settings/general',
+					url: '/general',
 				},
 				{
 					title: 'Documents',
-					url: '/settings/documents',
+					url: '/documents',
 				},
 				{
 					title: 'Billing',
-					url: '/settings/billing',
+					url: '/billing',
 				},
 			],
 		},
 	],
-	// overview: [],
-	// assets: [],
-	// activities: [],
 	navSecondary: [
 		{
 			title: 'Support',
@@ -171,6 +166,7 @@ export function PropertySidebar({
 	...props
 }: React.ComponentProps<typeof Sidebar>) {
 	const sidebarState = useSidebar()
+	const params = useParams()
 
 	return (
 		<Sidebar collapsible="icon" {...props}>
@@ -193,7 +189,11 @@ export function PropertySidebar({
 				<PropertySwitcher properties={data.properties} />
 			</SidebarHeader>
 			<SidebarContent>
-				<NavMain title="Main Navigation" items={data.navMain} />
+				<NavMain
+					title="Property Navigation"
+					items={data.navMain}
+					baseRoute={`/properties/${params?.propertySlug}`}
+				/>
 			</SidebarContent>
 			<SidebarFooter>
 				<NavSecondary

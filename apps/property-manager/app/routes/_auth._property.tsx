@@ -1,4 +1,4 @@
-import type {  } from './+types/_auth._property'
+import type {} from './+types/_auth._property'
 import { Outlet } from 'react-router'
 import {
 	Breadcrumb,

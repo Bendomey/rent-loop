@@ -74,15 +74,15 @@ const data = {
 			items: [
 				{
 					title: 'General',
-					url: '/settings/general',
+					url: '/general',
 				},
 				{
 					title: 'Documents',
-					url: '/settings/documents',
+					url: '/documents',
 				},
 				{
 					title: 'Billing',
-					url: '/settings/billing',
+					url: '/billing',
 				},
 			],
 		},
