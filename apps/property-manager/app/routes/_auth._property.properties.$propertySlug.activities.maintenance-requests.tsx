@@ -9,6 +9,10 @@ export async function loader({ request }: Route.LoaderArgs) {
 	}
 }
 
+export const handle = {
+	breadcrumb: 'Maintenance Requests',
+}
+
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
 		title: `Maintenance Requests | ${params.propertySlug}`,

@@ -9,6 +9,10 @@ export async function loader({ request }: Route.LoaderArgs) {
 	}
 }
 
+export const handle = {
+	breadcrumb: 'Insights',
+}
+
 export function meta({ loaderData, location }: Route.MetaArgs) {
 	const meta = getSocialMetas({
 		url: getDisplayUrl({

@@ -1,4 +1,5 @@
 import { PlusCircleIcon, type LucideIcon } from 'lucide-react'
+import { Link } from 'react-router'
 
 import {
 	SidebarGroup,
@@ -24,18 +25,20 @@ export function NavProperties({
 				{projects.map((item) => (
 					<SidebarMenuItem key={item.name}>
 						<SidebarMenuButton asChild>
-							<a href={item.url}>
+							<Link to={item.url}>
 								<item.icon />
 								<span>{item.name}</span>
-							</a>
+							</Link>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				))}
 				<SidebarMenuItem>
-					<SidebarMenuButton className="text-sidebar-foreground/70">
-						<PlusCircleIcon className="text-sidebar-foreground/70" />
-						<span>Add New Property</span>
-					</SidebarMenuButton>
+					<Link to="/properties/new">
+						<SidebarMenuButton className="text-sidebar-foreground/70">
+							<PlusCircleIcon className="text-sidebar-foreground/70" />
+							<span>Add New Property</span>
+						</SidebarMenuButton>
+					</Link>
 				</SidebarMenuItem>
 			</SidebarMenu>
 		</SidebarGroup>

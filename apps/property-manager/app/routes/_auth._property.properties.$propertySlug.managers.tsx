@@ -9,6 +9,10 @@ export async function loader({ request }: Route.LoaderArgs) {
 	}
 }
 
+export const handle = {
+	breadcrumb: 'Managers',
+}
+
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
 		title: `Managers | ${params.propertySlug}`,

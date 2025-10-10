@@ -1,5 +1,5 @@
-import type {} from './+types/_auth._property'
 import { Outlet } from 'react-router'
+import type { Route } from './+types/_auth._property'
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -16,7 +16,18 @@ import {
 } from '~/components/ui/sidebar'
 import { PropertySidebar } from '~/modules'
 
-export default function PropertyDashboard() {
+export const handle = {
+	breadcrumb: 'Property',
+}
+
+export default function PropertyDashboard({ matches }: Route.ComponentProps) {
+	const breadcrumbs = matches
+		.filter((m) => m?.handle)
+		.map((m) => {
+			const breadcrumb = (m?.handle as { breadcrumb: string }).breadcrumb
+			return { name: breadcrumb, pathname: m?.pathname, id: m?.id }
+		})
+
 	return (
 		<SidebarProvider>
 			<PropertySidebar />
@@ -30,15 +41,34 @@ export default function PropertyDashboard() {
 						/>
 						<Breadcrumb>
 							<BreadcrumbList>
-								<BreadcrumbItem className="hidden md:block">
-									<BreadcrumbLink href="#">
-										Building Your Application
-									</BreadcrumbLink>
-								</BreadcrumbItem>
-								<BreadcrumbSeparator className="hidden md:block" />
-								<BreadcrumbItem>
-									<BreadcrumbPage>Data Fetching</BreadcrumbPage>
-								</BreadcrumbItem>
+								{breadcrumbs.map((breadcrumb, index) => {
+									if (index === breadcrumbs.length - 1) {
+										return (
+											<BreadcrumbItem
+												key={breadcrumb.id}
+												className="hidden md:block"
+											>
+												<BreadcrumbPage>
+													{breadcrumb.name ?? '...'}
+												</BreadcrumbPage>
+											</BreadcrumbItem>
+										)
+									}
+
+									return (
+										<>
+											<BreadcrumbItem
+												key={breadcrumb.id}
+												className="hidden md:block"
+											>
+												<BreadcrumbLink href={breadcrumb.pathname}>
+													{breadcrumb.name ?? '...'}
+												</BreadcrumbLink>
+											</BreadcrumbItem>
+											<BreadcrumbSeparator className="hidden md:block" />
+										</>
+									)
+								})}
 							</BreadcrumbList>
 						</Breadcrumb>
 					</div>

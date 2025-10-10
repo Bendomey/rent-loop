@@ -1,4 +1,5 @@
 import type { Route } from './+types/_auth._dashboard.properties.new'
+import { APP_NAME } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { NewPropertyModule } from '~/modules'
@@ -9,9 +10,13 @@ export async function loader({ request }: Route.LoaderArgs) {
 	}
 }
 
+export const handle = {
+	breadcrumb: 'Add New',
+}
+
 export function meta({ loaderData, location }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: 'Add Property',
+		title: `Add Property | ${APP_NAME}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,

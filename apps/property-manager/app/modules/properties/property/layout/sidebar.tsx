@@ -47,7 +47,7 @@ const data = {
 	],
 	navMain: [
 		{
-			title: 'Insights',
+			title: 'Overview',
 			url: '',
 			icon: PieChart,
 		},

@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router'
+import type { Route } from './+types/_auth._dashboard'
 import { AppSidebar } from '~/components/app-sidebar'
 import {
 	Breadcrumb,
@@ -15,7 +16,14 @@ import {
 	SidebarTrigger,
 } from '~/components/ui/sidebar'
 
-export default function AuthDashboard() {
+export default function AuthDashboard({ matches }: Route.ComponentProps) {
+	const breadcrumbs = matches
+		.filter((m) => m?.handle)
+		.map((m) => {
+			const breadcrumb = (m?.handle as { breadcrumb: string }).breadcrumb
+			return { name: breadcrumb, pathname: m?.pathname, id: m?.id }
+		})
+
 	return (
 		<SidebarProvider>
 			<AppSidebar />
@@ -29,15 +37,34 @@ export default function AuthDashboard() {
 						/>
 						<Breadcrumb>
 							<BreadcrumbList>
-								<BreadcrumbItem className="hidden md:block">
-									<BreadcrumbLink href="#">
-										Building Your Application
-									</BreadcrumbLink>
-								</BreadcrumbItem>
-								<BreadcrumbSeparator className="hidden md:block" />
-								<BreadcrumbItem>
-									<BreadcrumbPage>Data Fetching</BreadcrumbPage>
-								</BreadcrumbItem>
+								{breadcrumbs.map((breadcrumb, index) => {
+									if (index === breadcrumbs.length - 1) {
+										return (
+											<BreadcrumbItem
+												key={breadcrumb.id}
+												className="hidden md:block"
+											>
+												<BreadcrumbPage>
+													{breadcrumb.name ?? '...'}
+												</BreadcrumbPage>
+											</BreadcrumbItem>
+										)
+									}
+
+									return (
+										<>
+											<BreadcrumbItem
+												key={breadcrumb.id}
+												className="hidden md:block"
+											>
+												<BreadcrumbLink href={breadcrumb.pathname}>
+													{breadcrumb.name ?? '...'}
+												</BreadcrumbLink>
+											</BreadcrumbItem>
+											<BreadcrumbSeparator className="hidden md:block" />
+										</>
+									)
+								})}
 							</BreadcrumbList>
 						</Breadcrumb>
 					</div>
