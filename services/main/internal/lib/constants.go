@@ -20,16 +20,16 @@ func AadminFromContext(ctx context.Context) (*models.Admin, bool) {
 	return admin, ok
 }
 
-// for real estate manager
-const realEstateManagerContextKey contextKey = "rentloop-real-estate-manager"
+// for client user
+const clientUserContextKey contextKey = "rentloop-client-user"
 
-func WithRealEstateManager(ctx context.Context, realEstateManager *models.RealEstateManager) context.Context {
-	return context.WithValue(ctx, realEstateManagerContextKey, realEstateManager)
+func WithClientUser(ctx context.Context, clientUser *models.ClientUser) context.Context {
+	return context.WithValue(ctx, clientUserContextKey, clientUser)
 }
 
-func RealEstateManagerFromContext(ctx context.Context) (*models.RealEstateManager, bool) {
-	realEstateManager, ok := ctx.Value(realEstateManagerContextKey).(*models.RealEstateManager)
-	return realEstateManager, ok
+func ClientUserFromContext(ctx context.Context) (*models.ClientUser, bool) {
+	clientUser, ok := ctx.Value(clientUserContextKey).(*models.ClientUser)
+	return clientUser, ok
 }
 
 // for tenant account
