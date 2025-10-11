@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router'
+import pkgJson from '../../package.json'
 import type { Route } from './+types/_auth._property'
 import {
 	Breadcrumb,
@@ -32,8 +33,8 @@ export default function PropertyDashboard({ matches }: Route.ComponentProps) {
 		<SidebarProvider>
 			<PropertySidebar />
 			<SidebarInset>
-				<header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-					<div className="flex items-center gap-2 px-4">
+				<header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b">
+					<div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
 						<SidebarTrigger className="-ml-1" />
 						<Separator
 							orientation="vertical"
@@ -71,9 +72,14 @@ export default function PropertyDashboard({ matches }: Route.ComponentProps) {
 								})}
 							</BreadcrumbList>
 						</Breadcrumb>
+						<div className="ml-auto flex items-center gap-2 text-sm">
+							v{pkgJson.version}
+						</div>
 					</div>
 				</header>
-				<Outlet />
+				<div className="px-7 pt-5">
+					<Outlet />
+				</div>
 			</SidebarInset>
 		</SidebarProvider>
 	)
