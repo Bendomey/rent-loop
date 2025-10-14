@@ -10,7 +10,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-func VerifyAdminAuthMiddleware(appCtx pkg.AppContext) func(http.Handler) http.Handler {
+// InjectAdminAuthMiddleware checks if auth token is present and then passes it to the app's context.
+func InjectAdminAuthMiddleware(appCtx pkg.AppContext) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authorizationToken := r.Header.Get("Authorization")

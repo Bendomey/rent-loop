@@ -9,7 +9,7 @@ import (
 
 func NewAdminRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func(r chi.Router) {
 	return func(r chi.Router) {
-		r.Use(middlewares.VerifyAdminAuthMiddleware(appCtx))
+		r.Use(middlewares.InjectAdminAuthMiddleware(appCtx))
 
 		r.Group(func(r chi.Router) {
 			r.Post("/v1/admins/login", handlers.AdminHandler.Authenticate)
