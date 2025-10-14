@@ -13,25 +13,6 @@ type Client struct {
 	Region  string `json:"region" gorm:"not null;"`
 	City    string `json:"city" gorm:"not null;"`
 
-	// company specific fields
-	RegistrationNumber string `json:"registrationNumber"` // company registration number
-	LogoURL            string `json:"logoUrl"`            // company logo URL or individual profile picture URL
-	Description        string `json:"description"`        // company description or individual bio
-	WebsiteURL         string `json:"websiteUrl"`         // company website URL
-	SupportEmail       string `json:"supportEmail"`       // company support email
-	SupportPhone       string `json:"supportPhone"`       // company support phone number
-
-	// individual specific fields
-	DateOfBirth   string `json:"dateOfBirth"`   // individual date of birth
-	IDType        string `json:"idType"`        // individual ID type (e.g., passport, driver's license)
-	IDNumber      string `json:"idNumber"`      // individual ID number
-	IDExpiry      string `json:"idExpiry"`      // individual ID expiry date
-	IDDocumentURL string `json:"idDocumentUrl"` // URL to the scanned copy of the ID document
-
-	ContactName        string `json:"contactName" gorm:"not null;"`
-	ContactPhoneNumber string `json:"contactPhoneNumber" gorm:"not null;"`
-	ContactEmail       string `json:"contactEmail" gorm:"not null;"`
-
-	CreatedById string `json:"createdById" gorm:"not null;"`
-	CreatedBy   Admin  `json:"createdBy" gorm:"foreignKey:CreatedById;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	ClientApplicationId string            `json:"clientApplicationId" gorm:"not null;"`
+	ClientApplication   ClientApplication `json:"clientApplication" gorm:"foreignKey:ClientApplicationId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
