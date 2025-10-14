@@ -29,7 +29,7 @@ export default function AuthDashboard({ matches }: Route.ComponentProps) {
 		<SidebarProvider>
 			<AppSidebar />
 			<SidebarInset>
-				<header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b">
+				<header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
 					<div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
 						<SidebarTrigger className="-ml-1" />
 						<Separator
@@ -73,7 +73,7 @@ export default function AuthDashboard({ matches }: Route.ComponentProps) {
 						</div>
 					</div>
 				</header>
-				<div className="px-7 pt-5">
+				<div className="px-2 pt-5 md:px-7">
 					<Outlet />
 				</div>
 			</SidebarInset>

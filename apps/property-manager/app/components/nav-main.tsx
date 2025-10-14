@@ -42,7 +42,6 @@ export function NavMain({
 			<SidebarMenu>
 				{items.map((item) => {
 					if (item?.items?.length) {
-						// const url = `${baseRoute}${item.url}`;
 						const isActive =
 							item.isActive ||
 							item.items?.some(
@@ -57,7 +56,14 @@ export function NavMain({
 							>
 								<SidebarMenuItem>
 									<CollapsibleTrigger asChild>
-										<SidebarMenuButton tooltip={item.title}>
+										<SidebarMenuButton
+											tooltip={item.title}
+											className={
+												isActive
+													? 'text-primary-foreground hover:text-primary-foreground bg-rose-600 hover:bg-rose-700'
+													: ''
+											}
+										>
 											{item.icon && <item.icon />}
 											<span>{item.title}</span>
 											<ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -93,7 +99,11 @@ export function NavMain({
 					return (
 						<SidebarMenuItem key={item.title}>
 							<SidebarMenuButton
-								isActive={isActive}
+								className={
+									isActive
+										? 'text-primary-foreground hover:text-primary-foreground bg-rose-600 hover:bg-rose-700'
+										: ''
+								}
 								tooltip={item.title}
 								asChild
 							>

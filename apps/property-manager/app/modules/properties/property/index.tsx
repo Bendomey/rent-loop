@@ -113,7 +113,6 @@
 
 // Response Rate / SLA compliance
 
-
 export function PropertyModule() {
 	return <div>Property overview</div>
 }
