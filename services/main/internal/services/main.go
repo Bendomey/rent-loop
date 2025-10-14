@@ -2,17 +2,17 @@ package services
 
 import (
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
+	"github.com/Bendomey/rent-loop/services/main/pkg"
 )
 
 type Services struct {
-	// ClientService       ClientService
+	AdminService AdminService
 }
 
-func NewServices(repository repository.Repository) Services {
-
-	// clientService := NewClientService(repository.ClientRepository)
+func NewServices(appCtx pkg.AppContext, repository repository.Repository) Services {
+	adminService := NewAdminService(appCtx, repository.AdminRepository)
 
 	return Services{
-		// ClientService: clientService,
+		AdminService: adminService,
 	}
 }

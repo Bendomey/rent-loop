@@ -6,6 +6,7 @@ toolchain go1.24.6
 
 require (
 	github.com/Bendomey/goutilities v0.0.0-20230531232445-1e65a3d13192
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/getsentry/raven-go v0.2.0
 	github.com/getsentry/sentry-go v0.35.3
 	github.com/go-chi/chi/v5 v5.2.3
@@ -14,6 +15,8 @@ require (
 	github.com/go-gormigrate/gormigrate/v2 v2.1.5
 	github.com/go-playground/validator/v10 v10.28.0
 	github.com/gofrs/uuid v4.4.0+incompatible
+	github.com/lib/pq v1.10.9
+	github.com/matoous/go-nanoid v1.5.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.6
@@ -49,7 +52,6 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
-	github.com/lib/pq v1.10.9 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/swaggo/files v1.0.1 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect

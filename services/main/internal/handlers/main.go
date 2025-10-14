@@ -2,18 +2,18 @@ package handlers
 
 import (
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
-	"github.com/go-playground/validator/v10"
+	"github.com/Bendomey/rent-loop/services/main/pkg"
 )
 
 type Handlers struct {
-	// ClientHandler       ClientHandler
+	AdminHandler AdminHandler
 }
 
-func NewHandlers(services services.Services, validate *validator.Validate) Handlers {
+func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 
-	// clientHandler := NewClientHandler(services.ClientService, validate)
+	adminHandler := NewAdminHandler(appCtx, services.AdminService)
 
 	return Handlers{
-		// ClientHandler: clientHandler,
+		AdminHandler: adminHandler,
 	}
 }

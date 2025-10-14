@@ -2,7 +2,7 @@ run:
 	scripts/run.sh
 
 run-dev:
-	scripts/run-dev.sh
+	make generate-docs && scripts/run-dev.sh
 
 build-server:
 	scripts/build.sh

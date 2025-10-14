@@ -24,12 +24,19 @@ type IDefaultData struct {
 	SuperAdminPassword string
 }
 
+type ITokenGenerationSecret struct {
+	AdminSecret      string
+	ClientUserSecret string
+	TenantUserSecret string
+}
+
 type Config struct {
-	Port        string
-	Database    IDatabase
-	Env         string // development, staging, production
-	Sentry      ISentry
-	DefaultData IDefaultData
+	Port         string
+	Database     IDatabase
+	Env          string // development, staging, production
+	Sentry       ISentry
+	DefaultData  IDefaultData
+	TokenSecrets ITokenGenerationSecret
 }
 
 // Load loads config from environment variables
@@ -53,6 +60,11 @@ func Load() Config {
 			SuperAdminName:     getEnv("SUPER_ADMIN_NAME", "Super Admin"),
 			SuperAdminEmail:    getEnv("SUPER_ADMIN_EMAIL", "admin@example.com"),
 			SuperAdminPassword: getEnv("SUPER_ADMIN_PASSWORD", "password"),
+		},
+		TokenSecrets: ITokenGenerationSecret{
+			AdminSecret:      getEnv("ADMIN_SECRET", "superduperadminsecret"),
+			ClientUserSecret: getEnv("CLIENT_USER_SECRET", "superduperclientusersecret"),
+			TenantUserSecret: getEnv("TENANT_USER_SECRET", "superdupertenantusersecret"),
 		},
 	}
 }

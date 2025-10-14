@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/handlers"
 	appMiddleware "github.com/Bendomey/rent-loop/services/main/internal/middlewares"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -28,8 +29,7 @@ import (
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
 // @host https://api.rentloop.com
-// @BasePath /v1
-func New(appCtx pkg.AppContext) *chi.Mux {
+func New(appCtx pkg.AppContext, handlers handlers.Handlers) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.CleanPath)
@@ -60,8 +60,16 @@ func New(appCtx pkg.AppContext) *chi.Mux {
 	// health check
 	r.Use(middleware.Heartbeat("/"))
 
-	r.Route("/api/v1", func(r chi.Router) {
-		// r.Mount("/clients", NewClientRouter(appCtx))               // clients
+	r.Route("/api", func(r chi.Router) {
+
+		// for admins
+		r.Group(NewAdminRouter(appCtx, handlers))
+
+		// for client user
+		// r.Group(NewClientUserRouter(appCtx, handlers))
+
+		// for tenant account
+		// r.Group(NewTenantAccountRouter(appCtx, handlers))
 	})
 
 	// serve openapi.yaml + docs

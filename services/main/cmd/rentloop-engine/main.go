@@ -30,23 +30,17 @@ func main() {
 		log.Fatal("failed to connect db:", err)
 	}
 
-	// singleton is efficient.
-	validate := validator.New()
-
-	repository := repository.NewRepository(database)
-	services := services.NewServices(repository)
-	handlers := handlers.NewHandlers(services, validate)
-
 	appCtx := pkg.AppContext{
-		DB:         database,
-		Config:     cfg,
-		Repository: repository,
-		Services:   services,
-		Handlers:   handlers,
-		Validator:  validate,
+		DB:        database,
+		Config:    cfg,
+		Validator: validator.New(),
 	}
 
-	r := router.New(appCtx)
+	repository := repository.NewRepository(database)
+	services := services.NewServices(appCtx, repository)
+	handlers := handlers.NewHandlers(appCtx, services)
+
+	r := router.New(appCtx, handlers)
 
 	log.Printf("Server running on :%s\n", cfg.Port)
 

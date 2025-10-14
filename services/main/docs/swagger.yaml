@@ -1,4 +1,88 @@
-basePath: /v1
+definitions:
+  handlers.CreateAdminRequest:
+    properties:
+      email:
+        type: string
+      name:
+        maxLength: 255
+        minLength: 3
+        type: string
+    required:
+    - email
+    - name
+    type: object
+  handlers.LoginRequest:
+    properties:
+      email:
+        example: admin@example.com
+        type: string
+      password:
+        example: strongpassword123
+        maxLength: 255
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  lib.HTTPError:
+    properties:
+      errors:
+        properties:
+          message:
+            type: string
+        type: object
+    type: object
+  lib.HTTPReturnPaginatedMetaResponse:
+    properties:
+      has_next_page:
+        example: true
+        type: boolean
+      has_previous_page:
+        example: false
+        type: boolean
+      order:
+        example: desc
+        type: string
+      order_by:
+        example: created_at
+        type: string
+      page:
+        example: 1
+        type: integer
+      page_size:
+        example: 20
+        type: integer
+      total:
+        example: 100
+        type: integer
+    type: object
+  transformations.OutputAdmin:
+    properties:
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      email:
+        example: admin@example.com
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      name:
+        example: Admin Name
+        type: string
+      updated_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+    type: object
+  transformations.OutputAdminWithToken:
+    properties:
+      admin:
+        $ref: '#/definitions/transformations.OutputAdmin'
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw
+        type: string
+    type: object
 host: https://api.rentloop.com
 info:
   contact:
@@ -12,5 +96,177 @@ info:
   termsOfService: http://rentloop.com/terms
   title: RentLoop API
   version: "1.0"
-paths: {}
+paths:
+  /api/v1/admins:
+    get:
+      consumes:
+      - application/json
+      description: Get all admins
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputAdmin'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get all admins
+      tags:
+      - admins
+    post:
+      consumes:
+      - application/json
+      description: Create a new admin
+      parameters:
+      - description: Admin details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateAdminRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdmin'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Create a new admin
+      tags:
+      - admins
+  /api/v1/admins/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get admin by ID
+      parameters:
+      - description: Admin ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdmin'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get admin by ID
+      tags:
+      - admins
+  /api/v1/admins/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate admin and return token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminWithToken'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Authenticate admin and return token
+      tags:
+      - admins
+  /api/v1/admins/me:
+    get:
+      consumes:
+      - application/json
+      description: Get the currently authenticated admin
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdmin'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get the currently authenticated admin
+      tags:
+      - admins
 swagger: "2.0"
