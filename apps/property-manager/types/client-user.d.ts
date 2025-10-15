@@ -5,7 +5,8 @@ interface ClientUser {
 	name: string
 	phone_number: string
 	email: string
-	role: 'OWNER' | 'STAFF'
+	role: 'OWNER' | 'ADMIN' | 'STAFF'
+	status: 'ClientUser.Status.Active' | 'ClientUser.Status.Inactive'
 	created_at: Date
 	updated_at: Date
 }

@@ -1,5 +1,6 @@
-import { Plus, RotateCw, Search } from 'lucide-react'
+import { Plus, RotateCw, Search, ToggleLeft } from 'lucide-react'
 import { Link } from 'react-router'
+import { FilterSet } from '~/components/filter-set'
 import { Button } from '~/components/ui/button'
 import {
 	InputGroup,
@@ -7,9 +8,48 @@ import {
 	InputGroupInput,
 } from '~/components/ui/input-group'
 
+const filters: Array<Filter> = [
+	{
+		id: 1,
+		type: 'selector',
+		selectType: 'single',
+		label: 'Status',
+		value: {
+			options: [
+				{ label: 'Active', value: 'ClientUser.Status.Active' },
+				{ label: 'Inactive', value: 'ClientUser.Status.Inactive' },
+			],
+			urlParam: 'status',
+			defaultValues: [],
+		},
+		Icon: ToggleLeft,
+	},
+	{
+		id: 1,
+		type: 'selector',
+		selectType: 'single',
+		label: 'Role',
+		value: {
+			options: [
+				{ label: 'Owner', value: 'OWNER' },
+				{ label: 'Admin', value: 'ADMIN' },
+				{ label: 'Staff', value: 'STAFF' },
+			],
+			urlParam: 'role',
+			defaultValues: [],
+		},
+		Icon: ToggleLeft,
+	},
+]
+
 export const UsersController = () => {
 	return (
 		<div className="flex w-full flex-col gap-2">
+			<div className="w-full rounded-md border p-4">
+				<div className="flex w-full flex-wrap items-center gap-2 text-sm">
+					<FilterSet label="Filters" urlParam="filters" filters={filters} />
+				</div>
+			</div>
 			<div className="flex flex-wrap items-center justify-between gap-4">
 				<div className="text-primary-foreground flex items-center gap-2 text-sm subpixel-antialiased">
 					<InputGroup>

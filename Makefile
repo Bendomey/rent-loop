@@ -8,7 +8,7 @@ run-fe:
 .PHONY: run-fe
 
 run-api:
-	cd services/main && make run-dev
+	cd services/main && make run
 .PHONY: run-api
 
 open-browser:

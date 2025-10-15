@@ -1,10 +1,9 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { CircleCheck, EllipsisVertical, Loader, User } from 'lucide-react'
+import { CircleCheck, CircleX, EllipsisVertical, User } from 'lucide-react'
 import { UsersController } from './controller'
-import { DataTable } from './table'
+import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
-import { Card } from '~/components/ui/card'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -17,13 +16,19 @@ const columns: ColumnDef<ClientUser>[] = [
 	{
 		id: 'drag',
 		header: () => null,
-		cell: ({ row }) => <User />,
+		cell: () => <User />,
 	},
 	{
 		accessorKey: 'name',
 		header: 'Name',
 		cell: ({ getValue }) => {
-			return <span>{getValue<string>()}</span>
+			return (
+				<div className="min-w-40">
+					<span className="truncate text-xs text-zinc-600">
+						{getValue<string>()}
+					</span>
+				</div>
+			)
 		},
 		enableHiding: false,
 	},
@@ -32,36 +37,46 @@ const columns: ColumnDef<ClientUser>[] = [
 		header: 'Role',
 		cell: ({ getValue }) => (
 			<Badge variant="outline" className="text-muted-foreground px-1.5">
-				<span className="truncate">{getValue<string>()}</span>
+				<span className="truncate text-xs text-zinc-600">
+					{getValue<string>()}
+				</span>
 			</Badge>
 		),
 	},
 	{
 		accessorKey: 'email',
 		header: 'Email',
-		cell: ({ row }) => (
-			<div className="w-32">
-				<span className="truncate">{row.original.email}</span>
+		cell: ({ getValue }) => (
+			<div className="min-w-32">
+				<span className="truncate text-xs text-zinc-600">
+					{getValue<string>()}
+				</span>
 			</div>
 		),
 	},
 	{
 		accessorKey: 'phone_number',
 		header: 'Phone',
-		cell: ({ row }) => (
-			<div className="w-32">
-				<span className="truncate">{row.original.phone_number}</span>
-			</div>
+		cell: ({ getValue }) => (
+			<span className="truncate text-xs text-zinc-600">
+				{getValue<string>()}
+			</span>
 		),
 	},
 
 	{
 		accessorKey: 'status',
 		header: 'Status',
-		cell: ({ row }) => (
+		cell: ({ getValue }) => (
 			<Badge variant="outline" className="text-muted-foreground px-1.5">
-				{true ? <CircleCheck className="fill-green-500" /> : <Loader />}
-				{/* {row.original.status} */}Active
+				{getValue<string>() === 'ClientUser.Status.Active' ? (
+					<CircleCheck className="fill-green-600 text-white" />
+				) : (
+					<CircleX className="fill-red-500 text-white" />
+				)}
+				{getValue<string>() === 'ClientUser.Status.Active'
+					? 'Active'
+					: 'Inactive'}
 			</Badge>
 		),
 	},
@@ -93,8 +108,7 @@ export function UsersModule() {
 	return (
 		<div className="flex flex-col gap-2 sm:gap-4">
 			<UsersController />
-			<Card className="bg-background w-full">
-				{/* <DataTable data={[]} /> */}
+			<div className="h-full w-full">
 				<DataTable
 					columns={columns}
 					data={[
@@ -108,10 +122,35 @@ export function UsersModule() {
 							updated_at: new Date(),
 							client: null,
 							client_id: '1',
+							status: 'ClientUser.Status.Active',
+						},
+						{
+							id: '1',
+							name: 'John Doe',
+							email: 'john.doe@example.com',
+							phone_number: '123-456-7890',
+							role: 'OWNER',
+							created_at: new Date(),
+							updated_at: new Date(),
+							client: null,
+							client_id: '1',
+							status: 'ClientUser.Status.Active',
+						},
+						{
+							id: '1',
+							name: 'John Doe',
+							email: 'john.doe@example.com',
+							phone_number: '123-456-7890',
+							role: 'OWNER',
+							created_at: new Date(),
+							updated_at: new Date(),
+							client: null,
+							client_id: '1',
+							status: 'ClientUser.Status.Active',
 						},
 					]}
 				/>
-			</Card>
+			</div>
 		</div>
 	)
 }

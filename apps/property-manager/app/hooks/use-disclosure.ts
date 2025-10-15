@@ -13,6 +13,7 @@ export const useDisclosure = (params?: Params) => {
 
 	return {
 		isOpened,
+		setIsOpened,
 		onOpen,
 		onClose,
 		onToggle,

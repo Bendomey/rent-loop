@@ -73,7 +73,7 @@ export default function AuthDashboard({ matches }: Route.ComponentProps) {
 						</div>
 					</div>
 				</header>
-				<div className="px-2 pt-5 md:px-7">
+				<div className="h-full px-2 py-5 md:px-7">
 					<Outlet />
 				</div>
 			</SidebarInset>

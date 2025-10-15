@@ -36,7 +36,7 @@ export function NavProperties({
 					<Link to="/properties/new">
 						<SidebarMenuButton className="text-sidebar-foreground/70">
 							<PlusCircleIcon className="text-sidebar-foreground/70" />
-							<span>Add New Property</span>
+							<span className="text-xs">Add New Property</span>
 						</SidebarMenuButton>
 					</Link>
 				</SidebarMenuItem>
