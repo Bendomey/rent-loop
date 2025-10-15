@@ -253,7 +253,7 @@ export function DataTable<T extends { id: string }>({
 											>
 												<SelectTrigger
 													size="sm"
-													className="w-20"
+													className="w-24"
 													id="rows-per-page"
 												>
 													<SelectValue
@@ -261,9 +261,18 @@ export function DataTable<T extends { id: string }>({
 													/>
 												</SelectTrigger>
 												<SelectContent side="top">
-													{[10, 20, 30, 40, 50].map((pageSize) => (
-														<SelectItem key={pageSize} value={`${pageSize}`}>
-															{pageSize}
+													{[
+														{ value: 10, label: '😁' },
+														{ value: 50, label: '😇' },
+														{ value: 100, label: '😐' },
+														{ value: 150, label: '😟' },
+														{ value: 200, label: '😢' },
+													].map((pageSize) => (
+														<SelectItem
+															key={pageSize.value}
+															value={`${pageSize.value}`}
+														>
+															{pageSize.label} {pageSize.value}
 														</SelectItem>
 													))}
 												</SelectContent>
