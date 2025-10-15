@@ -30,6 +30,11 @@ type ITokenGenerationSecret struct {
 	TenantUserSecret string
 }
 
+type IWittyflow struct {
+	AppID     string
+	AppSecret string
+}
+
 type Config struct {
 	Port         string
 	Database     IDatabase
@@ -37,6 +42,8 @@ type Config struct {
 	Sentry       ISentry
 	DefaultData  IDefaultData
 	TokenSecrets ITokenGenerationSecret
+	Wittyflow    IWittyflow
+	ResendAPIKey string
 }
 
 // Load loads config from environment variables
@@ -66,6 +73,11 @@ func Load() Config {
 			ClientUserSecret: getEnv("CLIENT_USER_SECRET", "superduperclientusersecret"),
 			TenantUserSecret: getEnv("TENANT_USER_SECRET", "superdupertenantusersecret"),
 		},
+		Wittyflow: IWittyflow{
+			AppID:     getEnv("WITTYFLOW_APP_ID", "fake-app-id"),
+			AppSecret: getEnv("WITTYFLOW_APP_SECRET", "fake-app-secret"),
+		},
+		ResendAPIKey: getEnv("RESEND_API_KEY", "fake-api-key"),
 	}
 }
 

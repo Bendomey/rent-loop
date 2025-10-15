@@ -2,6 +2,8 @@ package lib
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"strconv"
 
 	"gorm.io/datatypes"
@@ -94,4 +96,98 @@ func (ns NullableInterface) MarshalJSON() ([]byte, error) {
 		return []byte("null"), nil
 	}
 	return json.Marshal(*ns.Value)
+}
+
+// Always return a string, even if the pointer is nil.
+func SafeString(s *string) string {
+	if s == nil {
+		return ""
+	}
+
+	return *s
+}
+
+// Convert a bool pointer to a string.
+func BoolToString(b *bool) string {
+	if b == nil {
+		return ""
+	}
+
+	newBool := *b
+	return fmt.Sprintf("%t", newBool)
+}
+
+// convert int to string
+func IntToString(i *int64) string {
+	if i == nil {
+		return ""
+	}
+
+	newInt := *i
+	return fmt.Sprintf("%d", newInt)
+}
+
+// convert float64 to string
+func Float64ToString(f *float64) string {
+	if f == nil {
+		return ""
+	}
+
+	newFloat := *f
+	return fmt.Sprintf("%f", newFloat)
+}
+
+// normalize phone number
+func NormalizePhoneNumber(phoneNumber string) (string, error) {
+	if len(phoneNumber) < 10 {
+		return phoneNumber, errors.New("InvalidPhoneNumber")
+	}
+
+	return fmt.Sprintf("233%s", phoneNumber[len(phoneNumber)-9:]), nil
+}
+
+func GetStringPointer(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}
+
+func GetInt64Pointer(i int64) *int64 {
+	if i == 0 {
+		return nil
+	}
+	return &i
+}
+
+func GetBoolPointer(b bool) *bool {
+	if !b {
+		return nil
+	}
+	return &b
+}
+
+func GetFloat64Pointer(f float64) *float64 {
+	if f == 0 {
+		return nil
+	}
+	return &f
+}
+
+func ConvertStringToFloat64(s string) (float64, error) {
+	var f float64
+	_, err := fmt.Sscanf(s, "%f", &f)
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert string to float64: %w", err)
+	}
+	return f, nil
+}
+
+func ConvertStringToInt64(s string) (int64, error) {
+	var i int64
+	_, err := fmt.Sscanf(s, "%d", &i)
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert string to int64: %w", err)
+	}
+	return i, nil
 }
