@@ -10,7 +10,6 @@ import (
 
 type AdminRepository interface {
 	GetByEmail(context context.Context, email string) (*models.Admin, error)
-	GetByAdminID(context context.Context, adminId string) (*models.Admin, error)
 	GetByID(context context.Context, id string) (*models.Admin, error)
 	Create(context context.Context, admin *models.Admin) error
 	List(context context.Context, filterQuery lib.FilterQuery, filters ListAdminsFilter) (*[]models.Admin, error)
@@ -23,15 +22,6 @@ type adminRepository struct {
 
 func NewAdminRepository(DB *gorm.DB) AdminRepository {
 	return &adminRepository{DB}
-}
-
-func (r *adminRepository) GetByAdminID(ctx context.Context, adminId string) (*models.Admin, error) {
-	var admin models.Admin
-	result := r.DB.WithContext(ctx).Where("admin_id = ?", adminId).First(&admin)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return &admin, nil
 }
 
 func (r *adminRepository) GetByEmail(ctx context.Context, email string) (*models.Admin, error) {
