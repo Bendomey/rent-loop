@@ -11,8 +11,13 @@ type ClientUser struct {
 	Email       string `json:"email" gorm:"not null;uniqueIndex"`
 	Password    string `json:"password" gorm:"not null"`
 
-	Role string `json:"role" gorm:"not null;"` // OWNER | STAFF
+	Role string `json:"role" gorm:"not null;"` // OWNER | ADMIN | STAFF
 
 	CreatedById *string     `json:"createdById"`
 	CreatedBy   *ClientUser `json:"createdBy"`
+
+	Status string `json:"status" gorm:"not null;index;default:'ClientUser.Status.Active'"` // ClientUser.Status.Active | ClientUser.Status.Inactive
+
+	StatusUpdatedById *string     `json:"statusUpdatedById"`
+	StatusUpdatedBy   *ClientUser `json:"statusUpdatedBy" gorm:"foreignKey:StatusUpdatedById;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }
