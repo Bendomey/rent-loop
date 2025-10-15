@@ -3,11 +3,9 @@ import {
 	type ColumnFiltersState,
 	flexRender,
 	getCoreRowModel,
-	getFacetedRowModel,
-	getFacetedUniqueValues,
 	getFilteredRowModel,
-	getPaginationRowModel,
-	getSortedRowModel,
+	type OnChangeFn,
+	type PaginationState,
 	type SortingState,
 	useReactTable,
 	type VisibilityState,
@@ -22,7 +20,7 @@ import {
 } from 'lucide-react'
 import * as React from 'react'
 
-import { useLocation, useNavigate } from 'react-router'
+import { useLocation, useNavigate, useSearchParams } from 'react-router'
 import {
 	Empty,
 	EmptyContent,
@@ -54,7 +52,7 @@ import {
 } from '~/components/ui/table'
 
 interface Props<T> {
-	data: Array<T>
+	dataResponse: FetchMultipleDataResponse<T>
 	columns: ColumnDef<T>[]
 	empty: EmptyOutlineProps
 	isLoading?: boolean
@@ -62,7 +60,7 @@ interface Props<T> {
 }
 
 export function DataTable<T extends { id: string }>({
-	data,
+	dataResponse,
 	columns,
 	empty,
 	isLoading,
@@ -77,13 +75,47 @@ export function DataTable<T extends { id: string }>({
 		[],
 	)
 	const [sorting, setSorting] = React.useState<SortingState>([])
-	const [pagination, setPagination] = React.useState({
-		pageIndex: 0,
-		pageSize: 10,
-	})
+	const [searchParams, setSearchParams] = useSearchParams()
+
+	const pagination = React.useMemo((): PaginationState => {
+		const pageIndex = searchParams.get('page')
+			? Number(searchParams.get('page')) - 1
+			: dataResponse.page - 1
+		const pageSize = searchParams.get('pageSize')
+			? Number(searchParams.get('pageSize'))
+			: dataResponse.page_size
+		return {
+			pageIndex,
+			pageSize,
+		}
+	}, [dataResponse.page, dataResponse.page_size, searchParams])
+
+	const setPagination: OnChangeFn<PaginationState> = React.useCallback(
+		(input) => {
+			const pageIndex =
+				typeof input === 'function'
+					? input(pagination).pageIndex
+					: input.pageIndex
+			const pageSize =
+				typeof input === 'function'
+					? input(pagination).pageSize
+					: input.pageSize
+			if (
+				pageIndex !== pagination.pageIndex ||
+				pageSize !== pagination.pageSize
+			) {
+				setSearchParams({
+					...Object.fromEntries(searchParams),
+					page: (pageIndex + 1).toString(),
+					pageSize: pageSize.toString(),
+				})
+			}
+		},
+		[pagination, searchParams, setSearchParams],
+	)
 
 	const table = useReactTable({
-		data,
+		data: dataResponse.rows || [],
 		columns,
 		state: {
 			sorting,
@@ -92,6 +124,7 @@ export function DataTable<T extends { id: string }>({
 			columnFilters,
 			pagination,
 		},
+		pageCount: Math.ceil(dataResponse.total / dataResponse.page_size),
 		getRowId: (row) => row.id.toString(),
 		enableRowSelection: true,
 		onRowSelectionChange: setRowSelection,
@@ -99,12 +132,9 @@ export function DataTable<T extends { id: string }>({
 		onColumnFiltersChange: setColumnFilters,
 		onColumnVisibilityChange: setColumnVisibility,
 		onPaginationChange: setPagination,
+		manualPagination: true,
 		getCoreRowModel: getCoreRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
-		getPaginationRowModel: getPaginationRowModel(),
-		getSortedRowModel: getSortedRowModel(),
-		getFacetedRowModel: getFacetedRowModel(),
-		getFacetedUniqueValues: getFacetedUniqueValues(),
 	})
 
 	let content = <></>

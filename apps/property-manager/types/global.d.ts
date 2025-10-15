@@ -54,9 +54,10 @@ interface FetchMultipleDataResponse<T> {
 	total: number
 	page: number
 	page_size: number
-	total_pages: number
-	prev_page: Nullable<number>
-	next_page: Nullable<number>
+	order: 'asc' | 'desc'
+	order_by: string
+	has_prev_page: boolean
+	has_next_page: boolean
 }
 
 interface ApiConfigForServerConfig {

@@ -111,45 +111,53 @@ export function UsersModule() {
 			<div className="h-full w-full">
 				<DataTable
 					columns={columns}
-					data={[
-						{
-							id: '1',
-							name: 'John Doe',
-							email: 'john.doe@example.com',
-							phone_number: '123-456-7890',
-							role: 'OWNER',
-							created_at: new Date(),
-							updated_at: new Date(),
-							client: null,
-							client_id: '1',
-							status: 'ClientUser.Status.Active',
-						},
-						{
-							id: '1',
-							name: 'John Doe',
-							email: 'john.doe@example.com',
-							phone_number: '123-456-7890',
-							role: 'OWNER',
-							created_at: new Date(),
-							updated_at: new Date(),
-							client: null,
-							client_id: '1',
-							status: 'ClientUser.Status.Active',
-						},
-						{
-							id: '1',
-							name: 'John Doe',
-							email: 'john.doe@example.com',
-							phone_number: '123-456-7890',
-							role: 'OWNER',
-							created_at: new Date(),
-							updated_at: new Date(),
-							client: null,
-							client_id: '1',
-							status: 'ClientUser.Status.Active',
-						},
-					]}
-					error="Could not fetch users."
+					dataResponse={{
+						rows: [
+							{
+								id: '1',
+								name: 'John Doe',
+								email: 'john.doe@example.com',
+								phone_number: '123-456-7890',
+								role: 'OWNER',
+								created_at: new Date(),
+								updated_at: new Date(),
+								client: null,
+								client_id: '1',
+								status: 'ClientUser.Status.Active',
+							},
+							{
+								id: '1',
+								name: 'John Doe',
+								email: 'john.doe@example.com',
+								phone_number: '123-456-7890',
+								role: 'OWNER',
+								created_at: new Date(),
+								updated_at: new Date(),
+								client: null,
+								client_id: '1',
+								status: 'ClientUser.Status.Active',
+							},
+							{
+								id: '1',
+								name: 'John Doe',
+								email: 'john.doe@example.com',
+								phone_number: '123-456-7890',
+								role: 'OWNER',
+								created_at: new Date(),
+								updated_at: new Date(),
+								client: null,
+								client_id: '1',
+								status: 'ClientUser.Status.Active',
+							},
+						],
+						total: 150,
+						page: 1,
+						page_size: 50,
+						order: 'desc',
+						order_by: 'created_at',
+						has_prev_page: false,
+						has_next_page: true,
+					}}
 					empty={{
 						message: 'No users found',
 						description:
