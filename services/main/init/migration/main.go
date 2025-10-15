@@ -14,6 +14,11 @@ import (
 func updateMigration(db *gorm.DB) error {
 	err := db.AutoMigrate(
 		&models.Admin{},
+		&models.ClientApplication{},
+		&models.Client{},
+		&models.ClientUser{},
+		&models.Property{},
+		&models.ClientUserProperty{},
 	)
 	return err
 }
