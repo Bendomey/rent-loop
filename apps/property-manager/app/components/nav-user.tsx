@@ -4,8 +4,8 @@ import {
 	ChevronsUpDown,
 	CreditCard,
 	LogOut,
-	Sparkles,
 } from 'lucide-react'
+import { Link } from 'react-router'
 
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import {
@@ -75,22 +75,19 @@ export function NavUser({
 						</DropdownMenuLabel>
 						<DropdownMenuSeparator />
 						<DropdownMenuGroup>
-							<DropdownMenuItem>
-								<Sparkles />
-								Upgrade to Pro
-							</DropdownMenuItem>
-						</DropdownMenuGroup>
-						<DropdownMenuSeparator />
-						<DropdownMenuGroup>
-							<DropdownMenuItem>
-								<BadgeCheck />
-								Account
-							</DropdownMenuItem>
-							<DropdownMenuItem>
-								<CreditCard />
-								Billing
-							</DropdownMenuItem>
-							<DropdownMenuItem>
+							<Link to="/my-account">
+								<DropdownMenuItem>
+									<BadgeCheck />
+									Account
+								</DropdownMenuItem>
+							</Link>
+							<Link to="/settings/billing">
+								<DropdownMenuItem>
+									<CreditCard />
+									Billing
+								</DropdownMenuItem>
+							</Link>
+							<DropdownMenuItem disabled>
 								<Bell />
 								Notifications
 							</DropdownMenuItem>

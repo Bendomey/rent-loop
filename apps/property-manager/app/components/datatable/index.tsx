@@ -17,9 +17,22 @@ import {
 	ChevronRight,
 	ChevronsLeft,
 	ChevronsRight,
+	CloudAlert,
+	RotateCcw,
 } from 'lucide-react'
 import * as React from 'react'
 
+import { useLocation, useNavigate } from 'react-router'
+import {
+	Empty,
+	EmptyContent,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from '../ui/empty'
+import { Spinner } from '../ui/spinner'
+import { EmptyOutline, type EmptyOutlineProps } from './empty'
 import { Button } from '~/components/ui/button'
 
 import { Label } from '~/components/ui/label'
@@ -40,13 +53,23 @@ import {
 	TableRow,
 } from '~/components/ui/table'
 
+interface Props<T> {
+	data: Array<T>
+	columns: ColumnDef<T>[]
+	empty: EmptyOutlineProps
+	isLoading?: boolean
+	error?: string
+}
+
 export function DataTable<T extends { id: string }>({
 	data,
 	columns,
-}: {
-	data: Array<T>
-	columns: ColumnDef<T>[]
-}) {
+	empty,
+	isLoading,
+	error,
+}: Props<T>) {
+	const navigate = useNavigate()
+	const location = useLocation()
 	const [rowSelection, setRowSelection] = React.useState({})
 	const [columnVisibility, setColumnVisibility] =
 		React.useState<VisibilityState>({})
@@ -84,6 +107,77 @@ export function DataTable<T extends { id: string }>({
 		getFacetedUniqueValues: getFacetedUniqueValues(),
 	})
 
+	let content = <></>
+
+	if (isLoading) {
+		content = (
+			<TableRow>
+				<TableCell colSpan={columns.length} className="h-48">
+					<Empty className="w-full border border-dashed">
+						<EmptyHeader>
+							<EmptyMedia variant="icon">
+								<Spinner />
+							</EmptyMedia>
+							<EmptyTitle>Loading...</EmptyTitle>
+							<EmptyDescription>
+								Please wait while we load your request. Do not refresh the page.
+							</EmptyDescription>
+						</EmptyHeader>
+					</Empty>
+				</TableCell>
+			</TableRow>
+		)
+	} else if (error) {
+		content = (
+			<TableRow>
+				<TableCell colSpan={columns.length} className="h-48">
+					<Empty className="w-full border border-dashed">
+						<EmptyHeader>
+							<EmptyMedia variant="icon">
+								<CloudAlert className="text-red-600" />
+							</EmptyMedia>
+							<EmptyTitle>An Error Occurred</EmptyTitle>
+							<EmptyDescription>{error}</EmptyDescription>
+						</EmptyHeader>
+						<EmptyContent>
+							<Button
+								onClick={() => navigate(location.pathname + location.search)}
+								variant={'outline'}
+								size="sm"
+							>
+								<RotateCcw />
+								Retry
+							</Button>
+						</EmptyContent>
+					</Empty>
+				</TableCell>
+			</TableRow>
+		)
+	} else {
+		const rows = table.getRowModel().rows
+		if (rows.length === 0) {
+			content = <EmptyOutline {...empty} />
+		} else {
+			content = (
+				<>
+					{table.getRowModel().rows.map((row) => (
+						<TableRow
+							key={row.id}
+							data-state={row.getIsSelected() && 'selected'}
+							className="relative z-0"
+						>
+							{row.getVisibleCells().map((cell) => (
+								<TableCell key={cell.id}>
+									{flexRender(cell.column.columnDef.cell, cell.getContext())}
+								</TableCell>
+							))}
+						</TableRow>
+					))}
+				</>
+			)
+		}
+	}
+
 	return (
 		<div className="h-full w-full flex-col">
 			<div className="h-full overflow-hidden rounded-lg border">
@@ -107,33 +201,7 @@ export function DataTable<T extends { id: string }>({
 						))}
 					</TableHeader>
 					<TableBody className="**:data-[slot=table-cell]:first:w-8">
-						{table.getRowModel().rows?.length ? (
-							table.getRowModel().rows.map((row) => (
-								<TableRow
-									key={row.id}
-									data-state={row.getIsSelected() && 'selected'}
-									className="relative z-0"
-								>
-									{row.getVisibleCells().map((cell) => (
-										<TableCell key={cell.id}>
-											{flexRender(
-												cell.column.columnDef.cell,
-												cell.getContext(),
-											)}
-										</TableCell>
-									))}
-								</TableRow>
-							))
-						) : (
-							<TableRow>
-								<TableCell
-									colSpan={columns.length}
-									className="h-24 text-center"
-								>
-									No results.
-								</TableCell>
-							</TableRow>
-						)}
+						{content}
 					</TableBody>
 					<TableFooter className="w-full">
 						<TableRow>

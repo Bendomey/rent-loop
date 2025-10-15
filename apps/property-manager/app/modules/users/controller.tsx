@@ -51,7 +51,7 @@ export const UsersController = () => {
 				</div>
 			</div>
 			<div className="flex flex-wrap items-center justify-between gap-4">
-				<div className="text-primary-foreground flex items-center gap-2 text-sm subpixel-antialiased">
+				<div className="flex items-center gap-2 text-sm">
 					<InputGroup>
 						<InputGroupInput placeholder="Search users ..." />
 						<InputGroupAddon>

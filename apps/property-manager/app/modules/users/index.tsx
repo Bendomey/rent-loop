@@ -149,6 +149,18 @@ export function UsersModule() {
 							status: 'ClientUser.Status.Active',
 						},
 					]}
+					error="Could not fetch users."
+					empty={{
+						message: 'No users found',
+						description:
+							"Try adjusting your search or filter to find what you're looking for.",
+						button: {
+							label: 'Add User',
+							onClick: () => {
+								// Handle button click
+							},
+						},
+					}}
 				/>
 			</div>
 		</div>

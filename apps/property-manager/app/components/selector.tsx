@@ -122,7 +122,7 @@ export function Selector(props: Props) {
 								>
 									<Badge
 										variant="default"
-										className="hover:bg-destructive group relative rounded-full px-1 py-0 text-xs"
+										className="hover:bg-destructive group relative rounded-full bg-blue-600 px-1.5 py-0 text-xs"
 										onClick={(e) => {
 											e.stopPropagation()
 											props.onClear()
