@@ -58,7 +58,7 @@ func SendSMS(input SendSMSInput) error {
 		return errors.New("InternalServerError")
 	}
 
-	if input.Env == "development" {
+	if input.Env == "" || input.Env == "development" {
 		logrus.Info("Skipping sms send in development", input)
 		return nil
 	}

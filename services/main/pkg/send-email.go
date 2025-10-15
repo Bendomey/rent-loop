@@ -39,7 +39,7 @@ func SendEmail(input SendEmailInput) error {
 		return errors.New("InternalServerError")
 	}
 
-	if input.Env == "development" {
+	if input.Env == "" || input.Env == "development" {
 		logrus.Info("Skipping email send in development", input)
 		return nil
 	}
