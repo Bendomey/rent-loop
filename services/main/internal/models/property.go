@@ -24,8 +24,8 @@ type Property struct {
 	Type   string `json:"type" gorm:"not null;index;"`   // SINGLE | MULTI
 	Status string `json:"status" gorm:"not null;index;"` // ACTIVE | MAINTENANCE | INACTIVE
 
-	CreatedById string     `json:"createdById" gorm:"not null;"`
-	CreatedBy   ClientUser `json:"createdBy" gorm:"foreignKey:CreatedById;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	CreatedByID string     `json:"createdById" gorm:"not null;"`
+	CreatedBy   ClientUser `json:"createdBy" gorm:"foreignKey:CreatedByID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 
 	Units []Unit `json:"units" gorm:"foreignKey:PropertyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }
