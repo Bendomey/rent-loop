@@ -45,18 +45,16 @@ export function NavMain({
 					if (item?.items?.length) {
 						const isActive =
 							item.isActive ||
-							item.items?.some(
-								(i) => {
-									const url = `${baseRoute}${item.url}${i.url}`
+							item.items?.some((i) => {
+								const url = `${baseRoute}${item.url}${i.url}`
 
-									let isActive = location.pathname.includes(url)
-									if (item.isHome) {
-										isActive = Boolean(location.pathname === url || item.isActive)
-									}
+								let isActive = location.pathname.includes(url)
+								if (item.isHome) {
+									isActive = Boolean(location.pathname === url || item.isActive)
+								}
 
-									return isActive
-								},
-							)
+								return isActive
+							})
 						return (
 							<Collapsible
 								key={item.title}

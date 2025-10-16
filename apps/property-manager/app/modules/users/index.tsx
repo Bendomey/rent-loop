@@ -13,7 +13,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 	AlertDialogTrigger,
-} from "~/components/ui/alert-dialog"
+} from '~/components/ui/alert-dialog'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -25,7 +25,6 @@ import {
 } from '~/components/ui/dropdown-menu'
 
 export function UsersModule() {
-
 	const columns: ColumnDef<ClientUser>[] = useMemo(() => {
 		return [
 			{
@@ -114,9 +113,10 @@ export function UsersModule() {
 								<DropdownMenuItem>Edit</DropdownMenuItem>
 								<DropdownMenuSeparator />
 								<AlertDialogTrigger asChild>
-									<DropdownMenuItem variant="destructive">Deactivate</DropdownMenuItem>
+									<DropdownMenuItem variant="destructive">
+										Deactivate
+									</DropdownMenuItem>
 								</AlertDialogTrigger>
-
 							</DropdownMenuContent>
 						</DropdownMenu>
 						<AlertDialogContent className="sm:max-w-[425px]">
@@ -126,9 +126,11 @@ export function UsersModule() {
 									This will deactivate the user account.
 								</AlertDialogDescription>
 							</AlertDialogHeader>
-							<AlertDialogFooter className='mt-5'>
+							<AlertDialogFooter className="mt-5">
 								<AlertDialogCancel>Cancel</AlertDialogCancel>
-								<AlertDialogAction className="bg-destructive text-white hover:bg-destructive/90">Deactivate</AlertDialogAction>
+								<AlertDialogAction className="bg-destructive hover:bg-destructive/90 text-white">
+									Deactivate
+								</AlertDialogAction>
 							</AlertDialogFooter>
 						</AlertDialogContent>
 					</AlertDialog>
@@ -204,6 +206,5 @@ export function UsersModule() {
 				/>
 			</div>
 		</div>
-
 	)
 }
