@@ -26,6 +26,11 @@ const docTemplate = `{
     "paths": {
         "/api/v1/admins": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get all admins",
                 "consumes": [
                     "application/json"
@@ -81,6 +86,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new admin",
                 "consumes": [
                     "application/json"
@@ -189,6 +199,11 @@ const docTemplate = `{
         },
         "/api/v1/admins/me": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get the currently authenticated admin",
                 "consumes": [
                     "application/json"
@@ -235,6 +250,11 @@ const docTemplate = `{
         },
         "/api/v1/admins/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get admin by ID",
                 "consumes": [
                     "application/json"
@@ -409,13 +429,21 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type \"Bearer\" followed by a space and JWT token.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "https://api.rentloop.com",
+	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "RentLoop API",
