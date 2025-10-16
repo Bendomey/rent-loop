@@ -15,10 +15,14 @@
         },
         "version": "1.0"
     },
-    "host": "https://api.rentloop.com",
     "paths": {
         "/api/v1/admins": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get all admins",
                 "consumes": [
                     "application/json"
@@ -74,6 +78,11 @@
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new admin",
                 "consumes": [
                     "application/json"
@@ -182,6 +191,11 @@
         },
         "/api/v1/admins/me": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get the currently authenticated admin",
                 "consumes": [
                     "application/json"
@@ -228,6 +242,11 @@
         },
         "/api/v1/admins/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get admin by ID",
                 "consumes": [
                     "application/json"
@@ -401,6 +420,14 @@
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type \"Bearer\" followed by a space and JWT token.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }
