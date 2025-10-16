@@ -54,6 +54,7 @@ const data = {
 	navMain: [
 		{
 			title: 'Insights',
+			isHome: true,
 			url: '/',
 			icon: PieChart,
 		},

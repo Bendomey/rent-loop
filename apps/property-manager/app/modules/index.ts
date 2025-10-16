@@ -2,9 +2,13 @@ export * from './404-page'
 export * from './login'
 
 export * from './dashboard'
+
 export * from './properties'
 export * from './properties/new'
+
 export * from './users'
+export * from './users/new'
+
 export * from './support'
 export * from './changelog'
 

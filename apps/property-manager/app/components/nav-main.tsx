@@ -29,6 +29,7 @@ export function NavMain({
 		url: string
 		icon?: LucideIcon
 		isActive?: boolean
+		isHome?: boolean
 		items?: {
 			title: string
 			url: string
@@ -45,7 +46,16 @@ export function NavMain({
 						const isActive =
 							item.isActive ||
 							item.items?.some(
-								(i) => location.pathname === `${baseRoute}${item.url}${i.url}`,
+								(i) => {
+									const url = `${baseRoute}${item.url}${i.url}`
+
+									let isActive = location.pathname.includes(url)
+									if (item.isHome) {
+										isActive = Boolean(location.pathname === url || item.isActive)
+									}
+
+									return isActive
+								},
 							)
 						return (
 							<Collapsible
@@ -95,7 +105,11 @@ export function NavMain({
 					}
 
 					const url = `${baseRoute}${item.url}`
-					const isActive = location.pathname === url || item.isActive
+					let isActive = location.pathname.includes(url) || item.isActive
+
+					if (item.isHome) {
+						isActive = location.pathname === url || item.isActive
+					}
 					return (
 						<SidebarMenuItem key={item.title}>
 							<SidebarMenuButton
