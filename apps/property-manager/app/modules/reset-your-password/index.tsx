@@ -9,64 +9,61 @@ import {
 	FieldLabel,
 } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
-import { TypographyH1 } from '~/components/ui/typography'
+import { TypographyH1, TypographyMuted } from '~/components/ui/typography'
 import { APP_NAME } from '~/lib/constants'
 import { cn } from '~/lib/utils'
 
-export function LoginModule() {
+export function ResetYourPasswordModule() {
 	return (
 		<div className="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
 			<div className="w-full max-w-sm">
 				<div className={cn('flex flex-col gap-6')}>
 					<form>
 						<FieldGroup>
-							<div className="flex flex-col gap-2">
-								<div className="flex flex-col gap-2 font-medium">
+							<div className="flex flex-col gap-3">
+								<div className="mb-4 flex flex-col gap-2 font-medium">
 									<div className="flex size-8 items-center justify-center rounded-md">
-										<GalleryVerticalEnd className="size-10" />
+										<GalleryVerticalEnd className="size-16" />
 									</div>
 									<span className="sr-only">{APP_NAME}.</span>
 								</div>
 
-								<TypographyH1 className="mt-4">
-									Welcome to{' '}
-									<span className="text-rose-700">{APP_NAME.slice(0, 4)}</span>{' '}
-									<span className="font-extrabold">{APP_NAME.slice(4)}</span>
-								</TypographyH1>
-								<FieldDescription>
-									Don&apos;t have an account?{' '}
-									<Link to="/apply">Apply as landlord/real estate</Link>
-								</FieldDescription>
+								<TypographyH1>Reset Your Password</TypographyH1>
+								<TypographyMuted>
+									Set a new password for your account. Make sure it's strong and
+									secure to keep your account safe.
+								</TypographyMuted>
 							</div>
-							<Field>
-								<FieldLabel htmlFor="email">Email</FieldLabel>
-								<Input
-									id="email"
-									type="email"
-									placeholder="m@example.com"
-									required
-								/>
-							</Field>
-							<Field>
-								<FieldLabel htmlFor="password">Password</FieldLabel>
+							<Field className="mt-5">
+								<FieldLabel htmlFor="password">New Password</FieldLabel>
 								<Input
 									id="password"
 									type="password"
 									placeholder="* * * * * * * *"
 									required
 								/>
-								<FieldDescription>
-									Forgotten your password? Reset it{' '}
-									<Link to="/forgot-your-password">here</Link>.
-								</FieldDescription>
 							</Field>
 							<Field>
+								<FieldLabel htmlFor="confirm_password">
+									Confirm Password
+								</FieldLabel>
+								<Input
+									id="confirm_password"
+									type="password"
+									placeholder="* * * * * * * *"
+									required
+								/>
+								<FieldDescription>
+									Didn't request this? <Link to="/login">Login</Link>
+								</FieldDescription>
+							</Field>
+							<Field className="">
 								<Button
 									type="submit"
 									size="lg"
 									className="bg-rose-600 hover:bg-rose-700"
 								>
-									Login
+									Save New Password
 								</Button>
 							</Field>
 						</FieldGroup>

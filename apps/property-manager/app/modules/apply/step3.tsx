@@ -70,9 +70,6 @@ export function Step3({ onGoBack }: Props) {
 							</Tooltip>
 						</InputGroupAddon>
 					</InputGroup>
-					<FieldDescription>
-						We'll send you an account activation link
-					</FieldDescription>
 				</Field>
 				<Field>
 					<FieldLabel htmlFor="phone">Phone Number</FieldLabel>
@@ -103,6 +100,10 @@ export function Step3({ onGoBack }: Props) {
 							</Tooltip>
 						</InputGroupAddon>
 					</InputGroup>
+					<FieldDescription className="">
+						By clicking submit, you agree to our{' '}
+						<a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+					</FieldDescription>
 				</Field>
 			</FieldGroup>
 

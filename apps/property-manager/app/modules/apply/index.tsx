@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { Step0 } from './step0'
 import { Step1 } from './step1'
 import { Step2 } from './step2'
@@ -19,13 +20,15 @@ export function ApplyModule() {
 	return (
 		<main className="w-full">
 			<div className="border-b py-4 md:py-6">
-				<TypographyH3 className="text-center capitalize">
-					Welcome to{' '}
-					<span className="font-extrabold text-rose-700">
-						{APP_NAME.slice(0, 4)}{' '}
-					</span>
-					<span className="font-extrabold">{APP_NAME.slice(4)}</span>
-				</TypographyH3>
+				<Link to="/login">
+					<TypographyH3 className="text-center capitalize">
+						Welcome to{' '}
+						<span className="font-extrabold text-rose-700">
+							{APP_NAME.slice(0, 4)}{' '}
+						</span>
+						<span className="font-extrabold">{APP_NAME.slice(4)}</span>
+					</TypographyH3>
+				</Link>
 			</div>
 			<div
 				className="bg-rose-600"
