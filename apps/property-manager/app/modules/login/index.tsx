@@ -1,4 +1,5 @@
 import { GalleryVerticalEnd } from 'lucide-react'
+import { Link } from 'react-router'
 
 import { Button } from '~/components/ui/button'
 import {
@@ -8,6 +9,7 @@ import {
 	FieldLabel,
 } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
+import { TypographyH1 } from '~/components/ui/typography'
 import { APP_NAME } from '~/lib/constants'
 import { cn } from '~/lib/utils'
 
@@ -26,14 +28,14 @@ export function LoginModule() {
 									<span className="sr-only">{APP_NAME}.</span>
 								</div>
 
-								<h1 className="text-xl font-bold">
+								<TypographyH1>
 									Welcome to{' '}
-									<span className="text-rose-700">{APP_NAME.slice(0, 4)}</span>
-									<span className="font-extrabold">{APP_NAME.slice(4)}</span>.
-								</h1>
+									<span className="text-rose-700">{APP_NAME.slice(0, 4)}</span>{' '}
+									<span className="font-extrabold">{APP_NAME.slice(4)}</span>
+								</TypographyH1>
 								<FieldDescription>
 									Don&apos;t have an account?{' '}
-									<a href="#">Apply as landlord/real estate</a>
+									<Link to="/apply">Apply as landlord/real estate</Link>
 								</FieldDescription>
 							</div>
 							<Field>
