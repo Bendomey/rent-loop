@@ -23,6 +23,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
+import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 
 export function MembersModule() {
 	const columns: ColumnDef<ClientUser>[] = useMemo(() => {
@@ -135,6 +136,12 @@ export function MembersModule() {
 
 	return (
 		<main className="flex flex-col gap-2 sm:gap-4">
+			<div>
+				<TypographyH4>Manage Members</TypographyH4>
+				<TypographyMuted>
+					These members have access to your workspace.
+				</TypographyMuted>
+			</div>
 			<MembersController />
 			<div className="h-full w-full">
 				<DataTable
