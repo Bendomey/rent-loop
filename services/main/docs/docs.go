@@ -307,6 +307,167 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/client-applications": {
+            "get": {
+                "description": "Get all ClientApplications",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientApplications"
+                ],
+                "summary": "Get all ClientApplications",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputClientApplication"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new client application",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client applications"
+                ],
+                "summary": "Create a new client application",
+                "parameters": [
+                    {
+                        "description": "Client Application details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateClientApplicationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientApplication"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/client-applications/{id}": {
+            "get": {
+                "description": "Get clientApplication by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clientApplications"
+                ],
+                "summary": "Get clientApplication by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ClientApplication ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientApplication"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -324,6 +485,89 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 3
+                }
+            }
+        },
+        "handlers.CreateClientApplicationRequest": {
+            "type": "object",
+            "required": [
+                "address",
+                "city",
+                "contactEmail",
+                "contactName",
+                "contactPhoneNumber",
+                "country",
+                "latitude",
+                "longitude",
+                "name",
+                "region",
+                "subType",
+                "type"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3
+                },
+                "city": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3
+                },
+                "contactEmail": {
+                    "type": "string",
+                    "minLength": 3
+                },
+                "contactName": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3
+                },
+                "contactPhoneNumber": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3
+                },
+                "country": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3
+                },
+                "latitude": {
+                    "type": "number",
+                    "maximum": 255,
+                    "minimum": 3
+                },
+                "longitude": {
+                    "type": "number",
+                    "maximum": 255,
+                    "minimum": 3
+                },
+                "name": {
+                    "description": "company name or individual full name",
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3
+                },
+                "region": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3
+                },
+                "subType": {
+                    "description": "INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER | AGENCY",
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3
+                },
+                "type": {
+                    "description": "INDIVIDUAL | COMPANY",
+                    "type": "string",
+                    "enum": [
+                        "INDIVIDUAL",
+                        "COMPANY"
+                    ]
                 }
             }
         },
@@ -426,6 +670,147 @@ const docTemplate = `{
                 "token": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw"
+                }
+            }
+        },
+        "transformations.OutputClientApplication": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "description": "company address or individual home address",
+                    "type": "string",
+                    "example": "21st Neon Street"
+                },
+                "approvedById": {
+                    "type": "string",
+                    "example": "S90092"
+                },
+                "city": {
+                    "type": "string",
+                    "example": "Kwabenya"
+                },
+                "contactEmail": {
+                    "type": "string",
+                    "example": "contact@email.com"
+                },
+                "contactName": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "contactPhoneNumber": {
+                    "type": "string",
+                    "example": "01234567890"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "Ghana"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "dateOfBirth": {
+                    "description": "individual specific fields",
+                    "type": "string",
+                    "example": "2025-01-31"
+                },
+                "description": {
+                    "description": "company description or individual bio",
+                    "type": "string",
+                    "example": "Taking you to the next level!"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "idDocumentUrl": {
+                    "description": "URL to the scanned copy of the ID document",
+                    "type": "string",
+                    "example": "www.id-doc-url.com/id.pdf"
+                },
+                "idExpiry": {
+                    "description": "individual ID expiry date",
+                    "type": "string",
+                    "example": "2040-12-31"
+                },
+                "idNumber": {
+                    "description": "individual ID number",
+                    "type": "string",
+                    "example": "GHA-123-456-7890"
+                },
+                "idType": {
+                    "description": "individual ID type (e.g., passport, driver's license)",
+                    "type": "string",
+                    "example": "GHANACARD"
+                },
+                "latitude": {
+                    "type": "number",
+                    "example": 23
+                },
+                "logoUrl": {
+                    "description": "company logo URL or individual profile picture URL",
+                    "type": "string",
+                    "example": "www.logo-url.com/logo.png"
+                },
+                "longitude": {
+                    "type": "number",
+                    "example": 49
+                },
+                "name": {
+                    "description": "company name or individual full name",
+                    "type": "string",
+                    "example": "Company Nmae"
+                },
+                "region": {
+                    "type": "string",
+                    "example": "Greater Accra"
+                },
+                "registrationNumber": {
+                    "description": "company specific fields",
+                    "type": "string",
+                    "example": "GR1234567890"
+                },
+                "rejectedBecause": {
+                    "type": "string",
+                    "example": "No reason"
+                },
+                "rejectedById": {
+                    "type": "string",
+                    "example": "R234110"
+                },
+                "status": {
+                    "description": "ClientApplication.Status.Pending | ClientApplication.Status.Approved | ClientApplication.Status.Rejected",
+                    "type": "string",
+                    "example": "Approved"
+                },
+                "subType": {
+                    "description": "INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER | AGENCY",
+                    "type": "string",
+                    "example": "ESTATE MANAGER"
+                },
+                "supportEmail": {
+                    "description": "company support email",
+                    "type": "string",
+                    "example": "support@email.com"
+                },
+                "supportPhone": {
+                    "description": "company support phone number",
+                    "type": "string",
+                    "example": "+233 (0)12 345 6789"
+                },
+                "type": {
+                    "description": "INDIVIDUAL | COMPANY",
+                    "type": "string",
+                    "example": "COMPANY"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "websiteUrl": {
+                    "description": "company website URL",
+                    "type": "string",
+                    "example": "www.company-url.com"
                 }
             }
         }

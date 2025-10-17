@@ -68,6 +68,12 @@ func (h *AdminHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *AdminHandler) HelloWorld(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message": "Hello, World!"}`))
+}
+
 type CreateAdminRequest struct {
 	Name  string `json:"name" validate:"required,min=3,max=255"`
 	Email string `json:"email" validate:"required,email"`

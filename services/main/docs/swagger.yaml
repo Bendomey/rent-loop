@@ -11,6 +11,74 @@ definitions:
     - email
     - name
     type: object
+  handlers.CreateClientApplicationRequest:
+    properties:
+      address:
+        maxLength: 255
+        minLength: 3
+        type: string
+      city:
+        maxLength: 255
+        minLength: 3
+        type: string
+      contactEmail:
+        minLength: 3
+        type: string
+      contactName:
+        maxLength: 255
+        minLength: 3
+        type: string
+      contactPhoneNumber:
+        maxLength: 255
+        minLength: 3
+        type: string
+      country:
+        maxLength: 255
+        minLength: 3
+        type: string
+      latitude:
+        maximum: 255
+        minimum: 3
+        type: number
+      longitude:
+        maximum: 255
+        minimum: 3
+        type: number
+      name:
+        description: company name or individual full name
+        maxLength: 255
+        minLength: 3
+        type: string
+      region:
+        maxLength: 255
+        minLength: 3
+        type: string
+      subType:
+        description: INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER
+          | AGENCY
+        maxLength: 255
+        minLength: 3
+        type: string
+      type:
+        description: INDIVIDUAL | COMPANY
+        enum:
+        - INDIVIDUAL
+        - COMPANY
+        type: string
+    required:
+    - address
+    - city
+    - contactEmail
+    - contactName
+    - contactPhoneNumber
+    - country
+    - latitude
+    - longitude
+    - name
+    - region
+    - subType
+    - type
+    type: object
   handlers.LoginRequest:
     properties:
       email:
@@ -81,6 +149,117 @@ definitions:
         $ref: '#/definitions/transformations.OutputAdmin'
       token:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw
+        type: string
+    type: object
+  transformations.OutputClientApplication:
+    properties:
+      address:
+        description: company address or individual home address
+        example: 21st Neon Street
+        type: string
+      approvedById:
+        example: S90092
+        type: string
+      city:
+        example: Kwabenya
+        type: string
+      contactEmail:
+        example: contact@email.com
+        type: string
+      contactName:
+        example: John Doe
+        type: string
+      contactPhoneNumber:
+        example: "01234567890"
+        type: string
+      country:
+        example: Ghana
+        type: string
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      dateOfBirth:
+        description: individual specific fields
+        example: "2025-01-31"
+        type: string
+      description:
+        description: company description or individual bio
+        example: Taking you to the next level!
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      idDocumentUrl:
+        description: URL to the scanned copy of the ID document
+        example: www.id-doc-url.com/id.pdf
+        type: string
+      idExpiry:
+        description: individual ID expiry date
+        example: "2040-12-31"
+        type: string
+      idNumber:
+        description: individual ID number
+        example: GHA-123-456-7890
+        type: string
+      idType:
+        description: individual ID type (e.g., passport, driver's license)
+        example: GHANACARD
+        type: string
+      latitude:
+        example: 23
+        type: number
+      logoUrl:
+        description: company logo URL or individual profile picture URL
+        example: www.logo-url.com/logo.png
+        type: string
+      longitude:
+        example: 49
+        type: number
+      name:
+        description: company name or individual full name
+        example: Company Nmae
+        type: string
+      region:
+        example: Greater Accra
+        type: string
+      registrationNumber:
+        description: company specific fields
+        example: GR1234567890
+        type: string
+      rejectedBecause:
+        example: No reason
+        type: string
+      rejectedById:
+        example: R234110
+        type: string
+      status:
+        description: ClientApplication.Status.Pending | ClientApplication.Status.Approved
+          | ClientApplication.Status.Rejected
+        example: Approved
+        type: string
+      subType:
+        description: INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER
+          | AGENCY
+        example: ESTATE MANAGER
+        type: string
+      supportEmail:
+        description: company support email
+        example: support@email.com
+        type: string
+      supportPhone:
+        description: company support phone number
+        example: +233 (0)12 345 6789
+        type: string
+      type:
+        description: INDIVIDUAL | COMPANY
+        example: COMPANY
+        type: string
+      updated_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      websiteUrl:
+        description: company website URL
+        example: www.company-url.com
         type: string
     type: object
 info:
@@ -276,6 +455,111 @@ paths:
       summary: Get the currently authenticated admin
       tags:
       - admins
+  /api/v1/client-applications:
+    get:
+      consumes:
+      - application/json
+      description: Get all ClientApplications
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputClientApplication'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get all ClientApplications
+      tags:
+      - ClientApplications
+    post:
+      consumes:
+      - application/json
+      description: Create a new client application
+      parameters:
+      - description: Client Application details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateClientApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientApplication'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Create a new client application
+      tags:
+      - client applications
+  /api/v1/client-applications/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get clientApplication by ID
+      parameters:
+      - description: ClientApplication ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientApplication'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get clientApplication by ID
+      tags:
+      - clientApplications
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.
