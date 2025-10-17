@@ -11,9 +11,9 @@ func NewClientApplicationRouter(appCtx pkg.AppContext, handlers handlers.Handler
 	return func(r chi.Router) {
 		r.Route("/v1/client-applications", func(r chi.Router) {
 			// Public route (no admin auth required)
-			r.Group(func(r chi.Router) {
-				r.Post("/", handlers.ClientApplicationHandler.CreateClientApplication)
-			})
+			// r.Group(func(r chi.Router) {
+			// 	r.Post("/", handlers.ClientApplicationHandler.CreateClientApplication)
+			// })
 
 			// Protected routes (admin auth required)
 			r.Group(func(r chi.Router) {
