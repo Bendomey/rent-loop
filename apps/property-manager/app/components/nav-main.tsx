@@ -20,8 +20,10 @@ import {
 export function NavMain({
 	items,
 	title,
+	titleClassName = '',
 	baseRoute = '',
 }: {
+	titleClassName?: string
 	title?: string
 	baseRoute?: string
 	items: {
@@ -39,7 +41,9 @@ export function NavMain({
 	const location = useLocation()
 	return (
 		<SidebarGroup>
-			<SidebarGroupLabel>{title ?? 'Main Navigation'}</SidebarGroupLabel>
+			<SidebarGroupLabel className={titleClassName}>
+				{title ?? 'Main Navigation'}
+			</SidebarGroupLabel>
 			<SidebarMenu>
 				{items.map((item) => {
 					if (item?.items?.length) {
@@ -48,9 +52,9 @@ export function NavMain({
 							item.items?.some((i) => {
 								const url = `${baseRoute}${item.url}${i.url}`
 
-								let isActive = location.pathname.includes(url)
+								let isActive = location.pathname.includes(url) || item.isActive
 								if (item.isHome) {
-									isActive = Boolean(location.pathname === url || item.isActive)
+									isActive = Boolean(location.pathname === url) || item.isActive
 								}
 
 								return isActive
@@ -108,6 +112,7 @@ export function NavMain({
 					if (item.isHome) {
 						isActive = location.pathname === url || item.isActive
 					}
+
 					return (
 						<SidebarMenuItem key={item.title}>
 							<SidebarMenuButton

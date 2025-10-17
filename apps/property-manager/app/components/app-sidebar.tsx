@@ -5,7 +5,6 @@ import {
 	GalleryVerticalEnd,
 	Settings2,
 	LifeBuoy,
-	Users,
 	PieChart,
 	House,
 	BookOpenText,
@@ -64,28 +63,9 @@ const data = {
 			icon: House,
 		},
 		{
-			title: 'Manage Users',
-			url: '/users',
-			icon: Users,
-		},
-		{
 			title: 'Settings',
 			url: '/settings',
 			icon: Settings2,
-			items: [
-				{
-					title: 'General',
-					url: '/general',
-				},
-				{
-					title: 'Documents',
-					url: '/documents',
-				},
-				{
-					title: 'Billing',
-					url: '/billing',
-				},
-			],
 		},
 	],
 	properties: [

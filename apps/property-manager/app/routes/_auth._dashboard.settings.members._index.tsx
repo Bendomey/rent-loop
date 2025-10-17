@@ -1,7 +1,7 @@
-import type { Route } from './+types/_auth._dashboard.users.new._index'
+import type { Route } from './+types/_auth._dashboard.settings.members._index'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { NewUserModule } from '~/modules'
+import { MembersModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
 	return {
@@ -9,13 +9,9 @@ export async function loader({ request }: Route.LoaderArgs) {
 	}
 }
 
-export const handle = {
-	breadcrumb: 'New',
-}
-
 export function meta({ loaderData, location }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: 'Create New User',
+		title: 'Members',
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,
@@ -26,4 +22,4 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 	return meta
 }
 
-export default NewUserModule
+export default MembersModule

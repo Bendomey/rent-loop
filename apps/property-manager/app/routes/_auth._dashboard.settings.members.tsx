@@ -1,3 +1,3 @@
 export const handle = {
-	breadcrumb: 'Users',
+	breadcrumb: 'Members',
 }

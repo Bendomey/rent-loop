@@ -1,8 +1,8 @@
-import type { Route } from './+types/_auth._dashboard.settings.general'
+import type { Route } from './+types/_auth._dashboard.properties._index'
 import { APP_NAME } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { GeneralSettingsModule } from '~/modules'
+import { PropertiesModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
 	return {
@@ -10,13 +10,9 @@ export async function loader({ request }: Route.LoaderArgs) {
 	}
 }
 
-export const handle = {
-	breadcrumb: 'General',
-}
-
 export function meta({ loaderData, location }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `General Settings | ${APP_NAME}`,
+		title: `My Properties | ${APP_NAME}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,
@@ -27,4 +23,4 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 	return meta
 }
 
-export default GeneralSettingsModule
+export default PropertiesModule

@@ -24,15 +24,16 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from '~/components/ui/tooltip'
-import { TypographyH1, TypographyMuted } from '~/components/ui/typography'
+import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 
-export function NewUserModule() {
+export function NewMemberModule() {
 	return (
 		<div className="mx-2 max-w-lg md:mx-auto">
 			<div className="space-y-1">
-				<TypographyH1>Create New User</TypographyH1>
+				<TypographyH2>Create New Member</TypographyH2>
 				<TypographyMuted>
-					We&apos;ll send the user an invitation to join via email/phone number
+					We&apos;ll send the member an invitation to join via email/phone
+					number
 				</TypographyMuted>
 			</div>
 
@@ -122,13 +123,13 @@ export function NewUserModule() {
 
 			<div className="mt-10 flex justify-end border-t pt-5">
 				<div className="flex items-center gap-x-2">
-					<Link to="/users">
+					<Link to="/settings/members">
 						<Button type="button" variant="outline">
 							Cancel
 						</Button>
 					</Link>
 					<Button type="submit" className="bg-rose-600 hover:bg-rose-700">
-						Create User
+						Create Member
 					</Button>
 				</div>
 			</div>

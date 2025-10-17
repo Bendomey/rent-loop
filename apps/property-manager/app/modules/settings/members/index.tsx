@@ -1,7 +1,7 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { CircleCheck, CircleX, EllipsisVertical, User } from 'lucide-react'
 import { useMemo } from 'react'
-import { UsersController } from './controller'
+import { MembersController } from './controller'
 import { DataTable } from '~/components/datatable'
 import {
 	AlertDialog,
@@ -24,7 +24,7 @@ import {
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 
-export function UsersModule() {
+export function MembersModule() {
 	const columns: ColumnDef<ClientUser>[] = useMemo(() => {
 		return [
 			{
@@ -37,7 +37,7 @@ export function UsersModule() {
 				header: 'Name',
 				cell: ({ getValue }) => {
 					return (
-						<div className="min-w-40">
+						<div className="min-w-32">
 							<span className="truncate text-xs text-zinc-600">
 								{getValue<string>()}
 							</span>
@@ -58,23 +58,17 @@ export function UsersModule() {
 				),
 			},
 			{
-				accessorKey: 'email',
-				header: 'Email',
-				cell: ({ getValue }) => (
-					<div className="min-w-32">
+				accessorKey: 'id',
+				header: 'Contact',
+				cell: ({ row }) => (
+					<div className="flex min-w-32 flex-col items-start gap-1">
 						<span className="truncate text-xs text-zinc-600">
-							{getValue<string>()}
+							{row.original.email}
+						</span>
+						<span className="truncate text-xs text-zinc-600">
+							{row.original.phone_number}
 						</span>
 					</div>
-				),
-			},
-			{
-				accessorKey: 'phone_number',
-				header: 'Phone',
-				cell: ({ getValue }) => (
-					<span className="truncate text-xs text-zinc-600">
-						{getValue<string>()}
-					</span>
 				),
 			},
 
@@ -123,7 +117,7 @@ export function UsersModule() {
 							<AlertDialogHeader>
 								<AlertDialogTitle>Are you sure?</AlertDialogTitle>
 								<AlertDialogDescription>
-									This will deactivate the user account.
+									This will deactivate the member.
 								</AlertDialogDescription>
 							</AlertDialogHeader>
 							<AlertDialogFooter className="mt-5">
@@ -140,8 +134,8 @@ export function UsersModule() {
 	}, [])
 
 	return (
-		<div className="flex flex-col gap-2 sm:gap-4">
-			<UsersController />
+		<main className="flex flex-col gap-2 sm:gap-4">
+			<MembersController />
 			<div className="h-full w-full">
 				<DataTable
 					columns={columns}
@@ -193,11 +187,11 @@ export function UsersModule() {
 						has_next_page: true,
 					}}
 					empty={{
-						message: 'No users found',
+						message: 'No members found',
 						description:
 							"Try adjusting your search or filter to find what you're looking for.",
 						button: {
-							label: 'Add User',
+							label: 'Add Member',
 							onClick: () => {
 								// Handle button click
 							},
@@ -205,6 +199,6 @@ export function UsersModule() {
 					}}
 				/>
 			</div>
-		</div>
+		</main>
 	)
 }

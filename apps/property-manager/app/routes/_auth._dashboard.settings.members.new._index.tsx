@@ -1,8 +1,7 @@
-import type { Route } from './+types/_auth._dashboard.settings.general'
-import { APP_NAME } from '~/lib/constants'
+import type { Route } from './+types/_auth._dashboard.settings.members.new._index'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { GeneralSettingsModule } from '~/modules'
+import { NewMemberModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
 	return {
@@ -11,12 +10,12 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export const handle = {
-	breadcrumb: 'General',
+	breadcrumb: 'New',
 }
 
 export function meta({ loaderData, location }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `General Settings | ${APP_NAME}`,
+		title: 'Create New Member',
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,
@@ -27,4 +26,4 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 	return meta
 }
 
-export default GeneralSettingsModule
+export default NewMemberModule
