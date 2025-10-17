@@ -43,15 +43,6 @@ export function BillingModule() {
 				},
 			},
 			{
-				accessorKey: 'amount',
-				header: 'Amount',
-				cell: ({ getValue }) => (
-					<span className="truncate text-xs text-zinc-600">
-						{formatAmount(convertPesewasToCedis(getValue<number>()))}
-					</span>
-				),
-			},
-			{
 				accessorKey: 'status',
 				header: 'Status',
 				cell: ({ getValue }) => (
@@ -70,15 +61,30 @@ export function BillingModule() {
 				),
 			},
 			{
-				accessorKey: 'created_at',
-				header: 'Date',
+				accessorKey: 'property',
+				header: 'Property',
 				cell: ({ getValue }) => {
 					return (
-						<span className="truncate text-xs text-zinc-600">
-							{dayjs(getValue<Date>()).format('MMM D, YYYY')}
-						</span>
+						<div className="flex min-w-32 flex-col items-start gap-1">
+							<span className="truncate text-xs text-zinc-600">
+								{getValue<Property>().name}
+							</span>
+							<span className="truncate text-xs text-zinc-600">
+								{getValue<Property>().address}
+							</span>
+						</div>
 					)
 				},
+			},
+
+			{
+				accessorKey: 'amount',
+				header: 'Amount',
+				cell: ({ getValue }) => (
+					<span className="truncate text-xs text-zinc-600">
+						{formatAmount(convertPesewasToCedis(getValue<number>()))}
+					</span>
+				),
 			},
 			{
 				id: 'actions',
@@ -141,6 +147,17 @@ export function BillingModule() {
 								due_date: null,
 								paid_at: null,
 								updated_at: new Date(),
+								property_id: 'property_1',
+								property: {
+									id: 'property_1',
+									name: 'Sunset Apartments',
+									address: '123 Main St, Accra',
+									city: 'Accra',
+									state: 'Greater Accra',
+									zip_code: '00123',
+									created_at: new Date(),
+									updated_at: new Date(),
+								},
 							},
 							{
 								id: '2',
@@ -157,6 +174,17 @@ export function BillingModule() {
 								due_date: null,
 								paid_at: null,
 								updated_at: new Date(),
+								property_id: 'property_2',
+								property: {
+									id: 'property_2',
+									name: 'Greenfield Villas',
+									address: '456 Oak St, Kumasi',
+									city: 'Kumasi',
+									state: 'Ashanti',
+									zip_code: '00233',
+									created_at: new Date(),
+									updated_at: new Date(),
+								},
 							},
 						],
 						total: 150,

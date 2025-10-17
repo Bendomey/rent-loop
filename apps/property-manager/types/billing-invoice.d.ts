@@ -9,4 +9,6 @@ interface BillingInvoice {
 	paid_at: Nullable<Date>
 	client_id: string
 	client: Client
+	property_id: string
+	property: Property
 }
