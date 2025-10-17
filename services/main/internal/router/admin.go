@@ -15,6 +15,11 @@ func NewAdminRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func(r ch
 			r.Post("/v1/admins/login", handlers.AdminHandler.Authenticate)
 		})
 
+		r.Group(func(r chi.Router) {
+			r.Post("/v1/clients/apply", handlers.ClientApplicationHandler.CreateClientApplication)
+			r.Get("/v1/admins/test", handlers.AdminHandler.HelloWorld)
+		})
+
 		// protected client routes ...
 		r.Group(func(r chi.Router) {
 			// ensure auth is present
