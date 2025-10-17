@@ -1,3 +1,3 @@
 export function PropertiesModule() {
-	return <div>Properties</div>
+	return <main>Properties</main>
 }

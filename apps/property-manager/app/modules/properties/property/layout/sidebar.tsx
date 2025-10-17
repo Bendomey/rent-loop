@@ -48,6 +48,7 @@ const data = {
 	navMain: [
 		{
 			title: 'Overview',
+			isHome: true,
 			url: '',
 			icon: PieChart,
 		},

@@ -1,16 +1,24 @@
 export * from './404-page'
 export * from './login'
+export * from './forgot-your-password'
+export * from './reset-your-password'
+export * from './apply'
 
 export * from './dashboard'
+
 export * from './properties'
 export * from './properties/new'
-export * from './users'
+
+export * from './settings/members'
+export * from './settings/members/new'
+
 export * from './support'
 export * from './changelog'
 
 export * from './settings/general'
 export * from './settings/billing'
 export * from './settings/documents'
+export * from './settings/my-account'
 
 // property
 export * from './properties/property/layout/sidebar'

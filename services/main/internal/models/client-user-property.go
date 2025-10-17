@@ -12,6 +12,6 @@ type ClientUserProperty struct {
 
 	Role string `json:"role" gorm:"not null;"` // MANAGER | STAFF
 
-	CreatedById *string     `json:"createdById"`
+	CreatedByID *string     `json:"createdById"`
 	CreatedBy   *ClientUser `json:"createdBy"`
 }

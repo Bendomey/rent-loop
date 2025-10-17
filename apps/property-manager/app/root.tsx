@@ -8,10 +8,14 @@ import {
 	Outlet,
 	Scripts,
 	ScrollRestoration,
+	useLoaderData,
 } from 'react-router'
 import type { Route } from './+types/root'
 
 import './app.css'
+import { getAuthSession } from './lib/actions/auth.session.server'
+import { environmentVariables } from './lib/actions/env.server'
+import { Providers } from './providers'
 
 dayjs.locale('en-gb')
 dayjs.extend(localizedFormat)
@@ -28,6 +32,19 @@ export const links: Route.LinksFunction = () => [
 		href: 'https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Shantell+Sans:ital,wght@0,300..800;1,300..800&display=swap',
 	},
 ]
+
+export async function loader({ request }: Route.LoaderArgs) {
+	const env = environmentVariables()
+	const authSession = await getAuthSession(request.headers.get('Cookie'))
+
+	return {
+		ENV: {
+			NODE_ENV: env.NODE_ENV,
+			API_ADDRESS: env.API_ADDRESS,
+			AUTH_TOKEN: authSession.get('authToken'),
+		},
+	}
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
 	return (
@@ -48,7 +65,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-	return <Outlet />
+	const { ENV } = useLoaderData<typeof loader>()
+
+	if (typeof window !== 'undefined') {
+		window.ENV = ENV
+	}
+	return (
+		<Providers>
+			<Outlet />
+		</Providers>
+	)
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

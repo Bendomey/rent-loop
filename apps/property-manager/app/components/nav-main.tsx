@@ -20,8 +20,10 @@ import {
 export function NavMain({
 	items,
 	title,
+	titleClassName = '',
 	baseRoute = '',
 }: {
+	titleClassName?: string
 	title?: string
 	baseRoute?: string
 	items: {
@@ -29,6 +31,7 @@ export function NavMain({
 		url: string
 		icon?: LucideIcon
 		isActive?: boolean
+		isHome?: boolean
 		items?: {
 			title: string
 			url: string
@@ -38,15 +41,24 @@ export function NavMain({
 	const location = useLocation()
 	return (
 		<SidebarGroup>
-			<SidebarGroupLabel>{title ?? 'Main Navigation'}</SidebarGroupLabel>
+			<SidebarGroupLabel className={titleClassName}>
+				{title ?? 'Main Navigation'}
+			</SidebarGroupLabel>
 			<SidebarMenu>
 				{items.map((item) => {
 					if (item?.items?.length) {
 						const isActive =
 							item.isActive ||
-							item.items?.some(
-								(i) => location.pathname === `${baseRoute}${item.url}${i.url}`,
-							)
+							item.items?.some((i) => {
+								const url = `${baseRoute}${item.url}${i.url}`
+
+								let isActive = location.pathname.includes(url) || item.isActive
+								if (item.isHome) {
+									isActive = Boolean(location.pathname === url) || item.isActive
+								}
+
+								return isActive
+							})
 						return (
 							<Collapsible
 								key={item.title}
@@ -95,7 +107,12 @@ export function NavMain({
 					}
 
 					const url = `${baseRoute}${item.url}`
-					const isActive = location.pathname === url || item.isActive
+					let isActive = location.pathname.includes(url) || item.isActive
+
+					if (item.isHome) {
+						isActive = location.pathname === url || item.isActive
+					}
+
 					return (
 						<SidebarMenuItem key={item.title}>
 							<SidebarMenuButton

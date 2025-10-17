@@ -262,7 +262,6 @@ definitions:
         example: www.company-url.com
         type: string
     type: object
-host: https://api.rentloop.com
 info:
   contact:
     email: domeybenjamin1@gmail.com
@@ -310,6 +309,8 @@ paths:
           description: Internal Server Error
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Get all admins
       tags:
       - admins
@@ -346,6 +347,8 @@ paths:
           description: Internal Server Error
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Create a new admin
       tags:
       - admins
@@ -382,6 +385,8 @@ paths:
           description: Internal Server Error
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Get admin by ID
       tags:
       - admins
@@ -445,6 +450,8 @@ paths:
           description: Internal Server Error
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Get the currently authenticated admin
       tags:
       - admins
@@ -553,4 +560,10 @@ paths:
       summary: Get clientApplication by ID
       tags:
       - clientApplications
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

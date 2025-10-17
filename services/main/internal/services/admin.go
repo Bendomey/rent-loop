@@ -60,6 +60,10 @@ func (s *adminService) AuthenticateAdmin(ctx context.Context, input LoginAdminIn
 	}, s.appCtx.Config.TokenSecrets.AdminSecret)
 
 	if signTokenErrr != nil {
+		raven.CaptureError(signTokenErrr, map[string]string{
+			"function": "AuthenticateAdmin",
+			"action":   "signing token",
+		})
 		return nil, signTokenErrr
 	}
 

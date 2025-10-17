@@ -53,7 +53,6 @@ func (h *AdminHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
 		Email:    body.Email,
 		Password: body.Password,
 	})
-
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]any{
@@ -85,6 +84,7 @@ type CreateAdminRequest struct {
 // @Description  Create a new admin
 // @Tags         admins
 // @Accept       json
+// @Security BearerAuth
 // @Produce      json
 // @Param        body  body      CreateAdminRequest  true  "Admin details"
 // @Success      201  {object}  object{data=transformations.OutputAdmin}
@@ -117,7 +117,6 @@ func (h *AdminHandler) CreateAdmin(w http.ResponseWriter, r *http.Request) {
 		Email:       body.Email,
 		CreatedByID: currentAdmin.ID,
 	})
-
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]any{
@@ -132,7 +131,6 @@ func (h *AdminHandler) CreateAdmin(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": transformations.DBAdminToRestAdmin(admin),
 	})
-
 }
 
 // GetCurrentAdmin godoc
@@ -140,6 +138,7 @@ func (h *AdminHandler) CreateAdmin(w http.ResponseWriter, r *http.Request) {
 // @Description  Get the currently authenticated admin
 // @Tags         admins
 // @Accept       json
+// @Security BearerAuth
 // @Produce      json
 // @Success      200  {object}  object{data=transformations.OutputAdmin}
 // @Failure      400  {object}  lib.HTTPError
@@ -155,7 +154,6 @@ func (h *AdminHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	admin, err := h.service.GetAdmin(r.Context(), currentAdmin.ID)
-
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]any{
@@ -176,6 +174,7 @@ func (h *AdminHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 // @Description  Get admin by ID
 // @Tags         admins
 // @Accept       json
+// @Security BearerAuth
 // @Produce      json
 // @Param        id   path      string  true  "Admin ID"
 // @Success      200  {object}  object{data=transformations.OutputAdmin}
@@ -192,7 +191,6 @@ func (h *AdminHandler) GetAdminById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	admin, err := h.service.GetAdmin(r.Context(), currentAdmin.ID)
-
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]any{
@@ -208,14 +206,14 @@ func (h *AdminHandler) GetAdminById(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-type ListAdminsFilterRequest struct {
-}
+type ListAdminsFilterRequest struct{}
 
 // GetAdmins godoc
 // @Summary      Get all admins
 // @Description  Get all admins
 // @Tags         admins
 // @Accept       json
+// @Security BearerAuth
 // @Produce      json
 // @Param        q  query      ListAdminsFilterRequest  true  "Admins"
 // @Success      200  {object}  object{data=object{rows=[]transformations.OutputAdmin,meta=lib.HTTPReturnPaginatedMetaResponse}}

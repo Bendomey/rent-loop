@@ -42,7 +42,7 @@ const filters: Array<Filter> = [
 	},
 ]
 
-export const UsersController = () => {
+export const MembersController = () => {
 	return (
 		<div className="flex w-full flex-col gap-2">
 			<div className="w-full rounded-md border p-4">
@@ -53,21 +53,21 @@ export const UsersController = () => {
 			<div className="flex flex-wrap items-center justify-between gap-4">
 				<div className="flex items-center gap-2 text-sm">
 					<InputGroup>
-						<InputGroupInput placeholder="Search users ..." />
+						<InputGroupInput placeholder="Search members ..." />
 						<InputGroupAddon>
 							<Search />
 						</InputGroupAddon>
 					</InputGroup>
 				</div>
 				<div className="flex items-center justify-end gap-2">
-					<Link to="/users/new">
+					<Link to="/settings/members/new">
 						<Button
 							variant="default"
 							size="sm"
 							className="bg-rose-600 text-white hover:bg-rose-700"
 						>
 							<Plus className="size-4" />
-							Add User
+							Add Member
 						</Button>
 					</Link>
 					<Button variant="outline" size="sm">

@@ -21,11 +21,13 @@ func DBAdminToRestAdmin(i *models.Admin) interface{} {
 	}
 
 	data := map[string]interface{}{
-		"id":         i.ID.String(),
-		"name":       i.Name,
-		"email":      i.Email,
-		"created_at": i.CreatedAt,
-		"updated_at": i.UpdatedAt,
+		"id":            i.ID.String(),
+		"name":          i.Name,
+		"email":         i.Email,
+		"created_by_id": i.CreatedByID,
+		"created_by":    DBAdminToRestAdmin(i.CreatedBy),
+		"created_at":    i.CreatedAt,
+		"updated_at":    i.UpdatedAt,
 	}
 
 	return data

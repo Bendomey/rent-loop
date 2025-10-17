@@ -1,5 +1,5 @@
 run:
-	scripts/run.sh
+	make generate-docs && scripts/run.sh
 
 run-dev:
 	make generate-docs && scripts/run-dev.sh
