@@ -16,9 +16,9 @@ const filters: Array<Filter> = [
 		label: 'Status',
 		value: {
 			options: [
-				{ label: 'Active', value: 'ClientUser.Status.Active' },
-				{ label: 'Inactive', value: 'ClientUser.Status.Inactive' },
-				{ label: 'Maintenance', value: 'ClientUser.Status.Maintenance' },
+				{ label: 'Active', value: 'Property.Status.Active' },
+				{ label: 'Inactive', value: 'Property.Status.Inactive' },
+				{ label: 'Maintenance', value: 'Property.Status.Maintenance' },
 			],
 			urlParam: 'status',
 			defaultValues: [],

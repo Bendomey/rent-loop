@@ -14,7 +14,7 @@ interface Property {
 	city: string
 	state: string
 	type: 'SINGLE' | 'MULTI'
-	status: 'ClientUser.Status.Active' | 'ClientUser.Status.Inactive' | 'ClientUser.Status.Maintenance'
+	status: 'Property.Status.Active' | 'Property.Status.Inactive' | 'Property.Status.Maintenance'
 	zip_code: string
 	created_at: Date
 	updated_at: Date

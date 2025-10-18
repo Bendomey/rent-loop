@@ -23,7 +23,6 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
-import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 
 export function PropertiesModule() {
 	const columns: ColumnDef<Property>[] = useMemo(() => {
@@ -75,16 +74,16 @@ export function PropertiesModule() {
 				header: 'Status',
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
-						{getValue<string>() === 'ClientUser.Status.Active' ? (
+						{getValue<string>() === 'Property.Status.Active' ? (
 							<CircleCheck className="fill-green-600 text-white" />
-						) : getValue<string>() === 'ClientUser.Status.Maintenance' ? (
+						) : getValue<string>() === 'Property.Status.Maintenance' ? (
 							<CircleCheck className="fill-yellow-600 text-white" />
 						) : (
 							<CircleX className="fill-red-500 text-white" />
 						)}
-						{getValue<string>() === 'ClientUser.Status.Active'
+						{getValue<string>() === 'Property.Status.Active'
 							? 'Active'
-							: getValue<string>() === 'ClientUser.Status.Maintenance'
+							: getValue<string>() === 'Property.Status.Maintenance'
 							? 'Maintenance'
 							: 'Inactive'}
 					</Badge>
@@ -138,12 +137,6 @@ export function PropertiesModule() {
 
 	return (
 		<main className="flex flex-col gap-2 sm:gap-4">
-			<div>
-				<TypographyH4>Manage Properties</TypographyH4>
-				<TypographyMuted>
-					Manage your properties here — view details, update information, and perform actions like edit or delete. Use the table below to filter, sort, and navigate pages.
-				</TypographyMuted>
-			</div>
 			<PropertiesController />
 			<div className="h-full w-full">
 				<DataTable
@@ -160,7 +153,7 @@ export function PropertiesModule() {
 								type: 'SINGLE',
 								created_at: new Date(),
 								updated_at: new Date(),
-								status: 'ClientUser.Status.Active',
+								status: 'Property.Status.Active',
 							},
 							{
 								id: '2',
@@ -172,7 +165,7 @@ export function PropertiesModule() {
 								type: 'MULTI',
 								created_at: new Date(),
 								updated_at: new Date(),
-								status: 'ClientUser.Status.Maintenance',
+								status: 'Property.Status.Maintenance',
 							},
 							{
 								id: '3',
@@ -184,7 +177,7 @@ export function PropertiesModule() {
 								type: 'SINGLE',
 								created_at: new Date(),
 								updated_at: new Date(),
-								status: 'ClientUser.Status.Inactive',
+								status: 'Property.Status.Inactive',
 							},
 							{
 								id: '4',
@@ -196,7 +189,7 @@ export function PropertiesModule() {
 								type: 'SINGLE',
 								created_at: new Date(),
 								updated_at: new Date(),
-								status: 'ClientUser.Status.Active',
+								status: 'Property.Status.Active',
 							},
 							{
 								id: '5',
@@ -208,7 +201,7 @@ export function PropertiesModule() {
 								type: 'MULTI',
 								created_at: new Date(),
 								updated_at: new Date(),
-								status: 'ClientUser.Status.Inactive',
+								status: 'Property.Status.Inactive',
 							},
 							{
 								id: '6',
@@ -220,7 +213,7 @@ export function PropertiesModule() {
 								type: 'MULTI',
 								created_at: new Date(),
 								updated_at: new Date(),
-								status: 'ClientUser.Status.Active',
+								status: 'Property.Status.Active',
 							},
 							{
 								id: '7',
@@ -232,7 +225,7 @@ export function PropertiesModule() {
 								type: 'MULTI',
 								created_at: new Date(),
 								updated_at: new Date(),
-								status: 'ClientUser.Status.Inactive',
+								status: 'Property.Status.Inactive',
 							},
 							{
 								id: '8',
@@ -244,7 +237,7 @@ export function PropertiesModule() {
 								type: 'SINGLE',
 								created_at: new Date(),
 								updated_at: new Date(),
-								status: 'ClientUser.Status.Active',
+								status: 'Property.Status.Active',
 							},
 						],
 						total: 150,
@@ -256,7 +249,7 @@ export function PropertiesModule() {
 						has_next_page: true,
 					}}
 					empty={{
-						message: 'No members found',
+						message: 'No properties found',
 						description:
 							"Try adjusting your search or filter to find what you're looking for.",
 						button: {
