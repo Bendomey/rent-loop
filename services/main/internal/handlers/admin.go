@@ -28,7 +28,7 @@ type LoginRequest struct {
 // AuthenticateAdmin godoc
 // @Summary      Authenticate admin and return token
 // @Description  Authenticate admin and return token
-// @Tags         admins
+// @Tags         Admins
 // @Accept       json
 // @Produce      json
 // @Param        body  body      LoginRequest  true  "Login credentials"
@@ -68,6 +68,12 @@ func (h *AdminHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *AdminHandler) HelloWorld(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message": "Hello, World!"}`))
+}
+
 type CreateAdminRequest struct {
 	Name  string `json:"name" validate:"required,min=3,max=255"`
 	Email string `json:"email" validate:"required,email"`
@@ -76,7 +82,7 @@ type CreateAdminRequest struct {
 // CreateAdmin godoc
 // @Summary      Create a new admin
 // @Description  Create a new admin
-// @Tags         admins
+// @Tags         Admins
 // @Accept       json
 // @Security BearerAuth
 // @Produce      json
@@ -130,7 +136,7 @@ func (h *AdminHandler) CreateAdmin(w http.ResponseWriter, r *http.Request) {
 // GetCurrentAdmin godoc
 // @Summary      Get the currently authenticated admin
 // @Description  Get the currently authenticated admin
-// @Tags         admins
+// @Tags         Admins
 // @Accept       json
 // @Security BearerAuth
 // @Produce      json
@@ -166,7 +172,7 @@ func (h *AdminHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 // GetAdminById godoc
 // @Summary      Get admin by ID
 // @Description  Get admin by ID
-// @Tags         admins
+// @Tags         Admins
 // @Accept       json
 // @Security BearerAuth
 // @Produce      json
@@ -205,7 +211,7 @@ type ListAdminsFilterRequest struct{}
 // GetAdmins godoc
 // @Summary      Get all admins
 // @Description  Get all admins
-// @Tags         admins
+// @Tags         Admins
 // @Accept       json
 // @Security BearerAuth
 // @Produce      json

@@ -24,6 +24,10 @@ func NewAdminRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func(r ch
 			r.Get("/v1/admins/me", handlers.AdminHandler.GetMe)
 			r.Get("/v1/admins/{id}", handlers.AdminHandler.GetAdminById)
 			r.Get("/v1/admins", handlers.AdminHandler.ListAdmins)
+			r.Get("/v1/client-applications", handlers.ClientApplicationHandler.ListClientApplications)
+			r.Get("/v1/client-applications/{id}", handlers.ClientApplicationHandler.GetClientApplicationById)
+			r.Patch("/v1/client-applications/{applicationId}/approve", handlers.ClientApplicationHandler.ApproveClientApplication)
+			r.Patch("/v1/client-applications/{applicationId}/reject", handlers.ClientApplicationHandler.RejectClientApplication)
 		})
 	}
 }
