@@ -2,10 +2,11 @@ declare global {
 	interface Window {
 		ENV: {
 			API_ADDRESS: string
+			NODE_ENV: string
+			AUTH_TOKEN?: string
 		}
 	}
 }
-
 /**
  * Fetch wrapper to treat 4xx - 5xx status codes as errors.
  * We should be able to access those error messages in our catch block!
@@ -79,9 +80,13 @@ export function fetchClient<T>(
 
 			if (config?.authToken) {
 				userToken = config.authToken
+			} else if (window.ENV.AUTH_TOKEN) {
+				try {
+					userToken = window.ENV.AUTH_TOKEN
+				} catch {}
 			}
 
-			if (userToken && userToken.length) {
+			if (!config?.isUnAuthorizedRequest && userToken && userToken.length) {
 				headers.append('Authorization', `Bearer ${userToken}`)
 			}
 

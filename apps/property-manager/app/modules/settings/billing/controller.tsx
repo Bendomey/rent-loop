@@ -1,4 +1,4 @@
-import { ToggleLeft } from 'lucide-react'
+import { Home, ToggleLeft } from 'lucide-react'
 import { FilterSet } from '~/components/filter-set'
 
 const filters: Array<Filter> = [
@@ -16,6 +16,21 @@ const filters: Array<Filter> = [
 			defaultValues: [],
 		},
 		Icon: ToggleLeft,
+	},
+	{
+		id: 2,
+		type: 'selector',
+		selectType: 'multi',
+		label: 'Property',
+		value: {
+			options: [
+				{ label: 'Sunset Apartments', value: 'property_1' },
+				{ label: 'Greenfield Villas', value: 'property_2' },
+			],
+			urlParam: 'property',
+			defaultValues: [],
+		},
+		Icon: Home,
 	},
 ]
 
