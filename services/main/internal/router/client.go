@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func NewClientRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func(r chi.Router) {
+func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func(r chi.Router) {
 
 	return func(r chi.Router) {
 		r.Use(middlewares.InjectAdminAuthMiddleware(appCtx))

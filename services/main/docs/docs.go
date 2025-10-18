@@ -365,6 +365,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/client-applications/{applicationId}/approve": {
+            "patch": {
+                "description": "Admin approves a client's application after review",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientApplications"
+                ],
+                "summary": "Approve a client application",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client Application ID",
+                        "name": "applicationId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientApplication"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/client-applications/{applicationId}/reject": {
             "patch": {
                 "description": "Admin rejects a client application with a reason",
@@ -412,6 +473,12 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "404": {
@@ -593,8 +660,29 @@ const docTemplate = `{
                     "maxLength": 255,
                     "minLength": 3
                 },
+                "dateOfBirth": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "idDocumentUrl": {
+                    "type": "string"
+                },
+                "idExpiry": {
+                    "type": "string"
+                },
+                "idNumber": {
+                    "type": "string"
+                },
+                "idType": {
+                    "type": "string"
+                },
                 "latitude": {
                     "type": "number"
+                },
+                "logoUrl": {
+                    "type": "string"
                 },
                 "longitude": {
                     "type": "number"
@@ -608,11 +696,24 @@ const docTemplate = `{
                     "maxLength": 255,
                     "minLength": 3
                 },
+                "registrationNumber": {
+                    "type": "string"
+                },
                 "subType": {
                     "description": "INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER | AGENCY",
                     "type": "string",
-                    "maxLength": 255,
-                    "minLength": 3
+                    "enum": [
+                        "LANDLORD",
+                        "PROPERTY_MANAGER",
+                        "DEVELOPER",
+                        "AGENCY"
+                    ]
+                },
+                "supportEmail": {
+                    "type": "string"
+                },
+                "supportPhone": {
+                    "type": "string"
                 },
                 "type": {
                     "description": "INDIVIDUAL | COMPANY",
@@ -621,6 +722,9 @@ const docTemplate = `{
                         "INDIVIDUAL",
                         "COMPANY"
                     ]
+                },
+                "websiteUrl": {
+                    "type": "string"
                 }
             }
         },
