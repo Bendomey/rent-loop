@@ -2,7 +2,7 @@ package services
 
 import (
 	"context"
-	// "errors"
+	"fmt"
 
 	// "github.com/Bendomey/goutilities/pkg/signjwt"
 	// "github.com/Bendomey/goutilities/pkg/validatehash"
@@ -54,6 +54,19 @@ type CreateClientApplicationInput struct {
 	Status             string // ClientApplication.Status.Pending | ClientApplication.Status.Approved | ClientApplication.Status.Rejected
 }
 
+type CreateClientRequest struct {
+	Type    string `json:"type" gorm:"not null;index;"`
+	SubType string `json:"subType" gorm:"not null;index;"`
+	Name    string `json:"name" gorm:"not null;"`
+	Address   string  `json:"address" gorm:"not null;"`
+	Country   string  `json:"country" gorm:"not null;"`
+	Region    string  `json:"region" gorm:"not null;"`
+	City      string  `json:"city" gorm:"not null;"`
+	Latitude  float64 `json:"latitude" gorm:"not null;"`
+	Longitude float64 `json:"longitude" gorm:"not null;"`
+	ClientApplicationId string            `json:"clientApplicationId" gorm:"not null;"`
+}
+
 func (s *clientApplicationService) CreateClientApplication(ctx context.Context, input CreateClientApplicationInput) (*models.ClientApplication, error) {
 
 	clientApplication := models.ClientApplication{
@@ -102,10 +115,44 @@ func (s *clientApplicationService) ApproveClientApplication(ctx context.Context,
 		return nil, err
 	}
 
+
+	if clientApplication.Status != "Pending" {
+		return nil, fmt.Errorf("application is already approved")
+	}
+
+	// Stage 0: Start transaction
+	transaction := s.appCtx.DB.Begin()
+
+	// Stage 1: Update client application as Approved
 	clientApplication.Status = "Approved"
 	clientApplication.ApprovedById = &adminId
 
 	if err := s.repo.UpdateClientApplication(ctx, clientApplication); err != nil {
+		transaction.Rollback()
+		return nil, err
+	}
+
+	// Stage 2: Create client
+	client := models.Client{
+		Name:    clientApplication.Name,
+		Type:    clientApplication.Type,
+		SubType: clientApplication.SubType,
+		Address:   clientApplication.Address,
+		Region:   clientApplication.Region,
+		Country: clientApplication.Country,
+		City:    clientApplication.City,
+		Longitude: clientApplication.Longitude,
+		Latitude: clientApplication.Latitude,
+		ClientApplicationId: clientApplication.ID.String(),
+	}
+
+	if err := transaction.WithContext(ctx).Create(&client).Error; err != nil {
+		transaction.Rollback()
+		return nil, err
+	}
+
+	// Stage 3: Commit transaction
+	if err := transaction.Commit().Error; err != nil {
 		return nil, err
 	}
 
