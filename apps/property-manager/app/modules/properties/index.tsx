@@ -239,7 +239,7 @@ export function PropertiesModule() {
 								updated_at: new Date(),
 								status: 'Property.Status.Active',
 							},
-						],
+						] as Property[],
 						total: 150,
 						page: 1,
 						page_size: 50,
