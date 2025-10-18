@@ -52,19 +52,30 @@ type CreateClientApplicationInput struct {
 	ContactPhoneNumber string
 	ContactEmail       string
 	Status             string // ClientApplication.Status.Pending | ClientApplication.Status.Approved | ClientApplication.Status.Rejected
+	DateOfBirth        string
+	IDType             *string
+	IDNumber           *string
+	IDExpiry           *string
+	IDDocumentURL      *string
+	RegistrationNumber *string
+	LogoURL            *string
+	Description        *string
+	WebsiteURL         *string
+	SupportEmail       *string
+	SupportPhone       *string
 }
 
 type CreateClientRequest struct {
-	Type    string `json:"type" gorm:"not null;index;"`
-	SubType string `json:"subType" gorm:"not null;index;"`
-	Name    string `json:"name" gorm:"not null;"`
-	Address   string  `json:"address" gorm:"not null;"`
-	Country   string  `json:"country" gorm:"not null;"`
-	Region    string  `json:"region" gorm:"not null;"`
-	City      string  `json:"city" gorm:"not null;"`
-	Latitude  float64 `json:"latitude" gorm:"not null;"`
-	Longitude float64 `json:"longitude" gorm:"not null;"`
-	ClientApplicationId string            `json:"clientApplicationId" gorm:"not null;"`
+	Type                string  `json:"type" gorm:"not null;index;"`
+	SubType             string  `json:"subType" gorm:"not null;index;"`
+	Name                string  `json:"name" gorm:"not null;"`
+	Address             string  `json:"address" gorm:"not null;"`
+	Country             string  `json:"country" gorm:"not null;"`
+	Region              string  `json:"region" gorm:"not null;"`
+	City                string  `json:"city" gorm:"not null;"`
+	Latitude            float64 `json:"latitude" gorm:"not null;"`
+	Longitude           float64 `json:"longitude" gorm:"not null;"`
+	ClientApplicationId string  `json:"clientApplicationId" gorm:"not null;"`
 }
 
 func (s *clientApplicationService) CreateClientApplication(ctx context.Context, input CreateClientApplicationInput) (*models.ClientApplication, error) {
@@ -83,6 +94,17 @@ func (s *clientApplicationService) CreateClientApplication(ctx context.Context, 
 		ContactPhoneNumber: input.ContactPhoneNumber,
 		ContactEmail:       input.ContactEmail,
 		Status:             "Pending",
+		DateOfBirth:        StringPointer(input.DateOfBirth),
+		IDType:             (input.IDType),
+		IDNumber:           input.IDNumber,
+		IDExpiry:           input.IDExpiry,
+		IDDocumentURL:      input.IDDocumentURL,
+		RegistrationNumber: input.RegistrationNumber,
+		LogoURL:            input.LogoURL,
+		Description:        input.Description,
+		WebsiteURL:         input.WebsiteURL,
+		SupportEmail:       input.SupportEmail,
+		SupportPhone:       input.SupportPhone,
 	}
 
 	if err := s.repo.Create(ctx, &clientApplication); err != nil {
@@ -90,6 +112,10 @@ func (s *clientApplicationService) CreateClientApplication(ctx context.Context, 
 	}
 
 	return &clientApplication, nil
+}
+
+func StringPointer(s string) *string {
+	return &s
 }
 
 func (s *clientApplicationService) RejectClientApplication(ctx context.Context, id string, reason string, adminId string) (*models.ClientApplication, error) {
@@ -102,7 +128,7 @@ func (s *clientApplicationService) RejectClientApplication(ctx context.Context, 
 	clientApplication.RejectedBecause = &reason
 	clientApplication.RejectedById = &adminId
 
-	if err := s.repo.UpdateClietApplication(ctx, clientApplication); err != nil {
+	if err := s.repo.UpdateClientApplication(ctx, clientApplication); err != nil {
 		return nil, err
 	}
 
@@ -114,7 +140,6 @@ func (s *clientApplicationService) ApproveClientApplication(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-
 
 	if clientApplication.Status != "Pending" {
 		return nil, fmt.Errorf("application is already approved")
@@ -134,15 +159,15 @@ func (s *clientApplicationService) ApproveClientApplication(ctx context.Context,
 
 	// Stage 2: Create client
 	client := models.Client{
-		Name:    clientApplication.Name,
-		Type:    clientApplication.Type,
-		SubType: clientApplication.SubType,
-		Address:   clientApplication.Address,
-		Region:   clientApplication.Region,
-		Country: clientApplication.Country,
-		City:    clientApplication.City,
-		Longitude: clientApplication.Longitude,
-		Latitude: clientApplication.Latitude,
+		Name:                clientApplication.Name,
+		Type:                clientApplication.Type,
+		SubType:             clientApplication.SubType,
+		Address:             clientApplication.Address,
+		Region:              clientApplication.Region,
+		Country:             clientApplication.Country,
+		City:                clientApplication.City,
+		Longitude:           clientApplication.Longitude,
+		Latitude:            clientApplication.Latitude,
 		ClientApplicationId: clientApplication.ID.String(),
 	}
 
@@ -151,8 +176,25 @@ func (s *clientApplicationService) ApproveClientApplication(ctx context.Context,
 		return nil, err
 	}
 
-	// Stage 3: Commit transaction
+	// Stage 3. Create the user tied to this client
+	user := models.ClientUser{
+		ClientID:    client.ID.String(),
+		Name:        clientApplication.ContactName,
+		PhoneNumber: clientApplication.ContactPhoneNumber,
+		Email:       clientApplication.ContactEmail,
+		Password:    "password",
+		Role:        "OWNER",
+		Status:      "Inactive",
+	}
+
+	if err := transaction.Create(&user).Error; err != nil {
+		transaction.Rollback()
+		return nil, err
+	}
+
+	// Stage 4: Commit transaction
 	if err := transaction.Commit().Error; err != nil {
+		transaction.Rollback()
 		return nil, err
 	}
 

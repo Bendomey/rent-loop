@@ -29,8 +29,22 @@ definitions:
         maxLength: 255
         minLength: 3
         type: string
+      dateOfBirth:
+        type: string
+      description:
+        type: string
+      idDocumentUrl:
+        type: string
+      idExpiry:
+        type: string
+      idNumber:
+        type: string
+      idType:
+        type: string
       latitude:
         type: number
+      logoUrl:
+        type: string
       longitude:
         type: number
       name:
@@ -40,17 +54,28 @@ definitions:
         maxLength: 255
         minLength: 3
         type: string
+      registrationNumber:
+        type: string
       subType:
         description: INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER
           | AGENCY
-        maxLength: 255
-        minLength: 3
+        enum:
+        - LANDLORD
+        - PROPERTY_MANAGER
+        - DEVELOPER
+        - AGENCY
+        type: string
+      supportEmail:
+        type: string
+      supportPhone:
         type: string
       type:
         description: INDIVIDUAL | COMPANY
         enum:
         - INDIVIDUAL
         - COMPANY
+        type: string
+      websiteUrl:
         type: string
     required:
     - address
@@ -488,6 +513,46 @@ paths:
       summary: Get all ClientApplications
       tags:
       - ClientApplications
+  /api/v1/client-applications/{applicationId}/approve:
+    patch:
+      consumes:
+      - application/json
+      description: Admin approves a client's application after review
+      parameters:
+      - description: Client Application ID
+        in: path
+        name: applicationId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientApplication'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+      summary: Approve a client application
+      tags:
+      - ClientApplications
   /api/v1/client-applications/{applicationId}/reject:
     patch:
       consumes:
@@ -519,6 +584,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
         "404":
           description: Not Found
           schema:

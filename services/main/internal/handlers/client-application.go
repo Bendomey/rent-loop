@@ -34,6 +34,17 @@ type CreateClientApplicationRequest struct {
 	ContactName        string  `json:"contactName" validate:"required"`
 	ContactPhoneNumber string  `json:"contactPhoneNumber" validate:"required"`
 	ContactEmail       string  `json:"contactEmail" validate:"required,email"`
+	DateOfBirth        string  `json:"dateOfBirth"`
+	IDType             *string `json:"idType"`
+	IDNumber           *string `json:"idNumber"`
+	IDExpiry           *string `json:"idExpiry"`
+	IDDocumentURL      *string `json:"idDocumentUrl"`
+	RegistrationNumber *string `json:"registrationNumber"`
+	LogoURL            *string `json:"logoUrl"`
+	Description        *string `json:"description"`
+	WebsiteURL         *string `json:"websiteUrl"`
+	SupportEmail       *string `json:"supportEmail"`
+	SupportPhone       *string `json:"supportPhone"`
 }
 
 // CreateClientApplication godoc
@@ -74,6 +85,17 @@ func (h *ClientApplicationHandler) CreateClientApplication(w http.ResponseWriter
 		ContactName:        body.ContactName,
 		ContactPhoneNumber: body.ContactPhoneNumber,
 		ContactEmail:       body.ContactEmail,
+		DateOfBirth:        body.DateOfBirth,
+		IDType:             body.IDType,
+		IDNumber:           body.IDNumber,
+		IDExpiry:           body.IDExpiry,
+		IDDocumentURL:      body.IDDocumentURL,
+		RegistrationNumber: body.RegistrationNumber,
+		LogoURL:            body.LogoURL,
+		Description:        body.Description,
+		WebsiteURL:         body.WebsiteURL,
+		SupportEmail:       body.SupportEmail,
+		SupportPhone:       body.SupportPhone,
 	})
 
 	if err != nil {
@@ -193,7 +215,7 @@ func (h *ClientApplicationHandler) RejectClientApplication(w http.ResponseWriter
 // @Failure      401  {object}  string
 // @Failure      404  {object}  lib.HTTPError
 // @Failure      500  {object}  lib.HTTPError
-// @Router       /api/v1/client-applications/{applicationId}/reject [patch]
+// @Router       /api/v1/client-applications/{applicationId}/approve [patch]
 func (h *ClientApplicationHandler) ApproveClientApplication(w http.ResponseWriter, r *http.Request) {
 
 	currentAdmin, adminOk := lib.AdminFromContext(r.Context())
