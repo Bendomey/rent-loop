@@ -21,6 +21,8 @@ type ClientApplicationService interface {
 	CreateClientApplication(ctx context.Context, input CreateClientApplicationInput) (*models.ClientApplication, error)
 	ListClientApplications(ctx context.Context, filterQuery lib.FilterQuery, filters repository.ListClientApplicationsFilter) ([]models.ClientApplication, error)
 	CountClientApplications(ctx context.Context, filterQuery lib.FilterQuery, filters repository.ListClientApplicationsFilter) (int64, error)
+	ApproveClientApplication(ctx context.Context, clientApplicationId string, adminId string) (*models.ClientApplication, error)
+	RejectClientApplication(ctx context.Context, clientApplicationId string, reason string, adminId string) (*models.ClientApplication, error)
 }
 
 type clientApplicationService struct {
@@ -32,43 +34,42 @@ func NewClientApplicationService(appCtx pkg.AppContext, repo repository.ClientAp
 	return &clientApplicationService{appCtx, repo}
 }
 
-
 func (s *clientApplicationService) GetClientApplication(ctx context.Context, clientApplicationId string) (*models.ClientApplication, error) {
 	return s.repo.GetByID(ctx, clientApplicationId)
 }
 
 type CreateClientApplicationInput struct {
-	Type    string    // INDIVIDUAL | COMPANY
-	SubType string // INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER | AGENCY
-	Name    string           // company name or individual full name
-	Address   string 
-	Country   string 
-	Region    string 
-	City      string
-	Latitude  float64
-	Longitude float64 
+	Type               string // INDIVIDUAL | COMPANY
+	SubType            string // INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER | AGENCY
+	Name               string // company name or individual full name
+	Address            string
+	Country            string
+	Region             string
+	City               string
+	Latitude           float64
+	Longitude          float64
 	ContactName        string
 	ContactPhoneNumber string
 	ContactEmail       string
-	Status string // ClientApplication.Status.Pending | ClientApplication.Status.Approved | ClientApplication.Status.Rejected
+	Status             string // ClientApplication.Status.Pending | ClientApplication.Status.Approved | ClientApplication.Status.Rejected
 }
 
 func (s *clientApplicationService) CreateClientApplication(ctx context.Context, input CreateClientApplicationInput) (*models.ClientApplication, error) {
 
 	clientApplication := models.ClientApplication{
-		Type: input.Type,
-		SubType: input.SubType,
-		Name: input.Name,
-		Address: input.Address,
-		Country: input.Country,
-		Region: input.Region,
-		City: input.City,
-		Latitude: input.Latitude,
-		Longitude: input.Longitude, 
-		ContactName: input.ContactName,      
+		Type:               input.Type,
+		SubType:            input.SubType,
+		Name:               input.Name,
+		Address:            input.Address,
+		Country:            input.Country,
+		Region:             input.Region,
+		City:               input.City,
+		Latitude:           input.Latitude,
+		Longitude:          input.Longitude,
+		ContactName:        input.ContactName,
 		ContactPhoneNumber: input.ContactPhoneNumber,
-		ContactEmail: input.ContactEmail,       
-		Status: "Pending", 
+		ContactEmail:       input.ContactEmail,
+		Status:             "Pending",
 	}
 
 	if err := s.repo.Create(ctx, &clientApplication); err != nil {
@@ -76,6 +77,39 @@ func (s *clientApplicationService) CreateClientApplication(ctx context.Context, 
 	}
 
 	return &clientApplication, nil
+}
+
+func (s *clientApplicationService) RejectClientApplication(ctx context.Context, id string, reason string, adminId string) (*models.ClientApplication, error) {
+	clientApplication, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	clientApplication.Status = "Rejected"
+	clientApplication.RejectedBecause = &reason
+	clientApplication.RejectedById = &adminId
+
+	if err := s.repo.UpdateClietApplication(ctx, clientApplication); err != nil {
+		return nil, err
+	}
+
+	return clientApplication, nil
+}
+
+func (s *clientApplicationService) ApproveClientApplication(ctx context.Context, id string, adminId string) (*models.ClientApplication, error) {
+	clientApplication, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	clientApplication.Status = "Approved"
+	clientApplication.ApprovedById = &adminId
+
+	if err := s.repo.UpdateClientApplication(ctx, clientApplication); err != nil {
+		return nil, err
+	}
+
+	return clientApplication, nil
 }
 
 func (s *clientApplicationService) ListClientApplications(ctx context.Context, filterQuery lib.FilterQuery, filters repository.ListClientApplicationsFilter) ([]models.ClientApplication, error) {

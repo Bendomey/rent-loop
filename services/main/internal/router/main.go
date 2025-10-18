@@ -68,7 +68,7 @@ func New(appCtx pkg.AppContext, handlers handlers.Handlers) *chi.Mux {
 		r.Group(NewAdminRouter(appCtx, handlers))
 
 		// for client user
-		// r.Group(NewClientUserRouter(appCtx, handlers))
+		r.Group(NewClientUserRouter(appCtx, handlers))
 
 		// for tenant account
 		// r.Group(NewTenantAccountRouter(appCtx, handlers))

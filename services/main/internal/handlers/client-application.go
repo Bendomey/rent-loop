@@ -9,6 +9,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/go-chi/chi/v5"
 )
 
 type ClientApplicationHandler struct {
@@ -21,31 +22,31 @@ func NewClientApplicationHandler(appCtx pkg.AppContext, service services.ClientA
 }
 
 type CreateClientApplicationRequest struct {
-	Type    string `json:"type" validate:"required,oneof=INDIVIDUAL COMPANY"`    // INDIVIDUAL | COMPANY
-	SubType string `json:"subType" validate:"required,min=3,max=255"` // INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER | AGENCY
-	Name    string `json:"name" validate:"required,min=3,max=255"`          // company name or individual full name
-	Address   string `json:"address" validate:"required,min=3,max=255"`
-	Country   string `json:"country" validate:"required,min=3,max=255"`
-	Region    string `json:"region" validate:"required,min=3,max=255"`
-	City      string `json:"city" validate:"required,min=3,max=255"`
-	Latitude  float64 `json:"latitude" validate:"required,min=3,max=255"`
-	Longitude float64 `json:"longitude" validate:"required,min=3,max=255"`
-	ContactName        string `json:"contactName" validate:"required,min=3,max=255"`
-	ContactPhoneNumber string `json:"contactPhoneNumber" validate:"required,min=3,max=255"`
-	ContactEmail       string `json:"contactEmail" validate:"required,min=3,email"`
+	Type               string  `json:"type" validate:"required,oneof=INDIVIDUAL COMPANY"`                            // INDIVIDUAL | COMPANY
+	SubType            string  `json:"subType" validate:"required,oneof=LANDLORD PROPERTY_MANAGER DEVELOPER AGENCY"` // INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER | AGENCY
+	Name               string  `json:"name" validate:"required"`                                                     // company name or individual full name
+	Address            string  `json:"address" validate:"required"`
+	Country            string  `json:"country" validate:"required,min=3,max=255"`
+	Region             string  `json:"region" validate:"required,min=3,max=255"`
+	City               string  `json:"city" validate:"required,min=3,max=255"`
+	Latitude           float64 `json:"latitude" validate:"required"`
+	Longitude          float64 `json:"longitude" validate:"required"`
+	ContactName        string  `json:"contactName" validate:"required"`
+	ContactPhoneNumber string  `json:"contactPhoneNumber" validate:"required"`
+	ContactEmail       string  `json:"contactEmail" validate:"required,email"`
 }
 
 // CreateClientApplication godoc
 // @Summary      Create a new client application
 // @Description  Create a new client application
-// @Tags         client applications
+// @Tags         ClientApplications
 // @Accept       json
 // @Produce      json
 // @Param        body  body      CreateClientApplicationRequest  true  "Client Application details"
 // @Success      201  {object}  object{data=transformations.OutputClientApplication}
 // @Failure      400  {object}  lib.HTTPError
 // @Failure      500  {object}  string
-// @Router       /api/v1/client-applications [post]
+// @Router       /api/v1/clients/apply [post]
 func (h *ClientApplicationHandler) CreateClientApplication(w http.ResponseWriter, r *http.Request) {
 
 	var body CreateClientApplicationRequest
@@ -61,18 +62,18 @@ func (h *ClientApplicationHandler) CreateClientApplication(w http.ResponseWriter
 	}
 
 	clientApplication, err := h.service.CreateClientApplication(r.Context(), services.CreateClientApplicationInput{
-		Type: body.Type,
-		SubType: body.SubType,
-		Name: body.Name,
-		Address: body.Address,
-		Country: body.Country,
-		Region: body.Region,
-		City: body.City,
-		Latitude: body.Latitude,
-		Longitude: body.Longitude, 
-		ContactName: body.ContactName,      
+		Type:               body.Type,
+		SubType:            body.SubType,
+		Name:               body.Name,
+		Address:            body.Address,
+		Country:            body.Country,
+		Region:             body.Region,
+		City:               body.City,
+		Latitude:           body.Latitude,
+		Longitude:          body.Longitude,
+		ContactName:        body.ContactName,
 		ContactPhoneNumber: body.ContactPhoneNumber,
-		ContactEmail: body.ContactEmail,
+		ContactEmail:       body.ContactEmail,
 	})
 
 	if err != nil {
@@ -95,7 +96,7 @@ func (h *ClientApplicationHandler) CreateClientApplication(w http.ResponseWriter
 // GetClientApplicationById godoc
 // @Summary      Get clientApplication by ID
 // @Description  Get clientApplication by ID
-// @Tags         clientApplications
+// @Tags         ClientApplications
 // @Accept       json
 // @Produce      json
 // @Param        id   path      string  true  "ClientApplication ID"
@@ -124,6 +125,92 @@ func (h *ClientApplicationHandler) GetClientApplicationById(w http.ResponseWrite
 		return
 	}
 
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBClientApplicationToRestClientApplication(clientApplication),
+	})
+}
+
+type RejectClientApplicationRequest struct {
+	Reason string `json:"reason" validate:"required,min=3,max=255"`
+}
+
+// RejectClientApplication godoc
+// @Summary      Reject a client application
+// @Description  Admin rejects a client application with a reason
+// @Tags         ClientApplications
+// @Accept       json
+// @Produce      json
+// @Param        applicationId  path  string  true  "Client Application ID"
+// @Param        body  body  RejectClientApplicationRequest  true  "Rejection reason"
+// @Success      200  {object}  object{data=transformations.OutputClientApplication}
+// @Failure      400  {object}  lib.HTTPError
+// @Failure      401  {object}  string
+// @Failure      404  {object}  lib.HTTPError
+// @Failure      500  {object}  lib.HTTPError
+// @Router       /api/v1/client-applications/{applicationId}/reject [patch]
+func (h *ClientApplicationHandler) RejectClientApplication(w http.ResponseWriter, r *http.Request) {
+
+	currentAdmin, adminOk := lib.AdminFromContext(r.Context())
+
+	if !adminOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	applicationId := chi.URLParam(r, "applicationId")
+
+	var body RejectClientApplicationRequest
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	clientApplication, err := h.service.RejectClientApplication(r.Context(), applicationId, body.Reason, currentAdmin.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBClientApplicationToRestClientApplication(clientApplication),
+	})
+}
+
+// ApproveClientApplication godoc
+// @Summary      Approve a client application
+// @Description  Admin approves a client's application after review
+// @Tags         ClientApplications
+// @Accept       json
+// @Produce      json
+// @Param        applicationId  path  string  true  "Client Application ID"
+// @Success      200  {object}  object{data=transformations.OutputClientApplication}
+// @Failure      400  {object}  lib.HTTPError
+// @Failure      401  {object}  string
+// @Failure      404  {object}  lib.HTTPError
+// @Failure      500  {object}  lib.HTTPError
+// @Router       /api/v1/client-applications/{applicationId}/reject [patch]
+func (h *ClientApplicationHandler) ApproveClientApplication(w http.ResponseWriter, r *http.Request) {
+
+	currentAdmin, adminOk := lib.AdminFromContext(r.Context())
+
+	if !adminOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	applicationId := chi.URLParam(r, "applicationId")
+
+	clientApplication, err := h.service.ApproveClientApplication(r.Context(), applicationId, currentAdmin.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": transformations.DBClientApplicationToRestClientApplication(clientApplication),
 	})

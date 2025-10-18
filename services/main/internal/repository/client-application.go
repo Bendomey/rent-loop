@@ -13,6 +13,7 @@ type ClientApplicationRepository interface {
 	Create(ctx context.Context, clientApp *models.ClientApplication) error
 	List(ctx context.Context, filterQuery lib.FilterQuery, filters ListClientApplicationsFilter) (*[]models.ClientApplication, error)
 	Count(ctx context.Context, filterQuery lib.FilterQuery, filters ListClientApplicationsFilter) (int64, error)
+	UpdateClientApplication(ctx context.Context, clientApp *models.ClientApplication) error
 }
 
 type clientApplicationRepository struct {
@@ -53,4 +54,8 @@ func (r *clientApplicationRepository) Count(ctx context.Context, filterQuery lib
 
 type ListClientApplicationsFilter struct {
 	// Add any filter fields you need later (e.g. Status, Type, etc.)
+}
+
+func (r *clientApplicationRepository) UpdateClientApplication(ctx context.Context, clientApplication *models.ClientApplication) error {
+	return r.db.WithContext(ctx).Save(clientApplication).Error
 }
