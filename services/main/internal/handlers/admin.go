@@ -28,7 +28,7 @@ type LoginRequest struct {
 // AuthenticateAdmin godoc
 // @Summary      Authenticate admin and return token
 // @Description  Authenticate admin and return token
-// @Tags         admins
+// @Tags         Admins
 // @Accept       json
 // @Produce      json
 // @Param        body  body      LoginRequest  true  "Login credentials"
@@ -82,7 +82,7 @@ type CreateAdminRequest struct {
 // CreateAdmin godoc
 // @Summary      Create a new admin
 // @Description  Create a new admin
-// @Tags         admins
+// @Tags         Admins
 // @Accept       json
 // @Security BearerAuth
 // @Produce      json
@@ -136,7 +136,7 @@ func (h *AdminHandler) CreateAdmin(w http.ResponseWriter, r *http.Request) {
 // GetCurrentAdmin godoc
 // @Summary      Get the currently authenticated admin
 // @Description  Get the currently authenticated admin
-// @Tags         admins
+// @Tags         Admins
 // @Accept       json
 // @Security BearerAuth
 // @Produce      json
@@ -172,7 +172,7 @@ func (h *AdminHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 // GetAdminById godoc
 // @Summary      Get admin by ID
 // @Description  Get admin by ID
-// @Tags         admins
+// @Tags         Admins
 // @Accept       json
 // @Security BearerAuth
 // @Produce      json
@@ -211,7 +211,7 @@ type ListAdminsFilterRequest struct{}
 // GetAdmins godoc
 // @Summary      Get all admins
 // @Description  Get all admins
-// @Tags         admins
+// @Tags         Admins
 // @Accept       json
 // @Security BearerAuth
 // @Produce      json

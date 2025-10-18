@@ -14,40 +14,27 @@ definitions:
   handlers.CreateClientApplicationRequest:
     properties:
       address:
-        maxLength: 255
-        minLength: 3
         type: string
       city:
         maxLength: 255
         minLength: 3
         type: string
       contactEmail:
-        minLength: 3
         type: string
       contactName:
-        maxLength: 255
-        minLength: 3
         type: string
       contactPhoneNumber:
-        maxLength: 255
-        minLength: 3
         type: string
       country:
         maxLength: 255
         minLength: 3
         type: string
       latitude:
-        maximum: 255
-        minimum: 3
         type: number
       longitude:
-        maximum: 255
-        minimum: 3
         type: number
       name:
         description: company name or individual full name
-        maxLength: 255
-        minLength: 3
         type: string
       region:
         maxLength: 255
@@ -92,6 +79,15 @@ definitions:
     required:
     - email
     - password
+    type: object
+  handlers.RejectClientApplicationRequest:
+    properties:
+      reason:
+        maxLength: 255
+        minLength: 3
+        type: string
+    required:
+    - reason
     type: object
   lib.HTTPError:
     properties:
@@ -313,7 +309,7 @@ paths:
       - BearerAuth: []
       summary: Get all admins
       tags:
-      - admins
+      - Admins
     post:
       consumes:
       - application/json
@@ -351,7 +347,7 @@ paths:
       - BearerAuth: []
       summary: Create a new admin
       tags:
-      - admins
+      - Admins
   /api/v1/admins/{id}:
     get:
       consumes:
@@ -389,7 +385,7 @@ paths:
       - BearerAuth: []
       summary: Get admin by ID
       tags:
-      - admins
+      - Admins
   /api/v1/admins/login:
     post:
       consumes:
@@ -422,7 +418,7 @@ paths:
             type: string
       summary: Authenticate admin and return token
       tags:
-      - admins
+      - Admins
   /api/v1/admins/me:
     get:
       consumes:
@@ -454,7 +450,7 @@ paths:
       - BearerAuth: []
       summary: Get the currently authenticated admin
       tags:
-      - admins
+      - Admins
   /api/v1/client-applications:
     get:
       consumes:
@@ -492,22 +488,28 @@ paths:
       summary: Get all ClientApplications
       tags:
       - ClientApplications
-    post:
+  /api/v1/client-applications/{applicationId}/reject:
+    patch:
       consumes:
       - application/json
-      description: Create a new client application
+      description: Admin rejects a client application with a reason
       parameters:
-      - description: Client Application details
+      - description: Client Application ID
+        in: path
+        name: applicationId
+        required: true
+        type: string
+      - description: Rejection reason
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/handlers.CreateClientApplicationRequest'
+          $ref: '#/definitions/handlers.RejectClientApplicationRequest'
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
             properties:
               data:
@@ -517,13 +519,17 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            type: string
-      summary: Create a new client application
+            $ref: '#/definitions/lib.HTTPError'
+      summary: Reject a client application
       tags:
-      - client applications
+      - ClientApplications
   /api/v1/client-applications/{id}:
     get:
       consumes:
@@ -559,7 +565,40 @@ paths:
             type: string
       summary: Get clientApplication by ID
       tags:
-      - clientApplications
+      - ClientApplications
+  /api/v1/clients/apply:
+    post:
+      consumes:
+      - application/json
+      description: Create a new client application
+      parameters:
+      - description: Client Application details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateClientApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientApplication'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Create a new client application
+      tags:
+      - ClientApplications
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

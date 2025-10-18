@@ -12,7 +12,9 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 		r.Use(middlewares.InjectClientUserAuthMiddleware(appCtx))
 
 		// unprotected client user routes
-		r.Group(func(r chi.Router) {})
+		r.Group(func(r chi.Router) {
+			r.Post("/v1/clients/apply", handlers.ClientApplicationHandler.CreateClientApplication)
+		})
 
 		// protected client user routes
 		r.Group(func(r chi.Router) {

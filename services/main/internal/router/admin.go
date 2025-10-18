@@ -15,11 +15,6 @@ func NewAdminRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func(r ch
 			r.Post("/v1/admins/login", handlers.AdminHandler.Authenticate)
 		})
 
-		r.Group(func(r chi.Router) {
-			r.Post("/v1/clients/apply", handlers.ClientApplicationHandler.CreateClientApplication)
-			r.Get("/v1/clients/test", handlers.AdminHandler.HelloWorld)
-		})
-
 		// protected client routes ...
 		r.Group(func(r chi.Router) {
 			// ensure auth is present
@@ -29,6 +24,9 @@ func NewAdminRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func(r ch
 			r.Get("/v1/admins/me", handlers.AdminHandler.GetMe)
 			r.Get("/v1/admins/{id}", handlers.AdminHandler.GetAdminById)
 			r.Get("/v1/admins", handlers.AdminHandler.ListAdmins)
+			r.Get("/v1/client-applications", handlers.ClientApplicationHandler.ListClientApplications)
+			r.Get("/v1/client-applications/{id}", handlers.ClientApplicationHandler.GetClientApplicationById)
+			r.Patch("/v1/client-applications/{applicationId}/reject", handlers.ClientApplicationHandler.RejectClientApplication)
 		})
 	}
 }

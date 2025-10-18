@@ -39,7 +39,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admins"
+                    "Admins"
                 ],
                 "summary": "Get all admins",
                 "responses": {
@@ -99,7 +99,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admins"
+                    "Admins"
                 ],
                 "summary": "Create a new admin",
                 "parameters": [
@@ -156,7 +156,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admins"
+                    "Admins"
                 ],
                 "summary": "Authenticate admin and return token",
                 "parameters": [
@@ -212,7 +212,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admins"
+                    "Admins"
                 ],
                 "summary": "Get the currently authenticated admin",
                 "responses": {
@@ -263,7 +263,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admins"
+                    "Admins"
                 ],
                 "summary": "Get admin by ID",
                 "parameters": [
@@ -363,9 +363,11 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
-            "post": {
-                "description": "Create a new client application",
+            }
+        },
+        "/api/v1/client-applications/{applicationId}/reject": {
+            "patch": {
+                "description": "Admin rejects a client application with a reason",
                 "consumes": [
                     "application/json"
                 ],
@@ -373,23 +375,30 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "client applications"
+                    "ClientApplications"
                 ],
-                "summary": "Create a new client application",
+                "summary": "Reject a client application",
                 "parameters": [
                     {
-                        "description": "Client Application details",
+                        "type": "string",
+                        "description": "Client Application ID",
+                        "name": "applicationId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Rejection reason",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.CreateClientApplicationRequest"
+                            "$ref": "#/definitions/handlers.RejectClientApplicationRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -405,10 +414,16 @@ const docTemplate = `{
                             "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/lib.HTTPError"
                         }
                     }
                 }
@@ -424,7 +439,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "clientApplications"
+                    "ClientApplications"
                 ],
                 "summary": "Get clientApplication by ID",
                 "parameters": [
@@ -458,6 +473,57 @@ const docTemplate = `{
                         "description": "Unauthorized",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/clients/apply": {
+            "post": {
+                "description": "Create a new client application",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientApplications"
+                ],
+                "summary": "Create a new client application",
+                "parameters": [
+                    {
+                        "description": "Client Application details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateClientApplicationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientApplication"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "500": {
@@ -506,9 +572,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "address": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 3
+                    "type": "string"
                 },
                 "city": {
                     "type": "string",
@@ -516,18 +580,13 @@ const docTemplate = `{
                     "minLength": 3
                 },
                 "contactEmail": {
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "contactName": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 3
+                    "type": "string"
                 },
                 "contactPhoneNumber": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 3
+                    "type": "string"
                 },
                 "country": {
                     "type": "string",
@@ -535,20 +594,14 @@ const docTemplate = `{
                     "minLength": 3
                 },
                 "latitude": {
-                    "type": "number",
-                    "maximum": 255,
-                    "minimum": 3
+                    "type": "number"
                 },
                 "longitude": {
-                    "type": "number",
-                    "maximum": 255,
-                    "minimum": 3
+                    "type": "number"
                 },
                 "name": {
                     "description": "company name or individual full name",
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 3
+                    "type": "string"
                 },
                 "region": {
                     "type": "string",
@@ -587,6 +640,19 @@ const docTemplate = `{
                     "maxLength": 255,
                     "minLength": 8,
                     "example": "strongpassword123"
+                }
+            }
+        },
+        "handlers.RejectClientApplicationRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3
                 }
             }
         },
