@@ -26,6 +26,7 @@ import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { localizedDayjs } from '~/lib/date'
 import { FileIcon } from '~/components/file-icon'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
+import { getNameInitials } from '~/lib/misc'
 
 export function DocumentsModule() {
 	const columns: ColumnDef<AppDocument>[] = useMemo(() => {
@@ -62,8 +63,7 @@ export function DocumentsModule() {
 						<div className="min-w-32 flex items-center">
 							<Avatar className='w-8 h-8'>
 <AvatarFallback>
-  {row.original.owner.name?.split(/\s+/).map(word => word[0])
-    .join('').toUpperCase() || ''}
+ {getNameInitials(row.original.owner.name)}
 </AvatarFallback>
 </Avatar>
 							<span className="truncate text-xs text-zinc-600 pl-1.5">
@@ -182,7 +182,6 @@ export function DocumentsModule() {
 								status: 'Document.Status.Completed',
 								owner: {
 									name: 'Esther Bempong',
-									profile_pic: undefined,
 								},
 								created_at: new Date(),
 								updated_at: new Date(),
