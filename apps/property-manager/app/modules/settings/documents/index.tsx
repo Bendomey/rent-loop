@@ -3,6 +3,7 @@ import { EllipsisVertical, RotateCw } from 'lucide-react'
 import { useMemo } from 'react'
 import { DocumentsController } from './controller'
 import { DataTable } from '~/components/datatable'
+import { FileIcon } from '~/components/file-icon'
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -14,6 +15,7 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from '~/components/ui/alert-dialog'
+import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
 import {
 	DropdownMenu,
@@ -24,8 +26,6 @@ import {
 } from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { localizedDayjs } from '~/lib/date'
-import { FileIcon } from '~/components/file-icon'
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { getNameInitials } from '~/lib/misc'
 
 export function DocumentsModule() {
@@ -62,6 +62,7 @@ export function DocumentsModule() {
 					return (
 						<div className="min-w-32 flex items-center">
 							<Avatar className='w-8 h-8'>
+  <AvatarImage src="" />		
 <AvatarFallback>
  {getNameInitials(row.original.owner.name)}
 </AvatarFallback>

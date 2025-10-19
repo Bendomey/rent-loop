@@ -1,5 +1,5 @@
-import type { ReactElement } from "react";
 import { File, FileText } from "lucide-react";
+import type { ReactElement } from "react";
 import { Badge } from "./ui/badge";
 
 type FileMeta = {
