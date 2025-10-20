@@ -42,12 +42,12 @@ export default function SettingsDashboard({}: Route.ComponentProps) {
 	]
 
 	return (
-		<main className="h-full">
+		<main className="h-[calc(100vh+160px)] md:h-[calc(100vh-120px)]">
 			<div className="border-b px-5 py-3">
 				<TypographyH4>Settings</TypographyH4>
 			</div>
 			<div className="flex h-full">
-				<div className="h-full w-4/12 border-r">
+				<div className="h-full w-4/12 overflow-auto border-r">
 					<NavMain
 						items={generalMenus}
 						baseRoute="/settings"
@@ -62,7 +62,7 @@ export default function SettingsDashboard({}: Route.ComponentProps) {
 						titleClassName="text-zinc-500"
 					/>
 				</div>
-				<div className="w-full p-5">
+				<div className="w-full overflow-auto p-5">
 					<Outlet />
 				</div>
 			</div>

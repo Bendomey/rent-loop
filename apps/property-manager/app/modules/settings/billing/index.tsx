@@ -48,13 +48,13 @@ export function BillingModule() {
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
 						{getValue<BillingInvoice['status']>() ===
-							'BillingInvoice.Status.Paid' ? (
+						'BillingInvoice.Status.Paid' ? (
 							<CircleCheck className="fill-green-600 text-white" />
 						) : (
 							<Loader className="text-yellow-600" />
 						)}
 						{getValue<BillingInvoice['status']>() ===
-							'BillingInvoice.Status.Pending'
+						'BillingInvoice.Status.Pending'
 							? 'Pending'
 							: 'Paid'}
 					</Badge>

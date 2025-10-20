@@ -133,7 +133,7 @@ export function Plugins({ maxLength }: Props) {
 							<FormatParagraph />
 							<FormatHeading levels={['h1', 'h2', 'h3', 'h4', 'h5', 'h6']} />
 							<FormatNumberedList />
-							<FormatBulletedList /> 
+							<FormatBulletedList />
 							<FormatCheckList />
 							{/* <FormatCodeBlock /> */}
 							<FormatQuote />

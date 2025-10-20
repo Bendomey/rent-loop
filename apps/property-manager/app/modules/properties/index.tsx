@@ -84,8 +84,8 @@ export function PropertiesModule() {
 						{getValue<string>() === 'Property.Status.Active'
 							? 'Active'
 							: getValue<string>() === 'Property.Status.Maintenance'
-							? 'Maintenance'
-							: 'Inactive'}
+								? 'Maintenance'
+								: 'Inactive'}
 					</Badge>
 				),
 			},

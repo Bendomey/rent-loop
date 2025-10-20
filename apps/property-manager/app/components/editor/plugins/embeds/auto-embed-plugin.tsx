@@ -223,10 +223,7 @@ export function AutoEmbedPlugin(): JSX.Element {
 				getMenuOptions={getMenuOptions}
 				menuRenderFn={(
 					anchorElementRef,
-					{
-						options,
-						selectOptionAndCleanUp,
-					},
+					{ options, selectOptionAndCleanUp },
 				) => {
 					return anchorElementRef.current ? (
 						<Popover open={true}>
