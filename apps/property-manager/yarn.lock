@@ -212,7 +212,7 @@
     "@babel/plugin-transform-modules-commonjs" "^7.27.1"
     "@babel/plugin-transform-typescript" "^7.27.1"
 
-"@babel/runtime@^7.16.3", "@babel/runtime@^7.5.5", "@babel/runtime@^7.8.7":
+"@babel/runtime@^7.12.5", "@babel/runtime@^7.16.3", "@babel/runtime@^7.5.5", "@babel/runtime@^7.8.7":
   version "7.28.4"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.28.4.tgz#a70226016fabe25c5783b2f22d3e1c9bc5ca3326"
   integrity sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ==
@@ -537,12 +537,21 @@
     "@floating-ui/core" "^1.7.3"
     "@floating-ui/utils" "^0.2.10"
 
-"@floating-ui/react-dom@^2.0.0":
+"@floating-ui/react-dom@^2.0.0", "@floating-ui/react-dom@^2.1.6":
   version "2.1.6"
   resolved "https://registry.yarnpkg.com/@floating-ui/react-dom/-/react-dom-2.1.6.tgz#189f681043c1400561f62972f461b93f01bf2231"
   integrity sha512-4JX6rEatQEvlmgU80wZyq9RT96HZJa88q8hp0pBd+LrczeDI4o6uA2M+uvxngVHo4Ihr8uibXxH6+70zhAFrVw==
   dependencies:
     "@floating-ui/dom" "^1.7.4"
+
+"@floating-ui/react@^0.27.16":
+  version "0.27.16"
+  resolved "https://registry.yarnpkg.com/@floating-ui/react/-/react-0.27.16.tgz#6e485b5270b7a3296fdc4d0faf2ac9abf955a2f7"
+  integrity sha512-9O8N4SeG2z++TSM8QA/KTeKFBVCNEz/AGS7gWPJf6KFRzmRWixFRnCnkPHRDwSVZW6QPDO6uT0P2SpWNKCc9/g==
+  dependencies:
+    "@floating-ui/react-dom" "^2.1.6"
+    "@floating-ui/utils" "^0.2.10"
+    tabbable "^6.0.0"
 
 "@floating-ui/utils@^0.2.10":
   version "0.2.10"
@@ -637,6 +646,233 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
+"@lexical/clipboard@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/clipboard/-/clipboard-0.37.0.tgz#39baae67bf13effb90abf776d2cddb2650a32238"
+  integrity sha512-hRwASFX/ilaI5r8YOcZuQgONFshRgCPfdxfofNL7uruSFYAO6LkUhsjzZwUgf0DbmCJmbBADFw15FSthgCUhGA==
+  dependencies:
+    "@lexical/html" "0.37.0"
+    "@lexical/list" "0.37.0"
+    "@lexical/selection" "0.37.0"
+    "@lexical/utils" "0.37.0"
+    lexical "0.37.0"
+
+"@lexical/code@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/code/-/code-0.37.0.tgz#ee1f85ce0b6da110c0aa22cc566b4706c65ee323"
+  integrity sha512-ZXA4j/S8yLrxjrTnEp39VeDMp4Rd8bLYUlT4Buy1MQlS1WafxOiMhNQJG7k0BP/pO96YPkAebpA81ATKJL0IgA==
+  dependencies:
+    "@lexical/utils" "0.37.0"
+    lexical "0.37.0"
+    prismjs "^1.30.0"
+
+"@lexical/devtools-core@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/devtools-core/-/devtools-core-0.37.0.tgz#cc06ea42e43f7c315c6409130acca0e90ba66661"
+  integrity sha512-iOR+aKLJR92nKYcEOW3K/bgjTN7dJIRC/OM4OvzigU0Xygxped0lXV6UmkYBp0eoqOOwckB8+rZWZszj9lKA8Q==
+  dependencies:
+    "@lexical/html" "0.37.0"
+    "@lexical/link" "0.37.0"
+    "@lexical/mark" "0.37.0"
+    "@lexical/table" "0.37.0"
+    "@lexical/utils" "0.37.0"
+    lexical "0.37.0"
+
+"@lexical/dragon@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/dragon/-/dragon-0.37.0.tgz#5345f0a22744ac31cbc694271c5ad32b0b5afb03"
+  integrity sha512-iC4OKivEPtt7cGVSwZylLfz5T7Oqr9q9EOosS6E/byMyoqwkYWGjXn/qFiwIv1Xo3+G19vhfChi/+ZcYLXpHPw==
+  dependencies:
+    "@lexical/extension" "0.37.0"
+    lexical "0.37.0"
+
+"@lexical/extension@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/extension/-/extension-0.37.0.tgz#2ff2781b5668bdd8749435b926ef0118f8416562"
+  integrity sha512-Z58f2tIdz9bn8gltUu5cVg37qROGha38dUZv20gI2GeNugXAkoPzJYEcxlI1D/26tkevJ/7VaFUr9PTk+iKmaA==
+  dependencies:
+    "@lexical/utils" "0.37.0"
+    "@preact/signals-core" "^1.11.0"
+    lexical "0.37.0"
+
+"@lexical/file@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/file/-/file-0.37.0.tgz#66ada7ac0a8bc5d1ef6cca911d4fa3d5e4e77230"
+  integrity sha512-TXvojygwpBZ9WWArAZow+OP/S/xj2Z/zKAPRdovLFQgdNr70ormuJdk39CyF0Llzw9KQSG0PHlhv43J7aj6WEQ==
+  dependencies:
+    lexical "0.37.0"
+
+"@lexical/hashtag@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/hashtag/-/hashtag-0.37.0.tgz#294192cea65940a4ea5e079efa96c8e743dac0e3"
+  integrity sha512-DHoDpiokJRBu+GnC0qQH529hamn9YNjL7vzzkTAeEMKsT9+4O848Cq6F2GJn8QjQToySlkVZW3mkh76uf/XLfg==
+  dependencies:
+    "@lexical/text" "0.37.0"
+    "@lexical/utils" "0.37.0"
+    lexical "0.37.0"
+
+"@lexical/history@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/history/-/history-0.37.0.tgz#b2fc1c3c2a9f6ef9787aaedb5e0a98e6a80e1182"
+  integrity sha512-QKkrWCw4bsn/ZeLIkMVIpbtWKPhMYeax1nE7erHqTEwE52QR6pmZsZBgGSQDO73Ae29vahOmqlN7+ZJFvTKMVA==
+  dependencies:
+    "@lexical/extension" "0.37.0"
+    "@lexical/utils" "0.37.0"
+    lexical "0.37.0"
+
+"@lexical/html@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/html/-/html-0.37.0.tgz#b72e49302b45bd48a284d0af97950a07f197f6e5"
+  integrity sha512-oTsBc45eL8/lmF7fqGR+UCjrJYP04gumzf5nk4TczrxWL2pM4GIMLLKG1mpQI2H1MDiRLzq3T/xdI7Gh74z7Zw==
+  dependencies:
+    "@lexical/selection" "0.37.0"
+    "@lexical/utils" "0.37.0"
+    lexical "0.37.0"
+
+"@lexical/link@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/link/-/link-0.37.0.tgz#6e22800b3625fcfc78ebefaed21c7dd99a3052de"
+  integrity sha512-gglkjE99tKYnGAxQbrUq9TcaVKBQhidXhgPPbVw3x1Fba9biMafkbSJhE/7/pzQTPoQBAIl0w7DOUWmBOv+JbQ==
+  dependencies:
+    "@lexical/extension" "0.37.0"
+    "@lexical/utils" "0.37.0"
+    lexical "0.37.0"
+
+"@lexical/list@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/list/-/list-0.37.0.tgz#ca43e21c1705d2677a09ef4cd1d8d7d53cfadc22"
+  integrity sha512-AOC6yAA3mfNvJKbwo+kvAbPJI+13yF2ISA65vbA578CugvJ08zIVgM+pSzxquGhD0ioJY3cXVW7+gdkCP1qu5g==
+  dependencies:
+    "@lexical/extension" "0.37.0"
+    "@lexical/selection" "0.37.0"
+    "@lexical/utils" "0.37.0"
+    lexical "0.37.0"
+
+"@lexical/mark@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/mark/-/mark-0.37.0.tgz#ce4a953dee64d3fb9205e518618efb2b1e8ec1ea"
+  integrity sha512-ncjaL6kNHVioekx6vI5oJRDExFDJLbnXT7AdMnUv2LE3sxn/ea+JsZO/MDI4Ygmxq+lGtgZvbBDER8Yh/+5jdA==
+  dependencies:
+    "@lexical/utils" "0.37.0"
+    lexical "0.37.0"
+
+"@lexical/markdown@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/markdown/-/markdown-0.37.0.tgz#9fd4cda6b31420eed3a0b55d2acb9d4b390cd7e8"
+  integrity sha512-pcLMpxWkSxU2QaN2GLA3hNy4lV2A8sJOvb5YEkcsFEcVvFFbAz7lxgyKVYtDboRCW1eZFks1UGGuJEogLeEFdg==
+  dependencies:
+    "@lexical/code" "0.37.0"
+    "@lexical/link" "0.37.0"
+    "@lexical/list" "0.37.0"
+    "@lexical/rich-text" "0.37.0"
+    "@lexical/text" "0.37.0"
+    "@lexical/utils" "0.37.0"
+    lexical "0.37.0"
+
+"@lexical/offset@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/offset/-/offset-0.37.0.tgz#62f5de3962b2fc44f6365459b15a38bb0395e99e"
+  integrity sha512-q9Ckftfhb+VepJQeaClOYzpuV+WqWWGkSUuoexV4zjAm/HVjOie9lrNF4NkhQe5crnIBXI5zOofhuEfiCQWsbQ==
+  dependencies:
+    lexical "0.37.0"
+
+"@lexical/overflow@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/overflow/-/overflow-0.37.0.tgz#c8daa3829c6b423e334c28d006713a711ed5eb29"
+  integrity sha512-GC5qoQJQzaofCq1eMMvv9wIGMAbpFbFwny5BKA1C2Nmn+/2bi6v+7qlHwiBlbSVqfLVPvT4nYdrmNdnKoE0jZg==
+  dependencies:
+    lexical "0.37.0"
+
+"@lexical/plain-text@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/plain-text/-/plain-text-0.37.0.tgz#88813ce82bb41e3763d81431d33cd33845581577"
+  integrity sha512-4IxG9Tr0NnQ+clN1eoXfe2W8JTgw0xtPMzqvHP2IaO7RILUE6H8VFSOdhAOI0dHrjlXRMUS3I2Fhqr2ZRq8kdQ==
+  dependencies:
+    "@lexical/clipboard" "0.37.0"
+    "@lexical/dragon" "0.37.0"
+    "@lexical/selection" "0.37.0"
+    "@lexical/utils" "0.37.0"
+    lexical "0.37.0"
+
+"@lexical/react@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/react/-/react-0.37.0.tgz#042bb6339b9ff4fd329824206719a98fa2d1323a"
+  integrity sha512-PGIGmI5xDSAguqpAStd+89TfWsi6hs/R4a3hQAyNwXXDEt4anUFJic4Qet4YftybLGajP3vMvouLE5hrkmBihg==
+  dependencies:
+    "@floating-ui/react" "^0.27.16"
+    "@lexical/devtools-core" "0.37.0"
+    "@lexical/dragon" "0.37.0"
+    "@lexical/extension" "0.37.0"
+    "@lexical/hashtag" "0.37.0"
+    "@lexical/history" "0.37.0"
+    "@lexical/link" "0.37.0"
+    "@lexical/list" "0.37.0"
+    "@lexical/mark" "0.37.0"
+    "@lexical/markdown" "0.37.0"
+    "@lexical/overflow" "0.37.0"
+    "@lexical/plain-text" "0.37.0"
+    "@lexical/rich-text" "0.37.0"
+    "@lexical/table" "0.37.0"
+    "@lexical/text" "0.37.0"
+    "@lexical/utils" "0.37.0"
+    "@lexical/yjs" "0.37.0"
+    lexical "0.37.0"
+    react-error-boundary "^6.0.0"
+
+"@lexical/rich-text@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/rich-text/-/rich-text-0.37.0.tgz#80997836cfc9c88278a6dd3293290922b808609e"
+  integrity sha512-A9i5Es/RrZv71tB6dDSyd4TYdbkn/+oUrUdTwnWa+B8EZW26q0h+wgxCGwPtTU7ho4JNP9HOot+EIhe2DbyaYg==
+  dependencies:
+    "@lexical/clipboard" "0.37.0"
+    "@lexical/dragon" "0.37.0"
+    "@lexical/selection" "0.37.0"
+    "@lexical/utils" "0.37.0"
+    lexical "0.37.0"
+
+"@lexical/selection@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/selection/-/selection-0.37.0.tgz#de76c3abf29bcd0863541f9e312a90469d08c9c4"
+  integrity sha512-Lix1s2r71jHfsTEs4q/YqK2s3uXKOnyA3fd1VDMWysO+bZzRwEO5+qyDvENZ0WrXSDCnlibNFV1HttWX9/zqyw==
+  dependencies:
+    lexical "0.37.0"
+
+"@lexical/table@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/table/-/table-0.37.0.tgz#c57d2145157e541e3ef4bd0428fa11944fe19686"
+  integrity sha512-g7S8ml8kIujEDLWlzYKETgPCQ2U9oeWqdytRuHjHGi/rjAAGHSej5IRqTPIMxNP3VVQHnBoQ+Y9hBtjiuddhgQ==
+  dependencies:
+    "@lexical/clipboard" "0.37.0"
+    "@lexical/extension" "0.37.0"
+    "@lexical/utils" "0.37.0"
+    lexical "0.37.0"
+
+"@lexical/text@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/text/-/text-0.37.0.tgz#54c128d4c3d3298167bee97b313bc9960cc64ac1"
+  integrity sha512-qByNjHp88mlUWHxfYutH4vhSs3nzfCGHKsf/MqUMOC8K7Kmp0V1NK6cOW1sgsHpzkovfpgcNOGDzZxTNCFgHtg==
+  dependencies:
+    lexical "0.37.0"
+
+"@lexical/utils@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/utils/-/utils-0.37.0.tgz#e37d1ba07f3064d680075c7ec3a2af4666406d06"
+  integrity sha512-CFp4diY/kR5RqhzQSl/7SwsMod1sgLpI1FBifcOuJ6L/S6YywGpEB4B7aV5zqW21A/jU2T+2NZtxSUn6S+9gMg==
+  dependencies:
+    "@lexical/list" "0.37.0"
+    "@lexical/selection" "0.37.0"
+    "@lexical/table" "0.37.0"
+    lexical "0.37.0"
+
+"@lexical/yjs@0.37.0":
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/@lexical/yjs/-/yjs-0.37.0.tgz#1578707700d28e4b5cb7890db3d98a615def3374"
+  integrity sha512-7UjHvXDd+Is/qTdNkpQ/K04Zduh2uh7UTlSWbMiqwbQh8VRJNXXgcH8iK0TXLwc7M3VgVk+FlnNApNvcReKB6g==
+  dependencies:
+    "@lexical/offset" "0.37.0"
+    "@lexical/selection" "0.37.0"
+    lexical "0.37.0"
+
 "@mjackson/node-fetch-server@^0.2.0":
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/@mjackson/node-fetch-server/-/node-fetch-server-0.2.0.tgz#577c0c25d8aae9f69a97738b7b0d03d1471cdc49"
@@ -710,6 +946,11 @@
   version "0.11.0"
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
   integrity sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==
+
+"@preact/signals-core@^1.11.0":
+  version "1.12.1"
+  resolved "https://registry.yarnpkg.com/@preact/signals-core/-/signals-core-1.12.1.tgz#714b489bb35d9874cc44b35706a9dc27da8d21c4"
+  integrity sha512-BwbTXpj+9QutoZLQvbttRg5x3l5468qaV2kufh+51yha1c53ep5dY4kTuZR35+3pAZxpfQerGJiQqg34ZNZ6uA==
 
 "@radix-ui/number@1.1.1":
   version "1.1.1"
@@ -862,6 +1103,11 @@
     "@radix-ui/react-primitive" "2.1.3"
     "@radix-ui/react-use-callback-ref" "1.1.1"
 
+"@radix-ui/react-icons@1.3.2":
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/@radix-ui/react-icons/-/react-icons-1.3.2.tgz#09be63d178262181aeca5fb7f7bc944b10a7f441"
+  integrity sha512-fyQIhGDhzfc9pK2kH6Pl9c4BDJGfMkPqkyIgYDthyNYoNg3wVhoJMMh19WS4Up/1KMPFVpNsT2q3WmXn2N1m6g==
+
 "@radix-ui/react-id@1.1.1", "@radix-ui/react-id@^1.1.0":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@radix-ui/react-id/-/react-id-1.1.1.tgz#1404002e79a03fe062b7e3864aa01e24bd1471f7"
@@ -983,6 +1229,21 @@
     "@radix-ui/react-use-callback-ref" "1.1.1"
     "@radix-ui/react-use-controllable-state" "1.2.2"
 
+"@radix-ui/react-scroll-area@1.2.10":
+  version "1.2.10"
+  resolved "https://registry.yarnpkg.com/@radix-ui/react-scroll-area/-/react-scroll-area-1.2.10.tgz#e4fd3b4a79bb77bec1a52f0c8f26d8f3f1ca4b22"
+  integrity sha512-tAXIa1g3sM5CGpVT0uIbUx/U3Gs5N8T52IICuCtObaos1S8fzsrPXG5WObkQN3S6NVl6wKgPhAIiBGbWnvc97A==
+  dependencies:
+    "@radix-ui/number" "1.1.1"
+    "@radix-ui/primitive" "1.1.3"
+    "@radix-ui/react-compose-refs" "1.1.2"
+    "@radix-ui/react-context" "1.1.2"
+    "@radix-ui/react-direction" "1.1.1"
+    "@radix-ui/react-presence" "1.1.5"
+    "@radix-ui/react-primitive" "2.1.3"
+    "@radix-ui/react-use-callback-ref" "1.1.1"
+    "@radix-ui/react-use-layout-effect" "1.1.1"
+
 "@radix-ui/react-select@2.2.6":
   version "2.2.6"
   resolved "https://registry.yarnpkg.com/@radix-ui/react-select/-/react-select-2.2.6.tgz#022cf8dab16bf05d0d1b4df9e53e4bea1b744fd9"
@@ -1036,6 +1297,28 @@
     "@radix-ui/react-presence" "1.1.5"
     "@radix-ui/react-primitive" "2.1.3"
     "@radix-ui/react-roving-focus" "1.1.11"
+    "@radix-ui/react-use-controllable-state" "1.2.2"
+
+"@radix-ui/react-toggle-group@1.1.11":
+  version "1.1.11"
+  resolved "https://registry.yarnpkg.com/@radix-ui/react-toggle-group/-/react-toggle-group-1.1.11.tgz#e513d6ffdb07509b400ab5b26f2523747c0d51c1"
+  integrity sha512-5umnS0T8JQzQT6HbPyO7Hh9dgd82NmS36DQr+X/YJ9ctFNCiiQd6IJAYYZ33LUwm8M+taCz5t2ui29fHZc4Y6Q==
+  dependencies:
+    "@radix-ui/primitive" "1.1.3"
+    "@radix-ui/react-context" "1.1.2"
+    "@radix-ui/react-direction" "1.1.1"
+    "@radix-ui/react-primitive" "2.1.3"
+    "@radix-ui/react-roving-focus" "1.1.11"
+    "@radix-ui/react-toggle" "1.1.10"
+    "@radix-ui/react-use-controllable-state" "1.2.2"
+
+"@radix-ui/react-toggle@1.1.10":
+  version "1.1.10"
+  resolved "https://registry.yarnpkg.com/@radix-ui/react-toggle/-/react-toggle-1.1.10.tgz#b04ba0f9609599df666fce5b2f38109a197f08cf"
+  integrity sha512-lS1odchhFTeZv3xwHH31YPObmJn8gOg7Lq12inrr0+BH/l3Tsq32VfjqH1oh80ARM3mlkfMic15n0kg4sD1poQ==
+  dependencies:
+    "@radix-ui/primitive" "1.1.3"
+    "@radix-ui/react-primitive" "2.1.3"
     "@radix-ui/react-use-controllable-state" "1.2.2"
 
 "@radix-ui/react-tooltip@1.2.8":
@@ -3516,6 +3799,11 @@ levn@^0.4.1:
     prelude-ls "^1.2.1"
     type-check "~0.4.0"
 
+lexical@0.37.0:
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/lexical/-/lexical-0.37.0.tgz#9f849c6edb7a04d1568d05e18b8f509606dc7a70"
+  integrity sha512-r5VJR2TioQPAsZATfktnJFrGIiy6gjQN8b/+0a2u1d7/QTH7lhbB7byhGSvcq1iaa1TV/xcf/pFV55a5V5hTDQ==
+
 lightningcss-darwin-arm64@1.30.1:
   version "1.30.1"
   resolved "https://registry.yarnpkg.com/lightningcss-darwin-arm64/-/lightningcss-darwin-arm64-1.30.1.tgz#3d47ce5e221b9567c703950edf2529ca4a3700ae"
@@ -3630,10 +3918,10 @@ lru-cache@^7.4.4, lru-cache@^7.5.1:
   resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-7.18.3.tgz#f793896e0fd0e954a59dfdd82f0773808df6aa89"
   integrity sha512-jumlc0BIUrS3qJGgIkWZsyfAM7NCWiBcCDhnd+3NNM5KbBmLTgHVfWBcg6W+rLUsIpzpERPsvwUP7CckAQSOoA==
 
-lucide-react@0.545.0:
-  version "0.545.0"
-  resolved "https://registry.yarnpkg.com/lucide-react/-/lucide-react-0.545.0.tgz#82affd1b581d358356578dd033e11dd17e6493a0"
-  integrity sha512-7r1/yUuflQDSt4f1bpn5ZAocyIxcTyVyBBChSVtBKn5M+392cPmI5YJMWOJKk/HUWGm5wg83chlAZtCcGbEZtw==
+lucide-react@0.546.0:
+  version "0.546.0"
+  resolved "https://registry.yarnpkg.com/lucide-react/-/lucide-react-0.546.0.tgz#d9fdc232b47fe652e06401b7ee846bf82b4f7de8"
+  integrity sha512-Z94u6fKT43lKeYHiVyvyR8fT7pwCzDu7RyMPpTvh054+xahSgj4HFQ+NmflvzdXsoAjYGdCguGaFKYuvq0ThCQ==
 
 magic-string@^0.30.18:
   version "0.30.19"
@@ -4038,6 +4326,11 @@ prettier@3.6.2, prettier@^3.6.2:
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.6.2.tgz#ccda02a1003ebbb2bfda6f83a074978f608b9393"
   integrity sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==
 
+prismjs@^1.30.0:
+  version "1.30.0"
+  resolved "https://registry.yarnpkg.com/prismjs/-/prismjs-1.30.0.tgz#d9709969d9d4e16403f6f348c63553b19f0975a9"
+  integrity sha512-DEvV2ZF2r2/63V+tK8hQvrR2ZGn10srHbXviTlcv7Kpzw8jWiNTqbVgjO3IY8RxrrOUF8VPMQQFysYYYv0YZxw==
+
 proc-log@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/proc-log/-/proc-log-3.0.0.tgz#fb05ef83ccd64fd7b20bbe9c8c1070fc08338dd8"
@@ -4105,6 +4398,11 @@ raw-body@2.5.2:
     iconv-lite "0.4.24"
     unpipe "1.0.0"
 
+react-colorful@5.6.1:
+  version "5.6.1"
+  resolved "https://registry.yarnpkg.com/react-colorful/-/react-colorful-5.6.1.tgz#7dc2aed2d7c72fac89694e834d179e32f3da563b"
+  integrity sha512-1exovf0uGTGyq5mXQT0zgQ80uvj2PCwvF8zY1RN9/vbJVSjSo3fsB/4L3ObbF7u70NduSiK4xu4Y6q1MHoUGEw==
+
 react-device-detect@2.2.3:
   version "2.2.3"
   resolved "https://registry.yarnpkg.com/react-device-detect/-/react-device-detect-2.2.3.tgz#97a7ae767cdd004e7c3578260f48cf70c036e7ca"
@@ -4118,6 +4416,13 @@ react-dom@19.1.1:
   integrity sha512-Dlq/5LAZgF0Gaz6yiqZCf6VCcZs1ghAJyrsu84Q/GT0gV+mCxbfmKNoGRKBYMJ8IEdGPqu49YWXD02GCknEDkw==
   dependencies:
     scheduler "^0.26.0"
+
+react-error-boundary@6.0.0, react-error-boundary@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/react-error-boundary/-/react-error-boundary-6.0.0.tgz#a9e552146958fa77d873b587aa6a5e97544ee954"
+  integrity sha512-gdlJjD7NWr0IfkPlaREN2d9uUZUlksrfOx7SX62VRerwXbMY6ftGCIZua1VG1aXFNOimhISsTq+Owp725b9SiA==
+  dependencies:
+    "@babel/runtime" "^7.12.5"
 
 react-is@^16.13.1:
   version "16.13.1"
@@ -4692,6 +4997,11 @@ supports-preserve-symlinks-flag@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/supports-preserve-symlinks-flag/-/supports-preserve-symlinks-flag-1.0.0.tgz#6eda4bd344a3c94aea376d4cc31bc77311039e09"
   integrity sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==
+
+tabbable@^6.0.0:
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/tabbable/-/tabbable-6.2.0.tgz#732fb62bc0175cfcec257330be187dcfba1f3b97"
+  integrity sha512-Cat63mxsVJlzYvN51JmVXIgNoUokrIaT2zLclCXjRd8boZ0004U4KCs/sToJ75C6sdlByWxpYnb5Boif1VSFew==
 
 tailwind-merge@3.3.1:
   version "3.3.1"
