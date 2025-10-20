@@ -2,7 +2,6 @@ import {
 	Frame,
 	Settings2,
 	LifeBuoy,
-	Users,
 	PieChart,
 	House,
 	BookOpenText,
@@ -125,28 +124,9 @@ const data = {
 			],
 		},
 		{
-			title: 'Managers',
-			url: '/managers',
-			icon: Users,
-		},
-		{
 			title: 'Settings',
 			url: '/settings',
 			icon: Settings2,
-			items: [
-				{
-					title: 'General',
-					url: '/general',
-				},
-				{
-					title: 'Documents',
-					url: '/documents',
-				},
-				{
-					title: 'Billing',
-					url: '/billing',
-				},
-			],
 		},
 	],
 	navSecondary: [

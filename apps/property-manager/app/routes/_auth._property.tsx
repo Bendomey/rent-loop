@@ -77,7 +77,7 @@ export default function PropertyDashboard({ matches }: Route.ComponentProps) {
 						</div>
 					</div>
 				</header>
-				<div className="px-7 pt-5">
+				<div className="h-full">
 					<Outlet />
 				</div>
 			</SidebarInset>

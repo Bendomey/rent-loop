@@ -35,11 +35,15 @@ export function DocumentsModule() {
 				id: 'drag',
 				header: () => null,
 				cell: () => {
-					return     <Badge variant="outline" className={`w-9 h-9 p-0.5 flex flex-col bg-blue-100`}>
-      <FileText className={`w-full h-full text-blue-600`} />
-      <span className="text-[7px] font-bold text-black">DOCX</span>
-    </Badge>
-
+					return (
+						<Badge
+							variant="outline"
+							className={`flex h-9 w-9 flex-col bg-blue-100 p-0.5`}
+						>
+							<FileText className={`h-full w-full text-blue-600`} />
+							<span className="text-[7px] font-bold text-black">DOCX</span>
+						</Badge>
+					)
 				},
 			},
 			{
@@ -62,14 +66,14 @@ export function DocumentsModule() {
 				header: 'Owner',
 				cell: ({ row }) => {
 					return (
-						<div className="min-w-32 flex items-center">
-							<Avatar className='w-8 h-8'>
-							<AvatarImage src="" />		
-							<AvatarFallback>
-							{getNameInitials(row.original.created_by.name)}
-							</AvatarFallback>
+						<div className="flex min-w-32 items-center">
+							<Avatar className="h-8 w-8">
+								<AvatarImage src="" />
+								<AvatarFallback>
+									{getNameInitials(row.original.created_by.name)}
+								</AvatarFallback>
 							</Avatar>
-							<span className="truncate text-xs text-zinc-600 pl-1.5">
+							<span className="truncate pl-1.5 text-xs text-zinc-600">
 								{row.original.created_by.name}
 							</span>
 						</div>
@@ -147,13 +151,13 @@ export function DocumentsModule() {
 	return (
 		<main className="flex flex-col gap-2 sm:gap-4">
 			<div className="flex flex-row items-center justify-between">
-			<div>
-				<TypographyH4>Manage Documents</TypographyH4>
-				<TypographyMuted>
-					Manage your global templates here in one place. 
-				</TypographyMuted>
-			</div>
-			<div>
+				<div>
+					<TypographyH4>Manage Documents</TypographyH4>
+					<TypographyMuted>
+						Manage your global templates here in one place.
+					</TypographyMuted>
+				</div>
+				<div>
 					<Button variant="outline" size="sm">
 						<RotateCw className="size-4" />
 						Refresh
