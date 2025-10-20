@@ -1,9 +1,8 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { EllipsisVertical, RotateCw } from 'lucide-react'
+import { EllipsisVertical, FileText, RotateCw } from 'lucide-react'
 import { useMemo } from 'react'
 import { DocumentsController } from './controller'
 import { DataTable } from '~/components/datatable'
-import { FileIcon } from '~/components/file-icon'
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -16,6 +15,7 @@ import {
 	AlertDialogTrigger,
 } from '~/components/ui/alert-dialog'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
+import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
 	DropdownMenu,
@@ -34,9 +34,11 @@ export function DocumentsModule() {
 			{
 				id: 'drag',
 				header: () => null,
-				cell: ({ row }) => {
-					const name = row.original?.name || ''
-					return FileIcon(name)
+				cell: () => {
+					return     <Badge variant="outline" className={`w-9 h-9 p-0.5 flex flex-col bg-blue-100`}>
+      <FileText className={`w-full h-full text-blue-600`} />
+      <span className="text-[7px] font-bold text-black">DOCX</span>
+    </Badge>
 
 				},
 			},
@@ -56,19 +58,19 @@ export function DocumentsModule() {
 				enableHiding: false,
 			},
 			{
-				accessorKey: 'owner',
+				accessorKey: 'created_by',
 				header: 'Owner',
 				cell: ({ row }) => {
 					return (
 						<div className="min-w-32 flex items-center">
 							<Avatar className='w-8 h-8'>
-  <AvatarImage src="" />		
-<AvatarFallback>
- {getNameInitials(row.original.owner.name)}
-</AvatarFallback>
-</Avatar>
+							<AvatarImage src="" />		
+							<AvatarFallback>
+							{getNameInitials(row.original.created_by.name)}
+							</AvatarFallback>
+							</Avatar>
 							<span className="truncate text-xs text-zinc-600 pl-1.5">
-								{row.original.owner.name}
+								{row.original.created_by.name}
 							</span>
 						</div>
 					)
@@ -117,7 +119,7 @@ export function DocumentsModule() {
 								<DropdownMenuSeparator />
 								<AlertDialogTrigger asChild>
 									<DropdownMenuItem variant="destructive">
-										Deactivate
+										Delete
 									</DropdownMenuItem>
 								</AlertDialogTrigger>
 							</DropdownMenuContent>
@@ -126,13 +128,13 @@ export function DocumentsModule() {
 							<AlertDialogHeader>
 								<AlertDialogTitle>Are you sure?</AlertDialogTitle>
 								<AlertDialogDescription>
-									This will deactivate the member.
+									This will delete the document.
 								</AlertDialogDescription>
 							</AlertDialogHeader>
 							<AlertDialogFooter className="mt-5">
 								<AlertDialogCancel>Cancel</AlertDialogCancel>
 								<AlertDialogAction className="bg-destructive hover:bg-destructive/90 text-white">
-									Deactivate
+									Delete
 								</AlertDialogAction>
 							</AlertDialogFooter>
 						</AlertDialogContent>
@@ -166,22 +168,19 @@ export function DocumentsModule() {
 						rows: [
 							{
 								id: '1',
-								name: 'Tenant Agreement.pdf',
+								name: 'Tenant Agreement',
 								file_size: '1.2MB',
-								status: 'Document.Status.Completed',
-								owner: {
+								created_by: {
 									name: 'Gideon Bempong',
-									profile_pic: 'https://github.com/shadcn.png',
 								},
 								created_at: new Date(),
 								updated_at: new Date(),
 							},
 							{
 								id: '2',
-								name: 'Tenant Agreement.docx',
+								name: 'Tenant Agreement',
 								file_size: '1.2MB',
-								status: 'Document.Status.Completed',
-								owner: {
+								created_by: {
 									name: 'Esther Bempong',
 								},
 								created_at: new Date(),
@@ -189,10 +188,9 @@ export function DocumentsModule() {
 							},
 							{
 								id: '3',
-								name: 'Lease Agreement.doc',
+								name: 'Lease Agreement',
 								file_size: '850KB',
-								status: 'Document.Status.Approved',
-								owner: {
+								created_by: {
 									name: 'Adwoa Mensah',
 								},
 								created_at: new Date(),
@@ -200,10 +198,9 @@ export function DocumentsModule() {
 							},
 							{
 								id: '4',
-								name: 'Inventory List.xlsx',
+								name: 'Inventory List',
 								file_size: '420KB',
-								status: 'Document.Status.InProgress',
-								owner: {
+								created_by: {
 									name: 'Kofi Adu',
 								},
 								created_at: new Date(),
@@ -211,10 +208,9 @@ export function DocumentsModule() {
 							},
 							{
 								id: '5',
-								name: 'Inspection Report.pdf',
+								name: 'Inspection Report',
 								file_size: '2.3MB',
-								status: 'Document.Status.Completed',
-								owner: {
+								created_by: {
 									name: 'Abena Owusu',
 								},
 								created_at: new Date(),
@@ -222,10 +218,9 @@ export function DocumentsModule() {
 							},
 							{
 								id: '6',
-								name: 'Renewal Notice.docx',
+								name: 'Renewal Notice',
 								file_size: '300KB',
-								status: 'Document.Status.Draft',
-								owner: {
+								created_by: {
 									name: 'Yaw Boateng',
 								},
 								created_at: new Date(),
@@ -233,10 +228,9 @@ export function DocumentsModule() {
 							},
 							{
 								id: '7',
-								name: 'Payment Receipt.pdf',
+								name: 'Payment Receipt',
 								file_size: '120KB',
-								status: 'Document.Status.Approved',
-								owner: {
+								created_by: {
 									name: 'Selina Koranteng',
 								},
 								created_at: new Date(),
@@ -244,10 +238,9 @@ export function DocumentsModule() {
 							},
 							{
 								id: '8',
-								name: 'Property Photos.zip',
+								name: 'Property Photos',
 								file_size: '6.8MB',
-								status: 'Document.Status.Archived',
-								owner: {
+								created_by: {
 									name: 'Gideon Bempong',
 								},
 								created_at: new Date(),
