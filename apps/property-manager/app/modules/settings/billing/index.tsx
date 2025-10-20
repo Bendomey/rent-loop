@@ -48,13 +48,13 @@ export function BillingModule() {
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
 						{getValue<BillingInvoice['status']>() ===
-						'BillingInvoice.Status.Paid' ? (
+							'BillingInvoice.Status.Paid' ? (
 							<CircleCheck className="fill-green-600 text-white" />
 						) : (
 							<Loader className="text-yellow-600" />
 						)}
 						{getValue<BillingInvoice['status']>() ===
-						'BillingInvoice.Status.Pending'
+							'BillingInvoice.Status.Pending'
 							? 'Pending'
 							: 'Paid'}
 					</Badge>
@@ -155,6 +155,8 @@ export function BillingModule() {
 									city: 'Accra',
 									state: 'Greater Accra',
 									zip_code: '00123',
+									type: 'SINGLE',
+									status: 'Property.Status.Active',
 									created_at: new Date(),
 									updated_at: new Date(),
 								},
@@ -182,6 +184,8 @@ export function BillingModule() {
 									city: 'Kumasi',
 									state: 'Ashanti',
 									zip_code: '00233',
+									type: 'SINGLE',
+									status: 'Property.Status.Active',
 									created_at: new Date(),
 									updated_at: new Date(),
 								},
