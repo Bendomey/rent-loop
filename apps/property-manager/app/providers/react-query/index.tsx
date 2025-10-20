@@ -3,7 +3,7 @@ import {
 	QueryClientProvider,
 	HydrationBoundary,
 } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+// import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { type PropsWithChildren } from 'react'
 import { useDehydratedState } from '~/hooks/use-dehydrated-state.ts'
 
@@ -24,7 +24,7 @@ export const ReactQueryProvider = ({ children }: PropsWithChildren) => {
 	return (
 		<QueryClientProvider client={queryClient}>
 			<HydrationBoundary state={dehydratedState}>{children}</HydrationBoundary>
-			<ReactQueryDevtools initialIsOpen={false} />
+			{/* <ReactQueryDevtools initialIsOpen={false} /> */}
 		</QueryClientProvider>
 	)
 }
