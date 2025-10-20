@@ -1,5 +1,6 @@
 import { ArrowLeft, PencilLine, Save } from 'lucide-react'
 import { Button } from '~/components/ui/button'
+import { TypographyMuted } from '~/components/ui/typography'
 
 export function MenuBar() {
 	return (
@@ -12,6 +13,9 @@ export function MenuBar() {
 				<Button size="sm" variant="ghost">
 					<PencilLine />
 				</Button>
+			</div>
+			<div>
+				<TypographyMuted>Changes Made</TypographyMuted>
 			</div>
 			<div className="flex items-center space-x-2">
 				<Button size="sm" variant="ghost" className="text-xs">
