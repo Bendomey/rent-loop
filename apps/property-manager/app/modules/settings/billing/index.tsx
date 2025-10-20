@@ -200,11 +200,11 @@ export function BillingModule() {
 						has_next_page: true,
 					}}
 					empty={{
-						message: 'No members found',
+						message: 'No billing invoices found',
 						description:
 							"Try adjusting your search or filter to find what you're looking for.",
 						button: {
-							label: 'Add Member',
+							label: 'Add Invoice',
 							onClick: () => {
 								// Handle button click
 							},
