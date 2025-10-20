@@ -22,29 +22,29 @@ func NewClientApplicationHandler(appCtx pkg.AppContext, service services.ClientA
 }
 
 type CreateClientApplicationRequest struct {
-	Type               string  `json:"type" validate:"required,oneof=INDIVIDUAL COMPANY"`                            // INDIVIDUAL | COMPANY
-	SubType            string  `json:"subType" validate:"required,oneof=LANDLORD PROPERTY_MANAGER DEVELOPER AGENCY"` // INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER | AGENCY
-	Name               string  `json:"name" validate:"required"`                                                     // company name or individual full name
+	Type               string  `json:"type" validate:"required,oneof=INDIVIDUAL COMPANY"`                             // INDIVIDUAL | COMPANY
+	SubType            string  `json:"sub_type" validate:"required,oneof=LANDLORD PROPERTY_MANAGER DEVELOPER AGENCY"` // INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER | AGENCY
+	Name               string  `json:"name" validate:"required"`                                                      // company name or individual full name
 	Address            string  `json:"address" validate:"required"`
-	Country            string  `json:"country" validate:"required,min=3,max=255"`
-	Region             string  `json:"region" validate:"required,min=3,max=255"`
-	City               string  `json:"city" validate:"required,min=3,max=255"`
+	Country            string  `json:"country" validate:"required"`
+	Region             string  `json:"region" validate:"required"`
+	City               string  `json:"city" validate:"required"`
 	Latitude           float64 `json:"latitude" validate:"required"`
 	Longitude          float64 `json:"longitude" validate:"required"`
-	ContactName        string  `json:"contactName" validate:"required"`
-	ContactPhoneNumber string  `json:"contactPhoneNumber" validate:"required"`
-	ContactEmail       string  `json:"contactEmail" validate:"required,email"`
-	DateOfBirth        string  `json:"dateOfBirth"`
-	IDType             *string `json:"idType"`
-	IDNumber           *string `json:"idNumber"`
-	IDExpiry           *string `json:"idExpiry"`
-	IDDocumentURL      *string `json:"idDocumentUrl"`
-	RegistrationNumber *string `json:"registrationNumber"`
-	LogoURL            *string `json:"logoUrl"`
+	ContactName        string  `json:"contact_name" validate:"required"`
+	ContactPhoneNumber string  `json:"contact_phone_number" validate:"required"`
+	ContactEmail       string  `json:"contact_email" validate:"required,email"`
+	DateOfBirth        string  `json:"date_of_birth"`
+	IDType             *string `json:"id_type" validate:"oneof=DRIVERS_LICENSE PASSPORT NATIONAL_ID"`
+	IDNumber           *string `json:"id_number"`
+	IDExpiry           *string `json:"id_expiry"`
+	IDDocumentURL      *string `json:"id_document_url"`
+	RegistrationNumber *string `json:"registration_number"`
+	LogoURL            *string `json:"logo_url" validate:"url"`
 	Description        *string `json:"description"`
-	WebsiteURL         *string `json:"websiteUrl"`
-	SupportEmail       *string `json:"supportEmail"`
-	SupportPhone       *string `json:"supportPhone"`
+	WebsiteURL         *string `json:"website_url"`
+	SupportEmail       *string `json:"support_email"`
+	SupportPhone       *string `json:"support_phone"`
 }
 
 // CreateClientApplication godoc
