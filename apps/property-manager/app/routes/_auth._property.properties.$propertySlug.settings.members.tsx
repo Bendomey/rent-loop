@@ -1,7 +1,7 @@
 import type { Route } from './+types/_auth._property.properties.$propertySlug.settings.members'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { PropertyManagersModule } from '~/modules'
+import { PropertyMembersModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
 	return {
@@ -26,4 +26,4 @@ export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	return meta
 }
 
-export default PropertyManagersModule
+export default PropertyMembersModule
