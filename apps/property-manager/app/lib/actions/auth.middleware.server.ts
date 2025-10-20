@@ -28,6 +28,8 @@ export const authMiddleware: MiddlewareFunction = async ({
 				city: 'Anytown',
 				state: 'CA',
 				zip_code: '12345',
+				type: 'SINGLE',
+				status: 'Property.Status.Active',
 				created_at: new Date(),
 				updated_at: new Date(),
 			},
