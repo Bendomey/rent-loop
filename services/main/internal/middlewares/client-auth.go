@@ -33,7 +33,7 @@ func InjectClientUserAuthMiddleware(appCtx pkg.AppContext) func(http.Handler) ht
 	}
 }
 
-func CheckForClientUserAuthPresenceMiddleware(next http.Handler) http.Handler {
+func CheckForClientAuthPresenceMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		client, ok := lib.ClientUserFromContext(r.Context())
 		if !ok || client == nil {
