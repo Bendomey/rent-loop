@@ -10,22 +10,20 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-// InjectAdminAuthMiddleware checks if auth token is present and then passes it to the app's context.
-func InjectAdminAuthMiddleware(appCtx pkg.AppContext) func(http.Handler) http.Handler {
+func InjectClientUserAuthMiddleware(appCtx pkg.AppContext) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authorizationToken := r.Header.Get("Authorization")
 
 			if authorizationToken != "" {
-				admin, adminError := adminFromJWT(authorizationToken, appCtx.Config.TokenSecrets.AdminSecret)
+				client, clientError := clientFromJWT(authorizationToken, appCtx.Config.TokenSecrets.ClientUserSecret)
 
-				if adminError != nil {
+				if clientError != nil {
 					http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
 					return
 				}
 
-				// Attach admin to context
-				ctx := lib.WithAdmin(r.Context(), admin)
+				ctx := lib.WithClientUser(r.Context(), client)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
@@ -35,10 +33,10 @@ func InjectAdminAuthMiddleware(appCtx pkg.AppContext) func(http.Handler) http.Ha
 	}
 }
 
-func CheckForAdminAuthPresenceMiddleware(next http.Handler) http.Handler {
+func CheckForClientUserAuthPresenceMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		admin, ok := lib.AdminFromContext(r.Context())
-		if !ok || admin == nil {
+		client, ok := lib.ClientUserFromContext(r.Context())
+		if !ok || client == nil {
 			http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
 			return
 		}
@@ -47,24 +45,25 @@ func CheckForAdminAuthPresenceMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func adminFromJWT(unattendedToken string, secret string) (*lib.AdminFromToken, error) {
-	// extract token
+func clientFromJWT(unattendedToken string, secret string) (*lib.ClientUserFromToken, error) {
 	token, extractTokenErr := ExtractToken(unattendedToken)
+
 	if extractTokenErr != nil {
 		return nil, extractTokenErr
 	}
 
-	// extract token metadata
 	rawToken, validateError := validatetoken.ValidateJWTToken(token, secret)
 	if validateError != nil {
 		return nil, errors.New("AuthorizationFailed")
 	}
 
 	claims, ok := rawToken.Claims.(jwt.MapClaims)
-	var adminFromTokenImplementation lib.AdminFromToken
+	var clientFromTokenImplementation lib.ClientUserFromToken
+
 	if ok && rawToken.Valid {
-		adminFromTokenImplementation.ID = claims["id"].(string)
+		clientFromTokenImplementation.ID = claims["id"].(string)
+		clientFromTokenImplementation.Role = claims["role"].(string)
 	}
 
-	return &adminFromTokenImplementation, nil
+	return &clientFromTokenImplementation, nil
 }

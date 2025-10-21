@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-func ExtractAdminToken(unattendedToken string) (string, error) {
-	//remove bearer
+func ExtractToken(unattendedToken string) (string, error) {
+	// remove bearer
 	strArr := strings.Split(unattendedToken, " ")
 	if len(strArr) != 2 {
 		return "", errors.New("AuthorizationFailed")
