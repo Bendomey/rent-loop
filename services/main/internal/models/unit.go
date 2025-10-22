@@ -10,7 +10,7 @@ type Unit struct {
 
 	Name        string         `json:"name" gorm:"not null;"` // e.g., "Unit 101", "Apt 3B"
 	Slug        string         `json:"slug" gorm:"not null;index;"`
-	Description string         `json:"description"`
+	Description *string        `json:"description"`
 	Images      pq.StringArray `json:"images" gorm:"type:text[]"`
 	Tags        pq.StringArray `json:"tags" gorm:"type:text[]"`
 

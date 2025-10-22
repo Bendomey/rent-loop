@@ -10,16 +10,17 @@ type Property struct {
 
 	Name        string         `json:"name" gorm:"not null;"`
 	Slug        string         `json:"slug" gorm:"not null;index;"`
-	Description string         `json:"description"`
+	Description *string        `json:"description"`
 	Images      pq.StringArray `json:"images" gorm:"type:text[]"`
 	Tags        pq.StringArray `json:"tags" gorm:"type:text[]"`
 
-	Latitude  float64 `json:"latitude" gorm:"not null;"`
-	Longitude float64 `json:"longitude" gorm:"not null;"`
-	Address   string  `json:"address" gorm:"not null;"`
-	Country   string  `json:"country" gorm:"not null;"`
-	Region    string  `json:"region" gorm:"not null;"`
-	City      string  `json:"city" gorm:"not null;"`
+	Latitude   float64 `json:"latitude" gorm:"not null;"`
+	Longitude  float64 `json:"longitude" gorm:"not null;"`
+	Address    string  `json:"address" gorm:"not null;"`
+	Country    string  `json:"country" gorm:"not null;"`
+	Region     string  `json:"region" gorm:"not null;"`
+	City       string  `json:"city" gorm:"not null;"`
+	GPSAddress string  `json:"gpsAddress" gorm:"not null;"`
 
 	Type   string `json:"type" gorm:"not null;index;"`   // SINGLE | MULTI
 	Status string `json:"status" gorm:"not null;index;"` // ACTIVE | MAINTENANCE | INACTIVE

@@ -17,4 +17,6 @@ type Client struct {
 
 	ClientApplicationId string            `json:"clientApplicationId" gorm:"not null;"`
 	ClientApplication   ClientApplication `json:"clientApplication" gorm:"foreignKey:ClientApplicationId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+
+	Properties []Property `json:"properties" gorm:"foreignKey:ClientID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }
