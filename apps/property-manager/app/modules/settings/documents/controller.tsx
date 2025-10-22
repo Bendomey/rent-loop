@@ -1,7 +1,8 @@
 import type { SerializedEditorState, SerializedLexicalNode } from 'lexical'
-import { Download, Plus, Search } from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { ImportDocumentButton } from './components/import-document-button'
 import { Button } from '~/components/ui/button'
 import {
 	InputGroup,
@@ -47,10 +48,7 @@ export const DocumentsController = ({
 					</InputGroup>
 				</div>
 				<div className="flex items-center justify-end gap-2">
-					<Button variant="ghost" size="sm">
-						<Download className="size-4" />
-						Import
-					</Button>
+					<ImportDocumentButton />
 					<AddDocumentButton documentTemplates={documentTemplates} />
 				</div>
 			</div>
@@ -99,7 +97,7 @@ function AddDocumentButton({
 					Add Document
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent align="end" className="w-[50vw]">
+			<PopoverContent align="end" className="w-full md:w-[50vw]">
 				<div className="grid gap-4">
 					<div className="space-y-2">
 						<h4 className="leading-none font-medium">Add New Document</h4>
@@ -108,7 +106,7 @@ function AddDocumentButton({
 						</p>
 					</div>
 					<div className="py-3">
-						<ItemGroup className="grid grid-cols-2 gap-4">
+						<ItemGroup className="grid gap-4 md:grid-cols-2">
 							{docs.map((docTemplate) => (
 								<Item
 									key={docTemplate.name}
