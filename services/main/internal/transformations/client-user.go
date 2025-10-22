@@ -9,7 +9,7 @@ import (
 type OutputClientUser struct {
 	ID          string    `json:"id" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 	Name        string    `json:"name" example:"Client User Name"`
-	PhoneNumber string    `json:"phone_number" example:"0281234569"`
+	PhoneNumber string    `json:"phone_number" example:"+233281234569"`
 	Email       string    `json:"email" example:"client-user@example.com"`
 	Role        string    `json:"role" example:"STAFF"`
 	CreatedAt   time.Time `json:"created_at" example:"2023-01-01T00:00:00Z"`
