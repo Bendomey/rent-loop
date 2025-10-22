@@ -24,9 +24,7 @@ export function NewPropertyModule() {
 				/>
 				<div className="flex min-h-[88vh] items-center justify-center">
 					<div className="w-full max-w-3xl px-4 md:px-0">
-						{CurrentStep && (
-            <CurrentStep onGoBack={goBack} onGoNext={goNext} />
-          )}
+						{CurrentStep && <CurrentStep onGoBack={goBack} onGoNext={goNext} />}
 					</div>
 				</div>
 			</div>

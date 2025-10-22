@@ -14,8 +14,7 @@ import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 const models = [
 	{
 		name: 'Single Unit',
-		description:
-			'A complete housing space rented by one family or tenant.',
+		description: 'A complete housing space rented by one family or tenant.',
 		icon: Home,
 	},
 	{
@@ -34,9 +33,7 @@ export function Step0({ onGoNext }: Props) {
 	return (
 		<main className="mx-auto mb-5 space-y-10 md:max-w-2/3">
 			<div className="space-y-2">
-				<TypographyH2 className="">
-					What type of Property is this?
-				</TypographyH2>
+				<TypographyH2 className="">What type of Property is this?</TypographyH2>
 				<TypographyMuted className="">
 					Choose the category that best matches your property's layout or use.
 				</TypographyMuted>
