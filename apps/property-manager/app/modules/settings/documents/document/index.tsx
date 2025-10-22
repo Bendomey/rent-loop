@@ -3,7 +3,7 @@ import { useState } from 'react'
 
 import { Editor } from '~/components/blocks/template-editor/editor'
 
-export const initialValue = {
+const initialValue = {
 	root: {
 		children: [
 			{

@@ -44,6 +44,7 @@ export type DropzoneProps = Omit<DropzoneOptions, 'onDrop'> & {
 		event: DropEvent,
 	) => void
 	children?: ReactNode
+	content?: ReactNode
 	caption?: ReactNode
 }
 
@@ -59,6 +60,7 @@ export const Dropzone = ({
 	className,
 	children,
 	caption,
+	content,
 	...props
 }: DropzoneProps) => {
 	const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -117,7 +119,7 @@ export const Dropzone = ({
 				{...getRootProps()}
 			>
 				<input {...getInputProps()} disabled={disabled} />
-				{children}
+				{content ?? children}
 			</Button>
 			{errorMessage ? (
 				<TypographySmall className="text-destructive">
