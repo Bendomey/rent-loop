@@ -12,6 +12,14 @@ export const QUERY_KEYS = {
 	CURRENT_USER: 'current-user',
 } as const
 
+export const API_STATUS = {
+	IDLE: 'idle',
+	PENDING: 'pending',
+	SUCCESS: 'success',
+	ERROR: 'error',
+} as const
+export type APIStatusType = (typeof API_STATUS)[keyof typeof API_STATUS]
+
 // base64 1px png's generated from https://png-pixel.com/
 const placeholderColor =
 	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8+/79fwAJaAPMsmQeyQAAAABJRU5ErkJggg==' // grey-10 as 1px png in base64

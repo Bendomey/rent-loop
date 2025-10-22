@@ -1,5 +1,22 @@
 import type { SerializedEditorState } from 'lexical'
 
+export function getDocumentTemplates() {
+	return [
+		{
+			id: 'empty',
+			name: 'Empty Template',
+			description: 'Start from a blank template.',
+			document: EMPTY,
+		},
+		{
+			id: 'basic-lease-agreement',
+			name: 'Basic Lease Agreement',
+			description: 'A simple lease agreement template.',
+			document: BASIC,
+		},
+	]
+}
+
 export const EMPTY = {
 	root: {
 		children: [

@@ -1,6 +1,7 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { EllipsisVertical, FileText, RotateCw } from 'lucide-react'
 import { useMemo } from 'react'
+import { useLoaderData } from 'react-router'
 import { DocumentsController } from './controller'
 import { DataTable } from '~/components/datatable'
 import {
@@ -27,8 +28,10 @@ import {
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { localizedDayjs } from '~/lib/date'
 import { getNameInitials } from '~/lib/misc'
+import type { loader } from '~/routes/_auth._dashboard.settings.documents'
 
 export function DocumentsModule() {
+	const { documentTemplates } = useLoaderData<typeof loader>()
 	const columns: ColumnDef<AppDocument>[] = useMemo(() => {
 		return [
 			{
@@ -152,7 +155,7 @@ export function DocumentsModule() {
 		<main className="flex flex-col gap-2 sm:gap-4">
 			<div className="flex flex-row items-center justify-between">
 				<div>
-					<TypographyH4>Manage Documents</TypographyH4>
+					<TypographyH4>Manage Document Templates</TypographyH4>
 					<TypographyMuted>
 						Manage your global templates here in one place.
 					</TypographyMuted>
@@ -164,7 +167,7 @@ export function DocumentsModule() {
 					</Button>
 				</div>
 			</div>
-			<DocumentsController />
+			<DocumentsController documentTemplates={documentTemplates} />
 			<div className="h-full w-full">
 				<DataTable
 					columns={columns}

@@ -13,6 +13,7 @@ import {
 import type { Route } from './+types/root'
 
 import './app.css'
+import { Toaster } from './components/ui/sonner'
 import { getAuthSession } from './lib/actions/auth.session.server'
 import { environmentVariables } from './lib/actions/env.server'
 import { Providers } from './providers'
@@ -57,6 +58,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 			</head>
 			<body>
 				{children}
+				<Toaster position="top-center" />
 				<ScrollRestoration />
 				<Scripts />
 			</body>
