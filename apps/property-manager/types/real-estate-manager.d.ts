@@ -12,6 +12,7 @@ interface Property {
 	name: string
 	description: string | NullableString
 	address: string
+	gps_address: string
 	city: string
 	state: string
 	type: 'SINGLE' | 'MULTI'

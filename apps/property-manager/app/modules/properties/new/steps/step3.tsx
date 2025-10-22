@@ -15,6 +15,7 @@ const DUMMY_PREVIEWS: Property =
     description:
       "Cozy self-contained studio near Oxford Street, ideal for single professionals. Includes kitchenette and private bathroom.",
     address: "Osu, Oxford Street, Accra (5.5543, -0.1869)",
+    gps_address: "GH-123-4567",
 	zip_code: "GP-123-4567",
 	city: "Accra",
 	state: "Greater Accra",
@@ -71,9 +72,10 @@ export function Step3({ onGoBack, onSubmit, onEdit, formData }: Props) {
               <h3 className="text-sm font-semibold">Basic information</h3>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 {renderField('Name', data.name)}
-                {renderField('GPS Address', data.address)}
-                {renderField('Description', data.description)}
                 {renderField('Tags', data.tags)}
+              </div>
+              <div className="mt-2 grid gap-2 sm:grid-cols-1">
+                {renderField('Description', data.description)}
               </div>
             </div>
             <div>
@@ -90,6 +92,7 @@ export function Step3({ onGoBack, onSubmit, onEdit, formData }: Props) {
               <h3 className="text-sm font-semibold">Address</h3>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 {renderField('Selected address', data.address)}
+				{renderField('GPS Address', data.gps_address)}
               </div>
             </div>
             <div>

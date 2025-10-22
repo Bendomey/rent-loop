@@ -34,16 +34,6 @@ export function Step1({ onGoBack, onGoNext }: Props) {
 					<Textarea id="description" placeholder="Briefly describe your property (e.g., size, features, or highlights)"  />
 				</Field>
 
-					<Field>
-						<FieldLabel htmlFor="gps_address">GPS Address</FieldLabel>
-						<Input
-							id="gps_address"
-							type="text"
-							placeholder="Enter your GPS address"
-							required
-						/>
-					</Field>
-
 				 <PropertyTagInput value={tags} onChange={setTags} />
 			</FieldGroup>
 

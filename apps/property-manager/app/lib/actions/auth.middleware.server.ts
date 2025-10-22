@@ -26,6 +26,7 @@ export const authMiddleware: MiddlewareFunction = async ({
 				name: 'Sample Property',
 				description: '',
 				address: '123 Main St, Anytown, USA',
+				gps_address: 'GH-000-0000',
 				city: 'Anytown',
 				state: 'CA',
 				zip_code: '12345',

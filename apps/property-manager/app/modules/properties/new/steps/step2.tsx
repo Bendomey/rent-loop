@@ -2,6 +2,7 @@ import { Separator } from '@radix-ui/react-separator'
 import { ArrowLeft, Search } from 'lucide-react'
 import { Button } from '~/components/ui/button'
 import { Field, FieldGroup, FieldLabel } from '~/components/ui/field'
+import { Input } from '~/components/ui/input'
 import {
 	InputGroup,
 	InputGroupAddon,
@@ -38,6 +39,17 @@ export function Step2({ onGoBack, onGoNext }: Props) {
 						</InputGroupAddon>
 					</InputGroup>
 				</Field>
+
+				<Field>
+										<FieldLabel htmlFor="gps_address">GPS Address</FieldLabel>
+										<Input
+											id="gps_address"
+											type="text"
+											placeholder="Enter your GPS address (e.g., GM-123-4567)"
+											required
+										/>
+									</Field>
+				
 			</FieldGroup>
 
 			<div className="mt-10 flex items-center justify-end space-x-5">
