@@ -13,28 +13,33 @@ interface Props {
 }
 
 export function Step1({ onGoBack, onGoNext }: Props) {
-
-	 const [tags, setTags] = useState<string[]>([])
+	const [tags, setTags] = useState<string[]>([])
 	return (
 		<main className="mx-auto mb-5 space-y-10 md:max-w-2/3">
 			<div className="space-y-2">
 				<TypographyH2 className="">Basic Information</TypographyH2>
-				<TypographyMuted className="">
-					
-				</TypographyMuted>
+				<TypographyMuted className=""></TypographyMuted>
 			</div>
 
 			<FieldGroup>
 				<Field>
 					<FieldLabel htmlFor="name">Name</FieldLabel>
-					<Input id="name" type="text" placeholder="Enter property name" required />
+					<Input
+						id="name"
+						type="text"
+						placeholder="Enter property name"
+						required
+					/>
 				</Field>
 				<Field>
 					<FieldLabel htmlFor="description">Property Details</FieldLabel>
-					<Textarea id="description" placeholder="Briefly describe your property (e.g., size, features, or highlights)"  />
+					<Textarea
+						id="description"
+						placeholder="Briefly describe your property (e.g., size, features, or highlights)"
+					/>
 				</Field>
 
-				 <PropertyTagInput value={tags} onChange={setTags} />
+				<PropertyTagInput value={tags} onChange={setTags} />
 			</FieldGroup>
 
 			<div className="mt-10 flex items-center justify-end space-x-5">

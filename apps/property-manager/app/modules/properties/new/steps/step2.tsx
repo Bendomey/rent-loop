@@ -20,9 +20,7 @@ export function Step2({ onGoBack, onGoNext }: Props) {
 		<main className="mx-auto mb-5 space-y-10 md:max-w-2/3">
 			<div className="space-y-2">
 				<TypographyH2 className="">Address Information</TypographyH2>
-				<TypographyMuted className="">
-					Where are you located?
-				</TypographyMuted>
+				<TypographyMuted className="">Where are you located?</TypographyMuted>
 			</div>
 
 			<FieldGroup>
@@ -41,15 +39,14 @@ export function Step2({ onGoBack, onGoNext }: Props) {
 				</Field>
 
 				<Field>
-										<FieldLabel htmlFor="gps_address">GPS Address</FieldLabel>
-										<Input
-											id="gps_address"
-											type="text"
-											placeholder="Enter your GPS address (e.g., GM-123-4567)"
-											required
-										/>
-									</Field>
-				
+					<FieldLabel htmlFor="gps_address">GPS Address</FieldLabel>
+					<Input
+						id="gps_address"
+						type="text"
+						placeholder="Enter your GPS address (e.g., GM-123-4567)"
+						required
+					/>
+				</Field>
 			</FieldGroup>
 
 			<div className="mt-10 flex items-center justify-end space-x-5">
