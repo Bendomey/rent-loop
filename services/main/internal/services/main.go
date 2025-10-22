@@ -8,6 +8,8 @@ import (
 type Services struct {
 	AdminService             AdminService
 	ClientApplicationService ClientApplicationService
+	AdminService      AdminService
+	ClientUserService ClientUserService
 }
 
 func NewServices(appCtx pkg.AppContext, repository repository.Repository) Services {
@@ -17,5 +19,10 @@ func NewServices(appCtx pkg.AppContext, repository repository.Repository) Servic
 	return Services{
 		AdminService:             adminService,
 		ClientApplicationService: clientApplicationService,
+	clientUserService := NewClientUserService(appCtx, repository.ClientUserRepository, repository.ClientRepository)
+
+	return Services{
+		AdminService:      adminService,
+		ClientUserService: clientUserService,
 	}
 }
