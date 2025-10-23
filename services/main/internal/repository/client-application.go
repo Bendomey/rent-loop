@@ -37,25 +37,97 @@ func (r *clientApplicationRepository) Create(ctx context.Context, clientApp *mod
 }
 
 func (r *clientApplicationRepository) List(ctx context.Context, filterQuery lib.FilterQuery, filters ListClientApplicationsFilter) (*[]models.ClientApplication, error) {
-	var clientApps []models.ClientApplication
-	if err := r.db.WithContext(ctx).Find(&clientApps).Error; err != nil {
-		return nil, err
+	var clientApplications []models.ClientApplication
+
+	db := r.db.WithContext(ctx).
+		Scopes(
+			DateRangeScope("client_applications", filterQuery.DateRange),
+			SearchScope("client_applications", filterQuery.Search),
+			StatusFilterScope(filters.Status),
+			TypeFilterScope(filters.Type),
+			SubTypeFilterScope(filters.SubType),
+
+			PaginationScope(filterQuery.Page, filterQuery.PageSize),
+			OrderScope("client_applications", filterQuery.OrderBy, filterQuery.Order),
+		)
+
+	if filterQuery.Populate != nil {
+		for _, field := range *filterQuery.Populate {
+			db = db.Preload(field)
+		}
 	}
-	return &clientApps, nil
+
+	results := db.Find(&clientApplications)
+
+	if results.Error != nil {
+		return nil, results.Error
+	}
+
+	return &clientApplications, nil
 }
 
 func (r *clientApplicationRepository) Count(ctx context.Context, filterQuery lib.FilterQuery, filters ListClientApplicationsFilter) (int64, error) {
 	var count int64
-	if err := r.db.WithContext(ctx).Model(&models.ClientApplication{}).Count(&count).Error; err != nil {
-		return 0, err
+
+	result := r.db.
+		WithContext(ctx).
+		Model(&models.ClientApplication{}).
+		Scopes(
+			DateRangeScope("client_applications", filterQuery.DateRange),
+			SearchScope("client_applications", filterQuery.Search),
+			StatusFilterScope(filters.Status),
+			TypeFilterScope(filters.Type),
+			SubTypeFilterScope(filters.SubType),
+
+			PaginationScope(filterQuery.Page, filterQuery.PageSize),
+			OrderScope("client_applications", filterQuery.OrderBy, filterQuery.Order),
+		).
+		Count(&count)
+
+	if result.Error != nil {
+		return 0, result.Error
 	}
+
 	return count, nil
 }
 
 type ListClientApplicationsFilter struct {
-	// Add any filter fields you need later (e.g. Status, Type, etc.)
+	Status  *string
+	Type    *string
+	SubType *string
 }
 
 func (r *clientApplicationRepository) UpdateClientApplication(ctx context.Context, clientApplication *models.ClientApplication) error {
 	return r.db.WithContext(ctx).Save(clientApplication).Error
+}
+
+// Private methods
+func StatusFilterScope(status *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if status == nil {
+			return db
+		}
+
+		return db.Where("client_applications.status = ?", *status)
+	}
+}
+
+func TypeFilterScope(input *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if input == nil {
+			return db
+		}
+
+		return db.Where("client_applications.type = ?", *input)
+	}
+}
+
+func SubTypeFilterScope(subType *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if subType == nil {
+			return db
+		}
+
+		return db.Where("client_applications.sub_type = ?", *subType)
+	}
 }

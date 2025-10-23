@@ -9,6 +9,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/go-chi/chi/v5"
 )
 
 type AdminHandler struct {
@@ -170,21 +171,16 @@ func (h *AdminHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 // @Accept       json
 // @Security BearerAuth
 // @Produce      json
-// @Param        id   path      string  true  "Admin ID"
+// @Param        admin_id   path      string  true  "Admin ID"
 // @Success      200  {object}  object{data=transformations.OutputAdmin}
 // @Failure      400  {object}  lib.HTTPError
 // @Failure      401  {object}  string
 // @Failure      500  {object}  string
-// @Router       /api/v1/admins/{id} [get]
+// @Router       /api/v1/admins/{admin_id} [get]
 func (h *AdminHandler) GetAdminById(w http.ResponseWriter, r *http.Request) {
-	currentAdmin, adminOk := lib.AdminFromContext(r.Context())
+	adminId := chi.URLParam(r, "admin_id")
 
-	if !adminOk {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	admin, err := h.service.GetAdmin(r.Context(), currentAdmin.ID)
+	admin, err := h.service.GetAdmin(r.Context(), adminId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]any{

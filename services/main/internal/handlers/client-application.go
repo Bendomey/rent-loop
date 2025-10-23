@@ -24,7 +24,7 @@ func NewClientApplicationHandler(appCtx pkg.AppContext, service services.ClientA
 type CreateClientApplicationRequest struct {
 	Type               string  `json:"type" validate:"required,oneof=INDIVIDUAL COMPANY"`                             // INDIVIDUAL | COMPANY
 	SubType            string  `json:"sub_type" validate:"required,oneof=LANDLORD PROPERTY_MANAGER DEVELOPER AGENCY"` // INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER | AGENCY
-	Name               string  `json:"name" validate:"required"`                                                      // company name or individual full name
+	Name               string  `json:"name" validate:"required"`
 	Address            string  `json:"address" validate:"required"`
 	Country            string  `json:"country" validate:"required"`
 	Region             string  `json:"region" validate:"required"`
@@ -34,16 +34,16 @@ type CreateClientApplicationRequest struct {
 	ContactName        string  `json:"contact_name" validate:"required"`
 	ContactPhoneNumber string  `json:"contact_phone_number" validate:"required"`
 	ContactEmail       string  `json:"contact_email" validate:"required,email"`
-	DateOfBirth        string  `json:"date_of_birth"`
+	DateOfBirth        string  `json:"date_of_birth" validate:"required,datetime=2006-01-02"`
 	IDType             *string `json:"id_type" validate:"oneof=DRIVERS_LICENSE PASSPORT NATIONAL_ID"`
 	IDNumber           *string `json:"id_number"`
 	IDExpiry           *string `json:"id_expiry"`
-	IDDocumentURL      *string `json:"id_document_url"`
+	IDDocumentURL      *string `json:"id_document_url" validate:"url"`
 	RegistrationNumber *string `json:"registration_number"`
 	LogoURL            *string `json:"logo_url" validate:"url"`
 	Description        *string `json:"description"`
-	WebsiteURL         *string `json:"website_url"`
-	SupportEmail       *string `json:"support_email"`
+	WebsiteURL         *string `json:"website_url" validate:"url"`
+	SupportEmail       *string `json:"support_email" validate:"email"`
 	SupportPhone       *string `json:"support_phone"`
 }
 
@@ -121,21 +121,16 @@ func (h *ClientApplicationHandler) CreateClientApplication(w http.ResponseWriter
 // @Tags         ClientApplications
 // @Accept       json
 // @Produce      json
-// @Param        id   path      string  true  "ClientApplication ID"
+// @Param        application_id   path      string  true  "ClientApplication ID"
 // @Success      200  {object}  object{data=transformations.OutputClientApplication}
 // @Failure      400  {object}  lib.HTTPError
 // @Failure      401  {object}  string
 // @Failure      500  {object}  string
-// @Router       /api/v1/client-applications/{id} [get]
+// @Router       /api/v1/client-applications/{application_id} [get]
 func (h *ClientApplicationHandler) GetClientApplicationById(w http.ResponseWriter, r *http.Request) {
-	currentAdmin, adminOk := lib.AdminFromContext(r.Context())
+	applicationId := chi.URLParam(r, "application_id")
 
-	if !adminOk {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	clientApplication, err := h.service.GetClientApplication(r.Context(), currentAdmin.ID)
+	clientApplication, err := h.service.GetClientApplication(r.Context(), applicationId)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -153,7 +148,7 @@ func (h *ClientApplicationHandler) GetClientApplicationById(w http.ResponseWrite
 }
 
 type RejectClientApplicationRequest struct {
-	Reason string `json:"reason" validate:"required,min=3,max=255"`
+	Reason string `json:"reason" validate:"required"`
 }
 
 // RejectClientApplication godoc
@@ -162,14 +157,14 @@ type RejectClientApplicationRequest struct {
 // @Tags         ClientApplications
 // @Accept       json
 // @Produce      json
-// @Param        applicationId  path  string  true  "Client Application ID"
+// @Param        application_id  path  string  true  "Client Application ID"
 // @Param        body  body  RejectClientApplicationRequest  true  "Rejection reason"
 // @Success      200  {object}  object{data=transformations.OutputClientApplication}
 // @Failure      400  {object}  lib.HTTPError
 // @Failure      401  {object}  string
 // @Failure      404  {object}  lib.HTTPError
 // @Failure      500  {object}  lib.HTTPError
-// @Router       /api/v1/client-applications/{applicationId}/reject [patch]
+// @Router       /api/v1/client-applications/{application_id}/reject [patch]
 func (h *ClientApplicationHandler) RejectClientApplication(w http.ResponseWriter, r *http.Request) {
 
 	currentAdmin, adminOk := lib.AdminFromContext(r.Context())
@@ -178,7 +173,7 @@ func (h *ClientApplicationHandler) RejectClientApplication(w http.ResponseWriter
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	applicationId := chi.URLParam(r, "applicationId")
+	applicationId := chi.URLParam(r, "application_id")
 
 	var body RejectClientApplicationRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -191,7 +186,11 @@ func (h *ClientApplicationHandler) RejectClientApplication(w http.ResponseWriter
 		return
 	}
 
-	clientApplication, err := h.service.RejectClientApplication(r.Context(), applicationId, body.Reason, currentAdmin.ID)
+	clientApplication, err := h.service.RejectClientApplication(r.Context(), services.RejectClientApplicationInput{
+		ClientApplicationId: applicationId,
+		Reason:              body.Reason,
+		AdminId:             currentAdmin.ID,
+	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -209,13 +208,13 @@ func (h *ClientApplicationHandler) RejectClientApplication(w http.ResponseWriter
 // @Tags         ClientApplications
 // @Accept       json
 // @Produce      json
-// @Param        applicationId  path  string  true  "Client Application ID"
+// @Param        application_id  path  string  true  "Client Application ID"
 // @Success      200  {object}  object{data=transformations.OutputClientApplication}
 // @Failure      400  {object}  lib.HTTPError
 // @Failure      401  {object}  string
 // @Failure      404  {object}  lib.HTTPError
 // @Failure      500  {object}  lib.HTTPError
-// @Router       /api/v1/client-applications/{applicationId}/approve [patch]
+// @Router       /api/v1/client-applications/{application_id}/approve [patch]
 func (h *ClientApplicationHandler) ApproveClientApplication(w http.ResponseWriter, r *http.Request) {
 
 	currentAdmin, adminOk := lib.AdminFromContext(r.Context())
@@ -224,7 +223,7 @@ func (h *ClientApplicationHandler) ApproveClientApplication(w http.ResponseWrite
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	applicationId := chi.URLParam(r, "applicationId")
+	applicationId := chi.URLParam(r, "application_id")
 
 	clientApplication, err := h.service.ApproveClientApplication(r.Context(), applicationId, currentAdmin.ID)
 	if err != nil {
@@ -239,6 +238,9 @@ func (h *ClientApplicationHandler) ApproveClientApplication(w http.ResponseWrite
 }
 
 type ListClientApplicationsFilterRequest struct {
+	Status  *string `json:"status" validate:"omitempty,oneof=ClientApplication.Status.Pending ClientApplication.Status.Approved ClientApplication.Status.Rejected"`
+	Type    *string `json:"type" validate:"omitempty,oneof=INDIVIDUAL COMPANY"`
+	SubType *string `json:"sub_type" validate:"omitempty,oneof=LANDLORD PROPERTY_MANAGER DEVELOPER AGENCY"`
 }
 
 // GetClientApplications godoc
@@ -254,14 +256,11 @@ type ListClientApplicationsFilterRequest struct {
 // @Failure      500  {object}  string
 // @Router       /api/v1/client-applications [get]
 func (h *ClientApplicationHandler) ListClientApplications(w http.ResponseWriter, r *http.Request) {
-	_, adminOk := lib.AdminFromContext(r.Context())
-
-	if !adminOk {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
+	filters := ListClientApplicationsFilterRequest{
+		Status:  lib.NullOrString(r.URL.Query().Get("status")),
+		Type:    lib.NullOrString(r.URL.Query().Get("type")),
+		SubType: lib.NullOrString(r.URL.Query().Get("sub_type")),
 	}
-
-	filters := ListClientApplicationsFilterRequest{}
 
 	isFiltersPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filters, w)
 	if !isFiltersPassedValidation {
@@ -284,7 +283,12 @@ func (h *ClientApplicationHandler) ListClientApplications(w http.ResponseWriter,
 		return
 	}
 
-	clientApplications, clientApplicationsErr := h.service.ListClientApplications(r.Context(), *filterQuery, repository.ListClientApplicationsFilter{})
+	input := repository.ListClientApplicationsFilter{
+		Status:  filters.Status,
+		Type:    filters.Type,
+		SubType: filters.SubType,
+	}
+	clientApplications, clientApplicationsErr := h.service.ListClientApplications(r.Context(), *filterQuery, input)
 
 	if clientApplicationsErr != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -296,7 +300,7 @@ func (h *ClientApplicationHandler) ListClientApplications(w http.ResponseWriter,
 		return
 	}
 
-	count, countsErr := h.service.CountClientApplications(r.Context(), *filterQuery, repository.ListClientApplicationsFilter{})
+	count, countsErr := h.service.CountClientApplications(r.Context(), *filterQuery, input)
 
 	if countsErr != nil {
 		w.WriteHeader(http.StatusNotFound)

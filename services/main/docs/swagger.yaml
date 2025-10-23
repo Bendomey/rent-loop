@@ -16,47 +16,44 @@ definitions:
       address:
         type: string
       city:
-        maxLength: 255
-        minLength: 3
         type: string
-      contactEmail:
+      contact_email:
         type: string
-      contactName:
+      contact_name:
         type: string
-      contactPhoneNumber:
+      contact_phone_number:
         type: string
       country:
-        maxLength: 255
-        minLength: 3
         type: string
-      dateOfBirth:
+      date_of_birth:
         type: string
       description:
         type: string
-      idDocumentUrl:
+      id_document_url:
         type: string
-      idExpiry:
+      id_expiry:
         type: string
-      idNumber:
+      id_number:
         type: string
-      idType:
+      id_type:
+        enum:
+        - DRIVERS_LICENSE
+        - PASSPORT
+        - NATIONAL_ID
         type: string
       latitude:
         type: number
-      logoUrl:
+      logo_url:
         type: string
       longitude:
         type: number
       name:
-        description: company name or individual full name
         type: string
       region:
-        maxLength: 255
-        minLength: 3
         type: string
-      registrationNumber:
+      registration_number:
         type: string
-      subType:
+      sub_type:
         description: INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER
           | AGENCY
         enum:
@@ -65,9 +62,9 @@ definitions:
         - DEVELOPER
         - AGENCY
         type: string
-      supportEmail:
+      support_email:
         type: string
-      supportPhone:
+      support_phone:
         type: string
       type:
         description: INDIVIDUAL | COMPANY
@@ -75,20 +72,21 @@ definitions:
         - INDIVIDUAL
         - COMPANY
         type: string
-      websiteUrl:
+      website_url:
         type: string
     required:
     - address
     - city
-    - contactEmail
-    - contactName
-    - contactPhoneNumber
+    - contact_email
+    - contact_name
+    - contact_phone_number
     - country
+    - date_of_birth
     - latitude
     - longitude
     - name
     - region
-    - subType
+    - sub_type
     - type
     type: object
   handlers.LoginRequest:
@@ -108,8 +106,6 @@ definitions:
   handlers.RejectClientApplicationRequest:
     properties:
       reason:
-        maxLength: 255
-        minLength: 3
         type: string
     required:
     - reason
@@ -178,19 +174,19 @@ definitions:
         description: company address or individual home address
         example: 21st Neon Street
         type: string
-      approvedById:
+      approved_by_id:
         example: S90092
         type: string
       city:
-        example: Kwabenya
+        example: Accra
         type: string
-      contactEmail:
+      contact_email:
         example: contact@email.com
         type: string
-      contactName:
+      contact_name:
         example: John Doe
         type: string
-      contactPhoneNumber:
+      contact_phone_number:
         example: "01234567890"
         type: string
       country:
@@ -199,87 +195,74 @@ definitions:
       created_at:
         example: "2023-01-01T00:00:00Z"
         type: string
-      dateOfBirth:
+      date_of_birth:
         description: individual specific fields
         example: "2025-01-31"
         type: string
       description:
-        description: company description or individual bio
         example: Taking you to the next level!
         type: string
       id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
-      idDocumentUrl:
-        description: URL to the scanned copy of the ID document
+      id_document_url:
         example: www.id-doc-url.com/id.pdf
         type: string
-      idExpiry:
-        description: individual ID expiry date
+      id_expiry:
         example: "2040-12-31"
         type: string
-      idNumber:
-        description: individual ID number
+      id_number:
         example: GHA-123-456-7890
         type: string
-      idType:
-        description: individual ID type (e.g., passport, driver's license)
+      id_type:
         example: GHANACARD
         type: string
       latitude:
-        example: 23
+        example: 5.6037
         type: number
-      logoUrl:
-        description: company logo URL or individual profile picture URL
+      logo_url:
         example: www.logo-url.com/logo.png
         type: string
       longitude:
-        example: 49
+        example: -0.187
         type: number
       name:
-        description: company name or individual full name
-        example: Company Nmae
+        example: Company Name
         type: string
       region:
         example: Greater Accra
         type: string
-      registrationNumber:
+      registration_number:
         description: company specific fields
         example: GR1234567890
         type: string
-      rejectedBecause:
+      rejected_because:
         example: No reason
         type: string
-      rejectedById:
+      rejected_by:
+        $ref: '#/definitions/transformations.OutputAdmin'
+      rejected_by_id:
         example: R234110
         type: string
       status:
-        description: ClientApplication.Status.Pending | ClientApplication.Status.Approved
-          | ClientApplication.Status.Rejected
-        example: Approved
+        example: ClientApplication.Status.Approved
         type: string
-      subType:
-        description: INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER
-          | AGENCY
+      sub_type:
         example: ESTATE MANAGER
         type: string
-      supportEmail:
-        description: company support email
+      support_email:
         example: support@email.com
         type: string
-      supportPhone:
-        description: company support phone number
+      support_phone:
         example: +233 (0)12 345 6789
         type: string
       type:
-        description: INDIVIDUAL | COMPANY
         example: COMPANY
         type: string
       updated_at:
         example: "2023-01-01T00:00:00Z"
         type: string
-      websiteUrl:
-        description: company website URL
+      website_url:
         example: www.company-url.com
         type: string
     type: object
@@ -373,7 +356,7 @@ paths:
       summary: Create a new admin
       tags:
       - Admins
-  /api/v1/admins/{id}:
+  /api/v1/admins/{admin_id}:
     get:
       consumes:
       - application/json
@@ -381,7 +364,7 @@ paths:
       parameters:
       - description: Admin ID
         in: path
-        name: id
+        name: admin_id
         required: true
         type: string
       produces:
@@ -481,6 +464,28 @@ paths:
       consumes:
       - application/json
       description: Get all ClientApplications
+      parameters:
+      - enum:
+        - ClientApplication.Status.Pending
+        - ClientApplication.Status.Approved
+        - ClientApplication.Status.Rejected
+        in: query
+        name: status
+        type: string
+      - enum:
+        - LANDLORD
+        - PROPERTY_MANAGER
+        - DEVELOPER
+        - AGENCY
+        in: query
+        name: sub_type
+        type: string
+      - enum:
+        - INDIVIDUAL
+        - COMPANY
+        in: query
+        name: type
+        type: string
       produces:
       - application/json
       responses:
@@ -513,7 +518,43 @@ paths:
       summary: Get all ClientApplications
       tags:
       - ClientApplications
-  /api/v1/client-applications/{applicationId}/approve:
+  /api/v1/client-applications/{application_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get clientApplication by ID
+      parameters:
+      - description: ClientApplication ID
+        in: path
+        name: application_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientApplication'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get clientApplication by ID
+      tags:
+      - ClientApplications
+  /api/v1/client-applications/{application_id}/approve:
     patch:
       consumes:
       - application/json
@@ -521,7 +562,7 @@ paths:
       parameters:
       - description: Client Application ID
         in: path
-        name: applicationId
+        name: application_id
         required: true
         type: string
       produces:
@@ -553,7 +594,7 @@ paths:
       summary: Approve a client application
       tags:
       - ClientApplications
-  /api/v1/client-applications/{applicationId}/reject:
+  /api/v1/client-applications/{application_id}/reject:
     patch:
       consumes:
       - application/json
@@ -561,7 +602,7 @@ paths:
       parameters:
       - description: Client Application ID
         in: path
-        name: applicationId
+        name: application_id
         required: true
         type: string
       - description: Rejection reason
@@ -597,42 +638,6 @@ paths:
           schema:
             $ref: '#/definitions/lib.HTTPError'
       summary: Reject a client application
-      tags:
-      - ClientApplications
-  /api/v1/client-applications/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Get clientApplication by ID
-      parameters:
-      - description: ClientApplication ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputClientApplication'
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      summary: Get clientApplication by ID
       tags:
       - ClientApplications
   /api/v1/clients/apply:

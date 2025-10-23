@@ -248,7 +248,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admins/{id}": {
+        "/api/v1/admins/{admin_id}": {
             "get": {
                 "security": [
                     {
@@ -270,7 +270,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Admin ID",
-                        "name": "id",
+                        "name": "admin_id",
                         "in": "path",
                         "required": true
                     }
@@ -321,6 +321,38 @@ const docTemplate = `{
                     "ClientApplications"
                 ],
                 "summary": "Get all ClientApplications",
+                "parameters": [
+                    {
+                        "enum": [
+                            "ClientApplication.Status.Pending",
+                            "ClientApplication.Status.Approved",
+                            "ClientApplication.Status.Rejected"
+                        ],
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "LANDLORD",
+                            "PROPERTY_MANAGER",
+                            "DEVELOPER",
+                            "AGENCY"
+                        ],
+                        "type": "string",
+                        "name": "sub_type",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "INDIVIDUAL",
+                            "COMPANY"
+                        ],
+                        "type": "string",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -365,7 +397,62 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/client-applications/{applicationId}/approve": {
+        "/api/v1/client-applications/{application_id}": {
+            "get": {
+                "description": "Get clientApplication by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientApplications"
+                ],
+                "summary": "Get clientApplication by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ClientApplication ID",
+                        "name": "application_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientApplication"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/client-applications/{application_id}/approve": {
             "patch": {
                 "description": "Admin approves a client's application after review",
                 "consumes": [
@@ -382,7 +469,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Client Application ID",
-                        "name": "applicationId",
+                        "name": "application_id",
                         "in": "path",
                         "required": true
                     }
@@ -426,7 +513,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/client-applications/{applicationId}/reject": {
+        "/api/v1/client-applications/{application_id}/reject": {
             "patch": {
                 "description": "Admin rejects a client application with a reason",
                 "consumes": [
@@ -443,7 +530,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Client Application ID",
-                        "name": "applicationId",
+                        "name": "application_id",
                         "in": "path",
                         "required": true
                     },
@@ -491,61 +578,6 @@ const docTemplate = `{
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/client-applications/{id}": {
-            "get": {
-                "description": "Get clientApplication by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientApplications"
-                ],
-                "summary": "Get clientApplication by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "ClientApplication ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientApplication"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
                         }
                     }
                 }
@@ -626,15 +658,16 @@ const docTemplate = `{
             "required": [
                 "address",
                 "city",
-                "contactEmail",
-                "contactName",
-                "contactPhoneNumber",
+                "contact_email",
+                "contact_name",
+                "contact_phone_number",
                 "country",
+                "date_of_birth",
                 "latitude",
                 "longitude",
                 "name",
                 "region",
-                "subType",
+                "sub_type",
                 "type"
             ],
             "properties": {
@@ -642,64 +675,62 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "city": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 3
-                },
-                "contactEmail": {
                     "type": "string"
                 },
-                "contactName": {
+                "contact_email": {
                     "type": "string"
                 },
-                "contactPhoneNumber": {
+                "contact_name": {
+                    "type": "string"
+                },
+                "contact_phone_number": {
                     "type": "string"
                 },
                 "country": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 3
+                    "type": "string"
                 },
-                "dateOfBirth": {
+                "date_of_birth": {
                     "type": "string"
                 },
                 "description": {
                     "type": "string"
                 },
-                "idDocumentUrl": {
+                "id_document_url": {
                     "type": "string"
                 },
-                "idExpiry": {
+                "id_expiry": {
                     "type": "string"
                 },
-                "idNumber": {
+                "id_number": {
                     "type": "string"
                 },
-                "idType": {
-                    "type": "string"
+                "id_type": {
+                    "type": "string",
+                    "enum": [
+                        "DRIVERS_LICENSE",
+                        "PASSPORT",
+                        "NATIONAL_ID"
+                    ]
                 },
                 "latitude": {
                     "type": "number"
                 },
-                "logoUrl": {
+                "logo_url": {
                     "type": "string"
                 },
                 "longitude": {
                     "type": "number"
                 },
                 "name": {
-                    "description": "company name or individual full name",
                     "type": "string"
                 },
                 "region": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 3
-                },
-                "registrationNumber": {
                     "type": "string"
                 },
-                "subType": {
+                "registration_number": {
+                    "type": "string"
+                },
+                "sub_type": {
                     "description": "INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER | AGENCY",
                     "type": "string",
                     "enum": [
@@ -709,10 +740,10 @@ const docTemplate = `{
                         "AGENCY"
                     ]
                 },
-                "supportEmail": {
+                "support_email": {
                     "type": "string"
                 },
-                "supportPhone": {
+                "support_phone": {
                     "type": "string"
                 },
                 "type": {
@@ -723,7 +754,7 @@ const docTemplate = `{
                         "COMPANY"
                     ]
                 },
-                "websiteUrl": {
+                "website_url": {
                     "type": "string"
                 }
             }
@@ -754,9 +785,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "reason": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 3
+                    "type": "string"
                 }
             }
         },
@@ -851,23 +880,23 @@ const docTemplate = `{
                     "type": "string",
                     "example": "21st Neon Street"
                 },
-                "approvedById": {
+                "approved_by_id": {
                     "type": "string",
                     "example": "S90092"
                 },
                 "city": {
                     "type": "string",
-                    "example": "Kwabenya"
+                    "example": "Accra"
                 },
-                "contactEmail": {
+                "contact_email": {
                     "type": "string",
                     "example": "contact@email.com"
                 },
-                "contactName": {
+                "contact_name": {
                     "type": "string",
                     "example": "John Doe"
                 },
-                "contactPhoneNumber": {
+                "contact_phone_number": {
                     "type": "string",
                     "example": "01234567890"
                 },
@@ -879,13 +908,12 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2023-01-01T00:00:00Z"
                 },
-                "dateOfBirth": {
+                "date_of_birth": {
                     "description": "individual specific fields",
                     "type": "string",
                     "example": "2025-01-31"
                 },
                 "description": {
-                    "description": "company description or individual bio",
                     "type": "string",
                     "example": "Taking you to the next level!"
                 },
@@ -893,83 +921,75 @@ const docTemplate = `{
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
                 },
-                "idDocumentUrl": {
-                    "description": "URL to the scanned copy of the ID document",
+                "id_document_url": {
                     "type": "string",
                     "example": "www.id-doc-url.com/id.pdf"
                 },
-                "idExpiry": {
-                    "description": "individual ID expiry date",
+                "id_expiry": {
                     "type": "string",
                     "example": "2040-12-31"
                 },
-                "idNumber": {
-                    "description": "individual ID number",
+                "id_number": {
                     "type": "string",
                     "example": "GHA-123-456-7890"
                 },
-                "idType": {
-                    "description": "individual ID type (e.g., passport, driver's license)",
+                "id_type": {
                     "type": "string",
                     "example": "GHANACARD"
                 },
                 "latitude": {
                     "type": "number",
-                    "example": 23
+                    "example": 5.6037
                 },
-                "logoUrl": {
-                    "description": "company logo URL or individual profile picture URL",
+                "logo_url": {
                     "type": "string",
                     "example": "www.logo-url.com/logo.png"
                 },
                 "longitude": {
                     "type": "number",
-                    "example": 49
+                    "example": -0.187
                 },
                 "name": {
-                    "description": "company name or individual full name",
                     "type": "string",
-                    "example": "Company Nmae"
+                    "example": "Company Name"
                 },
                 "region": {
                     "type": "string",
                     "example": "Greater Accra"
                 },
-                "registrationNumber": {
+                "registration_number": {
                     "description": "company specific fields",
                     "type": "string",
                     "example": "GR1234567890"
                 },
-                "rejectedBecause": {
+                "rejected_because": {
                     "type": "string",
                     "example": "No reason"
                 },
-                "rejectedById": {
+                "rejected_by": {
+                    "$ref": "#/definitions/transformations.OutputAdmin"
+                },
+                "rejected_by_id": {
                     "type": "string",
                     "example": "R234110"
                 },
                 "status": {
-                    "description": "ClientApplication.Status.Pending | ClientApplication.Status.Approved | ClientApplication.Status.Rejected",
                     "type": "string",
-                    "example": "Approved"
+                    "example": "ClientApplication.Status.Approved"
                 },
-                "subType": {
-                    "description": "INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER | AGENCY",
+                "sub_type": {
                     "type": "string",
                     "example": "ESTATE MANAGER"
                 },
-                "supportEmail": {
-                    "description": "company support email",
+                "support_email": {
                     "type": "string",
                     "example": "support@email.com"
                 },
-                "supportPhone": {
-                    "description": "company support phone number",
+                "support_phone": {
                     "type": "string",
                     "example": "+233 (0)12 345 6789"
                 },
                 "type": {
-                    "description": "INDIVIDUAL | COMPANY",
                     "type": "string",
                     "example": "COMPANY"
                 },
@@ -977,8 +997,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2023-01-01T00:00:00Z"
                 },
-                "websiteUrl": {
-                    "description": "company website URL",
+                "website_url": {
                     "type": "string",
                     "example": "www.company-url.com"
                 }
