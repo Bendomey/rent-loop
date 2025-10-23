@@ -69,13 +69,16 @@ const (
 	CLIENT_USER_ADDED_BODY    = `
 Hey {{name}},
 
-You have been invited to join {{clientName}}. Login with the details below.
+You have been invited to join {{client_name}}. Login with the details below.
 
 Credentials:
+Url: {{property_manager_portal_url}}
 Email: {{email}}
 Password: {{password}}
 
 Note: Kindly change your password on your first login to properly secure your account
+
+{{SUPPORT_DETAILS_TEMPLATE}}
 
 Welcome aboard,
 The Rentloop Team

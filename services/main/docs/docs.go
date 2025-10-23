@@ -856,7 +856,6 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string",
-                    "maxLength": 100,
                     "minLength": 2,
                     "example": "John Doe"
                 },

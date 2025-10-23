@@ -96,7 +96,6 @@ definitions:
         type: string
       name:
         example: John Doe
-        maxLength: 100
         minLength: 2
         type: string
       phone:

@@ -20,7 +20,7 @@ func NewClientUserHandler(appCtx pkg.AppContext, service services.ClientUserServ
 }
 
 type CreateClientUserRequest struct {
-	Name  string `json:"name" validate:"required,min=2,max=100" example:"John Doe"`
+	Name  string `json:"name" validate:"required,min=2" example:"John Doe"`
 	Email string `json:"email" validate:"required,email" example:"client-user@example.com"`
 	Phone string `json:"phone" validate:"required,e164" example:"+233281234569"`
 	Role  string `json:"role" validate:"required,oneof=ADMIN STAFF" example:"ADMIN"`
