@@ -29,4 +29,4 @@ jobs:
 
       - name: 🚀 Deploy Staging
         run:
-          flyctl deploy --remote-only --build-arg COMMIT_SHA=${{ github.sha }}
+          flyctl deploy --config fly.staging.toml --remote-only --build-arg COMMIT_SHA=${{ github.sha }}
