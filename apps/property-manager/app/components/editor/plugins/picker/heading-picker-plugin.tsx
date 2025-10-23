@@ -5,7 +5,7 @@ import { Heading1Icon, Heading2Icon, Heading3Icon } from 'lucide-react'
 
 import { ComponentPickerOption } from '~/components/editor/plugins/picker/component-picker-option'
 
-export function HeadingPickerPlugin({ n }: { n: 1 | 2 | 3 }) {
+export function HeadingPickerPlugin({ n }: { n: 1 | 2 | 3 | 4 | 5 | 6 }) {
 	return new ComponentPickerOption(`Heading ${n}`, {
 		icon: <HeadingIcons n={n} />,
 		keywords: ['heading', 'header', `h${n}`],
