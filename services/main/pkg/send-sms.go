@@ -34,13 +34,11 @@ type WittyflowSendMessageResponse struct {
 type SendSMSInput struct {
 	Recipient string
 	Message   string
-	AppID     string
-	AppSecret string
-	Env       string
 }
 
 // Usage:
 // go SendSMS(
+// appCtx,
 // 	SendSMSInput{
 // 		Recipient: "233200000000",
 // 		Message:  "This is a test sms.",
@@ -51,14 +49,14 @@ type SendSMSInput struct {
 // )
 
 // SendSMS sends an SMS using the Wittyflow service
-func SendSMS(input SendSMSInput) error {
+func SendSMS(appCtx AppContext, input SendSMSInput) error {
 
-	if input.AppID == "" || input.AppSecret == "" {
+	if appCtx.Config.Wittyflow.AppID == "" || appCtx.Config.Wittyflow.AppSecret == "" {
 		raven.CaptureError(errors.New("wittyflow credentials not set"), nil)
 		return errors.New("InternalServerError")
 	}
 
-	if input.Env == "" || input.Env == "development" {
+	if appCtx.Config.Env == "" || appCtx.Config.Env == "development" {
 		logrus.Info("Skipping sms send in development", input)
 		return nil
 	}
@@ -87,9 +85,9 @@ func SendSMS(input SendSMSInput) error {
 			"from":       "Rentloop",
 			"to":         normalizePhone,
 			"type":       "1",
-			"message":    input.Message,
-			"app_id":     input.AppID,
-			"app_secret": input.AppSecret,
+			"message":    ApplyGlobalVariableTemplate(appCtx, input.Message),
+			"app_id":     appCtx.Config.Wittyflow.AppID,
+			"app_secret": appCtx.Config.Wittyflow.AppSecret,
 		},
 		SuccessObj: sendResponseSuccess,
 		ErrorObj:   sendResponseFailed,

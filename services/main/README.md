@@ -40,6 +40,14 @@ Rentloop Engine is a modular property rental management service designed to prov
      export SUPER_ADMIN_NAME="Super Admin"
      export SUPER_ADMIN_EMAIL=admin@example.com
      export SUPER_ADMIN_PASSWORD=password
+     export WITTYFLOW_APP_ID=fake-app-id
+      export WITTYFLOW_APP_SECRET=fake-app-secret
+     export RESEND_API_KEY=fake-api-key
+      export SUPPORT_EMAIL=support@rentloop.com
+      export SUPPORT_PHONE=0201080802
+      export ADMIN_PORTAL_URL=http://localhost:3001
+      export PROPERTY_MANAGER_PORTAL_URL=http://localhost:3000
+      export TENANT_PORTAL_URL=http://localhost:3002
      ```
 4. **Install Go dependencies:**
    ```sh

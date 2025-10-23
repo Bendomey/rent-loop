@@ -46,6 +46,10 @@ func InterfaceToJSON(input map[string]interface{}) (*datatypes.JSON, error) {
 	return &jsonData, err
 }
 
+func StringPointer(s string) *string {
+	return &s
+}
+
 // Usage
 // var input Input
 

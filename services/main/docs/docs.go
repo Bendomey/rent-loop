@@ -39,7 +39,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admins"
+                    "Admins"
                 ],
                 "summary": "Get all admins",
                 "responses": {
@@ -99,7 +99,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admins"
+                    "Admins"
                 ],
                 "summary": "Create a new admin",
                 "parameters": [
@@ -156,7 +156,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admins"
+                    "Admins"
                 ],
                 "summary": "Authenticate admin and return token",
                 "parameters": [
@@ -212,7 +212,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admins"
+                    "Admins"
                 ],
                 "summary": "Get the currently authenticated admin",
                 "responses": {
@@ -248,7 +248,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admins/{id}": {
+        "/api/v1/admins/{admin_id}": {
             "get": {
                 "security": [
                     {
@@ -263,14 +263,14 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admins"
+                    "Admins"
                 ],
                 "summary": "Get admin by ID",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Admin ID",
-                        "name": "id",
+                        "name": "admin_id",
                         "in": "path",
                         "required": true
                     }
@@ -307,6 +307,332 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/client-applications": {
+            "get": {
+                "description": "Get all ClientApplications",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientApplications"
+                ],
+                "summary": "Get all ClientApplications",
+                "parameters": [
+                    {
+                        "enum": [
+                            "ClientApplication.Status.Pending",
+                            "ClientApplication.Status.Approved",
+                            "ClientApplication.Status.Rejected"
+                        ],
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "LANDLORD",
+                            "PROPERTY_MANAGER",
+                            "DEVELOPER",
+                            "AGENCY"
+                        ],
+                        "type": "string",
+                        "name": "sub_type",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "INDIVIDUAL",
+                            "COMPANY"
+                        ],
+                        "type": "string",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputClientApplication"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/client-applications/{application_id}": {
+            "get": {
+                "description": "Get clientApplication by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientApplications"
+                ],
+                "summary": "Get clientApplication by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ClientApplication ID",
+                        "name": "application_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientApplication"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/client-applications/{application_id}/approve": {
+            "patch": {
+                "description": "Admin approves a client's application after review",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientApplications"
+                ],
+                "summary": "Approve a client application",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client Application ID",
+                        "name": "application_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientApplication"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/client-applications/{application_id}/reject": {
+            "patch": {
+                "description": "Admin rejects a client application with a reason",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientApplications"
+                ],
+                "summary": "Reject a client application",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client Application ID",
+                        "name": "application_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Rejection reason",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RejectClientApplicationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientApplication"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/clients/apply": {
+            "post": {
+                "description": "Create a new client application",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientApplications"
+                ],
+                "summary": "Create a new client application",
+                "parameters": [
+                    {
+                        "description": "Client Application details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateClientApplicationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientApplication"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -327,6 +653,112 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.CreateClientApplicationRequest": {
+            "type": "object",
+            "required": [
+                "address",
+                "city",
+                "contact_email",
+                "contact_name",
+                "contact_phone_number",
+                "country",
+                "date_of_birth",
+                "latitude",
+                "longitude",
+                "name",
+                "region",
+                "sub_type",
+                "type"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "contact_email": {
+                    "type": "string"
+                },
+                "contact_name": {
+                    "type": "string"
+                },
+                "contact_phone_number": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id_document_url": {
+                    "type": "string"
+                },
+                "id_expiry": {
+                    "type": "string"
+                },
+                "id_number": {
+                    "type": "string"
+                },
+                "id_type": {
+                    "type": "string",
+                    "enum": [
+                        "DRIVERS_LICENSE",
+                        "PASSPORT",
+                        "NATIONAL_ID"
+                    ]
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "logo_url": {
+                    "type": "string"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "registration_number": {
+                    "type": "string"
+                },
+                "sub_type": {
+                    "description": "INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER | AGENCY",
+                    "type": "string",
+                    "enum": [
+                        "LANDLORD",
+                        "PROPERTY_MANAGER",
+                        "DEVELOPER",
+                        "AGENCY"
+                    ]
+                },
+                "support_email": {
+                    "type": "string"
+                },
+                "support_phone": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "INDIVIDUAL | COMPANY",
+                    "type": "string",
+                    "enum": [
+                        "INDIVIDUAL",
+                        "COMPANY"
+                    ]
+                },
+                "website_url": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.LoginRequest": {
             "type": "object",
             "required": [
@@ -343,6 +775,17 @@ const docTemplate = `{
                     "maxLength": 255,
                     "minLength": 8,
                     "example": "strongpassword123"
+                }
+            }
+        },
+        "handlers.RejectClientApplicationRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string"
                 }
             }
         },
@@ -426,6 +869,137 @@ const docTemplate = `{
                 "token": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw"
+                }
+            }
+        },
+        "transformations.OutputClientApplication": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "description": "company address or individual home address",
+                    "type": "string",
+                    "example": "21st Neon Street"
+                },
+                "approved_by_id": {
+                    "type": "string",
+                    "example": "S90092"
+                },
+                "city": {
+                    "type": "string",
+                    "example": "Accra"
+                },
+                "contact_email": {
+                    "type": "string",
+                    "example": "contact@email.com"
+                },
+                "contact_name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "contact_phone_number": {
+                    "type": "string",
+                    "example": "01234567890"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "Ghana"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "date_of_birth": {
+                    "description": "individual specific fields",
+                    "type": "string",
+                    "example": "2025-01-31"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Taking you to the next level!"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "id_document_url": {
+                    "type": "string",
+                    "example": "www.id-doc-url.com/id.pdf"
+                },
+                "id_expiry": {
+                    "type": "string",
+                    "example": "2040-12-31"
+                },
+                "id_number": {
+                    "type": "string",
+                    "example": "GHA-123-456-7890"
+                },
+                "id_type": {
+                    "type": "string",
+                    "example": "GHANACARD"
+                },
+                "latitude": {
+                    "type": "number",
+                    "example": 5.6037
+                },
+                "logo_url": {
+                    "type": "string",
+                    "example": "www.logo-url.com/logo.png"
+                },
+                "longitude": {
+                    "type": "number",
+                    "example": -0.187
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Company Name"
+                },
+                "region": {
+                    "type": "string",
+                    "example": "Greater Accra"
+                },
+                "registration_number": {
+                    "description": "company specific fields",
+                    "type": "string",
+                    "example": "GR1234567890"
+                },
+                "rejected_because": {
+                    "type": "string",
+                    "example": "No reason"
+                },
+                "rejected_by": {
+                    "$ref": "#/definitions/transformations.OutputAdmin"
+                },
+                "rejected_by_id": {
+                    "type": "string",
+                    "example": "R234110"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "ClientApplication.Status.Approved"
+                },
+                "sub_type": {
+                    "type": "string",
+                    "example": "ESTATE MANAGER"
+                },
+                "support_email": {
+                    "type": "string",
+                    "example": "support@email.com"
+                },
+                "support_phone": {
+                    "type": "string",
+                    "example": "+233 (0)12 345 6789"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "COMPANY"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "website_url": {
+                    "type": "string",
+                    "example": "www.company-url.com"
                 }
             }
         }

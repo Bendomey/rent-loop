@@ -20,3 +20,10 @@ export WITTYFLOW_APP_ID=
 export WITTYFLOW_APP_SECRET=
 
 export RESEND_API_KEY=
+
+export SUPPORT_EMAIL=
+export SUPPORT_PHONE=
+
+export ADMIN_PORTAL_URL=http://localhost:3001
+export PROPERTY_MANAGER_PORTAL_URL=http://localhost:3000
+export TENANT_PORTAL_URL=http://localhost:3002

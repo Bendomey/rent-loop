@@ -11,6 +11,84 @@ definitions:
     - email
     - name
     type: object
+  handlers.CreateClientApplicationRequest:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      contact_email:
+        type: string
+      contact_name:
+        type: string
+      contact_phone_number:
+        type: string
+      country:
+        type: string
+      date_of_birth:
+        type: string
+      description:
+        type: string
+      id_document_url:
+        type: string
+      id_expiry:
+        type: string
+      id_number:
+        type: string
+      id_type:
+        enum:
+        - DRIVERS_LICENSE
+        - PASSPORT
+        - NATIONAL_ID
+        type: string
+      latitude:
+        type: number
+      logo_url:
+        type: string
+      longitude:
+        type: number
+      name:
+        type: string
+      region:
+        type: string
+      registration_number:
+        type: string
+      sub_type:
+        description: INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER
+          | AGENCY
+        enum:
+        - LANDLORD
+        - PROPERTY_MANAGER
+        - DEVELOPER
+        - AGENCY
+        type: string
+      support_email:
+        type: string
+      support_phone:
+        type: string
+      type:
+        description: INDIVIDUAL | COMPANY
+        enum:
+        - INDIVIDUAL
+        - COMPANY
+        type: string
+      website_url:
+        type: string
+    required:
+    - address
+    - city
+    - contact_email
+    - contact_name
+    - contact_phone_number
+    - country
+    - date_of_birth
+    - latitude
+    - longitude
+    - name
+    - region
+    - sub_type
+    - type
+    type: object
   handlers.LoginRequest:
     properties:
       email:
@@ -24,6 +102,13 @@ definitions:
     required:
     - email
     - password
+    type: object
+  handlers.RejectClientApplicationRequest:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
     type: object
   lib.HTTPError:
     properties:
@@ -83,6 +168,104 @@ definitions:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw
         type: string
     type: object
+  transformations.OutputClientApplication:
+    properties:
+      address:
+        description: company address or individual home address
+        example: 21st Neon Street
+        type: string
+      approved_by_id:
+        example: S90092
+        type: string
+      city:
+        example: Accra
+        type: string
+      contact_email:
+        example: contact@email.com
+        type: string
+      contact_name:
+        example: John Doe
+        type: string
+      contact_phone_number:
+        example: "01234567890"
+        type: string
+      country:
+        example: Ghana
+        type: string
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      date_of_birth:
+        description: individual specific fields
+        example: "2025-01-31"
+        type: string
+      description:
+        example: Taking you to the next level!
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      id_document_url:
+        example: www.id-doc-url.com/id.pdf
+        type: string
+      id_expiry:
+        example: "2040-12-31"
+        type: string
+      id_number:
+        example: GHA-123-456-7890
+        type: string
+      id_type:
+        example: GHANACARD
+        type: string
+      latitude:
+        example: 5.6037
+        type: number
+      logo_url:
+        example: www.logo-url.com/logo.png
+        type: string
+      longitude:
+        example: -0.187
+        type: number
+      name:
+        example: Company Name
+        type: string
+      region:
+        example: Greater Accra
+        type: string
+      registration_number:
+        description: company specific fields
+        example: GR1234567890
+        type: string
+      rejected_because:
+        example: No reason
+        type: string
+      rejected_by:
+        $ref: '#/definitions/transformations.OutputAdmin'
+      rejected_by_id:
+        example: R234110
+        type: string
+      status:
+        example: ClientApplication.Status.Approved
+        type: string
+      sub_type:
+        example: ESTATE MANAGER
+        type: string
+      support_email:
+        example: support@email.com
+        type: string
+      support_phone:
+        example: +233 (0)12 345 6789
+        type: string
+      type:
+        example: COMPANY
+        type: string
+      updated_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      website_url:
+        example: www.company-url.com
+        type: string
+    type: object
 info:
   contact:
     email: domeybenjamin1@gmail.com
@@ -134,7 +317,7 @@ paths:
       - BearerAuth: []
       summary: Get all admins
       tags:
-      - admins
+      - Admins
     post:
       consumes:
       - application/json
@@ -172,8 +355,8 @@ paths:
       - BearerAuth: []
       summary: Create a new admin
       tags:
-      - admins
-  /api/v1/admins/{id}:
+      - Admins
+  /api/v1/admins/{admin_id}:
     get:
       consumes:
       - application/json
@@ -181,7 +364,7 @@ paths:
       parameters:
       - description: Admin ID
         in: path
-        name: id
+        name: admin_id
         required: true
         type: string
       produces:
@@ -210,7 +393,7 @@ paths:
       - BearerAuth: []
       summary: Get admin by ID
       tags:
-      - admins
+      - Admins
   /api/v1/admins/login:
     post:
       consumes:
@@ -243,7 +426,7 @@ paths:
             type: string
       summary: Authenticate admin and return token
       tags:
-      - admins
+      - Admins
   /api/v1/admins/me:
     get:
       consumes:
@@ -275,7 +458,221 @@ paths:
       - BearerAuth: []
       summary: Get the currently authenticated admin
       tags:
-      - admins
+      - Admins
+  /api/v1/client-applications:
+    get:
+      consumes:
+      - application/json
+      description: Get all ClientApplications
+      parameters:
+      - enum:
+        - ClientApplication.Status.Pending
+        - ClientApplication.Status.Approved
+        - ClientApplication.Status.Rejected
+        in: query
+        name: status
+        type: string
+      - enum:
+        - LANDLORD
+        - PROPERTY_MANAGER
+        - DEVELOPER
+        - AGENCY
+        in: query
+        name: sub_type
+        type: string
+      - enum:
+        - INDIVIDUAL
+        - COMPANY
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputClientApplication'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get all ClientApplications
+      tags:
+      - ClientApplications
+  /api/v1/client-applications/{application_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get clientApplication by ID
+      parameters:
+      - description: ClientApplication ID
+        in: path
+        name: application_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientApplication'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get clientApplication by ID
+      tags:
+      - ClientApplications
+  /api/v1/client-applications/{application_id}/approve:
+    patch:
+      consumes:
+      - application/json
+      description: Admin approves a client's application after review
+      parameters:
+      - description: Client Application ID
+        in: path
+        name: application_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientApplication'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+      summary: Approve a client application
+      tags:
+      - ClientApplications
+  /api/v1/client-applications/{application_id}/reject:
+    patch:
+      consumes:
+      - application/json
+      description: Admin rejects a client application with a reason
+      parameters:
+      - description: Client Application ID
+        in: path
+        name: application_id
+        required: true
+        type: string
+      - description: Rejection reason
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RejectClientApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientApplication'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+      summary: Reject a client application
+      tags:
+      - ClientApplications
+  /api/v1/clients/apply:
+    post:
+      consumes:
+      - application/json
+      description: Create a new client application
+      parameters:
+      - description: Client Application details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateClientApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientApplication'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Create a new client application
+      tags:
+      - ClientApplications
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

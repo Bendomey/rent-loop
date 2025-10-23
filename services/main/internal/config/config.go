@@ -35,6 +35,17 @@ type IWittyflow struct {
 	AppSecret string
 }
 
+type IRentloopSupport struct {
+	Email string
+	Phone string
+}
+
+type IRentloopPortals struct {
+	AdminPortalURL           string
+	PropertyManagerPortalURL string
+	TenantPortalURL          string
+}
+
 type Config struct {
 	Port         string
 	Database     IDatabase
@@ -44,6 +55,8 @@ type Config struct {
 	TokenSecrets ITokenGenerationSecret
 	Wittyflow    IWittyflow
 	ResendAPIKey string
+	SupportData  IRentloopSupport
+	Portals      IRentloopPortals
 }
 
 // Load loads config from environment variables
@@ -78,6 +91,15 @@ func Load() Config {
 			AppSecret: getEnv("WITTYFLOW_APP_SECRET", "fake-app-secret"),
 		},
 		ResendAPIKey: getEnv("RESEND_API_KEY", "fake-api-key"),
+		SupportData: IRentloopSupport{
+			Email: getEnv("SUPPORT_EMAIL", "domeybenjamin1@gmail.com"),
+			Phone: getEnv("SUPPORT_PHONE", "0201080802"),
+		},
+		Portals: IRentloopPortals{
+			AdminPortalURL:           getEnv("ADMIN_PORTAL_URL", "http://localhost:3001"),
+			PropertyManagerPortalURL: getEnv("PROPERTY_MANAGER_PORTAL_URL", "http://localhost:3000"),
+			TenantPortalURL:          getEnv("TENANT_PORTAL_URL", "http://localhost:3002"),
+		},
 	}
 }
 
