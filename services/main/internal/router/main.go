@@ -79,7 +79,7 @@ func New(appCtx pkg.AppContext, handlers handlers.Handlers) *chi.Mux {
 	if appCtx.Config.Env != "production" {
 		r.Get("/swagger/*", func(w http.ResponseWriter, r *http.Request) {
 			scheme := "https"
-			if appCtx.Config.Env != "development" {
+			if appCtx.Config.Env == "development" {
 				scheme = "http"
 			}
 
