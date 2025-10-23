@@ -1,0 +1,118 @@
+package services
+
+import (
+	"context"
+	"errors"
+	"slices"
+	"strings"
+
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/models"
+	"github.com/Bendomey/rent-loop/services/main/internal/repository"
+	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/getsentry/raven-go"
+	gonanoid "github.com/matoous/go-nanoid"
+	"gorm.io/gorm"
+)
+
+type ClientUserService interface {
+	CreateClientUser(ctx context.Context, input CreateClientUserInput) (*models.ClientUser, error)
+}
+
+type clientUserService struct {
+	appCtx     pkg.AppContext
+	repo       repository.ClientUserRepository
+	clientRepo repository.ClientRepository
+}
+
+func NewClientUserService(appCtx pkg.AppContext, repo repository.ClientUserRepository, clientRepo repository.ClientRepository) ClientUserService {
+	return &clientUserService{appCtx, repo, clientRepo}
+}
+
+type CreateClientUserInput struct {
+	ClientID    string
+	Name        string
+	Email       string
+	Phone       string
+	Role        string
+	CreatedByID string
+}
+
+func (s *clientUserService) CreateClientUser(ctx context.Context, input CreateClientUserInput) (*models.ClientUser, error) {
+	existingClientUser, clientUserErr := s.repo.GetByEmail(ctx, input.Email)
+
+	if clientUserErr != nil {
+		if !errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
+			raven.CaptureError(clientUserErr, nil)
+		}
+		return nil, clientUserErr
+	}
+
+	if existingClientUser != nil {
+		return nil, errors.New("email already in use")
+	}
+
+	adminClientUser, adminClientUserErr := s.repo.GetByID(ctx, input.ClientID)
+
+	if adminClientUserErr != nil {
+		if !errors.Is(adminClientUserErr, gorm.ErrRecordNotFound) {
+			raven.CaptureError(adminClientUserErr, nil)
+		}
+		return nil, adminClientUserErr
+	}
+
+	if adminClientUser != nil && slices.Contains([]string{"ADMIN", "OWNER"}, adminClientUser.Role) == false {
+		return nil, errors.New("unauthorized to create client user")
+	}
+
+	password, err := gonanoid.Generate("abcdefghijklmnopqrstuvwxyz1234567890", 10)
+	if err != nil {
+		raven.CaptureError(err, map[string]string{
+			"function": "CreateClientUser",
+			"action":   "generating random password",
+		})
+		return nil, err
+	}
+
+	clientUser := models.ClientUser{
+		ClientID:    input.ClientID,
+		Name:        input.Name,
+		PhoneNumber: input.Phone,
+		Email:       input.Email,
+		Password:    password,
+		Role:        input.Role,
+		CreatedByID: &input.CreatedByID,
+	}
+
+	if err := s.repo.Create(ctx, &clientUser); err != nil {
+		return nil, err
+	}
+
+	client, clientErr := s.clientRepo.GetByID(ctx, input.ClientID)
+	if clientErr != nil {
+		return nil, err
+	}
+
+	r := strings.NewReplacer(
+		"{{name}}", input.Name,
+		"{{clientName}}", client.Name,
+		"{{email}}", input.Email,
+		"{{password}}", password,
+	)
+	message := r.Replace(lib.CLIENT_USER_ADDED_BODY)
+
+	sendEmailErr := pkg.SendEmail(
+		s.appCtx,
+		pkg.SendEmailInput{
+			Recipient: input.Email,
+			Subject:   lib.CLIENT_USER_ADDED_SUBJECT,
+			TextBody:  message,
+		},
+	)
+
+	if sendEmailErr != nil {
+		return nil, sendEmailErr
+	}
+
+	return &clientUser, nil
+}

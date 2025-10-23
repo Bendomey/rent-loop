@@ -49,7 +49,7 @@ func (s *adminService) AuthenticateAdmin(ctx context.Context, input LoginAdminIn
 		return nil, err
 	}
 
-	//since email in db, lets validate hash and then send back
+	// since email in db, lets validate hash and then send back
 	isSame := validatehash.ValidateCipher(input.Password, admin.Password)
 	if !isSame {
 		return nil, errors.New("PasswordIncorrect")
@@ -84,15 +84,14 @@ type CreateAdminInput struct {
 }
 
 func (s *adminService) CreateAdmin(ctx context.Context, input CreateAdminInput) (*models.Admin, error) {
-
 	// does email exists?
 	adminByEmail, adminByEmailErr := s.repo.GetByEmail(ctx, input.Email)
 
 	if adminByEmailErr != nil {
 		if !errors.Is(adminByEmailErr, gorm.ErrRecordNotFound) {
 			raven.CaptureError(adminByEmailErr, nil)
-			return nil, adminByEmailErr
 		}
+		return nil, adminByEmailErr
 	}
 
 	if adminByEmail != nil {

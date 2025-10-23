@@ -4,8 +4,9 @@ const SUPPORT_DETAILS_TEMPLATE = `
 If you have any questions, feel free to contact us at {{support_email}}/{{support_phone}}.
 `
 
-const CLIENT_APPLICATION_SUBMITTED_SUBJECT = "Your Rentloop Application Received"
-const CLIENT_APPLICATION_SUBMITTED_BODY = `
+const (
+	CLIENT_APPLICATION_SUBMITTED_SUBJECT = "Your Rentloop Application Received"
+	CLIENT_APPLICATION_SUBMITTED_BODY    = `
 Hi {{owner_name}},
 
 Thank you for submitting your property owner application on Rentloop!  
@@ -18,9 +19,11 @@ You'll receive an update once your application has been reviewed.
 Best regards,  
 The Rentloop Team
 `
+)
 
-const CLIENT_APPLICATION_REJECTED_SUBJECT = "Your Rentloop Application Rejected"
-const CLIENT_APPLICATION_REJECTED_BODY = `
+const (
+	CLIENT_APPLICATION_REJECTED_SUBJECT = "Your Rentloop Application Rejected"
+	CLIENT_APPLICATION_REJECTED_BODY    = `
 Hi {{owner_name}},
 
 Thank you for your interest in becoming a property owner on Rentloop.
@@ -35,9 +38,11 @@ We encourage you to review the feedback above and reapply once the issue has bee
 Thank you for understanding,
 The Rentloop Team
 `
+)
 
-const CLIENT_APPLICATION_ACCEPTED_SUBJECT = "Your Rentloop Application Accepted"
-const CLIENT_APPLICATION_ACCEPTED_BODY = `
+const (
+	CLIENT_APPLICATION_ACCEPTED_SUBJECT = "Your Rentloop Application Accepted"
+	CLIENT_APPLICATION_ACCEPTED_BODY    = `
 Hi {{owner_name}},
 
 Great news! Your property owner application has been approved.  
@@ -57,3 +62,25 @@ Please consider changing your password after your first login for security purpo
 Welcome aboard,  
 The Rentloop Team
 `
+)
+
+const (
+	CLIENT_USER_ADDED_SUBJECT = "Welcome to Rentloop"
+	CLIENT_USER_ADDED_BODY    = `
+Hey {{name}},
+
+You have been invited to join {{client_name}}. Login with the details below.
+
+Credentials:
+Url: {{property_manager_portal_url}}
+Email: {{email}}
+Password: {{password}}
+
+Note: Kindly change your password on your first login to properly secure your account
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Welcome aboard,
+The Rentloop Team
+`
+)

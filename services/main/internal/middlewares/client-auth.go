@@ -62,7 +62,7 @@ func clientFromJWT(unattendedToken string, secret string) (*lib.ClientUserFromTo
 
 	if ok && rawToken.Valid {
 		clientFromTokenImplementation.ID = claims["id"].(string)
-		clientFromTokenImplementation.Role = claims["role"].(string)
+		clientFromTokenImplementation.ClientID = claims["client_id"].(string)
 	}
 
 	return &clientFromTokenImplementation, nil

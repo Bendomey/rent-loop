@@ -9,8 +9,8 @@ type AdminFromToken struct {
 }
 
 type ClientUserFromToken struct {
-	ID   string `json:"id"`
-	Role string `json:"role"`
+	ID       string `json:"id"`
+	ClientID string `json:"client_id"`
 }
 
 type TenantAccountFromToken struct {
