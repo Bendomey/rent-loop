@@ -1,4 +1,5 @@
 # See https://fly.io/docs/app-guides/continuous-deployment-with-github-actions/
+name: Deploy API Staging
 
 on:
   push:
@@ -9,7 +10,7 @@ on:
 
 jobs:
   deploy:
-      name: ⚙️ Build And Deploy
+      name: ⚙️ Build And Deploy Staging
       runs-on: ubuntu-latest
       concurrency: deploy-group
 

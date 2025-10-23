@@ -9,12 +9,12 @@ on:
 
 jobs:
   deploy:
-      name: ⚙️ Build And Deploy
+      name: ⚙️ Build And Deploy Production
       runs-on: ubuntu-latest
       concurrency: deploy-group
 
       env:
-        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_PRODUCTION }}
 
       defaults:
         run:
@@ -27,7 +27,7 @@ jobs:
         - name: 🎈 Setup Fly
           uses: superfly/flyctl-actions/setup-flyctl@master
     
-        - name: 🚀 Deploy Staging
+        - name: 🚀 Deploy Production
           run:
             flyctl deploy --config fly.production.toml --remote-only 
               --build-arg COMMIT_SHA=${{ github.sha }} 
