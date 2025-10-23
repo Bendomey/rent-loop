@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
@@ -106,6 +107,20 @@ func (s *clientApplicationService) CreateClientApplication(ctx context.Context, 
 		return nil, err
 	}
 
+	message := lib.CLIENT_APPLICATION_SUBMITTED_BODY
+	message = strings.ReplaceAll(message, "{{owner_name}}", input.ContactName)
+
+	go pkg.SendEmail(s.appCtx, pkg.SendEmailInput{
+		Recipient: input.ContactEmail,
+		Subject:   lib.CLIENT_APPLICATION_SUBMITTED_SUBJECT,
+		TextBody:  message,
+	})
+
+	go pkg.SendSMS(s.appCtx, pkg.SendSMSInput{
+		Recipient: input.ContactPhoneNumber,
+		Message:   message,
+	})
+
 	return &clientApplication, nil
 }
 
@@ -128,6 +143,21 @@ func (s *clientApplicationService) RejectClientApplication(ctx context.Context, 
 	if err := s.repo.UpdateClientApplication(ctx, clientApplication); err != nil {
 		return nil, err
 	}
+
+	message := lib.CLIENT_APPLICATION_REJECTED_BODY
+	message = strings.ReplaceAll(message, "{{owner_name}}", clientApplication.ContactName)
+	message = strings.ReplaceAll(message, "{{rejection_reason}}", input.Reason)
+
+	go pkg.SendEmail(s.appCtx, pkg.SendEmailInput{
+		Recipient: clientApplication.ContactEmail,
+		Subject:   lib.CLIENT_APPLICATION_REJECTED_SUBJECT,
+		TextBody:  message,
+	})
+
+	go pkg.SendSMS(s.appCtx, pkg.SendSMSInput{
+		Recipient: clientApplication.ContactPhoneNumber,
+		Message:   message,
+	})
 
 	return clientApplication, nil
 }
@@ -198,6 +228,21 @@ func (s *clientApplicationService) ApproveClientApplication(ctx context.Context,
 		transaction.Rollback()
 		return nil, err
 	}
+
+	message := lib.CLIENT_APPLICATION_ACCEPTED_BODY
+	message = strings.ReplaceAll(message, "{{email}}", clientApplication.ContactEmail)
+	message = strings.ReplaceAll(message, "{{password}}", password)
+
+	go pkg.SendEmail(s.appCtx, pkg.SendEmailInput{
+		Recipient: clientApplication.ContactEmail,
+		Subject:   lib.CLIENT_APPLICATION_ACCEPTED_SUBJECT,
+		TextBody:  message,
+	})
+
+	go pkg.SendSMS(s.appCtx, pkg.SendSMSInput{
+		Recipient: clientApplication.ContactPhoneNumber,
+		Message:   message,
+	})
 
 	return clientApplication, nil
 }
