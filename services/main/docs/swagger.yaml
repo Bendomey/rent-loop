@@ -89,6 +89,31 @@ definitions:
     - sub_type
     - type
     type: object
+  handlers.CreateClientUserRequest:
+    properties:
+      email:
+        example: client-user@example.com
+        type: string
+      name:
+        example: John Doe
+        maxLength: 100
+        minLength: 2
+        type: string
+      phone:
+        example: "+233281234569"
+        type: string
+      role:
+        enum:
+        - ADMIN
+        - STAFF
+        example: ADMIN
+        type: string
+    required:
+    - email
+    - name
+    - phone
+    - role
+    type: object
   handlers.LoginRequest:
     properties:
       email:
@@ -264,6 +289,30 @@ definitions:
         type: string
       website_url:
         example: www.company-url.com
+        type: string
+    type: object
+  transformations.OutputClientUser:
+    properties:
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      email:
+        example: client-user@example.com
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      name:
+        example: Client User Name
+        type: string
+      phone_number:
+        example: "+233281234569"
+        type: string
+      role:
+        example: STAFF
+        type: string
+      updated_at:
+        example: "2023-01-01T00:00:00Z"
         type: string
     type: object
 info:
@@ -515,6 +564,8 @@ paths:
           description: Internal Server Error
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Get all ClientApplications
       tags:
       - ClientApplications
@@ -551,6 +602,8 @@ paths:
           description: Internal Server Error
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Get clientApplication by ID
       tags:
       - ClientApplications
@@ -591,6 +644,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/lib.HTTPError'
+      security:
+      - BearerAuth: []
       summary: Approve a client application
       tags:
       - ClientApplications
@@ -637,9 +692,50 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/lib.HTTPError'
+      security:
+      - BearerAuth: []
       summary: Reject a client application
       tags:
       - ClientApplications
+  /api/v1/client-users:
+    post:
+      consumes:
+      - application/json
+      description: Create a new client user
+      parameters:
+      - description: Create Client User Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateClientUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Client user created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientUser'
+            type: object
+        "400":
+          description: Error occured when creating a client user
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occured
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Creates new client user
+      tags:
+      - ClientUsers
   /api/v1/clients/apply:
     post:
       consumes:

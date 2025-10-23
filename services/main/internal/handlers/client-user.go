@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"slices"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
@@ -41,9 +40,9 @@ type CreateClientUserRequest struct {
 // @Failure 500 {object} string "An unexpected error occured"
 // @Router /api/v1/client-users [post]
 func (h *ClientUserHandler) CreateClientUser(w http.ResponseWriter, r *http.Request) {
-	currentClient, currentClientOk := lib.ClientUserFromContext(r.Context())
+	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 
-	if !currentClientOk || slices.Contains([]string{"ADMIN", "OWNER"}, currentClient.Role) == false {
+	if !currentClientUserOk {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -62,11 +61,12 @@ func (h *ClientUserHandler) CreateClientUser(w http.ResponseWriter, r *http.Requ
 	}
 
 	clientUser, err := h.service.CreateClientUser(r.Context(), services.CreateClientUserInput{
-		Name:     body.Name,
-		Email:    body.Email,
-		Phone:    body.Phone,
-		Role:     body.Role,
-		ClientID: currentClient.ID,
+		Name:        body.Name,
+		Email:       body.Email,
+		Phone:       body.Phone,
+		Role:        body.Role,
+		ClientID:    currentClientUser.ClientID,
+		CreatedByID: currentClientUser.ID,
 	})
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

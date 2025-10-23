@@ -310,6 +310,11 @@ const docTemplate = `{
         },
         "/api/v1/client-applications": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get all ClientApplications",
                 "consumes": [
                     "application/json"
@@ -399,6 +404,11 @@ const docTemplate = `{
         },
         "/api/v1/client-applications/{application_id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get clientApplication by ID",
                 "consumes": [
                     "application/json"
@@ -454,6 +464,11 @@ const docTemplate = `{
         },
         "/api/v1/client-applications/{application_id}/approve": {
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Admin approves a client's application after review",
                 "consumes": [
                     "application/json"
@@ -515,6 +530,11 @@ const docTemplate = `{
         },
         "/api/v1/client-applications/{application_id}/reject": {
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Admin rejects a client application with a reason",
                 "consumes": [
                     "application/json"
@@ -578,6 +598,68 @@ const docTemplate = `{
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/client-users": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new client user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Creates new client user",
+                "parameters": [
+                    {
+                        "description": "Create Client User Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateClientUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Client user created successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientUser"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occured when creating a client user",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occured",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
@@ -756,6 +838,39 @@ const docTemplate = `{
                 },
                 "website_url": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.CreateClientUserRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "phone",
+                "role"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "client-user@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2,
+                    "example": "John Doe"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+233281234569"
+                },
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "ADMIN",
+                        "STAFF"
+                    ],
+                    "example": "ADMIN"
                 }
             }
         },
@@ -1000,6 +1115,39 @@ const docTemplate = `{
                 "website_url": {
                     "type": "string",
                     "example": "www.company-url.com"
+                }
+            }
+        },
+        "transformations.OutputClientUser": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "client-user@example.com"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Client User Name"
+                },
+                "phone_number": {
+                    "type": "string",
+                    "example": "+233281234569"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "STAFF"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
                 }
             }
         }

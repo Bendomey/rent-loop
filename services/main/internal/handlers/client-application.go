@@ -59,7 +59,6 @@ type CreateClientApplicationRequest struct {
 // @Failure      500  {object}  string
 // @Router       /api/v1/clients/apply [post]
 func (h *ClientApplicationHandler) CreateClientApplication(w http.ResponseWriter, r *http.Request) {
-
 	var body CreateClientApplicationRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
 		http.Error(w, "Invalid JSON body", http.StatusInternalServerError)
@@ -97,7 +96,6 @@ func (h *ClientApplicationHandler) CreateClientApplication(w http.ResponseWriter
 		SupportEmail:       body.SupportEmail,
 		SupportPhone:       body.SupportPhone,
 	})
-
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]any{
@@ -112,7 +110,6 @@ func (h *ClientApplicationHandler) CreateClientApplication(w http.ResponseWriter
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": transformations.DBClientApplicationToRestClientApplication(clientApplication),
 	})
-
 }
 
 // GetClientApplicationById godoc
@@ -120,6 +117,7 @@ func (h *ClientApplicationHandler) CreateClientApplication(w http.ResponseWriter
 // @Description  Get clientApplication by ID
 // @Tags         ClientApplications
 // @Accept       json
+// @Security BearerAuth
 // @Produce      json
 // @Param        application_id   path      string  true  "ClientApplication ID"
 // @Success      200  {object}  object{data=transformations.OutputClientApplication}
@@ -131,7 +129,6 @@ func (h *ClientApplicationHandler) GetClientApplicationById(w http.ResponseWrite
 	applicationId := chi.URLParam(r, "application_id")
 
 	clientApplication, err := h.service.GetClientApplication(r.Context(), applicationId)
-
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]any{
@@ -156,6 +153,7 @@ type RejectClientApplicationRequest struct {
 // @Description  Admin rejects a client application with a reason
 // @Tags         ClientApplications
 // @Accept       json
+// @Security BearerAuth
 // @Produce      json
 // @Param        application_id  path  string  true  "Client Application ID"
 // @Param        body  body  RejectClientApplicationRequest  true  "Rejection reason"
@@ -166,7 +164,6 @@ type RejectClientApplicationRequest struct {
 // @Failure      500  {object}  lib.HTTPError
 // @Router       /api/v1/client-applications/{application_id}/reject [patch]
 func (h *ClientApplicationHandler) RejectClientApplication(w http.ResponseWriter, r *http.Request) {
-
 	currentAdmin, adminOk := lib.AdminFromContext(r.Context())
 
 	if !adminOk {
@@ -207,6 +204,7 @@ func (h *ClientApplicationHandler) RejectClientApplication(w http.ResponseWriter
 // @Description  Admin approves a client's application after review
 // @Tags         ClientApplications
 // @Accept       json
+// @Security BearerAuth
 // @Produce      json
 // @Param        application_id  path  string  true  "Client Application ID"
 // @Success      200  {object}  object{data=transformations.OutputClientApplication}
@@ -216,7 +214,6 @@ func (h *ClientApplicationHandler) RejectClientApplication(w http.ResponseWriter
 // @Failure      500  {object}  lib.HTTPError
 // @Router       /api/v1/client-applications/{application_id}/approve [patch]
 func (h *ClientApplicationHandler) ApproveClientApplication(w http.ResponseWriter, r *http.Request) {
-
 	currentAdmin, adminOk := lib.AdminFromContext(r.Context())
 
 	if !adminOk {
@@ -248,6 +245,7 @@ type ListClientApplicationsFilterRequest struct {
 // @Description  Get all ClientApplications
 // @Tags         ClientApplications
 // @Accept       json
+// @Security BearerAuth
 // @Produce      json
 // @Param        q  query      ListClientApplicationsFilterRequest  true  "ClientApplications"
 // @Success      200  {object}  object{data=object{rows=[]transformations.OutputClientApplication,meta=lib.HTTPReturnPaginatedMetaResponse}}

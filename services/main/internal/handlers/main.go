@@ -6,23 +6,19 @@ import (
 )
 
 type Handlers struct {
-	AdminHandler              AdminHandler
-	ClientApplicationHandler  ClientApplicationHandler
-	AdminHandler      AdminHandler
-	ClientUserHandler ClientUserHandler
+	AdminHandler             AdminHandler
+	ClientApplicationHandler ClientApplicationHandler
+	ClientUserHandler        ClientUserHandler
 }
 
 func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 	adminHandler := NewAdminHandler(appCtx, services.AdminService)
 	clientApplicationHandler := NewClientApplicationHandler(appCtx, services.ClientApplicationService)
-
-	return Handlers{
-		AdminHandler:             adminHandler,
-		ClientApplicationHandler: clientApplicationHandler,
 	clientUserHandler := NewClientUserHandler(appCtx, services.ClientUserService)
 
 	return Handlers{
-		AdminHandler:      adminHandler,
-		ClientUserHandler: clientUserHandler,
+		ClientApplicationHandler: clientApplicationHandler,
+		AdminHandler:             adminHandler,
+		ClientUserHandler:        clientUserHandler,
 	}
 }
