@@ -18,3 +18,6 @@ deploy-staging:
 
 generate-docs:
 	~/go/bin/swag init -g internal/router/main.go -o ./docs
+
+deploy-production:
+	fly deploy --config fly.production.toml --remote-only

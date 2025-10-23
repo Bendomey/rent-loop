@@ -2,6 +2,7 @@ package router
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/handlers"
@@ -76,9 +77,17 @@ func New(appCtx pkg.AppContext, handlers handlers.Handlers) *chi.Mux {
 
 	// serve openapi.yaml + docs
 	if appCtx.Config.Env != "production" {
-		r.Get("/swagger/*", httpSwagger.Handler(
-			httpSwagger.URL(fmt.Sprintf("http://localhost:%s/swagger/doc.json", appCtx.Config.Port)),
-		))
+		r.Get("/swagger/*", func(w http.ResponseWriter, r *http.Request) {
+			scheme := "https"
+			if appCtx.Config.Env != "development" {
+				scheme = "http"
+			}
+
+			origin := fmt.Sprintf("%s://%s", scheme, r.Host)
+			httpSwagger.Handler(
+				httpSwagger.URL(fmt.Sprintf("%s/swagger/doc.json", origin)),
+			)(w, r)
+		})
 	}
 
 	return r
