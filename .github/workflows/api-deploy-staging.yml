@@ -9,10 +9,44 @@ on:
       - main
 
 jobs:
+  sync-db:
+    name: 🗄️ Synchronize Database
+    runs-on: ubuntu-latest
+    concurrency: db-sync-group
+
+    defaults:
+      run:
+        working-directory: services/main
+
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v4
+
+      - name: 🧰 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: services/main/go.mod
+          cache: true
+
+      - name: 📦 Download dependencies
+        run: go mod download
+
+      - name: 🗄️ Run database sync
+        env:
+          DB_HOST: ${{ secrets.STAGING_DB_HOST }}
+          DB_USER: ${{ secrets.STAGING_DB_USER }}
+          DB_PASS: ${{ secrets.STAGING_DB_PASS }}
+          DB_NAME: ${{ secrets.STAGING_DB_NAME }}
+          DB_DEFAULT_DBNAME: ${{ secrets.STAGING_DB_DEFAULT_DBNAME }}
+          DB_PORT: ${{ secrets.STAGING_DB_PORT }}
+          DB_SSLMODE: ${{ secrets.STAGING_DB_SSLMODE }}
+        run: make update-db
+
   deploy:
       name: ⚙️ Build And Deploy Staging
       runs-on: ubuntu-latest
       concurrency: deploy-group
+      needs: sync-db # ⬅️ Wait until the DB sync job finishes successfully
 
       env:
         FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
@@ -22,12 +56,12 @@ jobs:
           working-directory: services/main
 
       steps:
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v4
+        - name: ⬇️ Checkout repo
+          uses: actions/checkout@v4
 
-      - name: 🎈 Setup Fly
-        uses: superfly/flyctl-actions/setup-flyctl@master
+        - name: 🎈 Setup Fly
+          uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: 🚀 Deploy Staging
-        run:
-          flyctl deploy --config fly.staging.toml --remote-only --build-arg COMMIT_SHA=${{ github.sha }}
+        - name: 🚀 Deploy Staging
+          run:
+            flyctl deploy --config fly.staging.toml --remote-only --build-arg COMMIT_SHA=${{ github.sha }}

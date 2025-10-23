@@ -10,6 +10,7 @@ import (
 func ApplyGlobalVariableTemplate(appCtx AppContext, template string) string {
 	supportEmail := appCtx.Config.SupportData.Email
 	supportPhone := appCtx.Config.SupportData.Phone
+
 	normalizedPhone, normalizedPhoneErr := lib.NormalizePhoneNumber(supportPhone)
 	if normalizedPhoneErr != nil {
 		normalizedPhone = supportPhone
