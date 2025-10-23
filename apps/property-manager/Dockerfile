@@ -1,22 +1,52 @@
-FROM node:20-alpine AS development-dependencies-env
-COPY . /app
-WORKDIR /app
-RUN npm ci
+FROM node:20-alpine AS base
 
-FROM node:20-alpine AS production-dependencies-env
-COPY ./package.json package-lock.json /app/
-WORKDIR /app
-RUN npm ci --omit=dev
+# install all node_modules, including dev
+FROM base as deps
 
-FROM node:20-alpine AS build-env
-COPY . /app/
-COPY --from=development-dependencies-env /app/node_modules /app/node_modules
-WORKDIR /app
-RUN npm run build
+RUN mkdir /app/
+WORKDIR /app/
 
-FROM node:20-alpine
-COPY ./package.json package-lock.json /app/
-COPY --from=production-dependencies-env /app/node_modules /app/node_modules
-COPY --from=build-env /app/build /app/build
+ADD package.json yarn.lock ./
+
+RUN yarn install --frozen-lockfile --production=false
+
+# setup production node_modules
+FROM base as production-deps
+
+RUN mkdir /app/
+WORKDIR /app/
+
+ADD package.json yarn.lock /app/
+RUN yarn install --frozen-lockfile --production=true
+
+# build app
+FROM base as build
+
+ARG COMMIT_SHA
+ENV COMMIT_SHA=$COMMIT_SHA
+
+RUN mkdir /app/
+WORKDIR /app/
+
+COPY --from=deps /app/node_modules /app/node_modules
+
+# app code changes all the time
+ADD . .
+RUN yarn build
+
+# build smaller image for running
+FROM base
+
+ARG NODE_ENV
+ENV NODE_ENV=$NODE_ENV
+
+ENV PORT=3000
+
+COPY --from=production-deps /app/node_modules /app/node_modules
+COPY --from=build /app/build /app/build
+COPY --from=build /app/public /app/public
+COPY --from=build /app/package.json /app/package.json
 WORKDIR /app
-CMD ["npm", "run", "start"]
+
+CMD ["yarn", "start"]
+EXPOSE 3000
