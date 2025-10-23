@@ -17,6 +17,7 @@ func NewAdminRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func(r ch
 
 		// protected client routes ...
 		r.Group(func(r chi.Router) {
+
 			// ensure auth is present
 			r.Use(middlewares.CheckForAdminAuthPresenceMiddleware)
 
