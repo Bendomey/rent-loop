@@ -1,38 +1,42 @@
-# See https://fly.io/docs/app-guides/continuous-deployment-with-github-actions/
 name: Deploy API Staging
 
 on:
   push:
     paths:
-        - 'services/main/**'
+      - 'services/main/**'
     branches:
       - main
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      db: ${{ steps.filter.outputs.db }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            db:
+              - 'services/main/init/**'
+
   sync-db:
     name: 🗄️ Synchronize Database
     runs-on: ubuntu-latest
     concurrency: db-sync-group
-    if: ${{ contains(join(github.event.commits.*.modified, ' '), 'services/main/init/') || contains(join(github.event.commits.*.added, ' '), 'services/main/init/') || contains(join(github.event.commits.*.removed, ' '), 'services/main/init/') }}
-
-
+    needs: changes
+    if: ${{ needs.changes.outputs.db == 'true' }}
     defaults:
       run:
         working-directory: services/main
-
     steps:
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v4
-
-      - name: 🧰 Setup Go
-        uses: actions/setup-go@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
           go-version-file: services/main/go.mod
           cache: true
-
-      - name: 📦 Download dependencies
-        run: go mod download
-
+      - run: go mod download
       - name: 🗄️ Run database sync
         env:
           DB_HOST: ${{ secrets.STAGING_DB_HOST }}
@@ -45,25 +49,18 @@ jobs:
         run: make update-db
 
   deploy:
-      name: ⚙️ Build And Deploy Staging
-      runs-on: ubuntu-latest
-      concurrency: deploy-group
-      needs: sync-db # ⬅️ Wait until the DB sync job finishes successfully
-
-      env:
-        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-
-      defaults:
-        run:
-          working-directory: services/main
-
-      steps:
-        - name: ⬇️ Checkout repo
-          uses: actions/checkout@v4
-
-        - name: 🎈 Setup Fly
-          uses: superfly/flyctl-actions/setup-flyctl@master
-
-        - name: 🚀 Deploy Staging
-          run:
-            flyctl deploy --config fly.staging.toml --remote-only --build-arg COMMIT_SHA=${{ github.sha }}
+    name: ⚙️ Build And Deploy Staging
+    runs-on: ubuntu-latest
+    concurrency: deploy-group
+    needs: [changes, sync-db]
+    if: ${{ always() && (needs.changes.result == 'success') }}
+    defaults:
+      run:
+        working-directory: services/main
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: 🚀 Deploy Staging
+        run: flyctl deploy --config fly.staging.toml --remote-only --build-arg COMMIT_SHA=${{ github.sha }}
