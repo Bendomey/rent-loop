@@ -1,4 +1,5 @@
 import { ArrowLeft, HelpCircle, Mail, Phone } from 'lucide-react'
+import { useApplyContext } from './context'
 import { Button } from '~/components/ui/button'
 import {
 	Field,
@@ -20,11 +21,9 @@ import {
 } from '~/components/ui/tooltip'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 
-interface Props {
-	onGoBack?: () => void
-}
+export function Step3() {
+	const { goBack } = useApplyContext()
 
-export function Step3({ onGoBack }: Props) {
 	return (
 		<main className="mx-auto mb-5 space-y-10 md:max-w-2/3">
 			<div className="space-y-2">
@@ -108,7 +107,7 @@ export function Step3({ onGoBack }: Props) {
 			</FieldGroup>
 
 			<div className="mt-10 flex items-center justify-end space-x-5">
-				<Button onClick={onGoBack} size="sm" variant="ghost">
+				<Button onClick={goBack} size="sm" variant="ghost">
 					<ArrowLeft />
 					Go Back
 				</Button>

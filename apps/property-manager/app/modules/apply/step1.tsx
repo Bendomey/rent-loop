@@ -1,4 +1,5 @@
 import { ArrowLeft } from 'lucide-react'
+import { useApplyContext } from './context'
 import { Button } from '~/components/ui/button'
 import { Field, FieldGroup, FieldLabel } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
@@ -13,12 +14,8 @@ import {
 } from '~/components/ui/select'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 
-interface Props {
-	onGoBack?: () => void
-	onGoNext?: () => void
-}
-
-export function Step1({ onGoBack, onGoNext }: Props) {
+export function Step1() {
+	const { goBack, goNext } = useApplyContext()
 	return (
 		<main className="mx-auto mb-5 space-y-10 md:max-w-2/3">
 			<div className="space-y-2">
@@ -98,12 +95,12 @@ export function Step1({ onGoBack, onGoNext }: Props) {
 			</FieldGroup>
 
 			<div className="mt-10 flex items-center justify-end space-x-5">
-				<Button onClick={onGoBack} size="sm" variant="ghost">
+				<Button onClick={goBack} size="sm" variant="ghost">
 					<ArrowLeft />
 					Go Back
 				</Button>
 				<Button
-					onClick={onGoNext}
+					onClick={goNext}
 					size="lg"
 					variant="default"
 					className="bg-rose-600 hover:bg-rose-700"
