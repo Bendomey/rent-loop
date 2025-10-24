@@ -86,7 +86,7 @@ func (s *clientUserService) CreateClientUser(ctx context.Context, input CreateCl
 		Email:       input.Email,
 		Password:    password,
 		Role:        input.Role,
-		CreatorID:   &input.CreatedByID,
+		CreatedByID: &input.CreatedByID,
 	}
 
 	if err := s.repo.Create(ctx, &clientUser); err != nil {

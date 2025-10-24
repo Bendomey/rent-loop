@@ -16,7 +16,7 @@ type Client struct {
 	Longitude float64 `json:"longitude" gorm:"not null;"`
 
 	ClientApplicationId string            `json:"clientApplicationId" gorm:"not null;"`
-	ClientApplication   ClientApplication `json:"clientApplication" gorm:"foreignKey:ClientApplicationId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	ClientApplication   ClientApplication `json:"clientApplication"`
 
-	Properties []Property `json:"properties" gorm:"foreignKey:ClientID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	Properties []Property `json:"properties"`
 }

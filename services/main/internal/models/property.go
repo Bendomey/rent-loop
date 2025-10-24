@@ -26,7 +26,7 @@ type Property struct {
 	Status string `json:"status" gorm:"not null;index;"` // ACTIVE | MAINTENANCE | INACTIVE
 
 	CreatedByID string     `json:"createdById" gorm:"not null;"`
-	CreatedBy   ClientUser `json:"createdBy" gorm:"foreignKey:CreatedByID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	CreatedBy   ClientUser `json:"createdBy"`
 
-	Units []Unit `json:"units" gorm:"foreignKey:PropertyID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	Units []Unit `json:"units"`
 }
