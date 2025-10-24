@@ -32,7 +32,7 @@ type CreateClientApplicationRequest struct {
 	Latitude           float64 `json:"latitude" validate:"required"`
 	Longitude          float64 `json:"longitude" validate:"required"`
 	ContactName        string  `json:"contact_name" validate:"required"`
-	ContactPhoneNumber string  `json:"contact_phone_number" validate:"required"`
+	ContactPhoneNumber string  `json:"contact_phone_number" validate:"required,e164"`
 	ContactEmail       string  `json:"contact_email" validate:"required,email"`
 	DateOfBirth        string  `json:"date_of_birth" validate:"required,datetime=2006-01-02"`
 	IDType             *string `json:"id_type" validate:"oneof=DRIVERS_LICENSE PASSPORT NATIONAL_ID"`
@@ -44,7 +44,7 @@ type CreateClientApplicationRequest struct {
 	Description        *string `json:"description"`
 	WebsiteURL         *string `json:"website_url" validate:"url"`
 	SupportEmail       *string `json:"support_email" validate:"email"`
-	SupportPhone       *string `json:"support_phone"`
+	SupportPhone       *string `json:"support_phone" validate:"omitempty,e164"`
 }
 
 // CreateClientApplication godoc
