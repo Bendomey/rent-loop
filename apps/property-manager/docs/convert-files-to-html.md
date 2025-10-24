@@ -12,7 +12,6 @@ formatting and styles that are not essential for web display.
 To use this library, you need to install it via npm. You can do this by running
 the following command in your project directory:
 
-
 ```bash
 npm install mammoth
 ```
