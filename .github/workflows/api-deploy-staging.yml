@@ -13,6 +13,8 @@ jobs:
     name: 🗄️ Synchronize Database
     runs-on: ubuntu-latest
     concurrency: db-sync-group
+    if: ${{ contains(join(github.event.commits.*.modified, ' '), 'services/main/init/') || contains(join(github.event.commits.*.added, ' '), 'services/main/init/') || contains(join(github.event.commits.*.removed, ' '), 'services/main/init/') }}
+
 
     defaults:
       run:
