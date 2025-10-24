@@ -38,9 +38,9 @@ type CreateClientApplicationRequest struct {
 	IDType             *string `json:"id_type" validate:"oneof=DRIVERS_LICENSE PASSPORT NATIONAL_ID"`
 	IDNumber           *string `json:"id_number"`
 	IDExpiry           *string `json:"id_expiry"`
-	IDDocumentURL      *string `json:"id_document_url" validate:"omitempty,url"`
+	IDDocumentURL      *string `json:"id_document_url" validate:"url"`
 	RegistrationNumber *string `json:"registration_number"`
-	LogoURL            *string `json:"logo_url" validate:"omitempty,url"`
+	LogoURL            *string `json:"logo_url" validate:"url"`
 	Description        *string `json:"description"`
 	WebsiteURL         *string `json:"website_url" validate:"url"`
 	SupportEmail       *string `json:"support_email" validate:"email"`
