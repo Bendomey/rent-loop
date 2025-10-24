@@ -113,6 +113,19 @@ definitions:
     - phone
     - role
     type: object
+  handlers.LoginClientUserRequest:
+    properties:
+      email:
+        example: client-user@example.com
+        type: string
+      password:
+        example: password123
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
   handlers.LoginRequest:
     properties:
       email:
@@ -312,6 +325,14 @@ definitions:
         type: string
       updated_at:
         example: "2023-01-01T00:00:00Z"
+        type: string
+    type: object
+  transformations.OutputClientUserWithToken:
+    properties:
+      client_user:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw
         type: string
     type: object
 info:
@@ -733,6 +754,39 @@ paths:
       security:
       - BearerAuth: []
       summary: Creates new client user
+      tags:
+      - ClientUsers
+  /api/v1/client-users/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate client user and returns client user and token
+      parameters:
+      - description: Client user login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginClientUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Client user authenticated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientUserWithToken'
+            type: object
+        "400":
+          description: Error occured when authenticating a client user
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occured
+          schema:
+            type: string
+      summary: Authenticates client user and returns token
       tags:
       - ClientUsers
   /api/v1/clients/apply:

@@ -6,17 +6,22 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/Bendomey/goutilities/pkg/signjwt"
+	"github.com/Bendomey/goutilities/pkg/validatehash"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/getsentry/raven-go"
 	gonanoid "github.com/matoous/go-nanoid"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type ClientUserService interface {
 	CreateClientUser(ctx context.Context, input CreateClientUserInput) (*models.ClientUser, error)
+	AuthenticateClientUser(ctx context.Context, input AuthenticateClientUserInput) (*AuthenticateClientUserResponse, error)
 }
 
 type clientUserService struct {
@@ -44,15 +49,15 @@ func (s *clientUserService) CreateClientUser(ctx context.Context, input CreateCl
 	if clientUserErr != nil {
 		if !errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
 			raven.CaptureError(clientUserErr, nil)
+			return nil, clientUserErr
 		}
-		return nil, clientUserErr
 	}
 
 	if existingClientUser != nil {
 		return nil, errors.New("email already in use")
 	}
 
-	adminClientUser, adminClientUserErr := s.repo.GetByID(ctx, input.ClientID)
+	adminClientUser, adminClientUserErr := s.repo.GetByID(ctx, input.CreatedByID)
 
 	if adminClientUserErr != nil {
 		if !errors.Is(adminClientUserErr, gorm.ErrRecordNotFound) {
@@ -81,7 +86,7 @@ func (s *clientUserService) CreateClientUser(ctx context.Context, input CreateCl
 		Email:       input.Email,
 		Password:    password,
 		Role:        input.Role,
-		CreatedByID: &input.CreatedByID,
+		CreatorID:   &input.CreatedByID,
 	}
 
 	if err := s.repo.Create(ctx, &clientUser); err != nil {
@@ -95,13 +100,15 @@ func (s *clientUserService) CreateClientUser(ctx context.Context, input CreateCl
 
 	r := strings.NewReplacer(
 		"{{name}}", input.Name,
-		"{{clientName}}", client.Name,
+		"{{client_name}}", client.Name,
 		"{{email}}", input.Email,
 		"{{password}}", password,
 	)
 	message := r.Replace(lib.CLIENT_USER_ADDED_BODY)
 
-	sendEmailErr := pkg.SendEmail(
+	logrus.Info("the client user email message", message)
+
+	go pkg.SendEmail(
 		s.appCtx,
 		pkg.SendEmailInput{
 			Recipient: input.Email,
@@ -110,9 +117,48 @@ func (s *clientUserService) CreateClientUser(ctx context.Context, input CreateCl
 		},
 	)
 
-	if sendEmailErr != nil {
-		return nil, sendEmailErr
+	return &clientUser, nil
+}
+
+type AuthenticateClientUserInput struct {
+	Email    string
+	Password string
+}
+
+type AuthenticateClientUserResponse struct {
+	ClientUser models.ClientUser
+	Token      string
+}
+
+func (s *clientUserService) AuthenticateClientUser(ctx context.Context, input AuthenticateClientUserInput) (*AuthenticateClientUserResponse, error) {
+	clientUser, clientUserErr := s.repo.GetByEmail(ctx, input.Email)
+	if clientUserErr != nil {
+		if !errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
+			raven.CaptureError(clientUserErr, nil)
+		}
+		return nil, clientUserErr
 	}
 
-	return &clientUser, nil
+	isSame := validatehash.ValidateCipher(input.Password, clientUser.Password)
+	if !isSame {
+		return nil, errors.New("PasswordIncorrect")
+	}
+
+	token, signTokenErrr := signjwt.SignJWT(jwt.MapClaims{
+		"id":        clientUser.ID,
+		"client_id": clientUser.ClientID,
+	}, s.appCtx.Config.TokenSecrets.ClientUserSecret)
+
+	if signTokenErrr != nil {
+		raven.CaptureError(signTokenErrr, map[string]string{
+			"function": "AuthenticateClientUser",
+			"action":   "signing token",
+		})
+		return nil, signTokenErrr
+	}
+
+	return &AuthenticateClientUserResponse{
+		ClientUser: *clientUser,
+		Token:      token,
+	}, nil
 }

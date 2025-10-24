@@ -27,16 +27,17 @@ type LoginRequest struct {
 }
 
 // AuthenticateAdmin godoc
-// @Summary      Authenticate admin and return token
-// @Description  Authenticate admin and return token
-// @Tags         Admins
-// @Accept       json
-// @Produce      json
-// @Param        body  body      LoginRequest  true  "Login credentials"
-// @Success      200  {object}  object{data=transformations.OutputAdminWithToken}
-// @Failure      400  {object}  lib.HTTPError
-// @Failure      500  {object}  string
-// @Router       /api/v1/admins/login [post]
+//
+//	@Summary		Authenticate admin and return token
+//	@Description	Authenticate admin and return token
+//	@Tags			Admins
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		LoginRequest	true	"Login credentials"
+//	@Success		200		{object}	object{data=transformations.OutputAdminWithToken}
+//	@Failure		400		{object}	lib.HTTPError
+//	@Failure		500		{object}	string
+//	@Router			/api/v1/admins/login [post]
 func (h *AdminHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
 	var body LoginRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
@@ -75,18 +76,19 @@ type CreateAdminRequest struct {
 }
 
 // CreateAdmin godoc
-// @Summary      Create a new admin
-// @Description  Create a new admin
-// @Tags         Admins
-// @Accept       json
-// @Security BearerAuth
-// @Produce      json
-// @Param        body  body      CreateAdminRequest  true  "Admin details"
-// @Success      201  {object}  object{data=transformations.OutputAdmin}
-// @Failure      400  {object}  lib.HTTPError
-// @Failure      401  {object}  string
-// @Failure      500  {object}  string
-// @Router       /api/v1/admins [post]
+//
+//	@Summary		Create a new admin
+//	@Description	Create a new admin
+//	@Tags			Admins
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			body	body		CreateAdminRequest	true	"Admin details"
+//	@Success		201		{object}	object{data=transformations.OutputAdmin}
+//	@Failure		400		{object}	lib.HTTPError
+//	@Failure		401		{object}	string
+//	@Failure		500		{object}	string
+//	@Router			/api/v1/admins [post]
 func (h *AdminHandler) CreateAdmin(w http.ResponseWriter, r *http.Request) {
 	currentAdmin, currentAdminOk := lib.AdminFromContext(r.Context())
 
@@ -129,17 +131,18 @@ func (h *AdminHandler) CreateAdmin(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetCurrentAdmin godoc
-// @Summary      Get the currently authenticated admin
-// @Description  Get the currently authenticated admin
-// @Tags         Admins
-// @Accept       json
-// @Security BearerAuth
-// @Produce      json
-// @Success      200  {object}  object{data=transformations.OutputAdmin}
-// @Failure      400  {object}  lib.HTTPError
-// @Failure      401  {object}  string
-// @Failure      500  {object}  string
-// @Router       /api/v1/admins/me [get]
+//
+//	@Summary		Get the currently authenticated admin
+//	@Description	Get the currently authenticated admin
+//	@Tags			Admins
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Success		200	{object}	object{data=transformations.OutputAdmin}
+//	@Failure		400	{object}	lib.HTTPError
+//	@Failure		401	{object}	string
+//	@Failure		500	{object}	string
+//	@Router			/api/v1/admins/me [get]
 func (h *AdminHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	currentAdmin, adminOk := lib.AdminFromContext(r.Context())
 
@@ -165,18 +168,19 @@ func (h *AdminHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAdminById godoc
-// @Summary      Get admin by ID
-// @Description  Get admin by ID
-// @Tags         Admins
-// @Accept       json
-// @Security BearerAuth
-// @Produce      json
-// @Param        admin_id   path      string  true  "Admin ID"
-// @Success      200  {object}  object{data=transformations.OutputAdmin}
-// @Failure      400  {object}  lib.HTTPError
-// @Failure      401  {object}  string
-// @Failure      500  {object}  string
-// @Router       /api/v1/admins/{admin_id} [get]
+//
+//	@Summary		Get admin by ID
+//	@Description	Get admin by ID
+//	@Tags			Admins
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			admin_id	path		string	true	"Admin ID"
+//	@Success		200			{object}	object{data=transformations.OutputAdmin}
+//	@Failure		400			{object}	lib.HTTPError
+//	@Failure		401			{object}	string
+//	@Failure		500			{object}	string
+//	@Router			/api/v1/admins/{admin_id} [get]
 func (h *AdminHandler) GetAdminById(w http.ResponseWriter, r *http.Request) {
 	adminId := chi.URLParam(r, "admin_id")
 
@@ -199,18 +203,19 @@ func (h *AdminHandler) GetAdminById(w http.ResponseWriter, r *http.Request) {
 type ListAdminsFilterRequest struct{}
 
 // GetAdmins godoc
-// @Summary      Get all admins
-// @Description  Get all admins
-// @Tags         Admins
-// @Accept       json
-// @Security BearerAuth
-// @Produce      json
-// @Param        q  query      ListAdminsFilterRequest  true  "Admins"
-// @Success      200  {object}  object{data=object{rows=[]transformations.OutputAdmin,meta=lib.HTTPReturnPaginatedMetaResponse}}
-// @Failure      400  {object}  lib.HTTPError
-// @Failure      401  {object}  string
-// @Failure      500  {object}  string
-// @Router       /api/v1/admins [get]
+//
+//	@Summary		Get all admins
+//	@Description	Get all admins
+//	@Tags			Admins
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			q	query		ListAdminsFilterRequest	true	"Admins"
+//	@Success		200	{object}	object{data=object{rows=[]transformations.OutputAdmin,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400	{object}	lib.HTTPError
+//	@Failure		401	{object}	string
+//	@Failure		500	{object}	string
+//	@Router			/api/v1/admins [get]
 func (h *AdminHandler) ListAdmins(w http.ResponseWriter, r *http.Request) {
 	_, adminOk := lib.AdminFromContext(r.Context())
 

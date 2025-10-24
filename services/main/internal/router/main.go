@@ -17,22 +17,22 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-// @title RentLoop API
-// @version 1.0
-// @description This is the RentLoop API documentation.
-// @termsOfService http://rentloop.com/terms
+//	@title			RentLoop API
+//	@version		1.0
+//	@description	This is the RentLoop API documentation.
+//	@termsOfService	http://rentloop.com/terms
 
-// @contact.name Domey Benjamin
-// @contact.url https://www.linkedin.com/in/benjamin-armah-kesey-domey/
-// @contact.email domeybenjamin1@gmail.com
+//	@contact.name	Domey Benjamin
+//	@contact.url	https://www.linkedin.com/in/benjamin-armah-kesey-domey/
+//	@contact.email	domeybenjamin1@gmail.com
 
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
-// @description Type "Bearer" followed by a space and JWT token.
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
+// @description				Type "Bearer" followed by a space and JWT token.
 func New(appCtx pkg.AppContext, handlers handlers.Handlers) *chi.Mux {
 	r := chi.NewRouter()
 

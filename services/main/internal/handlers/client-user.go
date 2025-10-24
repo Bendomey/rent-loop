@@ -27,18 +27,19 @@ type CreateClientUserRequest struct {
 }
 
 // CreateClientUser godoc
-// @Summary Creates new client user
-// @Description Create a new client user
-// @Tags ClientUsers
-// @Accept json
-// @Security BearerAuth
-// @Produce json
-// @Param body body CreateClientUserRequest true "Create Client User Request Body"
-// @Success 201 {object} object{data=transformations.OutputClientUser} "Client user created successfully"
-// @Failure 400 {object} lib.HTTPError "Error occured when creating a client user"
-// @Failure 401 {object} string "Invalid or absent authentication token"
-// @Failure 500 {object} string "An unexpected error occured"
-// @Router /api/v1/client-users [post]
+//
+//	@Summary		Creates new client user
+//	@Description	Create a new client user
+//	@Tags			ClientUsers
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			body	body		CreateClientUserRequest							true	"Create Client User Request Body"
+//	@Success		201		{object}	object{data=transformations.OutputClientUser}	"Client user created successfully"
+//	@Failure		400		{object}	lib.HTTPError									"Error occured when creating a client user"
+//	@Failure		401		{object}	string											"Invalid or absent authentication token"
+//	@Failure		500		{object}	string											"An unexpected error occured"
+//	@Router			/api/v1/client-users [post]
 func (h *ClientUserHandler) CreateClientUser(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 
@@ -81,5 +82,55 @@ func (h *ClientUserHandler) CreateClientUser(w http.ResponseWriter, r *http.Requ
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": transformations.DBClientUserToRest(clientUser),
+	})
+}
+
+type LoginClientUserRequest struct {
+	Email    string `json:"email" validate:"required,email" example:"client-user@example.com"`
+	Password string `json:"password" validate:"required,min=6" example:"password123"`
+}
+
+// AuthenticateClientUser godoc
+//
+//	@Summary		Authenticates client user and returns token
+//	@Description	Authenticate client user and returns client user and token
+//	@Tags			ClientUsers
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		LoginClientUserRequest									true	"Client user login credentials"
+//	@Success		200		{object}	object{data=transformations.OutputClientUserWithToken}	"Client user authenticated successfully"
+//	@Failure		400		{object}	lib.HTTPError											"Error occured when authenticating a client user"
+//	@Failure		500		{object}	string													"An unexpected error occured"
+//	@Router			/api/v1/client-users/login [post]
+func (h *ClientUserHandler) AuthenticateClientUser(w http.ResponseWriter, r *http.Request) {
+	var body LoginClientUserRequest
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusInternalServerError)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+
+	if !isPassedValidation {
+		return
+	}
+
+	clientUserWithToken, err := h.service.AuthenticateClientUser(r.Context(), services.AuthenticateClientUserInput{
+		Email:    body.Email,
+		Password: body.Password,
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]any{
+			"errors": map[string]string{
+				"message": err.Error(),
+			},
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBClientUserToRestWithToken(&clientUserWithToken.ClientUser, clientUserWithToken.Token),
 	})
 }

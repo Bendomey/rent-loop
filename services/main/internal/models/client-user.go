@@ -20,8 +20,10 @@ type ClientUser struct {
 
 	Role string `json:"role" gorm:"not null;"` // OWNER | ADMIN | STAFF
 
-	CreatedByID *string     `json:"createdById"`
-	CreatedBy   *ClientUser `json:"createdBy"`
+	CreatorID *string     `json:"creatorId"`                           // Use CreatorID instead of CreatedByID
+	Creator   *ClientUser `json:"creator" gorm:"foreignKey:CreatorID"` // Update foreignKey tag
+	// CreatedByID *string     `json:"createdById"`
+	// CreatedBy   *ClientUser `json:"createdBy"`
 
 	Status string `json:"status" gorm:"not null;index;default:'ClientUser.Status.Active'"` // ClientUser.Status.Active | ClientUser.Status.Inactive
 
@@ -31,7 +33,7 @@ type ClientUser struct {
 
 // BeforeCreate hook is called before the data is persisted to db
 func (clientUser *ClientUser) BeforeCreate(tx *gorm.DB) (err error) {
-	//hashes password
+	// hashes password
 	hashed, err := hashpassword.HashPassword(clientUser.Password)
 	clientUser.Password = hashed
 	if err != nil {
@@ -42,7 +44,7 @@ func (clientUser *ClientUser) BeforeCreate(tx *gorm.DB) (err error) {
 
 // BeforeDelete hook is called before the data is delete so that we dont delete super client user
 func (admin *ClientUser) BeforeDelete(tx *gorm.DB) (err error) {
-	if admin.CreatedByID == nil {
+	if admin.CreatorID == nil {
 		err = errors.New("CannotDeleteSuperUserForClient")
 	}
 	return
