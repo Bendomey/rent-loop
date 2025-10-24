@@ -14,6 +14,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 		// unprotected client user routes
 		r.Group(func(r chi.Router) {
 			r.Post("/v1/clients/apply", handlers.ClientApplicationHandler.CreateClientApplication)
+			r.Post("/v1/client-users/login", handlers.ClientUserHandler.AuthenticateClientUser)
 		})
 
 		// protected client user routes

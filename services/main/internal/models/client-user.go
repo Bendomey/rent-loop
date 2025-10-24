@@ -26,12 +26,12 @@ type ClientUser struct {
 	Status string `json:"status" gorm:"not null;index;default:'ClientUser.Status.Active'"` // ClientUser.Status.Active | ClientUser.Status.Inactive
 
 	StatusUpdatedById *string     `json:"statusUpdatedById"`
-	StatusUpdatedBy   *ClientUser `json:"statusUpdatedBy" gorm:"foreignKey:StatusUpdatedById;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	StatusUpdatedBy   *ClientUser `json:"statusUpdatedBy"`
 }
 
 // BeforeCreate hook is called before the data is persisted to db
 func (clientUser *ClientUser) BeforeCreate(tx *gorm.DB) (err error) {
-	//hashes password
+	// hashes password
 	hashed, err := hashpassword.HashPassword(clientUser.Password)
 	clientUser.Password = hashed
 	if err != nil {

@@ -76,7 +76,6 @@ type CreateClientRequest struct {
 }
 
 func (s *clientApplicationService) CreateClientApplication(ctx context.Context, input CreateClientApplicationInput) (*models.ClientApplication, error) {
-
 	clientApplication := models.ClientApplication{
 		Type:               input.Type,
 		SubType:            input.SubType,
@@ -230,6 +229,7 @@ func (s *clientApplicationService) ApproveClientApplication(ctx context.Context,
 	}
 
 	message := lib.CLIENT_APPLICATION_ACCEPTED_BODY
+	message = strings.ReplaceAll(message, "{{owner_name}}", clientApplication.ContactName)
 	message = strings.ReplaceAll(message, "{{email}}", clientApplication.ContactEmail)
 	message = strings.ReplaceAll(message, "{{password}}", password)
 

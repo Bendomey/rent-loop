@@ -665,6 +665,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/client-users/login": {
+            "post": {
+                "description": "Authenticate client user and returns client user and token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Authenticates client user and returns token",
+                "parameters": [
+                    {
+                        "description": "Client user login credentials",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LoginClientUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Client user authenticated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientUserWithToken"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occured when authenticating a client user",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occured",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/clients/apply": {
             "post": {
                 "description": "Create a new client application",
@@ -870,6 +921,24 @@ const docTemplate = `{
                         "STAFF"
                     ],
                     "example": "ADMIN"
+                }
+            }
+        },
+        "handlers.LoginClientUserRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "client-user@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "password123"
                 }
             }
         },
@@ -1147,6 +1216,18 @@ const docTemplate = `{
                 "updated_at": {
                     "type": "string",
                     "example": "2023-01-01T00:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputClientUserWithToken": {
+            "type": "object",
+            "properties": {
+                "client_user": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw"
                 }
             }
         }

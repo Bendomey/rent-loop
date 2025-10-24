@@ -90,8 +90,8 @@ func (s *adminService) CreateAdmin(ctx context.Context, input CreateAdminInput) 
 	if adminByEmailErr != nil {
 		if !errors.Is(adminByEmailErr, gorm.ErrRecordNotFound) {
 			raven.CaptureError(adminByEmailErr, nil)
+			return nil, adminByEmailErr
 		}
-		return nil, adminByEmailErr
 	}
 
 	if adminByEmail != nil {

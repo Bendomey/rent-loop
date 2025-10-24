@@ -48,16 +48,17 @@ type CreateClientApplicationRequest struct {
 }
 
 // CreateClientApplication godoc
-// @Summary      Create a new client application
-// @Description  Create a new client application
-// @Tags         ClientApplications
-// @Accept       json
-// @Produce      json
-// @Param        body  body      CreateClientApplicationRequest  true  "Client Application details"
-// @Success      201  {object}  object{data=transformations.OutputClientApplication}
-// @Failure      400  {object}  lib.HTTPError
-// @Failure      500  {object}  string
-// @Router       /api/v1/clients/apply [post]
+//
+//	@Summary		Create a new client application
+//	@Description	Create a new client application
+//	@Tags			ClientApplications
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		CreateClientApplicationRequest	true	"Client Application details"
+//	@Success		201		{object}	object{data=transformations.OutputClientApplication}
+//	@Failure		400		{object}	lib.HTTPError
+//	@Failure		500		{object}	string
+//	@Router			/api/v1/clients/apply [post]
 func (h *ClientApplicationHandler) CreateClientApplication(w http.ResponseWriter, r *http.Request) {
 	var body CreateClientApplicationRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
@@ -113,18 +114,19 @@ func (h *ClientApplicationHandler) CreateClientApplication(w http.ResponseWriter
 }
 
 // GetClientApplicationById godoc
-// @Summary      Get clientApplication by ID
-// @Description  Get clientApplication by ID
-// @Tags         ClientApplications
-// @Accept       json
-// @Security BearerAuth
-// @Produce      json
-// @Param        application_id   path      string  true  "ClientApplication ID"
-// @Success      200  {object}  object{data=transformations.OutputClientApplication}
-// @Failure      400  {object}  lib.HTTPError
-// @Failure      401  {object}  string
-// @Failure      500  {object}  string
-// @Router       /api/v1/client-applications/{application_id} [get]
+//
+//	@Summary		Get clientApplication by ID
+//	@Description	Get clientApplication by ID
+//	@Tags			ClientApplications
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			application_id	path		string	true	"ClientApplication ID"
+//	@Success		200				{object}	object{data=transformations.OutputClientApplication}
+//	@Failure		400				{object}	lib.HTTPError
+//	@Failure		401				{object}	string
+//	@Failure		500				{object}	string
+//	@Router			/api/v1/client-applications/{application_id} [get]
 func (h *ClientApplicationHandler) GetClientApplicationById(w http.ResponseWriter, r *http.Request) {
 	applicationId := chi.URLParam(r, "application_id")
 
@@ -149,20 +151,21 @@ type RejectClientApplicationRequest struct {
 }
 
 // RejectClientApplication godoc
-// @Summary      Reject a client application
-// @Description  Admin rejects a client application with a reason
-// @Tags         ClientApplications
-// @Accept       json
-// @Security BearerAuth
-// @Produce      json
-// @Param        application_id  path  string  true  "Client Application ID"
-// @Param        body  body  RejectClientApplicationRequest  true  "Rejection reason"
-// @Success      200  {object}  object{data=transformations.OutputClientApplication}
-// @Failure      400  {object}  lib.HTTPError
-// @Failure      401  {object}  string
-// @Failure      404  {object}  lib.HTTPError
-// @Failure      500  {object}  lib.HTTPError
-// @Router       /api/v1/client-applications/{application_id}/reject [patch]
+//
+//	@Summary		Reject a client application
+//	@Description	Admin rejects a client application with a reason
+//	@Tags			ClientApplications
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			application_id	path		string							true	"Client Application ID"
+//	@Param			body			body		RejectClientApplicationRequest	true	"Rejection reason"
+//	@Success		200				{object}	object{data=transformations.OutputClientApplication}
+//	@Failure		400				{object}	lib.HTTPError
+//	@Failure		401				{object}	string
+//	@Failure		404				{object}	lib.HTTPError
+//	@Failure		500				{object}	lib.HTTPError
+//	@Router			/api/v1/client-applications/{application_id}/reject [patch]
 func (h *ClientApplicationHandler) RejectClientApplication(w http.ResponseWriter, r *http.Request) {
 	currentAdmin, adminOk := lib.AdminFromContext(r.Context())
 
@@ -200,19 +203,20 @@ func (h *ClientApplicationHandler) RejectClientApplication(w http.ResponseWriter
 }
 
 // ApproveClientApplication godoc
-// @Summary      Approve a client application
-// @Description  Admin approves a client's application after review
-// @Tags         ClientApplications
-// @Accept       json
-// @Security BearerAuth
-// @Produce      json
-// @Param        application_id  path  string  true  "Client Application ID"
-// @Success      200  {object}  object{data=transformations.OutputClientApplication}
-// @Failure      400  {object}  lib.HTTPError
-// @Failure      401  {object}  string
-// @Failure      404  {object}  lib.HTTPError
-// @Failure      500  {object}  lib.HTTPError
-// @Router       /api/v1/client-applications/{application_id}/approve [patch]
+//
+//	@Summary		Approve a client application
+//	@Description	Admin approves a client's application after review
+//	@Tags			ClientApplications
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			application_id	path		string	true	"Client Application ID"
+//	@Success		200				{object}	object{data=transformations.OutputClientApplication}
+//	@Failure		400				{object}	lib.HTTPError
+//	@Failure		401				{object}	string
+//	@Failure		404				{object}	lib.HTTPError
+//	@Failure		500				{object}	lib.HTTPError
+//	@Router			/api/v1/client-applications/{application_id}/approve [patch]
 func (h *ClientApplicationHandler) ApproveClientApplication(w http.ResponseWriter, r *http.Request) {
 	currentAdmin, adminOk := lib.AdminFromContext(r.Context())
 
@@ -241,18 +245,19 @@ type ListClientApplicationsFilterRequest struct {
 }
 
 // GetClientApplications godoc
-// @Summary      Get all ClientApplications
-// @Description  Get all ClientApplications
-// @Tags         ClientApplications
-// @Accept       json
-// @Security BearerAuth
-// @Produce      json
-// @Param        q  query      ListClientApplicationsFilterRequest  true  "ClientApplications"
-// @Success      200  {object}  object{data=object{rows=[]transformations.OutputClientApplication,meta=lib.HTTPReturnPaginatedMetaResponse}}
-// @Failure      400  {object}  lib.HTTPError
-// @Failure      401  {object}  string
-// @Failure      500  {object}  string
-// @Router       /api/v1/client-applications [get]
+//
+//	@Summary		Get all ClientApplications
+//	@Description	Get all ClientApplications
+//	@Tags			ClientApplications
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			q	query		ListClientApplicationsFilterRequest	true	"ClientApplications"
+//	@Success		200	{object}	object{data=object{rows=[]transformations.OutputClientApplication,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400	{object}	lib.HTTPError
+//	@Failure		401	{object}	string
+//	@Failure		500	{object}	string
+//	@Router			/api/v1/client-applications [get]
 func (h *ClientApplicationHandler) ListClientApplications(w http.ResponseWriter, r *http.Request) {
 	filters := ListClientApplicationsFilterRequest{
 		Status:  lib.NullOrString(r.URL.Query().Get("status")),
