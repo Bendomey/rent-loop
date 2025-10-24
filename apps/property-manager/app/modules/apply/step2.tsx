@@ -1,5 +1,6 @@
 import { Separator } from '@radix-ui/react-separator'
 import { ArrowLeft, Search } from 'lucide-react'
+import { useApplyContext } from './context'
 import { Button } from '~/components/ui/button'
 import { Field, FieldGroup, FieldLabel } from '~/components/ui/field'
 import {
@@ -9,12 +10,8 @@ import {
 } from '~/components/ui/input-group'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 
-interface Props {
-	onGoBack?: () => void
-	onGoNext?: () => void
-}
-
-export function Step2({ onGoBack, onGoNext }: Props) {
+export function Step2() {
+	const { goBack, goNext } = useApplyContext()
 	return (
 		<main className="mx-auto mb-5 space-y-10 md:max-w-2/3">
 			<div className="space-y-2">
@@ -42,12 +39,12 @@ export function Step2({ onGoBack, onGoNext }: Props) {
 			</FieldGroup>
 
 			<div className="mt-10 flex items-center justify-end space-x-5">
-				<Button onClick={onGoBack} size="sm" variant="ghost">
+				<Button onClick={goBack} size="sm" variant="ghost">
 					<ArrowLeft />
 					Go Back
 				</Button>
 				<Button
-					onClick={onGoNext}
+					onClick={goNext}
 					size="lg"
 					variant="default"
 					className="bg-rose-600 hover:bg-rose-700"
