@@ -15,7 +15,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/getsentry/raven-go"
 	gonanoid "github.com/matoous/go-nanoid"
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -105,8 +104,6 @@ func (s *clientUserService) CreateClientUser(ctx context.Context, input CreateCl
 		"{{password}}", password,
 	)
 	message := r.Replace(lib.CLIENT_USER_ADDED_BODY)
-
-	logrus.Info("the client user email message", message)
 
 	go pkg.SendEmail(
 		s.appCtx,

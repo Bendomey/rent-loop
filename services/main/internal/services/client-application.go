@@ -11,7 +11,6 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/getsentry/raven-go"
 	gonanoid "github.com/matoous/go-nanoid"
-	"github.com/sirupsen/logrus"
 )
 
 type ClientApplicationService interface {
@@ -233,8 +232,6 @@ func (s *clientApplicationService) ApproveClientApplication(ctx context.Context,
 	message = strings.ReplaceAll(message, "{{owner_name}}", clientApplication.ContactName)
 	message = strings.ReplaceAll(message, "{{email}}", clientApplication.ContactEmail)
 	message = strings.ReplaceAll(message, "{{password}}", password)
-
-	logrus.Info("the message", message)
 
 	go pkg.SendEmail(s.appCtx, pkg.SendEmailInput{
 		Recipient: clientApplication.ContactEmail,
