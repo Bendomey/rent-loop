@@ -6,7 +6,7 @@ export function TopbarLoader() {
 	const navigation = useNavigation()
 
 	useEffect(() => {
-		// NProgress.configure({ showSpinner: false });
+		NProgress.configure({ showSpinner: false });
 		if (navigation.state === 'loading' || navigation.state === 'submitting') {
 			NProgress.start()
 		} else {
