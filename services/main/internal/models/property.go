@@ -10,30 +10,30 @@ import (
 // Property represents a property under a client in the system
 type Property struct {
 	BaseModelSoftDelete
-	ClientID string `json:"clientId" gorm:"not null;index;"`
-	Client   Client `json:"client"   gorm:"foreignKey:ClientID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	ClientID string `gorm:"not null;index;"`
+	Client   Client
 
-	Name        string         `json:"name"        gorm:"not null;"`
-	Slug        string         `json:"slug"        gorm:"not null;index;"`
-	Description *string        `json:"description"`
-	Images      pq.StringArray `json:"images"      gorm:"type:text[]"`
-	Tags        pq.StringArray `json:"tags"        gorm:"type:text[]"`
+	Name        string `gorm:"not null;"`
+	Slug        string `gorm:"not null;index;"`
+	Description *string
+	Images      pq.StringArray `gorm:"type:text[]"`
+	Tags        pq.StringArray `gorm:"type:text[]"`
 
-	Latitude   float64 `json:"latitude"   gorm:"not null;"`
-	Longitude  float64 `json:"longitude"  gorm:"not null;"`
-	Address    string  `json:"address"    gorm:"not null;"`
-	Country    string  `json:"country"    gorm:"not null;"`
-	Region     string  `json:"region"     gorm:"not null;"`
-	City       string  `json:"city"       gorm:"not null;"`
-	GPSAddress *string `json:"gpsAddress"`
+	Latitude   float64 `gorm:"not null;"`
+	Longitude  float64 `gorm:"not null;"`
+	Address    string  `gorm:"not null;"`
+	Country    string  `gorm:"not null;"`
+	Region     string  `gorm:"not null;"`
+	City       string  `gorm:"not null;"`
+	GPSAddress string  `gorm:"not null;"`
 
-	Type   string `json:"type"   gorm:"not null;index;"` // SINGLE | MULTI
-	Status string `json:"status" gorm:"not null;index;"` // ACTIVE | MAINTENANCE | INACTIVE
+	Type   string `gorm:"not null;index;"` // SINGLE | MULTI
+	Status string `gorm:"not null;index;"` // ACTIVE | MAINTENANCE | INACTIVE
 
-	CreatedByID string     `json:"createdById" gorm:"not null;"`
-	CreatedBy   ClientUser `json:"createdBy"`
+	CreatedByID string `gorm:"not null;"`
+	CreatedBy   ClientUser
 
-	Units []Unit `json:"units"`
+	Units []Unit
 }
 
 func (p *Property) BeforeCreate(tx *gorm.DB) (err error) {

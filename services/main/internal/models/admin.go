@@ -10,11 +10,11 @@ import (
 // Admin represents a rentlopp admin user in the system
 type Admin struct {
 	BaseModelSoftDelete
-	Name        string  `json:"name"        gorm:"not null;"`
-	Email       string  `json:"email"       gorm:"not null;uniqueIndex"`
-	Password    string  `json:"password"    gorm:"not null"`
-	CreatedByID *string `json:"createdByID"`
-	CreatedBy   *Admin  `json:"createdBy"`
+	Name        string `gorm:"not null;"`
+	Email       string `gorm:"not null;uniqueIndex"`
+	Password    string `gorm:"not null"`
+	CreatedByID *string
+	CreatedBy   *Admin
 }
 
 // BeforeCreate hook is called before the data is persisted to db
