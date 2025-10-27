@@ -1,10 +1,7 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import { CircleUserRound, DoorClosed, Home } from 'lucide-react'
-import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useFormContext } from 'react-hook-form'
 import { Link } from 'react-router'
-import z from 'zod'
-import { useApplyContext } from './context'
+import { useApplyContext, type FormSchema } from './context'
 import { Button } from '~/components/ui/button'
 import {
 	Item,
@@ -49,66 +46,23 @@ const subTypes: Array<{ label: string; value: ClientApplication['sub_type'] }> =
 		{ label: 'Agency', value: 'AGENCY' },
 	]
 
-const Step0ValidationSchema = z
-	.object({
-		type: z.enum(['INDIVIDUAL', 'COMPANY'], {
-			error: 'Please select a type',
-		}),
-		sub_type: z
-			.enum(['LANDLORD', 'PROPERTY_MANAGER', 'DEVELOPER', 'AGENCY'], {
-				error: 'Please select a sub type',
-			})
-			.optional()
-			.nullable(),
-	})
-	.superRefine((data, ctx) => {
-		if (data.type === 'COMPANY') {
-			if (!data.sub_type || data.sub_type === 'LANDLORD') {
-				ctx.addIssue({
-					code: 'custom',
-					message: 'Please select a sub type',
-					path: ['sub_type'],
-				})
-			}
-		}
-	})
-
-export type Step0Schema = z.infer<typeof Step0ValidationSchema>
-
 export function Step0() {
-	const { goNext, updateFormData, formData } = useApplyContext()
-	const { watch, setValue, handleSubmit, formState } = useForm<Step0Schema>({
-		resolver: zodResolver(Step0ValidationSchema),
-	})
+	const { goNext } = useApplyContext()
+	const { watch, setValue, formState, trigger } = useFormContext<FormSchema>()
 
-	useEffect(() => {
-		if (formData.type) {
-			setValue('type', formData.type, {
-				shouldDirty: true,
-			})
+	const onSubmit = async () => {
+		const isValid = await trigger(['type', 'sub_type'])
+		if (isValid) {
+			goNext()
 		}
-
-		setValue('sub_type', formData.sub_type, {
-			shouldDirty: true,
-		})
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [])
-
-	const onSubmit = (data: Step0Schema) => {
-		const subType =
-			data.type === 'COMPANY'
-				? (data.sub_type as ClientApplication['sub_type'])
-				: 'LANDLORD'
-		updateFormData({
-			...data,
-			sub_type: subType,
-		})
-		goNext()
 	}
 
 	return (
 		<form
-			onSubmit={handleSubmit(onSubmit)}
+			onSubmit={async (e) => {
+				e.preventDefault()
+				await onSubmit()
+			}}
 			className="mx-auto mb-5 space-y-10 md:max-w-2/3"
 		>
 			<div className="space-y-2">

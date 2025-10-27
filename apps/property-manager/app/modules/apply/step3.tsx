@@ -1,5 +1,6 @@
 import { ArrowLeft, HelpCircle, Mail, Phone } from 'lucide-react'
-import { useApplyContext } from './context'
+import { useFormContext } from 'react-hook-form'
+import { useApplyContext, type FormSchema } from './context'
 import { Button } from '~/components/ui/button'
 import {
 	Field,
@@ -7,6 +8,7 @@ import {
 	FieldGroup,
 	FieldLabel,
 } from '~/components/ui/field'
+import { Input } from '~/components/ui/input'
 import {
 	InputGroup,
 	InputGroupAddon,
@@ -23,26 +25,36 @@ import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 
 export function Step3() {
 	const { goBack } = useApplyContext()
+	const { watch } = useFormContext<FormSchema>()
+
+	const isIndividual = watch('type') === 'INDIVIDUAL'
 
 	return (
 		<main className="mx-auto mb-5 space-y-10 md:max-w-2/3">
 			<div className="space-y-2">
 				<TypographyH2 className="">Complete your Application</TypographyH2>
 				<TypographyMuted className="">
-					Kindly enter your account details to complete the application.
-					{/* Kindly enter company's contact person */}
+					Almost done!{' '}
+					{isIndividual
+						? 'Kindly enter your account details to complete the application.'
+						: "Kindly enter your company's contact person"}
 				</TypographyMuted>
 			</div>
 
 			<FieldGroup>
-				{/* <Field>
-                    <FieldLabel htmlFor="name">Full Name</FieldLabel>
-                    <Input id="name" type="text" placeholder="Enter your full name" required />
-                </Field> */}
+				{isIndividual ? null : (
+					<Field>
+						<FieldLabel htmlFor="name">Full Name</FieldLabel>
+						<Input
+							id="name"
+							type="text"
+							placeholder="Enter your full name"
+							required
+						/>
+					</Field>
+				)}
 				<Field>
-					<FieldLabel htmlFor="email">
-						Email <span className="text-red-600">*</span>
-					</FieldLabel>
+					<FieldLabel htmlFor="email">Email</FieldLabel>
 					<InputGroup>
 						<InputGroupInput placeholder="m@example.com" />
 						<InputGroupAddon>
