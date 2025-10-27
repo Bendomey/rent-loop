@@ -26,7 +26,7 @@ import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 
 export function Step1() {
 	const { goBack, goNext } = useApplyContext()
-	const { watch, handleSubmit, trigger, control, setValue, formState } =
+	const { watch, trigger, control, setValue, formState } =
 		useFormContext<FormSchema>()
 
 	const isIndividual = watch('type') === 'INDIVIDUAL'
@@ -58,7 +58,10 @@ export function Step1() {
 
 	return (
 		<form
-			onSubmit={handleSubmit(onSubmit)}
+			onSubmit={(e) => {
+				e.preventDefault()
+				void onSubmit()
+			}}
 			className="mx-auto mb-5 space-y-5 md:max-w-2/3"
 		>
 			<div className="space-y-2">
@@ -93,7 +96,7 @@ export function Step1() {
 
 				{isIndividual ? (
 					<>
-						<Field>
+						<Field data-invalid={!!formState.errors.date_of_birth}>
 							<Label htmlFor="dob" className="px-1">
 								Date of birth
 							</Label>
@@ -107,36 +110,51 @@ export function Step1() {
 								<FieldError errors={[formState.errors.date_of_birth]} />
 							) : null}
 						</Field>
+						<Controller
+							name="id_type"
+							control={control}
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel htmlFor="id_type">ID Type</FieldLabel>
+									<Select aria-invalid={fieldState.invalid} {...field}>
+										<SelectTrigger className="w-[180px]">
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectGroup>
+												<SelectLabel>All Types</SelectLabel>
+												<SelectItem value="NATIONAL_ID">National ID</SelectItem>
+												<SelectItem value="PASSPORT">Passport</SelectItem>
+												<SelectItem value="DRIVERS_LICENSE">
+													Driver's License
+												</SelectItem>
+											</SelectGroup>
+										</SelectContent>
+									</Select>
+									{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+								</Field>
+							)}
+						/>
 
-						<Field>
-							<FieldLabel htmlFor="role">ID Type</FieldLabel>
-							<Select>
-								<SelectTrigger className="w-[180px]">
-									<SelectValue placeholder="Select a type" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectGroup>
-										<SelectLabel>All Types</SelectLabel>
-										<SelectItem value="NATIONAL_ID">National ID</SelectItem>
-										<SelectItem value="PASSPORT">Passport</SelectItem>
-										<SelectItem value="DRIVERS_LICENSE">
-											Driver's License
-										</SelectItem>
-									</SelectGroup>
-								</SelectContent>
-							</Select>
-						</Field>
 
 						<FieldGroup className="grid grid-cols-1 gap-4 md:grid-cols-2">
-							<Field>
-								<FieldLabel htmlFor="id_number">ID Number</FieldLabel>
-								<Input
-									id="id_number"
-									type="text"
-									placeholder="Enter your ID number"
-								/>
-							</Field>
-							<Field>
+							<Controller
+								name="id_number"
+								control={control}
+								render={({ field, fieldState }) => (
+									<Field data-invalid={fieldState.invalid}>
+										<FieldLabel htmlFor="id_number">ID Number</FieldLabel>
+										<Input
+											id="id_number"
+											aria-invalid={fieldState.invalid}
+											type="text"
+											{...field}
+										/>
+										{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+									</Field>
+								)}
+							/>
+							<Field data-invalid={!!formState.errors.id_expiry}>
 								<Label htmlFor="id_expiry" className="px-1">
 									ID Expiry
 								</Label>
@@ -154,59 +172,78 @@ export function Step1() {
 					</>
 				) : (
 					<>
-						<Field>
-							<FieldLabel htmlFor="about">About</FieldLabel>
-							<Textarea
-								id="about"
-								placeholder="About the company..."
-								rows={5}
-							/>
-							<FieldDescription>
-								Any details you want to share about the company?
-							</FieldDescription>
-						</Field>
+						<Controller
+							name="description"
+							control={control}
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel htmlFor="description">About</FieldLabel>
+									<Textarea
+										aria-invalid={fieldState.invalid}
+										id="description"
+										placeholder="About the company..."
+										rows={5}
+										{...field}
+									/>
+									<FieldDescription>
+										Any details you want to share about the company?
+									</FieldDescription>
+									{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+								</Field>
+							)}
+						/>
 
-						<Field>
-							<FieldLabel htmlFor="registration_number">
-								Registration Number
-							</FieldLabel>
-							<Input id="registration_number" type="text" />
-							<FieldDescription>Optional</FieldDescription>
-						</Field>
+						<Controller
+							name="registration_number"
+							control={control}
+							render={({ field, fieldState }) => (
+								<Field data-invalid={fieldState.invalid}>
+									<FieldLabel htmlFor="registration_number">
+										Registration Number
+									</FieldLabel>
+									<Input aria-invalid={fieldState.invalid} id="registration_number" {...field} type="text" />
+									<FieldDescription>Optional</FieldDescription>
+									{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+								</Field>
+							)}
+						/>
 
 						<FieldGroup className="grid grid-cols-1 gap-4 md:grid-cols-2">
-							<Field>
-								<FieldLabel htmlFor="support_email">Support Email</FieldLabel>
-								<Input
-									id="support_email"
-									type="email"
-									placeholder="Enter your support email"
-								/>
-								<FieldDescription>Optional</FieldDescription>
-							</Field>
-							<Field>
-								<FieldLabel htmlFor="support_phone">
-									Support Phone Number
-								</FieldLabel>
-								<Input
-									id="support_phone"
-									type="tel"
-									placeholder="Enter your support phone number"
-								/>
-								<FieldDescription>Optional</FieldDescription>
-							</Field>
+							<Controller
+								name="support_email"
+								control={control}
+								render={({ field, fieldState }) => (
+									<Field data-invalid={fieldState.invalid}>
+										<FieldLabel htmlFor="support_email">Support Email</FieldLabel>
+										<Input aria-invalid={fieldState.invalid} id="support_email" {...field} type="text" />
+										<FieldDescription>Optional</FieldDescription>
+										{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+									</Field>
+								)}
+							/>
+							<Controller
+								name="support_phone"
+								control={control}
+								render={({ field, fieldState }) => (
+									<Field data-invalid={fieldState.invalid}>
+										<FieldLabel htmlFor="support_phone">Support Phone</FieldLabel>
+										<Input aria-invalid={fieldState.invalid} id="support_phone" {...field} type="text" />
+										<FieldDescription>Optional</FieldDescription>
+										{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+									</Field>
+								)}
+							/>
 						</FieldGroup>
 					</>
 				)}
 			</FieldGroup>
 
 			<div className="mt-10 flex items-center justify-end space-x-5">
-				<Button onClick={goBack} size="sm" variant="ghost">
+				<Button onClick={goBack} type='button' size="sm" variant="ghost">
 					<ArrowLeft />
 					Go Back
 				</Button>
 				<Button
-					onClick={goNext}
 					size="lg"
 					variant="default"
 					className="bg-rose-600 hover:bg-rose-700"

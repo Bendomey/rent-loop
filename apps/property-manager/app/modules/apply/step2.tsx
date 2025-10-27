@@ -39,7 +39,7 @@ export function Step2() {
 			</FieldGroup>
 
 			<div className="mt-10 flex items-center justify-end space-x-5">
-				<Button onClick={goBack} size="sm" variant="ghost">
+				<Button onClick={goBack} type='button' size="sm" variant="ghost">
 					<ArrowLeft />
 					Go Back
 				</Button>

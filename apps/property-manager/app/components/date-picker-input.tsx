@@ -3,6 +3,7 @@ import { Button } from './ui/button'
 import { Calendar } from './ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { useDisclosure } from '~/hooks/use-disclosure'
+import { cn } from '~/lib/utils'
 
 interface Props {
 	value: Date | undefined
@@ -18,7 +19,7 @@ export function DatePickerInput({ value, onChange, placeholder }: Props) {
 				<Button
 					variant="outline"
 					id="date"
-					className="w-48 justify-between font-normal"
+					className={cn("w-48 justify-between font-normal", value ? '' : 'text-muted-foreground')}
 				>
 					{value ? value.toLocaleDateString() : (placeholder ?? 'Select date')}
 					<ChevronDownIcon />

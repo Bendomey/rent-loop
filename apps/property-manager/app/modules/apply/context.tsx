@@ -19,7 +19,7 @@ const ValidationSchema = z
 			.nullable(),
 
 		// second step
-		name: z.string().min(2, 'Please enter a valid name'),
+		name: z.string({ error: 'Name is required' }).min(2, 'Please enter a valid name'),
 		description: z
 			.string()
 			.max(500, 'Description must be less than 500 characters')
@@ -28,10 +28,10 @@ const ValidationSchema = z
 			.string()
 			.min(2, 'Please enter a valid registration number')
 			.optional(),
-		support_email: z.email('Please enter a valid support email address'),
+		support_email: z.email('Please enter a valid support email address').optional(),
 		support_phone: z
 			.string()
-			.min(9, 'Please enter a valid support phone number'),
+			.min(9, 'Please enter a valid support phone number').optional(),
 		website_url: z.url('Please enter a valid website URL').optional(),
 		contact_name: z.string().min(2, 'Please enter a valid name').optional(),
 		date_of_birth: z
@@ -57,21 +57,21 @@ const ValidationSchema = z
 			.optional(),
 
 		// third step
-		address: z.string().min(5, 'Please enter a valid address'),
-		city: z.string().min(2, 'Please enter a valid address'),
-		region: z.string().min(2, 'Please enter a valid address'),
-		country: z.string().min(2, 'Please enter a valid address'),
+		address: z.string({ error: "Address is required" }).min(5, 'Please enter a valid address'),
+		city: z.string({ error: "City is required" }).min(2, 'Please enter a valid address'),
+		region: z.string({ error: "Region is required" }).min(2, 'Please enter a valid address'),
+		country: z.string({ error: "Country is required" }).min(2, 'Please enter a valid address'),
 		latitude: z.number().refine((val) => !isNaN(val), {
-			message: 'Please enter a valid address',
+			message: 'Please enter a valid latitude',
 		}),
 		longitude: z.number().refine((val) => !isNaN(val), {
-			message: 'Please enter a valid address',
+			message: 'Please enter a valid longitude',
 		}),
 
 		// fourth step
 		contact_email: z.email('Please enter a valid email address'),
 		contact_phone_number: z
-			.string()
+			.string({ error: 'Contact phone number is required' })
 			.min(9, 'Please enter a valid phone number'),
 	})
 	.superRefine((data, ctx) => {
@@ -81,6 +81,14 @@ const ValidationSchema = z
 					code: 'custom',
 					message: 'Please select a sub type',
 					path: ['sub_type'],
+				})
+			}
+
+			if(!data.contact_name){
+				ctx.addIssue({
+					code: 'custom',
+					message: 'Please enter contact name',
+					path: ['contact_name'],
 				})
 			}
 		}
@@ -118,7 +126,6 @@ const ValidationSchema = z
 					path: ['id_expiry'],
 				})
 			}
-		} else if (data.type === 'COMPANY') {
 		}
 	})
 
