@@ -645,7 +645,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Error occured when creating a client user",
+                        "description": "Error occurred when creating a client user",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -657,7 +657,7 @@ const docTemplate = `{
                         }
                     },
                     "500": {
-                        "description": "An unexpected error occured",
+                        "description": "An unexpected error occurred",
                         "schema": {
                             "type": "string"
                         }
