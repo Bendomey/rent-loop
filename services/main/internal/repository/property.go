@@ -18,7 +18,6 @@ type PropertyRepository interface {
 }
 
 type ListPropertiesFilter struct {
-	ClientID *string
 	Status   *string 
 	Type     *string 
 	Country  *string
@@ -60,12 +59,8 @@ func (r *propertyRepository) List(ctx context.Context, filterQuery interface{}, 
 	var properties []models.Property
 
 	q := r.db.WithContext(ctx).Model(&models.Property{}).
-		Preload("Client").
 		Preload("CreatedBy")
 
-	if filters.ClientID != nil && *filters.ClientID != "" {
-		q = q.Where("client_id = ?", *filters.ClientID)
-	}
 	if filters.Status != nil && *filters.Status != "" {
 		q = q.Where("status = ?", *filters.Status)
 	}
@@ -107,10 +102,6 @@ func (r *propertyRepository) Count(ctx context.Context, filterQuery interface{},
 
 	q := r.db.WithContext(ctx).Model(&models.Property{})
 
-	// Keep filters aligned with List
-	if filters.ClientID != nil && *filters.ClientID != "" {
-		q = q.Where("client_id = ?", *filters.ClientID)
-	}
 	if filters.Status != nil && *filters.Status != "" {
 		q = q.Where("status = ?", *filters.Status)
 	}
@@ -141,4 +132,8 @@ func (r *propertyRepository) Count(ctx context.Context, filterQuery interface{},
 		return 0, err
 	}
 	return count, nil
+}
+
+func (r *propertyRepository) Delete(ctx context.Context, id string) error {
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.Property{}).Error
 }

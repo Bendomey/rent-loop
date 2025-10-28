@@ -645,7 +645,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Error occurred when creating a client user",
+                        "description": "Error occured when creating a client user",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -657,7 +657,7 @@ const docTemplate = `{
                         }
                     },
                     "500": {
-                        "description": "An unexpected error occurred",
+                        "description": "An unexpected error occured",
                         "schema": {
                             "type": "string"
                         }
@@ -703,6 +703,112 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/properties": {
+            "post": {
+                "description": "Create a new property under a client with geolocation and metadata",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Properties"
+                ],
+                "summary": "Create a new property",
+                "parameters": [
+                    {
+                        "description": "Property details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreatePropertyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputProperty"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/properties/{propertyId}": {
+            "get": {
+                "description": "Retrieve a single property resource by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Properties"
+                ],
+                "summary": "Get a property by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "propertyId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputProperty"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -870,6 +976,59 @@ const docTemplate = `{
                         "STAFF"
                     ],
                     "example": "ADMIN"
+                }
+            }
+        },
+        "handlers.CreatePropertyRequest": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "createdById": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "gps_address": {
+                    "type": "string"
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "type": "string"
                 }
             }
         },
@@ -1143,6 +1302,77 @@ const docTemplate = `{
                 "role": {
                     "type": "string",
                     "example": "STAFF"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputProperty": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "123 Main St, City, Country"
+                },
+                "city": {
+                    "type": "string",
+                    "example": "City"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "Country"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "A lovely place to stay."
+                },
+                "gps_address": {
+                    "type": "string",
+                    "example": "37.7749,-122.4194"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "latitude": {
+                    "type": "number",
+                    "example": 37.7749
+                },
+                "longitude": {
+                    "type": "number",
+                    "example": -122.4194
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Beautiful Apartment"
+                },
+                "region": {
+                    "type": "string",
+                    "example": "Region"
+                },
+                "slug": {
+                    "type": "string",
+                    "example": "beautiful-apartment"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "available"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "['wifi'",
+                        " 'pool']"
+                    ]
                 },
                 "updated_at": {
                     "type": "string",

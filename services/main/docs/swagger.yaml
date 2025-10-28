@@ -113,6 +113,41 @@ definitions:
     - phone
     - role
     type: object
+  handlers.CreatePropertyRequest:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      country:
+        type: string
+      createdById:
+        type: string
+      description:
+        type: string
+      gps_address:
+        type: string
+      images:
+        items:
+          type: string
+        type: array
+      latitude:
+        type: number
+      longitude:
+        type: number
+      name:
+        type: string
+      region:
+        type: string
+      status:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+    type: object
   handlers.LoginRequest:
     properties:
       email:
@@ -310,6 +345,58 @@ definitions:
       role:
         example: STAFF
         type: string
+      updated_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+    type: object
+  transformations.OutputProperty:
+    properties:
+      address:
+        example: 123 Main St, City, Country
+        type: string
+      city:
+        example: City
+        type: string
+      country:
+        example: Country
+        type: string
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      description:
+        example: A lovely place to stay.
+        type: string
+      gps_address:
+        example: 37.7749,-122.4194
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      latitude:
+        example: 37.7749
+        type: number
+      longitude:
+        example: -122.4194
+        type: number
+      name:
+        example: Beautiful Apartment
+        type: string
+      region:
+        example: Region
+        type: string
+      slug:
+        example: beautiful-apartment
+        type: string
+      status:
+        example: available
+        type: string
+      tags:
+        example:
+        - '[''wifi'''
+        - ' ''pool'']'
+        items:
+          type: string
+        type: array
       updated_at:
         example: "2023-01-01T00:00:00Z"
         type: string
@@ -768,6 +855,75 @@ paths:
       summary: Create a new client application
       tags:
       - ClientApplications
+  /api/v1/properties:
+    post:
+      consumes:
+      - application/json
+      description: Create a new property under a client with geolocation and metadata
+      parameters:
+      - description: Property details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreatePropertyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputProperty'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Create a new property
+      tags:
+      - Properties
+  /api/v1/properties/{propertyId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a single property resource by its ID
+      parameters:
+      - description: Property ID
+        in: path
+        name: propertyId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputProperty'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get a property by ID
+      tags:
+      - Properties
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

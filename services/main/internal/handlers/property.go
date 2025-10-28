@@ -6,7 +6,7 @@ import (
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
-	"github.com/Bendomey/rent-loop/services/main/internal/transformation"
+	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/go-chi/chi/v5"
@@ -61,7 +61,7 @@ type CreatePropertyRequest struct {
 // @Accept       json
 // @Produce      json
 // @Param        body  body      handlers.CreatePropertyRequest  true  "Property details"
-// @Success      201   {object}  object{data=transformation.OutputProperty}
+// @Success      201   {object}  object{data=transformations.OutputProperty}
 // @Failure      400   {object}  lib.HTTPError
 // @Failure      500   {object}  string
 // @Router       /api/v1/properties [post]
@@ -128,7 +128,7 @@ func (h *PropertyHandler) CreateProperty(w http.ResponseWriter, r *http.Request)
 // @Accept       json
 // @Produce      json
 // @Param        propertyId  path      string  true  "Property ID"
-// @Success      200         {object}  object{data=transformation.OutputProperty}
+// @Success      200         {object}  object{data=transformations.OutputProperty}
 // @Failure      400         {object}  lib.HTTPError
 // @Failure      404         {object}  lib.HTTPError
 // @Failure      500         {object}  string
