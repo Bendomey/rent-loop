@@ -112,6 +112,82 @@ definitions:
     - phone
     - role
     type: object
+  handlers.CreatePropertyRequest:
+    properties:
+      address:
+        example: 12 Labone Crescent
+        maxLength: 200
+        minLength: 5
+        type: string
+      city:
+        example: Accra
+        maxLength: 100
+        minLength: 2
+        type: string
+      country:
+        example: Ghana
+        maxLength: 100
+        minLength: 2
+        type: string
+      description:
+        example: A luxurious apartment overlooking the Atlantic Ocean.
+        type: string
+      gpsAddress:
+        example: GA-123-4567
+        type: string
+      images:
+        example:
+        - https://example.com/images/1.jpg
+        items:
+          type: string
+        type: array
+      latitude:
+        example: 5.6037
+        type: number
+      longitude:
+        example: -0.187
+        type: number
+      name:
+        example: Oceanview Apartment
+        maxLength: 100
+        minLength: 3
+        type: string
+      region:
+        example: Greater Accra
+        maxLength: 100
+        minLength: 2
+        type: string
+      status:
+        enum:
+        - Property.Status.Active
+        - Property.Status.Maintenance
+        - Property.Status.Inactive
+        example: Property.Status.Active
+        type: string
+      tags:
+        example:
+        - beachfront
+        - furnished
+        items:
+          type: string
+        type: array
+      type:
+        enum:
+        - SINGLE
+        - MULTI
+        example: SINGLE
+        type: string
+    required:
+    - address
+    - city
+    - country
+    - latitude
+    - longitude
+    - name
+    - region
+    - status
+    - type
+    type: object
   handlers.LoginClientUserRequest:
     properties:
       email:
@@ -332,6 +408,67 @@ definitions:
         $ref: '#/definitions/transformations.OutputClientUser'
       token:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw
+        type: string
+    type: object
+  transformations.OutputProperty:
+    properties:
+      address:
+        example: 123 Main St
+        type: string
+      city:
+        example: Accra
+        type: string
+      country:
+        example: Ghana
+        type: string
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        format: date-time
+        type: string
+      description:
+        example: Very elegant place
+        type: string
+      gps_address:
+        example: GH-1234-5678
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        format: uuid
+        type: string
+      images:
+        example:
+        - http://www.images/hih.jpg
+        items:
+          type: string
+        type: array
+      latitude:
+        example: 5.6037
+        type: number
+      longitude:
+        example: -0.187
+        type: number
+      name:
+        example: My Property
+        type: string
+      region:
+        example: Greater Accra
+        type: string
+      status:
+        example: Property.Status.Active
+        type: string
+      tags:
+        example:
+        - apartment
+        - downtown
+        items:
+          type: string
+        type: array
+      type:
+        example: SINGLE
+        type: string
+      updated_at:
+        example: "2023-01-01T00:00:00Z"
+        format: date-time
         type: string
     type: object
 info:
@@ -853,6 +990,45 @@ paths:
       summary: Create a new client application
       tags:
       - ClientApplications
+  /api/v1/properties:
+    post:
+      consumes:
+      - application/json
+      description: Create a new property
+      parameters:
+      - description: Create Property Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreatePropertyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Property created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputProperty'
+            type: object
+        "400":
+          description: Error occured when creating a property
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occured
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Creates a new property
+      tags:
+      - Properties
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

@@ -809,6 +809,68 @@
                     }
                 }
             }
+        },
+        "/api/v1/properties": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new property",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Properties"
+                ],
+                "summary": "Creates a new property",
+                "parameters": [
+                    {
+                        "description": "Create Property Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreatePropertyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Property created successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputProperty"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occured when creating a property",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occured",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -963,6 +1025,104 @@
                         "STAFF"
                     ],
                     "example": "ADMIN"
+                }
+            }
+        },
+        "handlers.CreatePropertyRequest": {
+            "type": "object",
+            "required": [
+                "address",
+                "city",
+                "country",
+                "latitude",
+                "longitude",
+                "name",
+                "region",
+                "status",
+                "type"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 5,
+                    "example": "12 Labone Crescent"
+                },
+                "city": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2,
+                    "example": "Accra"
+                },
+                "country": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2,
+                    "example": "Ghana"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "A luxurious apartment overlooking the Atlantic Ocean."
+                },
+                "gpsAddress": {
+                    "type": "string",
+                    "example": "GA-123-4567"
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "https://example.com/images/1.jpg"
+                    ]
+                },
+                "latitude": {
+                    "type": "number",
+                    "example": 5.6037
+                },
+                "longitude": {
+                    "type": "number",
+                    "example": -0.187
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "example": "Oceanview Apartment"
+                },
+                "region": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2,
+                    "example": "Greater Accra"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "Property.Status.Active",
+                        "Property.Status.Maintenance",
+                        "Property.Status.Inactive"
+                    ],
+                    "example": "Property.Status.Active"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "beachfront",
+                        "furnished"
+                    ]
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "SINGLE",
+                        "MULTI"
+                    ],
+                    "example": "SINGLE"
                 }
             }
         },
@@ -1270,6 +1430,89 @@
                 "token": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw"
+                }
+            }
+        },
+        "transformations.OutputProperty": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "123 Main St"
+                },
+                "city": {
+                    "type": "string",
+                    "example": "Accra"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "Ghana"
+                },
+                "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Very elegant place"
+                },
+                "gps_address": {
+                    "type": "string",
+                    "example": "GH-1234-5678"
+                },
+                "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "http://www.images/hih.jpg"
+                    ]
+                },
+                "latitude": {
+                    "type": "number",
+                    "example": 5.6037
+                },
+                "longitude": {
+                    "type": "number",
+                    "example": -0.187
+                },
+                "name": {
+                    "type": "string",
+                    "example": "My Property"
+                },
+                "region": {
+                    "type": "string",
+                    "example": "Greater Accra"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "Property.Status.Active"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "apartment",
+                        "downtown"
+                    ]
+                },
+                "type": {
+                    "type": "string",
+                    "example": "SINGLE"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2023-01-01T00:00:00Z"
                 }
             }
         }
