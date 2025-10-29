@@ -1,41 +1,54 @@
 import { redirect, type MiddlewareFunction } from 'react-router'
 import { userContext } from './auth.context.server'
-import { getAuthSession } from './auth.session.server'
+import { deleteAuthSession, getAuthSession } from './auth.session.server'
+import { USER_CACHE_KEY, userCache } from './cache.server'
+import { environmentVariables } from './env.server'
+import { getCurrentUser } from '~/api/auth'
 
 export const authMiddleware: MiddlewareFunction = async ({
 	request,
 	context,
 }) => {
+	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
-	if (!authSession.has('authToken')) {
-		throw redirect('/login')
+	const url = new URL(request.url)
+	const returnTo = `${url.pathname}${url.search}`
+	const redirectToLogin = `/login?returnTo=${encodeURIComponent(returnTo)}`
+
+	const authToken = authSession.get('authToken')
+
+	if (!authToken) {
+		return redirect(redirectToLogin)
 	}
 
-	// TODO: get current USER from api.
+	const cacheKey = USER_CACHE_KEY.replace('{token}', authToken)
 
-	// TODO: save in context for use in loaders/actions.
-	context.set(userContext, {
-		id: 'user-123',
-		name: 'John Doe',
-		email: 'john.doe@example.com',
-		created_at: new Date(),
-		updated_at: new Date(),
-		properties: [
-			{
-				id: 'property-123',
-				name: 'Sample Property',
-				description: '',
-				address: '123 Main St, Anytown, USA',
-				gps_address: 'GH-000-0000',
-				city: 'Anytown',
-				state: 'CA',
-				zip_code: '12345',
-				type: 'SINGLE',
-				tags: [],
-				status: 'Property.Status.Active',
-				created_at: new Date(),
-				updated_at: new Date(),
+	try {
+		const cached = userCache.get(cacheKey)
+		if (cached) {
+			const clientUserParsed = JSON.parse(cached as string)
+			context.set(userContext, clientUserParsed)
+			return
+		}
+
+		const clientUser = await getCurrentUser({
+			baseUrl,
+			authToken,
+		})
+
+		if (!clientUser) {
+			throw new Error('No user found')
+		}
+
+		userCache.set(cacheKey, JSON.stringify(clientUser))
+		context.set(userContext, clientUser)
+	} catch {
+		// if there're any errors fetching the user, logout please!
+		userCache.delete(cacheKey)
+		return redirect(redirectToLogin, {
+			headers: {
+				'Set-Cookie': await deleteAuthSession(authSession),
 			},
-		],
-	})
+		})
+	}
 }
