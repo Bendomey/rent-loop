@@ -30,7 +30,6 @@ export const applyAsAClient = async (
 	props: CreateClientApplicationInput,
 	apiConfig?: ApiConfigForServerConfig,
 ) => {
-	console.log({ body: JSON.stringify(props) })
 	try {
 		const response = await fetchServer<ApiResponse<ClientApplication>>(
 			`${apiConfig?.baseUrl}/v1/clients/apply`,
@@ -45,7 +44,6 @@ export const applyAsAClient = async (
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
-			console.log('API Error Response:', response)
 			throw new Error(response.errors?.message || 'Unknown error')
 		}
 

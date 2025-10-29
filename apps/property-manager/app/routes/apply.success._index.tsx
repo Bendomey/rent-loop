@@ -24,4 +24,3 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 }
 
 export default ApplySuccessModule
-ApplySuccessModule

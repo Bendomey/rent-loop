@@ -56,7 +56,13 @@ const ValidationSchema = z
 type FormSchema = z.infer<typeof ValidationSchema>
 
 export function Step3() {
-	const { goBack, formData, onSubmit: submit, updateFormData, isSubmitting } = useApplyContext()
+	const {
+		goBack,
+		formData,
+		onSubmit: submit,
+		updateFormData,
+		isSubmitting,
+	} = useApplyContext()
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
@@ -76,7 +82,6 @@ export function Step3() {
 		})
 		updateFormData(data)
 	}
-
 
 	return (
 		<Form {...rhfMethods}>
@@ -122,7 +127,11 @@ export function Step3() {
 								<FormLabel>Email</FormLabel>
 								<FormControl>
 									<InputGroup>
-										<InputGroupInput type='email' {...field} placeholder="m@example.com" />
+										<InputGroupInput
+											type="email"
+											{...field}
+											placeholder="m@example.com"
+										/>
 										<InputGroupAddon>
 											<Mail />
 											<Separator

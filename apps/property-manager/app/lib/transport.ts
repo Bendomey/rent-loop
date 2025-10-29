@@ -122,7 +122,6 @@ export function fetchServer<T>(
 	config?: FetchClientConfig,
 ): Promise<HttpResponse<T>> {
 	return new Promise(async (resolve, reject) => {
-
 		const headers = new Headers({
 			Accept: 'application/json',
 			'Content-Type': 'application/json',

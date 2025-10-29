@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import type { CreateClientApplicationInput } from '~/api/client-applications'
 import { BlockNavigationDialog } from '~/components/block-navigation-dialog'
 import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
+import { localizedDayjs } from '~/lib/date'
 
 interface ApplyContextType {
 	stepCount: number
@@ -20,7 +21,7 @@ export const ApplyContext = createContext<ApplyContextType | undefined>(
 )
 
 export function ApplyProvider({ children }: { children: React.ReactNode }) {
-	const applyFetcher = useFetcher<{ error: string; }>()
+	const applyFetcher = useFetcher<{ error: string }>()
 	const [stepCount, setStepCount] = useState(0)
 	const [formData, setFormData] = useState<
 		Partial<CreateClientApplicationInput>
@@ -28,7 +29,6 @@ export function ApplyProvider({ children }: { children: React.ReactNode }) {
 
 	const goBack = () => setStepCount((prev) => (prev > 0 ? prev - 1 : prev))
 	const goNext = () => setStepCount((prev) => prev + 1)
-
 
 	// where there is an error in the action data, show an error toast
 	useEffect(() => {
@@ -38,7 +38,7 @@ export function ApplyProvider({ children }: { children: React.ReactNode }) {
 	}, [applyFetcher?.data])
 
 	const isDirty = Object.keys(formData).length > 0
-	const isSubmitting = applyFetcher.state !== "idle";
+	const isSubmitting = applyFetcher.state !== 'idle'
 
 	let blocker = useNavigationBlocker(isSubmitting ? false : isDirty)
 
@@ -50,7 +50,24 @@ export function ApplyProvider({ children }: { children: React.ReactNode }) {
 	}
 
 	const onSubmit = async (data: Partial<CreateClientApplicationInput>) => {
-		await applyFetcher.submit(data, {
+		const updatedData = { ...data }
+		if (updatedData.date_of_birth) {
+			updatedData.date_of_birth = localizedDayjs(
+				updatedData.date_of_birth,
+			).format('YYYY-MM-DD')
+		}
+
+		if (updatedData.id_expiry) {
+			updatedData.id_expiry = localizedDayjs(updatedData.id_expiry).format(
+				'YYYY-MM-DD',
+			)
+		}
+
+		if (formData.contact_phone_number) {
+			updatedData.contact_phone_number = `+233${formData.contact_phone_number.slice(-9)}`
+		}
+
+		await applyFetcher.submit(updatedData, {
 			method: 'POST',
 			action: '/apply',
 		})
@@ -63,7 +80,7 @@ export function ApplyProvider({ children }: { children: React.ReactNode }) {
 		updateFormData,
 		formData,
 		onSubmit,
-		isSubmitting
+		isSubmitting,
 	}
 
 	return (
