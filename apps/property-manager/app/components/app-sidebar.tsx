@@ -28,11 +28,6 @@ import { APP_NAME } from '~/lib/constants'
 
 // This is sample data.
 const data = {
-	user: {
-		name: 'shadcn',
-		email: 'm@example.com',
-		avatar: '/avatars/shadcn.jpg',
-	},
 	teams: [
 		{
 			name: 'Acme Inc',
@@ -131,7 +126,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			</SidebarContent>
 			<SidebarFooter>
 				<NavSecondary items={data.navSecondary} className="mt-auto" />
-				<NavUser user={data.user} />
+				<NavUser />
 			</SidebarFooter>
 			<SidebarRail />
 		</Sidebar>

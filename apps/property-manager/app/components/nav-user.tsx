@@ -18,7 +18,8 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from './ui/alert-dialog'
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
+import { Badge } from './ui/badge'
+import { Avatar, AvatarFallback } from '~/components/ui/avatar'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -34,16 +35,11 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from '~/components/ui/sidebar'
+import { getNameInitials } from '~/lib/misc'
+import { useAuth } from '~/providers/auth-provider'
 
-export function NavUser({
-	user,
-}: {
-	user: {
-		name: string
-		email: string
-		avatar: string
-	}
-}) {
+export function NavUser() {
+	const { currentUser } = useAuth()
 	const { isMobile } = useSidebar()
 
 	return (
@@ -57,12 +53,20 @@ export function NavUser({
 								className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 							>
 								<Avatar className="h-8 w-8 rounded-lg">
-									<AvatarImage src={user.avatar} alt={user.name} />
-									<AvatarFallback className="rounded-lg">CN</AvatarFallback>
+									{/* <AvatarImage src={user.avatar} alt={currentUser?.name} /> */}
+									<AvatarFallback className="rounded-lg">
+										{getNameInitials(currentUser?.name ?? '')}
+									</AvatarFallback>
 								</Avatar>
 								<div className="grid flex-1 text-left text-sm leading-tight">
-									<span className="truncate font-medium">{user.name}</span>
-									<span className="truncate text-xs">{user.email}</span>
+									<span className="truncate font-medium">
+										{currentUser?.name}
+									</span>
+									<Badge variant="outline" className="mt-1">
+										<span className="truncate text-xs capitalize">
+											{currentUser?.role?.toLowerCase()}
+										</span>
+									</Badge>
 								</div>
 								<ChevronsUpDown className="ml-auto size-4" />
 							</SidebarMenuButton>
@@ -76,12 +80,18 @@ export function NavUser({
 							<DropdownMenuLabel className="p-0 font-normal">
 								<div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
 									<Avatar className="h-8 w-8 rounded-lg">
-										<AvatarImage src={user.avatar} alt={user.name} />
-										<AvatarFallback className="rounded-lg">CN</AvatarFallback>
+										{/* <AvatarImage src={user.avatar} alt={user.name} /> */}
+										<AvatarFallback className="rounded-lg">
+											{getNameInitials(currentUser?.name ?? '')}
+										</AvatarFallback>
 									</Avatar>
 									<div className="grid flex-1 text-left text-sm leading-tight">
-										<span className="truncate font-medium">{user.name}</span>
-										<span className="truncate text-xs">{user.email}</span>
+										<span className="truncate font-medium">
+											{currentUser?.name}
+										</span>
+										<span className="truncate text-xs">
+											{currentUser?.email}
+										</span>
 									</div>
 								</div>
 							</DropdownMenuLabel>

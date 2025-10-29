@@ -27,11 +27,6 @@ import {
 import { APP_NAME } from '~/lib/constants'
 
 const data = {
-	user: {
-		name: 'shadcn',
-		email: 'm@example.com',
-		avatar: '/avatars/shadcn.jpg',
-	},
 	properties: [
 		{
 			name: 'Mikasa',
@@ -182,7 +177,7 @@ export function PropertySidebar({
 					onProperty
 					className="mt-auto"
 				/>
-				<NavUser user={data.user} />
+				<NavUser />
 			</SidebarFooter>
 			<SidebarRail />
 		</Sidebar>
