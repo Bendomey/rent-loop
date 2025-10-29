@@ -2,7 +2,9 @@ export * from './404-page'
 export * from './login'
 export * from './forgot-your-password'
 export * from './reset-your-password'
+
 export * from './apply'
+export * from './apply/success'
 
 export * from './dashboard'
 
