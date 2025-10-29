@@ -28,7 +28,7 @@ const {
 		maxAge: 60,
 		path: '/',
 		sameSite: 'lax',
-		secrets: ['s3cret1'],
+		secrets: ['s3cret1'], // TODO: use env var
 		secure: true,
 	},
 })

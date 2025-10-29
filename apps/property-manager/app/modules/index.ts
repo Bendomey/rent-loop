@@ -3,6 +3,8 @@ export * from './login'
 export * from './forgot-your-password'
 export * from './reset-your-password'
 
+export * from './auth-middleware'
+
 export * from './apply'
 export * from './apply/success'
 
