@@ -7,8 +7,7 @@ import { Step3 } from './step3'
 import { TypographyH3 } from '~/components/ui/typography'
 import { APP_NAME } from '~/lib/constants'
 
-const Steps = [Step0, Step1, Step2, Step3]
-const STEPS = Steps.length
+const STEPS = 4
 
 function Apply() {
 	const { stepCount } = useApplyContext()
@@ -32,7 +31,10 @@ function Apply() {
 			/>
 
 			<div className="mx-4 mt-10 max-w-3xl md:mx-auto md:mt-14">
-				{Steps[stepCount]?.()}
+				{stepCount === 0 ? <Step0 /> : null}
+				{stepCount === 1 ? <Step1 /> : null}
+				{stepCount === 2 ? <Step2 /> : null}
+				{stepCount === 3 ? <Step3 /> : null}
 			</div>
 		</main>
 	)

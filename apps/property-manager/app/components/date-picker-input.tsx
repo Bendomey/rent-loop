@@ -19,7 +19,10 @@ export function DatePickerInput({ value, onChange, placeholder }: Props) {
 				<Button
 					variant="outline"
 					id="date"
-					className={cn("w-48 justify-between font-normal", value ? '' : 'text-muted-foreground')}
+					className={cn(
+						'w-full justify-between font-normal',
+						value ? '' : 'text-muted-foreground',
+					)}
 				>
 					{value ? value.toLocaleDateString() : (placeholder ?? 'Select date')}
 					<ChevronDownIcon />

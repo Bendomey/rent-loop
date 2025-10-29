@@ -4,6 +4,7 @@ declare global {
 			API_ADDRESS: string
 			NODE_ENV: string
 			AUTH_TOKEN?: string
+			GOOGLE_MAPS_API_KEY: string
 		}
 	}
 }

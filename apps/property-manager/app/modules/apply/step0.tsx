@@ -1,7 +1,10 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import { CircleUserRound, DoorClosed, Home } from 'lucide-react'
-import { useFormContext } from 'react-hook-form'
+import { useEffect } from 'react'
+import { useForm } from 'react-hook-form'
 import { Link } from 'react-router'
-import { useApplyContext, type FormSchema } from './context'
+import { z } from 'zod'
+import { useApplyContext } from './context'
 import { Button } from '~/components/ui/button'
 import {
 	Item,
@@ -17,6 +20,32 @@ import {
 	TypographySmall,
 } from '~/components/ui/typography'
 import { cn } from '~/lib/utils'
+
+const ValidationSchema = z
+	.object({
+		type: z.enum(['INDIVIDUAL', 'COMPANY'], {
+			error: 'Please select a type',
+		}),
+		sub_type: z
+			.enum(['LANDLORD', 'PROPERTY_MANAGER', 'DEVELOPER', 'AGENCY'], {
+				error: 'Please select a sub type',
+			})
+			.optional()
+			.nullable(),
+	})
+	.superRefine((data, ctx) => {
+		if (data.type === 'COMPANY') {
+			if (!data.sub_type || data.sub_type === 'LANDLORD') {
+				ctx.addIssue({
+					code: 'custom',
+					message: 'Please select a sub type',
+					path: ['sub_type'],
+				})
+			}
+		}
+	})
+
+type FormSchema = z.infer<typeof ValidationSchema>
 
 const models = [
 	{
@@ -47,22 +76,43 @@ const subTypes: Array<{ label: string; value: ClientApplication['sub_type'] }> =
 	]
 
 export function Step0() {
-	const { goNext } = useApplyContext()
-	const { watch, setValue, formState, trigger } = useFormContext<FormSchema>()
+	const { watch, setValue, formState, handleSubmit } = useForm<FormSchema>({
+		resolver: zodResolver(ValidationSchema),
+	})
+	const { goNext, updateFormData, formData } = useApplyContext()
 
-	const onSubmit = async () => {
-		const isValid = await trigger(['type', 'sub_type'])
-		if (isValid) {
-			goNext()
+	useEffect(() => {
+		if (formData.type) {
+			setValue('type', formData.type, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
 		}
+		if (formData.sub_type) {
+			setValue('sub_type', formData.sub_type, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
+
+	const onSubmit = async (data: FormSchema) => {
+		let subType = data.sub_type ?? undefined
+		if (data.type === 'INDIVIDUAL') {
+			subType = 'LANDLORD'
+		}
+
+		updateFormData({
+			type: data.type,
+			sub_type: subType,
+		})
+		goNext()
 	}
 
 	return (
 		<form
-			onSubmit={async (e) => {
-				e.preventDefault()
-				await onSubmit()
-			}}
+			onSubmit={handleSubmit(onSubmit)}
 			className="mx-auto mb-5 space-y-10 md:max-w-2/3"
 		>
 			<div className="space-y-2">

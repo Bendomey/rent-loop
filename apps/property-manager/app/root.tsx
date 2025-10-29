@@ -45,6 +45,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 			NODE_ENV: env.NODE_ENV,
 			API_ADDRESS: env.API_ADDRESS,
 			AUTH_TOKEN: authSession.get('authToken'),
+			GOOGLE_MAPS_API_KEY: env.GOOGLE_MAPS_API_KEY,
 		},
 	}
 }

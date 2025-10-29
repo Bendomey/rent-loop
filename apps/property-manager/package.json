@@ -51,6 +51,7 @@
     "@radix-ui/react-toggle": "1.1.10",
     "@radix-ui/react-toggle-group": "1.1.11",
     "@radix-ui/react-tooltip": "1.2.8",
+    "@react-google-maps/api": "2.20.7",
     "@react-router/fs-routes": "7.9.4",
     "@react-router/node": "7.9.2",
     "@react-router/serve": "7.9.2",
