@@ -1,5 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
-import { fetchClient } from '~/lib/transport'
+import { fetchServer } from '~/lib/transport'
 
 export interface CreateClientApplicationInput {
 	address: string
@@ -27,14 +26,18 @@ export interface CreateClientApplicationInput {
 	website_url: Maybe<string>
 }
 
-export const applyAsAClient = async (props: CreateClientApplicationInput) => {
+export const applyAsAClient = async (
+	props: CreateClientApplicationInput,
+	apiConfig?: ApiConfigForServerConfig,
+) => {
+	console.log({ body: JSON.stringify(props) })
 	try {
-		const response = await fetchClient<ApiResponse<ClientApplication>>(
-			`/v1/clients/apply`,
+		const response = await fetchServer<ApiResponse<ClientApplication>>(
+			`${apiConfig?.baseUrl}/v1/clients/apply`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),
-				isUnAuthorizedRequest: true,
+				...(apiConfig ? apiConfig : {}),
 			},
 		)
 
@@ -42,6 +45,7 @@ export const applyAsAClient = async (props: CreateClientApplicationInput) => {
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
+			console.log('API Error Response:', response)
 			throw new Error(response.errors?.message || 'Unknown error')
 		}
 
@@ -50,8 +54,3 @@ export const applyAsAClient = async (props: CreateClientApplicationInput) => {
 		}
 	}
 }
-
-export const useApplyAsAClient = () =>
-	useMutation({
-		mutationFn: applyAsAClient,
-	})

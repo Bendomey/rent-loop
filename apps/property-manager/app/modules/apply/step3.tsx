@@ -22,6 +22,7 @@ import {
 	InputGroupInput,
 } from '~/components/ui/input-group'
 import { Separator } from '~/components/ui/separator'
+import { Spinner } from '~/components/ui/spinner'
 import {
 	Tooltip,
 	TooltipContent,
@@ -55,11 +56,12 @@ const ValidationSchema = z
 type FormSchema = z.infer<typeof ValidationSchema>
 
 export function Step3() {
-	const { goBack, formData, updateFormData } = useApplyContext()
+	const { goBack, formData, onSubmit: submit, updateFormData, isSubmitting } = useApplyContext()
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
 			type: formData.type,
+			contact_name: formData.contact_name,
 		},
 	})
 
@@ -67,9 +69,14 @@ export function Step3() {
 
 	const isIndividual = watch('type') === 'INDIVIDUAL'
 
-	const onSubmit = (data: FormSchema) => {
+	const onSubmit = async (data: FormSchema) => {
+		await submit({
+			...formData,
+			...data,
+		})
 		updateFormData(data)
 	}
+
 
 	return (
 		<Form {...rhfMethods}>
@@ -115,7 +122,7 @@ export function Step3() {
 								<FormLabel>Email</FormLabel>
 								<FormControl>
 									<InputGroup>
-										<InputGroupInput {...field} placeholder="m@example.com" />
+										<InputGroupInput type='email' {...field} placeholder="m@example.com" />
 										<InputGroupAddon>
 											<Mail />
 											<Separator
@@ -203,9 +210,11 @@ export function Step3() {
 					</Button>
 					<Button
 						size="lg"
+						disabled={isSubmitting}
 						variant="default"
 						className="bg-rose-600 hover:bg-rose-700"
 					>
+						{isSubmitting ? <Spinner /> : null}
 						Submit
 					</Button>
 				</div>

@@ -116,3 +116,52 @@ export function fetchClient<T>(
 		}
 	})
 }
+
+export function fetchServer<T>(
+	path: string,
+	config?: FetchClientConfig,
+): Promise<HttpResponse<T>> {
+	return new Promise(async (resolve, reject) => {
+
+		const headers = new Headers({
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...config?.headers,
+		})
+
+		try {
+			let userToken: string | undefined
+
+			if (config?.authToken) {
+				userToken = config.authToken
+			}
+
+			if (!config?.isUnAuthorizedRequest && userToken && userToken.length) {
+				headers.append('Authorization', `Bearer ${userToken}`)
+			}
+
+			const response = await transport(path, {
+				...config,
+				headers,
+			})
+
+			const contentType = response.headers.get('Content-Type')
+
+			let parsedBody
+			if (contentType?.includes('json')) {
+				parsedBody = await response.json()
+			} else {
+				parsedBody = await response.text()
+			}
+
+			const res: HttpResponse<T> = {
+				...response,
+				parsedBody,
+			}
+
+			resolve(res)
+		} catch (error: unknown) {
+			reject(error)
+		}
+	})
+}
