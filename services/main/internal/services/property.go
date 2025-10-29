@@ -1,6 +1,25 @@
 package services
 
-type PropertyService interface{}
+import (
+	"context"
+
+	"github.com/Bendomey/rent-loop/services/main/internal/models"
+	"github.com/Bendomey/rent-loop/services/main/internal/repository"
+	"github.com/Bendomey/rent-loop/services/main/pkg"
+)
+
+type PropertyService interface {
+	CreateProperty(context context.Context, input CreatePropertyInput) (*models.Property, error)
+}
+
+type propertyService struct {
+	appCtx pkg.AppContext
+	repo   repository.PropertyRepository
+}
+
+func NewPropertyService(appCtx pkg.AppContext, repo repository.PropertyRepository) PropertyService {
+	return &propertyService{appCtx, repo}
+}
 
 type CreatePropertyInput struct {
 	Type        string
@@ -19,4 +38,8 @@ type CreatePropertyInput struct {
 	GpsAddress  *string
 	ClientID    string
 	CreatedByID string
+}
+
+func (s *propertyService) CreateProperty(ctx context.Context, input CreatePropertyInput) (*models.Property, error) {
+	return nil, nil
 }
