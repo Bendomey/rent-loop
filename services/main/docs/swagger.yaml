@@ -81,7 +81,6 @@ definitions:
     - contact_name
     - contact_phone_number
     - country
-    - date_of_birth
     - latitude
     - longitude
     - name
@@ -787,6 +786,38 @@ paths:
           schema:
             type: string
       summary: Authenticates client user and returns token
+      tags:
+      - ClientUsers
+  /api/v1/client-users/me:
+    get:
+      consumes:
+      - application/json
+      description: Get the currently authenticated client user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientUser'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get the currently authenticated client user
       tags:
       - ClientUsers
   /api/v1/clients/apply:

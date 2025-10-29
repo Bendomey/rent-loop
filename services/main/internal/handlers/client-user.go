@@ -134,3 +134,40 @@ func (h *ClientUserHandler) AuthenticateClientUser(w http.ResponseWriter, r *htt
 		"data": transformations.DBClientUserToRestWithToken(&clientUserWithToken.ClientUser, clientUserWithToken.Token),
 	})
 }
+
+// GetCurrentClientUser godoc
+//
+//	@Summary		Get the currently authenticated client user
+//	@Description	Get the currently authenticated client user
+//	@Tags			ClientUsers
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Success		200	{object}	object{data=transformations.OutputClientUser}
+//	@Failure		400	{object}	lib.HTTPError
+//	@Failure		401	{object}	string
+//	@Failure		500	{object}	string
+//	@Router			/api/v1/client-users/me [get]
+func (h *ClientUserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
+
+	if !clientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	clientUser, err := h.service.GetClientUser(r.Context(), currentClientUser.ID)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]any{
+			"errors": map[string]string{
+				"message": err.Error(),
+			},
+		})
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBClientUserToRest(clientUser),
+	})
+}
