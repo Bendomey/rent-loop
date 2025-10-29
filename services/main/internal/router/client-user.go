@@ -21,6 +21,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 		r.Group(func(r chi.Router) {
 			r.Use(middlewares.CheckForClientUserAuthPresenceMiddleware)
 			r.Post("/v1/client-users", handlers.ClientUserHandler.CreateClientUser)
+			r.Get("/v1/client-users/me", handlers.ClientUserHandler.GetMe)
 		})
 	}
 }

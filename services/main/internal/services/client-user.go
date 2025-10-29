@@ -21,6 +21,7 @@ import (
 type ClientUserService interface {
 	CreateClientUser(ctx context.Context, input CreateClientUserInput) (*models.ClientUser, error)
 	AuthenticateClientUser(ctx context.Context, input AuthenticateClientUserInput) (*AuthenticateClientUserResponse, error)
+	GetClientUser(ctx context.Context, clientUserId string) (*models.ClientUser, error)
 }
 
 type clientUserService struct {
@@ -158,4 +159,8 @@ func (s *clientUserService) AuthenticateClientUser(ctx context.Context, input Au
 		ClientUser: *clientUser,
 		Token:      token,
 	}, nil
+}
+
+func (s *clientUserService) GetClientUser(ctx context.Context, clientUserId string) (*models.ClientUser, error) {
+	return s.repo.GetByID(ctx, clientUserId)
 }
