@@ -49,7 +49,7 @@ type CreateClientApplicationInput struct {
 	ContactPhoneNumber string
 	ContactEmail       string
 	Status             string
-	DateOfBirth        string
+	DateOfBirth        *string
 	IDType             *string
 	IDNumber           *string
 	IDExpiry           *string
@@ -89,7 +89,7 @@ func (s *clientApplicationService) CreateClientApplication(ctx context.Context, 
 		ContactName:        input.ContactName,
 		ContactPhoneNumber: input.ContactPhoneNumber,
 		ContactEmail:       input.ContactEmail,
-		DateOfBirth:        lib.StringPointer(input.DateOfBirth),
+		DateOfBirth:        input.DateOfBirth,
 		IDType:             (input.IDType),
 		IDNumber:           input.IDNumber,
 		IDExpiry:           input.IDExpiry,
