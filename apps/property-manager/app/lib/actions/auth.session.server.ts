@@ -8,6 +8,7 @@ type SessionData = {
 
 type SessionFlashData = {
 	error: string
+	success: string
 }
 
 const isProduction = environmentVariables().NODE_ENV === 'production'

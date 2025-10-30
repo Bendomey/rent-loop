@@ -20,7 +20,6 @@ export const login = async (
 			{
 				method: 'POST',
 				body: JSON.stringify(props),
-				...(apiConfig ? apiConfig : {}),
 			},
 		)
 
@@ -44,6 +43,36 @@ export const getCurrentUser = async (apiConfig?: ApiConfigForServerConfig) => {
 			{
 				method: 'GET',
 				...(apiConfig ? apiConfig : {}),
+			},
+		)
+
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export interface SendForgotPasswordLinkInput {
+	email: string
+}
+
+export const sendForgotPasswordLink = async (
+	props: SendForgotPasswordLinkInput,
+	apiConfig?: ApiConfigForServerConfig,
+) => {
+	try {
+		const response = await fetchServer<ApiResponse<string>>(
+			`${apiConfig?.baseUrl}/v1/client-users/reset-password`,
+			{
+				method: 'POST',
+				body: JSON.stringify(props),
 			},
 		)
 

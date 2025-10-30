@@ -1,4 +1,4 @@
-import { redirect } from 'react-router'
+import { data, redirect } from 'react-router'
 import type { Route } from './+types/login'
 
 import { login } from '~/api/auth'
@@ -19,9 +19,21 @@ export async function loader({ request }: Route.LoaderArgs) {
 		return redirect('/')
 	}
 
-	return {
-		origin: getDomainUrl(request),
-	}
+	const error = authSession.get('error')
+	const success = authSession.get('success')
+
+	return data(
+		{
+			origin: getDomainUrl(request),
+			error,
+			success,
+		},
+		{
+			headers: {
+				'Set-Cookie': await saveAuthSession(authSession),
+			},
+		},
+	)
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -61,9 +73,15 @@ export async function action({ request }: Route.ActionArgs) {
 			},
 		})
 	} catch {
-		return {
-			error: 'Failed to login. Please check your credentials and try again.',
-		}
+		session.flash(
+			'error',
+			'Failed to login. Please check your credentials and try again.',
+		)
+		return data(undefined, {
+			headers: {
+				'Set-Cookie': await saveAuthSession(session),
+			},
+		})
 	}
 }
 
