@@ -9,6 +9,7 @@ type Services struct {
 	AdminService             AdminService
 	ClientApplicationService ClientApplicationService
 	ClientUserService        ClientUserService
+	PropertyService          PropertyService
 }
 
 func NewServices(appCtx pkg.AppContext, repository repository.Repository) Services {
@@ -16,10 +17,12 @@ func NewServices(appCtx pkg.AppContext, repository repository.Repository) Servic
 	clientApplicationService := NewClientApplicationService(appCtx, repository.ClientApplicationRepository)
 
 	clientUserService := NewClientUserService(appCtx, repository.ClientUserRepository, repository.ClientRepository)
+	propertyService := NewPropertyService(appCtx, repository.PropertyRepository)
 
 	return Services{
 		AdminService:             adminService,
 		ClientApplicationService: clientApplicationService,
 		ClientUserService:        clientUserService,
+		PropertyService:          propertyService,
 	}
 }
