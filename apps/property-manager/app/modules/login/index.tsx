@@ -1,10 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { GalleryVerticalEnd } from 'lucide-react'
-import { useEffect } from 'react'
+import {
+	AlertCircleIcon,
+	CheckCircle2Icon,
+	GalleryVerticalEnd,
+} from 'lucide-react'
 import { useForm } from 'react-hook-form'
-import { Link, useFetcher } from 'react-router'
-import { toast } from 'sonner'
+import { Link, useFetcher, useLoaderData } from 'react-router'
 import { z } from 'zod'
+import { Alert, AlertDescription } from '~/components/ui/alert'
 
 import { Button } from '~/components/ui/button'
 import { Field, FieldDescription, FieldGroup } from '~/components/ui/field'
@@ -32,17 +35,12 @@ const ValidationSchema = z.object({
 type FormSchema = z.infer<typeof ValidationSchema>
 
 export function LoginModule() {
+	const { error, success } = useLoaderData()
 	const fetcher = useFetcher<{ error: string }>()
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
 	})
-
-	useEffect(() => {
-		if (fetcher.data?.error) {
-			toast.error(fetcher.data.error)
-		}
-	}, [fetcher.data?.error])
 
 	const { control, handleSubmit } = rhfMethods
 
@@ -80,6 +78,23 @@ export function LoginModule() {
 									</FieldDescription>
 								</div>
 
+								{success ? (
+									<Alert className="bg-green-600 text-white">
+										<CheckCircle2Icon />
+										<AlertDescription className="text-white">
+											{success}
+										</AlertDescription>
+									</Alert>
+								) : null}
+								{error ? (
+									<Alert className="bg-red-600 text-white">
+										<AlertCircleIcon />
+										<AlertDescription className="text-white">
+											{error}
+										</AlertDescription>
+									</Alert>
+								) : null}
+
 								<FormField
 									name="email"
 									control={control}
@@ -111,6 +126,10 @@ export function LoginModule() {
 													placeholder="* * * * * * * *"
 												/>
 											</FormControl>
+											<FieldDescription>
+												Forgot your password?{' '}
+												<Link to="/forgot-your-password">Reset it</Link>
+											</FieldDescription>
 											<FormMessage />
 										</FormItem>
 									)}
