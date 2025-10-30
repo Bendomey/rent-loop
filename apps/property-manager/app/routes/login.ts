@@ -60,8 +60,7 @@ export async function action({ request }: Route.ActionArgs) {
 				'Set-Cookie': await saveAuthSession(session),
 			},
 		})
-	} catch (e) {
-		console.log(e)
+	} catch {
 		return {
 			error: 'Failed to login. Please check your credentials and try again.',
 		}

@@ -16,7 +16,10 @@ type Empty = {}
 declare global {
 	interface Window {
 		ENV: {
+			NODE_ENV: string
 			API_ADDRESS: string
+			AUTH_TOKEN?: string
+			GOOGLE_MAPS_API_KEY: string
 		}
 	}
 }

@@ -1,5 +1,3 @@
-'use client'
-
 import { UploadIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { createContext, useContext, useState } from 'react'

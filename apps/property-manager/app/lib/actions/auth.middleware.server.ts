@@ -13,7 +13,7 @@ export const authMiddleware: MiddlewareFunction = async ({
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const url = new URL(request.url)
 	const returnTo = `${url.pathname}${url.search}`
-	const redirectToLogin = `/login?returnTo=${encodeURIComponent(returnTo)}`
+	const redirectToLogin = `/login?return_to=${encodeURIComponent(returnTo)}`
 
 	const authToken = authSession.get('authToken')
 

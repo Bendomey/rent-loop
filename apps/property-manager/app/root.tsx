@@ -42,7 +42,6 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 	return {
 		ENV: {
-			NODE_ENV: env.NODE_ENV,
 			API_ADDRESS: env.API_ADDRESS,
 			AUTH_TOKEN: authSession.get('authToken'),
 			GOOGLE_MAPS_API_KEY: env.GOOGLE_MAPS_API_KEY,
@@ -51,6 +50,8 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
+	const data = useLoaderData<typeof loader>()
+
 	return (
 		<html lang="en">
 			<head>
@@ -63,6 +64,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				{children}
 				<TopbarLoader />
 				<Toaster position="top-center" />
+				<script
+					dangerouslySetInnerHTML={{
+						__html: `window.ENV = ${JSON.stringify(data.ENV)};`,
+					}}
+				/>
 				<ScrollRestoration />
 				<Scripts />
 			</body>
@@ -71,11 +77,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-	const { ENV } = useLoaderData<typeof loader>()
-
-	if (typeof window !== 'undefined') {
-		window.ENV = ENV
-	}
 	return (
 		<Providers>
 			<Outlet />
