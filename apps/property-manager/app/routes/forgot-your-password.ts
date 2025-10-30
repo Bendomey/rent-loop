@@ -14,6 +14,10 @@ import { ForgotYourPasswordModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
+	if (authSession.has('authToken')) {
+		return redirect('/')
+	}
+
 	const error = authSession.get('error')
 	const success = authSession.get('success')
 
