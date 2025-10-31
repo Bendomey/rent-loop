@@ -167,15 +167,14 @@ func (h *ClientUserHandler) SendResetLink(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Check if user exists
+	// Checking if client-user exists
 	clientUser, err := h.service.GetClientUserByEmail(r.Context(), body.Email)
 	if err != nil {
-		// For security, don't reveal whether the email exists
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
-	// Generate JWT token for password reset
+	// Generating JWT token for password reset
 	token, err := h.service.GeneratePasswordResetToken(clientUser)
 	if err != nil {
 		http.Error(w, "Failed to generate reset token", http.StatusInternalServerError)
@@ -184,9 +183,9 @@ func (h *ClientUserHandler) SendResetLink(w http.ResponseWriter, r *http.Request
 
 	origin := r.Header.Get("Origin")
 	if origin == "" {
-		origin = os.Getenv("FRONTEND_ORIGIN")
+		origin = os.Getenv("APP_ORIGIN")
 		if origin == "" {
-			origin = "http://localhost:3000"
+			origin = "http://localhost:5001"
 		}
 	}
 
