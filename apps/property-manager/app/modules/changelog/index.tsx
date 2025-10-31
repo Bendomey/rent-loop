@@ -1,4 +1,5 @@
 import bgImge from '~/assets/bg-changelog.jpg'
+import { Badge } from '~/components/ui/badge'
 import { Card, CardContent } from '~/components/ui/card'
 import { Separator } from '~/components/ui/separator'
 import { TypographyH4 } from '~/components/ui/typography'
@@ -8,6 +9,7 @@ const timelineData = [
 	{
 		date: new Date(),
 		title: 'The Birth of Rentloop',
+		version: '1.0.0',
 		content: (
 			<div>
 				<span>
@@ -64,7 +66,7 @@ export function ChangelogModule() {
 						<div key={index} className="relative mb-10 pl-8">
 							<div className="bg-foreground absolute top-3.5 left-0 flex size-4 items-center justify-center rounded-full" />
 							<h4 className="rounded-xl py-2 text-xl font-bold tracking-tight xl:mb-4 xl:px-3">
-								{entry.title}
+								{entry.title} <Badge>v{entry.version}</Badge>
 							</h4>
 
 							<h5 className="text-md text-muted-foreground top-3 -left-34 rounded-xl tracking-tight xl:absolute">
