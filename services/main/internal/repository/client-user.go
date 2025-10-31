@@ -11,6 +11,7 @@ type ClientUserRepository interface {
 	Create(context context.Context, clientUser *models.ClientUser) error
 	GetByID(context context.Context, id string) (*models.ClientUser, error)
 	GetByEmail(context context.Context, email string) (*models.ClientUser, error)
+	GetByQuery(context context.Context, query map[string]any) (*models.ClientUser, error)
 }
 
 type clientUserRepository struct {
@@ -35,12 +36,29 @@ func (r *clientUserRepository) GetByID(ctx context.Context, id string) (*models.
 	return &clientUser, nil
 }
 
-func (r *clientUserRepository) GetByEmail(ctx context.Context, email string) (*models.ClientUser, error) {
+func (r *clientUserRepository) GetByEmail(
+	ctx context.Context,
+	email string,
+) (*models.ClientUser, error) {
 	var clientUser models.ClientUser
 	result := r.DB.WithContext(ctx).Where("email = ?", email).First(&clientUser)
 
 	if result.Error != nil {
 		return nil, result.Error
 	}
+	return &clientUser, nil
+}
+
+func (r *clientUserRepository) GetByQuery(
+	ctx context.Context,
+	query map[string]any,
+) (*models.ClientUser, error) {
+	var clientUser models.ClientUser
+	result := r.DB.WithContext(ctx).Where(query).First(&clientUser)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
 	return &clientUser, nil
 }
