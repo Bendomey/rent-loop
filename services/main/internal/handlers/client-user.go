@@ -4,10 +4,14 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"fmt"
+	"os"
+
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	logger "github.com/sirupsen/logrus"
 )
 
 type ClientUserHandler struct {
@@ -133,4 +137,80 @@ func (h *ClientUserHandler) AuthenticateClientUser(w http.ResponseWriter, r *htt
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": transformations.DBClientUserToRestWithToken(&clientUserWithToken.ClientUser, clientUserWithToken.Token),
 	})
+}
+
+// SendPasswordResetLinkRequest represents the incoming JSON payload.
+type SendPasswordResetLinkRequest struct {
+	Email string `json:"email" validate:"required,email" example:"client-user@example.com"`
+}
+
+// SendResetLink godoc
+//
+//	@Summary		Send password reset link to client user
+//	@Description	Generates a JWT token and sends a password reset link to the client user’s email
+//	@Tags			ClientUsers
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		SendPasswordResetLinkRequest	true	"Client user email address"
+//	@Success		204		"No Content"
+//	@Failure		400		{object}	lib.HTTPError					"Invalid request"
+//	@Failure		500		{object}	string							"Unexpected server error"
+//	@Router			/api/v1/client-users/reset-password [post]
+func (h *ClientUserHandler) SendResetLink(w http.ResponseWriter, r *http.Request) {
+	var body SendPasswordResetLinkRequest
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		return
+	}
+
+	if ok := lib.ValidateRequest(h.appCtx.Validator, body, w); !ok {
+		return
+	}
+
+	// Check if user exists
+	clientUser, err := h.service.GetClientUserByEmail(r.Context(), body.Email)
+	if err != nil {
+		// For security, don't reveal whether the email exists
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	// Generate JWT token for password reset
+	token, err := h.service.GeneratePasswordResetToken(clientUser)
+	if err != nil {
+		http.Error(w, "Failed to generate reset token", http.StatusInternalServerError)
+		return
+	}
+
+	origin := r.Header.Get("Origin")
+	if origin == "" {
+		origin = os.Getenv("FRONTEND_ORIGIN")
+		if origin == "" {
+			origin = "http://localhost:3000"
+		}
+	}
+
+	resetLink := fmt.Sprintf("%s/reset-your-password?token=%s", origin, token)
+
+	message := lib.RenderTemplate(lib.CLIENT_USER_PASSWORD_RESET_BODY, map[string]string{
+		"name":       clientUser.Name,
+		"reset_link": resetLink,
+	})
+
+	logger.Info(message)
+
+	go func() {
+		if err := pkg.SendEmail(
+			h.appCtx,
+			pkg.SendEmailInput{
+				Recipient: body.Email,
+				Subject:   lib.CLIENT_USER_PASSWORD_RESET_SUBJECT,
+				TextBody:  message,
+			},
+		); err != nil {
+			logger.Error("Failed to send password reset email", "error", err)
+		}
+	}()
+
+	w.WriteHeader(http.StatusNoContent)
 }

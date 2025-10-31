@@ -147,6 +147,14 @@ definitions:
     required:
     - reason
     type: object
+  handlers.SendPasswordResetLinkRequest:
+    properties:
+      email:
+        example: client-user@example.com
+        type: string
+    required:
+    - email
+    type: object
   lib.HTTPError:
     properties:
       errors:
@@ -787,6 +795,35 @@ paths:
           schema:
             type: string
       summary: Authenticates client user and returns token
+      tags:
+      - ClientUsers
+  /api/v1/client-users/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Generates a JWT token and sends a password reset link to the client
+        user’s email
+      parameters:
+      - description: Client user email address
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SendPasswordResetLinkRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Unexpected server error
+          schema:
+            type: string
+      summary: Send password reset link to client user
       tags:
       - ClientUsers
   /api/v1/clients/apply:

@@ -716,6 +716,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/client-users/reset-password": {
+            "post": {
+                "description": "Generates a JWT token and sends a password reset link to the client user’s email",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Send password reset link to client user",
+                "parameters": [
+                    {
+                        "description": "Client user email address",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SendPasswordResetLinkRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/clients/apply": {
             "post": {
                 "description": "Create a new client application",
@@ -969,6 +1012,18 @@ const docTemplate = `{
             "properties": {
                 "reason": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.SendPasswordResetLinkRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "client-user@example.com"
                 }
             }
         },

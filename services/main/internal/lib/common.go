@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"strings"
+
 	"gorm.io/datatypes"
 )
 
@@ -194,4 +196,13 @@ func ConvertStringToInt64(s string) (int64, error) {
 		return 0, fmt.Errorf("failed to convert string to int64: %w", err)
 	}
 	return i, nil
+}
+
+func RenderTemplate(template string, data map[string]string) string {
+	replacements := []string{}
+	for key, val := range data {
+		replacements = append(replacements, "{{"+key+"}}", val)
+	}
+	r := strings.NewReplacer(replacements...)
+	return r.Replace(template)
 }

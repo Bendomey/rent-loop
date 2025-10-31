@@ -21,6 +21,8 @@ import (
 type ClientUserService interface {
 	CreateClientUser(ctx context.Context, input CreateClientUserInput) (*models.ClientUser, error)
 	AuthenticateClientUser(ctx context.Context, input AuthenticateClientUserInput) (*AuthenticateClientUserResponse, error)
+	GetClientUserByEmail(ctx context.Context, email string) (*models.ClientUser, error)
+	GeneratePasswordResetToken(clientUser *models.ClientUser) (string, error)
 }
 
 type clientUserService struct {
@@ -158,4 +160,34 @@ func (s *clientUserService) AuthenticateClientUser(ctx context.Context, input Au
 		ClientUser: *clientUser,
 		Token:      token,
 	}, nil
+}
+
+func (s *clientUserService) GetClientUserByEmail(ctx context.Context, email string) (*models.ClientUser, error) {
+	clientUser, err := s.repo.GetByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+
+	if clientUser == nil {
+		return nil, errors.New("ClientUserNotFound")
+	}
+
+	return clientUser, nil
+}
+
+func (s *clientUserService) GeneratePasswordResetToken(clientUser *models.ClientUser) (string, error) {
+	token, signTokenErr := signjwt.SignJWT(jwt.MapClaims{
+		"id":        clientUser.ID,
+		"client_id": clientUser.ClientID,
+	}, s.appCtx.Config.TokenSecrets.ClientUserSecret)
+
+	if signTokenErr != nil {
+		raven.CaptureError(signTokenErr, map[string]string{
+			"function": "GeneratePasswordResetToken",
+			"action":   "signing token",
+		})
+		return "", signTokenErr
+	}
+
+	return token, nil
 }

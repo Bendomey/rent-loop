@@ -84,3 +84,20 @@ Welcome aboard,
 The Rentloop Team
 `
 )
+
+const (
+	CLIENT_USER_PASSWORD_RESET_SUBJECT = "Reset Your Rentloop Password"
+	CLIENT_USER_PASSWORD_RESET_BODY    = `
+Hi {{name}},
+
+We received a request to reset your password.
+Click the link below to set a new password:
+
+{{reset_link}}
+
+If you didn’t request this, you can safely ignore this email — your account is secure.
+
+Best regards,
+The Rentloop Team
+`
+)
