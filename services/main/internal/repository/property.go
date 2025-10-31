@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"gorm.io/gorm"
 )
@@ -21,7 +22,16 @@ func NewPropertyRepository(DB *gorm.DB) PropertyRepository {
 }
 
 func (r *propertyRepository) Create(ctx context.Context, property *models.Property) error {
-	return r.DB.WithContext(ctx).Create(property).Error
+	var db *gorm.DB
+
+	tx, txOk := lib.TransactionFromContext(ctx)
+	db = tx
+
+	if !txOk || tx == nil {
+		db = r.DB
+	}
+
+	return db.WithContext(ctx).Create(property).Error
 }
 
 func (r *propertyRepository) GetByID(ctx context.Context, id string) (*models.Property, error) {

@@ -16,12 +16,26 @@ type PropertyService interface {
 }
 
 type propertyService struct {
-	appCtx pkg.AppContext
-	repo   repository.PropertyRepository
+	appCtx                 pkg.AppContext
+	repo                   repository.PropertyRepository
+	clientUserRepo         repository.ClientUserRepository
+	clientUserPropertyRepo repository.ClientUserPropertyRepository
 }
 
-func NewPropertyService(appCtx pkg.AppContext, repo repository.PropertyRepository) PropertyService {
-	return &propertyService{appCtx, repo}
+type PropertyServiceDependencies struct {
+	AppCtx                 pkg.AppContext
+	Repo                   repository.PropertyRepository
+	ClientUserRepo         repository.ClientUserRepository
+	ClientUserPropertyRepo repository.ClientUserPropertyRepository
+}
+
+func NewPropertyService(deps PropertyServiceDependencies) PropertyService {
+	return &propertyService{
+		appCtx:                 deps.AppCtx,
+		repo:                   deps.Repo,
+		clientUserRepo:         deps.ClientUserRepo,
+		clientUserPropertyRepo: deps.ClientUserPropertyRepo,
+	}
 }
 
 type CreatePropertyInput struct {
@@ -42,7 +56,10 @@ type CreatePropertyInput struct {
 	CreatedByID string
 }
 
-func (s *propertyService) CreateProperty(ctx context.Context, input CreatePropertyInput) (*models.Property, error) {
+func (s *propertyService) CreateProperty(
+	ctx context.Context,
+	input CreatePropertyInput,
+) (*models.Property, error) {
 	slug, err := lib.GenerateSlug(input.Name)
 	if err != nil {
 		raven.CaptureError(err, map[string]string{
@@ -85,9 +102,39 @@ func (s *propertyService) CreateProperty(ctx context.Context, input CreateProper
 		CreatedByID: input.CreatedByID,
 	}
 
-	if err := s.repo.Create(ctx, &property); err != nil {
+	transaction := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, transaction)
+
+	if err := s.repo.Create(transCtx, &property); err != nil {
+		transaction.Rollback()
 		return nil, err
 	}
 
+	clientUserOwner, clientUserErr := s.clientUserRepo.GetByQuery(
+		ctx,
+		map[string]any{"client_id": input.ClientID, "role": "OWNER"},
+	)
+	if clientUserErr != nil {
+		transaction.Rollback()
+		return nil, clientUserErr
+	}
+
+	clientUserProperty := models.ClientUserProperty{
+		PropertyID:   property.ID.String(),
+		ClientUserID: clientUserOwner.ID.String(),
+		Role:         "MANAGER",
+		CreatedByID:  &input.CreatedByID,
+	}
+
+	linkPropertyErr := s.clientUserPropertyRepo.Create(transCtx, &clientUserProperty)
+	if linkPropertyErr != nil {
+		transaction.Rollback()
+		return nil, linkPropertyErr
+	}
+
+	if commitErr := transaction.Commit().Error; commitErr != nil {
+		transaction.Rollback()
+		return nil, commitErr
+	}
 	return &property, nil
 }
