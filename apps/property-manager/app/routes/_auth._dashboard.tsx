@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router'
+import { Link, Outlet } from 'react-router'
 import pkgJson from '../../package.json'
 import type { Route } from './+types/_auth._dashboard'
 import { AppSidebar } from '~/components/app-sidebar'
@@ -69,7 +69,7 @@ export default function AuthDashboard({ matches }: Route.ComponentProps) {
 							</BreadcrumbList>
 						</Breadcrumb>
 						<div className="ml-auto flex items-center gap-2 text-sm">
-							v{pkgJson.version}
+							<Link to="/changelog">v{pkgJson.version}</Link>
 						</div>
 					</div>
 				</header>
