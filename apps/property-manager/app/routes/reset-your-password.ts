@@ -1,6 +1,9 @@
 import { data, redirect } from 'react-router'
 import type { Route } from './+types/login'
-import { getAuthSession, saveAuthSession } from '~/lib/actions/auth.session.server'
+import {
+	getAuthSession,
+	saveAuthSession,
+} from '~/lib/actions/auth.session.server'
 
 import { APP_NAME } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'

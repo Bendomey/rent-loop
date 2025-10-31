@@ -16,7 +16,6 @@ export * from './properties/new'
 export * from './settings/members'
 export * from './settings/members/new'
 
-export * from './support'
 export * from './changelog'
 
 export * from './settings/general'
