@@ -6,6 +6,11 @@ declare global {
 			AUTH_TOKEN?: string
 			GOOGLE_MAPS_API_KEY: string
 		}
+		Tawk_API: {
+			toggle: () => void
+			minimize: () => void
+			maximize: () => void
+		}
 	}
 }
 /**

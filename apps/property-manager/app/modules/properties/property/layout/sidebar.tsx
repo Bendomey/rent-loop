@@ -127,7 +127,7 @@ const data = {
 	navSecondary: [
 		{
 			title: 'Support',
-			url: '/support',
+			onClick: () => window?.Tawk_API?.toggle(),
 			icon: LifeBuoy,
 		},
 		{

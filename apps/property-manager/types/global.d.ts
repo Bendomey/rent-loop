@@ -13,17 +13,6 @@ type BooleanMap = Map<string, boolean>
 type NumberLike = string | number
 type Empty = {}
 
-declare global {
-	interface Window {
-		ENV: {
-			NODE_ENV: string
-			API_ADDRESS: string
-			AUTH_TOKEN?: string
-			GOOGLE_MAPS_API_KEY: string
-		}
-	}
-}
-
 interface ApiResponse<T> {
 	data: T
 	errors: Nullable<{ message: string }>
