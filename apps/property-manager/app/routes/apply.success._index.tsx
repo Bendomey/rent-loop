@@ -1,8 +1,8 @@
-import type { Route } from './+types/_auth._dashboard.support'
+import type { Route } from './+types/apply.success._index'
 import { APP_NAME } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { SupportModule } from '~/modules'
+import { ApplySuccessModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
 	return {
@@ -10,13 +10,9 @@ export async function loader({ request }: Route.LoaderArgs) {
 	}
 }
 
-export const handle = {
-	breadcrumb: 'Support',
-}
-
 export function meta({ loaderData, location }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `Support | ${APP_NAME}`,
+		title: `Property Owner Application is successful - ${APP_NAME}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,
@@ -27,4 +23,4 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 	return meta
 }
 
-export default SupportModule
+export default ApplySuccessModule

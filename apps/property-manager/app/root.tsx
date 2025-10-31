@@ -42,14 +42,16 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 	return {
 		ENV: {
-			NODE_ENV: env.NODE_ENV,
 			API_ADDRESS: env.API_ADDRESS,
 			AUTH_TOKEN: authSession.get('authToken'),
+			GOOGLE_MAPS_API_KEY: env.GOOGLE_MAPS_API_KEY,
 		},
 	}
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
+	const data = useLoaderData<typeof loader>()
+
 	return (
 		<html lang="en">
 			<head>
@@ -62,6 +64,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				{children}
 				<TopbarLoader />
 				<Toaster position="top-center" />
+				<script
+					dangerouslySetInnerHTML={{
+						__html: `window.ENV = ${JSON.stringify(data.ENV)};`,
+					}}
+				/>
+				<script>
+					{`
+						var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+						(function(){
+							var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+							s1.async=true;
+							s1.src='https://embed.tawk.to/690490aed8bd2d195501b220/1j8stab0n';
+							s1.charset='UTF-8';
+							s1.setAttribute('crossorigin','*');
+							s0.parentNode.insertBefore(s1,s0);
+						})();
+						`}
+				</script>
 				<ScrollRestoration />
 				<Scripts />
 			</body>
@@ -70,11 +90,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-	const { ENV } = useLoaderData<typeof loader>()
-
-	if (typeof window !== 'undefined') {
-		window.ENV = ENV
-	}
 	return (
 		<Providers>
 			<Outlet />

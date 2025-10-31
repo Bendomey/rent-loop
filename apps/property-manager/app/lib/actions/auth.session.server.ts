@@ -1,5 +1,6 @@
 import { createCookieSessionStorage } from 'react-router'
-import { APP_DOMAIN, USER_CIPHER } from '../constants'
+import { USER_CIPHER } from '../constants'
+import { environmentVariables } from './env.server'
 
 type SessionData = {
 	authToken: string
@@ -7,7 +8,10 @@ type SessionData = {
 
 type SessionFlashData = {
 	error: string
+	success: string
 }
+
+const isProduction = environmentVariables().NODE_ENV === 'production'
 
 const {
 	getSession: getAuthSession,
@@ -19,17 +23,15 @@ const {
 		name: USER_CIPHER,
 
 		// all of these are optional
-		domain: APP_DOMAIN,
 		// Expires can also be set (although maxAge overrides it when used in combination).
 		// Note that this method is NOT recommended as `new Date` creates only one date on each server deployment, not a dynamic date in the future!
 		//
 		// expires: new Date(Date.now() + 60_000),
 		httpOnly: true,
-		maxAge: 60,
 		path: '/',
 		sameSite: 'lax',
-		secrets: ['s3cret1'],
-		secure: true,
+		secrets: ['s3cret1'], // TODO: use env var
+		secure: isProduction,
 	},
 })
 

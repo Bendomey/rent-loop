@@ -20,7 +20,7 @@ type Property struct {
 	Country    string  `json:"country" gorm:"not null;"`
 	Region     string  `json:"region" gorm:"not null;"`
 	City       string  `json:"city" gorm:"not null;"`
-	GPSAddress string  `json:"gpsAddress" gorm:"not null;"`
+	GPSAddress *string `json:"gpsAddress"`
 
 	Type   string `json:"type" gorm:"not null;index;"`   // SINGLE | MULTI
 	Status string `json:"status" gorm:"not null;index;"` // ACTIVE | MAINTENANCE | INACTIVE

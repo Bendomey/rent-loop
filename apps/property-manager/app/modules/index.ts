@@ -2,7 +2,11 @@ export * from './404-page'
 export * from './login'
 export * from './forgot-your-password'
 export * from './reset-your-password'
+
+export * from './auth-middleware'
+
 export * from './apply'
+export * from './apply/success'
 
 export * from './dashboard'
 
@@ -12,7 +16,6 @@ export * from './properties/new'
 export * from './settings/members'
 export * from './settings/members/new'
 
-export * from './support'
 export * from './changelog'
 
 export * from './settings/general'

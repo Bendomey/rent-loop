@@ -97,6 +97,11 @@ func ResolveDatabase(host, user, password, dbname, default_dbname, port, sslmode
 		}
 	} else if dropOldDatabase {
 		logger.Info("======== DB does exist, dropping db ==========")
+		terminateConnectionsStmt := fmt.Sprintf("SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '%s';", dbname)
+		if rs := postgresDb.Exec(terminateConnectionsStmt); rs.Error != nil {
+			logger.Info("terminating connections errored out: ", rs.Error)
+			os.Exit(1)
+		}
 		// if it does drop it
 		stmt := fmt.Sprintf("DROP DATABASE %s;", dbname)
 		if rs := postgresDb.Exec(stmt); rs.Error != nil {

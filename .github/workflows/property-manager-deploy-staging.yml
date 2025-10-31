@@ -6,11 +6,18 @@ on:
       - 'apps/property-manager/**'
     branches:
       - main
+  workflow_run:
+    workflows: ["Property manager CI"]
+    types:
+      - completed
+    branches:
+      - main
 
 jobs:
   deploy:
       name: ⚙️ Build And Deploy Staging
       runs-on: ubuntu-latest
+      if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }}
       concurrency: deploy-group
 
       env:

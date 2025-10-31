@@ -1,5 +1,6 @@
 type PossiblyUndefined<T> = T | undefined
 type Nullable<T> = T | null
+type Maybe<T> = T | null | undefined
 type StringList = Array<string>
 type NumberList = Array<number>
 type BooleanList = Array<boolean>
@@ -12,18 +13,9 @@ type BooleanMap = Map<string, boolean>
 type NumberLike = string | number
 type Empty = {}
 
-declare global {
-	interface Window {
-		ENV: {
-			API_ADDRESS: string
-		}
-	}
-}
-
 interface ApiResponse<T> {
 	data: T
-	errorMessage: Nullable<string>
-	status: boolean
+	errors: Nullable<{ message: string }>
 }
 
 interface Pagination {

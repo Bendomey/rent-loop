@@ -1,12 +1,3 @@
-interface RealEstateManager {
-	id: string
-	name: string
-	email: string
-	created_at: Date
-	updated_at: Date
-	properties: Array<Property>
-}
-
 interface Property {
 	id: string
 	name: string

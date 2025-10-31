@@ -1,5 +1,5 @@
-import { useState } from 'react'
 import { Link } from 'react-router'
+import { ApplyProvider, useApplyContext } from './context'
 import { Step0 } from './step0'
 import { Step1 } from './step1'
 import { Step2 } from './step2'
@@ -7,15 +7,10 @@ import { Step3 } from './step3'
 import { TypographyH3 } from '~/components/ui/typography'
 import { APP_NAME } from '~/lib/constants'
 
-const STEP = 3
+const STEPS = 4
 
-const Steps = [Step0, Step1, Step2, Step3]
-
-export function ApplyModule() {
-	const [stepCount, setStepCount] = useState(0)
-
-	const goBack = () => setStepCount((prev) => (prev > 0 ? prev - 1 : prev))
-	const goNext = () => setStepCount((prev) => prev + 1)
+function Apply() {
+	const { stepCount } = useApplyContext()
 
 	return (
 		<main className="w-full">
@@ -32,12 +27,23 @@ export function ApplyModule() {
 			</div>
 			<div
 				className="bg-rose-600"
-				style={{ height: '3px', width: `${(stepCount / STEP) * 100}%` }}
+				style={{ height: '3px', width: `${(stepCount / STEPS) * 100}%` }}
 			/>
 
 			<div className="mx-4 mt-10 max-w-3xl md:mx-auto md:mt-14">
-				{Steps[stepCount]?.({ onGoBack: goBack, onGoNext: goNext })}
+				{stepCount === 0 ? <Step0 /> : null}
+				{stepCount === 1 ? <Step1 /> : null}
+				{stepCount === 2 ? <Step2 /> : null}
+				{stepCount === 3 ? <Step3 /> : null}
 			</div>
 		</main>
+	)
+}
+
+export function ApplyModule() {
+	return (
+		<ApplyProvider>
+			<Apply />
+		</ApplyProvider>
 	)
 }

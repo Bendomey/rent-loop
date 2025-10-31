@@ -1,7 +1,7 @@
 package lib
 
 const SUPPORT_DETAILS_TEMPLATE = `
-If you have any questions, feel free to contact us at {{support_email}}/{{support_phone}}.
+If you have any questions, feel free to contact us at {{support_email}} / {{support_phone}}.
 `
 
 const (

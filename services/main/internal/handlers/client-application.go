@@ -34,16 +34,16 @@ type CreateClientApplicationRequest struct {
 	ContactName        string  `json:"contact_name" validate:"required"`
 	ContactPhoneNumber string  `json:"contact_phone_number" validate:"required,e164"`
 	ContactEmail       string  `json:"contact_email" validate:"required,email"`
-	DateOfBirth        string  `json:"date_of_birth" validate:"required,datetime=2006-01-02"`
-	IDType             *string `json:"id_type" validate:"oneof=DRIVERS_LICENSE PASSPORT NATIONAL_ID"`
+	DateOfBirth        *string `json:"date_of_birth" validate:"omitempty,datetime=2006-01-02"`
+	IDType             *string `json:"id_type" validate:"omitempty,oneof=DRIVERS_LICENSE PASSPORT NATIONAL_ID"`
 	IDNumber           *string `json:"id_number"`
-	IDExpiry           *string `json:"id_expiry"`
-	IDDocumentURL      *string `json:"id_document_url" validate:"url"`
+	IDExpiry           *string `json:"id_expiry" validate:"omitempty,datetime=2006-01-02"`
+	IDDocumentURL      *string `json:"id_document_url" validate:"omitempty,url"`
 	RegistrationNumber *string `json:"registration_number"`
-	LogoURL            *string `json:"logo_url" validate:"url"`
+	LogoURL            *string `json:"logo_url" validate:"omitempty,url"`
 	Description        *string `json:"description"`
-	WebsiteURL         *string `json:"website_url" validate:"url"`
-	SupportEmail       *string `json:"support_email" validate:"email"`
+	WebsiteURL         *string `json:"website_url" validate:"omitempty,url"`
+	SupportEmail       *string `json:"support_email" validate:"omitempty,email"`
 	SupportPhone       *string `json:"support_phone" validate:"omitempty,e164"`
 }
 
