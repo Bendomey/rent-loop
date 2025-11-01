@@ -49,10 +49,7 @@ export async function action({ request }: Route.ActionArgs) {
 	}
 
 	try {
-		const response = await sendForgotPasswordLink({ email }, { baseUrl })
-		if (!response) {
-			throw new Error('Forgot Password init failed')
-		}
+		await sendForgotPasswordLink({ email }, { baseUrl })
 
 		session.flash('success', 'Reset password link sent successfully.')
 		return redirect('/login', {
@@ -60,8 +57,13 @@ export async function action({ request }: Route.ActionArgs) {
 				'Set-Cookie': await saveAuthSession(session),
 			},
 		})
-	} catch {
-		session.flash('error', 'Failed to send reset password link.')
+	} catch (e) {
+		let message = 'Failed to send reset password link.'
+		if(e instanceof Error && e.message === 'EmailNotFound') {
+			message = 'Email address not found.'
+		}
+		
+		session.flash('error', message)
 		return data(
 			{
 				origin: getDomainUrl(request),

@@ -65,11 +65,11 @@ export function ChangelogModule() {
 					{timelineData.map((entry, index) => (
 						<div key={index} className="relative mb-10 pl-8">
 							<div className="bg-foreground absolute top-3.5 left-0 flex size-4 items-center justify-center rounded-full" />
-							<h4 className="rounded-xl py-2 text-xl font-bold tracking-tight xl:mb-4 xl:px-3">
+							<h4 className="rounded-xl py-2 text-xl font-bold tracking-tight">
 								{entry.title} <Badge>v{entry.version}</Badge>
 							</h4>
 
-							<h5 className="text-md text-muted-foreground top-3 -left-34 rounded-xl tracking-tight xl:absolute">
+							<h5 className="text-md text-muted-foreground rounded-xl tracking-tight">
 								{localizedDayjs(entry.date).format('LL')}
 							</h5>
 

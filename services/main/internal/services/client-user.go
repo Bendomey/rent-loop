@@ -22,6 +22,8 @@ type ClientUserService interface {
 	CreateClientUser(ctx context.Context, input CreateClientUserInput) (*models.ClientUser, error)
 	AuthenticateClientUser(ctx context.Context, input AuthenticateClientUserInput) (*AuthenticateClientUserResponse, error)
 	GetClientUser(ctx context.Context, clientUserId string) (*models.ClientUser, error)
+	SendForgotPasswordResetLink(ctx context.Context, email string) (*models.ClientUser, error)
+	ResetPassword(ctx context.Context, input ResetClientUserPasswordInput) (*models.ClientUser, error)
 }
 
 type clientUserService struct {
@@ -115,6 +117,14 @@ func (s *clientUserService) CreateClientUser(ctx context.Context, input CreateCl
 		},
 	)
 
+	go pkg.SendSMS(
+		s.appCtx,
+		pkg.SendSMSInput{
+			Recipient: input.Phone,
+			Message:   message,
+		},
+	)
+
 	return &clientUser, nil
 }
 
@@ -163,4 +173,68 @@ func (s *clientUserService) AuthenticateClientUser(ctx context.Context, input Au
 
 func (s *clientUserService) GetClientUser(ctx context.Context, clientUserId string) (*models.ClientUser, error) {
 	return s.repo.GetByID(ctx, clientUserId)
+}
+
+func (s *clientUserService) SendForgotPasswordResetLink(ctx context.Context, email string) (*models.ClientUser, error) {
+	clientUser, clientUserErr := s.repo.GetByEmail(ctx, email)
+	if clientUserErr != nil {
+		if !errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
+			raven.CaptureError(clientUserErr, nil)
+		}
+		return nil, errors.New("EmailNotFound")
+	}
+
+	token, signTokenErrr := signjwt.SignJWT(jwt.MapClaims{
+		"id":        clientUser.ID,
+		"client_id": clientUser.ClientID,
+	}, s.appCtx.Config.TokenSecrets.ClientUserSecret)
+
+	if signTokenErrr != nil {
+		raven.CaptureError(signTokenErrr, map[string]string{
+			"function": "SendForgotPasswordResetLink",
+			"action":   "signing token",
+		})
+		return nil, signTokenErrr
+	}
+
+	r := strings.NewReplacer(
+		"{{name}}", clientUser.Name,
+		"{{reset_token}}", token,
+	)
+	message := r.Replace(lib.CLIENT_USER_PASSWORD_RESET_BODY)
+
+	go pkg.SendEmail(
+		s.appCtx,
+		pkg.SendEmailInput{
+			Recipient: clientUser.Email,
+			Subject:   lib.CLIENT_USER_PASSWORD_RESET_SUBJECT,
+			TextBody:  message,
+		},
+	)
+
+	return clientUser, nil
+}
+
+type ResetClientUserPasswordInput struct {
+	ID          string
+	NewPassword string
+}
+
+func (s *clientUserService) ResetPassword(ctx context.Context, input ResetClientUserPasswordInput) (*models.ClientUser, error) {
+	clientUser, clientUserErr := s.repo.GetByID(ctx, input.ID)
+	if clientUserErr != nil {
+		if !errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
+			raven.CaptureError(clientUserErr, nil)
+		}
+		return nil, clientUserErr
+	}
+
+	clientUser.Password = input.NewPassword
+
+	if err := s.repo.Update(ctx, clientUser); err != nil {
+		raven.CaptureError(err, nil)
+		return nil, err
+	}
+
+	return clientUser, nil
 }

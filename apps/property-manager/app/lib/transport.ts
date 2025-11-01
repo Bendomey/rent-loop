@@ -149,6 +149,14 @@ export function fetchServer<T>(
 				headers,
 			})
 
+			if (response.status === 204) {
+				const res: HttpResponse<T> = {
+					...response,
+					parsedBody: {} as T,
+				}
+				return resolve(res)
+			}
+
 			const contentType = response.headers.get('Content-Type')
 
 			let parsedBody
