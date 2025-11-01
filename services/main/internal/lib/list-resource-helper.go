@@ -6,26 +6,38 @@ import (
 	"time"
 )
 
+type FilterQueryInput struct {
+	Page         int       `json:"page"          validate:"gte=0"`
+	PageSize     int       `json:"page_size"     validate:"gte=0"`
+	Order        string    `json:"order"         validate:"omitempty,oneof=asc desc"`
+	OrderBy      string    `json:"order_by"      validate:"omitempty"`
+	Query        string    `json:"query"         validate:"omitempty"`
+	SearchFields []string  `json:"search_fields" validate:"omitempty,min=1"`
+	StartDate    time.Time `json:"start_date"    validate:"omitempty"`
+	EndDate      time.Time `json:"end_date"      validate:"omitempty,gtfield=StartTime"`
+	Populate     *[]string `json:"populate"      validate:"omitempty"`
+}
+
 // FilterQuery type to help generate filter for queries
 type FilterQuery struct {
-	Page      int            `json:"page" validate:"gte=0"`
-	PageSize  int            `json:"page_size" validate:"gte=0"`
-	Order     string         `json:"order" validate:"omitempty,oneof=asc desc"`
-	OrderBy   string         `json:"order_by" validate:"omitempty"`
-	Search    *Search        `json:"search" validate:"omitempty"`
+	Page      int            `json:"page"       validate:"gte=0"`
+	PageSize  int            `json:"page_size"  validate:"gte=0"`
+	Order     string         `json:"order"      validate:"omitempty,oneof=asc desc"`
+	OrderBy   string         `json:"order_by"   validate:"omitempty"`
+	Search    *Search        `json:"search"     validate:"omitempty"`
 	DateRange *DateRangeType `json:"date_range" validate:"omitempty"`
-	Populate  *[]string      `json:"populate" validate:"omitempty"`
+	Populate  *[]string      `json:"populate"   validate:"omitempty"`
 }
 
 // DateRangeType
 type DateRangeType struct {
 	StartTime time.Time `json:"start_time" validate:"required"`
-	EndTime   time.Time `json:"end_time" validate:"required,gtfield=StartTime"`
+	EndTime   time.Time `json:"end_time"   validate:"required,gtfield=StartTime"`
 }
 
 // Search
 type Search struct {
-	Query        string   `json:"query" validate:"required"`
+	Query        string   `json:"query"         validate:"required"`
 	SearchFields []string `json:"search_fields" validate:"required,min=1"`
 }
 
@@ -55,19 +67,19 @@ func GenerateQuery(argument url.Values) (*FilterQuery, error) {
 		}
 	}
 
-	//order
+	// order
 	order := argument.Get("order")
 	if order != "" {
 		filterResult.Order = order
 	}
 
-	//orderBy
+	// orderBy
 	orderBy := argument.Get("order_by")
 	if orderBy != "" {
 		filterResult.OrderBy = orderBy
 	}
 
-	//dateRange
+	// dateRange
 	startDate := argument.Get("start_date")
 	endDate := argument.Get("end_date")
 

@@ -25,7 +25,9 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			r.Get("/v1/client-users/me", handlers.ClientUserHandler.GetMe)
 			r.Post("/v1/client-users/reset-password", handlers.ClientUserHandler.ResetClientUserPassword)
 
+			// properties
 			r.Post("/v1/properties", handlers.PropertyHandler.CreateProperty)
+			r.Get("/v1/properties", handlers.PropertyHandler.ListProperties)
 		})
 	}
 }
