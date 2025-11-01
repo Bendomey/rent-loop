@@ -36,9 +36,9 @@ type CreateClientUserRequest struct {
 //	@Produce		json
 //	@Param			body	body		CreateClientUserRequest							true	"Create Client User Request Body"
 //	@Success		201		{object}	object{data=transformations.OutputClientUser}	"Client user created successfully"
-//	@Failure		400		{object}	lib.HTTPError									"Error occured when creating a client user"
+//	@Failure		400		{object}	lib.HTTPError									"Error occurred when creating a client user"
 //	@Failure		401		{object}	string											"Invalid or absent authentication token"
-//	@Failure		500		{object}	string											"An unexpected error occured"
+//	@Failure		500		{object}	string											"An unexpected error occurred"
 //	@Router			/api/v1/client-users [post]
 func (h *ClientUserHandler) CreateClientUser(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
@@ -99,8 +99,8 @@ type LoginClientUserRequest struct {
 //	@Produce		json
 //	@Param			body	body		LoginClientUserRequest									true	"Client user login credentials"
 //	@Success		200		{object}	object{data=transformations.OutputClientUserWithToken}	"Client user authenticated successfully"
-//	@Failure		400		{object}	lib.HTTPError											"Error occured when authenticating a client user"
-//	@Failure		500		{object}	string													"An unexpected error occured"
+//	@Failure		400		{object}	lib.HTTPError											"Error occurred when authenticating a client user"
+//	@Failure		500		{object}	string													"An unexpected error occurred"
 //	@Router			/api/v1/client-users/login [post]
 func (h *ClientUserHandler) AuthenticateClientUser(w http.ResponseWriter, r *http.Request) {
 	var body LoginClientUserRequest
@@ -184,8 +184,8 @@ type SendForgotPasswordResetLinkRequest struct {
 //	@Accept			json
 //	@Param			body	body		SendForgotPasswordResetLinkRequest						true  "Send Forgot Password Reset Link Request Body"
 //	@Success		204		"Forgot password reset link sent successfully"
-//	@Failure		400		{object}	lib.HTTPError											"Error occured when sending forgot password reset link to client user"
-//	@Failure		500		{object}	string													"An unexpected error occured"
+//	@Failure		400		{object}	lib.HTTPError											"Error occurred when sending forgot password reset link to client user"
+//	@Failure		500		{object}	string													"An unexpected error occurred"
 //	@Router			/api/v1/client-users/forgot-password [post]
 func (h *ClientUserHandler) SendForgotPasswordResetLink(w http.ResponseWriter, r *http.Request) {
 	var body SendForgotPasswordResetLinkRequest
@@ -228,8 +228,8 @@ type ResetPasswordRequest struct {
 //	@Security		BearerAuth
 //	@Param			body	body		ResetPasswordRequest						true  "Reset Password Request Body"
 //	@Success		204		"Password reset successfully"
-//	@Failure		400		{object}	lib.HTTPError											"Error occured when resetting password for client user"
-//	@Failure		500		{object}	string													"An unexpected error occured"
+//	@Failure		400		{object}	lib.HTTPError											"Error occurred when resetting password for client user"
+//	@Failure		500		{object}	string													"An unexpected error occurred"
 //	@Router			/api/v1/client-users/reset-password [post]
 func (h *ClientUserHandler) ResetClientUserPassword(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())

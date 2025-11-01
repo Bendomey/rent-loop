@@ -45,9 +45,9 @@ type CreatePropertyRequest struct {
 //	@Produce		json
 //	@Param			body	body		CreatePropertyRequest						true	"Create Property Request Body"
 //	@Success		201		{object}	object{data=transformations.OutputProperty}	"Property created successfully"
-//	@Failure		400		{object}	lib.HTTPError								"Error occured when creating a property"
+//	@Failure		400		{object}	lib.HTTPError								"Error occurred when creating a property"
 //	@Failure		401		{object}	string										"Invalid or absent authentication token"
-//	@Failure		500		{object}	string										"An unexpected error occured"
+//	@Failure		500		{object}	string										"An unexpected error occurred"
 //	@Router			/api/v1/properties [post]
 func (h *PropertyHandler) CreateProperty(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
