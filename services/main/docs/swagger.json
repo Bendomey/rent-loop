@@ -811,6 +811,122 @@
             }
         },
         "/api/v1/properties": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all properties",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Properties"
+                ],
+                "summary": "Get all properties",
+                "parameters": [
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Property.Status.Active",
+                            "Property.Status.Maintenance",
+                            "Property.Status.Inactive"
+                        ],
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "SINGLE",
+                            "MULTI"
+                        ],
+                        "type": "string",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputProperty"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -1174,6 +1290,21 @@
                 }
             }
         },
+        "lib.DateRangeType": {
+            "type": "object",
+            "required": [
+                "end_time",
+                "start_time"
+            ],
+            "properties": {
+                "end_time": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                }
+            }
+        },
         "lib.HTTPError": {
             "type": "object",
             "properties": {
@@ -1220,6 +1351,25 @@
                 }
             }
         },
+        "lib.Search": {
+            "type": "object",
+            "required": [
+                "query",
+                "search_fields"
+            ],
+            "properties": {
+                "query": {
+                    "type": "string"
+                },
+                "search_fields": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "transformations.OutputAdmin": {
             "type": "object",
             "properties": {
@@ -1254,6 +1404,63 @@
                 "token": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw"
+                }
+            }
+        },
+        "transformations.OutputClient": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "123 Main St, Suite 100"
+                },
+                "city": {
+                    "type": "string",
+                    "example": "San Francisco"
+                },
+                "client_application_id": {
+                    "type": "string",
+                    "example": "app-1234"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "US"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "latitude": {
+                    "type": "number",
+                    "example": 37.7749
+                },
+                "longitude": {
+                    "type": "number",
+                    "example": -122.4194
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Acme Corp"
+                },
+                "region": {
+                    "type": "string",
+                    "example": "California"
+                },
+                "subType": {
+                    "type": "string",
+                    "example": "real-estate"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "corporate"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
                 }
             }
         },
@@ -1444,6 +1651,13 @@
                     "type": "string",
                     "example": "Accra"
                 },
+                "client": {
+                    "$ref": "#/definitions/transformations.OutputClient"
+                },
+                "client_id": {
+                    "type": "string",
+                    "example": "b50874ee-1a70-436e-ba24-572078895982"
+                },
                 "country": {
                     "type": "string",
                     "example": "Ghana"
@@ -1452,6 +1666,13 @@
                     "type": "string",
                     "format": "date-time",
                     "example": "2023-01-01T00:00:00Z"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "created_by_id": {
+                    "type": "string",
+                    "example": "1e81fea0-5e8b-4535-b449-1a2133e94a7a"
                 },
                 "description": {
                     "type": "string",

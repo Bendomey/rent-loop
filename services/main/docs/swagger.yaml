@@ -222,6 +222,16 @@ definitions:
     required:
     - reason
     type: object
+  lib.DateRangeType:
+    properties:
+      end_time:
+        type: string
+      start_time:
+        type: string
+    required:
+    - end_time
+    - start_time
+    type: object
   lib.HTTPError:
     properties:
       errors:
@@ -254,6 +264,19 @@ definitions:
         example: 100
         type: integer
     type: object
+  lib.Search:
+    properties:
+      query:
+        type: string
+      search_fields:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - query
+    - search_fields
+    type: object
   transformations.OutputAdmin:
     properties:
       created_at:
@@ -278,6 +301,48 @@ definitions:
         $ref: '#/definitions/transformations.OutputAdmin'
       token:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw
+        type: string
+    type: object
+  transformations.OutputClient:
+    properties:
+      address:
+        example: 123 Main St, Suite 100
+        type: string
+      city:
+        example: San Francisco
+        type: string
+      client_application_id:
+        example: app-1234
+        type: string
+      country:
+        example: US
+        type: string
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      latitude:
+        example: 37.7749
+        type: number
+      longitude:
+        example: -122.4194
+        type: number
+      name:
+        example: Acme Corp
+        type: string
+      region:
+        example: California
+        type: string
+      subType:
+        example: real-estate
+        type: string
+      type:
+        example: corporate
+        type: string
+      updated_at:
+        example: "2023-01-01T00:00:00Z"
         type: string
     type: object
   transformations.OutputClientApplication:
@@ -418,12 +483,22 @@ definitions:
       city:
         example: Accra
         type: string
+      client:
+        $ref: '#/definitions/transformations.OutputClient'
+      client_id:
+        example: b50874ee-1a70-436e-ba24-572078895982
+        type: string
       country:
         example: Ghana
         type: string
       created_at:
         example: "2023-01-01T00:00:00Z"
         format: date-time
+        type: string
+      created_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      created_by_id:
+        example: 1e81fea0-5e8b-4535-b449-1a2133e94a7a
         type: string
       description:
         example: Very elegant place
@@ -991,6 +1066,81 @@ paths:
       tags:
       - ClientApplications
   /api/v1/properties:
+    get:
+      consumes:
+      - application/json
+      description: Get all properties
+      parameters:
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - enum:
+        - Property.Status.Active
+        - Property.Status.Maintenance
+        - Property.Status.Inactive
+        in: query
+        name: status
+        type: string
+      - enum:
+        - SINGLE
+        - MULTI
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputProperty'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get all properties
+      tags:
+      - Properties
     post:
       consumes:
       - application/json
