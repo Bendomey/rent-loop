@@ -62,7 +62,7 @@ type CreateClientApplicationRequest struct {
 func (h *ClientApplicationHandler) CreateClientApplication(w http.ResponseWriter, r *http.Request) {
 	var body CreateClientApplicationRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusInternalServerError)
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
 	}
 

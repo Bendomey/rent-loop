@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/Bendomey/goutilities/pkg/hashpassword"
+	"github.com/getsentry/raven-go"
 	"gorm.io/gorm"
 )
 
@@ -35,7 +36,27 @@ func (clientUser *ClientUser) BeforeCreate(tx *gorm.DB) (err error) {
 	hashed, err := hashpassword.HashPassword(clientUser.Password)
 	clientUser.Password = hashed
 	if err != nil {
+		raven.CaptureError(err, map[string]string{
+			"function": "ClientUser.BeforeCreate",
+			"action":   "hashing password",
+		})
 		err = errors.New("CannotHashClientUserPassword")
+	}
+	return
+}
+
+func (clientUser *ClientUser) BeforeUpdate(tx *gorm.DB) (err error) {
+	// hashes password
+	if tx.Statement.Changed("Password") {
+		hashed, err := hashpassword.HashPassword(clientUser.Password)
+		clientUser.Password = hashed
+		if err != nil {
+			raven.CaptureError(err, map[string]string{
+				"function": "ClientUser.BeforeUpdate",
+				"action":   "hashing password",
+			})
+			err = errors.New("CannotHashClientUserPassword")
+		}
 	}
 	return
 }

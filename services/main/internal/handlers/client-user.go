@@ -36,9 +36,9 @@ type CreateClientUserRequest struct {
 //	@Produce		json
 //	@Param			body	body		CreateClientUserRequest							true	"Create Client User Request Body"
 //	@Success		201		{object}	object{data=transformations.OutputClientUser}	"Client user created successfully"
-//	@Failure		400		{object}	lib.HTTPError									"Error occured when creating a client user"
+//	@Failure		400		{object}	lib.HTTPError									"Error occurred when creating a client user"
 //	@Failure		401		{object}	string											"Invalid or absent authentication token"
-//	@Failure		500		{object}	string											"An unexpected error occured"
+//	@Failure		500		{object}	string											"An unexpected error occurred"
 //	@Router			/api/v1/client-users [post]
 func (h *ClientUserHandler) CreateClientUser(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
@@ -51,7 +51,7 @@ func (h *ClientUserHandler) CreateClientUser(w http.ResponseWriter, r *http.Requ
 	var body CreateClientUserRequest
 
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusInternalServerError)
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
 	}
 
@@ -99,13 +99,13 @@ type LoginClientUserRequest struct {
 //	@Produce		json
 //	@Param			body	body		LoginClientUserRequest									true	"Client user login credentials"
 //	@Success		200		{object}	object{data=transformations.OutputClientUserWithToken}	"Client user authenticated successfully"
-//	@Failure		400		{object}	lib.HTTPError											"Error occured when authenticating a client user"
-//	@Failure		500		{object}	string													"An unexpected error occured"
+//	@Failure		400		{object}	lib.HTTPError											"Error occurred when authenticating a client user"
+//	@Failure		500		{object}	string													"An unexpected error occurred"
 //	@Router			/api/v1/client-users/login [post]
 func (h *ClientUserHandler) AuthenticateClientUser(w http.ResponseWriter, r *http.Request) {
 	var body LoginClientUserRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusInternalServerError)
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
 	}
 
@@ -184,13 +184,13 @@ type SendForgotPasswordResetLinkRequest struct {
 //	@Accept			json
 //	@Param			body	body		SendForgotPasswordResetLinkRequest						true  "Send Forgot Password Reset Link Request Body"
 //	@Success		204		"Forgot password reset link sent successfully"
-//	@Failure		400		{object}	lib.HTTPError											"Error occured when sending forgot password reset link to client user"
-//	@Failure		500		{object}	string													"An unexpected error occured"
+//	@Failure		400		{object}	lib.HTTPError											"Error occurred when sending forgot password reset link to client user"
+//	@Failure		500		{object}	string													"An unexpected error occurred"
 //	@Router			/api/v1/client-users/forgot-password [post]
 func (h *ClientUserHandler) SendForgotPasswordResetLink(w http.ResponseWriter, r *http.Request) {
 	var body SendForgotPasswordResetLinkRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusInternalServerError)
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
 	}
 
@@ -211,6 +211,60 @@ func (h *ClientUserHandler) SendForgotPasswordResetLink(w http.ResponseWriter, r
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusNoContent)
+	json.NewEncoder(w).Encode(map[string]any{})
+}
+
+type ResetPasswordRequest struct {
+	NewPassword string `json:"newPassword" validate:"required,min=6" example:"newpassword123"`
+}
+
+// ResetClientUserPassword godoc
+//
+//	@Summary		Resets the password for a client user
+//	@Description	Resets the password for a client user
+//	@Tags			ClientUsers
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Param			body	body		ResetPasswordRequest						true  "Reset Password Request Body"
+//	@Success		204		"Password reset successfully"
+//	@Failure		400		{object}	lib.HTTPError											"Error occurred when resetting password for client user"
+//	@Failure		500		{object}	string													"An unexpected error occurred"
+//	@Router			/api/v1/client-users/reset-password [post]
+func (h *ClientUserHandler) ResetClientUserPassword(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
+
+	if !clientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body ResetPasswordRequest
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+
+	if !isPassedValidation {
+		return
+	}
+
+	_, err := h.service.ResetPassword(r.Context(), services.ResetClientUserPasswordInput{
+		ID:          currentClientUser.ID,
+		NewPassword: body.NewPassword,
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]any{
+			"errors": map[string]string{
+				"message": err.Error(),
+			},
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 	json.NewEncoder(w).Encode(map[string]any{})
 }

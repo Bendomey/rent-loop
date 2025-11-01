@@ -645,7 +645,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Error occured when creating a client user",
+                        "description": "Error occurred when creating a client user",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -657,7 +657,7 @@ const docTemplate = `{
                         }
                     },
                     "500": {
-                        "description": "An unexpected error occured",
+                        "description": "An unexpected error occurred",
                         "schema": {
                             "type": "string"
                         }
@@ -691,13 +691,13 @@ const docTemplate = `{
                         "description": "Forgot password reset link sent successfully"
                     },
                     "400": {
-                        "description": "Error occured when sending forgot password reset link to client user",
+                        "description": "Error occurred when sending forgot password reset link to client user",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "500": {
-                        "description": "An unexpected error occured",
+                        "description": "An unexpected error occurred",
                         "schema": {
                             "type": "string"
                         }
@@ -742,13 +742,13 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Error occured when authenticating a client user",
+                        "description": "Error occurred when authenticating a client user",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "500": {
-                        "description": "An unexpected error occured",
+                        "description": "An unexpected error occurred",
                         "schema": {
                             "type": "string"
                         }
@@ -800,6 +800,51 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/client-users/reset-password": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Resets the password for a client user",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Resets the password for a client user",
+                "parameters": [
+                    {
+                        "description": "Reset Password Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ResetPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Password reset successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when resetting password for client user",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
                         "schema": {
                             "type": "string"
                         }
@@ -900,7 +945,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Error occured when creating a property",
+                        "description": "Error occurred when creating a property",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -912,7 +957,7 @@ const docTemplate = `{
                         }
                     },
                     "500": {
-                        "description": "An unexpected error occured",
+                        "description": "An unexpected error occurred",
                         "schema": {
                             "type": "string"
                         }
@@ -1219,6 +1264,19 @@ const docTemplate = `{
             "properties": {
                 "reason": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.ResetPasswordRequest": {
+            "type": "object",
+            "required": [
+                "newPassword"
+            ],
+            "properties": {
+                "newPassword": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "newpassword123"
                 }
             }
         },

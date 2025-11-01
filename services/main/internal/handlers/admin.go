@@ -41,7 +41,7 @@ type LoginRequest struct {
 func (h *AdminHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
 	var body LoginRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusInternalServerError)
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
 	}
 
@@ -99,7 +99,7 @@ func (h *AdminHandler) CreateAdmin(w http.ResponseWriter, r *http.Request) {
 
 	var body CreateAdminRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusInternalServerError)
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
 	}
 

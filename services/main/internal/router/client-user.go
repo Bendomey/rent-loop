@@ -23,6 +23,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			r.Use(middlewares.CheckForClientUserAuthPresenceMiddleware)
 			r.Post("/v1/client-users", handlers.ClientUserHandler.CreateClientUser)
 			r.Get("/v1/client-users/me", handlers.ClientUserHandler.GetMe)
+			r.Post("/v1/client-users/reset-password", handlers.ClientUserHandler.ResetClientUserPassword)
 
 			r.Post("/v1/properties", handlers.PropertyHandler.CreateProperty)
 		})

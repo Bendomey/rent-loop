@@ -222,6 +222,15 @@ definitions:
     required:
     - reason
     type: object
+  handlers.ResetPasswordRequest:
+    properties:
+      newPassword:
+        example: newpassword123
+        minLength: 6
+        type: string
+    required:
+    - newPassword
+    type: object
   handlers.SendForgotPasswordResetLinkRequest:
     properties:
       email:
@@ -884,7 +893,7 @@ paths:
                 $ref: '#/definitions/transformations.OutputClientUser'
             type: object
         "400":
-          description: Error occured when creating a client user
+          description: Error occurred when creating a client user
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "401":
@@ -892,7 +901,7 @@ paths:
           schema:
             type: string
         "500":
-          description: An unexpected error occured
+          description: An unexpected error occurred
           schema:
             type: string
       security:
@@ -916,12 +925,12 @@ paths:
         "204":
           description: Forgot password reset link sent successfully
         "400":
-          description: Error occured when sending forgot password reset link to client
+          description: Error occurred when sending forgot password reset link to client
             user
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "500":
-          description: An unexpected error occured
+          description: An unexpected error occurred
           schema:
             type: string
       summary: Sends forgot password reset link to client user
@@ -950,11 +959,11 @@ paths:
                 $ref: '#/definitions/transformations.OutputClientUserWithToken'
             type: object
         "400":
-          description: Error occured when authenticating a client user
+          description: Error occurred when authenticating a client user
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "500":
-          description: An unexpected error occured
+          description: An unexpected error occurred
           schema:
             type: string
       summary: Authenticates client user and returns token
@@ -990,6 +999,34 @@ paths:
       security:
       - BearerAuth: []
       summary: Get the currently authenticated client user
+      tags:
+      - ClientUsers
+  /api/v1/client-users/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Resets the password for a client user
+      parameters:
+      - description: Reset Password Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ResetPasswordRequest'
+      responses:
+        "204":
+          description: Password reset successfully
+        "400":
+          description: Error occurred when resetting password for client user
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Resets the password for a client user
       tags:
       - ClientUsers
   /api/v1/clients/apply:
@@ -1048,7 +1085,7 @@ paths:
                 $ref: '#/definitions/transformations.OutputProperty'
             type: object
         "400":
-          description: Error occured when creating a property
+          description: Error occurred when creating a property
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "401":
@@ -1056,7 +1093,7 @@ paths:
           schema:
             type: string
         "500":
-          description: An unexpected error occured
+          description: An unexpected error occurred
           schema:
             type: string
       security:
