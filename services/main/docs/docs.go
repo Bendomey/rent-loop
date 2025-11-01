@@ -1383,6 +1383,31 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.ResetPasswordRequest": {
+            "type": "object",
+            "required": [
+                "newPassword"
+            ],
+            "properties": {
+                "newPassword": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "newpassword123"
+                }
+            }
+        },
+        "handlers.SendForgotPasswordResetLinkRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "client-user@example.com"
+                }
+            }
+        },
         "lib.DateRangeType": {
             "type": "object",
             "required": [

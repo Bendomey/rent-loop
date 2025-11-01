@@ -222,6 +222,23 @@ definitions:
     required:
     - reason
     type: object
+  handlers.ResetPasswordRequest:
+    properties:
+      newPassword:
+        example: newpassword123
+        minLength: 6
+        type: string
+    required:
+    - newPassword
+    type: object
+  handlers.SendForgotPasswordResetLinkRequest:
+    properties:
+      email:
+        example: client-user@example.com
+        type: string
+    required:
+    - email
+    type: object
   lib.DateRangeType:
     properties:
       end_time:
