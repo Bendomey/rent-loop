@@ -1650,9 +1650,6 @@ const docTemplate = `{
         },
         "handlers.UpdateDocumentRequest": {
             "type": "object",
-            "required": [
-                "tags"
-            ],
             "properties": {
                 "content": {
                     "type": "string"
@@ -1672,8 +1669,8 @@ const docTemplate = `{
                         "type": "string"
                     },
                     "example": [
-                        "[\"lease\"",
-                        "\"updated\"]"
+                        "LEASE_AGREEMENT",
+                        "INSPECTION_REPORT"
                     ]
                 },
                 "title": {

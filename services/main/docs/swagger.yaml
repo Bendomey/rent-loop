@@ -277,16 +277,14 @@ definitions:
         type: integer
       tags:
         example:
-        - '["lease"'
-        - '"updated"]'
+        - LEASE_AGREEMENT
+        - INSPECTION_REPORT
         items:
           type: string
         type: array
       title:
         example: Updated Lease Agreement
         type: string
-    required:
-    - tags
     type: object
   lib.HTTPError:
     properties:
