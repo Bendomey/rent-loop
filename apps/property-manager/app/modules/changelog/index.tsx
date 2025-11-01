@@ -69,7 +69,7 @@ export function ChangelogModule() {
 								{entry.title} <Badge>v{entry.version}</Badge>
 							</h4>
 
-							<h5 className="text-md text-muted-foreground  rounded-xl tracking-tight ">
+							<h5 className="text-md text-muted-foreground rounded-xl tracking-tight">
 								{localizedDayjs(entry.date).format('LL')}
 							</h5>
 
