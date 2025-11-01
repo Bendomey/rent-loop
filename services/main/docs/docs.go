@@ -665,6 +665,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/client-users/forgot-password": {
+            "post": {
+                "description": "Sends forgot password reset link to client user",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Sends forgot password reset link to client user",
+                "parameters": [
+                    {
+                        "description": "Send Forgot Password Reset Link Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SendForgotPasswordResetLinkRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Forgot password reset link sent successfully"
+                    },
+                    "400": {
+                        "description": "Error occured when sending forgot password reset link to client user",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occured",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/client-users/login": {
             "post": {
                 "description": "Authenticate client user and returns client user and token",
@@ -1179,6 +1219,18 @@ const docTemplate = `{
             "properties": {
                 "reason": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.SendForgotPasswordResetLinkRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "client-user@example.com"
                 }
             }
         },

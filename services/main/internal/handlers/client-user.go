@@ -171,3 +171,46 @@ func (h *ClientUserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		"data": transformations.DBClientUserToRest(clientUser),
 	})
 }
+
+type SendForgotPasswordResetLinkRequest struct {
+	Email string `json:"email" validate:"required,email" example:"client-user@example.com"`
+}
+
+// SendForgotPasswordResetLink godoc
+//
+//	@Summary		Sends forgot password reset link to client user
+//	@Description	Sends forgot password reset link to client user
+//	@Tags			ClientUsers
+//	@Accept			json
+//	@Param			body	body		SendForgotPasswordResetLinkRequest						true  "Send Forgot Password Reset Link Request Body"
+//	@Success		204		"Forgot password reset link sent successfully"
+//	@Failure		400		{object}	lib.HTTPError											"Error occured when sending forgot password reset link to client user"
+//	@Failure		500		{object}	string													"An unexpected error occured"
+//	@Router			/api/v1/client-users/forgot-password [post]
+func (h *ClientUserHandler) SendForgotPasswordResetLink(w http.ResponseWriter, r *http.Request) {
+	var body SendForgotPasswordResetLinkRequest
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusInternalServerError)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+
+	if !isPassedValidation {
+		return
+	}
+
+	_, err := h.service.SendForgotPasswordResetLink(r.Context(), body.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]any{
+			"errors": map[string]string{
+				"message": err.Error(),
+			},
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]any{})
+}
