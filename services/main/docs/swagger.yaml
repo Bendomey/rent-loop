@@ -222,6 +222,15 @@ definitions:
     required:
     - reason
     type: object
+  handlers.ResetPasswordRequest:
+    properties:
+      newPassword:
+        example: newpassword123
+        minLength: 6
+        type: string
+    required:
+    - newPassword
+    type: object
   handlers.SendForgotPasswordResetLinkRequest:
     properties:
       email:
@@ -990,6 +999,32 @@ paths:
       security:
       - BearerAuth: []
       summary: Get the currently authenticated client user
+      tags:
+      - ClientUsers
+  /api/v1/client-users/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Resets the password for a client user
+      parameters:
+      - description: Reset Password Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ResetPasswordRequest'
+      responses:
+        "204":
+          description: Password reset successfully
+        "400":
+          description: Error occured when resetting password for client user
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occured
+          schema:
+            type: string
+      summary: Resets the password for a client user
       tags:
       - ClientUsers
   /api/v1/clients/apply:

@@ -23,6 +23,7 @@ type ClientUserService interface {
 	AuthenticateClientUser(ctx context.Context, input AuthenticateClientUserInput) (*AuthenticateClientUserResponse, error)
 	GetClientUser(ctx context.Context, clientUserId string) (*models.ClientUser, error)
 	SendForgotPasswordResetLink(ctx context.Context, email string) (*models.ClientUser, error)
+	ResetPassword(ctx context.Context, input ResetClientUserPasswordInput) (*models.ClientUser, error)
 }
 
 type clientUserService struct {
@@ -210,6 +211,29 @@ func (s *clientUserService) SendForgotPasswordResetLink(ctx context.Context, ema
 			TextBody:  message,
 		},
 	)
+
+	return clientUser, nil
+}
+
+type ResetClientUserPasswordInput struct {
+	ID          string
+	NewPassword string
+}
+
+func (s *clientUserService) ResetPassword(ctx context.Context, input ResetClientUserPasswordInput) (*models.ClientUser, error) {
+	clientUser, clientUserErr := s.repo.GetByID(ctx, input.ID)
+	if clientUserErr != nil {
+		if !errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
+			raven.CaptureError(clientUserErr, nil)
+		}
+		return nil, clientUserErr
+	}
+
+	clientUser.Password = input.NewPassword
+
+	if err := s.repo.Update(ctx, clientUser); err != nil {
+		return nil, err
+	}
 
 	return clientUser, nil
 }

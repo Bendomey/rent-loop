@@ -799,6 +799,46 @@
                 }
             }
         },
+        "/api/v1/client-users/reset-password": {
+            "post": {
+                "description": "Resets the password for a client user",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Resets the password for a client user",
+                "parameters": [
+                    {
+                        "description": "Reset Password Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ResetPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Password reset successfully"
+                    },
+                    "400": {
+                        "description": "Error occured when resetting password for client user",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occured",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/clients/apply": {
             "post": {
                 "description": "Create a new client application",
@@ -1211,6 +1251,19 @@
             "properties": {
                 "reason": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.ResetPasswordRequest": {
+            "type": "object",
+            "required": [
+                "newPassword"
+            ],
+            "properties": {
+                "newPassword": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "newpassword123"
                 }
             }
         },

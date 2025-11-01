@@ -12,6 +12,7 @@ type ClientUserRepository interface {
 	GetByID(context context.Context, id string) (*models.ClientUser, error)
 	GetByEmail(context context.Context, email string) (*models.ClientUser, error)
 	GetByQuery(context context.Context, query map[string]any) (*models.ClientUser, error)
+	Update(context context.Context, clientUser *models.ClientUser) error
 }
 
 type clientUserRepository struct {
@@ -61,4 +62,8 @@ func (r *clientUserRepository) GetByQuery(
 	}
 
 	return &clientUser, nil
+}
+
+func (r *clientUserRepository) Update(ctx context.Context, clientUser *models.ClientUser) error {
+	return r.DB.WithContext(ctx).Save(clientUser).Error
 }

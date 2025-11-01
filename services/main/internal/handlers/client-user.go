@@ -211,6 +211,59 @@ func (h *ClientUserHandler) SendForgotPasswordResetLink(w http.ResponseWriter, r
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusNoContent)
+	json.NewEncoder(w).Encode(map[string]any{})
+}
+
+type ResetPasswordRequest struct {
+	NewPassword string `json:"newPassword" validate:"required,min=6" example:"newpassword123"`
+}
+
+// ResetClientUserPassword godoc
+//
+//	@Summary		Resets the password for a client user
+//	@Description	Resets the password for a client user
+//	@Tags			ClientUsers
+//	@Accept			json
+//	@Param			body	body		ResetPasswordRequest						true  "Reset Password Request Body"
+//	@Success		204		"Password reset successfully"
+//	@Failure		400		{object}	lib.HTTPError											"Error occured when resetting password for client user"
+//	@Failure		500		{object}	string													"An unexpected error occured"
+//	@Router			/api/v1/client-users/reset-password [post]
+func (h *ClientUserHandler) ResetClientUserPassword(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
+
+	if !clientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body ResetPasswordRequest
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusInternalServerError)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+
+	if !isPassedValidation {
+		return
+	}
+
+	_, err := h.service.ResetPassword(r.Context(), services.ResetClientUserPasswordInput{
+		ID:          currentClientUser.ID,
+		NewPassword: body.NewPassword,
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]any{
+			"errors": map[string]string{
+				"message": err.Error(),
+			},
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 	json.NewEncoder(w).Encode(map[string]any{})
 }
