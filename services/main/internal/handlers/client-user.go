@@ -212,7 +212,6 @@ func (h *ClientUserHandler) SendForgotPasswordResetLink(w http.ResponseWriter, r
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-	json.NewEncoder(w).Encode(map[string]any{})
 }
 
 type ResetPasswordRequest struct {
@@ -266,5 +265,4 @@ func (h *ClientUserHandler) ResetClientUserPassword(w http.ResponseWriter, r *ht
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-	json.NewEncoder(w).Encode(map[string]any{})
 }
