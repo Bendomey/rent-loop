@@ -46,35 +46,35 @@ func (clientUser *ClientUser) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 func (clientUser *ClientUser) BeforeUpdate(tx *gorm.DB) (err error) {
-	// hashes password
-	if tx.Statement.Changed("Password") {
-		hashed, err := hashpassword.HashPassword(clientUser.Password)
-		clientUser.Password = hashed
-		if err != nil {
-			raven.CaptureError(err, map[string]string{
+	// hashes password if it's not already hashed or if it's being changed
+	if clientUser.Password != "" && (len(clientUser.Password) < 60 || tx.Statement.Changed("Password")) {
+		hashed, hashErr := hashpassword.HashPassword(clientUser.Password)
+		if hashErr != nil {
+			raven.CaptureError(hashErr, map[string]string{
 				"function": "ClientUser.BeforeUpdate",
 				"action":   "hashing password",
 			})
-			err = errors.New("CannotHashClientUserPassword")
+			return errors.New("CannotHashClientUserPassword")
 		}
+		clientUser.Password = hashed
 	}
-	return
+	return nil
 }
 
 func (clientUser *ClientUser) BeforeSave(tx *gorm.DB) (err error) {
-	// hashes password
-	if tx.Statement.Changed("Password") {
-		hashed, err := hashpassword.HashPassword(clientUser.Password)
-		clientUser.Password = hashed
-		if err != nil {
-			raven.CaptureError(err, map[string]string{
+	// hashes password if it's not already hashed or if it's being changed
+	if clientUser.Password != "" && (len(clientUser.Password) < 60 || tx.Statement.Changed("Password")) {
+		hashed, hashErr := hashpassword.HashPassword(clientUser.Password)
+		if hashErr != nil {
+			raven.CaptureError(hashErr, map[string]string{
 				"function": "ClientUser.BeforeSave",
 				"action":   "hashing password",
 			})
-			err = errors.New("CannotHashClientUserPassword")
+			return errors.New("CannotHashClientUserPassword")
 		}
+		clientUser.Password = hashed
 	}
-	return
+	return nil
 }
 
 // BeforeDelete hook is called before the data is delete so that we dont delete super client user
