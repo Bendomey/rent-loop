@@ -232,6 +232,7 @@ func (s *clientUserService) ResetPassword(ctx context.Context, input ResetClient
 	clientUser.Password = input.NewPassword
 
 	if err := s.repo.Update(ctx, clientUser); err != nil {
+		raven.CaptureError(err, nil)
 		return nil, err
 	}
 
