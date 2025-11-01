@@ -46,13 +46,13 @@ export async function action({ request }: Route.ActionArgs) {
 	const session = await getAuthSession(request.headers.get('Cookie'))
 
 	const form = await request.formData()
-	const password = form.get('password')
+	const newPassword = form.get('password')
 	const token = form.get('token')
 
 	if (
-		!password ||
+		!newPassword ||
 		!token ||
-		typeof password !== 'string' ||
+		typeof newPassword !== 'string' ||
 		typeof token !== 'string'
 	) {
 		return {
@@ -61,13 +61,10 @@ export async function action({ request }: Route.ActionArgs) {
 	}
 
 	try {
-		const response = await resetPassword(
-			{ password },
+		await resetPassword(
+			{ newPassword },
 			{ baseUrl, authToken: token },
 		)
-		if (!response) {
-			throw new Error('Failed to send reset password.')
-		}
 
 		session.flash('success', 'Password has been reset successfully.')
 		return redirect('/login', {

@@ -68,7 +68,7 @@ export const sendForgotPasswordLink = async (
 	apiConfig?: ApiConfigForServerConfig,
 ) => {
 	try {
-		const response = await fetchServer<ApiResponse<string>>(
+		 await fetchServer(
 			`${apiConfig?.baseUrl}/v1/client-users/forgot-password`,
 			{
 				method: 'POST',
@@ -76,7 +76,6 @@ export const sendForgotPasswordLink = async (
 			},
 		)
 
-		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
@@ -90,7 +89,7 @@ export const sendForgotPasswordLink = async (
 }
 
 export interface ResetPasswordInput {
-	password: string
+	newPassword: string
 }
 
 export const resetPassword = async (
@@ -98,15 +97,14 @@ export const resetPassword = async (
 	apiConfig?: ApiConfigForServerConfig,
 ) => {
 	try {
-		const response = await fetchServer<ApiResponse<string>>(
+		await fetchServer<ApiResponse<string>>(
 			`${apiConfig?.baseUrl}/v1/client-users/reset-password`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),
+				authToken: apiConfig?.authToken,
 			},
 		)
-
-		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()

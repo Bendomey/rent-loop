@@ -5,7 +5,7 @@ import {
 	GalleryVerticalEnd,
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
-import { Link, useFetcher, useLoaderData } from 'react-router'
+import { Link, useFetcher, useLoaderData, useSearchParams } from 'react-router'
 
 import { z } from 'zod'
 import { Alert, AlertDescription } from '~/components/ui/alert'
@@ -47,6 +47,7 @@ const ValidationSchema = z
 type FormSchema = z.infer<typeof ValidationSchema>
 
 export function ResetYourPasswordModule() {
+	const [searchParams] = useSearchParams()
 	const { error, success } = useLoaderData()
 	const fetcher = useFetcher<{ error: string }>()
 
@@ -57,7 +58,7 @@ export function ResetYourPasswordModule() {
 	const { control, handleSubmit } = rhfMethods
 
 	const onSubmit = handleSubmit(async (data) =>
-		fetcher.submit(data, { method: 'post' }),
+		fetcher.submit({...data, token: searchParams.get('token')}, { method: 'post' }),
 	)
 
 	const isSubmitting = fetcher.state !== 'idle'
