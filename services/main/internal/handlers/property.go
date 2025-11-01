@@ -60,7 +60,7 @@ func (h *PropertyHandler) CreateProperty(w http.ResponseWriter, r *http.Request)
 	var body CreatePropertyRequest
 
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusInternalServerError)
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 		return
 	}
 
