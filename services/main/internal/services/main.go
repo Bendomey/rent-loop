@@ -10,6 +10,7 @@ type Services struct {
 	ClientApplicationService ClientApplicationService
 	ClientUserService        ClientUserService
 	PropertyService          PropertyService
+	DocumentService          DocumentService
 }
 
 func NewServices(appCtx pkg.AppContext, repository repository.Repository) Services {
@@ -33,10 +34,16 @@ func NewServices(appCtx pkg.AppContext, repository repository.Repository) Servic
 		},
 	)
 
+	documentService := NewDocumentService(
+		appCtx,
+		repository.DocumentRepository,
+	)
+
 	return Services{
 		AdminService:             adminService,
 		ClientApplicationService: clientApplicationService,
 		ClientUserService:        clientUserService,
 		PropertyService:          propertyService,
+		DocumentService:          documentService,
 	}
 }

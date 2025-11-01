@@ -320,18 +320,5 @@ func (h *ClientApplicationHandler) ListClientApplications(w http.ResponseWriter,
 		clientApplicationsTransformed = append(clientApplicationsTransformed, transformations.DBClientApplicationToRestClientApplication(&clientApplication))
 	}
 
-	json.NewEncoder(w).Encode(map[string]any{
-		"data": map[string]any{
-			"rows": clientApplicationsTransformed,
-			"meta": map[string]any{
-				"page":              filterQuery.Page,
-				"page_size":         filterQuery.PageSize,
-				"order":             filterQuery.Order,
-				"order_by":          filterQuery.OrderBy,
-				"total":             count,
-				"has_next_page":     (filterQuery.Page * filterQuery.PageSize) < int(count),
-				"has_previous_page": filterQuery.Page > 1,
-			},
-		},
-	})
+	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, clientApplicationsTransformed, count))
 }

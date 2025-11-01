@@ -9,6 +9,7 @@ type Repository struct {
 	ClientRepository             ClientRepository
 	PropertyRepository           PropertyRepository
 	ClientUserPropertyRepository ClientUserPropertyRepository
+	DocumentRepository           DocumentRepository
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -18,6 +19,7 @@ func NewRepository(db *gorm.DB) Repository {
 	clientRepository := NewClientRepository(db)
 	propertyRepository := NewPropertyRepository(db)
 	clientUserPropertyRepository := NewClientUserPropertyRepository(db)
+	documentRepository := NewDocumentRepository(db)
 
 	return Repository{
 		AdminRepository:              adminRepository,
@@ -26,5 +28,6 @@ func NewRepository(db *gorm.DB) Repository {
 		ClientRepository:             clientRepository,
 		PropertyRepository:           propertyRepository,
 		ClientUserPropertyRepository: clientUserPropertyRepository,
+		DocumentRepository:           documentRepository,
 	}
 }

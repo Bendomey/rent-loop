@@ -26,6 +26,17 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			r.Post("/v1/client-users/reset-password", handlers.ClientUserHandler.ResetClientUserPassword)
 
 			r.Post("/v1/properties", handlers.PropertyHandler.CreateProperty)
+
+			r.Route("/v1/documents", func(r chi.Router) {
+				r.Post("/", handlers.DocumentHandler.CreateDocument)
+				r.Get("/", handlers.DocumentHandler.ListDocuments)
+
+				r.Route("/{document_id}", func(r chi.Router) {
+					r.Get("/", handlers.DocumentHandler.GetDocumentById)
+					r.Patch("/", handlers.DocumentHandler.UpdateDocument)
+					r.Delete("/", handlers.DocumentHandler.DeleteDocument)
+				})
+			})
 		})
 	}
 }

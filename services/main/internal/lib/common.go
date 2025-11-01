@@ -35,6 +35,14 @@ func NullOrString(input string) *string {
 	return &input
 }
 
+func NullOrStringArray(input []string) *[]string {
+	if len(input) == 0 {
+		return nil
+	}
+
+	return &input
+}
+
 func InterfaceToJSON(input map[string]interface{}) (*datatypes.JSON, error) {
 	var jsonData datatypes.JSON
 	bytes, err := json.Marshal(input)
