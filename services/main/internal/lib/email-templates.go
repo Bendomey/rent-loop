@@ -1,8 +1,6 @@
 package lib
 
-const SUPPORT_DETAILS_TEMPLATE = `
-If you have any questions, feel free to contact us at {{support_email}} / {{support_phone}}.
-`
+const SUPPORT_DETAILS_TEMPLATE = `If you have any questions, feel free to contact us at {{support_email}} / {{support_phone}}.`
 
 const (
 	CLIENT_APPLICATION_SUBMITTED_SUBJECT = "Your Rentloop Application Received"
