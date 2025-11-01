@@ -222,6 +222,14 @@ definitions:
     required:
     - reason
     type: object
+  handlers.SendForgotPasswordResetLinkRequest:
+    properties:
+      email:
+        example: client-user@example.com
+        type: string
+    required:
+    - email
+    type: object
   lib.HTTPError:
     properties:
       errors:
@@ -890,6 +898,33 @@ paths:
       security:
       - BearerAuth: []
       summary: Creates new client user
+      tags:
+      - ClientUsers
+  /api/v1/client-users/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Sends forgot password reset link to client user
+      parameters:
+      - description: Send Forgot Password Reset Link Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SendForgotPasswordResetLinkRequest'
+      responses:
+        "204":
+          description: Forgot password reset link sent successfully
+        "400":
+          description: Error occured when sending forgot password reset link to client
+            user
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occured
+          schema:
+            type: string
+      summary: Sends forgot password reset link to client user
       tags:
       - ClientUsers
   /api/v1/client-users/login:
