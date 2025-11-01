@@ -22,7 +22,7 @@ func NewAdminHandler(appCtx pkg.AppContext, service services.AdminService) Admin
 }
 
 type LoginRequest struct {
-	Email    string `json:"email" validate:"required,email" example:"admin@example.com"`
+	Email    string `json:"email"    validate:"required,email"         example:"admin@example.com"`
 	Password string `json:"password" validate:"required,min=8,max=255" example:"strongpassword123"`
 }
 
@@ -66,12 +66,15 @@ func (h *AdminHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBAdminWithTokenToRestAdminWithToken(&adminWithToken.Admin, adminWithToken.Token),
+		"data": transformations.DBAdminWithTokenToRestAdminWithToken(
+			&adminWithToken.Admin,
+			adminWithToken.Token,
+		),
 	})
 }
 
 type CreateAdminRequest struct {
-	Name  string `json:"name" validate:"required,min=3,max=255"`
+	Name  string `json:"name"  validate:"required,min=3,max=255"`
 	Email string `json:"email" validate:"required,email"`
 }
 
@@ -200,7 +203,9 @@ func (h *AdminHandler) GetAdminById(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-type ListAdminsFilterRequest struct{}
+type ListAdminsFilterRequest struct {
+	lib.FilterQueryInput
+}
 
 // GetAdmins godoc
 //
@@ -247,7 +252,11 @@ func (h *AdminHandler) ListAdmins(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	admins, adminsErr := h.service.ListAdmins(r.Context(), *filterQuery, repository.ListAdminsFilter{})
+	admins, adminsErr := h.service.ListAdmins(
+		r.Context(),
+		*filterQuery,
+		repository.ListAdminsFilter{},
+	)
 
 	if adminsErr != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -259,7 +268,11 @@ func (h *AdminHandler) ListAdmins(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	count, countsErr := h.service.CountAdmins(r.Context(), *filterQuery, repository.ListAdminsFilter{})
+	count, countsErr := h.service.CountAdmins(
+		r.Context(),
+		*filterQuery,
+		repository.ListAdminsFilter{},
+	)
 
 	if countsErr != nil {
 		w.WriteHeader(http.StatusNotFound)

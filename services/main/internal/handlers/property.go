@@ -105,7 +105,7 @@ func (h *PropertyHandler) CreateProperty(w http.ResponseWriter, r *http.Request)
 }
 
 type ListPropertiesFilterRequest struct {
-	lib.FilterQuery
+	lib.FilterQueryInput
 	Status string `json:"status" validate:"oneof=Property.Status.Active Property.Status.Maintenance Property.Status.Inactive"`
 	Type   string `json:"type"   validate:"oneof=SINGLE MULTI"`
 }

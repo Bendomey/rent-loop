@@ -42,6 +42,68 @@ const docTemplate = `{
                     "Admins"
                 ],
                 "summary": "Get all admins",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -923,6 +985,11 @@ const docTemplate = `{
                 "summary": "Get all properties",
                 "parameters": [
                     {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
                         "enum": [
                             "asc",
                             "desc"
@@ -955,6 +1022,26 @@ const docTemplate = `{
                         },
                         "collectionFormat": "csv",
                         "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
                         "in": "query"
                     },
                     {
@@ -1408,21 +1495,6 @@ const docTemplate = `{
                 }
             }
         },
-        "lib.DateRangeType": {
-            "type": "object",
-            "required": [
-                "end_time",
-                "start_time"
-            ],
-            "properties": {
-                "end_time": {
-                    "type": "string"
-                },
-                "start_time": {
-                    "type": "string"
-                }
-            }
-        },
         "lib.HTTPError": {
             "type": "object",
             "properties": {
@@ -1466,25 +1538,6 @@ const docTemplate = `{
                 "total": {
                     "type": "integer",
                     "example": 100
-                }
-            }
-        },
-        "lib.Search": {
-            "type": "object",
-            "required": [
-                "query",
-                "search_fields"
-            ],
-            "properties": {
-                "query": {
-                    "type": "string"
-                },
-                "search_fields": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },

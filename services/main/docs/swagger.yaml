@@ -239,16 +239,6 @@ definitions:
     required:
     - email
     type: object
-  lib.DateRangeType:
-    properties:
-      end_time:
-        type: string
-      start_time:
-        type: string
-    required:
-    - end_time
-    - start_time
-    type: object
   lib.HTTPError:
     properties:
       errors:
@@ -280,19 +270,6 @@ definitions:
       total:
         example: 100
         type: integer
-    type: object
-  lib.Search:
-    properties:
-      query:
-        type: string
-      search_fields:
-        items:
-          type: string
-        minItems: 1
-        type: array
-    required:
-    - query
-    - search_fields
     type: object
   transformations.OutputAdmin:
     properties:
@@ -581,6 +558,46 @@ paths:
       consumes:
       - application/json
       description: Get all admins
+      parameters:
+      - in: query
+        name: end_date
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
       produces:
       - application/json
       responses:
@@ -1143,6 +1160,9 @@ paths:
       - application/json
       description: Get all properties
       parameters:
+      - in: query
+        name: end_date
+        type: string
       - enum:
         - asc
         - desc
@@ -1166,6 +1186,19 @@ paths:
           type: string
         name: populate
         type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
       - enum:
         - Property.Status.Active
         - Property.Status.Maintenance
