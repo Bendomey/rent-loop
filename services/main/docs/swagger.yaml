@@ -1024,6 +1024,8 @@ paths:
           description: An unexpected error occured
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Resets the password for a client user
       tags:
       - ClientUsers

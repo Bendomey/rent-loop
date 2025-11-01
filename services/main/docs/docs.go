@@ -809,6 +809,11 @@ const docTemplate = `{
         },
         "/api/v1/client-users/reset-password": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Resets the password for a client user",
                 "consumes": [
                     "application/json"

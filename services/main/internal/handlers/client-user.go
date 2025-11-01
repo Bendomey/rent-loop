@@ -225,6 +225,7 @@ type ResetPasswordRequest struct {
 //	@Description	Resets the password for a client user
 //	@Tags			ClientUsers
 //	@Accept			json
+//	@Security		BearerAuth
 //	@Param			body	body		ResetPasswordRequest						true  "Reset Password Request Body"
 //	@Success		204		"Password reset successfully"
 //	@Failure		400		{object}	lib.HTTPError											"Error occured when resetting password for client user"
