@@ -82,7 +82,9 @@ func (h *DocumentHandler) CreateDocument(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]any{
-			"error": err.Error(),
+			"errors": map[string]string{
+				"message": err.Error(),
+			},
 		})
 		return
 	}
@@ -160,7 +162,9 @@ func (h *DocumentHandler) UpdateDocument(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]any{
-			"error": err.Error(),
+			"errors": map[string]string{
+				"message": err.Error(),
+			},
 		})
 		return
 	}
