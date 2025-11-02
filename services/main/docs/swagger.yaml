@@ -112,6 +112,31 @@ definitions:
     - phone
     - role
     type: object
+  handlers.CreateDocumentRequest:
+    properties:
+      content:
+        type: string
+      property_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      size:
+        example: 2048
+        type: integer
+      tags:
+        example:
+        - LEASE_AGREEMENT
+        - INSPECTION_REPORT
+        items:
+          type: string
+        type: array
+      title:
+        example: Lease Agreement
+        type: string
+    required:
+    - content
+    - size
+    - title
+    type: object
   handlers.CreatePropertyRequest:
     properties:
       address:
@@ -238,6 +263,28 @@ definitions:
         type: string
     required:
     - email
+    type: object
+  handlers.UpdateDocumentRequest:
+    properties:
+      content:
+        type: string
+      property_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      size:
+        example: 3072
+        minimum: 1
+        type: integer
+      tags:
+        example:
+        - LEASE_AGREEMENT
+        - INSPECTION_REPORT
+        items:
+          type: string
+        type: array
+      title:
+        example: Updated Lease Agreement
+        type: string
     type: object
   lib.HTTPError:
     properties:
@@ -467,6 +514,48 @@ definitions:
         $ref: '#/definitions/transformations.OutputClientUser'
       token:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw
+        type: string
+    type: object
+  transformations.OutputDocument:
+    properties:
+      content:
+        type: string
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      created_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      created_by_id:
+        example: d290f1ee-6c54-4b01-90e6-d701748f0851
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      property:
+        $ref: '#/definitions/transformations.OutputProperty'
+      property_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      size:
+        example: 2048
+        type: integer
+      tags:
+        example:
+        - LEASE_AGREEMENT
+        - INSPECTION_REPORT
+        items:
+          type: string
+        type: array
+      title:
+        example: Lease Agreement
+        type: string
+      updated_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      updated_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      updated_by_id:
+        example: c290f1ee-6c54-4b01-90e6-d701748f0852
         type: string
     type: object
   transformations.OutputProperty:
@@ -1154,6 +1243,211 @@ paths:
       summary: Create a new client application
       tags:
       - ClientApplications
+  /api/v1/documents:
+    get:
+      consumes:
+      - application/json
+      description: Get all documents
+      parameters:
+      - example: 550e8400-e29b-41d4-a716-446655440000
+        in: query
+        name: propertyID
+        type: string
+      - collectionFormat: csv
+        example:
+        - LEASE_AGREEMENT
+        - INSPECTION_REPORT
+        in: query
+        items:
+          type: string
+        name: tags
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputDocument'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get all documents
+      tags:
+      - Documents
+    post:
+      consumes:
+      - application/json
+      description: Create a new document
+      parameters:
+      - description: Document details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateDocumentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Document created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputDocument'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a new document
+      tags:
+      - Documents
+  /api/v1/documents/{document_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a document
+      parameters:
+      - description: Document ID
+        in: path
+        name: document_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete a document
+      tags:
+      - Documents
+    get:
+      consumes:
+      - application/json
+      description: Get document by ID
+      parameters:
+      - description: Document ID
+        in: path
+        name: document_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputDocument'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get document by ID
+      tags:
+      - Documents
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing document
+      parameters:
+      - description: Document ID
+        format: uuid4
+        in: path
+        name: document_id
+        required: true
+        type: string
+      - description: Document details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateDocumentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Document Updated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputDocument'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update an existing document
+      tags:
+      - Documents
   /api/v1/properties:
     get:
       consumes:

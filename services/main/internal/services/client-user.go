@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/Bendomey/goutilities/pkg/hashpassword"
 	"github.com/Bendomey/goutilities/pkg/signjwt"
 	"github.com/Bendomey/goutilities/pkg/validatehash"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
@@ -229,7 +230,16 @@ func (s *clientUserService) ResetPassword(ctx context.Context, input ResetClient
 		return nil, clientUserErr
 	}
 
-	clientUser.Password = input.NewPassword
+	hashed, err := hashpassword.HashPassword(input.NewPassword)
+	if err != nil {
+		raven.CaptureError(err, map[string]string{
+			"function": "ResetPassword",
+			"action":   "hashing new password",
+		})
+		return nil, err
+	}
+
+	clientUser.Password = hashed
 
 	if err := s.repo.Update(ctx, clientUser); err != nil {
 		raven.CaptureError(err, nil)

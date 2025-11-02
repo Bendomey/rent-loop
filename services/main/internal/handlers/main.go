@@ -10,6 +10,7 @@ type Handlers struct {
 	ClientApplicationHandler ClientApplicationHandler
 	ClientUserHandler        ClientUserHandler
 	PropertyHandler          PropertyHandler
+	DocumentHandler          DocumentHandler
 }
 
 func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
@@ -17,11 +18,13 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 	clientApplicationHandler := NewClientApplicationHandler(appCtx, services.ClientApplicationService)
 	clientUserHandler := NewClientUserHandler(appCtx, services.ClientUserService)
 	propertyHandler := NewPropertyHandler(appCtx, services.PropertyService)
+	documentHandler := NewDocumentHandler(appCtx, services.DocumentService)
 
 	return Handlers{
 		ClientApplicationHandler: clientApplicationHandler,
 		AdminHandler:             adminHandler,
 		ClientUserHandler:        clientUserHandler,
 		PropertyHandler:          propertyHandler,
+		DocumentHandler:          documentHandler,
 	}
 }

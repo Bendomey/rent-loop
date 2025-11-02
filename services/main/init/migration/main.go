@@ -19,6 +19,7 @@ func updateMigration(db *gorm.DB) error {
 		&models.ClientUser{},
 		&models.Property{},
 		&models.ClientUserProperty{},
+		&models.Document{},
 		&models.Unit{},
 	)
 	return err

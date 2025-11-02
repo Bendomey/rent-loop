@@ -27,7 +27,17 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 
 			// properties
 			r.Post("/v1/properties", handlers.PropertyHandler.CreateProperty)
-			r.Get("/v1/properties", handlers.PropertyHandler.ListProperties)
+
+			r.Route("/v1/documents", func(r chi.Router) {
+				r.Post("/", handlers.DocumentHandler.CreateDocument)
+				r.Get("/", handlers.DocumentHandler.ListDocuments)
+
+				r.Route("/{document_id}", func(r chi.Router) {
+					r.Get("/", handlers.DocumentHandler.GetDocumentById)
+					r.Patch("/", handlers.DocumentHandler.UpdateDocument)
+					r.Delete("/", handlers.DocumentHandler.DeleteDocument)
+				})
+			})
 		})
 	}
 }
