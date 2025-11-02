@@ -2,7 +2,7 @@ interface Property {
 	id: string
 	slug: string
 	name: string
-	description: string | NullableString
+	description: Nullable<string>
 	address: string
 	gps_address: string
 	city: string
