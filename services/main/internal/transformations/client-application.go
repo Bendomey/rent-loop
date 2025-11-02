@@ -4,48 +4,49 @@ import (
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
+	"github.com/gofrs/uuid"
 )
 
 type OutputClientApplication struct {
-	ID      string `json:"id" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	Type    string `json:"type" example:"COMPANY"`
+	ID      string `json:"id"       example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	Type    string `json:"type"     example:"COMPANY"`
 	SubType string `json:"sub_type" example:"ESTATE MANAGER"`
-	Name    string `json:"name" example:"Company Name"`
+	Name    string `json:"name"     example:"Company Name"`
 
 	// company address or individual home address
-	Address   string  `json:"address" example:"21st Neon Street"`
-	Country   string  `json:"country" example:"Ghana"`
-	Region    string  `json:"region" example:"Greater Accra"`
-	City      string  `json:"city" example:"Accra"`
-	Latitude  float64 `json:"latitude" example:"5.6037"`
+	Address   string  `json:"address"   example:"21st Neon Street"`
+	Country   string  `json:"country"   example:"Ghana"`
+	Region    string  `json:"region"    example:"Greater Accra"`
+	City      string  `json:"city"      example:"Accra"`
+	Latitude  float64 `json:"latitude"  example:"5.6037"`
 	Longitude float64 `json:"longitude" example:"-0.1870"`
 
 	// company specific fields
 	RegistrationNumber *string `json:"registration_number" example:"GR1234567890"`
-	LogoURL            *string `json:"logo_url" example:"www.logo-url.com/logo.png"`
-	Description        *string `json:"description" example:"Taking you to the next level!"`
-	WebsiteURL         *string `json:"website_url" example:"www.company-url.com"`
-	SupportEmail       *string `json:"support_email" example:"support@email.com"`
-	SupportPhone       *string `json:"support_phone" example:"+233 (0)12 345 6789"`
+	LogoURL            *string `json:"logo_url"            example:"www.logo-url.com/logo.png"`
+	Description        *string `json:"description"         example:"Taking you to the next level!"`
+	WebsiteURL         *string `json:"website_url"         example:"www.company-url.com"`
+	SupportEmail       *string `json:"support_email"       example:"support@email.com"`
+	SupportPhone       *string `json:"support_phone"       example:"+233 (0)12 345 6789"`
 
 	// individual specific fields
-	DateOfBirth   *string `json:"date_of_birth" example:"2025-01-31"`
-	IDType        *string `json:"id_type" example:"GHANACARD"`
-	IDNumber      *string `json:"id_number" example:"GHA-123-456-7890"`
-	IDExpiry      *string `json:"id_expiry" example:"2040-12-31"`
+	DateOfBirth   *string `json:"date_of_birth"   example:"2025-01-31"`
+	IDType        *string `json:"id_type"         example:"GHANACARD"`
+	IDNumber      *string `json:"id_number"       example:"GHA-123-456-7890"`
+	IDExpiry      *string `json:"id_expiry"       example:"2040-12-31"`
 	IDDocumentURL *string `json:"id_document_url" example:"www.id-doc-url.com/id.pdf"`
 
-	ContactName        string `json:"contact_name" example:"John Doe"`
+	ContactName        string `json:"contact_name"         example:"John Doe"`
 	ContactPhoneNumber string `json:"contact_phone_number" example:"01234567890"`
-	ContactEmail       string `json:"contact_email" example:"contact@email.com"`
+	ContactEmail       string `json:"contact_email"        example:"contact@email.com"`
 
 	Status string `json:"status" example:"ClientApplication.Status.Approved"`
 
 	ApprovedById *string `json:"approved_by_id" example:"S90092"`
 
-	RejectedById    *string      `json:"rejected_by_id" example:"R234110"`
+	RejectedById    *string      `json:"rejected_by_id"        example:"R234110"`
 	RejectedBy      *OutputAdmin `json:"rejected_by,omitempty"`
-	RejectedBecause *string      `json:"rejected_because" example:"No reason"`
+	RejectedBecause *string      `json:"rejected_because"      example:"No reason"`
 
 	CreatedAt time.Time `json:"created_at" example:"2023-01-01T00:00:00Z"`
 	UpdatedAt time.Time `json:"updated_at" example:"2023-01-01T00:00:00Z"`
@@ -53,7 +54,7 @@ type OutputClientApplication struct {
 
 // DBClientApplicationToRestClientApplication transforms the db client application model to a rest client application model
 func DBClientApplicationToRestClientApplication(i *models.ClientApplication) interface{} {
-	if i == nil {
+	if i == nil || i.ID == uuid.Nil {
 		return nil
 	}
 

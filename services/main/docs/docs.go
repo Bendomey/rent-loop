@@ -1976,6 +1976,9 @@ const docTemplate = `{
                     "type": "string",
                     "example": "San Francisco"
                 },
+                "client_application": {
+                    "$ref": "#/definitions/transformations.OutputClientApplication"
+                },
                 "client_application_id": {
                     "type": "string",
                     "example": "app-1234"
@@ -2008,13 +2011,13 @@ const docTemplate = `{
                     "type": "string",
                     "example": "California"
                 },
-                "subType": {
+                "sub_type": {
                     "type": "string",
-                    "example": "real-estate"
+                    "example": "LANDLORD"
                 },
                 "type": {
                     "type": "string",
-                    "example": "corporate"
+                    "example": "INDIVIDUAL"
                 },
                 "updated_at": {
                     "type": "string",

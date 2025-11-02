@@ -37,7 +37,7 @@ type CreateDocumentRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			body	body		CreateDocumentRequest	true	"Document details"
+//	@Param			body	body		CreateDocumentRequest						true	"Document details"
 //	@Success		201		{object}	object{data=transformations.OutputDocument}	"Document created successfully"
 //	@Failure		400		{object}	lib.HTTPError
 //	@Failure		401		{object}	string
@@ -105,19 +105,19 @@ type UpdateDocumentRequest struct {
 
 // UpdateDocument godoc
 //
-//		@Summary		Update an existing document
-//		@Description	Update an existing document
-//		@Tags			Documents
-//		@Accept			json
-//		@Security		BearerAuth
-//		@Produce		json
-//	    @Param 	   		document_id   path      string                  true        "Document ID"  format(uuid4)
-//		@Param			body	body		UpdateDocumentRequest	true	"Document details"
-//		@Success		200		{object}	object{data=transformations.OutputDocument}	"Document Updated successfully"
-//		@Failure		400		{object}	lib.HTTPError
-//		@Failure		401		{object}	string
-//		@Failure		500		{object}	string
-//		@Router			/api/v1/documents/{document_id} [patch]
+//	@Summary		Update an existing document
+//	@Description	Update an existing document
+//	@Tags			Documents
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			document_id	path		string										true	"Document ID"	format(uuid4)
+//	@Param			body		body		UpdateDocumentRequest						true	"Document details"
+//	@Success		200			{object}	object{data=transformations.OutputDocument}	"Document Updated successfully"
+//	@Failure		400			{object}	lib.HTTPError
+//	@Failure		401			{object}	string
+//	@Failure		500			{object}	string
+//	@Router			/api/v1/documents/{document_id} [patch]
 func (h *DocumentHandler) UpdateDocument(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 

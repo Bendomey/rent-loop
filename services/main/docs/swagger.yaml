@@ -352,6 +352,8 @@ definitions:
       city:
         example: San Francisco
         type: string
+      client_application:
+        $ref: '#/definitions/transformations.OutputClientApplication'
       client_application_id:
         example: app-1234
         type: string
@@ -376,11 +378,11 @@ definitions:
       region:
         example: California
         type: string
-      subType:
-        example: real-estate
+      sub_type:
+        example: LANDLORD
         type: string
       type:
-        example: corporate
+        example: INDIVIDUAL
         type: string
       updated_at:
         example: "2023-01-01T00:00:00Z"
