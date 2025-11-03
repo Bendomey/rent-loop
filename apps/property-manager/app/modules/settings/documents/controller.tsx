@@ -1,10 +1,15 @@
+import { useQueryClient } from '@tanstack/react-query'
 import type { SerializedEditorState, SerializedLexicalNode } from 'lexical'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { toast } from 'sonner'
 import { ImportDocumentButton } from './components/import-document-button'
+import { useCreateDocument } from '~/api/documents'
 import { SearchInput } from '~/components/search'
 import { Button } from '~/components/ui/button'
+import { Field, FieldDescription } from '~/components/ui/field'
+import { Input } from '~/components/ui/input'
 import {
 	Item,
 	ItemContent,
@@ -13,16 +18,20 @@ import {
 	ItemHeader,
 	ItemTitle,
 } from '~/components/ui/item'
+import { Label } from '~/components/ui/label'
 import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
 } from '~/components/ui/popover'
+import { Spinner } from '~/components/ui/spinner'
 import { useDisclosure } from '~/hooks/use-disclosure'
+import { QUERY_KEYS } from '~/lib/constants'
 
 export type IDocumentTemplate = {
 	id: string
 	name: string
+	charCount: number
 	description: string
 	document: SerializedEditorState<SerializedLexicalNode>
 }
@@ -54,9 +63,12 @@ export function AddDocumentButton({
 	documentTemplates: Array<IDocumentTemplate>
 	property?: Property
 }) {
+	const [documentTitle, setDocumentTitle] = useState<string>('')
+	const { mutate, isPending } = useCreateDocument()
 	const { isOpened, onClose, setIsOpened } = useDisclosure()
 	const [selectedTemplate, setSelectedTemplate] = useState<string>()
 	const navigate = useNavigate()
+	const queryClient = useQueryClient()
 
 	const docs = documentTemplates.map((docTemplate) => {
 		let header = <></>
@@ -78,6 +90,55 @@ export function AddDocumentButton({
 			header,
 		}
 	})
+
+	// TODO: later redirect them to /settings/documents/new with the selected template applied(or to select template screen)
+	// and then set the name/type of document there before creating it. For now, we just create with default name as "Untitled Document"
+	const handleSubmit = () => {
+		if (!selectedTemplate) return
+
+		const template = documentTemplates.find(
+			(template) => template.id === selectedTemplate,
+		)
+		if (!template) {
+			toast.error('Selected template not found.')
+			return
+		}
+
+		const title = documentTitle.trim()
+		mutate(
+			{
+				title: title ?? `Untitled Document (${template.id})`,
+				content: JSON.stringify(template.document),
+				size: template.charCount,
+				tags: [],
+				property_id: property?.id,
+			},
+			{
+				onSuccess: (data) => {
+					if (!data?.id) {
+						toast.error('Failed to create document. Try again later.')
+						return
+					}
+
+					void queryClient.invalidateQueries({
+						queryKey: [QUERY_KEYS.DOCUMENTS],
+					})
+
+					if (property) {
+						void navigate(
+							`/properties/${property.slug}/settings/documents/${data.id}`,
+						)
+						return
+					}
+
+					void navigate(`/settings/documents/${data.id}`)
+				},
+				onError: () => {
+					toast.error(`Failed to create document. Try again later.`)
+				},
+			},
+		)
+	}
 
 	return (
 		<Popover open={isOpened} onOpenChange={setIsOpened}>
@@ -118,27 +179,30 @@ export function AddDocumentButton({
 							))}
 						</ItemGroup>
 					</div>
+					{selectedTemplate ? (
+						<div>
+							<Field>
+								<Label>Document Title</Label>
+								<Input
+									value={documentTitle}
+									onChange={(e) => setDocumentTitle(e.target.value)}
+									placeholder={`Untitled Document (${selectedTemplate})`}
+								/>
+								<FieldDescription>Optional</FieldDescription>
+							</Field>
+						</div>
+					) : null}
 					<div className="flex items-center justify-end gap-x-2">
 						<Button variant="ghost" size="sm" onClick={onClose}>
 							Cancel
 						</Button>
 						<Button
 							variant="default"
-							onClick={() => {
-								// TODO: later redirect them to /settings/documents/new with the selected template applied(or to select template screen)
-								// and then set the name/type of document there before creating it. For now, we just create with default name as "Untitled Document"
-								if (property) {
-									void navigate(
-										`/properties/${property.slug}/settings/documents/new/${selectedTemplate}`,
-									)
-									return
-								}
-
-								void navigate(`/settings/documents/${selectedTemplate}`)
-							}}
+							onClick={handleSubmit}
 							className="bg-rose-600 hover:bg-rose-700"
-							disabled={!Boolean(selectedTemplate)}
+							disabled={!Boolean(selectedTemplate) || isPending}
 						>
+							{isPending ? <Spinner className="size-4" /> : null}
 							Create Document
 						</Button>
 					</div>

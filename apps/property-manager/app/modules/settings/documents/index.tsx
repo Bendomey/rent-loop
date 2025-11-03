@@ -1,9 +1,11 @@
+import { useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { EllipsisVertical, FileText, RotateCw } from 'lucide-react'
-import { useMemo } from 'react'
-import { useLoaderData, useSearchParams } from 'react-router'
+import { useMemo, useState } from 'react'
+import { Link, useLoaderData, useSearchParams } from 'react-router'
+import { toast } from 'sonner'
 import { DocumentsController } from './controller'
-import { useGetDocuments } from '~/api/documents'
+import { useDeleteDocument, useGetDocuments } from '~/api/documents'
 import { DataTable } from '~/components/datatable'
 import {
 	AlertDialog,
@@ -26,8 +28,9 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
+import { Spinner } from '~/components/ui/spinner'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
-import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { PAGINATION_DEFAULTS, QUERY_KEYS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { getNameInitials } from '~/lib/misc'
 import { safeString } from '~/lib/strings'
@@ -37,6 +40,9 @@ import type { loader } from '~/routes/_auth._dashboard.settings.documents'
 export function DocumentsModule() {
 	const { documentTemplates } = useLoaderData<typeof loader>()
 	const [searchParams] = useSearchParams()
+	const queryClient = useQueryClient()
+	const { mutate: deleteDocument, isPending: isDeleting } = useDeleteDocument()
+	const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page')) + 1
@@ -79,11 +85,13 @@ export function DocumentsModule() {
 				header: 'Name',
 				cell: ({ row }) => (
 					<div className="flex min-w-32 flex-col items-start gap-1">
+						<Link to={`/settings/documents/${row.original.id}`}>
+							<span className="truncate text-xs text-blue-600 hover:underline">
+								{row.original.title}
+							</span>
+						</Link>
 						<span className="truncate text-xs text-zinc-600">
-							{row.original.title}
-						</span>
-						<span className="truncate text-xs text-zinc-600">
-							{row.original.size}
+							Characters count: {row.original.size}
 						</span>
 					</div>
 				),
@@ -133,8 +141,11 @@ export function DocumentsModule() {
 			},
 			{
 				id: 'actions',
-				cell: () => (
-					<AlertDialog>
+				cell: ({ row }) => (
+					<AlertDialog
+						open={openDeleteDialog}
+						onOpenChange={setOpenDeleteDialog}
+					>
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button
@@ -147,7 +158,9 @@ export function DocumentsModule() {
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end" className="w-32">
-								<DropdownMenuItem>Edit</DropdownMenuItem>
+								<Link to={`/settings/documents/${row.original.id}`}>
+									<DropdownMenuItem>Edit</DropdownMenuItem>
+								</Link>
 								<DropdownMenuSeparator />
 								<AlertDialogTrigger asChild>
 									<DropdownMenuItem variant="destructive">
@@ -160,12 +173,35 @@ export function DocumentsModule() {
 							<AlertDialogHeader>
 								<AlertDialogTitle>Are you sure?</AlertDialogTitle>
 								<AlertDialogDescription>
-									This will delete the document.
+									This will delete this document.
 								</AlertDialogDescription>
 							</AlertDialogHeader>
 							<AlertDialogFooter className="mt-5">
-								<AlertDialogCancel>Cancel</AlertDialogCancel>
-								<AlertDialogAction className="bg-destructive hover:bg-destructive/90 text-white">
+								<AlertDialogCancel disabled={isDeleting}>
+									Cancel
+								</AlertDialogCancel>
+								<AlertDialogAction
+									disabled={isDeleting}
+									onClick={(e) => {
+										e.preventDefault()
+										deleteDocument(row.original.id, {
+											onError: (e) => {
+												console.log(e)
+												toast.error(
+													'Failed to delete document. Try again later.',
+												)
+											},
+											onSuccess: () => {
+												void queryClient.invalidateQueries({
+													queryKey: [QUERY_KEYS.DOCUMENTS],
+												})
+												setOpenDeleteDialog(false)
+											},
+										})
+									}}
+									className="bg-destructive hover:bg-destructive/90 text-white"
+								>
+									{isDeleting ? <Spinner /> : null}
 									Delete
 								</AlertDialogAction>
 							</AlertDialogFooter>
@@ -174,7 +210,7 @@ export function DocumentsModule() {
 				),
 			},
 		]
-	}, [])
+	}, [deleteDocument, isDeleting, openDeleteDialog, queryClient])
 
 	return (
 		<main className="flex flex-col gap-2 sm:gap-4">
