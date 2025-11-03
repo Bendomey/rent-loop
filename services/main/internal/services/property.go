@@ -21,6 +21,10 @@ type PropertyService interface {
 		context context.Context,
 		filterQuery repository.ListPropertiesFilter,
 	) (int64, error)
+	GetProperty(
+		context context.Context,
+		query repository.GetPropertyQuery,
+	) (*models.Property, error)
 }
 
 type propertyService struct {
@@ -168,4 +172,16 @@ func (s *propertyService) CountProperties(
 	}
 
 	return propertiesCount, nil
+}
+
+func (s *propertyService) GetProperty(
+	ctx context.Context,
+	query repository.GetPropertyQuery,
+) (*models.Property, error) {
+	property, err := s.repo.GetByID(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return property, nil
 }

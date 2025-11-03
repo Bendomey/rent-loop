@@ -9,6 +9,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/go-chi/chi/v5"
 )
 
 type PropertyHandler struct {
@@ -186,4 +187,68 @@ func (h *PropertyHandler) ListProperties(w http.ResponseWriter, r *http.Request)
 	}
 
 	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, propertiesTransformed, count))
+}
+
+type GetPropertyQuery struct {
+	lib.GetOneQueryInput
+}
+
+// GetPropertyById godoc
+//
+//	@Summary		Get property by ID
+//	@Description	Get property by ID
+//	@Tags			Properties
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string				true	"Property ID"
+//	@Param			q			query		GetPropertyQuery	true	"Properties"
+//	@Success		200			{object}	object{data=transformations.OutputProperty}
+//	@Failure		400			{object}	lib.HTTPError
+//	@Failure		401			{object}	string
+//	@Failure		500			{object}	string
+//	@Router			/api/v1/properties/{property_id} [get]
+func (h *PropertyHandler) GetPropertyById(w http.ResponseWriter, r *http.Request) {
+	_, clientUserOk := lib.ClientUserFromContext(r.Context())
+	if !clientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	propertyID := chi.URLParam(r, "property_id")
+	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
+	if filterErr != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]any{
+			"errors": map[string]string{
+				"message": filterErr.Error(),
+			},
+		})
+		return
+	}
+
+	isFilterQueryPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filterQuery, w)
+	if !isFilterQueryPassedValidation {
+		return
+	}
+
+	query := repository.GetPropertyQuery{
+		ID:       propertyID,
+		Populate: filterQuery.Populate,
+	}
+
+	property, err := h.service.GetProperty(r.Context(), query)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]any{
+			"errors": map[string]string{
+				"message": err.Error(),
+			},
+		})
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBPropertyToRest(property),
+	})
 }
