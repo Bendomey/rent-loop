@@ -50,7 +50,6 @@ type SendSMSInput struct {
 
 // SendSMS sends an SMS using the Wittyflow service
 func SendSMS(appCtx AppContext, input SendSMSInput) error {
-
 	if appCtx.Config.Wittyflow.AppID == "" || appCtx.Config.Wittyflow.AppSecret == "" {
 		raven.CaptureError(errors.New("wittyflow credentials not set"), nil)
 		return errors.New("InternalServerError")
@@ -62,8 +61,8 @@ func SendSMS(appCtx AppContext, input SendSMSInput) error {
 	}
 
 	// Send sms with wittyflow
-	var sendResponseSuccess = new(WittyflowSendMessageResponse)
-	var sendResponseFailed = new(WittyflowSendMessageResponse)
+	sendResponseSuccess := new(WittyflowSendMessageResponse)
+	sendResponseFailed := new(WittyflowSendMessageResponse)
 
 	normalizePhone, normalizePhoneErr := lib.NormalizePhoneNumber(input.Recipient)
 	if normalizePhoneErr != nil {

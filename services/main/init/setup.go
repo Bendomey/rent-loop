@@ -29,7 +29,15 @@ func Setup(isInit bool) {
 
 	ResolveDatabase(host, user, password, dbname, default_dbname, port, sslmode, dropOldDatabase)
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", host, user, password, dbname, port, sslmode)
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
+		host,
+		user,
+		password,
+		dbname,
+		port,
+		sslmode,
+	)
 	db, dbErr := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: gormLogger.Default.LogMode(gormLogger.Info),
 	})
@@ -66,10 +74,19 @@ func Setup(isInit bool) {
 func ResolveDatabase(host, user, password, dbname, default_dbname, port, sslmode string, dropOldDatabase bool) {
 	postgresDbname := default_dbname
 
-	postgresDsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", host, user, password, postgresDbname, port, sslmode)
+	postgresDsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
+		host,
+		user,
+		password,
+		postgresDbname,
+		port,
+		sslmode,
+	)
 
 	postgresDb, postgresDberr := gorm.Open(postgres.Open(postgresDsn), &gorm.Config{
-		Logger: gormLogger.Default.LogMode(gormLogger.Info)})
+		Logger: gormLogger.Default.LogMode(gormLogger.Info),
+	})
 
 	if postgresDberr != nil {
 		logger.Info("connecting to postgres db errored out: ", postgresDberr)
@@ -86,7 +103,7 @@ func ResolveDatabase(host, user, password, dbname, default_dbname, port, sslmode
 	}
 
 	// Check if db exists
-	var rec = make(map[string]interface{})
+	rec := make(map[string]interface{})
 	if rs.Find(rec); len(rec) == 0 {
 		// If it doesn't create it
 		logger.Info("======== DB does not exist, creating db ==========")

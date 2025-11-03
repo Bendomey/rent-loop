@@ -17,7 +17,6 @@ func NewAdminRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func(r ch
 
 		// protected client routes ...
 		r.Group(func(r chi.Router) {
-
 			// ensure auth is present
 			r.Use(middlewares.CheckForAdminAuthPresenceMiddleware)
 
@@ -26,9 +25,18 @@ func NewAdminRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func(r ch
 			r.Get("/v1/admins/{admin_id}", handlers.AdminHandler.GetAdminById)
 			r.Get("/v1/admins", handlers.AdminHandler.ListAdmins)
 			r.Get("/v1/client-applications", handlers.ClientApplicationHandler.ListClientApplications)
-			r.Get("/v1/client-applications/{application_id}", handlers.ClientApplicationHandler.GetClientApplicationById)
-			r.Patch("/v1/client-applications/{application_id}/approve", handlers.ClientApplicationHandler.ApproveClientApplication)
-			r.Patch("/v1/client-applications/{application_id}/reject", handlers.ClientApplicationHandler.RejectClientApplication)
+			r.Get(
+				"/v1/client-applications/{application_id}",
+				handlers.ClientApplicationHandler.GetClientApplicationById,
+			)
+			r.Patch(
+				"/v1/client-applications/{application_id}/approve",
+				handlers.ClientApplicationHandler.ApproveClientApplication,
+			)
+			r.Patch(
+				"/v1/client-applications/{application_id}/reject",
+				handlers.ClientApplicationHandler.RejectClientApplication,
+			)
 		})
 	}
 }

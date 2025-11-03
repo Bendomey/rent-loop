@@ -47,10 +47,13 @@ func (r *adminRepository) Create(ctx context.Context, admin *models.Admin) error
 	return r.DB.WithContext(ctx).Create(admin).Error
 }
 
-type ListAdminsFilter struct {
-}
+type ListAdminsFilter struct{}
 
-func (r *adminRepository) List(ctx context.Context, filterQuery lib.FilterQuery, filters ListAdminsFilter) (*[]models.Admin, error) {
+func (r *adminRepository) List(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters ListAdminsFilter,
+) (*[]models.Admin, error) {
 	var admins []models.Admin
 
 	db := r.DB.WithContext(ctx).
@@ -77,7 +80,11 @@ func (r *adminRepository) List(ctx context.Context, filterQuery lib.FilterQuery,
 	return &admins, nil
 }
 
-func (r *adminRepository) Count(ctx context.Context, filterQuery lib.FilterQuery, filters ListAdminsFilter) (int64, error) {
+func (r *adminRepository) Count(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters ListAdminsFilter,
+) (int64, error) {
 	var count int64
 
 	result := r.DB.

@@ -29,5 +29,4 @@ func Sentry(dsn string, environment string) {
 	defer sentry.Flush(2 * time.Second)
 
 	raven.SetDSN(dsn)
-
 }

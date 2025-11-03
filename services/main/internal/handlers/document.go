@@ -238,8 +238,9 @@ func (h *DocumentHandler) GetDocumentById(w http.ResponseWriter, r *http.Request
 
 type ListDocumentsFilterRequest struct {
 	lib.FilterQueryInput
-	PropertyID *string   `query:"property_id" validate:"omitempty,uuid4" example:"550e8400-e29b-41d4-a716-446655440000"`
-	Tags       *[]string `query:"tags"        validate:"omitempty,dive"  example:"LEASE_AGREEMENT,INSPECTION_REPORT"`
+	PropertyID   *string   `json:"property_id"   validate:"omitempty,uuid4" example:"550e8400-e29b-41d4-a716-446655440000"`
+	PropertySlug *string   `json:"property_slug" validate:"omitempty"       example:"downtown-apartment-101"`
+	Tags         *[]string `json:"tags"          validate:"omitempty,dive"  example:"LEASE_AGREEMENT,INSPECTION_REPORT"`
 }
 
 // GetDocuments godoc
@@ -265,8 +266,9 @@ func (h *DocumentHandler) ListDocuments(w http.ResponseWriter, r *http.Request) 
 	}
 
 	filters := ListDocumentsFilterRequest{
-		PropertyID: lib.NullOrString(r.URL.Query().Get("property_id")),
-		Tags:       lib.NullOrStringArray(r.URL.Query()["tags"]),
+		PropertyID:   lib.NullOrString(r.URL.Query().Get("property_id")),
+		PropertySlug: lib.NullOrString(r.URL.Query().Get("property_slug")),
+		Tags:         lib.NullOrStringArray(r.URL.Query()["tags"]),
 	}
 
 	isFiltersPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filters, w)
@@ -291,9 +293,10 @@ func (h *DocumentHandler) ListDocuments(w http.ResponseWriter, r *http.Request) 
 	}
 
 	input := repository.ListDocumentsFilter{
-		PropertyID: filters.PropertyID,
-		ClientID:   currentUser.ClientID,
-		Tags:       filters.Tags,
+		PropertyID:   filters.PropertyID,
+		PropertySlug: filters.PropertySlug,
+		ClientID:     currentUser.ClientID,
+		Tags:         filters.Tags,
 	}
 
 	documents, documentsErr := h.service.List(r.Context(), *filterQuery, input)

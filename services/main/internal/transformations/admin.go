@@ -7,9 +7,9 @@ import (
 )
 
 type OutputAdmin struct {
-	ID        string    `json:"id" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	Name      string    `json:"name" example:"Admin Name"`
-	Email     string    `json:"email" example:"admin@example.com"`
+	ID        string    `json:"id"         example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	Name      string    `json:"name"       example:"Admin Name"`
+	Email     string    `json:"email"      example:"admin@example.com"`
 	CreatedAt time.Time `json:"created_at" example:"2023-01-01T00:00:00Z"`
 	UpdatedAt time.Time `json:"updated_at" example:"2023-01-01T00:00:00Z"`
 }

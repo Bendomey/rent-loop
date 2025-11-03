@@ -17,34 +17,37 @@ type ClientApplicationHandler struct {
 	appCtx  pkg.AppContext
 }
 
-func NewClientApplicationHandler(appCtx pkg.AppContext, service services.ClientApplicationService) ClientApplicationHandler {
+func NewClientApplicationHandler(
+	appCtx pkg.AppContext,
+	service services.ClientApplicationService,
+) ClientApplicationHandler {
 	return ClientApplicationHandler{service, appCtx}
 }
 
 type CreateClientApplicationRequest struct {
-	Type               string  `json:"type" validate:"required,oneof=INDIVIDUAL COMPANY"`                             // INDIVIDUAL | COMPANY
-	SubType            string  `json:"sub_type" validate:"required,oneof=LANDLORD PROPERTY_MANAGER DEVELOPER AGENCY"` // INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER | AGENCY
-	Name               string  `json:"name" validate:"required"`
-	Address            string  `json:"address" validate:"required"`
-	Country            string  `json:"country" validate:"required"`
-	Region             string  `json:"region" validate:"required"`
-	City               string  `json:"city" validate:"required"`
-	Latitude           float64 `json:"latitude" validate:"required"`
-	Longitude          float64 `json:"longitude" validate:"required"`
-	ContactName        string  `json:"contact_name" validate:"required"`
+	Type               string  `json:"type"                 validate:"required,oneof=INDIVIDUAL COMPANY"`                         // INDIVIDUAL | COMPANY
+	SubType            string  `json:"sub_type"             validate:"required,oneof=LANDLORD PROPERTY_MANAGER DEVELOPER AGENCY"` // INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER | AGENCY
+	Name               string  `json:"name"                 validate:"required"`
+	Address            string  `json:"address"              validate:"required"`
+	Country            string  `json:"country"              validate:"required"`
+	Region             string  `json:"region"               validate:"required"`
+	City               string  `json:"city"                 validate:"required"`
+	Latitude           float64 `json:"latitude"             validate:"required"`
+	Longitude          float64 `json:"longitude"            validate:"required"`
+	ContactName        string  `json:"contact_name"         validate:"required"`
 	ContactPhoneNumber string  `json:"contact_phone_number" validate:"required,e164"`
-	ContactEmail       string  `json:"contact_email" validate:"required,email"`
-	DateOfBirth        *string `json:"date_of_birth" validate:"omitempty,datetime=2006-01-02"`
-	IDType             *string `json:"id_type" validate:"omitempty,oneof=DRIVERS_LICENSE PASSPORT NATIONAL_ID"`
+	ContactEmail       string  `json:"contact_email"        validate:"required,email"`
+	DateOfBirth        *string `json:"date_of_birth"        validate:"omitempty,datetime=2006-01-02"`
+	IDType             *string `json:"id_type"              validate:"omitempty,oneof=DRIVERS_LICENSE PASSPORT NATIONAL_ID"`
 	IDNumber           *string `json:"id_number"`
-	IDExpiry           *string `json:"id_expiry" validate:"omitempty,datetime=2006-01-02"`
-	IDDocumentURL      *string `json:"id_document_url" validate:"omitempty,url"`
+	IDExpiry           *string `json:"id_expiry"            validate:"omitempty,datetime=2006-01-02"`
+	IDDocumentURL      *string `json:"id_document_url"      validate:"omitempty,url"`
 	RegistrationNumber *string `json:"registration_number"`
-	LogoURL            *string `json:"logo_url" validate:"omitempty,url"`
+	LogoURL            *string `json:"logo_url"             validate:"omitempty,url"`
 	Description        *string `json:"description"`
-	WebsiteURL         *string `json:"website_url" validate:"omitempty,url"`
-	SupportEmail       *string `json:"support_email" validate:"omitempty,email"`
-	SupportPhone       *string `json:"support_phone" validate:"omitempty,e164"`
+	WebsiteURL         *string `json:"website_url"          validate:"omitempty,url"`
+	SupportEmail       *string `json:"support_email"        validate:"omitempty,email"`
+	SupportPhone       *string `json:"support_phone"        validate:"omitempty,e164"`
 }
 
 // CreateClientApplication godoc
@@ -239,8 +242,8 @@ func (h *ClientApplicationHandler) ApproveClientApplication(w http.ResponseWrite
 }
 
 type ListClientApplicationsFilterRequest struct {
-	Status  *string `json:"status" validate:"omitempty,oneof=ClientApplication.Status.Pending ClientApplication.Status.Approved ClientApplication.Status.Rejected"`
-	Type    *string `json:"type" validate:"omitempty,oneof=INDIVIDUAL COMPANY"`
+	Status  *string `json:"status"   validate:"omitempty,oneof=ClientApplication.Status.Pending ClientApplication.Status.Approved ClientApplication.Status.Rejected"`
+	Type    *string `json:"type"     validate:"omitempty,oneof=INDIVIDUAL COMPANY"`
 	SubType *string `json:"sub_type" validate:"omitempty,oneof=LANDLORD PROPERTY_MANAGER DEVELOPER AGENCY"`
 }
 
@@ -317,7 +320,10 @@ func (h *ClientApplicationHandler) ListClientApplications(w http.ResponseWriter,
 
 	clientApplicationsTransformed := make([]interface{}, 0)
 	for _, clientApplication := range clientApplications {
-		clientApplicationsTransformed = append(clientApplicationsTransformed, transformations.DBClientApplicationToRestClientApplication(&clientApplication))
+		clientApplicationsTransformed = append(
+			clientApplicationsTransformed,
+			transformations.DBClientApplicationToRestClientApplication(&clientApplication),
+		)
 	}
 
 	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, clientApplicationsTransformed, count))

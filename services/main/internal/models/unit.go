@@ -6,15 +6,15 @@ import "github.com/lib/pq"
 type Unit struct {
 	BaseModelSoftDelete
 	PropertyID string   `json:"propertyId" gorm:"not null;index;"`
-	Property   Property `json:"property" gorm:"foreignKey:PropertyID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Property   Property `json:"property"   gorm:"foreignKey:PropertyID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 
-	Name        string         `json:"name" gorm:"not null;"` // e.g., "Unit 101", "Apt 3B"
-	Slug        string         `json:"slug" gorm:"not null;index;"`
+	Name        string         `json:"name"        gorm:"not null;"` // e.g., "Unit 101", "Apt 3B"
+	Slug        string         `json:"slug"        gorm:"not null;index;"`
 	Description *string        `json:"description"`
-	Images      pq.StringArray `json:"images" gorm:"type:text[]"`
-	Tags        pq.StringArray `json:"tags" gorm:"type:text[]"`
+	Images      pq.StringArray `json:"images"      gorm:"type:text[]"`
+	Tags        pq.StringArray `json:"tags"        gorm:"type:text[]"`
 
-	Type   string `json:"type" gorm:"not null;index;"`   // APARTMENT | HOUSE | STUDIO | OFFICE | RETAIL
+	Type   string `json:"type"   gorm:"not null;index;"` // APARTMENT | HOUSE | STUDIO | OFFICE | RETAIL
 	Status string `json:"status" gorm:"not null;index;"` // AVAILABLE | OCCUPIED | MAINTENANCE
 
 	Bedrooms      int     `json:"bedrooms"`
@@ -24,5 +24,5 @@ type Unit struct {
 	RentFrequency string  `json:"rentFrequency"` // WEEKLY | MONTHLY | YEARLY
 
 	CreatedById string     `json:"createdById" gorm:"not null;"`
-	CreatedBy   ClientUser `json:"createdBy" gorm:"foreignKey:CreatedById;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	CreatedBy   ClientUser `json:"createdBy"   gorm:"foreignKey:CreatedById;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

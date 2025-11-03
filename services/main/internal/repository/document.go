@@ -48,12 +48,17 @@ func (r *documentRepository) Delete(ctx context.Context, documentID string) erro
 }
 
 type ListDocumentsFilter struct {
-	Tags       *[]string
-	PropertyID *string
-	ClientID   string
+	Tags         *[]string
+	PropertyID   *string
+	PropertySlug *string
+	ClientID     string
 }
 
-func (r *documentRepository) List(ctx context.Context, filterQuery lib.FilterQuery, filters ListDocumentsFilter) (*[]models.Document, error) {
+func (r *documentRepository) List(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters ListDocumentsFilter,
+) (*[]models.Document, error) {
 	var documents []models.Document
 
 	db := r.DB.WithContext(ctx).
@@ -62,6 +67,7 @@ func (r *documentRepository) List(ctx context.Context, filterQuery lib.FilterQue
 			SearchScope("documents", filterQuery.Search),
 			ClientIDFilterScope(filters.ClientID),
 			PropertyIDFilterScope(filters.PropertyID),
+			PropertySlugFilterScope(filters.PropertySlug),
 			TagsFilterScope(filters.Tags),
 
 			PaginationScope(filterQuery.Page, filterQuery.PageSize),
@@ -83,7 +89,11 @@ func (r *documentRepository) List(ctx context.Context, filterQuery lib.FilterQue
 	return &documents, nil
 }
 
-func (r *documentRepository) Count(ctx context.Context, filterQuery lib.FilterQuery, filters ListDocumentsFilter) (int64, error) {
+func (r *documentRepository) Count(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters ListDocumentsFilter,
+) (int64, error) {
 	var count int64
 
 	result := r.DB.
@@ -94,6 +104,7 @@ func (r *documentRepository) Count(ctx context.Context, filterQuery lib.FilterQu
 			SearchScope("documents", filterQuery.Search),
 			ClientIDFilterScope(filters.ClientID),
 			PropertyIDFilterScope(filters.PropertyID),
+			PropertySlugFilterScope(filters.PropertySlug),
 			TagsFilterScope(filters.Tags),
 		).
 		Count(&count)
@@ -112,6 +123,17 @@ func PropertyIDFilterScope(propertyID *string) func(db *gorm.DB) *gorm.DB {
 		}
 
 		return db.Where("documents.property_id = ?", *propertyID)
+	}
+}
+
+func PropertySlugFilterScope(propertySlug *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if propertySlug == nil {
+			return db
+		}
+
+		return db.Joins("JOIN properties ON documents.property_id = properties.id").
+			Where("properties.slug = ?", *propertySlug)
 	}
 }
 

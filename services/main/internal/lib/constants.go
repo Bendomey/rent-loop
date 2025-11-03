@@ -80,11 +80,11 @@ type HTTPSuccess[T any] struct {
 }
 
 type HTTPReturnPaginatedMetaResponse struct {
-	Page            int    `json:"page" example:"1"`
-	PageSize        int    `json:"page_size" example:"20"`
-	Order           string `json:"order" example:"desc"`
-	OrderBy         string `json:"order_by" example:"created_at"`
-	Total           int64  `json:"total" example:"100"`
-	HasNextPage     bool   `json:"has_next_page" example:"true"`
+	Page            int    `json:"page"              example:"1"`
+	PageSize        int    `json:"page_size"         example:"20"`
+	Order           string `json:"order"             example:"desc"`
+	OrderBy         string `json:"order_by"          example:"created_at"`
+	Total           int64  `json:"total"             example:"100"`
+	HasNextPage     bool   `json:"has_next_page"     example:"true"`
 	HasPreviousPage bool   `json:"has_previous_page" example:"false"`
 }
