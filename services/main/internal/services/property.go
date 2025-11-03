@@ -13,6 +13,14 @@ import (
 
 type PropertyService interface {
 	CreateProperty(context context.Context, input CreatePropertyInput) (*models.Property, error)
+	ListProperties(
+		context context.Context,
+		filterQuery repository.ListPropertiesFilter,
+	) ([]models.Property, error)
+	CountProperties(
+		context context.Context,
+		filterQuery repository.ListPropertiesFilter,
+	) (int64, error)
 }
 
 type propertyService struct {
@@ -137,4 +145,27 @@ func (s *propertyService) CreateProperty(
 		return nil, commitErr
 	}
 	return &property, nil
+}
+
+func (s *propertyService) ListProperties(
+	ctx context.Context,
+	filterQuery repository.ListPropertiesFilter,
+) ([]models.Property, error) {
+	properties, err := s.repo.List(ctx, filterQuery)
+	if err != nil {
+		return nil, err
+	}
+	return *properties, nil
+}
+
+func (s *propertyService) CountProperties(
+	ctx context.Context,
+	filterQuery repository.ListPropertiesFilter,
+) (int64, error) {
+	propertiesCount, err := s.repo.Count(ctx, filterQuery)
+	if err != nil {
+		return 0, err
+	}
+
+	return propertiesCount, nil
 }

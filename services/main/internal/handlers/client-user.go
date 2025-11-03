@@ -15,15 +15,18 @@ type ClientUserHandler struct {
 	appCtx  pkg.AppContext
 }
 
-func NewClientUserHandler(appCtx pkg.AppContext, service services.ClientUserService) ClientUserHandler {
+func NewClientUserHandler(
+	appCtx pkg.AppContext,
+	service services.ClientUserService,
+) ClientUserHandler {
 	return ClientUserHandler{service, appCtx}
 }
 
 type CreateClientUserRequest struct {
-	Name  string `json:"name" validate:"required,min=2" example:"John Doe"`
-	Email string `json:"email" validate:"required,email" example:"client-user@example.com"`
-	Phone string `json:"phone" validate:"required,e164" example:"+233281234569"`
-	Role  string `json:"role" validate:"required,oneof=ADMIN STAFF" example:"ADMIN"`
+	Name  string `json:"name"  validate:"required,min=2"             example:"John Doe"`
+	Email string `json:"email" validate:"required,email"             example:"client-user@example.com"`
+	Phone string `json:"phone" validate:"required,e164"              example:"+233281234569"`
+	Role  string `json:"role"  validate:"required,oneof=ADMIN STAFF" example:"ADMIN"`
 }
 
 // CreateClientUser godoc
@@ -86,7 +89,7 @@ func (h *ClientUserHandler) CreateClientUser(w http.ResponseWriter, r *http.Requ
 }
 
 type LoginClientUserRequest struct {
-	Email    string `json:"email" validate:"required,email" example:"client-user@example.com"`
+	Email    string `json:"email"    validate:"required,email" example:"client-user@example.com"`
 	Password string `json:"password" validate:"required,min=6" example:"password123"`
 }
 
@@ -115,10 +118,13 @@ func (h *ClientUserHandler) AuthenticateClientUser(w http.ResponseWriter, r *htt
 		return
 	}
 
-	clientUserWithToken, err := h.service.AuthenticateClientUser(r.Context(), services.AuthenticateClientUserInput{
-		Email:    body.Email,
-		Password: body.Password,
-	})
+	clientUserWithToken, err := h.service.AuthenticateClientUser(
+		r.Context(),
+		services.AuthenticateClientUserInput{
+			Email:    body.Email,
+			Password: body.Password,
+		},
+	)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]any{
@@ -131,7 +137,10 @@ func (h *ClientUserHandler) AuthenticateClientUser(w http.ResponseWriter, r *htt
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBClientUserToRestWithToken(&clientUserWithToken.ClientUser, clientUserWithToken.Token),
+		"data": transformations.DBClientUserToRestWithToken(
+			&clientUserWithToken.ClientUser,
+			clientUserWithToken.Token,
+		),
 	})
 }
 
@@ -182,10 +191,10 @@ type SendForgotPasswordResetLinkRequest struct {
 //	@Description	Sends forgot password reset link to client user
 //	@Tags			ClientUsers
 //	@Accept			json
-//	@Param			body	body		SendForgotPasswordResetLinkRequest						true  "Send Forgot Password Reset Link Request Body"
+//	@Param			body	body	SendForgotPasswordResetLinkRequest	true	"Send Forgot Password Reset Link Request Body"
 //	@Success		204		"Forgot password reset link sent successfully"
-//	@Failure		400		{object}	lib.HTTPError											"Error occurred when sending forgot password reset link to client user"
-//	@Failure		500		{object}	string													"An unexpected error occurred"
+//	@Failure		400		{object}	lib.HTTPError	"Error occurred when sending forgot password reset link to client user"
+//	@Failure		500		{object}	string			"An unexpected error occurred"
 //	@Router			/api/v1/client-users/forgot-password [post]
 func (h *ClientUserHandler) SendForgotPasswordResetLink(w http.ResponseWriter, r *http.Request) {
 	var body SendForgotPasswordResetLinkRequest
@@ -225,10 +234,10 @@ type ResetPasswordRequest struct {
 //	@Tags			ClientUsers
 //	@Accept			json
 //	@Security		BearerAuth
-//	@Param			body	body		ResetPasswordRequest						true  "Reset Password Request Body"
+//	@Param			body	body	ResetPasswordRequest	true	"Reset Password Request Body"
 //	@Success		204		"Password reset successfully"
-//	@Failure		400		{object}	lib.HTTPError											"Error occurred when resetting password for client user"
-//	@Failure		500		{object}	string													"An unexpected error occurred"
+//	@Failure		400		{object}	lib.HTTPError	"Error occurred when resetting password for client user"
+//	@Failure		500		{object}	string			"An unexpected error occurred"
 //	@Router			/api/v1/client-users/reset-password [post]
 func (h *ClientUserHandler) ResetClientUserPassword(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())

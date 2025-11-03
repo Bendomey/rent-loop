@@ -22,10 +22,10 @@ func NewDocumentHandler(appCtx pkg.AppContext, service services.DocumentService)
 }
 
 type CreateDocumentRequest struct {
-	Title      string    `json:"title" validate:"required" example:"Lease Agreement"`
-	Content    string    `json:"content" validate:"required,json"`
-	Size       int64     `json:"size" validate:"required" example:"2048"`
-	Tags       *[]string `json:"tags" validate:"omitempty,dive" example:"LEASE_AGREEMENT,INSPECTION_REPORT"`
+	Title      string    `json:"title"                 validate:"required"        example:"Lease Agreement"`
+	Content    string    `json:"content"               validate:"required,json"`
+	Size       int64     `json:"size"                  validate:"required"        example:"2048"`
+	Tags       *[]string `json:"tags"                  validate:"omitempty,dive"  example:"LEASE_AGREEMENT,INSPECTION_REPORT"`
 	PropertyID *string   `json:"property_id,omitempty" validate:"omitempty,uuid4" example:"550e8400-e29b-41d4-a716-446655440000"`
 }
 
@@ -37,7 +37,7 @@ type CreateDocumentRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			body	body		CreateDocumentRequest	true	"Document details"
+//	@Param			body	body		CreateDocumentRequest						true	"Document details"
 //	@Success		201		{object}	object{data=transformations.OutputDocument}	"Document created successfully"
 //	@Failure		400		{object}	lib.HTTPError
 //	@Failure		401		{object}	string
@@ -78,7 +78,6 @@ func (h *DocumentHandler) CreateDocument(w http.ResponseWriter, r *http.Request)
 		PropertyID:   body.PropertyID,
 		ClientUserID: currentUser.ID,
 	})
-
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]any{
@@ -96,28 +95,28 @@ func (h *DocumentHandler) CreateDocument(w http.ResponseWriter, r *http.Request)
 }
 
 type UpdateDocumentRequest struct {
-	Title      *string   `json:"title,omitempty" validate:"omitempty" example:"Updated Lease Agreement"`
-	Content    *string   `json:"content,omitempty" validate:"omitempty,json"`
-	Size       *int64    `json:"size,omitempty" validate:"omitempty,min=1" example:"3072"`
-	Tags       *[]string `json:"tags,omitempty" validate:"omitempty,dive" example:"LEASE_AGREEMENT,INSPECTION_REPORT"`
+	Title      *string   `json:"title,omitempty"       validate:"omitempty"       example:"Updated Lease Agreement"`
+	Content    *string   `json:"content,omitempty"     validate:"omitempty,json"`
+	Size       *int64    `json:"size,omitempty"        validate:"omitempty,min=1" example:"3072"`
+	Tags       *[]string `json:"tags,omitempty"        validate:"omitempty,dive"  example:"LEASE_AGREEMENT,INSPECTION_REPORT"`
 	PropertyID *string   `json:"property_id,omitempty" validate:"omitempty,uuid4" example:"550e8400-e29b-41d4-a716-446655440000"`
 }
 
 // UpdateDocument godoc
 //
-//		@Summary		Update an existing document
-//		@Description	Update an existing document
-//		@Tags			Documents
-//		@Accept			json
-//		@Security		BearerAuth
-//		@Produce		json
-//	    @Param 	   		document_id   path      string                  true        "Document ID"  format(uuid4)
-//		@Param			body	body		UpdateDocumentRequest	true	"Document details"
-//		@Success		200		{object}	object{data=transformations.OutputDocument}	"Document Updated successfully"
-//		@Failure		400		{object}	lib.HTTPError
-//		@Failure		401		{object}	string
-//		@Failure		500		{object}	string
-//		@Router			/api/v1/documents/{document_id} [patch]
+//	@Summary		Update an existing document
+//	@Description	Update an existing document
+//	@Tags			Documents
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			document_id	path		string										true	"Document ID"	format(uuid4)
+//	@Param			body		body		UpdateDocumentRequest						true	"Document details"
+//	@Success		200			{object}	object{data=transformations.OutputDocument}	"Document Updated successfully"
+//	@Failure		400			{object}	lib.HTTPError
+//	@Failure		401			{object}	string
+//	@Failure		500			{object}	string
+//	@Router			/api/v1/documents/{document_id} [patch]
 func (h *DocumentHandler) UpdateDocument(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 
@@ -158,7 +157,6 @@ func (h *DocumentHandler) UpdateDocument(w http.ResponseWriter, r *http.Request)
 		PropertyID:   body.PropertyID,
 		ClientUserID: currentUser.ID,
 	})
-
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]any{
@@ -239,8 +237,9 @@ func (h *DocumentHandler) GetDocumentById(w http.ResponseWriter, r *http.Request
 }
 
 type ListDocumentsFilterRequest struct {
+	lib.FilterQueryInput
 	PropertyID *string   `query:"property_id" validate:"omitempty,uuid4" example:"550e8400-e29b-41d4-a716-446655440000"`
-	Tags       *[]string `query:"tags" validate:"omitempty,dive" example:"LEASE_AGREEMENT,INSPECTION_REPORT"`
+	Tags       *[]string `query:"tags"        validate:"omitempty,dive"  example:"LEASE_AGREEMENT,INSPECTION_REPORT"`
 }
 
 // GetDocuments godoc
@@ -323,7 +322,10 @@ func (h *DocumentHandler) ListDocuments(w http.ResponseWriter, r *http.Request) 
 
 	documentsTransformed := make([]interface{}, 0)
 	for _, document := range documents {
-		documentsTransformed = append(documentsTransformed, transformations.DBDocumentToRestDocument(&document))
+		documentsTransformed = append(
+			documentsTransformed,
+			transformations.DBDocumentToRestDocument(&document),
+		)
 	}
 
 	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, documentsTransformed, count))
