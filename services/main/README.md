@@ -52,6 +52,7 @@ Rentloop Engine is a modular property rental management service designed to prov
 4. **Install Go dependencies:**
    ```sh
    go mod download
+   make install-tools
    ```
 
 ## Database Preparation (Migration)
@@ -82,6 +83,16 @@ To initialize or update the database schema, run:
   make run
   # or
   ./scripts/run.sh
+  ```
+
+## Linting and Formatting
+- **Check formatting issues:**
+  ```sh
+  make lint
+  ```
+- **Automatically fix formatting issues:**
+  ```sh
+  make lint-fix
   ```
 
 ## Swagger Docs

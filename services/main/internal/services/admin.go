@@ -20,7 +20,11 @@ type AdminService interface {
 	AuthenticateAdmin(ctx context.Context, input LoginAdminInput) (*AuthenticateAdminResponse, error)
 	GetAdmin(ctx context.Context, adminId string) (*models.Admin, error)
 	CreateAdmin(ctx context.Context, input CreateAdminInput) (*models.Admin, error)
-	ListAdmins(ctx context.Context, filterQuery lib.FilterQuery, filters repository.ListAdminsFilter) ([]models.Admin, error)
+	ListAdmins(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters repository.ListAdminsFilter,
+	) ([]models.Admin, error)
 	CountAdmins(ctx context.Context, filterQuery lib.FilterQuery, filters repository.ListAdminsFilter) (int64, error)
 }
 
@@ -43,7 +47,10 @@ type AuthenticateAdminResponse struct {
 	Token string
 }
 
-func (s *adminService) AuthenticateAdmin(ctx context.Context, input LoginAdminInput) (*AuthenticateAdminResponse, error) {
+func (s *adminService) AuthenticateAdmin(
+	ctx context.Context,
+	input LoginAdminInput,
+) (*AuthenticateAdminResponse, error) {
 	admin, err := s.repo.GetByEmail(ctx, input.Email)
 	if err != nil {
 		return nil, err
@@ -122,7 +129,11 @@ func (s *adminService) CreateAdmin(ctx context.Context, input CreateAdminInput) 
 	return &admin, nil
 }
 
-func (s *adminService) ListAdmins(ctx context.Context, filterQuery lib.FilterQuery, filters repository.ListAdminsFilter) ([]models.Admin, error) {
+func (s *adminService) ListAdmins(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters repository.ListAdminsFilter,
+) ([]models.Admin, error) {
 	admins, err := s.repo.List(ctx, filterQuery, filters)
 	if err != nil {
 		return nil, err
@@ -131,6 +142,10 @@ func (s *adminService) ListAdmins(ctx context.Context, filterQuery lib.FilterQue
 	return *admins, nil
 }
 
-func (s *adminService) CountAdmins(ctx context.Context, filterQuery lib.FilterQuery, filters repository.ListAdminsFilter) (int64, error) {
+func (s *adminService) CountAdmins(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters repository.ListAdminsFilter,
+) (int64, error) {
 	return s.repo.Count(ctx, filterQuery, filters)
 }

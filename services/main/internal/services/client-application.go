@@ -16,9 +16,21 @@ import (
 type ClientApplicationService interface {
 	GetClientApplication(ctx context.Context, clientApplicationId string) (*models.ClientApplication, error)
 	CreateClientApplication(ctx context.Context, input CreateClientApplicationInput) (*models.ClientApplication, error)
-	ListClientApplications(ctx context.Context, filterQuery lib.FilterQuery, filters repository.ListClientApplicationsFilter) ([]models.ClientApplication, error)
-	CountClientApplications(ctx context.Context, filterQuery lib.FilterQuery, filters repository.ListClientApplicationsFilter) (int64, error)
-	ApproveClientApplication(ctx context.Context, clientApplicationId string, adminId string) (*models.ClientApplication, error)
+	ListClientApplications(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters repository.ListClientApplicationsFilter,
+	) ([]models.ClientApplication, error)
+	CountClientApplications(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters repository.ListClientApplicationsFilter,
+	) (int64, error)
+	ApproveClientApplication(
+		ctx context.Context,
+		clientApplicationId string,
+		adminId string,
+	) (*models.ClientApplication, error)
 	RejectClientApplication(ctx context.Context, input RejectClientApplicationInput) (*models.ClientApplication, error)
 }
 
@@ -27,11 +39,17 @@ type clientApplicationService struct {
 	repo   repository.ClientApplicationRepository
 }
 
-func NewClientApplicationService(appCtx pkg.AppContext, repo repository.ClientApplicationRepository) ClientApplicationService {
+func NewClientApplicationService(
+	appCtx pkg.AppContext,
+	repo repository.ClientApplicationRepository,
+) ClientApplicationService {
 	return &clientApplicationService{appCtx, repo}
 }
 
-func (s *clientApplicationService) GetClientApplication(ctx context.Context, clientApplicationId string) (*models.ClientApplication, error) {
+func (s *clientApplicationService) GetClientApplication(
+	ctx context.Context,
+	clientApplicationId string,
+) (*models.ClientApplication, error) {
 	return s.repo.GetByID(ctx, clientApplicationId)
 }
 
@@ -75,7 +93,10 @@ type CreateClientRequest struct {
 	ClientApplicationId string
 }
 
-func (s *clientApplicationService) CreateClientApplication(ctx context.Context, input CreateClientApplicationInput) (*models.ClientApplication, error) {
+func (s *clientApplicationService) CreateClientApplication(
+	ctx context.Context,
+	input CreateClientApplicationInput,
+) (*models.ClientApplication, error) {
 	clientApplication := models.ClientApplication{
 		Type:               input.Type,
 		SubType:            input.SubType,
@@ -129,7 +150,10 @@ type RejectClientApplicationInput struct {
 	AdminId             string
 }
 
-func (s *clientApplicationService) RejectClientApplication(ctx context.Context, input RejectClientApplicationInput) (*models.ClientApplication, error) {
+func (s *clientApplicationService) RejectClientApplication(
+	ctx context.Context,
+	input RejectClientApplicationInput,
+) (*models.ClientApplication, error) {
 	clientApplication, err := s.repo.GetByID(ctx, input.ClientApplicationId)
 	if err != nil {
 		return nil, err
@@ -161,7 +185,11 @@ func (s *clientApplicationService) RejectClientApplication(ctx context.Context, 
 	return clientApplication, nil
 }
 
-func (s *clientApplicationService) ApproveClientApplication(ctx context.Context, id string, adminId string) (*models.ClientApplication, error) {
+func (s *clientApplicationService) ApproveClientApplication(
+	ctx context.Context,
+	id string,
+	adminId string,
+) (*models.ClientApplication, error) {
 	clientApplication, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -247,7 +275,11 @@ func (s *clientApplicationService) ApproveClientApplication(ctx context.Context,
 	return clientApplication, nil
 }
 
-func (s *clientApplicationService) ListClientApplications(ctx context.Context, filterQuery lib.FilterQuery, filters repository.ListClientApplicationsFilter) ([]models.ClientApplication, error) {
+func (s *clientApplicationService) ListClientApplications(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters repository.ListClientApplicationsFilter,
+) ([]models.ClientApplication, error) {
 	clientApplications, err := s.repo.List(ctx, filterQuery, filters)
 	if err != nil {
 		return nil, err
@@ -256,6 +288,10 @@ func (s *clientApplicationService) ListClientApplications(ctx context.Context, f
 	return *clientApplications, nil
 }
 
-func (s *clientApplicationService) CountClientApplications(ctx context.Context, filterQuery lib.FilterQuery, filters repository.ListClientApplicationsFilter) (int64, error) {
+func (s *clientApplicationService) CountClientApplications(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters repository.ListClientApplicationsFilter,
+) (int64, error) {
 	return s.repo.Count(ctx, filterQuery, filters)
 }

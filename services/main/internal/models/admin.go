@@ -10,16 +10,16 @@ import (
 // Admin represents a rentlopp admin user in the system
 type Admin struct {
 	BaseModelSoftDelete
-	Name        string  `json:"name" gorm:"not null;"`
-	Email       string  `json:"email" gorm:"not null;uniqueIndex"`
-	Password    string  `json:"password" gorm:"not null"`
+	Name        string  `json:"name"        gorm:"not null;"`
+	Email       string  `json:"email"       gorm:"not null;uniqueIndex"`
+	Password    string  `json:"password"    gorm:"not null"`
 	CreatedByID *string `json:"createdByID"`
 	CreatedBy   *Admin  `json:"createdBy"`
 }
 
 // BeforeCreate hook is called before the data is persisted to db
 func (admin *Admin) BeforeCreate(tx *gorm.DB) (err error) {
-	//hashes password
+	// hashes password
 	hashed, err := hashpassword.HashPassword(admin.Password)
 	admin.Password = hashed
 	if err != nil {

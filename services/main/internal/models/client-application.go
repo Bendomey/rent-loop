@@ -3,16 +3,16 @@ package models
 // ClientApplication represents a property owner (landlord/developer/etc) application in the system.
 type ClientApplication struct {
 	BaseModelSoftDelete
-	Type    string `json:"type" gorm:"not null;index;"`    // INDIVIDUAL | COMPANY
+	Type    string `json:"type"    gorm:"not null;index;"` // INDIVIDUAL | COMPANY
 	SubType string `json:"subType" gorm:"not null;index;"` // INDIVIDUAL = LANDLORD; COMPANY = PROPERTY_MANAGER | DEVELOPER | AGENCY
-	Name    string `json:"name" gorm:"not null;"`          // company name or individual full name
+	Name    string `json:"name"    gorm:"not null;"`       // company name or individual full name
 
 	// company address or individual home address
-	Address   string  `json:"address" gorm:"not null;"`
-	Country   string  `json:"country" gorm:"not null;"`
-	Region    string  `json:"region" gorm:"not null;"`
-	City      string  `json:"city" gorm:"not null;"`
-	Latitude  float64 `json:"latitude" gorm:"not null;"`
+	Address   string  `json:"address"   gorm:"not null;"`
+	Country   string  `json:"country"   gorm:"not null;"`
+	Region    string  `json:"region"    gorm:"not null;"`
+	City      string  `json:"city"      gorm:"not null;"`
+	Latitude  float64 `json:"latitude"  gorm:"not null;"`
 	Longitude float64 `json:"longitude" gorm:"not null;"`
 
 	// company specific fields
@@ -30,16 +30,16 @@ type ClientApplication struct {
 	IDExpiry      *string `json:"idExpiry"`      // individual ID expiry date
 	IDDocumentURL *string `json:"idDocumentUrl"` // URL to the scanned copy of the ID document
 
-	ContactName        string `json:"contactName" gorm:"not null;"`
+	ContactName        string `json:"contactName"        gorm:"not null;"`
 	ContactPhoneNumber string `json:"contactPhoneNumber" gorm:"not null;"`
-	ContactEmail       string `json:"contactEmail" gorm:"not null;"`
+	ContactEmail       string `json:"contactEmail"       gorm:"not null;"`
 
 	Status string `json:"status" gorm:"not null;index;default:'ClientApplication.Status.Pending'"` // ClientApplication.Status.Pending | ClientApplication.Status.Approved | ClientApplication.Status.Rejected
 
 	ApprovedById *string `json:"approvedById"`
-	ApprovedBy   *Admin  `json:"approvedBy" gorm:"foreignKey:ApprovedById;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	ApprovedBy   *Admin  `json:"approvedBy"   gorm:"foreignKey:ApprovedById;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 
 	RejectedById    *string `json:"rejectedById"`
-	RejectedBy      *Admin  `json:"rejectedBy" gorm:"foreignKey:RejectedById;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	RejectedBy      *Admin  `json:"rejectedBy"      gorm:"foreignKey:RejectedById;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	RejectedBecause *string `json:"rejectedBecause"`
 }
