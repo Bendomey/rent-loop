@@ -1,22 +1,27 @@
 install-tools:
 	go install github.com/cespare/reflex@latest
+	go install github.com/swaggo/swag/cmd/swag@latest
 	go install mvdan.cc/gofumpt@latest
 	go install github.com/segmentio/golines@latest
 
 run:
-	make generate-docs && scripts/run.sh
+	make generate-docs
+	scripts/run.sh
 
 run-dev:
-	make generate-docs && scripts/run-dev.sh
+	make generate-docs
+	scripts/run-dev.sh
 
 build-server:
 	scripts/build.sh
 
 lint:
-	gofumpt -l -d . && golines -m 120 -d .
+	gofumpt -l -d .
+	golines -m 120 -d .
 
 lint-fix:
-	gofumpt -l -w . && golines -m 120 -w .
+	gofumpt -l -w .
+	golines -m 120 -w .
 
 setup-db:
 	go run init/main.go init/setup.go -init true
