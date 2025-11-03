@@ -11,7 +11,7 @@ import (
 
 type PropertyRepository interface {
 	Create(context context.Context, property *models.Property) error
-	GetByID(context context.Context, id string) (*models.Property, error)
+	GetByID(context context.Context, query GetPropertyQuery) (*models.Property, error)
 	List(context context.Context, filterQuery ListPropertiesFilter) (*[]models.Property, error)
 	Count(context context.Context, filterQuery ListPropertiesFilter) (int64, error)
 }
@@ -37,9 +37,25 @@ func (r *propertyRepository) Create(ctx context.Context, property *models.Proper
 	return db.WithContext(ctx).Create(property).Error
 }
 
-func (r *propertyRepository) GetByID(ctx context.Context, id string) (*models.Property, error) {
+type GetPropertyQuery struct {
+	ID       string
+	Populate *[]string
+}
+
+func (r *propertyRepository) GetByID(
+	ctx context.Context,
+	query GetPropertyQuery,
+) (*models.Property, error) {
 	var property models.Property
-	result := r.DB.WithContext(ctx).Where("id = ?", id).First(&property)
+	db := r.DB.WithContext(ctx).Where("id = ?", query.ID)
+
+	if query.Populate != nil {
+		for _, field := range *query.Populate {
+			db = db.Preload(field)
+		}
+	}
+
+	result := db.First(&property)
 
 	if result.Error != nil {
 		return nil, result.Error

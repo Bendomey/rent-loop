@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+type GetOneQueryInput struct {
+	Populate *[]string `json:"populate" validate:"omitempty"`
+}
+
 type FilterQueryInput struct {
 	Page         int       `json:"page"          validate:"gte=0"`
 	PageSize     int       `json:"page_size"     validate:"gte=0"`

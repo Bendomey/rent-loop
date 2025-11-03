@@ -1279,7 +1279,11 @@ paths:
         type: array
       - example: 550e8400-e29b-41d4-a716-446655440000
         in: query
-        name: propertyID
+        name: property_id
+        type: string
+      - example: downtown-apartment-101
+        in: query
+        name: property_slug
         type: string
       - in: query
         name: query
@@ -1617,6 +1621,50 @@ paths:
       security:
       - BearerAuth: []
       summary: Creates a new property
+      tags:
+      - Properties
+  /api/v1/properties/{property_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get property by ID
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputProperty'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get property by ID
       tags:
       - Properties
 securityDefinitions:
