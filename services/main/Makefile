@@ -22,6 +22,7 @@ lint:
 lint-fix:
 	~/go/bin/gofumpt -l -w .
 	~/go/bin/golines -m 120 -w .
+	~/go/bin/swag fmt
 
 setup-db:
 	go run init/main.go init/setup.go -init true
