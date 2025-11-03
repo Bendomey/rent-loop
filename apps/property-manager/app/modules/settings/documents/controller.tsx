@@ -49,8 +49,10 @@ export const DocumentsController = ({
 
 export function AddDocumentButton({
 	documentTemplates,
+	property,
 }: {
 	documentTemplates: Array<IDocumentTemplate>
+	property?: Property
 }) {
 	const { isOpened, onClose, setIsOpened } = useDisclosure()
 	const [selectedTemplate, setSelectedTemplate] = useState<string>()
@@ -125,6 +127,13 @@ export function AddDocumentButton({
 							onClick={() => {
 								// TODO: later redirect them to /settings/documents/new with the selected template applied(or to select template screen)
 								// and then set the name/type of document there before creating it. For now, we just create with default name as "Untitled Document"
+								if (property) {
+									void navigate(
+										`/properties/${property.slug}/settings/documents/new/${selectedTemplate}`,
+									)
+									return
+								}
+
 								void navigate(`/settings/documents/${selectedTemplate}`)
 							}}
 							className="bg-rose-600 hover:bg-rose-700"

@@ -31,6 +31,7 @@ import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { getNameInitials } from '~/lib/misc'
 import { safeString } from '~/lib/strings'
+import { cn } from '~/lib/utils'
 import type { loader } from '~/routes/_auth._dashboard.settings.documents'
 
 export function DocumentsModule() {
@@ -38,12 +39,12 @@ export function DocumentsModule() {
 	const [searchParams] = useSearchParams()
 
 	const page = searchParams.get('page')
-		? Number(searchParams.get('page'))
+		? Number(searchParams.get('page')) + 1
 		: PAGINATION_DEFAULTS.PAGE
 	const per = searchParams.get('per_page')
 		? Number(searchParams.get('per_page'))
 		: PAGINATION_DEFAULTS.PER_PAGE
-	const { data, isLoading, error, refetch } = useGetDocuments({
+	const { data, isPending, isRefetching, error, refetch } = useGetDocuments({
 		filters: {},
 		pagination: { page, per },
 		populate: ['CreatedBy'],
@@ -53,6 +54,8 @@ export function DocumentsModule() {
 			fields: ['title'],
 		},
 	})
+
+	const isLoading = isPending || isRefetching
 
 	const columns: ColumnDef<RentloopDocument>[] = useMemo(() => {
 		return [
@@ -183,10 +186,19 @@ export function DocumentsModule() {
 					</TypographyMuted>
 				</div>
 				<div>
-					<Button onClick={() => refetch()} variant="outline" size="sm">
-						<RotateCw className="size-4" />
-						Refresh
-					</Button>
+					{isPending ? null : (
+						<Button
+							onClick={() => refetch()}
+							disabled={isLoading}
+							variant="outline"
+							size="sm"
+						>
+							<RotateCw
+								className={cn('size-4', { 'animate-spin': isLoading })}
+							/>
+							Refresh
+						</Button>
+					)}
 				</div>
 			</div>
 			<DocumentsController documentTemplates={documentTemplates} />
@@ -195,7 +207,7 @@ export function DocumentsModule() {
 					columns={columns}
 					isLoading={isLoading}
 					refetch={refetch}
-					error={error?.message}
+					error={error ? 'Failed to load documents.' : undefined}
 					dataResponse={{
 						rows: data?.rows ?? [],
 						total: data?.total ?? 0,

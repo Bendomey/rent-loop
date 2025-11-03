@@ -20,5 +20,6 @@ interface RentloopDocument {
 
 interface FetchRentloopDocumentFilter {
 	property_id?: string
+	property_slug?: string
 	tags?: Array<string>
 }

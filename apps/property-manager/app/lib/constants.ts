@@ -14,7 +14,7 @@ export const QUERY_KEYS = {
 } as const
 
 export const PAGINATION_DEFAULTS = {
-	PAGE: 0,
+	PAGE: 1,
 	PER_PAGE: 50,
 } as const
 

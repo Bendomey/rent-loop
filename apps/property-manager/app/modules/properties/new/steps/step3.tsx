@@ -5,6 +5,7 @@ import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 
 const DUMMY_PREVIEWS: Property = {
 	id: 'property-123',
+	slug: 'osu-studio-apartment',
 	type: 'SINGLE',
 	status: 'Property.Status.Active',
 	name: 'Osu Studio Apartment',

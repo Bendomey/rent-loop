@@ -1,8 +1,9 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { EllipsisVertical, FileText, RotateCw } from 'lucide-react'
 import { useMemo } from 'react'
-import { useLoaderData } from 'react-router'
+import { useLoaderData, useParams, useSearchParams } from 'react-router'
 import { PropertyDocumentsController } from './controller'
+import { useGetDocuments } from '~/api/documents'
 import { DataTable } from '~/components/datatable'
 import {
 	AlertDialog,
@@ -26,13 +27,55 @@ import {
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
+import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { getNameInitials } from '~/lib/misc'
 import { safeString } from '~/lib/strings'
+import { cn } from '~/lib/utils'
 import type { loader } from '~/routes/_auth._dashboard.settings.documents'
 
+// TODO: fetch single property from loader data
+const property: Property = {
+	id: 'property-id',
+	name: 'Sample Property',
+	slug: 'sample-property',
+	address: '123 Main St, Anytown, USA',
+	city: 'Anytown',
+	state: 'CA',
+	description: 'A sample property for demonstration purposes.',
+	created_at: new Date(),
+	updated_at: new Date(),
+	gps_address: '123 Main St, Anytown, USA',
+	status: 'Property.Status.Active',
+	tags: [],
+	type: 'SINGLE',
+	zip_code: '12345',
+}
 export function PropertyDocumentsSettingsModule() {
 	const { documentTemplates } = useLoaderData<typeof loader>()
+	const params = useParams()
+	const [searchParams] = useSearchParams()
+
+	const page = searchParams.get('page')
+		? Number(searchParams.get('page')) + 1
+		: PAGINATION_DEFAULTS.PAGE
+	const per = searchParams.get('per_page')
+		? Number(searchParams.get('per_page'))
+		: PAGINATION_DEFAULTS.PER_PAGE
+
+	const { data, isPending, isRefetching, error, refetch } = useGetDocuments({
+		filters: {
+			property_slug: params.propertySlug,
+		},
+		pagination: { page, per },
+		populate: ['CreatedBy'],
+		sorter: { sort: 'desc', sort_by: 'created_at' },
+		search: {
+			query: searchParams.get('query') ?? undefined,
+			fields: ['title'],
+		},
+	})
+	const isLoading = isPending || isRefetching
 
 	const columns: ColumnDef<RentloopDocument>[] = useMemo(() => {
 		return [
@@ -163,36 +206,45 @@ export function PropertyDocumentsSettingsModule() {
 					</TypographyMuted>
 				</div>
 				<div>
-					<Button variant="outline" size="sm">
-						<RotateCw className="size-4" />
-						Refresh
-					</Button>
+					{isPending ? null : (
+						<Button
+							onClick={() => refetch()}
+							disabled={isLoading}
+							variant="outline"
+							size="sm"
+						>
+							<RotateCw
+								className={cn('size-4', { 'animate-spin': isLoading })}
+							/>
+							Refresh
+						</Button>
+					)}
 				</div>
 			</div>
-			<PropertyDocumentsController documentTemplates={documentTemplates} />
+			<PropertyDocumentsController
+				property={property}
+				documentTemplates={documentTemplates}
+			/>
 			<div className="h-full w-full">
 				<DataTable
 					columns={columns}
+					isLoading={isLoading}
+					refetch={refetch}
+					error={error ? 'Failed to load documents.' : undefined}
 					dataResponse={{
-						rows: [],
-						total: 150,
-						page: 1,
-						page_size: 50,
-						order: 'desc',
-						order_by: 'created_at',
-						has_prev_page: false,
-						has_next_page: true,
+						rows: data?.rows ?? [],
+						total: data?.total ?? 0,
+						page,
+						page_size: per,
+						order: data?.order ?? 'desc',
+						order_by: data?.order_by ?? 'created_at',
+						has_prev_page: data?.has_prev_page ?? false,
+						has_next_page: data?.has_next_page ?? false,
 					}}
 					empty={{
 						message: 'No documents found',
 						description:
 							"Try adjusting your search to find what you're looking for.",
-						button: {
-							label: 'Add Document',
-							onClick: () => {
-								// Handle button click
-							},
-						},
 					}}
 				/>
 			</div>

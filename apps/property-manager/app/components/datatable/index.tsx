@@ -182,7 +182,13 @@ export function DataTable<T extends { id: string }>({
 	} else {
 		const rows = table.getRowModel().rows
 		if (rows.length === 0) {
-			content = <EmptyOutline {...empty} />
+			content = (
+				<TableRow>
+					<TableCell colSpan={columns.length} className="h-48">
+						<EmptyOutline {...empty} />
+					</TableCell>
+				</TableRow>
+			)
 		} else {
 			content = (
 				<>

@@ -23,7 +23,11 @@ import { Spinner } from '~/components/ui/spinner'
 import { TypographyMuted } from '~/components/ui/typography'
 import { API_STATUS, type APIStatusType } from '~/lib/constants'
 
-export function ImportDocumentButton() {
+interface Props {
+	property?: Property
+}
+
+export function ImportDocumentButton({ property }: Props) {
 	const [files, setFiles] = useState<File[] | undefined>()
 	const [previewerStatus, setPreviewerStatus] = useState<APIStatusType>(
 		API_STATUS.IDLE,
@@ -57,7 +61,14 @@ export function ImportDocumentButton() {
 		async function navigateToDocument(documentId: string) {
 			setNavigatingStatus(API_STATUS.PENDING)
 			try {
-				await navigate(`/settings/documents/${documentId}`)
+				if (property) {
+					await navigate(
+						`/properties/${property.slug}/settings/documents/${documentId}`,
+					)
+				} else {
+					await navigate(`/settings/documents/${documentId}`)
+				}
+
 				setNavigatingStatus(API_STATUS.SUCCESS)
 			} catch {
 				setNavigatingStatus(API_STATUS.ERROR)

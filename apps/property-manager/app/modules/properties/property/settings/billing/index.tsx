@@ -142,6 +142,7 @@ export function PropertyBillingSettingsModule() {
 								updated_at: new Date(),
 								property_id: 'property_1',
 								property: {
+									slug: 'sunset-apartments',
 									id: 'property_1',
 									name: 'Sunset Apartments',
 									description: '',
@@ -184,6 +185,7 @@ export function PropertyBillingSettingsModule() {
 								updated_at: new Date(),
 								property_id: 'property_1',
 								property: {
+									slug: 'client-2',
 									id: 'property_2',
 									name: 'Greenfield Villas',
 									description: 'A beautiful villa with a garden.',
