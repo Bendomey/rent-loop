@@ -16,12 +16,12 @@ build-server:
 	scripts/build.sh
 
 lint:
-	gofumpt -l -d .
-	golines -m 120 -d .
+	~/go/bin/gofumpt -l -d .
+	~/go/bin/golines -m 120 -d .
 
 lint-fix:
-	gofumpt -l -w .
-	golines -m 120 -w .
+	~/go/bin/gofumpt -l -w .
+	~/go/bin/golines -m 120 -w .
 
 setup-db:
 	go run init/main.go init/setup.go -init true

@@ -238,8 +238,8 @@ func (h *DocumentHandler) GetDocumentById(w http.ResponseWriter, r *http.Request
 
 type ListDocumentsFilterRequest struct {
 	lib.FilterQueryInput
-	PropertyID *string   `query:"property_id" validate:"omitempty,uuid4" example:"550e8400-e29b-41d4-a716-446655440000"`
-	Tags       *[]string `query:"tags"        validate:"omitempty,dive"  example:"LEASE_AGREEMENT,INSPECTION_REPORT"`
+	PropertyID *string   `json:"property_id" validate:"omitempty,uuid4" example:"550e8400-e29b-41d4-a716-446655440000"`
+	Tags       *[]string `json:"tags"        validate:"omitempty,dive"  example:"LEASE_AGREEMENT,INSPECTION_REPORT"`
 }
 
 // GetDocuments godoc

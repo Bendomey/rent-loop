@@ -58,6 +58,7 @@ func New(appCtx pkg.AppContext, handlers handlers.Handlers) *chi.Mux {
 			"Origin",
 			"Pragma",
 			"Referer",
+			"Authorization",
 		},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: false,
