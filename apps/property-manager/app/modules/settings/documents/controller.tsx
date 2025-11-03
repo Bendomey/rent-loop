@@ -32,6 +32,7 @@ export type IDocumentTemplate = {
 	id: string
 	name: string
 	charCount: number
+	tags: Array<string>
 	description: string
 	document: SerializedEditorState<SerializedLexicalNode>
 }
@@ -107,10 +108,10 @@ export function AddDocumentButton({
 		const title = documentTitle.trim()
 		mutate(
 			{
-				title: title ?? `Untitled Document (${template.id})`,
+				title: title.length ? title : `Untitled Document (${template.id})`,
 				content: JSON.stringify(template.document),
 				size: template.charCount,
-				tags: [],
+				tags: template.tags,
 				property_id: property?.id,
 			},
 			{

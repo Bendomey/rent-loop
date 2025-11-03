@@ -51,8 +51,19 @@ import {
 	TableRow,
 } from '~/components/ui/table'
 
+interface DataResponse<T> {
+	rows: T[]
+	total: number
+	page: number
+	page_size: number
+	order: 'asc' | 'desc'
+	order_by: string
+	has_prev_page: boolean
+	has_next_page: boolean
+}
+
 interface Props<T> {
-	dataResponse: FetchMultipleDataResponse<T>
+	dataResponse: DataResponse<T>
 	columns: ColumnDef<T>[]
 	empty: EmptyOutlineProps
 	isLoading?: boolean

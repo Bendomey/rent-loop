@@ -246,13 +246,13 @@ export function DocumentsModule() {
 					error={error ? 'Failed to load documents.' : undefined}
 					dataResponse={{
 						rows: data?.rows ?? [],
-						total: data?.total ?? 0,
+						total: data?.meta?.total ?? 0,
 						page,
 						page_size: per,
-						order: data?.order ?? 'desc',
-						order_by: data?.order_by ?? 'created_at',
-						has_prev_page: data?.has_prev_page ?? false,
-						has_next_page: data?.has_next_page ?? false,
+						order: data?.meta?.order ?? 'desc',
+						order_by: data?.meta?.order_by ?? 'created_at',
+						has_prev_page: data?.meta?.has_prev_page ?? false,
+						has_next_page: data?.meta?.has_next_page ?? false,
 					}}
 					empty={{
 						message: 'No documents found',

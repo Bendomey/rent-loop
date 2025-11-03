@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '~/lib/constants'
 import { getQueryParams } from '~/lib/get-param'
-import { fetchClient } from '~/lib/transport'
+import { fetchClient, fetchServer } from '~/lib/transport'
 
 const getDocuments = async (
 	props: FetchMultipleDataInputParams<FetchRentloopDocumentFilter>,
@@ -43,7 +43,34 @@ interface CreateDocumentInputParams {
 	title: string
 }
 
-const createDocument = async (params: CreateDocumentInputParams) => {
+export const createDocumentSSR = async (
+	params: CreateDocumentInputParams,
+	apiConfig: ApiConfigForServerConfig,
+) => {
+	try {
+		const response = await fetchServer<ApiResponse<RentloopDocument>>(
+			`${apiConfig?.baseUrl}/v1/documents`,
+			{
+				method: 'POST',
+				body: JSON.stringify(params),
+				...apiConfig,
+			},
+		)
+
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const createDocument = async (params: CreateDocumentInputParams) => {
 	try {
 		const response = await fetchClient<ApiResponse<RentloopDocument>>(
 			'/v1/documents',
