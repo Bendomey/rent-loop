@@ -1,4 +1,8 @@
+import { redirect } from 'react-router'
 import type { Route } from './+types/_auth._dashboard.properties.new'
+import { createProperty } from '~/api/property'
+import { environmentVariables } from '~/lib/actions/env.server'
+import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'
 import { APP_NAME } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
@@ -12,6 +16,52 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export const handle = {
 	breadcrumb: 'Add New',
+}
+
+export async function action({ request }: Route.ActionArgs) {
+	const baseUrl = environmentVariables().API_ADDRESS
+
+	let formData = await request.formData()
+	const type = formData.get('type') as Property['type']
+	const status = formData.get('status') as Property['status']
+	const name = formData.get('name') as string
+	const description = formData.get('description') as string | null
+	const tags = formData.getAll('tags') as string[]
+	const gps_address = formData.get('gps_address') as string
+	const address = formData.get('address') as string
+	const city = formData.get('city') as string
+	const region = formData.get('region') as string
+	const country = formData.get('country') as string
+	const images = formData.getAll('images') as string[]
+	const latitude = parseFloat(formData.get('latitude') as string)
+	const longitude = parseFloat(formData.get('longitude') as string)
+
+	try {
+		await createProperty(
+			replaceNullUndefinedWithUndefined({
+				type,
+				status,
+				name,
+				description,
+				tags,
+				gps_address,
+				address,
+				city,
+				region,
+				country,
+				images,
+				latitude,
+				longitude,
+			}),
+			{
+				baseUrl,
+			},
+		)
+
+		return redirect('/properties')
+	} catch {
+		return { error: 'Failed to create property' }
+	}
 }
 
 export function meta({ loaderData, location }: Route.MetaArgs) {

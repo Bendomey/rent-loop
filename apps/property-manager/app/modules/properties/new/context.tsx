@@ -51,9 +51,11 @@ export function CreatePropertyProvider({
 	}
 
 	const onSubmit = async (data: Partial<CreatePropertyInput>) => {
-		await createFetcher.submit(data, {
+		const updatedData = { ...data }
+
+		await createFetcher.submit(updatedData, {
 			method: 'POST',
-			action: '/apply',
+			action: '/properties/new',
 		})
 	}
 
