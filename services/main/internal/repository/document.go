@@ -48,9 +48,10 @@ func (r *documentRepository) Delete(ctx context.Context, documentID string) erro
 }
 
 type ListDocumentsFilter struct {
-	Tags       *[]string
-	PropertyID *string
-	ClientID   string
+	Tags         *[]string
+	PropertyID   *string
+	PropertySlug *string
+	ClientID     string
 }
 
 func (r *documentRepository) List(
@@ -66,6 +67,7 @@ func (r *documentRepository) List(
 			SearchScope("documents", filterQuery.Search),
 			ClientIDFilterScope(filters.ClientID),
 			PropertyIDFilterScope(filters.PropertyID),
+			PropertySlugFilterScope(filters.PropertySlug),
 			TagsFilterScope(filters.Tags),
 
 			PaginationScope(filterQuery.Page, filterQuery.PageSize),
@@ -102,6 +104,7 @@ func (r *documentRepository) Count(
 			SearchScope("documents", filterQuery.Search),
 			ClientIDFilterScope(filters.ClientID),
 			PropertyIDFilterScope(filters.PropertyID),
+			PropertySlugFilterScope(filters.PropertySlug),
 			TagsFilterScope(filters.Tags),
 		).
 		Count(&count)
@@ -120,6 +123,17 @@ func PropertyIDFilterScope(propertyID *string) func(db *gorm.DB) *gorm.DB {
 		}
 
 		return db.Where("documents.property_id = ?", *propertyID)
+	}
+}
+
+func PropertySlugFilterScope(propertySlug *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if propertySlug == nil {
+			return db
+		}
+
+		return db.Joins("JOIN properties ON documents.property_id = properties.id").
+			Where("properties.slug = ?", *propertySlug)
 	}
 }
 
