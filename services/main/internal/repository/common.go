@@ -28,11 +28,17 @@ func SearchScope(tableName string, search *lib.Search) func(db *gorm.DB) *gorm.D
 
 		for index, singleQuery := range search.SearchFields {
 			if index == 0 {
-				results = results.Where(fmt.Sprintf("%s.%s ILIKE ?", tableName, singleQuery), fmt.Sprintf("%%%s%%", search.Query))
+				results = results.Where(
+					fmt.Sprintf("%s.%s ILIKE ?", tableName, singleQuery),
+					fmt.Sprintf("%%%s%%", search.Query),
+				)
 				continue
 			}
 
-			results = results.Or(fmt.Sprintf("%s.%s ILIKE ?", tableName, singleQuery), fmt.Sprintf("%%%s%%", search.Query))
+			results = results.Or(
+				fmt.Sprintf("%s.%s ILIKE ?", tableName, singleQuery),
+				fmt.Sprintf("%%%s%%", search.Query),
+			)
 		}
 
 		return results

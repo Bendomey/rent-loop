@@ -15,7 +15,11 @@ type DocumentService interface {
 	Update(ctx context.Context, input UpdateDocumentInput) (*models.Document, error)
 	GetByID(ctx context.Context, documentID string) (*models.Document, error)
 	Delete(ctx context.Context, documentID string) error
-	List(ctx context.Context, filterQuery lib.FilterQuery, filters repository.ListDocumentsFilter) ([]models.Document, error)
+	List(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters repository.ListDocumentsFilter,
+	) ([]models.Document, error)
 	Count(ctx context.Context, filterQuery lib.FilterQuery, filters repository.ListDocumentsFilter) (int64, error)
 }
 
@@ -123,7 +127,11 @@ func (s *documentService) Delete(ctx context.Context, documentID string) error {
 	return s.repo.Delete(ctx, documentID)
 }
 
-func (s *documentService) List(ctx context.Context, filterQuery lib.FilterQuery, filters repository.ListDocumentsFilter) ([]models.Document, error) {
+func (s *documentService) List(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters repository.ListDocumentsFilter,
+) ([]models.Document, error) {
 	documents, err := s.repo.List(ctx, filterQuery, filters)
 	if err != nil {
 		return nil, err
@@ -132,6 +140,10 @@ func (s *documentService) List(ctx context.Context, filterQuery lib.FilterQuery,
 	return *documents, nil
 }
 
-func (s *documentService) Count(ctx context.Context, filterQuery lib.FilterQuery, filters repository.ListDocumentsFilter) (int64, error) {
+func (s *documentService) Count(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters repository.ListDocumentsFilter,
+) (int64, error) {
 	return s.repo.Count(ctx, filterQuery, filters)
 }

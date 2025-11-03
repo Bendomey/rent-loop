@@ -85,6 +85,16 @@ To initialize or update the database schema, run:
   ./scripts/run.sh
   ```
 
+## Linting and Formatting
+- **Check formatting issues:**
+  ```sh
+  make lint
+  ```
+- **Automatically fix formatting issues:**
+  ```sh
+  make lint-fix
+  ```
+
 ## Swagger Docs
 - http://localhost:5003/swagger/index.html
 - http://localhost:5003/doc.json

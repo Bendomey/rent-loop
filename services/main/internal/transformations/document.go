@@ -7,19 +7,19 @@ import (
 )
 
 type OutputDocument struct {
-	ID          string            `json:"id" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	Title       string            `json:"title" example:"Lease Agreement"`
+	ID          string            `json:"id"                      example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	Title       string            `json:"title"                   example:"Lease Agreement"`
 	Content     string            `json:"content"`
-	Size        int64             `json:"size" example:"2048"`
-	Tags        []string          `json:"tags" example:"LEASE_AGREEMENT,INSPECTION_REPORT"`
-	PropertyID  *string           `json:"property_id,omitempty" example:"550e8400-e29b-41d4-a716-446655440000"`
+	Size        int64             `json:"size"                    example:"2048"`
+	Tags        []string          `json:"tags"                    example:"LEASE_AGREEMENT,INSPECTION_REPORT"`
+	PropertyID  *string           `json:"property_id,omitempty"   example:"550e8400-e29b-41d4-a716-446655440000"`
 	Property    *OutputProperty   `json:"property,omitempty"`
-	CreatedById string            `json:"created_by_id" example:"d290f1ee-6c54-4b01-90e6-d701748f0851"`
+	CreatedById string            `json:"created_by_id"           example:"d290f1ee-6c54-4b01-90e6-d701748f0851"`
 	CreatedBy   *OutputClientUser `json:"created_by,omitempty"`
 	UpdatedById *string           `json:"updated_by_id,omitempty" example:"c290f1ee-6c54-4b01-90e6-d701748f0852"`
 	UpdatedBy   *OutputClientUser `json:"updated_by,omitempty"`
-	CreatedAt   time.Time         `json:"created_at" example:"2023-01-01T00:00:00Z"`
-	UpdatedAt   time.Time         `json:"updated_at" example:"2023-01-01T00:00:00Z"`
+	CreatedAt   time.Time         `json:"created_at"              example:"2023-01-01T00:00:00Z"`
+	UpdatedAt   time.Time         `json:"updated_at"              example:"2023-01-01T00:00:00Z"`
 }
 
 // DBDocumentToRestDocument transforms the db document model to a rest document model

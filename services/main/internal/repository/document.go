@@ -53,7 +53,11 @@ type ListDocumentsFilter struct {
 	ClientID   string
 }
 
-func (r *documentRepository) List(ctx context.Context, filterQuery lib.FilterQuery, filters ListDocumentsFilter) (*[]models.Document, error) {
+func (r *documentRepository) List(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters ListDocumentsFilter,
+) (*[]models.Document, error) {
 	var documents []models.Document
 
 	db := r.DB.WithContext(ctx).
@@ -83,7 +87,11 @@ func (r *documentRepository) List(ctx context.Context, filterQuery lib.FilterQue
 	return &documents, nil
 }
 
-func (r *documentRepository) Count(ctx context.Context, filterQuery lib.FilterQuery, filters ListDocumentsFilter) (int64, error) {
+func (r *documentRepository) Count(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters ListDocumentsFilter,
+) (int64, error) {
 	var count int64
 
 	result := r.DB.

@@ -30,7 +30,6 @@ type SendEmailInput struct {
 
 // SendEmail sends an email using the Resend service
 func SendEmail(appCtx AppContext, input SendEmailInput) error {
-
 	if appCtx.Config.ResendAPIKey == "" {
 		raven.CaptureError(errors.New("resend api key not set"), nil)
 		return errors.New("InternalServerError")

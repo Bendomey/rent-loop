@@ -11,7 +11,11 @@ import (
 type ClientApplicationRepository interface {
 	GetByID(ctx context.Context, id string) (*models.ClientApplication, error)
 	Create(ctx context.Context, clientApp *models.ClientApplication) error
-	List(ctx context.Context, filterQuery lib.FilterQuery, filters ListClientApplicationsFilter) (*[]models.ClientApplication, error)
+	List(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters ListClientApplicationsFilter,
+	) (*[]models.ClientApplication, error)
 	Count(ctx context.Context, filterQuery lib.FilterQuery, filters ListClientApplicationsFilter) (int64, error)
 	UpdateClientApplication(ctx context.Context, clientApp *models.ClientApplication) error
 }
@@ -36,7 +40,11 @@ func (r *clientApplicationRepository) Create(ctx context.Context, clientApp *mod
 	return r.db.WithContext(ctx).Create(clientApp).Error
 }
 
-func (r *clientApplicationRepository) List(ctx context.Context, filterQuery lib.FilterQuery, filters ListClientApplicationsFilter) (*[]models.ClientApplication, error) {
+func (r *clientApplicationRepository) List(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters ListClientApplicationsFilter,
+) (*[]models.ClientApplication, error) {
 	var clientApplications []models.ClientApplication
 
 	db := r.db.WithContext(ctx).
@@ -66,7 +74,11 @@ func (r *clientApplicationRepository) List(ctx context.Context, filterQuery lib.
 	return &clientApplications, nil
 }
 
-func (r *clientApplicationRepository) Count(ctx context.Context, filterQuery lib.FilterQuery, filters ListClientApplicationsFilter) (int64, error) {
+func (r *clientApplicationRepository) Count(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters ListClientApplicationsFilter,
+) (int64, error) {
 	var count int64
 
 	result := r.db.
@@ -97,7 +109,10 @@ type ListClientApplicationsFilter struct {
 	SubType *string
 }
 
-func (r *clientApplicationRepository) UpdateClientApplication(ctx context.Context, clientApplication *models.ClientApplication) error {
+func (r *clientApplicationRepository) UpdateClientApplication(
+	ctx context.Context,
+	clientApplication *models.ClientApplication,
+) error {
 	return r.db.WithContext(ctx).Save(clientApplication).Error
 }
 
