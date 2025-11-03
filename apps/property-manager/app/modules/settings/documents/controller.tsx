@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { SerializedEditorState, SerializedLexicalNode } from 'lexical'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useNavigation } from 'react-router'
 import { toast } from 'sonner'
 import { ImportDocumentButton } from './components/import-document-button'
 import { useCreateDocument } from '~/api/documents'
@@ -69,6 +69,7 @@ export function AddDocumentButton({
 	const { isOpened, onClose, setIsOpened } = useDisclosure()
 	const [selectedTemplate, setSelectedTemplate] = useState<string>()
 	const navigate = useNavigate()
+	const { state } = useNavigation()
 	const queryClient = useQueryClient()
 
 	const docs = documentTemplates.map((docTemplate) => {
@@ -141,6 +142,8 @@ export function AddDocumentButton({
 		)
 	}
 
+	const isLoading = state === 'loading' || state === 'submitting' || isPending
+
 	return (
 		<Popover open={isOpened} onOpenChange={setIsOpened}>
 			<PopoverTrigger asChild>
@@ -201,9 +204,9 @@ export function AddDocumentButton({
 							variant="default"
 							onClick={handleSubmit}
 							className="bg-rose-600 hover:bg-rose-700"
-							disabled={!Boolean(selectedTemplate) || isPending}
+							disabled={!Boolean(selectedTemplate) || isLoading}
 						>
-							{isPending ? <Spinner className="size-4" /> : null}
+							{isLoading ? <Spinner className="size-4" /> : null}
 							Create Document
 						</Button>
 					</div>

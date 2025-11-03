@@ -1,12 +1,18 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
-import { EllipsisVertical, FileText, RotateCw } from 'lucide-react'
+import {
+	AlertCircleIcon,
+	EllipsisVertical,
+	FileText,
+	RotateCw,
+} from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useLoaderData, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import { DocumentsController } from './controller'
 import { useDeleteDocument, useGetDocuments } from '~/api/documents'
 import { DataTable } from '~/components/datatable'
+import { Alert, AlertDescription } from '~/components/ui/alert'
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -38,7 +44,8 @@ import { cn } from '~/lib/utils'
 import type { loader } from '~/routes/_auth._dashboard.settings.documents'
 
 export function DocumentsModule() {
-	const { documentTemplates } = useLoaderData<typeof loader>()
+	const { documentTemplates, error: documentError } =
+		useLoaderData<typeof loader>()
 	const [searchParams] = useSearchParams()
 	const queryClient = useQueryClient()
 	const { mutate: deleteDocument, isPending: isDeleting } = useDeleteDocument()
@@ -237,6 +244,12 @@ export function DocumentsModule() {
 					)}
 				</div>
 			</div>
+			{documentError ? (
+				<Alert variant="destructive" className="border-red-600">
+					<AlertCircleIcon />
+					<AlertDescription>{documentError}</AlertDescription>
+				</Alert>
+			) : null}
 			<DocumentsController documentTemplates={documentTemplates} />
 			<div className="h-full w-full">
 				<DataTable

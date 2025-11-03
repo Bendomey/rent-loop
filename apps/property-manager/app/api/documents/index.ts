@@ -27,6 +27,32 @@ const getDocuments = async (
 	}
 }
 
+export const getDocument = async (
+	id: string,
+	apiConfig: ApiConfigForServerConfig,
+) => {
+	try {
+		const response = await fetchServer<ApiResponse<RentloopDocument>>(
+			`${apiConfig?.baseUrl}/v1/documents/${id}`,
+			{
+				method: 'GET',
+				...(apiConfig ? apiConfig : {}),
+			},
+		)
+
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
 export const useGetDocuments = (
 	query: FetchMultipleDataInputParams<FetchRentloopDocumentFilter>,
 ) =>

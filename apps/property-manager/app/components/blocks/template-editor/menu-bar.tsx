@@ -3,16 +3,22 @@ import { Link } from 'react-router'
 import { Button } from '~/components/ui/button'
 import { TypographyMuted } from '~/components/ui/typography'
 
-export function MenuBar() {
+export function MenuBar({ document }: { document: RentloopDocument }) {
 	return (
 		<div className="flex flex-col justify-between gap-2 border-b py-3 md:flex-row md:items-center md:px-3">
 			<div className="flex items-center space-x-2">
-				<Link to="/settings/documents">
+				<Link
+					to={
+						document?.property_id
+							? `/properties/${document.property_id}/settings/documents`
+							: '/settings/documents'
+					}
+				>
 					<Button size="sm" variant="ghost">
 						<ArrowLeft />
 					</Button>
 				</Link>
-				<h1 className="font-medium">Document Title</h1>
+				<h1 className="font-medium">{document.title}</h1>
 				<Button size="sm" variant="ghost">
 					<PencilLine />
 				</Button>
