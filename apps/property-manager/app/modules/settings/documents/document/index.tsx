@@ -1,7 +1,9 @@
 import { type SerializedEditorState } from 'lexical'
 import { useState } from 'react'
+import { useLoaderData } from 'react-router'
 
 import { Editor } from '~/components/blocks/template-editor/editor'
+import type { loader } from '~/routes/_auth.settings.documents.$documentId._index'
 
 const initialValue = {
 	root: {
@@ -24,10 +26,15 @@ const initialValue = {
 } as unknown as SerializedEditorState
 
 export function SingleDocumentModule() {
-	const [editorState, setEditorState] =
-		useState<SerializedEditorState>(initialValue)
+	const { document } = useLoaderData<typeof loader>()
+	const [editorState, setEditorState] = useState<SerializedEditorState>(
+		document?.content ? JSON.parse(document.content) : initialValue,
+	)
+	if (!document) return null
+
 	return (
 		<Editor
+			document={document}
 			editorSerializedState={editorState}
 			onSerializedChange={(value) => setEditorState(value)}
 		/>

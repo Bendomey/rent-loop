@@ -7,12 +7,16 @@ export function getDocumentTemplates() {
 			name: 'Empty Template',
 			description: 'Start from a blank template.',
 			document: EMPTY,
+			charCount: 1,
+			tags: [],
 		},
 		{
 			id: 'basic-lease-agreement',
 			name: 'Basic Lease Agreement',
 			description: 'A simple lease agreement template.',
 			document: BASIC,
+			charCount: 3517,
+			tags: ['LEASE_AGREEMENT'],
 		},
 	]
 }

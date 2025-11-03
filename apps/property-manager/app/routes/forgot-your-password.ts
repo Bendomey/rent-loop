@@ -59,10 +59,10 @@ export async function action({ request }: Route.ActionArgs) {
 		})
 	} catch (e) {
 		let message = 'Failed to send reset password link.'
-		if(e instanceof Error && e.message === 'EmailNotFound') {
+		if (e instanceof Error && e.message === 'EmailNotFound') {
 			message = 'Email address not found.'
 		}
-		
+
 		session.flash('error', message)
 		return data(
 			{

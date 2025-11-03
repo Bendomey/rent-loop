@@ -22,6 +22,7 @@ const editorConfig: InitialConfigType = {
 
 export function Editor({
 	editorState,
+	document,
 	editorSerializedState,
 	onChange,
 	onSerializedChange,
@@ -30,6 +31,7 @@ export function Editor({
 	editorSerializedState?: SerializedEditorState
 	onChange?: (editorState: EditorState) => void
 	onSerializedChange?: (editorSerializedState: SerializedEditorState) => void
+	document: RentloopDocument
 }) {
 	return (
 		<div className="overflow-hidden">
@@ -44,7 +46,7 @@ export function Editor({
 			>
 				<TooltipProvider>
 					<main>
-						<MenuBar />
+						<MenuBar document={document} />
 						<Plugins />
 
 						<OnChangePlugin

@@ -1,8 +1,20 @@
 import * as mammoth from 'mammoth'
+import { redirect } from 'react-router'
 import type { Route } from './+types/_auth.api.files.docx.to-lexical'
+import { createDocumentSSR } from '~/api/documents'
+import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { htmlToLexicalState } from '~/lib/actions/editor-utils.server'
+import { environmentVariables } from '~/lib/actions/env.server'
+import { removeFileExtension } from '~/lib/strings'
 
 export async function action({ request }: Route.ActionArgs) {
+	const baseUrl = environmentVariables().API_ADDRESS
+	const authSession = await getAuthSession(request.headers.get('Cookie'))
+	const authToken = authSession.get('authToken')
+	if (!authToken) {
+		return redirect('/login')
+	}
+
 	const form = await request.formData()
 
 	const pdfFile = form.get('file')
@@ -23,12 +35,28 @@ export async function action({ request }: Route.ActionArgs) {
 			console.warn('Warnings during conversion:', response.messages)
 		}
 
-		await htmlToLexicalState(response.value)
+		const { lexicalState, charCount } = await htmlToLexicalState(response.value)
+		const pdfName = (pdfFile as File).name
+			? removeFileExtension((pdfFile as File).name)
+			: 'Untitled Document'
 
-		// TODO: call to create document on API
-		const documentId = 'temp-document-id'
+		const createResponse = await createDocumentSSR(
+			{
+				title: pdfName,
+				content: JSON.stringify(lexicalState),
+				size: charCount,
+				tags: [],
+			},
+			{
+				baseUrl,
+				authToken,
+			},
+		)
+		if (!createResponse) {
+			throw new Error('Failed to create document')
+		}
 
-		return new Response(JSON.stringify({ data: documentId }), {
+		return new Response(JSON.stringify({ data: createResponse.id }), {
 			headers: { 'Content-Type': 'application/json' },
 		})
 	} catch (error) {

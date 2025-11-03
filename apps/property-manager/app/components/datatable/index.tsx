@@ -20,7 +20,7 @@ import {
 } from 'lucide-react'
 import * as React from 'react'
 
-import { useLocation, useNavigate, useSearchParams } from 'react-router'
+import { useSearchParams } from 'react-router'
 import {
 	Empty,
 	EmptyContent,
@@ -51,12 +51,24 @@ import {
 	TableRow,
 } from '~/components/ui/table'
 
+interface DataResponse<T> {
+	rows: T[]
+	total: number
+	page: number
+	page_size: number
+	order: 'asc' | 'desc'
+	order_by: string
+	has_prev_page: boolean
+	has_next_page: boolean
+}
+
 interface Props<T> {
-	dataResponse: FetchMultipleDataResponse<T>
+	dataResponse: DataResponse<T>
 	columns: ColumnDef<T>[]
 	empty: EmptyOutlineProps
 	isLoading?: boolean
 	error?: string
+	refetch?: () => void
 }
 
 export function DataTable<T extends { id: string }>({
@@ -65,9 +77,8 @@ export function DataTable<T extends { id: string }>({
 	empty,
 	isLoading,
 	error,
+	refetch,
 }: Props<T>) {
-	const navigate = useNavigate()
-	const location = useLocation()
 	const [rowSelection, setRowSelection] = React.useState({})
 	const [columnVisibility, setColumnVisibility] =
 		React.useState<VisibilityState>({})
@@ -170,11 +181,7 @@ export function DataTable<T extends { id: string }>({
 							<EmptyDescription>{error}</EmptyDescription>
 						</EmptyHeader>
 						<EmptyContent>
-							<Button
-								onClick={() => navigate(location.pathname + location.search)}
-								variant={'outline'}
-								size="sm"
-							>
+							<Button onClick={() => refetch?.()} variant={'outline'} size="sm">
 								<RotateCcw />
 								Retry
 							</Button>
@@ -186,7 +193,13 @@ export function DataTable<T extends { id: string }>({
 	} else {
 		const rows = table.getRowModel().rows
 		if (rows.length === 0) {
-			content = <EmptyOutline {...empty} />
+			content = (
+				<TableRow>
+					<TableCell colSpan={columns.length} className="h-48">
+						<EmptyOutline {...empty} />
+					</TableCell>
+				</TableRow>
+			)
 		} else {
 			content = (
 				<>

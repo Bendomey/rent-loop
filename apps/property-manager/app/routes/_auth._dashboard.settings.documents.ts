@@ -1,4 +1,9 @@
+import { data } from 'react-router'
 import type { Route } from './+types/_auth._dashboard.settings.documents'
+import {
+	getAuthSession,
+	saveAuthSession,
+} from '~/lib/actions/auth.session.server'
 import { getDocumentTemplates } from '~/lib/actions/document-templates.server'
 import { APP_NAME } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
@@ -7,10 +12,22 @@ import { DocumentsModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
 	const documentTemplates = getDocumentTemplates()
-	return {
-		origin: getDomainUrl(request),
-		documentTemplates,
-	}
+	const authSession = await getAuthSession(request.headers.get('Cookie'))
+
+	const error = authSession.get('error')
+
+	return data(
+		{
+			origin: getDomainUrl(request),
+			error,
+			documentTemplates,
+		},
+		{
+			headers: {
+				'Set-Cookie': await saveAuthSession(authSession),
+			},
+		},
+	)
 }
 
 export const handle = {

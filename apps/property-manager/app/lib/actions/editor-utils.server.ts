@@ -35,5 +35,10 @@ export async function htmlToLexicalState(htmlString: string) {
 		{ discrete: true },
 	)
 
-	return editor.getEditorState().toJSON()
+	return {
+		lexicalState: editor.getEditorState().toJSON(),
+		charCount: editor
+			.getEditorState()
+			.read(() => $getRoot().getTextContent().length),
+	}
 }

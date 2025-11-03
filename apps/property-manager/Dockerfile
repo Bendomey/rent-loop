@@ -1,5 +1,12 @@
 FROM node:20-alpine AS base
 
+# Install Java Runtime Environment (OpenJDK 11) for pdf3html library
+# Required for Apache Tika and PDFBox dependencies
+RUN apk add --no-cache openjdk11-jre
+
+# Verify Java installation
+RUN java -version
+
 # install all node_modules, including dev
 FROM base as deps
 
