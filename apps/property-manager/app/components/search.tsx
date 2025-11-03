@@ -9,7 +9,7 @@ interface Props {
 
 export function SearchInput({ placeholder = 'Search ...' }: Props) {
 	const [searchParams, setSearchParams] = useSearchParams()
-	const [query, setQuery] = useState<string>('')
+	const [query, setQuery] = useState<string>(searchParams.get('query') || '')
 	useEffect(() => {
 		const handler = setTimeout(() => {
 			if (query) {
@@ -22,7 +22,8 @@ export function SearchInput({ placeholder = 'Search ...' }: Props) {
 		return () => {
 			clearTimeout(handler)
 		}
-	}, [query, searchParams, setSearchParams])
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [query, setSearchParams])
 
 	return (
 		<InputGroup>

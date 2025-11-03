@@ -1,23 +1,16 @@
 import { ArrowLeft, PencilLine, Save } from 'lucide-react'
-import { Link } from 'react-router'
+import { useNavigate } from 'react-router'
 import { Button } from '~/components/ui/button'
 import { TypographyMuted } from '~/components/ui/typography'
 
 export function MenuBar({ document }: { document: RentloopDocument }) {
+	const navigate = useNavigate()
 	return (
 		<div className="flex flex-col justify-between gap-2 border-b py-3 md:flex-row md:items-center md:px-3">
 			<div className="flex items-center space-x-2">
-				<Link
-					to={
-						document?.property_id
-							? `/properties/${document.property_id}/settings/documents`
-							: '/settings/documents'
-					}
-				>
-					<Button size="sm" variant="ghost">
-						<ArrowLeft />
-					</Button>
-				</Link>
+				<Button onClick={() => navigate(-1)} size="sm" variant="ghost">
+					<ArrowLeft />
+				</Button>
 				<h1 className="font-medium">{document.title}</h1>
 				<Button size="sm" variant="ghost">
 					<PencilLine />

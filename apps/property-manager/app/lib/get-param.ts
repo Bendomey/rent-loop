@@ -1,4 +1,4 @@
-import { cleanParams, type ObjectT } from './remove-nulls.ts'
+import { cleanParams, type ObjectT } from './remove-nulls'
 
 export const getQueryParams = <FilterT>(
 	props: FetchMultipleDataInputParams<FilterT>,
