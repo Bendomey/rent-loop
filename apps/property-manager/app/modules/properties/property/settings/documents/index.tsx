@@ -1,6 +1,7 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { EllipsisVertical, FileText, RotateCw } from 'lucide-react'
 import { useMemo } from 'react'
+import { useLoaderData } from 'react-router'
 import { PropertyDocumentsController } from './controller'
 import { DataTable } from '~/components/datatable'
 import {
@@ -27,9 +28,13 @@ import {
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { localizedDayjs } from '~/lib/date'
 import { getNameInitials } from '~/lib/misc'
+import { safeString } from '~/lib/strings'
+import type { loader } from '~/routes/_auth._dashboard.settings.documents'
 
 export function PropertyDocumentsSettingsModule() {
-	const columns: ColumnDef<AppDocument>[] = useMemo(() => {
+	const { documentTemplates } = useLoaderData<typeof loader>()
+
+	const columns: ColumnDef<RentloopDocument>[] = useMemo(() => {
 		return [
 			{
 				id: 'drag',
@@ -52,10 +57,10 @@ export function PropertyDocumentsSettingsModule() {
 				cell: ({ row }) => (
 					<div className="flex min-w-32 flex-col items-start gap-1">
 						<span className="truncate text-xs text-zinc-600">
-							{row.original.name}
+							{row.original.title}
 						</span>
 						<span className="truncate text-xs text-zinc-600">
-							{row.original.file_size}
+							{row.original.size}
 						</span>
 					</div>
 				),
@@ -70,11 +75,11 @@ export function PropertyDocumentsSettingsModule() {
 							<Avatar className="h-8 w-8">
 								<AvatarImage src="" />
 								<AvatarFallback>
-									{getNameInitials(row.original.created_by.name)}
+									{getNameInitials(safeString(row.original.created_by?.name))}
 								</AvatarFallback>
 							</Avatar>
 							<span className="truncate pl-1.5 text-xs text-zinc-600">
-								{row.original.created_by.name}
+								{safeString(row.original.created_by?.name)}
 							</span>
 						</div>
 					)
@@ -164,73 +169,12 @@ export function PropertyDocumentsSettingsModule() {
 					</Button>
 				</div>
 			</div>
-			<PropertyDocumentsController />
+			<PropertyDocumentsController documentTemplates={documentTemplates} />
 			<div className="h-full w-full">
 				<DataTable
 					columns={columns}
 					dataResponse={{
-						rows: [
-							{
-								id: '1',
-								name: 'Tenant Agreement',
-								file_size: '1.2MB',
-								created_by: {
-									name: 'Gideon Bempong',
-								},
-								created_at: new Date(),
-								updated_at: new Date(),
-							},
-							{
-								id: '2',
-								name: 'Tenant Agreement',
-								file_size: '1.2MB',
-								created_by: {
-									name: 'Esther Bempong',
-								},
-								created_at: new Date(),
-								updated_at: new Date(),
-							},
-							{
-								id: '3',
-								name: 'Lease Agreement',
-								file_size: '850KB',
-								created_by: {
-									name: 'Adwoa Mensah',
-								},
-								created_at: new Date(),
-								updated_at: new Date(),
-							},
-							{
-								id: '4',
-								name: 'Inventory List',
-								file_size: '420KB',
-								created_by: {
-									name: 'Kofi Adu',
-								},
-								created_at: new Date(),
-								updated_at: new Date(),
-							},
-							{
-								id: '5',
-								name: 'Inspection Report',
-								file_size: '2.3MB',
-								created_by: {
-									name: 'Abena Owusu',
-								},
-								created_at: new Date(),
-								updated_at: new Date(),
-							},
-							{
-								id: '6',
-								name: 'Renewal Notice',
-								file_size: '300KB',
-								created_by: {
-									name: 'Yaw Boateng',
-								},
-								created_at: new Date(),
-								updated_at: new Date(),
-							},
-						] as AppDocument[],
+						rows: [],
 						total: 150,
 						page: 1,
 						page_size: 50,

@@ -25,7 +25,7 @@ interface Pagination {
 
 interface Sorter {
 	sort?: 'asc' | 'desc'
-	sortBy?: string
+	sort_by?: string
 }
 
 interface Search {

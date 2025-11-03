@@ -20,7 +20,7 @@ import {
 } from 'lucide-react'
 import * as React from 'react'
 
-import { useLocation, useNavigate, useSearchParams } from 'react-router'
+import { useSearchParams } from 'react-router'
 import {
 	Empty,
 	EmptyContent,
@@ -57,6 +57,7 @@ interface Props<T> {
 	empty: EmptyOutlineProps
 	isLoading?: boolean
 	error?: string
+	refetch?: () => void
 }
 
 export function DataTable<T extends { id: string }>({
@@ -65,9 +66,8 @@ export function DataTable<T extends { id: string }>({
 	empty,
 	isLoading,
 	error,
+	refetch,
 }: Props<T>) {
-	const navigate = useNavigate()
-	const location = useLocation()
 	const [rowSelection, setRowSelection] = React.useState({})
 	const [columnVisibility, setColumnVisibility] =
 		React.useState<VisibilityState>({})
@@ -170,11 +170,7 @@ export function DataTable<T extends { id: string }>({
 							<EmptyDescription>{error}</EmptyDescription>
 						</EmptyHeader>
 						<EmptyContent>
-							<Button
-								onClick={() => navigate(location.pathname + location.search)}
-								variant={'outline'}
-								size="sm"
-							>
+							<Button onClick={() => refetch?.()} variant={'outline'} size="sm">
 								<RotateCcw />
 								Retry
 							</Button>

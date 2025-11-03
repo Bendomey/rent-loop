@@ -1,14 +1,10 @@
 import type { SerializedEditorState, SerializedLexicalNode } from 'lexical'
-import { Plus, Search } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { ImportDocumentButton } from './components/import-document-button'
+import { SearchInput } from '~/components/search'
 import { Button } from '~/components/ui/button'
-import {
-	InputGroup,
-	InputGroupAddon,
-	InputGroupInput,
-} from '~/components/ui/input-group'
 import {
 	Item,
 	ItemContent,
@@ -24,7 +20,7 @@ import {
 } from '~/components/ui/popover'
 import { useDisclosure } from '~/hooks/use-disclosure'
 
-type IDocumentTemplate = {
+export type IDocumentTemplate = {
 	id: string
 	name: string
 	description: string
@@ -40,12 +36,7 @@ export const DocumentsController = ({
 		<div className="flex w-full flex-col gap-2">
 			<div className="flex flex-wrap items-center justify-between gap-4 rounded-md border p-4">
 				<div className="flex items-center gap-2 text-sm">
-					<InputGroup>
-						<InputGroupInput placeholder="Search documents ..." />
-						<InputGroupAddon>
-							<Search />
-						</InputGroupAddon>
-					</InputGroup>
+					<SearchInput placeholder="Search documents..." />
 				</div>
 				<div className="flex items-center justify-end gap-2">
 					<ImportDocumentButton />
@@ -56,7 +47,7 @@ export const DocumentsController = ({
 	)
 }
 
-function AddDocumentButton({
+export function AddDocumentButton({
 	documentTemplates,
 }: {
 	documentTemplates: Array<IDocumentTemplate>

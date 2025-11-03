@@ -68,14 +68,10 @@ export const sendForgotPasswordLink = async (
 	apiConfig?: ApiConfigForServerConfig,
 ) => {
 	try {
-		 await fetchServer(
-			`${apiConfig?.baseUrl}/v1/client-users/forgot-password`,
-			{
-				method: 'POST',
-				body: JSON.stringify(props),
-			},
-		)
-
+		await fetchServer(`${apiConfig?.baseUrl}/v1/client-users/forgot-password`, {
+			method: 'POST',
+			body: JSON.stringify(props),
+		})
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
