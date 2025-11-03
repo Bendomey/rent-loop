@@ -14,7 +14,7 @@ type FilterQueryInput struct {
 	Query        string    `json:"query"         validate:"omitempty"`
 	SearchFields []string  `json:"search_fields" validate:"omitempty,min=1"`
 	StartDate    time.Time `json:"start_date"    validate:"omitempty"`
-	EndDate      time.Time `json:"end_date"      validate:"omitempty,gtfield=StartTime"`
+	EndDate      time.Time `json:"end_date"      validate:"omitempty,gtfield=StartDate"`
 	Populate     *[]string `json:"populate"      validate:"omitempty"`
 }
 
@@ -134,7 +134,11 @@ func GenerateEmptyQuery() FilterQuery {
 	}
 }
 
-func ReturnListResponse(filterQuery *FilterQuery, items []interface{}, totalCount int64) map[string]any {
+func ReturnListResponse(
+	filterQuery *FilterQuery,
+	items []interface{},
+	totalCount int64,
+) map[string]any {
 	return map[string]any{
 		"data": map[string]any{
 			"rows": items,
