@@ -1,9 +1,18 @@
+import { useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
-import { EllipsisVertical, FileText, RotateCw } from 'lucide-react'
-import { useMemo } from 'react'
-import { useLoaderData } from 'react-router'
+import {
+	AlertCircleIcon,
+	EllipsisVertical,
+	FileText,
+	RotateCw,
+} from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Link, useLoaderData, useSearchParams } from 'react-router'
+import { toast } from 'sonner'
 import { DocumentsController } from './controller'
+import { useDeleteDocument, useGetDocuments } from '~/api/documents'
 import { DataTable } from '~/components/datatable'
+import { Alert, AlertDescription } from '~/components/ui/alert'
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -25,14 +34,43 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
+import { Spinner } from '~/components/ui/spinner'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
+import { PAGINATION_DEFAULTS, QUERY_KEYS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { getNameInitials } from '~/lib/misc'
+import { safeString } from '~/lib/strings'
+import { cn } from '~/lib/utils'
 import type { loader } from '~/routes/_auth._dashboard.settings.documents'
 
 export function DocumentsModule() {
-	const { documentTemplates } = useLoaderData<typeof loader>()
-	const columns: ColumnDef<AppDocument>[] = useMemo(() => {
+	const { documentTemplates, error: documentError } =
+		useLoaderData<typeof loader>()
+	const [searchParams] = useSearchParams()
+	const queryClient = useQueryClient()
+	const { mutate: deleteDocument, isPending: isDeleting } = useDeleteDocument()
+	const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
+
+	const page = searchParams.get('page')
+		? Number(searchParams.get('page')) + 1
+		: PAGINATION_DEFAULTS.PAGE
+	const per = searchParams.get('per_page')
+		? Number(searchParams.get('per_page'))
+		: PAGINATION_DEFAULTS.PER_PAGE
+	const { data, isPending, isRefetching, error, refetch } = useGetDocuments({
+		filters: {},
+		pagination: { page, per },
+		populate: ['CreatedBy'],
+		sorter: { sort: 'desc', sort_by: 'created_at' },
+		search: {
+			query: searchParams.get('query') ?? undefined,
+			fields: ['title'],
+		},
+	})
+
+	const isLoading = isPending || isRefetching
+
+	const columns: ColumnDef<RentloopDocument>[] = useMemo(() => {
 		return [
 			{
 				id: 'drag',
@@ -54,11 +92,13 @@ export function DocumentsModule() {
 				header: 'Name',
 				cell: ({ row }) => (
 					<div className="flex min-w-32 flex-col items-start gap-1">
+						<Link to={`/settings/documents/${row.original.id}`}>
+							<span className="truncate text-xs text-blue-600 hover:underline">
+								{row.original.title}
+							</span>
+						</Link>
 						<span className="truncate text-xs text-zinc-600">
-							{row.original.name}
-						</span>
-						<span className="truncate text-xs text-zinc-600">
-							{row.original.file_size}
+							Characters count: {row.original.size}
 						</span>
 					</div>
 				),
@@ -73,11 +113,11 @@ export function DocumentsModule() {
 							<Avatar className="h-8 w-8">
 								<AvatarImage src="" />
 								<AvatarFallback>
-									{getNameInitials(row.original.created_by.name)}
+									{getNameInitials(safeString(row.original.created_by?.name))}
 								</AvatarFallback>
 							</Avatar>
 							<span className="truncate pl-1.5 text-xs text-zinc-600">
-								{row.original.created_by.name}
+								{safeString(row.original.created_by?.name)}
 							</span>
 						</div>
 					)
@@ -108,8 +148,11 @@ export function DocumentsModule() {
 			},
 			{
 				id: 'actions',
-				cell: () => (
-					<AlertDialog>
+				cell: ({ row }) => (
+					<AlertDialog
+						open={openDeleteDialog}
+						onOpenChange={setOpenDeleteDialog}
+					>
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button
@@ -122,7 +165,9 @@ export function DocumentsModule() {
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end" className="w-32">
-								<DropdownMenuItem>Edit</DropdownMenuItem>
+								<Link to={`/settings/documents/${row.original.id}`}>
+									<DropdownMenuItem>Edit</DropdownMenuItem>
+								</Link>
 								<DropdownMenuSeparator />
 								<AlertDialogTrigger asChild>
 									<DropdownMenuItem variant="destructive">
@@ -135,12 +180,35 @@ export function DocumentsModule() {
 							<AlertDialogHeader>
 								<AlertDialogTitle>Are you sure?</AlertDialogTitle>
 								<AlertDialogDescription>
-									This will delete the document.
+									This will delete this document.
 								</AlertDialogDescription>
 							</AlertDialogHeader>
 							<AlertDialogFooter className="mt-5">
-								<AlertDialogCancel>Cancel</AlertDialogCancel>
-								<AlertDialogAction className="bg-destructive hover:bg-destructive/90 text-white">
+								<AlertDialogCancel disabled={isDeleting}>
+									Cancel
+								</AlertDialogCancel>
+								<AlertDialogAction
+									disabled={isDeleting}
+									onClick={(e) => {
+										e.preventDefault()
+										deleteDocument(row.original.id, {
+											onError: (e) => {
+												console.log(e)
+												toast.error(
+													'Failed to delete document. Try again later.',
+												)
+											},
+											onSuccess: () => {
+												void queryClient.invalidateQueries({
+													queryKey: [QUERY_KEYS.DOCUMENTS],
+												})
+												setOpenDeleteDialog(false)
+											},
+										})
+									}}
+									className="bg-destructive hover:bg-destructive/90 text-white"
+								>
+									{isDeleting ? <Spinner /> : null}
 									Delete
 								</AlertDialogAction>
 							</AlertDialogFooter>
@@ -149,7 +217,7 @@ export function DocumentsModule() {
 				),
 			},
 		]
-	}, [])
+	}, [deleteDocument, isDeleting, openDeleteDialog, queryClient])
 
 	return (
 		<main className="flex flex-col gap-2 sm:gap-4">
@@ -161,117 +229,48 @@ export function DocumentsModule() {
 					</TypographyMuted>
 				</div>
 				<div>
-					<Button variant="outline" size="sm">
-						<RotateCw className="size-4" />
-						Refresh
-					</Button>
+					{isPending ? null : (
+						<Button
+							onClick={() => refetch()}
+							disabled={isLoading}
+							variant="outline"
+							size="sm"
+						>
+							<RotateCw
+								className={cn('size-4', { 'animate-spin': isLoading })}
+							/>
+							Refresh
+						</Button>
+					)}
 				</div>
 			</div>
+			{documentError ? (
+				<Alert variant="destructive" className="border-red-600">
+					<AlertCircleIcon />
+					<AlertDescription>{documentError}</AlertDescription>
+				</Alert>
+			) : null}
 			<DocumentsController documentTemplates={documentTemplates} />
 			<div className="h-full w-full">
 				<DataTable
 					columns={columns}
+					isLoading={isLoading}
+					refetch={refetch}
+					error={error ? 'Failed to load documents.' : undefined}
 					dataResponse={{
-						rows: [
-							{
-								id: '1',
-								name: 'Tenant Agreement',
-								file_size: '1.2MB',
-								created_by: {
-									name: 'Gideon Bempong',
-								},
-								created_at: new Date(),
-								updated_at: new Date(),
-							},
-							{
-								id: '2',
-								name: 'Tenant Agreement',
-								file_size: '1.2MB',
-								created_by: {
-									name: 'Esther Bempong',
-								},
-								created_at: new Date(),
-								updated_at: new Date(),
-							},
-							{
-								id: '3',
-								name: 'Lease Agreement',
-								file_size: '850KB',
-								created_by: {
-									name: 'Adwoa Mensah',
-								},
-								created_at: new Date(),
-								updated_at: new Date(),
-							},
-							{
-								id: '4',
-								name: 'Inventory List',
-								file_size: '420KB',
-								created_by: {
-									name: 'Kofi Adu',
-								},
-								created_at: new Date(),
-								updated_at: new Date(),
-							},
-							{
-								id: '5',
-								name: 'Inspection Report',
-								file_size: '2.3MB',
-								created_by: {
-									name: 'Abena Owusu',
-								},
-								created_at: new Date(),
-								updated_at: new Date(),
-							},
-							{
-								id: '6',
-								name: 'Renewal Notice',
-								file_size: '300KB',
-								created_by: {
-									name: 'Yaw Boateng',
-								},
-								created_at: new Date(),
-								updated_at: new Date(),
-							},
-							{
-								id: '7',
-								name: 'Payment Receipt',
-								file_size: '120KB',
-								created_by: {
-									name: 'Selina Koranteng',
-								},
-								created_at: new Date(),
-								updated_at: new Date(),
-							},
-							{
-								id: '8',
-								name: 'Property Photos',
-								file_size: '6.8MB',
-								created_by: {
-									name: 'Gideon Bempong',
-								},
-								created_at: new Date(),
-								updated_at: new Date(),
-							},
-						] as AppDocument[],
-						total: 150,
-						page: 1,
-						page_size: 50,
-						order: 'desc',
-						order_by: 'created_at',
-						has_prev_page: false,
-						has_next_page: true,
+						rows: data?.rows ?? [],
+						total: data?.meta?.total ?? 0,
+						page,
+						page_size: per,
+						order: data?.meta?.order ?? 'desc',
+						order_by: data?.meta?.order_by ?? 'created_at',
+						has_prev_page: data?.meta?.has_prev_page ?? false,
+						has_next_page: data?.meta?.has_next_page ?? false,
 					}}
 					empty={{
 						message: 'No documents found',
 						description:
 							"Try adjusting your search to find what you're looking for.",
-						button: {
-							label: 'Add Document',
-							onClick: () => {
-								// Handle button click
-							},
-						},
 					}}
 				/>
 			</div>

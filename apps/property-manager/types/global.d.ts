@@ -25,7 +25,7 @@ interface Pagination {
 
 interface Sorter {
 	sort?: 'asc' | 'desc'
-	sortBy?: string
+	sort_by?: string
 }
 
 interface Search {
@@ -43,13 +43,15 @@ interface FetchMultipleDataInputParams<FilterT> {
 
 interface FetchMultipleDataResponse<T> {
 	rows: T[]
-	total: number
-	page: number
-	page_size: number
-	order: 'asc' | 'desc'
-	order_by: string
-	has_prev_page: boolean
-	has_next_page: boolean
+	meta: {
+		total: number
+		page: number
+		page_size: number
+		order: 'asc' | 'desc'
+		order_by: string
+		has_prev_page: boolean
+		has_next_page: boolean
+	}
 }
 
 interface ApiConfigForServerConfig {

@@ -10,6 +10,12 @@ export const USER_CIPHER = 'rentloop-account'
 
 export const QUERY_KEYS = {
 	CURRENT_USER: 'current-user',
+	DOCUMENTS: 'documents',
+} as const
+
+export const PAGINATION_DEFAULTS = {
+	PAGE: 1,
+	PER_PAGE: 50,
 } as const
 
 export const API_STATUS = {

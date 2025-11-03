@@ -1,5 +1,6 @@
 interface Property {
 	id: string
+	slug: string
 	name: string
 	description: string | NullableString
 	address: string

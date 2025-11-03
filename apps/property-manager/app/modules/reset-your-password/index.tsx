@@ -58,7 +58,10 @@ export function ResetYourPasswordModule() {
 	const { control, handleSubmit } = rhfMethods
 
 	const onSubmit = handleSubmit(async (data) =>
-		fetcher.submit({...data, token: searchParams.get('token')}, { method: 'post' }),
+		fetcher.submit(
+			{ ...data, token: searchParams.get('token') },
+			{ method: 'post' },
+		),
 	)
 
 	const isSubmitting = fetcher.state !== 'idle'
