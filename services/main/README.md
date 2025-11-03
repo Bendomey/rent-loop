@@ -52,6 +52,7 @@ Rentloop Engine is a modular property rental management service designed to prov
 4. **Install Go dependencies:**
    ```sh
    go mod download
+   make install-tools
    ```
 
 ## Database Preparation (Migration)
