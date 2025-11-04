@@ -255,19 +255,17 @@ func (h *PropertyHandler) GetPropertyById(w http.ResponseWriter, r *http.Request
 }
 
 type UpdatePropertyRequest struct {
-	Type        *string   `json:"type"        validate:"omitempty,oneof=SINGLE MULTI"                                                                example:"SINGLE"                                                description:"Type of the property. Options: SINGLE | MULTI."`
-	Status      *string   `json:"status"      validate:"omitempty,oneof=Property.Status.Active Property.Status.Maintenance Property.Status.Inactive" example:"Property.Status.Active"                                description:"Current operational status of the property"`
-	Name        *string   `json:"name"        validate:"omitempty,min=3,max=100"                                                                     example:"Oceanview Apartment"                                   description:"Human-readable name of the property."`
-	Description *string   `json:"description" validate:"omitempty"                                                                                   example:"A luxurious apartment overlooking the Atlantic Ocean." description:"Brief description of the property."`
-	Images      *[]string `json:"images"      validate:"omitempty,dive,url"                                                                          example:"https://example.com/images/1.jpg"                      description:"Array of image URLs associated with the property."`
-	Tags        *[]string `json:"tags"        validate:"omitempty,dive,min=1,max=30"                                                                 example:"beachfront,furnished"                                  description:"Tags for categorizing the property."`
-	Latitude    *float64  `json:"latitude"    validate:"omitempty,latitude"                                                                          example:"5.6037"                                                description:"Latitude coordinate of the property."`
-	Longitude   *float64  `json:"longitude"   validate:"omitempty,longitude"                                                                         example:"-0.1870"                                               description:"Longitude coordinate of the property."`
-	Address     *string   `json:"address"     validate:"omitempty,min=5,max=200"                                                                     example:"12 Labone Crescent"                                    description:"Physical address of the property."`
-	Country     *string   `json:"country"     validate:"omitempty,min=2,max=100"                                                                     example:"Ghana"                                                 description:"Country where the property is located."`
-	Region      *string   `json:"region"      validate:"omitempty,min=2,max=100"                                                                     example:"Greater Accra"                                         description:"Region or administrative area where the property is located."`
-	City        *string   `json:"city"        validate:"omitempty,min=2,max=100"                                                                     example:"Accra"                                                 description:"City where the property is located."`
-	GPSAddress  *string   `json:"gpsAddress"  validate:"omitempty"                                                                                   example:"GA-123-4567"                                           description:"GPS or digital address reference."`
+	Name        *string   `json:"name"        validate:"omitempty,min=3,max=100"     example:"Oceanview Apartment"                                   description:"Human-readable name of the property."`
+	Description *string   `json:"description" validate:"omitempty"                   example:"A luxurious apartment overlooking the Atlantic Ocean." description:"Brief description of the property."`
+	Images      *[]string `json:"images"      validate:"omitempty,dive,url"          example:"https://example.com/images/1.jpg"                      description:"Array of image URLs associated with the property."`
+	Tags        *[]string `json:"tags"        validate:"omitempty,dive,min=1,max=30" example:"beachfront,furnished"                                  description:"Tags for categorizing the property."`
+	Latitude    *float64  `json:"latitude"    validate:"omitempty,latitude"          example:"5.6037"                                                description:"Latitude coordinate of the property."`
+	Longitude   *float64  `json:"longitude"   validate:"omitempty,longitude"         example:"-0.1870"                                               description:"Longitude coordinate of the property."`
+	Address     *string   `json:"address"     validate:"omitempty,min=5,max=200"     example:"12 Labone Crescent"                                    description:"Physical address of the property."`
+	Country     *string   `json:"country"     validate:"omitempty,min=2,max=100"     example:"Ghana"                                                 description:"Country where the property is located."`
+	Region      *string   `json:"region"      validate:"omitempty,min=2,max=100"     example:"Greater Accra"                                         description:"Region or administrative area where the property is located."`
+	City        *string   `json:"city"        validate:"omitempty,min=2,max=100"     example:"Accra"                                                 description:"City where the property is located."`
+	GPSAddress  *string   `json:"gpsAddress"  validate:"omitempty"                   example:"GA-123-4567"                                           description:"GPS or digital address reference."`
 }
 
 // UpdateProperty godoc
@@ -311,8 +309,6 @@ func (h *PropertyHandler) UpdateProperty(w http.ResponseWriter, r *http.Request)
 
 	input := services.UpdatePropertyInput{
 		PropertyID:  propertyID,
-		Type:        body.Type,
-		Status:      body.Status,
 		Name:        body.Name,
 		Description: body.Description,
 		Images:      body.Images,

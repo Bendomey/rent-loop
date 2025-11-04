@@ -192,8 +192,6 @@ func (s *propertyService) GetProperty(
 
 type UpdatePropertyInput struct {
 	PropertyID  string
-	Type        *string
-	Status      *string
 	Name        *string
 	Description *string
 	Images      *[]string
@@ -217,14 +215,6 @@ func (s *propertyService) UpdateProperty(
 			raven.CaptureError(err, nil)
 		}
 		return nil, err
-	}
-
-	if input.Type != nil {
-		property.Type = *input.Type
-	}
-
-	if input.Status != nil {
-		property.Status = *input.Status
 	}
 
 	if input.Name != nil {
