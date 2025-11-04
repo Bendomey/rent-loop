@@ -204,9 +204,10 @@ type GetPropertyQuery struct {
 //	@Param			property_id	path		string				true	"Property ID"
 //	@Param			q			query		GetPropertyQuery	true	"Properties"
 //	@Success		200			{object}	object{data=transformations.OutputProperty}
-//	@Failure		400			{object}	lib.HTTPError
-//	@Failure		401			{object}	string
-//	@Failure		500			{object}	string
+//	@Failure		400			{object}	lib.HTTPError	"Error occurred when fetching a property"
+//	@Failure		401			{object}	string			"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError	"Property not found"
+//	@Failure		500			{object}	string			"An unexpected error occured"
 //	@Router			/api/v1/properties/{property_id} [get]
 func (h *PropertyHandler) GetPropertyById(w http.ResponseWriter, r *http.Request) {
 	_, clientUserOk := lib.ClientUserFromContext(r.Context())
@@ -251,4 +252,125 @@ func (h *PropertyHandler) GetPropertyById(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": transformations.DBPropertyToRest(property),
 	})
+}
+
+type UpdatePropertyRequest struct {
+	Type        *string   `json:"type"        validate:"omitempty,oneof=SINGLE MULTI"                                                                example:"SINGLE"                                                description:"Type of the property. Options: SINGLE | MULTI."`
+	Status      *string   `json:"status"      validate:"omitempty,oneof=Property.Status.Active Property.Status.Maintenance Property.Status.Inactive" example:"Property.Status.Active"                                description:"Current operational status of the property"`
+	Name        *string   `json:"name"        validate:"omitempty,min=3,max=100"                                                                     example:"Oceanview Apartment"                                   description:"Human-readable name of the property."`
+	Description *string   `json:"description" validate:"omitempty"                                                                                   example:"A luxurious apartment overlooking the Atlantic Ocean." description:"Brief description of the property."`
+	Images      *[]string `json:"images"      validate:"omitempty,dive,url"                                                                          example:"https://example.com/images/1.jpg"                      description:"Array of image URLs associated with the property."`
+	Tags        *[]string `json:"tags"        validate:"omitempty,dive,min=1,max=30"                                                                 example:"beachfront,furnished"                                  description:"Tags for categorizing the property."`
+	Latitude    *float64  `json:"latitude"    validate:"omitempty,latitude"                                                                          example:"5.6037"                                                description:"Latitude coordinate of the property."`
+	Longitude   *float64  `json:"longitude"   validate:"omitempty,longitude"                                                                         example:"-0.1870"                                               description:"Longitude coordinate of the property."`
+	Address     *string   `json:"address"     validate:"omitempty,min=5,max=200"                                                                     example:"12 Labone Crescent"                                    description:"Physical address of the property."`
+	Country     *string   `json:"country"     validate:"omitempty,min=2,max=100"                                                                     example:"Ghana"                                                 description:"Country where the property is located."`
+	Region      *string   `json:"region"      validate:"omitempty,min=2,max=100"                                                                     example:"Greater Accra"                                         description:"Region or administrative area where the property is located."`
+	City        *string   `json:"city"        validate:"omitempty,min=2,max=100"                                                                     example:"Accra"                                                 description:"City where the property is located."`
+	GPSAddress  *string   `json:"gpsAddress"  validate:"omitempty"                                                                                   example:"GA-123-4567"                                           description:"GPS or digital address reference."`
+}
+
+// UpdateProperty godoc
+//
+//	@Summary		Update an existing property
+//	@Description	Update an existing property
+//	@Tags			Properties
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string										true	"Property ID"	format(uuid4)
+//	@Param			body		body		UpdatePropertyRequest						true	"Property details"
+//	@Success		200			{object}	object{data=transformations.OutputProperty}	"Property updated successfully"
+//	@Failure		400			{object}	lib.HTTPError								"Error occurred when updating a property"
+//	@Failure		401			{object}	string										"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError								"Property not found"
+//	@Failure		500			{object}	string										"An unexpected error occured"
+//	@Router			/api/v1/properties/{property_id} [patch]
+func (h *PropertyHandler) UpdateProperty(w http.ResponseWriter, r *http.Request) {
+	_, currentClientUserOk := lib.ClientUserFromContext(r.Context())
+
+	if !currentClientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body UpdatePropertyRequest
+
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+
+	if !isPassedValidation {
+		return
+	}
+
+	propertyID := chi.URLParam(r, "property_id")
+
+	input := services.UpdatePropertyInput{
+		PropertyID:  propertyID,
+		Type:        body.Type,
+		Status:      body.Status,
+		Name:        body.Name,
+		Description: body.Description,
+		Images:      body.Images,
+		Tags:        body.Tags,
+		Latitude:    body.Latitude,
+		Longitude:   body.Longitude,
+		Address:     body.Address,
+		Country:     body.Country,
+		Region:      body.Region,
+		City:        body.City,
+		GPSAddress:  body.GPSAddress,
+	}
+
+	property, updateErr := h.service.UpdateProperty(r.Context(), input)
+
+	if updateErr != nil {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]any{
+			"errors": map[string]string{
+				"message": updateErr.Error(),
+			},
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBPropertyToRest(property),
+	})
+}
+
+// DeleteProperty godoc
+//
+//	@Summary		Delete a property
+//	@Description	Delete a property
+//	@Tags			Properties
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string			true	"Property ID"
+//	@Success		204			{object}	nil				"Property deleted successfully"
+//	@Failure		400			{object}	lib.HTTPError	"Error occurred when updating a property"
+//	@Failure		401			{object}	string			"Invalid or absent authentication token"
+//	@Failure		500			{object}	string			"An unexpected error occured"
+//	@Router			/api/v1/properties/{property_id} [delete]
+func (h *PropertyHandler) DeleteProperty(w http.ResponseWriter, r *http.Request) {
+	propertyID := chi.URLParam(r, "property_id")
+
+	deleteErr := h.service.DeleteProperty(r.Context(), propertyID)
+	if deleteErr != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]any{
+			"errors": map[string]string{
+				"message": deleteErr.Error(),
+			},
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

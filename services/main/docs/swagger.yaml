@@ -286,6 +286,72 @@ definitions:
         example: Updated Lease Agreement
         type: string
     type: object
+  handlers.UpdatePropertyRequest:
+    properties:
+      address:
+        example: 12 Labone Crescent
+        maxLength: 200
+        minLength: 5
+        type: string
+      city:
+        example: Accra
+        maxLength: 100
+        minLength: 2
+        type: string
+      country:
+        example: Ghana
+        maxLength: 100
+        minLength: 2
+        type: string
+      description:
+        example: A luxurious apartment overlooking the Atlantic Ocean.
+        type: string
+      gpsAddress:
+        example: GA-123-4567
+        type: string
+      images:
+        example:
+        - https://example.com/images/1.jpg
+        items:
+          type: string
+        type: array
+      latitude:
+        example: 5.6037
+        type: number
+      longitude:
+        example: -0.187
+        type: number
+      name:
+        example: Oceanview Apartment
+        maxLength: 100
+        minLength: 3
+        type: string
+      region:
+        example: Greater Accra
+        maxLength: 100
+        minLength: 2
+        type: string
+      status:
+        enum:
+        - Property.Status.Active
+        - Property.Status.Maintenance
+        - Property.Status.Inactive
+        example: Property.Status.Active
+        type: string
+      tags:
+        example:
+        - beachfront
+        - furnished
+        items:
+          type: string
+        type: array
+      type:
+        enum:
+        - SINGLE
+        - MULTI
+        example: SINGLE
+        type: string
+    type: object
   lib.HTTPError:
     properties:
       errors:
@@ -1624,6 +1690,38 @@ paths:
       tags:
       - Properties
   /api/v1/properties/{property_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a property
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Property deleted successfully
+        "400":
+          description: Error occurred when updating a property
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occured
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete a property
+      tags:
+      - Properties
     get:
       consumes:
       - application/json
@@ -1651,20 +1749,72 @@ paths:
                 $ref: '#/definitions/transformations.OutputProperty'
             type: object
         "400":
-          description: Bad Request
+          description: Error occurred when fetching a property
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "401":
-          description: Unauthorized
+          description: Invalid or absent authentication token
           schema:
             type: string
+        "404":
+          description: Property not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
         "500":
-          description: Internal Server Error
+          description: An unexpected error occured
           schema:
             type: string
       security:
       - BearerAuth: []
       summary: Get property by ID
+      tags:
+      - Properties
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing property
+      parameters:
+      - description: Property ID
+        format: uuid4
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Property details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdatePropertyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Property updated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputProperty'
+            type: object
+        "400":
+          description: Error occurred when updating a property
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Property not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occured
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update an existing property
       tags:
       - Properties
 securityDefinitions:

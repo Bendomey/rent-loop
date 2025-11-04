@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
@@ -9,6 +10,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/getsentry/raven-go"
 	"github.com/lib/pq"
+	"gorm.io/gorm"
 )
 
 type PropertyService interface {
@@ -25,6 +27,8 @@ type PropertyService interface {
 		context context.Context,
 		query repository.GetPropertyQuery,
 	) (*models.Property, error)
+	UpdateProperty(context context.Context, input UpdatePropertyInput) (*models.Property, error)
+	DeleteProperty(context context.Context, propertyID string) error
 }
 
 type propertyService struct {
@@ -184,4 +188,109 @@ func (s *propertyService) GetProperty(
 	}
 
 	return property, nil
+}
+
+type UpdatePropertyInput struct {
+	PropertyID  string
+	Type        *string
+	Status      *string
+	Name        *string
+	Description *string
+	Images      *[]string
+	Tags        *[]string
+	Latitude    *float64
+	Longitude   *float64
+	Address     *string
+	Country     *string
+	Region      *string
+	City        *string
+	GPSAddress  *string
+}
+
+func (s *propertyService) UpdateProperty(
+	context context.Context,
+	input UpdatePropertyInput,
+) (*models.Property, error) {
+	property, err := s.repo.GetByID(context, repository.GetPropertyQuery{ID: input.PropertyID})
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			raven.CaptureError(err, nil)
+		}
+		return nil, err
+	}
+
+	if input.Type != nil {
+		property.Type = *input.Type
+	}
+
+	if input.Status != nil {
+		property.Status = *input.Status
+	}
+
+	if input.Name != nil {
+		property.Name = *input.Name
+	}
+
+	if input.Description != nil {
+		property.Description = input.Description
+	}
+
+	if input.Images != nil {
+		property.Images = *input.Images
+	}
+
+	if input.Tags != nil {
+		property.Tags = *input.Tags
+	}
+
+	if input.Latitude != nil {
+		property.Latitude = *input.Latitude
+	}
+
+	if input.Longitude != nil {
+		property.Longitude = *input.Longitude
+	}
+
+	if input.Address != nil {
+		property.Address = *input.Address
+	}
+
+	if input.Country != nil {
+		property.Country = *input.Country
+	}
+
+	if input.Region != nil {
+		property.Region = *input.Region
+	}
+
+	if input.City != nil {
+		property.City = *input.City
+	}
+
+	if input.GPSAddress != nil {
+		property.GPSAddress = input.GPSAddress
+	}
+
+	if updateErr := s.repo.Update(context, property); updateErr != nil {
+		return nil, updateErr
+	}
+
+	return property, nil
+}
+
+func (s *propertyService) DeleteProperty(context context.Context, propertyID string) error {
+	_, propertyErr := s.repo.GetByID(context, repository.GetPropertyQuery{ID: propertyID})
+	if propertyErr != nil {
+		if !errors.Is(propertyErr, gorm.ErrRecordNotFound) {
+			raven.CaptureError(propertyErr, nil)
+		}
+		return propertyErr
+	}
+
+	deletePropertyErr := s.repo.Delete(context, propertyID)
+	if deletePropertyErr != nil {
+		return deletePropertyErr
+	}
+
+	return nil
 }
