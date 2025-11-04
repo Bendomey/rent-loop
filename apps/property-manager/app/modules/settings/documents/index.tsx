@@ -52,10 +52,10 @@ export function DocumentsModule() {
 	const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
 
 	const page = searchParams.get('page')
-		? Number(searchParams.get('page')) + 1
+		? Number(searchParams.get('page'))
 		: PAGINATION_DEFAULTS.PAGE
-	const per = searchParams.get('per_page')
-		? Number(searchParams.get('per_page'))
+	const per = searchParams.get('pageSize')
+		? Number(searchParams.get('pageSize'))
 		: PAGINATION_DEFAULTS.PER_PAGE
 	const { data, isPending, isRefetching, error, refetch } = useGetDocuments({
 		filters: {},
