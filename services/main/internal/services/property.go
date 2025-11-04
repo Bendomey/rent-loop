@@ -32,28 +32,28 @@ type PropertyService interface {
 }
 
 type propertyService struct {
-	appCtx                 pkg.AppContext
-	repo                   repository.PropertyRepository
-	clientUserRepo         repository.ClientUserRepository
-	clientUserPropertyRepo repository.ClientUserPropertyRepository
-	unitService            UnitService
+	appCtx                    pkg.AppContext
+	repo                      repository.PropertyRepository
+	clientUserService         ClientUserService
+	clientUserPropertyService ClientUserPropertyService
+	unitService               UnitService
 }
 
 type PropertyServiceDependencies struct {
-	AppCtx                 pkg.AppContext
-	Repo                   repository.PropertyRepository
-	ClientUserRepo         repository.ClientUserRepository
-	ClientUserPropertyRepo repository.ClientUserPropertyRepository
-	UnitService            UnitService
+	AppCtx                    pkg.AppContext
+	Repo                      repository.PropertyRepository
+	ClientUserService         ClientUserService
+	ClientUserPropertyService ClientUserPropertyService
+	UnitService               UnitService
 }
 
 func NewPropertyService(deps PropertyServiceDependencies) PropertyService {
 	return &propertyService{
-		appCtx:                 deps.AppCtx,
-		repo:                   deps.Repo,
-		clientUserRepo:         deps.ClientUserRepo,
-		clientUserPropertyRepo: deps.ClientUserPropertyRepo,
-		unitService:            deps.UnitService,
+		appCtx:                    deps.AppCtx,
+		repo:                      deps.Repo,
+		clientUserService:         deps.ClientUserService,
+		clientUserPropertyService: deps.ClientUserPropertyService,
+		unitService:               deps.UnitService,
 	}
 }
 
@@ -129,7 +129,7 @@ func (s *propertyService) CreateProperty(
 		return nil, err
 	}
 
-	clientUserOwner, clientUserErr := s.clientUserRepo.GetByQuery(
+	clientUserOwner, clientUserErr := s.clientUserService.GetClientUserByQuery(
 		ctx,
 		map[string]any{"client_id": input.ClientID, "role": "OWNER"},
 	)
@@ -138,14 +138,17 @@ func (s *propertyService) CreateProperty(
 		return nil, clientUserErr
 	}
 
-	clientUserProperty := models.ClientUserProperty{
+	clientUserProperty := CreateClientUserPropertyInput{
 		PropertyID:   property.ID.String(),
 		ClientUserID: clientUserOwner.ID.String(),
 		Role:         "MANAGER",
 		CreatedByID:  &input.CreatedByID,
 	}
 
-	linkPropertyErr := s.clientUserPropertyRepo.Create(transCtx, &clientUserProperty)
+	_, linkPropertyErr := s.clientUserPropertyService.LinkClientUserProperty(
+		transCtx,
+		clientUserProperty,
+	)
 	if linkPropertyErr != nil {
 		transaction.Rollback()
 		return nil, linkPropertyErr
@@ -195,6 +198,7 @@ func (s *propertyService) GetProperty(
 
 type UpdatePropertyInput struct {
 	PropertyID  string
+	ClientID    string
 	Name        *string
 	Description *string
 	Images      *[]string
@@ -218,6 +222,10 @@ func (s *propertyService) UpdateProperty(
 			raven.CaptureError(err, nil)
 		}
 		return nil, err
+	}
+
+	if input.ClientID != property.ClientID {
+		return nil, errors.New("client id mismatch")
 	}
 
 	if input.Name != nil {
@@ -276,9 +284,9 @@ func (s *propertyService) DeleteProperty(context context.Context, propertyID str
 		return propertyErr
 	}
 
-	unit, unitErr := s.unitService.GetUnitByQuery(
+	unitsCount, unitErr := s.unitService.CountUnits(
 		context,
-		map[string]any{"property_id": property.ID.String()},
+		repository.ListUnitsFilter{PropertyID: property.ID.String()},
 	)
 	if unitErr != nil {
 		if !errors.Is(unitErr, gorm.ErrRecordNotFound) {
@@ -286,13 +294,30 @@ func (s *propertyService) DeleteProperty(context context.Context, propertyID str
 		}
 	}
 
-	if unit != nil {
+	if unitsCount > 0 {
 		return errors.New("property is linked to a unit")
 	}
 
-	deletePropertyErr := s.repo.Delete(context, propertyID)
+	tx := s.appCtx.DB.Begin()
+
+	transCtx := lib.WithTransaction(context, tx)
+
+	unlinkPropertyErr := s.clientUserPropertyService.UnlinkByPropertyID(transCtx, propertyID)
+	if unlinkPropertyErr != nil {
+		tx.Rollback()
+		return unlinkPropertyErr
+	}
+
+	deletePropertyErr := s.repo.Delete(transCtx, propertyID)
 	if deletePropertyErr != nil {
+		tx.Rollback()
 		return deletePropertyErr
+	}
+
+	commitErr := tx.Commit().Error
+	if commitErr != nil {
+		tx.Rollback()
+		return commitErr
 	}
 
 	return nil

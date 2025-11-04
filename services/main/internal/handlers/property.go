@@ -285,7 +285,7 @@ type UpdatePropertyRequest struct {
 //	@Failure		500			{object}	string										"An unexpected error occured"
 //	@Router			/api/v1/properties/{property_id} [patch]
 func (h *PropertyHandler) UpdateProperty(w http.ResponseWriter, r *http.Request) {
-	_, currentClientUserOk := lib.ClientUserFromContext(r.Context())
+	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 
 	if !currentClientUserOk {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -309,6 +309,7 @@ func (h *PropertyHandler) UpdateProperty(w http.ResponseWriter, r *http.Request)
 
 	input := services.UpdatePropertyInput{
 		PropertyID:  propertyID,
+		ClientID:    currentClientUser.ClientID,
 		Name:        body.Name,
 		Description: body.Description,
 		Images:      body.Images,

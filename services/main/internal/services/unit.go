@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/getsentry/raven-go"
@@ -12,7 +11,7 @@ import (
 )
 
 type UnitService interface {
-	GetUnitByQuery(context context.Context, query map[string]any) (*models.Unit, error)
+	CountUnits(context context.Context, filterQuery repository.ListUnitsFilter) (int64, error)
 }
 
 type unitService struct {
@@ -24,17 +23,17 @@ func NewUnitService(appCtx pkg.AppContext, repo repository.UnitRepository) UnitS
 	return &unitService{appCtx: appCtx, repo: repo}
 }
 
-func (s *unitService) GetUnitByQuery(
+func (s *unitService) CountUnits(
 	ctx context.Context,
-	query map[string]any,
-) (*models.Unit, error) {
-	unit, getErr := s.repo.GetByQuery(ctx, query)
-	if getErr != nil {
-		if !errors.Is(getErr, gorm.ErrRecordNotFound) {
-			raven.CaptureError(getErr, nil)
+	filterQuery repository.ListUnitsFilter,
+) (int64, error) {
+	unitCount, countErr := s.repo.Count(ctx, filterQuery)
+	if countErr != nil {
+		if !errors.Is(countErr, gorm.ErrRecordNotFound) {
+			raven.CaptureError(countErr, nil)
 		}
-		return nil, getErr
+		return 0, countErr
 	}
 
-	return unit, nil
+	return unitCount, nil
 }
