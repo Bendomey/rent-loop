@@ -11,6 +11,7 @@ type Services struct {
 	ClientUserService        ClientUserService
 	PropertyService          PropertyService
 	DocumentService          DocumentService
+	UnitService              UnitService
 }
 
 func NewServices(appCtx pkg.AppContext, repository repository.Repository) Services {
@@ -25,12 +26,16 @@ func NewServices(appCtx pkg.AppContext, repository repository.Repository) Servic
 		repository.ClientUserRepository,
 		repository.ClientRepository,
 	)
+
+	unitService := NewUnitService(appCtx, repository.UnitRepository)
+
 	propertyService := NewPropertyService(
 		PropertyServiceDependencies{
 			AppCtx:                 appCtx,
 			Repo:                   repository.PropertyRepository,
 			ClientUserRepo:         repository.ClientUserRepository,
 			ClientUserPropertyRepo: repository.ClientUserPropertyRepository,
+			UnitService:            unitService,
 		},
 	)
 
@@ -45,5 +50,6 @@ func NewServices(appCtx pkg.AppContext, repository repository.Repository) Servic
 		ClientUserService:        clientUserService,
 		PropertyService:          propertyService,
 		DocumentService:          documentService,
+		UnitService:              unitService,
 	}
 }

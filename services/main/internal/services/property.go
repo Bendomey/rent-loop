@@ -36,6 +36,7 @@ type propertyService struct {
 	repo                   repository.PropertyRepository
 	clientUserRepo         repository.ClientUserRepository
 	clientUserPropertyRepo repository.ClientUserPropertyRepository
+	unitService            UnitService
 }
 
 type PropertyServiceDependencies struct {
@@ -43,6 +44,7 @@ type PropertyServiceDependencies struct {
 	Repo                   repository.PropertyRepository
 	ClientUserRepo         repository.ClientUserRepository
 	ClientUserPropertyRepo repository.ClientUserPropertyRepository
+	UnitService            UnitService
 }
 
 func NewPropertyService(deps PropertyServiceDependencies) PropertyService {
@@ -51,6 +53,7 @@ func NewPropertyService(deps PropertyServiceDependencies) PropertyService {
 		repo:                   deps.Repo,
 		clientUserRepo:         deps.ClientUserRepo,
 		clientUserPropertyRepo: deps.ClientUserPropertyRepo,
+		unitService:            deps.UnitService,
 	}
 }
 
@@ -221,9 +224,7 @@ func (s *propertyService) UpdateProperty(
 		property.Name = *input.Name
 	}
 
-	if input.Description != nil {
-		property.Description = input.Description
-	}
+	property.Description = input.Description
 
 	if input.Images != nil {
 		property.Images = *input.Images
@@ -257,9 +258,7 @@ func (s *propertyService) UpdateProperty(
 		property.City = *input.City
 	}
 
-	if input.GPSAddress != nil {
-		property.GPSAddress = input.GPSAddress
-	}
+	property.GPSAddress = input.GPSAddress
 
 	if updateErr := s.repo.Update(context, property); updateErr != nil {
 		return nil, updateErr
@@ -269,12 +268,26 @@ func (s *propertyService) UpdateProperty(
 }
 
 func (s *propertyService) DeleteProperty(context context.Context, propertyID string) error {
-	_, propertyErr := s.repo.GetByID(context, repository.GetPropertyQuery{ID: propertyID})
+	property, propertyErr := s.repo.GetByID(context, repository.GetPropertyQuery{ID: propertyID})
 	if propertyErr != nil {
 		if !errors.Is(propertyErr, gorm.ErrRecordNotFound) {
 			raven.CaptureError(propertyErr, nil)
 		}
 		return propertyErr
+	}
+
+	unit, unitErr := s.unitService.GetUnitByQuery(
+		context,
+		map[string]any{"property_id": property.ID.String()},
+	)
+	if unitErr != nil {
+		if !errors.Is(unitErr, gorm.ErrRecordNotFound) {
+			return unitErr
+		}
+	}
+
+	if unit != nil {
+		return errors.New("property is linked to a unit")
 	}
 
 	deletePropertyErr := s.repo.Delete(context, propertyID)
