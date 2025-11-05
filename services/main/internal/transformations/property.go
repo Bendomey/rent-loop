@@ -9,6 +9,7 @@ import (
 
 type OutputProperty struct {
 	ID          string           `json:"id"                    example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b" format:"uuid"      description:"Unique identifier for the property"`
+	Slug        string           `json:"slug"                  example:"my-property-abcde1876drkjy"                              description:"Slug for the property"`
 	Type        string           `json:"type"                  example:"SINGLE"                                                  description:"Type of the property (e.g., SINGLE, MULTI)"`
 	Status      string           `json:"status"                example:"Property.Status.Active"                                  description:"Current status of the property"`
 	Name        string           `json:"name"                  example:"My Property"                                             description:"Name of the property"`
@@ -37,6 +38,7 @@ func DBPropertyToRest(i *models.Property) interface{} {
 
 	data := map[string]interface{}{
 		"id":            i.ID.String(),
+		"slug":          i.Slug,
 		"type":          i.Type,
 		"status":        i.Status,
 		"name":          i.Name,

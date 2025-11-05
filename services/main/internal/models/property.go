@@ -1,6 +1,11 @@
 package models
 
-import "github.com/lib/pq"
+import (
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/getsentry/raven-go"
+	"github.com/lib/pq"
+	"gorm.io/gorm"
+)
 
 // Property represents a property under a client in the system
 type Property struct {
@@ -29,4 +34,18 @@ type Property struct {
 	CreatedBy   ClientUser `json:"createdBy"`
 
 	Units []Unit `json:"units"`
+}
+
+func (p *Property) BeforeCreate(tx *gorm.DB) (err error) {
+	slug, slugErr := lib.GenerateSlug(p.Name)
+	if slugErr != nil {
+		raven.CaptureError(err, map[string]string{
+			"function": "BeforeCreatePropertyHook",
+			"action":   "Generating a slug",
+		})
+		return slugErr
+	}
+
+	p.Slug = slug
+	return
 }

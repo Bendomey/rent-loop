@@ -28,7 +28,7 @@ type PropertyService interface {
 		query repository.GetPropertyQuery,
 	) (*models.Property, error)
 	UpdateProperty(context context.Context, input UpdatePropertyInput) (*models.Property, error)
-	DeleteProperty(context context.Context, propertyID string) error
+	DeleteProperty(context context.Context, input DeletePropertyInput) error
 }
 
 type propertyService struct {
@@ -79,15 +79,6 @@ func (s *propertyService) CreateProperty(
 	ctx context.Context,
 	input CreatePropertyInput,
 ) (*models.Property, error) {
-	slug, err := lib.GenerateSlug(input.Name)
-	if err != nil {
-		raven.CaptureError(err, map[string]string{
-			"function": "CreateProperty",
-			"action":   "Generating a slug",
-		})
-		return nil, err
-	}
-
 	var images pq.StringArray
 	if input.Images != nil {
 		images = pq.StringArray(input.Images)
@@ -106,7 +97,6 @@ func (s *propertyService) CreateProperty(
 		Type:        input.Type,
 		Status:      input.Status,
 		Name:        input.Name,
-		Slug:        slug,
 		Description: input.Description,
 		Images:      images,
 		Tags:        tags,
@@ -216,16 +206,15 @@ func (s *propertyService) UpdateProperty(
 	context context.Context,
 	input UpdatePropertyInput,
 ) (*models.Property, error) {
-	property, err := s.repo.GetByID(context, repository.GetPropertyQuery{ID: input.PropertyID})
+	property, err := s.repo.GetByQuery(
+		context,
+		map[string]any{"id": input.PropertyID, "client_id": input.ClientID},
+	)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			raven.CaptureError(err, nil)
 		}
 		return nil, err
-	}
-
-	if input.ClientID != property.ClientID {
-		return nil, errors.New("client id mismatch")
 	}
 
 	if input.Name != nil {
@@ -275,11 +264,22 @@ func (s *propertyService) UpdateProperty(
 	return property, nil
 }
 
-func (s *propertyService) DeleteProperty(context context.Context, propertyID string) error {
-	property, propertyErr := s.repo.GetByID(context, repository.GetPropertyQuery{ID: propertyID})
+type DeletePropertyInput struct {
+	PropertyID string
+	ClientID   string
+}
+
+func (s *propertyService) DeleteProperty(context context.Context, input DeletePropertyInput) error {
+	property, propertyErr := s.repo.GetByQuery(
+		context,
+		map[string]any{"id": input.PropertyID, "client_id": input.ClientID},
+	)
 	if propertyErr != nil {
 		if !errors.Is(propertyErr, gorm.ErrRecordNotFound) {
-			raven.CaptureError(propertyErr, nil)
+			raven.CaptureError(propertyErr, map[string]string{
+				"function": "DeleteProperty",
+				"action":   "get property by id",
+			})
 		}
 		return propertyErr
 	}
@@ -289,9 +289,11 @@ func (s *propertyService) DeleteProperty(context context.Context, propertyID str
 		repository.ListUnitsFilter{PropertyID: property.ID.String()},
 	)
 	if unitErr != nil {
-		if !errors.Is(unitErr, gorm.ErrRecordNotFound) {
-			return unitErr
-		}
+		raven.CaptureError(unitErr, map[string]string{
+			"function": "DeleteProperty",
+			"action":   "fetching units count",
+		})
+		return unitErr
 	}
 
 	if unitsCount > 0 {
@@ -302,13 +304,13 @@ func (s *propertyService) DeleteProperty(context context.Context, propertyID str
 
 	transCtx := lib.WithTransaction(context, tx)
 
-	unlinkPropertyErr := s.clientUserPropertyService.UnlinkByPropertyID(transCtx, propertyID)
+	unlinkPropertyErr := s.clientUserPropertyService.UnlinkByPropertyID(transCtx, input.PropertyID)
 	if unlinkPropertyErr != nil {
 		tx.Rollback()
 		return unlinkPropertyErr
 	}
 
-	deletePropertyErr := s.repo.Delete(transCtx, propertyID)
+	deletePropertyErr := s.repo.Delete(transCtx, input.PropertyID)
 	if deletePropertyErr != nil {
 		tx.Rollback()
 		return deletePropertyErr

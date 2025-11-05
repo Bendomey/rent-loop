@@ -356,9 +356,20 @@ func (h *PropertyHandler) UpdateProperty(w http.ResponseWriter, r *http.Request)
 //	@Failure		500			{object}	string			"An unexpected error occured"
 //	@Router			/api/v1/properties/{property_id} [delete]
 func (h *PropertyHandler) DeleteProperty(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
+	if !currentClientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	propertyID := chi.URLParam(r, "property_id")
 
-	deleteErr := h.service.DeleteProperty(r.Context(), propertyID)
+	input := services.DeletePropertyInput{
+		PropertyID: propertyID,
+		ClientID:   currentClientUser.ClientID,
+	}
+
+	deleteErr := h.service.DeleteProperty(r.Context(), input)
 	if deleteErr != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]any{
