@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
@@ -9,6 +10,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/getsentry/raven-go"
 	"github.com/lib/pq"
+	"gorm.io/gorm"
 )
 
 type PropertyService interface {
@@ -25,28 +27,33 @@ type PropertyService interface {
 		context context.Context,
 		query repository.GetPropertyQuery,
 	) (*models.Property, error)
+	UpdateProperty(context context.Context, input UpdatePropertyInput) (*models.Property, error)
+	DeleteProperty(context context.Context, input DeletePropertyInput) error
 }
 
 type propertyService struct {
-	appCtx                 pkg.AppContext
-	repo                   repository.PropertyRepository
-	clientUserRepo         repository.ClientUserRepository
-	clientUserPropertyRepo repository.ClientUserPropertyRepository
+	appCtx                    pkg.AppContext
+	repo                      repository.PropertyRepository
+	clientUserService         ClientUserService
+	clientUserPropertyService ClientUserPropertyService
+	unitService               UnitService
 }
 
 type PropertyServiceDependencies struct {
-	AppCtx                 pkg.AppContext
-	Repo                   repository.PropertyRepository
-	ClientUserRepo         repository.ClientUserRepository
-	ClientUserPropertyRepo repository.ClientUserPropertyRepository
+	AppCtx                    pkg.AppContext
+	Repo                      repository.PropertyRepository
+	ClientUserService         ClientUserService
+	ClientUserPropertyService ClientUserPropertyService
+	UnitService               UnitService
 }
 
 func NewPropertyService(deps PropertyServiceDependencies) PropertyService {
 	return &propertyService{
-		appCtx:                 deps.AppCtx,
-		repo:                   deps.Repo,
-		clientUserRepo:         deps.ClientUserRepo,
-		clientUserPropertyRepo: deps.ClientUserPropertyRepo,
+		appCtx:                    deps.AppCtx,
+		repo:                      deps.Repo,
+		clientUserService:         deps.ClientUserService,
+		clientUserPropertyService: deps.ClientUserPropertyService,
+		unitService:               deps.UnitService,
 	}
 }
 
@@ -72,15 +79,6 @@ func (s *propertyService) CreateProperty(
 	ctx context.Context,
 	input CreatePropertyInput,
 ) (*models.Property, error) {
-	slug, err := lib.GenerateSlug(input.Name)
-	if err != nil {
-		raven.CaptureError(err, map[string]string{
-			"function": "CreateProperty",
-			"action":   "Generating a slug",
-		})
-		return nil, err
-	}
-
 	var images pq.StringArray
 	if input.Images != nil {
 		images = pq.StringArray(input.Images)
@@ -99,7 +97,6 @@ func (s *propertyService) CreateProperty(
 		Type:        input.Type,
 		Status:      input.Status,
 		Name:        input.Name,
-		Slug:        slug,
 		Description: input.Description,
 		Images:      images,
 		Tags:        tags,
@@ -122,7 +119,7 @@ func (s *propertyService) CreateProperty(
 		return nil, err
 	}
 
-	clientUserOwner, clientUserErr := s.clientUserRepo.GetByQuery(
+	clientUserOwner, clientUserErr := s.clientUserService.GetClientUserByQuery(
 		ctx,
 		map[string]any{"client_id": input.ClientID, "role": "OWNER"},
 	)
@@ -131,14 +128,17 @@ func (s *propertyService) CreateProperty(
 		return nil, clientUserErr
 	}
 
-	clientUserProperty := models.ClientUserProperty{
+	clientUserProperty := CreateClientUserPropertyInput{
 		PropertyID:   property.ID.String(),
 		ClientUserID: clientUserOwner.ID.String(),
 		Role:         "MANAGER",
 		CreatedByID:  &input.CreatedByID,
 	}
 
-	linkPropertyErr := s.clientUserPropertyRepo.Create(transCtx, &clientUserProperty)
+	_, linkPropertyErr := s.clientUserPropertyService.LinkClientUserProperty(
+		transCtx,
+		clientUserProperty,
+	)
 	if linkPropertyErr != nil {
 		transaction.Rollback()
 		return nil, linkPropertyErr
@@ -184,4 +184,143 @@ func (s *propertyService) GetProperty(
 	}
 
 	return property, nil
+}
+
+type UpdatePropertyInput struct {
+	PropertyID  string
+	ClientID    string
+	Name        *string
+	Description *string
+	Images      *[]string
+	Tags        *[]string
+	Latitude    *float64
+	Longitude   *float64
+	Address     *string
+	Country     *string
+	Region      *string
+	City        *string
+	GPSAddress  *string
+}
+
+func (s *propertyService) UpdateProperty(
+	context context.Context,
+	input UpdatePropertyInput,
+) (*models.Property, error) {
+	property, err := s.repo.GetByQuery(
+		context,
+		map[string]any{"id": input.PropertyID, "client_id": input.ClientID},
+	)
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			raven.CaptureError(err, nil)
+		}
+		return nil, err
+	}
+
+	if input.Name != nil {
+		property.Name = *input.Name
+	}
+
+	property.Description = input.Description
+
+	if input.Images != nil {
+		property.Images = *input.Images
+	}
+
+	if input.Tags != nil {
+		property.Tags = *input.Tags
+	}
+
+	if input.Latitude != nil {
+		property.Latitude = *input.Latitude
+	}
+
+	if input.Longitude != nil {
+		property.Longitude = *input.Longitude
+	}
+
+	if input.Address != nil {
+		property.Address = *input.Address
+	}
+
+	if input.Country != nil {
+		property.Country = *input.Country
+	}
+
+	if input.Region != nil {
+		property.Region = *input.Region
+	}
+
+	if input.City != nil {
+		property.City = *input.City
+	}
+
+	property.GPSAddress = input.GPSAddress
+
+	if updateErr := s.repo.Update(context, property); updateErr != nil {
+		return nil, updateErr
+	}
+
+	return property, nil
+}
+
+type DeletePropertyInput struct {
+	PropertyID string
+	ClientID   string
+}
+
+func (s *propertyService) DeleteProperty(context context.Context, input DeletePropertyInput) error {
+	property, propertyErr := s.repo.GetByQuery(
+		context,
+		map[string]any{"id": input.PropertyID, "client_id": input.ClientID},
+	)
+	if propertyErr != nil {
+		if !errors.Is(propertyErr, gorm.ErrRecordNotFound) {
+			raven.CaptureError(propertyErr, map[string]string{
+				"function": "DeleteProperty",
+				"action":   "get property by id",
+			})
+		}
+		return propertyErr
+	}
+
+	unitsCount, unitErr := s.unitService.CountUnits(
+		context,
+		repository.ListUnitsFilter{PropertyID: property.ID.String()},
+	)
+	if unitErr != nil {
+		raven.CaptureError(unitErr, map[string]string{
+			"function": "DeleteProperty",
+			"action":   "fetching units count",
+		})
+		return unitErr
+	}
+
+	if unitsCount > 0 {
+		return errors.New("property is linked to a unit")
+	}
+
+	tx := s.appCtx.DB.Begin()
+
+	transCtx := lib.WithTransaction(context, tx)
+
+	unlinkPropertyErr := s.clientUserPropertyService.UnlinkByPropertyID(transCtx, input.PropertyID)
+	if unlinkPropertyErr != nil {
+		tx.Rollback()
+		return unlinkPropertyErr
+	}
+
+	deletePropertyErr := s.repo.Delete(transCtx, input.PropertyID)
+	if deletePropertyErr != nil {
+		tx.Rollback()
+		return deletePropertyErr
+	}
+
+	commitErr := tx.Commit().Error
+	if commitErr != nil {
+		tx.Rollback()
+		return commitErr
+	}
+
+	return nil
 }

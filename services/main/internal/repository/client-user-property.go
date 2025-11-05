@@ -10,6 +10,8 @@ import (
 
 type ClientUserPropertyRepository interface {
 	Create(context context.Context, clientUserProperty *models.ClientUserProperty) error
+	DeleteByPropertyID(context context.Context, propertyID string) error
+	DeleteByClientUserID(context context.Context, clientUserID string) error
 }
 
 type clientUserPropertyRepository struct {
@@ -34,4 +36,26 @@ func (r *clientUserPropertyRepository) Create(
 	}
 
 	return db.WithContext(ctx).Create(clientUserProperty).Error
+}
+
+func (r *clientUserPropertyRepository) DeleteByPropertyID(
+	ctx context.Context,
+	propertyID string,
+) error {
+	db := lib.ResolveDB(ctx, r.DB)
+
+	return db.WithContext(ctx).
+		Delete(&models.ClientUserProperty{}, "property_id = ?", propertyID).
+		Error
+}
+
+func (r *clientUserPropertyRepository) DeleteByClientUserID(
+	ctx context.Context,
+	clientUserID string,
+) error {
+	db := lib.ResolveDB(ctx, r.DB)
+
+	return db.WithContext(ctx).
+		Delete(&models.ClientUserProperty{}, "client_user_id = ?", clientUserID).
+		Error
 }

@@ -6,11 +6,13 @@ import (
 )
 
 type Services struct {
-	AdminService             AdminService
-	ClientApplicationService ClientApplicationService
-	ClientUserService        ClientUserService
-	PropertyService          PropertyService
-	DocumentService          DocumentService
+	AdminService              AdminService
+	ClientApplicationService  ClientApplicationService
+	ClientUserService         ClientUserService
+	PropertyService           PropertyService
+	DocumentService           DocumentService
+	UnitService               UnitService
+	ClientUserPropertyService ClientUserPropertyService
 }
 
 func NewServices(appCtx pkg.AppContext, repository repository.Repository) Services {
@@ -25,12 +27,21 @@ func NewServices(appCtx pkg.AppContext, repository repository.Repository) Servic
 		repository.ClientUserRepository,
 		repository.ClientRepository,
 	)
+
+	clientUserPropertyService := NewClientUserPropertyService(
+		appCtx,
+		repository.ClientUserPropertyRepository,
+	)
+
+	unitService := NewUnitService(appCtx, repository.UnitRepository)
+
 	propertyService := NewPropertyService(
 		PropertyServiceDependencies{
-			AppCtx:                 appCtx,
-			Repo:                   repository.PropertyRepository,
-			ClientUserRepo:         repository.ClientUserRepository,
-			ClientUserPropertyRepo: repository.ClientUserPropertyRepository,
+			AppCtx:                    appCtx,
+			Repo:                      repository.PropertyRepository,
+			ClientUserService:         clientUserService,
+			ClientUserPropertyService: clientUserPropertyService,
+			UnitService:               unitService,
 		},
 	)
 
@@ -40,10 +51,12 @@ func NewServices(appCtx pkg.AppContext, repository repository.Repository) Servic
 	)
 
 	return Services{
-		AdminService:             adminService,
-		ClientApplicationService: clientApplicationService,
-		ClientUserService:        clientUserService,
-		PropertyService:          propertyService,
-		DocumentService:          documentService,
+		AdminService:              adminService,
+		ClientApplicationService:  clientApplicationService,
+		ClientUserService:         clientUserService,
+		PropertyService:           propertyService,
+		DocumentService:           documentService,
+		UnitService:               unitService,
+		ClientUserPropertyService: clientUserPropertyService,
 	}
 }

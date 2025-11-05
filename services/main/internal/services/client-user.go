@@ -27,7 +27,11 @@ type ClientUserService interface {
 	) (*AuthenticateClientUserResponse, error)
 	GetClientUser(ctx context.Context, clientUserId string) (*models.ClientUser, error)
 	SendForgotPasswordResetLink(ctx context.Context, email string) (*models.ClientUser, error)
-	ResetPassword(ctx context.Context, input ResetClientUserPasswordInput) (*models.ClientUser, error)
+	ResetPassword(
+		ctx context.Context,
+		input ResetClientUserPasswordInput,
+	) (*models.ClientUser, error)
+	GetClientUserByQuery(context context.Context, query map[string]any) (*models.ClientUser, error)
 }
 
 type clientUserService struct {
@@ -79,7 +83,8 @@ func (s *clientUserService) CreateClientUser(
 		return nil, adminClientUserErr
 	}
 
-	if adminClientUser != nil && slices.Contains([]string{"ADMIN", "OWNER"}, adminClientUser.Role) == false {
+	if adminClientUser != nil &&
+		slices.Contains([]string{"ADMIN", "OWNER"}, adminClientUser.Role) == false {
 		return nil, errors.New("unauthorized to create client user")
 	}
 
@@ -185,11 +190,17 @@ func (s *clientUserService) AuthenticateClientUser(
 	}, nil
 }
 
-func (s *clientUserService) GetClientUser(ctx context.Context, clientUserId string) (*models.ClientUser, error) {
+func (s *clientUserService) GetClientUser(
+	ctx context.Context,
+	clientUserId string,
+) (*models.ClientUser, error) {
 	return s.repo.GetByID(ctx, clientUserId)
 }
 
-func (s *clientUserService) SendForgotPasswordResetLink(ctx context.Context, email string) (*models.ClientUser, error) {
+func (s *clientUserService) SendForgotPasswordResetLink(
+	ctx context.Context,
+	email string,
+) (*models.ClientUser, error) {
 	clientUser, clientUserErr := s.repo.GetByEmail(ctx, email)
 	if clientUserErr != nil {
 		if !errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
@@ -263,4 +274,16 @@ func (s *clientUserService) ResetPassword(
 	}
 
 	return clientUser, nil
+}
+
+func (s *clientUserService) GetClientUserByQuery(
+	ctx context.Context,
+	query map[string]any,
+) (*models.ClientUser, error) {
+	clientUserOwner, clientUserErr := s.repo.GetByQuery(ctx, query)
+	if clientUserErr != nil {
+		return nil, clientUserErr
+	}
+
+	return clientUserOwner, nil
 }

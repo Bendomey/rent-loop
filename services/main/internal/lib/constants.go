@@ -33,6 +33,15 @@ func TransactionFromContext(ctx context.Context) (*gorm.DB, bool) {
 	return tx, ok
 }
 
+func ResolveDB(ctx context.Context, db *gorm.DB) *gorm.DB {
+	tx, txOk := TransactionFromContext(ctx)
+	if !txOk || tx == nil {
+		return db
+	}
+
+	return tx
+}
+
 // for admin
 const adminContextKey contextKey = "rentloop-admin"
 

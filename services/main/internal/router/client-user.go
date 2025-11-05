@@ -38,6 +38,8 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 
 				r.Route("/{property_id}", func(r chi.Router) {
 					r.Get("/", handlers.PropertyHandler.GetPropertyById)
+					r.Patch("/", handlers.PropertyHandler.UpdateProperty)
+					r.Delete("/", handlers.PropertyHandler.DeleteProperty)
 				})
 			})
 

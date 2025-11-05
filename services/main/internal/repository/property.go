@@ -14,6 +14,9 @@ type PropertyRepository interface {
 	GetByID(context context.Context, query GetPropertyQuery) (*models.Property, error)
 	List(context context.Context, filterQuery ListPropertiesFilter) (*[]models.Property, error)
 	Count(context context.Context, filterQuery ListPropertiesFilter) (int64, error)
+	Update(context context.Context, property *models.Property) error
+	Delete(context context.Context, propertyID string) error
+	GetByQuery(context context.Context, query map[string]any) (*models.Property, error)
 }
 
 type propertyRepository struct {
@@ -25,14 +28,7 @@ func NewPropertyRepository(DB *gorm.DB) PropertyRepository {
 }
 
 func (r *propertyRepository) Create(ctx context.Context, property *models.Property) error {
-	var db *gorm.DB
-
-	tx, txOk := lib.TransactionFromContext(ctx)
-	db = tx
-
-	if !txOk || tx == nil {
-		db = r.DB
-	}
+	db := lib.ResolveDB(ctx, r.DB)
 
 	return db.WithContext(ctx).Create(property).Error
 }
@@ -140,4 +136,30 @@ func propertyTypeScope(tableName string, propertyType *string) func(db *gorm.DB)
 		}
 		return db.Where(fmt.Sprintf("%s.type = ?", tableName), propertyType)
 	}
+}
+
+func (r *propertyRepository) Update(ctx context.Context, property *models.Property) error {
+	db := lib.ResolveDB(ctx, r.DB)
+
+	return db.WithContext(ctx).Save(property).Error
+}
+
+func (r *propertyRepository) Delete(ctx context.Context, propertyID string) error {
+	db := lib.ResolveDB(ctx, r.DB)
+
+	return db.WithContext(ctx).Where("id = ?", propertyID).Delete(&models.Property{}).Error
+}
+
+func (r *propertyRepository) GetByQuery(
+	ctx context.Context,
+	query map[string]any,
+) (*models.Property, error) {
+	var property models.Property
+
+	result := r.DB.WithContext(ctx).Where(query).First(&property)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &property, nil
 }
