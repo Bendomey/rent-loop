@@ -50,7 +50,11 @@ export function PropertyTagInput({
 						onKeyDown={handleKeyDown}
 						className="flex-1"
 					/>
-					<Button type="button" onClick={addTag}>
+					<Button
+						disabled={inputValue.trim().length === 0}
+						type="button"
+						onClick={addTag}
+					>
 						Create
 					</Button>
 				</div>
@@ -74,6 +78,9 @@ export function PropertyTagInput({
 					</Badge>
 				))}
 			</div>
+			{value.length ? null : (
+				<p className="text-muted-foreground text-sm">Optional</p>
+			)}
 		</div>
 	)
 }

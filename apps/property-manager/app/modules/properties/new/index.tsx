@@ -1,19 +1,13 @@
-import { useState } from 'react'
+import { CreatePropertyProvider, useCreatePropertyContext } from './context'
 import { Step0 } from './steps/step0'
 import { Step1 } from './steps/step1'
 import { Step2 } from './steps/step2'
 import { Step3 } from './steps/step3'
 
-const STEP = 3
+const STEP = 4
 
-const Steps = [Step0, Step1, Step2, Step3]
-
-export function NewPropertyModule() {
-	const [stepCount, setStepCount] = useState(0)
-	const CurrentStep = Steps[stepCount]
-
-	const goBack = () => setStepCount((prev) => (prev > 0 ? prev - 1 : prev))
-	const goNext = () => setStepCount((prev) => prev + 1)
+export function NewProperty() {
+	const { stepCount } = useCreatePropertyContext()
 
 	return (
 		<main className="w-full">
@@ -24,10 +18,21 @@ export function NewPropertyModule() {
 				/>
 				<div className="flex min-h-[88vh] items-center justify-center">
 					<div className="w-full max-w-3xl px-4 md:px-0">
-						{CurrentStep && <CurrentStep onGoBack={goBack} onGoNext={goNext} />}
+						{stepCount === 0 ? <Step0 /> : null}
+						{stepCount === 1 ? <Step1 /> : null}
+						{stepCount === 2 ? <Step2 /> : null}
+						{stepCount === 3 ? <Step3 /> : null}
 					</div>
 				</div>
 			</div>
 		</main>
+	)
+}
+
+export function NewPropertyModule() {
+	return (
+		<CreatePropertyProvider>
+			<NewProperty />
+		</CreatePropertyProvider>
 	)
 }
