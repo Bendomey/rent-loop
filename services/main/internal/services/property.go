@@ -29,6 +29,10 @@ type PropertyService interface {
 	) (*models.Property, error)
 	UpdateProperty(context context.Context, input UpdatePropertyInput) (*models.Property, error)
 	DeleteProperty(context context.Context, input DeletePropertyInput) error
+	GetPropertyBySlug(
+		context context.Context,
+		query repository.GetPropertyBySlugQuery,
+	) (*models.Property, error)
 }
 
 type propertyService struct {
@@ -323,4 +327,22 @@ func (s *propertyService) DeleteProperty(context context.Context, input DeletePr
 	}
 
 	return nil
+}
+
+func (s *propertyService) GetPropertyBySlug(
+	ctx context.Context,
+	query repository.GetPropertyBySlugQuery,
+) (*models.Property, error) {
+	property, getErr := s.repo.GetBySlug(ctx, query)
+	if getErr != nil {
+		if !errors.Is(getErr, gorm.ErrRecordNotFound) {
+			raven.CaptureError(getErr, map[string]string{
+				"function": "GetPropertyBySlug",
+				"action":   "get property by slug",
+			})
+			return nil, getErr
+		}
+	}
+
+	return property, nil
 }
