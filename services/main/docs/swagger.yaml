@@ -1807,6 +1807,54 @@ paths:
       summary: Update an existing property
       tags:
       - Properties
+  /api/v1/properties/slug/{slug}:
+    get:
+      consumes:
+      - application/json
+      description: Get property by slug
+      parameters:
+      - description: Property slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Property of slug retrieved successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputProperty'
+            type: object
+        "400":
+          description: Error occurred when fetching a property
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Property not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occured
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get property by slug
+      tags:
+      - Properties
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

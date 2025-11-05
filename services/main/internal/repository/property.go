@@ -17,6 +17,7 @@ type PropertyRepository interface {
 	Update(context context.Context, property *models.Property) error
 	Delete(context context.Context, propertyID string) error
 	GetByQuery(context context.Context, query map[string]any) (*models.Property, error)
+	GetBySlug(context context.Context, query GetPropertyBySlugQuery) (*models.Property, error)
 }
 
 type propertyRepository struct {
@@ -157,6 +158,34 @@ func (r *propertyRepository) GetByQuery(
 	var property models.Property
 
 	result := r.DB.WithContext(ctx).Where(query).First(&property)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &property, nil
+}
+
+type GetPropertyBySlugQuery struct {
+	Slug     string
+	Populate *[]string
+}
+
+func (r *propertyRepository) GetBySlug(
+	ctx context.Context,
+	query GetPropertyBySlugQuery,
+) (*models.Property, error) {
+	var property models.Property
+
+	db := r.DB.WithContext(ctx).Where("slug = ?", query.Slug)
+
+	if query.Populate != nil {
+		for _, field := range *query.Populate {
+			db = db.Preload(field)
+		}
+	}
+
+	result := db.First(&property)
+
 	if result.Error != nil {
 		return nil, result.Error
 	}
