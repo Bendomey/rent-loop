@@ -28,13 +28,13 @@ export async function action({ request }: Route.ActionArgs) {
 	const status = formData.get('status') as Property['status']
 	const name = formData.get('name') as string
 	const description = formData.get('description') as string | null
-	const tags = formData.getAll('tags') as string[]
+	const tags = (formData.getAll('tags') as string[])?.filter(Boolean) ?? []
 	const gps_address = formData.get('gps_address') as string
 	const address = formData.get('address') as string
 	const city = formData.get('city') as string
 	const region = formData.get('region') as string
 	const country = formData.get('country') as string
-	const images = formData.getAll('images') as string[]
+	const images = (formData.getAll('images') as string[])?.filter(Boolean) ?? []
 	const latitude = parseFloat(formData.get('latitude') as string)
 	const longitude = parseFloat(formData.get('longitude') as string)
 
