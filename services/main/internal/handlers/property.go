@@ -254,6 +254,61 @@ func (h *PropertyHandler) GetPropertyById(w http.ResponseWriter, r *http.Request
 	})
 }
 
+// GetPropertyBySlug godoc
+//
+//	@Summary		Get property by slug
+//	@Description	Get property by slug
+//	@Tags			Properties
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			slug	path		string										true	"Property slug"
+//	@Param			q		query		GetPropertyQuery							true	"Properties"
+//	@Success		200		{object}	object{data=transformations.OutputProperty}	"Property of slug retrieved successfully"
+//	@Failure		400		{object}	lib.HTTPError								"Error occurred when fetching a property"
+//	@Failure		401		{object}	string										"Invalid or absent authentication token"
+//	@Failure		404		{object}	lib.HTTPError								"Property not found"
+//	@Failure		500		{object}	string										"An unexpected error occured"
+//	@Router			/api/v1/properties/slug/{slug} [get]
+func (h *PropertyHandler) GetPropertyBySlug(w http.ResponseWriter, r *http.Request) {
+	propertySlug := chi.URLParam(r, "slug")
+	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
+	if filterErr != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]any{
+			"errors": map[string]string{
+				"message": filterErr.Error(),
+			},
+		})
+		return
+	}
+
+	isFilterQueryPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filterQuery, w)
+	if !isFilterQueryPassedValidation {
+		return
+	}
+
+	query := repository.GetPropertyBySlugQuery{
+		Slug:     propertySlug,
+		Populate: filterQuery.Populate,
+	}
+
+	property, getErr := h.service.GetPropertyBySlug(r.Context(), query)
+	if getErr != nil {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]any{
+			"errors": map[string]string{
+				"message": getErr.Error(),
+			},
+		})
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBPropertyToRest(property),
+	})
+}
+
 type UpdatePropertyRequest struct {
 	Name        *string   `json:"name"        validate:"omitempty,min=3,max=100"     example:"Oceanview Apartment"                                   description:"Human-readable name of the property."`
 	Description *string   `json:"description" validate:"omitempty"                   example:"A luxurious apartment overlooking the Atlantic Ocean." description:"Brief description of the property."`

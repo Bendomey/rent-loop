@@ -35,6 +35,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			r.Route("/v1/properties", func(r chi.Router) {
 				r.Post("/", handlers.PropertyHandler.CreateProperty)
 				r.Get("/", handlers.PropertyHandler.ListProperties)
+				r.Get("/slug/{slug}", handlers.PropertyHandler.GetPropertyBySlug)
 
 				r.Route("/{property_id}", func(r chi.Router) {
 					r.Get("/", handlers.PropertyHandler.GetPropertyById)
