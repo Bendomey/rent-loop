@@ -666,6 +666,9 @@ definitions:
       region:
         example: Greater Accra
         type: string
+      slug:
+        example: my-property-abcde1876drkjy
+        type: string
       status:
         example: Property.Status.Active
         type: string

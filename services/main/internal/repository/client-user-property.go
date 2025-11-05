@@ -42,14 +42,8 @@ func (r *clientUserPropertyRepository) DeleteByPropertyID(
 	ctx context.Context,
 	propertyID string,
 ) error {
-	var db *gorm.DB
+	db := lib.ResolveDB(ctx, r.DB)
 
-	tx, txOk := lib.TransactionFromContext(ctx)
-	db = tx
-
-	if !txOk || tx == nil {
-		db = r.DB
-	}
 	return db.WithContext(ctx).
 		Delete(&models.ClientUserProperty{}, "property_id = ?", propertyID).
 		Error
@@ -59,14 +53,8 @@ func (r *clientUserPropertyRepository) DeleteByClientUserID(
 	ctx context.Context,
 	clientUserID string,
 ) error {
-	var db *gorm.DB
+	db := lib.ResolveDB(ctx, r.DB)
 
-	tx, txOk := lib.TransactionFromContext(ctx)
-	db = tx
-
-	if !txOk || tx == nil {
-		db = r.DB
-	}
 	return db.WithContext(ctx).
 		Delete(&models.ClientUserProperty{}, "client_user_id = ?", clientUserID).
 		Error

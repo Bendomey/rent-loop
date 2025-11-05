@@ -2667,6 +2667,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Greater Accra"
                 },
+                "slug": {
+                    "type": "string",
+                    "example": "my-property-abcde1876drkjy"
+                },
                 "status": {
                     "type": "string",
                     "example": "Property.Status.Active"
