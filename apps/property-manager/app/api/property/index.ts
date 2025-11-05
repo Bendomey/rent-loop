@@ -5,7 +5,7 @@ export interface CreatePropertyInput {
 	city: string
 	country: string
 	description: Maybe<string>
-	gps_address: string
+	gps_address: Maybe<string>
 	images: Maybe<string[]>
 	latitude: number
 	longitude: number

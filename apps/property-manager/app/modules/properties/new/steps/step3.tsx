@@ -8,6 +8,10 @@ import { Field, FieldLabel } from '~/components/ui/field'
 import { Form } from '~/components/ui/form'
 import { Spinner } from '~/components/ui/spinner'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
+import {
+	getPropertyStatusLabel,
+	getPropertyTypeLabel,
+} from '~/lib/properties.utils'
 
 const ValidationSchema = z.object({})
 
@@ -16,6 +20,7 @@ type FormSchema = z.infer<typeof ValidationSchema>
 export function Step3() {
 	const {
 		goBack,
+		goToPage,
 		formData,
 		onSubmit: submit,
 		updateFormData,
@@ -68,14 +73,22 @@ export function Step3() {
 						<div className="flex items-start justify-between">
 							<div>
 								<h3 className="text-sm font-semibold">
-									Property type & status
+									Property type & Status
 								</h3>
 								<p className="mt-1 text-xs text-zinc-600">
-									{formData.type ?? '—'} · {formData.status ?? '—'}
+									{formData.type ? getPropertyTypeLabel(formData.type) : '—'} ·{' '}
+									{formData.status
+										? getPropertyStatusLabel(formData.status)
+										: '—'}
 								</p>
 							</div>
 							<div>
-								<Button size="sm" variant="ghost" onClick={() => {}}>
+								<Button
+									type="button"
+									size="sm"
+									variant="ghost"
+									onClick={() => goToPage(0)}
+								>
 									<Pencil className="mr-2" /> Edit
 								</Button>
 							</div>
@@ -95,7 +108,12 @@ export function Step3() {
 								</div>
 							</div>
 							<div>
-								<Button size="sm" variant="ghost" onClick={() => {}}>
+								<Button
+									type="button"
+									size="sm"
+									variant="ghost"
+									onClick={() => goToPage(1)}
+								>
 									<Pencil className="mr-2" /> Edit
 								</Button>
 							</div>
@@ -108,11 +126,19 @@ export function Step3() {
 								<h3 className="text-sm font-semibold">Address</h3>
 								<div className="mt-3 grid gap-2 sm:grid-cols-2">
 									{renderField('Selected address', formData.address)}
-									{renderField('GPS Address', formData.gps_address)}
+									{renderField(
+										'GPS Address',
+										formData?.gps_address?.toString(),
+									)}
 								</div>
 							</div>
 							<div>
-								<Button size="sm" variant="ghost" onClick={() => {}}>
+								<Button
+									type="button"
+									size="sm"
+									variant="ghost"
+									onClick={() => goToPage(2)}
+								>
 									<Pencil className="mr-2" /> Edit
 								</Button>
 							</div>

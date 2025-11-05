@@ -7,6 +7,7 @@ import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
 
 interface CreateNewPropertyContextType {
 	stepCount: number
+	goToPage: (page: number) => void
 	goBack: () => void
 	goNext: () => void
 	updateFormData: (data: Partial<CreatePropertyInput>) => void
@@ -30,6 +31,7 @@ export function CreatePropertyProvider({
 
 	const goBack = () => setStepCount((prev) => (prev > 0 ? prev - 1 : prev))
 	const goNext = () => setStepCount((prev) => prev + 1)
+	const goToPage = (page: number) => setStepCount(page)
 
 	// where there is an error in the action data, show an error toast
 	useEffect(() => {
@@ -62,6 +64,7 @@ export function CreatePropertyProvider({
 	const contextValue = {
 		stepCount,
 		goBack,
+		goToPage,
 		goNext,
 		updateFormData,
 		formData,

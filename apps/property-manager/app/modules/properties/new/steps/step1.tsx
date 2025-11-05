@@ -10,6 +10,7 @@ import { FieldGroup } from '~/components/ui/field'
 import {
 	Form,
 	FormControl,
+	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -115,6 +116,7 @@ export function Step1() {
 									/>
 								</FormControl>
 								<FormMessage />
+								<FormDescription>Optional</FormDescription>
 							</FormItem>
 						)}
 					/>

@@ -15,6 +15,7 @@ import {
 import {
 	Form,
 	FormControl,
+	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -25,7 +26,7 @@ import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 
 const ValidationSchema = z
 	.object({
-		gps_address: z.string().min(4, 'Please enter a valid GPS address'),
+		gps_address: z.string().optional(),
 	})
 	.and(AddressSchema)
 
@@ -148,6 +149,7 @@ export function Step2() {
 									/>
 								</FormControl>
 								<FormMessage />
+								<FormDescription>Optional</FormDescription>
 							</FormItem>
 						)}
 					/>

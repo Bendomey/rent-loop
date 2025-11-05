@@ -64,6 +64,9 @@ const status: Array<{ label: string; value: Property['status'] }> = [
 export function Step0() {
 	const { watch, setValue, formState, handleSubmit } = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
+		defaultValues: {
+			status: 'Property.Status.Active',
+		},
 	})
 
 	const { goNext, updateFormData, formData } = useCreatePropertyContext()

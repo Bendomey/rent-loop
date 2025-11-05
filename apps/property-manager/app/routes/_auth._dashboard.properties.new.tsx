@@ -1,6 +1,7 @@
 import { redirect } from 'react-router'
 import type { Route } from './+types/_auth._dashboard.properties.new'
 import { createProperty } from '~/api/property'
+import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'
 import { APP_NAME } from '~/lib/constants'
@@ -20,6 +21,7 @@ export const handle = {
 
 export async function action({ request }: Route.ActionArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
+	const authSession = await getAuthSession(request.headers.get('Cookie'))
 
 	let formData = await request.formData()
 	const type = formData.get('type') as Property['type']
@@ -37,7 +39,7 @@ export async function action({ request }: Route.ActionArgs) {
 	const longitude = parseFloat(formData.get('longitude') as string)
 
 	try {
-		await createProperty(
+		const property = await createProperty(
 			replaceNullUndefinedWithUndefined({
 				type,
 				status,
@@ -55,11 +57,17 @@ export async function action({ request }: Route.ActionArgs) {
 			}),
 			{
 				baseUrl,
+				authToken: authSession.get('authToken'),
 			},
 		)
 
-		return redirect('/properties')
-	} catch {
+		if (!property) {
+			throw new Error('Property creation returned no data')
+		}
+
+		return redirect(`/properties/${property.slug}`)
+	} catch (e) {
+		console.log({ e })
 		return { error: 'Failed to create property' }
 	}
 }
