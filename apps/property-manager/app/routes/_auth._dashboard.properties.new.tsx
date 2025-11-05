@@ -66,8 +66,7 @@ export async function action({ request }: Route.ActionArgs) {
 		}
 
 		return redirect(`/properties/${property.slug}`)
-	} catch (e) {
-		console.log({ e })
+	} catch {
 		return { error: 'Failed to create property' }
 	}
 }
