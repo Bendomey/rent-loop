@@ -66,7 +66,7 @@ func (h *DocumentHandler) CreateDocument(w http.ResponseWriter, r *http.Request)
 
 	var contentData map[string]interface{}
 	if marshalErr := json.Unmarshal([]byte(body.Content), &contentData); marshalErr != nil {
-		http.Error(w, "Invalid content JSON body", http.StatusUnprocessableEntity)
+		http.Error(w, "Invalid JSON format in content field", http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -138,7 +138,7 @@ func (h *DocumentHandler) UpdateDocument(w http.ResponseWriter, r *http.Request)
 	var contentData *map[string]interface{} = nil
 	if body.Content != nil {
 		if marshalErr := json.Unmarshal([]byte(*body.Content), &contentData); marshalErr != nil {
-			http.Error(w, "Invalid content JSON body", http.StatusUnprocessableEntity)
+			http.Error(w, "Invalid JSON format in content field", http.StatusUnprocessableEntity)
 			return
 		}
 	}
