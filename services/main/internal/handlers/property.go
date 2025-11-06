@@ -90,12 +90,7 @@ func (h *PropertyHandler) CreateProperty(w http.ResponseWriter, r *http.Request)
 		CreatedByID: currentClientUser.ID,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -135,12 +130,7 @@ func (h *PropertyHandler) ListProperties(w http.ResponseWriter, r *http.Request)
 
 	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
 	if filterErr != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": filterErr.Error(),
-			},
-		})
+		HandleErrorResponse(w, filterErr)
 		return
 	}
 
@@ -158,24 +148,14 @@ func (h *PropertyHandler) ListProperties(w http.ResponseWriter, r *http.Request)
 
 	properties, propertiesErr := h.service.ListProperties(r.Context(), input)
 	if propertiesErr != nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": propertiesErr.Error(),
-			},
-		})
+		HandleErrorResponse(w, propertiesErr)
 		return
 	}
 
 	count, countErr := h.service.CountProperties(r.Context(), input)
 	if countErr != nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": countErr.Error(),
-			},
-		})
-
+		HandleErrorResponse(w, countErr)
+		return
 	}
 
 	propertiesTransformed := make([]any, 0)
@@ -219,12 +199,7 @@ func (h *PropertyHandler) GetPropertyById(w http.ResponseWriter, r *http.Request
 	propertyID := chi.URLParam(r, "property_id")
 	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
 	if filterErr != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": filterErr.Error(),
-			},
-		})
+		HandleErrorResponse(w, filterErr)
 		return
 	}
 
@@ -240,12 +215,7 @@ func (h *PropertyHandler) GetPropertyById(w http.ResponseWriter, r *http.Request
 
 	property, err := h.service.GetProperty(r.Context(), query)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -274,12 +244,7 @@ func (h *PropertyHandler) GetPropertyBySlug(w http.ResponseWriter, r *http.Reque
 	propertySlug := chi.URLParam(r, "slug")
 	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
 	if filterErr != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": filterErr.Error(),
-			},
-		})
+		HandleErrorResponse(w, filterErr)
 		return
 	}
 
@@ -295,12 +260,7 @@ func (h *PropertyHandler) GetPropertyBySlug(w http.ResponseWriter, r *http.Reque
 
 	property, getErr := h.service.GetPropertyBySlug(r.Context(), query)
 	if getErr != nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": getErr.Error(),
-			},
-		})
+		HandleErrorResponse(w, getErr)
 		return
 	}
 
@@ -381,12 +341,7 @@ func (h *PropertyHandler) UpdateProperty(w http.ResponseWriter, r *http.Request)
 	property, updateErr := h.service.UpdateProperty(r.Context(), input)
 
 	if updateErr != nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": updateErr.Error(),
-			},
-		})
+		HandleErrorResponse(w, updateErr)
 		return
 	}
 
@@ -426,12 +381,7 @@ func (h *PropertyHandler) DeleteProperty(w http.ResponseWriter, r *http.Request)
 
 	deleteErr := h.service.DeleteProperty(r.Context(), input)
 	if deleteErr != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": deleteErr.Error(),
-			},
-		})
+		HandleErrorResponse(w, deleteErr)
 		return
 	}
 

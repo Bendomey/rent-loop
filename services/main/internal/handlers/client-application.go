@@ -101,12 +101,7 @@ func (h *ClientApplicationHandler) CreateClientApplication(w http.ResponseWriter
 		SupportPhone:       body.SupportPhone,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -135,12 +130,7 @@ func (h *ClientApplicationHandler) GetClientApplicationById(w http.ResponseWrite
 
 	clientApplication, err := h.service.GetClientApplication(r.Context(), applicationId)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -195,7 +185,7 @@ func (h *ClientApplicationHandler) RejectClientApplication(w http.ResponseWriter
 		AdminId:             currentAdmin.ID,
 	})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -231,7 +221,7 @@ func (h *ClientApplicationHandler) ApproveClientApplication(w http.ResponseWrite
 
 	clientApplication, err := h.service.ApproveClientApplication(r.Context(), applicationId, currentAdmin.ID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -275,12 +265,7 @@ func (h *ClientApplicationHandler) ListClientApplications(w http.ResponseWriter,
 
 	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
 	if filterErr != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": filterErr.Error(),
-			},
-		})
+		HandleErrorResponse(w, filterErr)
 		return
 	}
 
@@ -297,24 +282,14 @@ func (h *ClientApplicationHandler) ListClientApplications(w http.ResponseWriter,
 	clientApplications, clientApplicationsErr := h.service.ListClientApplications(r.Context(), *filterQuery, input)
 
 	if clientApplicationsErr != nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": clientApplicationsErr.Error(),
-			},
-		})
+		HandleErrorResponse(w, clientApplicationsErr)
 		return
 	}
 
 	count, countsErr := h.service.CountClientApplications(r.Context(), *filterQuery, input)
 
 	if countsErr != nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": countsErr.Error(),
-			},
-		})
+		HandleErrorResponse(w, countsErr)
 		return
 	}
 

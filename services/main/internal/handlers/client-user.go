@@ -73,12 +73,7 @@ func (h *ClientUserHandler) CreateClientUser(w http.ResponseWriter, r *http.Requ
 		CreatedByID: currentClientUser.ID,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -126,12 +121,7 @@ func (h *ClientUserHandler) AuthenticateClientUser(w http.ResponseWriter, r *htt
 		},
 	)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -167,12 +157,7 @@ func (h *ClientUserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 
 	clientUser, err := h.service.GetClientUser(r.Context(), currentClientUser.ID)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -211,12 +196,7 @@ func (h *ClientUserHandler) SendForgotPasswordResetLink(w http.ResponseWriter, r
 
 	_, err := h.service.SendForgotPasswordResetLink(r.Context(), body.Email)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -264,12 +244,7 @@ func (h *ClientUserHandler) ResetClientUserPassword(w http.ResponseWriter, r *ht
 		NewPassword: body.NewPassword,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
