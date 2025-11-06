@@ -33,6 +33,7 @@ func DBClientUserToRest(i *models.ClientUser) interface{} {
 		"phone_number":  i.PhoneNumber,
 		"email":         i.Email,
 		"role":          i.Role,
+		"status":        i.Status,
 		"created_at":    i.CreatedAt,
 		"updated_at":    i.UpdatedAt,
 		"created_by_id": i.CreatedByID,
