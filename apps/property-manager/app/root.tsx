@@ -50,8 +50,6 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-	const data = useLoaderData<typeof loader>()
-
 	return (
 		<html lang="en">
 			<head>
@@ -64,11 +62,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				{children}
 				<TopbarLoader />
 				<Toaster position="top-center" />
-				<script
-					dangerouslySetInnerHTML={{
-						__html: `window.ENV = ${JSON.stringify(data.ENV)};`,
-					}}
-				/>
 				<script>
 					{`
 						var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
@@ -90,6 +83,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+	const { ENV } = useLoaderData<typeof loader>()
+
+	if (typeof window !== 'undefined') {
+		window.ENV = ENV
+	}
+
 	return (
 		<Providers>
 			<Outlet />
