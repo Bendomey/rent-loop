@@ -6,6 +6,7 @@ import (
 
 	"github.com/Bendomey/goutilities/pkg/validatetoken"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/dgrijalva/jwt-go"
 )
@@ -66,4 +67,39 @@ func clientFromJWT(unattendedToken string, secret string) (*lib.ClientUserFromTo
 	}
 
 	return &clientFromTokenImplementation, nil
+}
+
+func ValidateRoleClientUserMiddleware(appCtx pkg.AppContext, allowedRoles ...string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			clientCtx, ok := lib.ClientUserFromContext(r.Context())
+			if !ok || clientCtx == nil {
+				http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
+				return
+			}
+
+			// TODO: Add a cache layer here later
+			var clientUser models.ClientUser
+			result := appCtx.DB.Select("id", "role").Where("id = ?", clientCtx.ID).First(&clientUser)
+			if result.Error != nil {
+				http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
+				return
+			}
+
+			hasAllowedRole := false
+			for _, role := range allowedRoles {
+				if clientUser.Role == role {
+					hasAllowedRole = true
+					break
+				}
+			}
+
+			if !hasAllowedRole {
+				http.Error(w, "Forbidden", http.StatusForbidden)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }

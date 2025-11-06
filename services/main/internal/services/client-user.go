@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"errors"
-	"slices"
 	"strings"
 
 	"github.com/Bendomey/goutilities/pkg/hashpassword"
@@ -72,20 +71,6 @@ func (s *clientUserService) CreateClientUser(
 
 	if existingClientUser != nil {
 		return nil, errors.New("email already in use")
-	}
-
-	adminClientUser, adminClientUserErr := s.repo.GetByID(ctx, input.CreatedByID)
-
-	if adminClientUserErr != nil {
-		if !errors.Is(adminClientUserErr, gorm.ErrRecordNotFound) {
-			raven.CaptureError(adminClientUserErr, nil)
-		}
-		return nil, adminClientUserErr
-	}
-
-	if adminClientUser != nil &&
-		slices.Contains([]string{"ADMIN", "OWNER"}, adminClientUser.Role) == false {
-		return nil, errors.New("unauthorized to create client user")
 	}
 
 	password, err := gonanoid.Generate("abcdefghijklmnopqrstuvwxyz1234567890", 10)

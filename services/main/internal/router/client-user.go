@@ -24,7 +24,10 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 		// protected client user routes
 		r.Group(func(r chi.Router) {
 			r.Use(middlewares.CheckForClientUserAuthPresenceMiddleware)
-			r.Post("/v1/client-users", handlers.ClientUserHandler.CreateClientUser)
+
+			// client users
+			r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+				Post("/v1/client-users", handlers.ClientUserHandler.CreateClientUser)
 			r.Get("/v1/client-users/me", handlers.ClientUserHandler.GetMe)
 			r.Post(
 				"/v1/client-users/reset-password",
@@ -33,17 +36,22 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 
 			// properties
 			r.Route("/v1/properties", func(r chi.Router) {
-				r.Post("/", handlers.PropertyHandler.CreateProperty)
-				r.Get("/", handlers.PropertyHandler.ListProperties)
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Post("/", handlers.PropertyHandler.CreateProperty)
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Get("/", handlers.PropertyHandler.ListProperties)
 				r.Get("/slug/{slug}", handlers.PropertyHandler.GetPropertyBySlug)
 
 				r.Route("/{property_id}", func(r chi.Router) {
 					r.Get("/", handlers.PropertyHandler.GetPropertyById)
-					r.Patch("/", handlers.PropertyHandler.UpdateProperty)
-					r.Delete("/", handlers.PropertyHandler.DeleteProperty)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Patch("/", handlers.PropertyHandler.UpdateProperty)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Delete("/", handlers.PropertyHandler.DeleteProperty)
 				})
 			})
 
+			// documents
 			r.Route("/v1/documents", func(r chi.Router) {
 				r.Post("/", handlers.DocumentHandler.CreateDocument)
 				r.Get("/", handlers.DocumentHandler.ListDocuments)
