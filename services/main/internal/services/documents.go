@@ -3,11 +3,13 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"gorm.io/gorm"
 )
 
 type DocumentService interface {
@@ -47,7 +49,13 @@ type CreateDocumentInput struct {
 func (s *documentService) Create(ctx context.Context, input CreateDocumentInput) (*models.Document, error) {
 	contentBytes, contentBytesErr := json.Marshal(input.Content)
 	if contentBytesErr != nil {
-		return nil, contentBytesErr
+		return nil, pkg.InternalServerError(contentBytesErr.Error(), &pkg.RentLoopErrorParams{
+			Err: contentBytesErr,
+			Metadata: map[string]string{
+				"function": "CreateDocument",
+				"action":   "marshaling document content to JSON",
+			},
+		})
 	}
 
 	tags := []string{}
@@ -65,7 +73,13 @@ func (s *documentService) Create(ctx context.Context, input CreateDocumentInput)
 	}
 
 	if err := s.repo.Create(ctx, document); err != nil {
-		return nil, err
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CreateDocument",
+				"action":   "creating new document record",
+			},
+		})
 	}
 
 	return document, nil
@@ -82,10 +96,21 @@ type UpdateDocumentInput struct {
 }
 
 func (s *documentService) Update(ctx context.Context, input UpdateDocumentInput) (*models.Document, error) {
-	document, getErr := s.repo.GetByID(ctx, input.DocumentID)
+	document, err := s.repo.GetByID(ctx, input.DocumentID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("DocumentNotFound", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
 
-	if getErr != nil {
-		return nil, getErr
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "UpdateDocument",
+				"action":   "fetching document by ID",
+			},
+		})
 	}
 
 	if input.Title != nil {
@@ -95,7 +120,13 @@ func (s *documentService) Update(ctx context.Context, input UpdateDocumentInput)
 	if input.Content != nil {
 		contentBytes, contentBytesErr := json.Marshal(*input.Content)
 		if contentBytesErr != nil {
-			return nil, contentBytesErr
+			return nil, pkg.InternalServerError(contentBytesErr.Error(), &pkg.RentLoopErrorParams{
+				Err: contentBytesErr,
+				Metadata: map[string]string{
+					"function": "UpdateDocument",
+					"action":   "marshaling updated document content to JSON",
+				},
+			})
 		}
 
 		document.Content = contentBytes
@@ -113,18 +144,53 @@ func (s *documentService) Update(ctx context.Context, input UpdateDocumentInput)
 	document.UpdatedByID = &input.ClientUserID
 
 	if err := s.repo.Update(ctx, document); err != nil {
-		return nil, err
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "UpdateDocument",
+				"action":   "updating document record",
+			},
+		})
 	}
 
 	return document, nil
 }
 
 func (s *documentService) GetByID(ctx context.Context, documentID string) (*models.Document, error) {
-	return s.repo.GetByID(ctx, documentID)
+	document, err := s.repo.GetByID(ctx, documentID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("DocumentNotFound", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "GetByID",
+				"action":   "fetching document by ID",
+			},
+		})
+	}
+
+	return document, nil
 }
 
 func (s *documentService) Delete(ctx context.Context, documentID string) error {
-	return s.repo.Delete(ctx, documentID)
+	deleteErr := s.repo.Delete(ctx, documentID)
+
+	if deleteErr != nil {
+		return pkg.InternalServerError(deleteErr.Error(), &pkg.RentLoopErrorParams{
+			Err: deleteErr,
+			Metadata: map[string]string{
+				"function": "DeleteDocument",
+				"action":   "deleting document by ID",
+			},
+		})
+	}
+
+	return nil
 }
 
 func (s *documentService) List(
@@ -134,7 +200,13 @@ func (s *documentService) List(
 ) ([]models.Document, error) {
 	documents, err := s.repo.List(ctx, filterQuery, filters)
 	if err != nil {
-		return nil, err
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "List",
+				"action":   "listing documents",
+			},
+		})
 	}
 
 	return *documents, nil
@@ -145,5 +217,16 @@ func (s *documentService) Count(
 	filterQuery lib.FilterQuery,
 	filters repository.ListDocumentsFilter,
 ) (int64, error) {
-	return s.repo.Count(ctx, filterQuery, filters)
+	count, err := s.repo.Count(ctx, filterQuery, filters)
+	if err != nil {
+		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "Count",
+				"action":   "counting documents",
+			},
+		})
+	}
+
+	return count, nil
 }

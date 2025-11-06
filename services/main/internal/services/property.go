@@ -8,7 +8,6 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
-	"github.com/getsentry/raven-go"
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
@@ -120,7 +119,13 @@ func (s *propertyService) CreateProperty(
 
 	if err := s.repo.Create(transCtx, &property); err != nil {
 		transaction.Rollback()
-		return nil, err
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CreateProperty",
+				"action":   "creating new property",
+			},
+		})
 	}
 
 	clientUserOwner, clientUserErr := s.clientUserService.GetClientUserByQuery(
@@ -150,7 +155,13 @@ func (s *propertyService) CreateProperty(
 
 	if commitErr := transaction.Commit().Error; commitErr != nil {
 		transaction.Rollback()
-		return nil, commitErr
+		return nil, pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: commitErr,
+			Metadata: map[string]string{
+				"function": "CreateProperty",
+				"action":   "committing transaction",
+			},
+		})
 	}
 	return &property, nil
 }
@@ -161,8 +172,15 @@ func (s *propertyService) ListProperties(
 ) ([]models.Property, error) {
 	properties, err := s.repo.List(ctx, filterQuery)
 	if err != nil {
-		return nil, err
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ListProperties",
+				"action":   "listing properties",
+			},
+		})
 	}
+
 	return *properties, nil
 }
 
@@ -172,7 +190,13 @@ func (s *propertyService) CountProperties(
 ) (int64, error) {
 	propertiesCount, err := s.repo.Count(ctx, filterQuery)
 	if err != nil {
-		return 0, err
+		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CountProperties",
+				"action":   "counting properties",
+			},
+		})
 	}
 
 	return propertiesCount, nil
@@ -184,7 +208,19 @@ func (s *propertyService) GetProperty(
 ) (*models.Property, error) {
 	property, err := s.repo.GetByID(ctx, query)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("PropertyNotFound", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "GetProperty",
+				"action":   "fetching property by ID",
+			},
+		})
 	}
 
 	return property, nil
@@ -216,9 +252,18 @@ func (s *propertyService) UpdateProperty(
 	)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			raven.CaptureError(err, nil)
+			return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+				Err: err,
+				Metadata: map[string]string{
+					"function": "UpdateProperty",
+					"action":   "get property by id",
+				},
+			})
 		}
-		return nil, err
+
+		return nil, pkg.NotFoundError("PropertyNotFound", &pkg.RentLoopErrorParams{
+			Err: err,
+		})
 	}
 
 	if input.Name != nil {
@@ -262,7 +307,13 @@ func (s *propertyService) UpdateProperty(
 	property.GPSAddress = input.GPSAddress
 
 	if updateErr := s.repo.Update(context, property); updateErr != nil {
-		return nil, updateErr
+		return nil, pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateErr,
+			Metadata: map[string]string{
+				"function": "UpdateProperty",
+				"action":   "updating property details",
+			},
+		})
 	}
 
 	return property, nil
@@ -280,12 +331,18 @@ func (s *propertyService) DeleteProperty(context context.Context, input DeletePr
 	)
 	if propertyErr != nil {
 		if !errors.Is(propertyErr, gorm.ErrRecordNotFound) {
-			raven.CaptureError(propertyErr, map[string]string{
-				"function": "DeleteProperty",
-				"action":   "get property by id",
+			return pkg.InternalServerError(propertyErr.Error(), &pkg.RentLoopErrorParams{
+				Err: propertyErr,
+				Metadata: map[string]string{
+					"function": "DeleteProperty",
+					"action":   "fetching property by ID",
+				},
 			})
 		}
-		return propertyErr
+
+		return pkg.NotFoundError("PropertyNotFound", &pkg.RentLoopErrorParams{
+			Err: propertyErr,
+		})
 	}
 
 	unitsCount, unitErr := s.unitService.CountUnits(
@@ -293,15 +350,11 @@ func (s *propertyService) DeleteProperty(context context.Context, input DeletePr
 		repository.ListUnitsFilter{PropertyID: property.ID.String()},
 	)
 	if unitErr != nil {
-		raven.CaptureError(unitErr, map[string]string{
-			"function": "DeleteProperty",
-			"action":   "fetching units count",
-		})
 		return unitErr
 	}
 
 	if unitsCount > 0 {
-		return errors.New("property is linked to a unit")
+		return pkg.BadRequestError("property is linked to a unit", nil)
 	}
 
 	tx := s.appCtx.DB.Begin()
@@ -317,7 +370,13 @@ func (s *propertyService) DeleteProperty(context context.Context, input DeletePr
 	deletePropertyErr := s.repo.Delete(transCtx, input.PropertyID)
 	if deletePropertyErr != nil {
 		tx.Rollback()
-		return deletePropertyErr
+		return pkg.InternalServerError(deletePropertyErr.Error(), &pkg.RentLoopErrorParams{
+			Err: deletePropertyErr,
+			Metadata: map[string]string{
+				"function": "DeleteProperty",
+				"action":   "deleting property",
+			},
+		})
 	}
 
 	commitErr := tx.Commit().Error
@@ -336,12 +395,18 @@ func (s *propertyService) GetPropertyBySlug(
 	property, getErr := s.repo.GetBySlug(ctx, query)
 	if getErr != nil {
 		if !errors.Is(getErr, gorm.ErrRecordNotFound) {
-			raven.CaptureError(getErr, map[string]string{
+			return nil, pkg.NotFoundError("PropertyNotFound", &pkg.RentLoopErrorParams{
+				Err: getErr,
+			})
+		}
+
+		return nil, pkg.InternalServerError(getErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getErr,
+			Metadata: map[string]string{
 				"function": "GetPropertyBySlug",
 				"action":   "get property by slug",
-			})
-			return nil, getErr
-		}
+			},
+		})
 	}
 
 	return property, nil

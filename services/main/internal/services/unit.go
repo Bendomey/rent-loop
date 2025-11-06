@@ -2,12 +2,9 @@ package services
 
 import (
 	"context"
-	"errors"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
-	"github.com/getsentry/raven-go"
-	"gorm.io/gorm"
 )
 
 type UnitService interface {
@@ -29,10 +26,13 @@ func (s *unitService) CountUnits(
 ) (int64, error) {
 	unitCount, countErr := s.repo.Count(ctx, filterQuery)
 	if countErr != nil {
-		if !errors.Is(countErr, gorm.ErrRecordNotFound) {
-			raven.CaptureError(countErr, nil)
-		}
-		return 0, countErr
+		return 0, pkg.InternalServerError(countErr.Error(), &pkg.RentLoopErrorParams{
+			Err: countErr,
+			Metadata: map[string]string{
+				"function": "CountUnits",
+				"action":   "counting units",
+			},
+		})
 	}
 
 	return unitCount, nil
