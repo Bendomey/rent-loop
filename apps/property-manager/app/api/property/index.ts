@@ -110,7 +110,6 @@ export const createProperty = async (
 	}
 }
 
-
 /**
  * Delete property
  */

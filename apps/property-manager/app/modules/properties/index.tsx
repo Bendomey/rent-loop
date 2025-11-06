@@ -27,8 +27,8 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
-import { PAGINATION_DEFAULTS, QUERY_KEYS } from '~/lib/constants'
 import { Spinner } from '~/components/ui/spinner'
+import { PAGINATION_DEFAULTS, QUERY_KEYS } from '~/lib/constants'
 
 export function PropertiesModule() {
 	const [searchParams] = useSearchParams()
@@ -124,8 +124,11 @@ export function PropertiesModule() {
 			},
 			{
 				id: 'actions',
-				cell: ({row}) => (
-					<AlertDialog >
+				cell: ({ row }) => (
+					<AlertDialog
+						open={openDeleteDialog}
+						onOpenChange={setOpenDeleteDialog}
+					>
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button
@@ -156,14 +159,15 @@ export function PropertiesModule() {
 								</AlertDialogDescription>
 							</AlertDialogHeader>
 							<AlertDialogFooter className="mt-5">
-								<AlertDialogCancel  disabled={isDeleting}>Cancel</AlertDialogCancel>
+								<AlertDialogCancel disabled={isDeleting}>
+									Cancel
+								</AlertDialogCancel>
 								<AlertDialogAction
 									disabled={isDeleting}
 									onClick={(e) => {
 										e.preventDefault()
 										deleteProperty(row.original.id, {
-											onError: (e) => {
-												console.log(e)
+											onError: () => {
 												toast.error(
 													'Failed to delete property. Try again later.',
 												)
