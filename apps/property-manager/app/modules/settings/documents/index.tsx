@@ -192,8 +192,7 @@ export function DocumentsModule() {
 									onClick={(e) => {
 										e.preventDefault()
 										deleteDocument(row.original.id, {
-											onError: (e) => {
-												console.log(e)
+											onError: () => {
 												toast.error(
 													'Failed to delete document. Try again later.',
 												)
