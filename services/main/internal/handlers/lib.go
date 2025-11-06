@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/sirupsen/logrus"
 )
 
 func GetPopulateFields(r *http.Request) *[]string {
@@ -26,18 +27,22 @@ func HandleErrorResponse[T error](w http.ResponseWriter, err T) {
 	var det *pkg.IRentLoopError
 	if errors.As(err, &det) {
 		w.WriteHeader(det.Code)
-		json.NewEncoder(w).Encode(map[string]any{
+		encodeErr := json.NewEncoder(w).Encode(map[string]any{
 			"errors": map[string]string{
 				"message": det.Message,
 			},
 		})
+		logrus.Error(encodeErr.Error())
+
 		return
 	}
 
 	w.WriteHeader(http.StatusBadRequest)
-	json.NewEncoder(w).Encode(map[string]any{
+	encodeErr := json.NewEncoder(w).Encode(map[string]any{
 		"errors": map[string]string{
 			"message": err.Error(),
 		},
 	})
+
+	logrus.Error(encodeErr.Error())
 }

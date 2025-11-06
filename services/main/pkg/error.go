@@ -33,7 +33,9 @@ func RentLoopError(msg string, params *RentLoopErrorParams) *IRentLoopError {
 	var err error
 
 	if params != nil {
-		code = params.Code
+		if params.Code != 0 {
+			code = params.Code
+		}
 		meta = params.Metadata
 		err = params.Err
 	}

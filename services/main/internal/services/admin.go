@@ -70,9 +70,7 @@ func (s *adminService) AuthenticateAdmin(
 	// since email in db, lets validate hash and then send back
 	isSame := validatehash.ValidateCipher(input.Password, admin.Password)
 	if !isSame {
-		return nil, pkg.BadRequestError("PasswordIncorrect", &pkg.RentLoopErrorParams{
-			Err: err,
-		})
+		return nil, pkg.BadRequestError("PasswordIncorrect", nil)
 	}
 
 	token, signTokenErrr := signjwt.SignJWT(jwt.MapClaims{
@@ -127,19 +125,15 @@ func (s *adminService) CreateAdmin(ctx context.Context, input CreateAdminInput) 
 	adminByEmail, adminByEmailErr := s.repo.GetByEmail(ctx, input.Email)
 
 	if adminByEmailErr != nil {
-		if errors.Is(adminByEmailErr, gorm.ErrRecordNotFound) {
-			return nil, pkg.NotFoundError("EmailNotFound", &pkg.RentLoopErrorParams{
+		if !errors.Is(adminByEmailErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.InternalServerError(adminByEmailErr.Error(), &pkg.RentLoopErrorParams{
 				Err: adminByEmailErr,
+				Metadata: map[string]string{
+					"function": "CreateAdmin",
+					"action":   "fetching admin by email",
+				},
 			})
 		}
-
-		return nil, pkg.InternalServerError(adminByEmailErr.Error(), &pkg.RentLoopErrorParams{
-			Err: adminByEmailErr,
-			Metadata: map[string]string{
-				"function": "AuthenticateAdmin",
-				"action":   "fetching admin by email",
-			},
-		})
 	}
 
 	if adminByEmail != nil {
@@ -167,7 +161,7 @@ func (s *adminService) CreateAdmin(ctx context.Context, input CreateAdminInput) 
 
 	if err := s.repo.Create(ctx, &admin); err != nil {
 		return nil, pkg.BadRequestError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: adminByEmailErr,
+			Err: err,
 		})
 	}
 
