@@ -1,9 +1,11 @@
+import { useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Building, CircleCheck, CircleX, EllipsisVertical } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
+import { toast } from 'sonner'
 import { PropertiesController } from './controller'
-import { useGetProperties } from '~/api/property'
+import { useDeleteProperty, useGetProperties } from '~/api/property'
 import { DataTable } from '~/components/datatable'
 import {
 	AlertDialog,
@@ -25,10 +27,14 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
-import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { PAGINATION_DEFAULTS, QUERY_KEYS } from '~/lib/constants'
+import { Spinner } from '~/components/ui/spinner'
 
 export function PropertiesModule() {
 	const [searchParams] = useSearchParams()
+	const queryClient = useQueryClient()
+	const { mutate: deleteProperty, isPending: isDeleting } = useDeleteProperty()
+	const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -118,8 +124,8 @@ export function PropertiesModule() {
 			},
 			{
 				id: 'actions',
-				cell: () => (
-					<AlertDialog>
+				cell: ({row}) => (
+					<AlertDialog >
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button
@@ -150,8 +156,29 @@ export function PropertiesModule() {
 								</AlertDialogDescription>
 							</AlertDialogHeader>
 							<AlertDialogFooter className="mt-5">
-								<AlertDialogCancel>Cancel</AlertDialogCancel>
-								<AlertDialogAction className="bg-destructive hover:bg-destructive/90 text-white">
+								<AlertDialogCancel  disabled={isDeleting}>Cancel</AlertDialogCancel>
+								<AlertDialogAction
+									disabled={isDeleting}
+									onClick={(e) => {
+										e.preventDefault()
+										deleteProperty(row.original.id, {
+											onError: (e) => {
+												console.log(e)
+												toast.error(
+													'Failed to delete property. Try again later.',
+												)
+											},
+											onSuccess: () => {
+												void queryClient.invalidateQueries({
+													queryKey: [QUERY_KEYS.PROPERTIES],
+												})
+												setOpenDeleteDialog(false)
+											},
+										})
+									}}
+									className="bg-destructive hover:bg-destructive/90 text-white"
+								>
+									{isDeleting ? <Spinner /> : null}
 									Delete
 								</AlertDialogAction>
 							</AlertDialogFooter>
@@ -160,7 +187,7 @@ export function PropertiesModule() {
 				),
 			},
 		]
-	}, [])
+	}, [deleteProperty, isDeleting, openDeleteDialog, queryClient])
 
 	return (
 		<main className="flex flex-col gap-2 sm:gap-4">

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '~/lib/constants'
 import { getQueryParams } from '~/lib/get-param'
 import { fetchClient, fetchServer } from '~/lib/transport'
@@ -109,3 +109,29 @@ export const createProperty = async (
 		}
 	}
 }
+
+
+/**
+ * Delete property
+ */
+const deleteProperty = async (id: string) => {
+	try {
+		await fetchClient(`/v1/properties/${id}`, {
+			method: 'DELETE',
+		})
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useDeleteProperty = () =>
+	useMutation({
+		mutationFn: deleteProperty,
+	})
