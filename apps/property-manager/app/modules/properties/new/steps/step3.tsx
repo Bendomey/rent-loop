@@ -10,13 +10,8 @@ import {
 } from '~/lib/properties.utils'
 
 export function Step3() {
-	const {
-		goBack,
-		goToPage,
-		formData,
-		onSubmit,
-		isSubmitting,
-	} = useCreatePropertyContext()
+	const { goBack, goToPage, formData, onSubmit, isSubmitting } =
+		useCreatePropertyContext()
 
 	const renderField = (label: string, value?: string | string[]) => (
 		<Field>
@@ -51,9 +46,7 @@ export function Step3() {
 				<div className="rounded-md border p-4">
 					<div className="flex items-start justify-between">
 						<div>
-							<h3 className="text-sm font-semibold">
-								Property type & Status
-							</h3>
+							<h3 className="text-sm font-semibold">Property type & Status</h3>
 							<p className="mt-1 text-xs text-zinc-600">
 								{formData.type ? getPropertyTypeLabel(formData.type) : '—'} ·{' '}
 								{formData.status
@@ -105,10 +98,7 @@ export function Step3() {
 							<h3 className="text-sm font-semibold">Address</h3>
 							<div className="mt-3 grid gap-2 sm:grid-cols-2">
 								{renderField('Selected address', formData.address)}
-								{renderField(
-									'GPS Address',
-									formData?.gps_address?.toString(),
-								)}
+								{renderField('GPS Address', formData?.gps_address?.toString())}
 							</div>
 						</div>
 						<div>
