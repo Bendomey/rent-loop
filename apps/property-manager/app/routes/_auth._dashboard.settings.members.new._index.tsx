@@ -45,7 +45,7 @@ export async function action({ request }: Route.ActionArgs) {
 		if (!member) {
 			throw new Error('Member creation returned no data')
 		}
-		return redirect(`/settings/members/${member.id}`)
+		return redirect('/settings/members')
 	} catch {
 		return { error: 'Failed to create member' }
 	}
