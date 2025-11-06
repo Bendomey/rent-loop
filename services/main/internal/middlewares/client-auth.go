@@ -80,7 +80,7 @@ func ValidateRoleClientUserMiddleware(appCtx pkg.AppContext, allowedRoles ...str
 
 			// TODO: Add a cache layer here later
 			var clientUser models.ClientUser
-			result := appCtx.DB.Where("id = ?", clientCtx.ID).First(&clientUser)
+			result := appCtx.DB.Select("id", "role").Where("id = ?", clientCtx.ID).First(&clientUser)
 			if result.Error != nil {
 				http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
 				return
