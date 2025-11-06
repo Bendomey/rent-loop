@@ -162,6 +162,10 @@ func (s *adminService) CreateAdmin(ctx context.Context, input CreateAdminInput) 
 	if err := s.repo.Create(ctx, &admin); err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
+			Metadata: map[string]string{
+				"function": "CreateAdmin",
+				"action":   "creating new admin",
+			},
 		})
 	}
 

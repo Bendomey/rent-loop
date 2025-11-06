@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -9,8 +10,8 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
-	"github.com/getsentry/raven-go"
 	gonanoid "github.com/matoous/go-nanoid"
+	"gorm.io/gorm"
 )
 
 type ClientApplicationService interface {
@@ -124,7 +125,13 @@ func (s *clientApplicationService) CreateClientApplication(
 	}
 
 	if err := s.repo.Create(ctx, &clientApplication); err != nil {
-		return nil, err
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CreateClientApplication",
+				"action":   "creating new client application",
+			},
+		})
 	}
 
 	message := lib.CLIENT_APPLICATION_SUBMITTED_BODY
@@ -156,7 +163,19 @@ func (s *clientApplicationService) RejectClientApplication(
 ) (*models.ClientApplication, error) {
 	clientApplication, err := s.repo.GetByID(ctx, input.ClientApplicationId)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("ClientApplicationNotFound", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "RejectClientApplication",
+				"action":   "fetching client application by ID",
+			},
+		})
 	}
 
 	clientApplication.Status = "ClientApplication.Status.Rejected"
@@ -164,7 +183,13 @@ func (s *clientApplicationService) RejectClientApplication(
 	clientApplication.RejectedById = lib.StringPointer(input.AdminId)
 
 	if err := s.repo.UpdateClientApplication(ctx, clientApplication); err != nil {
-		return nil, err
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "RejectClientApplication",
+				"action":   "rejecting client application",
+			},
+		})
 	}
 
 	message := lib.CLIENT_APPLICATION_REJECTED_BODY
@@ -192,7 +217,19 @@ func (s *clientApplicationService) ApproveClientApplication(
 ) (*models.ClientApplication, error) {
 	clientApplication, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("ClientApplicationNotFound", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ApproveClientApplication",
+				"action":   "fetching client application by ID",
+			},
+		})
 	}
 
 	if clientApplication.Status != "ClientApplication.Status.Pending" {
@@ -206,7 +243,13 @@ func (s *clientApplicationService) ApproveClientApplication(
 
 	if err := s.repo.UpdateClientApplication(ctx, clientApplication); err != nil {
 		transaction.Rollback()
-		return nil, err
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ApproveClientApplication",
+				"action":   "approving client application",
+			},
+		})
 	}
 
 	client := models.Client{
@@ -224,17 +267,25 @@ func (s *clientApplicationService) ApproveClientApplication(
 
 	if err := transaction.WithContext(ctx).Create(&client).Error; err != nil {
 		transaction.Rollback()
-		return nil, err
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ApproveClientApplication",
+				"action":   " creating client after approving application",
+			},
+		})
 	}
 
 	// generate password
 	password, err := gonanoid.Generate("abcdefghijklmnopqrstuvwxyz1234567890", 10)
 	if err != nil {
-		raven.CaptureError(err, map[string]string{
-			"function": "ApproveClientApplication",
-			"action":   "generating random password for OWNER client user",
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ApproveClientApplication",
+				"action":   "generating random password for OWNER client user",
+			},
 		})
-		return nil, err
 	}
 
 	user := models.ClientUser{
@@ -248,12 +299,24 @@ func (s *clientApplicationService) ApproveClientApplication(
 
 	if err := transaction.Create(&user).Error; err != nil {
 		transaction.Rollback()
-		return nil, err
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ApproveClientApplication",
+				"action":   "creating OWNER client user after approving application",
+			},
+		})
 	}
 
 	if err := transaction.Commit().Error; err != nil {
 		transaction.Rollback()
-		return nil, err
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ApproveClientApplication",
+				"action":   "committing transaction",
+			},
+		})
 	}
 
 	message := lib.CLIENT_APPLICATION_ACCEPTED_BODY
@@ -282,7 +345,13 @@ func (s *clientApplicationService) ListClientApplications(
 ) ([]models.ClientApplication, error) {
 	clientApplications, err := s.repo.List(ctx, filterQuery, filters)
 	if err != nil {
-		return nil, err
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ListClientApplications",
+				"action":   "listing client applications",
+			},
+		})
 	}
 
 	return *clientApplications, nil
@@ -293,5 +362,15 @@ func (s *clientApplicationService) CountClientApplications(
 	filterQuery lib.FilterQuery,
 	filters repository.ListClientApplicationsFilter,
 ) (int64, error) {
-	return s.repo.Count(ctx, filterQuery, filters)
+	count, err := s.repo.Count(ctx, filterQuery, filters)
+	if err != nil {
+		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CountClientApplications",
+				"action":   "counting client applications",
+			},
+		})
+	}
+	return count, nil
 }
