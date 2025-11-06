@@ -32,6 +32,14 @@ type ClientUserService interface {
 		input ResetClientUserPasswordInput,
 	) (*models.ClientUser, error)
 	GetClientUserByQuery(context context.Context, query map[string]any) (*models.ClientUser, error)
+	ListClientUsers(
+		ctx context.Context,
+		filterQuery repository.ListClientUsersFilter,
+	) ([]models.ClientUser, error)
+	CountClientUsers(
+		ctx context.Context,
+		filterQuery repository.ListClientUsersFilter,
+	) (int64, error)
 }
 
 type clientUserService struct {
@@ -286,4 +294,39 @@ func (s *clientUserService) GetClientUserByQuery(
 	}
 
 	return clientUserOwner, nil
+}
+
+func (s *clientUserService) ListClientUsers(
+	ctx context.Context,
+	filterQuery repository.ListClientUsersFilter,
+) ([]models.ClientUser, error) {
+	clientUsers, listErr := s.repo.List(ctx, filterQuery)
+	if listErr != nil {
+		if !errors.Is(listErr, gorm.ErrRecordNotFound) {
+			raven.CaptureError(listErr, map[string]string{
+				"function": "ListClientUsers",
+				"action":   "fetching client users",
+			})
+		}
+		return nil, listErr
+	}
+
+	return *clientUsers, nil
+}
+
+func (s *clientUserService) CountClientUsers(
+	ctx context.Context,
+	filterQuery repository.ListClientUsersFilter,
+) (int64, error) {
+	clientUsersCount, countErr := s.repo.Count(ctx, filterQuery)
+	if countErr != nil {
+		if !errors.Is(countErr, gorm.ErrRecordNotFound) {
+			raven.CaptureError(countErr, map[string]string{
+				"function": "CountClientUsers",
+				"action":   "fetching client users count",
+			})
+		}
+		return 0, countErr
+	}
+	return clientUsersCount, nil
 }

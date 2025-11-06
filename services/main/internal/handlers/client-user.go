@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -274,4 +275,88 @@ func (h *ClientUserHandler) ResetClientUserPassword(w http.ResponseWriter, r *ht
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+type ListClientUsersFilterRequest struct {
+	lib.FilterQueryInput
+	Status string `json:"status" validate:"oneof=ClientUser.Status.Active ClientUser.Status.Inactive" example:"ClientUser.Status.Active"`
+	Role   string `json:"role"   validate:"oneof=OWNER ADMIN STAFF"                                   example:"OWNER"`
+}
+
+// ListClientUsers godoc
+//
+//	@Summary		Get all client users
+//	@Description	Get all client users
+//	@Tags			ClientUsers
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			q	query		ListClientUsersFilterRequest	true	"Client users"
+//	@Success		200	{object}	object{data=object{rows=[]transformations.OutputClientUser,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400	{object}	lib.HTTPError	"An error occurred while filtering client users"
+//	@Failure		401	{object}	string			"Absent or invalid authentication token"
+//	@Failure		500	{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/client-users [get]
+func (h *ClientUserHandler) ListClientUsers(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
+	if !clientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
+	if filterQueryErr != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]any{
+			"errors": map[string]string{
+				"message": filterQueryErr.Error(),
+			},
+		})
+		return
+	}
+
+	isFilterQueryPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filterQuery, w)
+	if !isFilterQueryPassedValidation {
+		return
+	}
+
+	input := repository.ListClientUsersFilter{
+		FilterQuery: *filterQuery,
+		ClientID:    currentClientUser.ClientID,
+		Status:      lib.NullOrString(r.URL.Query().Get("status")),
+		Role:        lib.NullOrString(r.URL.Query().Get("role")),
+	}
+
+	clientUsers, clientUsersErr := h.service.ListClientUsers(r.Context(), input)
+	if clientUsersErr != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]any{
+			"errors": map[string]string{
+				"message": clientUsersErr.Error(),
+			},
+		})
+		return
+	}
+
+	clientUsersCount, clientUsersCountErr := h.service.CountClientUsers(r.Context(), input)
+	if clientUsersCountErr != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]any{
+			"errors": map[string]string{
+				"message": clientUsersCountErr.Error(),
+			},
+		})
+		return
+	}
+
+	clientUsersTransformed := make([]any, 0)
+	for _, clientUser := range clientUsers {
+		clientUsersTransformed = append(
+			clientUsersTransformed,
+			transformations.DBClientUserToRest(&clientUser),
+		)
+	}
+
+	json.NewEncoder(w).
+		Encode(lib.ReturnListResponse(filterQuery, clientUsersTransformed, clientUsersCount))
 }

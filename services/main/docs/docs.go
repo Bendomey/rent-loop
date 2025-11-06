@@ -666,6 +666,149 @@ const docTemplate = `{
             }
         },
         "/api/v1/client-users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all client users",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Get all client users",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "OWNER",
+                            "ADMIN",
+                            "STAFF"
+                        ],
+                        "type": "string",
+                        "example": "OWNER",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "ClientUser.Status.Active",
+                            "ClientUser.Status.Inactive"
+                        ],
+                        "type": "string",
+                        "example": "ClientUser.Status.Active",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputClientUser"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "An error occurred while filtering client users",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Absent or invalid authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -2569,9 +2712,20 @@ const docTemplate = `{
         "transformations.OutputClientUser": {
             "type": "object",
             "properties": {
+                "client": {
+                    "$ref": "#/definitions/transformations.OutputClient"
+                },
+                "client_id": {
+                    "type": "string",
+                    "example": "e4ad26d4-d7e9-4599-a246-5e88abba6083"
+                },
                 "created_at": {
                     "type": "string",
                     "example": "2023-01-01T00:00:00Z"
+                },
+                "created_by_id": {
+                    "type": "string",
+                    "example": "0205126b-9bbb-4a98-960a-e87d8f095335"
                 },
                 "email": {
                     "type": "string",

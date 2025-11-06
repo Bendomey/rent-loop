@@ -30,6 +30,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				"/v1/client-users/reset-password",
 				handlers.ClientUserHandler.ResetClientUserPassword,
 			)
+			r.Get("/v1/client-users", handlers.ClientUserHandler.ListClientUsers)
 
 			// properties
 			r.Route("/v1/properties", func(r chi.Router) {

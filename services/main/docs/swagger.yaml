@@ -541,8 +541,16 @@ definitions:
     type: object
   transformations.OutputClientUser:
     properties:
+      client:
+        $ref: '#/definitions/transformations.OutputClient'
+      client_id:
+        example: e4ad26d4-d7e9-4599-a246-5e88abba6083
+        type: string
       created_at:
         example: "2023-01-01T00:00:00Z"
+        type: string
+      created_by_id:
+        example: 0205126b-9bbb-4a98-960a-e87d8f095335
         type: string
       email:
         example: client-user@example.com
@@ -1110,6 +1118,99 @@ paths:
       tags:
       - ClientApplications
   /api/v1/client-users:
+    get:
+      consumes:
+      - application/json
+      description: Get all client users
+      parameters:
+      - in: query
+        name: end_date
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - enum:
+        - OWNER
+        - ADMIN
+        - STAFF
+        example: OWNER
+        in: query
+        name: role
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - ClientUser.Status.Active
+        - ClientUser.Status.Inactive
+        example: ClientUser.Status.Active
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputClientUser'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: An error occurred while filtering client users
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Absent or invalid authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get all client users
+      tags:
+      - ClientUsers
     post:
       consumes:
       - application/json
