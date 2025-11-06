@@ -18,3 +18,9 @@ interface Property {
 	created_at: Date
 	updated_at: Date
 }
+
+interface FetchPropertyFilter {
+	type?: string
+	status?: string
+	tags?: Array<string>
+}
