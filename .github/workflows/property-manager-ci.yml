@@ -24,11 +24,12 @@ jobs:
           uses: actions/setup-node@v4
           with:
             node-version: 20
+            cache: 'yarn'
+            cache-dependency-path: 'apps/property-manager/yarn.lock'
   
         - name: 📥 Download deps
-          uses: bahmutov/npm-install@v1
-          with:
-            working-directory: apps/property-manager
+          run: yarn install --frozen-lockfile
+          working-directory: apps/property-manager
 
         - name: 🔬 Lint
           run: yarn lint:ci
