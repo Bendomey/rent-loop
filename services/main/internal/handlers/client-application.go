@@ -65,7 +65,7 @@ type CreateClientApplicationRequest struct {
 func (h *ClientApplicationHandler) CreateClientApplication(w http.ResponseWriter, r *http.Request) {
 	var body CreateClientApplicationRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -180,7 +180,7 @@ func (h *ClientApplicationHandler) RejectClientApplication(w http.ResponseWriter
 
 	var body RejectClientApplicationRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
 		return
 	}
 

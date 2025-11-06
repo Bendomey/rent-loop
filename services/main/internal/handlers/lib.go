@@ -1,11 +1,16 @@
 package handlers
 
 import (
+	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
+
+	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/sirupsen/logrus"
 )
 
-func getPopulateFields(r *http.Request) *[]string {
+func GetPopulateFields(r *http.Request) *[]string {
 	var populateFields *[]string = nil
 	populate := r.URL.Query().Get("populate")
 
@@ -15,4 +20,33 @@ func getPopulateFields(r *http.Request) *[]string {
 	}
 
 	return populateFields
+}
+
+// handle error response
+func HandleErrorResponse[T error](w http.ResponseWriter, err T) {
+	var det *pkg.IRentLoopError
+	if errors.As(err, &det) {
+		w.WriteHeader(det.Code)
+		encodeErr := json.NewEncoder(w).Encode(map[string]any{
+			"errors": map[string]string{
+				"message": det.Message,
+			},
+		})
+		if encodeErr != nil {
+			logrus.Error(encodeErr.Error())
+		}
+
+		return
+	}
+
+	w.WriteHeader(http.StatusBadRequest)
+	encodeErr := json.NewEncoder(w).Encode(map[string]any{
+		"errors": map[string]string{
+			"message": err.Error(),
+		},
+	})
+
+	if encodeErr != nil {
+		logrus.Error(encodeErr.Error())
+	}
 }
