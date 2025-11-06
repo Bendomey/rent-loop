@@ -394,7 +394,7 @@ func (s *propertyService) GetPropertyBySlug(
 ) (*models.Property, error) {
 	property, getErr := s.repo.GetBySlug(ctx, query)
 	if getErr != nil {
-		if !errors.Is(getErr, gorm.ErrRecordNotFound) {
+		if errors.Is(getErr, gorm.ErrRecordNotFound) {
 			return nil, pkg.NotFoundError("PropertyNotFound", &pkg.RentLoopErrorParams{
 				Err: getErr,
 			})

@@ -70,7 +70,7 @@ func (s *clientUserPropertyService) UnlinkByPropertyID(
 			Err: unlinkErr,
 			Metadata: map[string]string{
 				"function": "UnlinkByPropertyID",
-				"action":   " deleting client user property links",
+				"action":   "deleting client user property links",
 			},
 		})
 	}

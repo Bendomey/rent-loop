@@ -271,7 +271,7 @@ func (s *clientApplicationService) ApproveClientApplication(
 			Err: err,
 			Metadata: map[string]string{
 				"function": "ApproveClientApplication",
-				"action":   " creating client after approving application",
+				"action":   "creating client after approving application",
 			},
 		})
 	}
