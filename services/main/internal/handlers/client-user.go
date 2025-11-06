@@ -55,7 +55,7 @@ func (h *ClientUserHandler) CreateClientUser(w http.ResponseWriter, r *http.Requ
 	var body CreateClientUserRequest
 
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -74,12 +74,7 @@ func (h *ClientUserHandler) CreateClientUser(w http.ResponseWriter, r *http.Requ
 		CreatedByID: currentClientUser.ID,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -109,7 +104,7 @@ type LoginClientUserRequest struct {
 func (h *ClientUserHandler) AuthenticateClientUser(w http.ResponseWriter, r *http.Request) {
 	var body LoginClientUserRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -127,12 +122,7 @@ func (h *ClientUserHandler) AuthenticateClientUser(w http.ResponseWriter, r *htt
 		},
 	)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -168,12 +158,7 @@ func (h *ClientUserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 
 	clientUser, err := h.service.GetClientUser(r.Context(), currentClientUser.ID)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -200,7 +185,7 @@ type SendForgotPasswordResetLinkRequest struct {
 func (h *ClientUserHandler) SendForgotPasswordResetLink(w http.ResponseWriter, r *http.Request) {
 	var body SendForgotPasswordResetLinkRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -212,12 +197,7 @@ func (h *ClientUserHandler) SendForgotPasswordResetLink(w http.ResponseWriter, r
 
 	_, err := h.service.SendForgotPasswordResetLink(r.Context(), body.Email)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -250,7 +230,7 @@ func (h *ClientUserHandler) ResetClientUserPassword(w http.ResponseWriter, r *ht
 
 	var body ResetPasswordRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -265,12 +245,7 @@ func (h *ClientUserHandler) ResetClientUserPassword(w http.ResponseWriter, r *ht
 		NewPassword: body.NewPassword,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 

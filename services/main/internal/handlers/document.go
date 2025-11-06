@@ -54,7 +54,7 @@ func (h *DocumentHandler) CreateDocument(w http.ResponseWriter, r *http.Request)
 	var body CreateDocumentRequest
 
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -66,7 +66,7 @@ func (h *DocumentHandler) CreateDocument(w http.ResponseWriter, r *http.Request)
 
 	var contentData map[string]interface{}
 	if marshalErr := json.Unmarshal([]byte(body.Content), &contentData); marshalErr != nil {
-		http.Error(w, "Invalid content JSON body", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON format in content field", http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -79,12 +79,7 @@ func (h *DocumentHandler) CreateDocument(w http.ResponseWriter, r *http.Request)
 		ClientUserID: currentUser.ID,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -128,7 +123,7 @@ func (h *DocumentHandler) UpdateDocument(w http.ResponseWriter, r *http.Request)
 	var body UpdateDocumentRequest
 
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -143,7 +138,7 @@ func (h *DocumentHandler) UpdateDocument(w http.ResponseWriter, r *http.Request)
 	var contentData *map[string]interface{} = nil
 	if body.Content != nil {
 		if marshalErr := json.Unmarshal([]byte(*body.Content), &contentData); marshalErr != nil {
-			http.Error(w, "Invalid content JSON body", http.StatusBadRequest)
+			http.Error(w, "Invalid JSON format in content field", http.StatusUnprocessableEntity)
 			return
 		}
 	}
@@ -158,12 +153,7 @@ func (h *DocumentHandler) UpdateDocument(w http.ResponseWriter, r *http.Request)
 		ClientUserID: currentUser.ID,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -191,12 +181,7 @@ func (h *DocumentHandler) DeleteDocument(w http.ResponseWriter, r *http.Request)
 
 	err := h.service.Delete(r.Context(), documentID)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -222,12 +207,7 @@ func (h *DocumentHandler) GetDocumentById(w http.ResponseWriter, r *http.Request
 
 	document, err := h.service.GetByID(r.Context(), documentID)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -278,12 +258,7 @@ func (h *DocumentHandler) ListDocuments(w http.ResponseWriter, r *http.Request) 
 
 	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
 	if filterErr != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": filterErr.Error(),
-			},
-		})
+		HandleErrorResponse(w, filterErr)
 		return
 	}
 
@@ -302,24 +277,14 @@ func (h *DocumentHandler) ListDocuments(w http.ResponseWriter, r *http.Request) 
 	documents, documentsErr := h.service.List(r.Context(), *filterQuery, input)
 
 	if documentsErr != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": documentsErr.Error(),
-			},
-		})
+		HandleErrorResponse(w, documentsErr)
 		return
 	}
 
 	count, countsErr := h.service.Count(r.Context(), *filterQuery, input)
 
 	if countsErr != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": countsErr.Error(),
-			},
-		})
+		HandleErrorResponse(w, countsErr)
 		return
 	}
 

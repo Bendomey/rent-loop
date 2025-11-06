@@ -41,7 +41,7 @@ type LoginRequest struct {
 func (h *AdminHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
 	var body LoginRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -56,12 +56,7 @@ func (h *AdminHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
 		Password: body.Password,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -102,7 +97,7 @@ func (h *AdminHandler) CreateAdmin(w http.ResponseWriter, r *http.Request) {
 
 	var body CreateAdminRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -118,12 +113,7 @@ func (h *AdminHandler) CreateAdmin(w http.ResponseWriter, r *http.Request) {
 		CreatedByID: currentAdmin.ID,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -156,12 +146,7 @@ func (h *AdminHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 
 	admin, err := h.service.GetAdmin(r.Context(), currentAdmin.ID)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -189,12 +174,7 @@ func (h *AdminHandler) GetAdminById(w http.ResponseWriter, r *http.Request) {
 
 	admin, err := h.service.GetAdmin(r.Context(), adminId)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": err.Error(),
-			},
-		})
+		HandleErrorResponse(w, err)
 		return
 	}
 
@@ -238,12 +218,7 @@ func (h *AdminHandler) ListAdmins(w http.ResponseWriter, r *http.Request) {
 
 	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
 	if filterErr != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": filterErr.Error(),
-			},
-		})
+		HandleErrorResponse(w, filterErr)
 		return
 	}
 
@@ -259,12 +234,7 @@ func (h *AdminHandler) ListAdmins(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if adminsErr != nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": adminsErr.Error(),
-			},
-		})
+		HandleErrorResponse(w, adminsErr)
 		return
 	}
 
