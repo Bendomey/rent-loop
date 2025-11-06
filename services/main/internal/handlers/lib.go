@@ -32,7 +32,9 @@ func HandleErrorResponse[T error](w http.ResponseWriter, err T) {
 				"message": det.Message,
 			},
 		})
-		logrus.Error(encodeErr.Error())
+		if encodeErr != nil {
+			logrus.Error(encodeErr.Error())
+		}
 
 		return
 	}
@@ -44,5 +46,7 @@ func HandleErrorResponse[T error](w http.ResponseWriter, err T) {
 		},
 	})
 
-	logrus.Error(encodeErr.Error())
+	if encodeErr != nil {
+		logrus.Error(encodeErr.Error())
+	}
 }

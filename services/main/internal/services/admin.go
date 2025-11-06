@@ -160,7 +160,7 @@ func (s *adminService) CreateAdmin(ctx context.Context, input CreateAdminInput) 
 	}
 
 	if err := s.repo.Create(ctx, &admin); err != nil {
-		return nil, pkg.BadRequestError(err.Error(), &pkg.RentLoopErrorParams{
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
 		})
 	}
