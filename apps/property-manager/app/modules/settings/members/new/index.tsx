@@ -1,7 +1,19 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import { HelpCircle, Mail, Phone } from 'lucide-react'
-import { Link } from 'react-router'
+import { useForm } from 'react-hook-form'
+import { Link, useFetcher } from 'react-router'
+import { z } from 'zod'
+import type { CreateClientUserInput } from '~/api/client-users'
 import { Button } from '~/components/ui/button'
-import { Field, FieldGroup, FieldLabel } from '~/components/ui/field'
+import { FieldGroup } from '~/components/ui/field'
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
 import {
 	InputGroup,
@@ -26,113 +38,207 @@ import {
 } from '~/components/ui/tooltip'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 
+const ValidationSchema = z.object({
+	role: z.enum(['ADMIN', 'STAFF'], {
+		error: 'Please select a role',
+	}),
+	name: z
+		.string({ error: 'Name is required' })
+		.min(2, 'Please enter a valid name'),
+	phone: z
+		.string({ error: 'Contact phone number is required' })
+		.min(9, 'Please enter a valid support phone number'),
+	email: z.email('Please enter a valid support email address'),
+})
+
+export type FormSchema = z.infer<typeof ValidationSchema>
+
 export function NewMemberModule() {
+	const createFetcher = useFetcher<{ error: string }>()
+
+	const rhfMethods = useForm<FormSchema>({
+		defaultValues: {
+			name: '',
+			phone: '',
+			email: '',
+			role: 'STAFF',
+		},
+		resolver: zodResolver(ValidationSchema),
+	})
+
+	const { handleSubmit, control, getValues } = rhfMethods
+
+	const onSubmit = async (data: Partial<CreateClientUserInput>) => {
+		const updatedData = { ...data }
+		if (getValues('phone')) {
+			updatedData.phone = `+233${getValues('phone').slice(-9)}`
+		}
+		await createFetcher.submit(updatedData, {
+			method: 'POST',
+			action: '/settings/members/new',
+		})
+	}
 	return (
-		<div className="mx-2 max-w-lg md:mx-auto">
-			<div className="space-y-1">
-				<TypographyH2>Create New Member</TypographyH2>
-				<TypographyMuted>
-					We&apos;ll send the member an invitation to join via email/phone
-					number
-				</TypographyMuted>
-			</div>
-
-			<FieldGroup className="mt-10">
-				<FieldGroup>
-					<Field>
-						<FieldLabel htmlFor="name">Full Name</FieldLabel>
-						<Input id="name" type="text" placeholder="John Doe" required />
-					</Field>
-					<Field>
-						<FieldLabel htmlFor="email">Email</FieldLabel>
-						<InputGroup>
-							<InputGroupInput placeholder="m@example.com" />
-							<InputGroupAddon>
-								<Mail />
-								<Separator
-									orientation="vertical"
-									className="data-[orientation=vertical]:h-4"
-								/>
-							</InputGroupAddon>
-							<InputGroupAddon align="inline-end">
-								<Tooltip>
-									<TooltipTrigger asChild>
-										<InputGroupButton
-											variant="ghost"
-											aria-label="Help"
-											size="icon-xs"
-										>
-											<HelpCircle />
-										</InputGroupButton>
-									</TooltipTrigger>
-									<TooltipContent>
-										<p>We&apos;ll use this to send you notifications</p>
-									</TooltipContent>
-								</Tooltip>
-							</InputGroupAddon>
-						</InputGroup>
-					</Field>
-					<Field>
-						<FieldLabel htmlFor="phone">Phone Number</FieldLabel>
-						<InputGroup>
-							<InputGroupInput id="phone" type="tel" placeholder="201234567" />
-							<InputGroupAddon>
-								<Phone />
-								+233
-								<Separator
-									orientation="vertical"
-									className="data-[orientation=vertical]:h-4"
-								/>
-							</InputGroupAddon>
-							<InputGroupAddon align="inline-end">
-								<Tooltip>
-									<TooltipTrigger asChild>
-										<InputGroupButton
-											variant="ghost"
-											aria-label="Help"
-											size="icon-xs"
-										>
-											<HelpCircle />
-										</InputGroupButton>
-									</TooltipTrigger>
-									<TooltipContent>
-										<p>We&apos;ll use this to send you notifications</p>
-									</TooltipContent>
-								</Tooltip>
-							</InputGroupAddon>
-						</InputGroup>
-					</Field>
-					<Field>
-						<FieldLabel htmlFor="role">Role</FieldLabel>
-						<Select>
-							<SelectTrigger className="w-[180px]">
-								<SelectValue placeholder="Select a role" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectGroup>
-									<SelectItem value="__EMPTY__">Please select</SelectItem>
-									<SelectLabel>All Roles</SelectLabel>
-									<SelectItem value="ADMIN">Admin</SelectItem>
-									<SelectItem value="STAFF">Staff</SelectItem>
-								</SelectGroup>
-							</SelectContent>
-						</Select>
-					</Field>
-				</FieldGroup>
-			</FieldGroup>
-
-			<div className="mt-10 flex justify-end border-t pt-5">
-				<div className="flex items-center gap-x-2">
-					<Link to="/settings/members">
-						<Button type="button" variant="outline">
-							Cancel
-						</Button>
-					</Link>
-					<Button type="submit" className="bg-rose-600 hover:bg-rose-700">
-						Create Member
-					</Button>
+		<Form {...rhfMethods}>
+			<form
+				onSubmit={handleSubmit(onSubmit)}
+				className="mx-2 max-w-lg md:mx-auto"
+			>
+				<div className="space-y-1">
+					<TypographyH2>Create New Member</TypographyH2>
+					<TypographyMuted>
+						We&apos;ll send the member an invitation to join via email/phone
+						number
+					</TypographyMuted>
 				</div>
-			</div>
-		</div>
+
+				<FieldGroup className="mt-10">
+					<FieldGroup>
+						<FormField
+							name="name"
+							control={control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Full Name</FormLabel>
+									<FormControl>
+										<Input placeholder="John Doe" type="text" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<FormField
+							name="email"
+							control={control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel htmlFor="email">Email</FormLabel>
+									<FormControl>
+										<InputGroup>
+											<InputGroupInput
+												placeholder="m@example.com"
+												id="email"
+												{...field}
+											/>
+											<InputGroupAddon>
+												<Mail {...field} />
+												<Separator
+													orientation="vertical"
+													className="data-[orientation=vertical]:h-4"
+												/>
+											</InputGroupAddon>
+											<InputGroupAddon align="inline-end">
+												<Tooltip>
+													<TooltipTrigger asChild>
+														<InputGroupButton
+															variant="ghost"
+															aria-label="Help"
+															size="icon-xs"
+														>
+															<HelpCircle />
+														</InputGroupButton>
+													</TooltipTrigger>
+													<TooltipContent>
+														<p>We&apos;ll use this to send you notifications</p>
+													</TooltipContent>
+												</Tooltip>
+											</InputGroupAddon>
+										</InputGroup>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<FormField
+							name="phone"
+							control={control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Phone Number</FormLabel>
+									<FormControl>
+										<InputGroup>
+											<InputGroupInput
+												placeholder="201234567"
+												id="phone"
+												type="tel"
+												{...field}
+											/>
+											<InputGroupAddon>
+												<Phone />
+												+233
+												<Separator
+													orientation="vertical"
+													className="data-[orientation=vertical]:h-4"
+												/>
+											</InputGroupAddon>
+											<InputGroupAddon align="inline-end">
+												<Tooltip>
+													<TooltipTrigger asChild>
+														<InputGroupButton
+															variant="ghost"
+															aria-label="Help"
+															size="icon-xs"
+														>
+															<HelpCircle />
+														</InputGroupButton>
+													</TooltipTrigger>
+													<TooltipContent>
+														<p>We&apos;ll use this to send you notifications</p>
+													</TooltipContent>
+												</Tooltip>
+											</InputGroupAddon>
+										</InputGroup>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<FormField
+							name="role"
+							control={control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel htmlFor="role">Role</FormLabel>
+									<FormControl>
+										<Select onValueChange={field.onChange} value={field.value}>
+											<SelectTrigger className="w-[180px]" id="role">
+												<SelectValue placeholder="Select a role" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectGroup>
+													<SelectItem value="__EMPTY__">
+														Please select
+													</SelectItem>
+													<SelectLabel>All Roles</SelectLabel>
+													<SelectItem value="ADMIN">Admin</SelectItem>
+													<SelectItem value="STAFF">Staff</SelectItem>
+												</SelectGroup>
+											</SelectContent>
+										</Select>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</FieldGroup>
+				</FieldGroup>
+
+				<div className="mt-10 flex justify-end border-t pt-5">
+					<div className="flex items-center gap-x-2">
+						<Link to="/settings/members">
+							<Button type="button" variant="outline">
+								Cancel
+							</Button>
+						</Link>
+						<Button type="submit" className="bg-rose-600 hover:bg-rose-700">
+							Create Member
+						</Button>
+					</div>
+				</div>
+			</form>
+		</Form>
 	)
 }
