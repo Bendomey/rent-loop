@@ -175,7 +175,7 @@ func (s *adminService) ListAdmins(
 ) ([]models.Admin, error) {
 	admins, err := s.repo.List(ctx, filterQuery, filters)
 	if err != nil {
-		return nil, pkg.BadRequestError(err.Error(), &pkg.RentLoopErrorParams{
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
 		})
 	}
@@ -190,7 +190,7 @@ func (s *adminService) CountAdmins(
 ) (int64, error) {
 	count, err := s.repo.Count(ctx, filterQuery, filters)
 	if err != nil {
-		return 0, pkg.BadRequestError(err.Error(), &pkg.RentLoopErrorParams{
+		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
 		})
 	}
