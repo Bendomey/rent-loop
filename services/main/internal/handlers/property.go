@@ -62,7 +62,7 @@ func (h *PropertyHandler) CreateProperty(w http.ResponseWriter, r *http.Request)
 	var body CreatePropertyRequest
 
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -350,7 +350,7 @@ func (h *PropertyHandler) UpdateProperty(w http.ResponseWriter, r *http.Request)
 	var body UpdatePropertyRequest
 
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
 		return
 	}
 

@@ -11,7 +11,6 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/getsentry/raven-go"
 	gonanoid "github.com/matoous/go-nanoid"
 	"gorm.io/gorm"
 )
@@ -53,13 +52,27 @@ func (s *adminService) AuthenticateAdmin(
 ) (*AuthenticateAdminResponse, error) {
 	admin, err := s.repo.GetByEmail(ctx, input.Email)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("EmailNotFound", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "AuthenticateAdmin",
+				"action":   "fetching admin by email",
+			},
+		})
 	}
 
 	// since email in db, lets validate hash and then send back
 	isSame := validatehash.ValidateCipher(input.Password, admin.Password)
 	if !isSame {
-		return nil, errors.New("PasswordIncorrect")
+		return nil, pkg.BadRequestError("PasswordIncorrect", &pkg.RentLoopErrorParams{
+			Err: err,
+		})
 	}
 
 	token, signTokenErrr := signjwt.SignJWT(jwt.MapClaims{
@@ -67,11 +80,13 @@ func (s *adminService) AuthenticateAdmin(
 	}, s.appCtx.Config.TokenSecrets.AdminSecret)
 
 	if signTokenErrr != nil {
-		raven.CaptureError(signTokenErrr, map[string]string{
-			"function": "AuthenticateAdmin",
-			"action":   "signing token",
+		return nil, pkg.InternalServerError(signTokenErrr.Error(), &pkg.RentLoopErrorParams{
+			Err: signTokenErrr,
+			Metadata: map[string]string{
+				"function": "AuthenticateAdmin",
+				"action":   "signing token",
+			},
 		})
-		return nil, signTokenErrr
 	}
 
 	return &AuthenticateAdminResponse{
@@ -81,7 +96,24 @@ func (s *adminService) AuthenticateAdmin(
 }
 
 func (s *adminService) GetAdmin(ctx context.Context, adminId string) (*models.Admin, error) {
-	return s.repo.GetByID(ctx, adminId)
+	admin, err := s.repo.GetByID(ctx, adminId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("AdminNotFound", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "GetAdmin",
+				"action":   "fetching admin by ID",
+			},
+		})
+	}
+
+	return admin, nil
 }
 
 type CreateAdminInput struct {
@@ -95,10 +127,19 @@ func (s *adminService) CreateAdmin(ctx context.Context, input CreateAdminInput) 
 	adminByEmail, adminByEmailErr := s.repo.GetByEmail(ctx, input.Email)
 
 	if adminByEmailErr != nil {
-		if !errors.Is(adminByEmailErr, gorm.ErrRecordNotFound) {
-			raven.CaptureError(adminByEmailErr, nil)
-			return nil, adminByEmailErr
+		if errors.Is(adminByEmailErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("EmailNotFound", &pkg.RentLoopErrorParams{
+				Err: adminByEmailErr,
+			})
 		}
+
+		return nil, pkg.InternalServerError(adminByEmailErr.Error(), &pkg.RentLoopErrorParams{
+			Err: adminByEmailErr,
+			Metadata: map[string]string{
+				"function": "AuthenticateAdmin",
+				"action":   "fetching admin by email",
+			},
+		})
 	}
 
 	if adminByEmail != nil {
@@ -108,11 +149,13 @@ func (s *adminService) CreateAdmin(ctx context.Context, input CreateAdminInput) 
 	// generate password
 	password, err := gonanoid.Generate("abcdefghijklmnopqrstuvwxyz1234567890", 10)
 	if err != nil {
-		raven.CaptureError(err, map[string]string{
-			"function": "CreateAdmin",
-			"action":   "generating random password",
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CreateAdmin",
+				"action":   "generating random password",
+			},
 		})
-		return nil, err
 	}
 
 	admin := models.Admin{
@@ -123,7 +166,9 @@ func (s *adminService) CreateAdmin(ctx context.Context, input CreateAdminInput) 
 	}
 
 	if err := s.repo.Create(ctx, &admin); err != nil {
-		return nil, err
+		return nil, pkg.BadRequestError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: adminByEmailErr,
+		})
 	}
 
 	return &admin, nil
@@ -136,7 +181,9 @@ func (s *adminService) ListAdmins(
 ) ([]models.Admin, error) {
 	admins, err := s.repo.List(ctx, filterQuery, filters)
 	if err != nil {
-		return nil, err
+		return nil, pkg.BadRequestError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+		})
 	}
 
 	return *admins, nil
@@ -147,5 +194,12 @@ func (s *adminService) CountAdmins(
 	filterQuery lib.FilterQuery,
 	filters repository.ListAdminsFilter,
 ) (int64, error) {
-	return s.repo.Count(ctx, filterQuery, filters)
+	count, err := s.repo.Count(ctx, filterQuery, filters)
+	if err != nil {
+		return 0, pkg.BadRequestError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+		})
+	}
+
+	return count, nil
 }
