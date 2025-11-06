@@ -12,6 +12,7 @@ export const QUERY_KEYS = {
 	CURRENT_USER: 'current-user',
 	DOCUMENTS: 'documents',
 	PROPERTIES: 'properties',
+	CLIENT_USERS: 'client-users',
 } as const
 
 export const PAGINATION_DEFAULTS = {

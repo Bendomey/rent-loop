@@ -10,3 +10,9 @@ interface ClientUser {
 	created_at: Date
 	updated_at: Date
 }
+
+interface FetchClientUserFilter {
+	role?: string
+	status?: string
+	client_id?: string
+}
