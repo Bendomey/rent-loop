@@ -6,7 +6,6 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
-	"github.com/getsentry/raven-go"
 )
 
 type ClientUserPropertyService interface {
@@ -49,7 +48,13 @@ func (s *clientUserPropertyService) LinkClientUserProperty(
 
 	clientUserPropertyErr := s.repo.Create(ctx, &clientUserProperty)
 	if clientUserPropertyErr != nil {
-		return nil, clientUserPropertyErr
+		return nil, pkg.InternalServerError(clientUserPropertyErr.Error(), &pkg.RentLoopErrorParams{
+			Err: clientUserPropertyErr,
+			Metadata: map[string]string{
+				"function": "LinkClientUserProperty",
+				"action":   "creating client user property link",
+			},
+		})
 	}
 
 	return &clientUserProperty, nil
@@ -61,8 +66,13 @@ func (s *clientUserPropertyService) UnlinkByPropertyID(
 ) error {
 	unlinkErr := s.repo.DeleteByPropertyID(ctx, propertyID)
 	if unlinkErr != nil {
-		raven.CaptureError(unlinkErr, nil)
-		return unlinkErr
+		return pkg.InternalServerError(unlinkErr.Error(), &pkg.RentLoopErrorParams{
+			Err: unlinkErr,
+			Metadata: map[string]string{
+				"function": "UnlinkByPropertyID",
+				"action":   "deleting client user property links",
+			},
+		})
 	}
 	return nil
 }

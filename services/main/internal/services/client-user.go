@@ -13,7 +13,6 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/getsentry/raven-go"
 	gonanoid "github.com/matoous/go-nanoid"
 	"gorm.io/gorm"
 )
@@ -62,11 +61,14 @@ func (s *clientUserService) CreateClientUser(
 ) (*models.ClientUser, error) {
 	existingClientUser, clientUserErr := s.repo.GetByEmail(ctx, input.Email)
 
-	if clientUserErr != nil {
-		if !errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
-			raven.CaptureError(clientUserErr, nil)
-			return nil, clientUserErr
-		}
+	if clientUserErr != nil && !errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
+		return nil, pkg.InternalServerError(clientUserErr.Error(), &pkg.RentLoopErrorParams{
+			Err: clientUserErr,
+			Metadata: map[string]string{
+				"function": "CreateClientUser",
+				"action":   "checking existing client user by email",
+			},
+		})
 	}
 
 	if existingClientUser != nil {
@@ -75,11 +77,13 @@ func (s *clientUserService) CreateClientUser(
 
 	password, err := gonanoid.Generate("abcdefghijklmnopqrstuvwxyz1234567890", 10)
 	if err != nil {
-		raven.CaptureError(err, map[string]string{
-			"function": "CreateClientUser",
-			"action":   "generating random password",
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CreateClientUser",
+				"action":   "generating random password",
+			},
 		})
-		return nil, err
 	}
 
 	clientUser := models.ClientUser{
@@ -93,12 +97,24 @@ func (s *clientUserService) CreateClientUser(
 	}
 
 	if err := s.repo.Create(ctx, &clientUser); err != nil {
-		return nil, err
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CreateClientUser",
+				"action":   "creating new client user",
+			},
+		})
 	}
 
 	client, clientErr := s.clientRepo.GetByID(ctx, input.ClientID)
 	if clientErr != nil {
-		return nil, err
+		return nil, pkg.InternalServerError(clientErr.Error(), &pkg.RentLoopErrorParams{
+			Err: clientErr,
+			Metadata: map[string]string{
+				"function": "CreateClientUser",
+				"action":   "fetching client for email notification",
+			},
+		})
 	}
 
 	r := strings.NewReplacer(
@@ -145,15 +161,24 @@ func (s *clientUserService) AuthenticateClientUser(
 ) (*AuthenticateClientUserResponse, error) {
 	clientUser, clientUserErr := s.repo.GetByEmail(ctx, input.Email)
 	if clientUserErr != nil {
-		if !errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
-			raven.CaptureError(clientUserErr, nil)
+		if errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("ClientUserNotFound", &pkg.RentLoopErrorParams{
+				Err: clientUserErr,
+			})
 		}
-		return nil, clientUserErr
+
+		return nil, pkg.InternalServerError(clientUserErr.Error(), &pkg.RentLoopErrorParams{
+			Err: clientUserErr,
+			Metadata: map[string]string{
+				"function": "AuthenticateClientUser",
+				"action":   "fetching client user by email",
+			},
+		})
 	}
 
 	isSame := validatehash.ValidateCipher(input.Password, clientUser.Password)
 	if !isSame {
-		return nil, errors.New("PasswordIncorrect")
+		return nil, pkg.BadRequestError("PasswordIncorrect", nil)
 	}
 
 	token, signTokenErrr := signjwt.SignJWT(jwt.MapClaims{
@@ -162,11 +187,13 @@ func (s *clientUserService) AuthenticateClientUser(
 	}, s.appCtx.Config.TokenSecrets.ClientUserSecret)
 
 	if signTokenErrr != nil {
-		raven.CaptureError(signTokenErrr, map[string]string{
-			"function": "AuthenticateClientUser",
-			"action":   "signing token",
+		return nil, pkg.InternalServerError(signTokenErrr.Error(), &pkg.RentLoopErrorParams{
+			Err: signTokenErrr,
+			Metadata: map[string]string{
+				"function": "AuthenticateClientUser",
+				"action":   "signing token",
+			},
 		})
-		return nil, signTokenErrr
 	}
 
 	return &AuthenticateClientUserResponse{
@@ -179,7 +206,24 @@ func (s *clientUserService) GetClientUser(
 	ctx context.Context,
 	clientUserId string,
 ) (*models.ClientUser, error) {
-	return s.repo.GetByID(ctx, clientUserId)
+	clientUser, err := s.repo.GetByID(ctx, clientUserId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("ClientUserNotFound", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "GetClientUser",
+				"action":   "fetching client user by ID",
+			},
+		})
+	}
+
+	return clientUser, nil
 }
 
 func (s *clientUserService) SendForgotPasswordResetLink(
@@ -188,10 +232,19 @@ func (s *clientUserService) SendForgotPasswordResetLink(
 ) (*models.ClientUser, error) {
 	clientUser, clientUserErr := s.repo.GetByEmail(ctx, email)
 	if clientUserErr != nil {
-		if !errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
-			raven.CaptureError(clientUserErr, nil)
+		if errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("ClientUserNotFound", &pkg.RentLoopErrorParams{
+				Err: clientUserErr,
+			})
 		}
-		return nil, errors.New("EmailNotFound")
+
+		return nil, pkg.InternalServerError(clientUserErr.Error(), &pkg.RentLoopErrorParams{
+			Err: clientUserErr,
+			Metadata: map[string]string{
+				"function": "SendForgotPasswordResetLink",
+				"action":   "fetching client user by email",
+			},
+		})
 	}
 
 	token, signTokenErrr := signjwt.SignJWT(jwt.MapClaims{
@@ -200,11 +253,13 @@ func (s *clientUserService) SendForgotPasswordResetLink(
 	}, s.appCtx.Config.TokenSecrets.ClientUserSecret)
 
 	if signTokenErrr != nil {
-		raven.CaptureError(signTokenErrr, map[string]string{
-			"function": "SendForgotPasswordResetLink",
-			"action":   "signing token",
+		return nil, pkg.InternalServerError(signTokenErrr.Error(), &pkg.RentLoopErrorParams{
+			Err: signTokenErrr,
+			Metadata: map[string]string{
+				"function": "SendForgotPasswordResetLink",
+				"action":   "signing token",
+			},
 		})
-		return nil, signTokenErrr
 	}
 
 	r := strings.NewReplacer(
@@ -236,26 +291,42 @@ func (s *clientUserService) ResetPassword(
 ) (*models.ClientUser, error) {
 	clientUser, clientUserErr := s.repo.GetByID(ctx, input.ID)
 	if clientUserErr != nil {
-		if !errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
-			raven.CaptureError(clientUserErr, nil)
+		if errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("ClientUserNotFound", &pkg.RentLoopErrorParams{
+				Err: clientUserErr,
+			})
 		}
-		return nil, clientUserErr
+
+		return nil, pkg.InternalServerError(clientUserErr.Error(), &pkg.RentLoopErrorParams{
+			Err: clientUserErr,
+			Metadata: map[string]string{
+				"function": "ResetPassword",
+				"action":   "fetching client user by id",
+			},
+		})
 	}
 
 	hashed, err := hashpassword.HashPassword(input.NewPassword)
 	if err != nil {
-		raven.CaptureError(err, map[string]string{
-			"function": "ResetPassword",
-			"action":   "hashing new password",
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ResetPassword",
+				"action":   "hashing new password",
+			},
 		})
-		return nil, err
 	}
 
 	clientUser.Password = hashed
 
 	if err := s.repo.Update(ctx, clientUser); err != nil {
-		raven.CaptureError(err, nil)
-		return nil, err
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ResetPassword",
+				"action":   "updating client user",
+			},
+		})
 	}
 
 	return clientUser, nil
@@ -267,7 +338,13 @@ func (s *clientUserService) GetClientUserByQuery(
 ) (*models.ClientUser, error) {
 	clientUserOwner, clientUserErr := s.repo.GetByQuery(ctx, query)
 	if clientUserErr != nil {
-		return nil, clientUserErr
+		return nil, pkg.InternalServerError(clientUserErr.Error(), &pkg.RentLoopErrorParams{
+			Err: clientUserErr,
+			Metadata: map[string]string{
+				"function": "GetClientUserByQuery",
+				"action":   "getting client user by query",
+			},
+		})
 	}
 
 	return clientUserOwner, nil
