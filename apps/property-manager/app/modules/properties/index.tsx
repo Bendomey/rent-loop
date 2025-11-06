@@ -1,7 +1,9 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { Building, CircleCheck, CircleX, EllipsisVertical } from 'lucide-react'
 import { useMemo } from 'react'
+import { useSearchParams } from 'react-router'
 import { PropertiesController } from './controller'
+import { useGetProperties } from '~/api/property'
 import { DataTable } from '~/components/datatable'
 import {
 	AlertDialog,
@@ -23,8 +25,33 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
+import { PAGINATION_DEFAULTS } from '~/lib/constants'
 
 export function PropertiesModule() {
+	const [searchParams] = useSearchParams()
+
+	const page = searchParams.get('page')
+		? Number(searchParams.get('page'))
+		: PAGINATION_DEFAULTS.PAGE
+	const per = searchParams.get('pageSize')
+		? Number(searchParams.get('pageSize'))
+		: PAGINATION_DEFAULTS.PER_PAGE
+	const type = searchParams.get('type') ?? undefined
+	const status = searchParams.get('status') ?? undefined
+
+	const { data, isPending, isRefetching, error, refetch } = useGetProperties({
+		filters: { type: type, status: status },
+		pagination: { page, per },
+		populate: ['CreatedBy'],
+		sorter: { sort: 'desc', sort_by: 'created_at' },
+		search: {
+			query: searchParams.get('query') ?? undefined,
+			fields: ['name', 'address'],
+		},
+	})
+
+	const isLoading = isPending || isRefetching
+
 	const columns: ColumnDef<Property>[] = useMemo(() => {
 		return [
 			{
@@ -137,127 +164,27 @@ export function PropertiesModule() {
 
 	return (
 		<main className="flex flex-col gap-2 sm:gap-4">
-			<PropertiesController />
+			<PropertiesController isLoading={isLoading} refetch={refetch} />
 			<div className="h-full w-full">
 				<DataTable
 					columns={columns}
+					isLoading={isLoading}
+					refetch={refetch}
+					error={error ? 'Failed to load properties.' : undefined}
 					dataResponse={{
-						rows: [
-							{
-								id: '1',
-								name: 'La Palm Beach Hotel',
-								address: 'Labadi Beach, Accra',
-								city: 'Accra',
-								state: 'Greater Accra',
-								zip_code: '00233',
-								type: 'SINGLE',
-								created_at: new Date(),
-								updated_at: new Date(),
-								status: 'Property.Status.Active',
-							},
-							{
-								id: '2',
-								name: 'Kumasi City Hostel',
-								address: 'Kejetia, Kumasi Central',
-								city: 'Kumasi',
-								state: 'Ashanti',
-								zip_code: '00232',
-								type: 'MULTI',
-								created_at: new Date(),
-								updated_at: new Date(),
-								status: 'Property.Status.Maintenance',
-							},
-							{
-								id: '3',
-								name: 'Cape Coast Tourist Inn',
-								address: 'Castle Road, Cape Coast',
-								city: 'Cape Coast',
-								state: 'Central',
-								zip_code: '00231',
-								type: 'SINGLE',
-								created_at: new Date(),
-								updated_at: new Date(),
-								status: 'Property.Status.Inactive',
-							},
-							{
-								id: '4',
-								name: 'Takoradi Seafront Hotel',
-								address: 'Takoradi Harbour Road',
-								city: 'Takoradi',
-								state: 'Western',
-								zip_code: '00234',
-								type: 'SINGLE',
-								created_at: new Date(),
-								updated_at: new Date(),
-								status: 'Property.Status.Active',
-							},
-							{
-								id: '5',
-								name: 'Tamale Central Lodge',
-								address: 'Market Circle, Tamale',
-								city: 'Tamale',
-								state: 'Northern',
-								zip_code: '00240',
-								type: 'MULTI',
-								created_at: new Date(),
-								updated_at: new Date(),
-								status: 'Property.Status.Inactive',
-							},
-							{
-								id: '6',
-								name: 'Osu Boutique Hotel',
-								address: 'Osu Oxford Street, Accra',
-								city: 'Accra',
-								state: 'Greater Accra',
-								zip_code: '00233',
-								type: 'MULTI',
-								created_at: new Date(),
-								updated_at: new Date(),
-								status: 'Property.Status.Active',
-							},
-							{
-								id: '7',
-								name: 'East Legon Serviced Apartments',
-								address: 'East Legon Link Road, Accra',
-								city: 'Accra',
-								state: 'Greater Accra',
-								zip_code: '00233',
-								type: 'MULTI',
-								created_at: new Date(),
-								updated_at: new Date(),
-								status: 'Property.Status.Inactive',
-							},
-							{
-								id: '8',
-								name: 'Tema Riverside Guesthouse',
-								address: 'Community 1, Tema',
-								city: 'Tema',
-								state: 'Greater Accra',
-								zip_code: '00236',
-								type: 'SINGLE',
-								created_at: new Date(),
-								updated_at: new Date(),
-								status: 'Property.Status.Active',
-							},
-						] as Property[],
-						total: 150,
-						page: 1,
-						page_size: 50,
-						order: 'desc',
-						order_by: 'created_at',
-						has_prev_page: false,
-						has_next_page: true,
+						rows: data?.rows ?? [],
+						total: data?.meta?.total ?? 0,
+						page,
+						page_size: per,
+						order: data?.meta?.order ?? 'desc',
+						order_by: data?.meta?.order_by ?? 'created_at',
+						has_prev_page: data?.meta?.has_prev_page ?? false,
+						has_next_page: data?.meta?.has_next_page ?? false,
 					}}
 					empty={{
 						message: 'No properties found',
 						description:
-							"Try adjusting your search or filter to find what you're looking for.",
-						button: {
-							label: 'Add Property',
-							onClick: () => {
-								// Handle button click
-							},
-						},
+							"Try adjusting your search to find what you're looking for.",
 					}}
 				/>
 			</div>

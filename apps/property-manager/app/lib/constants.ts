@@ -11,6 +11,7 @@ export const USER_CIPHER = 'rentloop-account'
 export const QUERY_KEYS = {
 	CURRENT_USER: 'current-user',
 	DOCUMENTS: 'documents',
+	PROPERTIES: 'properties',
 } as const
 
 export const PAGINATION_DEFAULTS = {
