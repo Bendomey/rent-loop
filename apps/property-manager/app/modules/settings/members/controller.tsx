@@ -1,12 +1,9 @@
-import { Plus, RotateCw, Search, ToggleLeft } from 'lucide-react'
+import { Plus, RotateCw, ToggleLeft } from 'lucide-react'
 import { Link } from 'react-router'
 import { FilterSet } from '~/components/filter-set'
+import { SearchInput } from '~/components/search'
 import { Button } from '~/components/ui/button'
-import {
-	InputGroup,
-	InputGroupAddon,
-	InputGroupInput,
-} from '~/components/ui/input-group'
+import { cn } from '~/lib/utils'
 
 const filters: Array<Filter> = [
 	{
@@ -42,7 +39,13 @@ const filters: Array<Filter> = [
 	},
 ]
 
-export const MembersController = () => {
+export const MembersController = ({
+	isLoading,
+	refetch,
+}: {
+	isLoading: boolean
+	refetch: VoidFunction
+}) => {
 	return (
 		<div className="flex w-full flex-col gap-2">
 			<div className="w-full rounded-md border p-4">
@@ -52,12 +55,7 @@ export const MembersController = () => {
 			</div>
 			<div className="flex flex-wrap items-center justify-between gap-4">
 				<div className="flex items-center gap-2 text-sm">
-					<InputGroup>
-						<InputGroupInput placeholder="Search members ..." />
-						<InputGroupAddon>
-							<Search />
-						</InputGroupAddon>
-					</InputGroup>
+					<SearchInput placeholder="Search members..." />
 				</div>
 				<div className="flex items-center justify-end gap-2">
 					<Link to="/settings/members/new">
@@ -70,8 +68,13 @@ export const MembersController = () => {
 							Add Member
 						</Button>
 					</Link>
-					<Button variant="outline" size="sm">
-						<RotateCw className="size-4" />
+					<Button
+						onClick={() => refetch()}
+						disabled={isLoading}
+						variant="outline"
+						size="sm"
+					>
+						<RotateCw className={cn('size-4', { 'animate-spin': isLoading })} />
 						Refresh
 					</Button>
 				</div>
