@@ -14,6 +14,14 @@ type ClientUserPropertyService interface {
 		input CreateClientUserPropertyInput,
 	) (*models.ClientUserProperty, error)
 	UnlinkByPropertyID(context context.Context, propertyID string) error
+	ListClientUserProperties(
+		ctx context.Context,
+		filterQuery repository.ListClientUserPropertiesFilter,
+	) ([]models.ClientUserProperty, error)
+	CountClientUserProperties(
+		ctx context.Context,
+		filterQuery repository.ListClientUserPropertiesFilter,
+	) (int64, error)
 }
 
 type clientUserPropertyService struct {
@@ -75,4 +83,40 @@ func (s *clientUserPropertyService) UnlinkByPropertyID(
 		})
 	}
 	return nil
+}
+
+func (s *clientUserPropertyService) ListClientUserProperties(
+	ctx context.Context,
+	filterQuery repository.ListClientUserPropertiesFilter,
+) ([]models.ClientUserProperty, error) {
+	clientUserProperties, err := s.repo.List(ctx, filterQuery)
+	if err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ListClientUserProperties",
+				"action":   "listing client user properties",
+			},
+		})
+	}
+
+	return *clientUserProperties, nil
+}
+
+func (s *clientUserPropertyService) CountClientUserProperties(
+	ctx context.Context,
+	filterQuery repository.ListClientUserPropertiesFilter,
+) (int64, error) {
+	clientUserPropertiesCount, err := s.repo.Count(ctx, filterQuery)
+	if err != nil {
+		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CountClientUserProperties",
+				"action":   "counting client user properties",
+			},
+		})
+	}
+
+	return clientUserPropertiesCount, nil
 }

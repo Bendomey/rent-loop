@@ -6,11 +6,12 @@ import (
 )
 
 type Handlers struct {
-	AdminHandler             AdminHandler
-	ClientApplicationHandler ClientApplicationHandler
-	ClientUserHandler        ClientUserHandler
-	PropertyHandler          PropertyHandler
-	DocumentHandler          DocumentHandler
+	AdminHandler              AdminHandler
+	ClientApplicationHandler  ClientApplicationHandler
+	ClientUserHandler         ClientUserHandler
+	PropertyHandler           PropertyHandler
+	ClientUserPropertyHandler ClientUserPropertyHandler
+	DocumentHandler           DocumentHandler
 }
 
 func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
@@ -18,13 +19,15 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 	clientApplicationHandler := NewClientApplicationHandler(appCtx, services.ClientApplicationService)
 	clientUserHandler := NewClientUserHandler(appCtx, services.ClientUserService)
 	propertyHandler := NewPropertyHandler(appCtx, services.PropertyService)
+	clientUserPropertyHandler := NewClientUserPropertyHandler(appCtx, services.ClientUserPropertyService)
 	documentHandler := NewDocumentHandler(appCtx, services.DocumentService)
 
 	return Handlers{
-		ClientApplicationHandler: clientApplicationHandler,
-		AdminHandler:             adminHandler,
-		ClientUserHandler:        clientUserHandler,
-		PropertyHandler:          propertyHandler,
-		DocumentHandler:          documentHandler,
+		ClientApplicationHandler:  clientApplicationHandler,
+		AdminHandler:              adminHandler,
+		ClientUserHandler:         clientUserHandler,
+		PropertyHandler:           propertyHandler,
+		ClientUserPropertyHandler: clientUserPropertyHandler,
+		DocumentHandler:           documentHandler,
 	}
 }
