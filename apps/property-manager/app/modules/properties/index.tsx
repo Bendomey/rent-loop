@@ -72,7 +72,10 @@ export function PropertiesModule() {
 				cell: ({ getValue, row }) => {
 					return (
 						<div className="flex min-w-32 flex-col items-start gap-1">
-							<Link to={`/properties/${row.original.slug}`}>
+							<Link
+								to={`/properties/${row.original.slug}`}
+								aria-label={`View details for property ${getValue<string>()}`}
+							>
 								<span className="truncate text-xs text-blue-600 hover:underline">
 									{getValue<string>()}
 								</span>

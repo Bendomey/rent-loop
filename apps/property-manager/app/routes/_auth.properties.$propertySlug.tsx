@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import { Outlet, redirect, useLoaderData } from 'react-router'
 import pkgJson from '../../package.json'
 import type { Route } from './+types/_auth.properties.$propertySlug._index'
@@ -113,17 +114,14 @@ export default function PropertyDashboard({ matches }: Route.ComponentProps) {
 										}
 
 										return (
-											<>
-												<BreadcrumbItem
-													key={breadcrumb.id}
-													className="hidden md:block"
-												>
+											<Fragment key={breadcrumb.id}>
+												<BreadcrumbItem className="hidden md:block">
 													<BreadcrumbLink href={breadcrumb.pathname}>
 														{breadcrumb.name ?? '...'}
 													</BreadcrumbLink>
 												</BreadcrumbItem>
 												<BreadcrumbSeparator className="hidden md:block" />
-											</>
+											</Fragment>
 										)
 									})}
 								</BreadcrumbList>

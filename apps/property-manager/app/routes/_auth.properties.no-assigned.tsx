@@ -35,7 +35,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 		authData.clientUserProperties.rows.length
 	) {
 		const firstProperty = authData.clientUserProperties.rows[0]
-		return redirect(`/auth/dashboard/property/${firstProperty?.property?.slug}`)
+		return redirect(`/properties/${firstProperty?.property?.slug}`)
 	}
 
 	return {
