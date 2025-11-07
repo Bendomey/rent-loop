@@ -41,6 +41,10 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					Post("/", handlers.PropertyHandler.CreateProperty)
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Get("/", handlers.PropertyHandler.ListProperties)
+
+				// client user properties
+				r.Get("/me", handlers.ClientUserPropertyHandler.ListClientUserProperties)
+
 				r.Get("/slug/{slug}", handlers.PropertyHandler.GetPropertyBySlug)
 
 				r.Route("/{property_id}", func(r chi.Router) {

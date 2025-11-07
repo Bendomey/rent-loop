@@ -1698,6 +1698,139 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/properties/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get my properties",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUserProperties"
+                ],
+                "summary": "Get my properties",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "MANAGER",
+                            "STAFF"
+                        ],
+                        "type": "string",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputClientUserProperty"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/properties/slug/{slug}": {
             "get": {
                 "security": [
@@ -2749,6 +2882,51 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputClientUserProperty": {
+            "type": "object",
+            "properties": {
+                "client_user": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "client_user_id": {
+                    "type": "string",
+                    "example": "b50874ee-1a70-436e-ba24-572078895982"
+                },
+                "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "created_by_id": {
+                    "type": "string",
+                    "example": "1e81fea0-5e8b-4535-b449-1a2133e94a7a"
+                },
+                "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "property": {
+                    "$ref": "#/definitions/transformations.OutputProperty"
+                },
+                "property_id": {
+                    "type": "string",
+                    "example": "b50874ee-1a70-436e-ba24-572078895982"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "MANAGER"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
                     "example": "2023-01-01T00:00:00Z"
                 }
             }
