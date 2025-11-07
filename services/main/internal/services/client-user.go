@@ -13,7 +13,6 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/getsentry/raven-go"
 	gonanoid "github.com/matoous/go-nanoid"
 	"gorm.io/gorm"
 )
@@ -365,13 +364,13 @@ func (s *clientUserService) ListClientUsers(
 ) ([]models.ClientUser, error) {
 	clientUsers, listErr := s.repo.List(ctx, filterQuery)
 	if listErr != nil {
-		if !errors.Is(listErr, gorm.ErrRecordNotFound) {
-			raven.CaptureError(listErr, map[string]string{
+		return nil, pkg.InternalServerError(listErr.Error(), &pkg.RentLoopErrorParams{
+			Err: listErr,
+			Metadata: map[string]string{
 				"function": "ListClientUsers",
-				"action":   "fetching client users",
-			})
-		}
-		return nil, listErr
+				"action":   "listing client users",
+			},
+		})
 	}
 
 	return *clientUsers, nil
@@ -383,13 +382,14 @@ func (s *clientUserService) CountClientUsers(
 ) (int64, error) {
 	clientUsersCount, countErr := s.repo.Count(ctx, filterQuery)
 	if countErr != nil {
-		if !errors.Is(countErr, gorm.ErrRecordNotFound) {
-			raven.CaptureError(countErr, map[string]string{
+		return 0, pkg.InternalServerError(countErr.Error(), &pkg.RentLoopErrorParams{
+			Err: countErr,
+			Metadata: map[string]string{
 				"function": "CountClientUsers",
-				"action":   "fetching client users count",
-			})
-		}
-		return 0, countErr
+				"action":   "counting client users",
+			},
+		})
 	}
+
 	return clientUsersCount, nil
 }

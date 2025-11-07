@@ -281,12 +281,7 @@ func (h *ClientUserHandler) ListClientUsers(w http.ResponseWriter, r *http.Reque
 
 	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
 	if filterQueryErr != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": filterQueryErr.Error(),
-			},
-		})
+		HandleErrorResponse(w, filterQueryErr)
 		return
 	}
 
@@ -304,23 +299,13 @@ func (h *ClientUserHandler) ListClientUsers(w http.ResponseWriter, r *http.Reque
 
 	clientUsers, clientUsersErr := h.service.ListClientUsers(r.Context(), input)
 	if clientUsersErr != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": clientUsersErr.Error(),
-			},
-		})
+		HandleErrorResponse(w, clientUsersErr)
 		return
 	}
 
 	clientUsersCount, clientUsersCountErr := h.service.CountClientUsers(r.Context(), input)
 	if clientUsersCountErr != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]any{
-			"errors": map[string]string{
-				"message": clientUsersCountErr.Error(),
-			},
-		})
+		HandleErrorResponse(w, clientUsersCountErr)
 		return
 	}
 
