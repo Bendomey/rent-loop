@@ -1,6 +1,7 @@
 import { Frame, PlusCircleIcon } from 'lucide-react'
 import { Link } from 'react-router'
 
+import PermissionGuard from './permissions/permission-guard'
 import {
 	SidebarGroup,
 	SidebarGroupLabel,
@@ -11,7 +12,9 @@ import {
 import { useAuth } from '~/providers/auth-provider'
 
 export function NavProperties() {
-	const { currentUser, clientUserProperties } = useAuth()
+	const { clientUserProperties } = useAuth()
+	if (clientUserProperties?.rows.length === 0) return null
+
 	return (
 		<SidebarGroup className="group-data-[collapsible=icon]:hidden">
 			<SidebarGroupLabel>My Properties</SidebarGroupLabel>
@@ -26,7 +29,7 @@ export function NavProperties() {
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				))}
-				{currentUser?.role !== 'STAFF' ? (
+				<PermissionGuard roles={['ADMIN', 'OWNER']}>
 					<SidebarMenuItem>
 						<Link to="/properties/new">
 							<SidebarMenuButton className="text-sidebar-foreground/70">
@@ -35,7 +38,7 @@ export function NavProperties() {
 							</SidebarMenuButton>
 						</Link>
 					</SidebarMenuItem>
-				) : null}
+				</PermissionGuard>
 			</SidebarMenu>
 		</SidebarGroup>
 	)

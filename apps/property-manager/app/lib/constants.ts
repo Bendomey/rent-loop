@@ -17,6 +17,12 @@ export const QUERY_KEYS = {
 	CLIENT_USERS: 'client-users',
 } as const
 
+export const PermissionState = {
+	AUTHORIZED: 'AUTHORIZED',
+	PENDING: 'PENDING',
+	UNAUTHORIZED: 'UNAUTHORIZED',
+} as const
+
 export const PAGINATION_DEFAULTS = {
 	PAGE: 1,
 	PER_PAGE: 50,

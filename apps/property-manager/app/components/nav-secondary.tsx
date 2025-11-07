@@ -2,6 +2,7 @@ import { ArrowLeft, type LucideIcon } from 'lucide-react'
 import * as React from 'react'
 import { Link } from 'react-router'
 
+import PermissionGuard from './permissions/permission-guard'
 import {
 	SidebarGroup,
 	SidebarGroupContent,
@@ -9,7 +10,6 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from '~/components/ui/sidebar'
-import { useAuth } from '~/providers/auth-provider'
 
 export function NavSecondary({
 	items,
@@ -24,21 +24,21 @@ export function NavSecondary({
 		onClick?: () => void
 	}[]
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
-	const { currentUser } = useAuth()
-
 	return (
 		<SidebarGroup {...props}>
 			<SidebarGroupContent>
 				<SidebarMenu>
-					{onProperty && currentUser?.role !== 'STAFF' ? (
-						<SidebarMenuItem>
-							<SidebarMenuButton tooltip="Main Menu" asChild size="sm">
-								<Link to="/properties">
-									<ArrowLeft />
-									<span>Main Menu</span>
-								</Link>
-							</SidebarMenuButton>
-						</SidebarMenuItem>
+					{onProperty ? (
+						<PermissionGuard roles={['OWNER', 'ADMIN']}>
+							<SidebarMenuItem>
+								<SidebarMenuButton tooltip="Main Menu" asChild size="sm">
+									<Link to="/properties">
+										<ArrowLeft />
+										<span>Main Menu</span>
+									</Link>
+								</SidebarMenuButton>
+							</SidebarMenuItem>
+						</PermissionGuard>
 					) : null}
 					{items.map((item) => {
 						return (

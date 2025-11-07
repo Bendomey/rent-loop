@@ -2,6 +2,7 @@ import { ChevronsUpDown, Frame, FrameIcon, Plus } from 'lucide-react'
 import * as React from 'react'
 import { Link, useParams } from 'react-router'
 
+import PermissionGuard from './permissions/permission-guard'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -19,7 +20,7 @@ import {
 import { useAuth } from '~/providers/auth-provider'
 
 export function PropertySwitcher() {
-	const { clientUserProperties, currentUser } = useAuth()
+	const { clientUserProperties } = useAuth()
 	const { isMobile } = useSidebar()
 	const { propertySlug } = useParams()
 	const activeProperty = React.useMemo(() => {
@@ -78,21 +79,19 @@ export function PropertySwitcher() {
 								</DropdownMenuItem>
 							</Link>
 						))}
-						{currentUser?.role !== 'STAFF' ? (
-							<>
-								<DropdownMenuSeparator />
-								<Link to="/properties/new">
-									<DropdownMenuItem className="gap-2 p-2">
-										<div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
-											<Plus className="size-4" />
-										</div>
-										<div className="text-muted-foreground font-medium">
-											Add property
-										</div>
-									</DropdownMenuItem>
-								</Link>
-							</>
-						) : null}
+						<PermissionGuard roles={['ADMIN', 'OWNER']}>
+							<DropdownMenuSeparator />
+							<Link to="/properties/new">
+								<DropdownMenuItem className="gap-2 p-2">
+									<div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
+										<Plus className="size-4" />
+									</div>
+									<div className="text-muted-foreground font-medium">
+										Add property
+									</div>
+								</DropdownMenuItem>
+							</Link>
+						</PermissionGuard>
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</SidebarMenuItem>
