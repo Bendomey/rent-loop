@@ -30,6 +30,14 @@ type ClientUserService interface {
 		input ResetClientUserPasswordInput,
 	) (*models.ClientUser, error)
 	GetClientUserByQuery(context context.Context, query map[string]any) (*models.ClientUser, error)
+	ListClientUsers(
+		ctx context.Context,
+		filterQuery repository.ListClientUsersFilter,
+	) ([]models.ClientUser, error)
+	CountClientUsers(
+		ctx context.Context,
+		filterQuery repository.ListClientUsersFilter,
+	) (int64, error)
 }
 
 type clientUserService struct {
@@ -348,4 +356,40 @@ func (s *clientUserService) GetClientUserByQuery(
 	}
 
 	return clientUserOwner, nil
+}
+
+func (s *clientUserService) ListClientUsers(
+	ctx context.Context,
+	filterQuery repository.ListClientUsersFilter,
+) ([]models.ClientUser, error) {
+	clientUsers, listErr := s.repo.List(ctx, filterQuery)
+	if listErr != nil {
+		return nil, pkg.InternalServerError(listErr.Error(), &pkg.RentLoopErrorParams{
+			Err: listErr,
+			Metadata: map[string]string{
+				"function": "ListClientUsers",
+				"action":   "listing client users",
+			},
+		})
+	}
+
+	return *clientUsers, nil
+}
+
+func (s *clientUserService) CountClientUsers(
+	ctx context.Context,
+	filterQuery repository.ListClientUsersFilter,
+) (int64, error) {
+	clientUsersCount, countErr := s.repo.Count(ctx, filterQuery)
+	if countErr != nil {
+		return 0, pkg.InternalServerError(countErr.Error(), &pkg.RentLoopErrorParams{
+			Err: countErr,
+			Metadata: map[string]string{
+				"function": "CountClientUsers",
+				"action":   "counting client users",
+			},
+		})
+	}
+
+	return clientUsersCount, nil
 }
