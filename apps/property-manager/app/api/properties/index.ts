@@ -67,6 +67,32 @@ export const getProperty = async (
 	}
 }
 
+export const getPropertyBySlug = async (
+	slug: string,
+	apiConfig: ApiConfigForServerConfig,
+) => {
+	try {
+		const response = await fetchServer<ApiResponse<Property>>(
+			`${apiConfig?.baseUrl}/v1/properties/slug/${slug}`,
+			{
+				method: 'GET',
+				...(apiConfig ? apiConfig : {}),
+			},
+		)
+
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
 export interface CreatePropertyInput {
 	address: string
 	city: string

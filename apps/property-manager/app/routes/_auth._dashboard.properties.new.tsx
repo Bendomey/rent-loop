@@ -1,6 +1,6 @@
 import { redirect } from 'react-router'
 import type { Route } from './+types/_auth._dashboard.properties.new'
-import { createProperty } from '~/api/property'
+import { createProperty } from '~/api/properties'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'

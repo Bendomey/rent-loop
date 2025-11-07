@@ -27,6 +27,7 @@ export * from './settings/my-account'
 
 // property
 export * from './properties/property/layout/sidebar'
+export * from './property-middleware'
 export * from './properties/property'
 export * from './properties/property/assets/units'
 export * from './properties/property/assets/facilities'

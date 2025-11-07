@@ -8,6 +8,8 @@ export const MYLES_PUDO_URL = 'https://mylespudo.com'
 
 export const USER_CIPHER = 'rentloop-account'
 
+export const NOT_FOUND_ROUTE = '/not-found'
+
 export const QUERY_KEYS = {
 	CURRENT_USER: 'current-user',
 	DOCUMENTS: 'documents',
