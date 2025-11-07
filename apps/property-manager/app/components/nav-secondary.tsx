@@ -9,6 +9,7 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from '~/components/ui/sidebar'
+import { useAuth } from '~/providers/auth-provider'
 
 export function NavSecondary({
 	items,
@@ -23,11 +24,13 @@ export function NavSecondary({
 		onClick?: () => void
 	}[]
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
+	const { currentUser } = useAuth()
+
 	return (
 		<SidebarGroup {...props}>
 			<SidebarGroupContent>
 				<SidebarMenu>
-					{onProperty ? (
+					{onProperty && currentUser?.role !== 'STAFF' ? (
 						<SidebarMenuItem>
 							<SidebarMenuButton tooltip="Main Menu" asChild size="sm">
 								<Link to="/properties">

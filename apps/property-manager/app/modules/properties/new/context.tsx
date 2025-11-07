@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { useFetcher } from 'react-router'
 import { toast } from 'sonner'
-import type { CreatePropertyInput } from '~/api/property'
+import type { CreatePropertyInput } from '~/api/properties'
 import { BlockNavigationDialog } from '~/components/block-navigation-dialog'
 import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
 

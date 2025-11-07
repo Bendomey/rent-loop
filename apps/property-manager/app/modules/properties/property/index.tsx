@@ -1,5 +1,7 @@
 // 🏠 1. Property Summary (Header Section)
 
+import { useProperty } from '~/providers/property-provider'
+
 // Show key identifiers at the top.
 
 // Example:
@@ -114,5 +116,6 @@
 // Response Rate / SLA compliance
 
 export function PropertyModule() {
-	return <div>Property overview</div>
+	const { property } = useProperty()
+	return <div>Property overview {property?.name}</div>
 }

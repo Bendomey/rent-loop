@@ -1,5 +1,5 @@
 import { redirect } from 'react-router'
-import type { Route } from './+types/_auth._property.properties.$propertySlug.activities._index'
+import type { Route } from './+types/_auth.properties.$propertySlug.activities._index'
 
 export async function loader({ params }: Route.LoaderArgs) {
 	return redirect(

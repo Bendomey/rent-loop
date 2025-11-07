@@ -1,4 +1,4 @@
-import { Link, Outlet } from 'react-router'
+import { Link, Outlet, redirect } from 'react-router'
 import pkgJson from '../../package.json'
 import type { Route } from './+types/_auth._dashboard'
 import { AppSidebar } from '~/components/app-sidebar'
@@ -16,6 +16,24 @@ import {
 	SidebarProvider,
 	SidebarTrigger,
 } from '~/components/ui/sidebar'
+import { userContext } from '~/lib/actions/auth.context.server'
+
+export async function loader({ context }: Route.LoaderArgs) {
+	const authData = context.get(userContext)
+	if (!authData) return
+
+	// only admins and owners can access the main dashboard.
+	if (authData.clientUser.role === 'STAFF') {
+		if (authData.clientUserProperties.rows.length) {
+			const firstProperty = authData.clientUserProperties.rows[0]
+			return redirect(
+				`/auth/dashboard/property/${firstProperty?.property?.slug}`,
+			)
+		}
+
+		return redirect('/properties/no-assigned')
+	}
+}
 
 export default function AuthDashboard({ matches }: Route.ComponentProps) {
 	const breadcrumbs = matches

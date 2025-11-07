@@ -1,7 +1,7 @@
-import type { Route } from './+types/_auth._property.properties.$propertySlug.activities.maintenance-requests'
+import type { Route } from './+types/_auth.properties.$propertySlug.settings.general'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { PropertyActivitiesMaintenanceRequestsModule } from '~/modules'
+import { PropertyGeneralSettingsModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
 	return {
@@ -10,12 +10,12 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export const handle = {
-	breadcrumb: 'Maintenance Requests',
+	breadcrumb: 'General',
 }
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `Maintenance Requests | ${params.propertySlug}`,
+		title: `General Settings | ${params.propertySlug}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,
@@ -26,4 +26,4 @@ export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	return meta
 }
 
-export default PropertyActivitiesMaintenanceRequestsModule
+export default PropertyGeneralSettingsModule

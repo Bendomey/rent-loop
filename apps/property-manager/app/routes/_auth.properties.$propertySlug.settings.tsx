@@ -1,6 +1,6 @@
 import { FileText, Globe, Users, Wrench } from 'lucide-react'
 import { Outlet } from 'react-router'
-import type { Route } from './+types/_auth._property.properties.$propertySlug.settings'
+import type { Route } from './+types/_auth.properties.$propertySlug.settings'
 import { NavMain } from '~/components/nav-main'
 import { Separator } from '~/components/ui/separator'
 import { TypographyH4 } from '~/components/ui/typography'
