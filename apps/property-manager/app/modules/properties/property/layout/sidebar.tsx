@@ -1,5 +1,4 @@
 import {
-	Frame,
 	Settings2,
 	LifeBuoy,
 	PieChart,
@@ -27,18 +26,6 @@ import {
 import { APP_NAME } from '~/lib/constants'
 
 const data = {
-	properties: [
-		{
-			name: 'Mikasa',
-			logo: Frame,
-			slug: 'mikasa-ent',
-		},
-		{
-			name: "Domey's Villas",
-			logo: Frame,
-			slug: 'domey-villas',
-		},
-	],
 	navMain: [
 		{
 			title: 'Overview',
@@ -162,7 +149,7 @@ export function PropertySidebar({
 						</>
 					) : null}
 				</Link>
-				<PropertySwitcher properties={data.properties} />
+				<PropertySwitcher />
 			</SidebarHeader>
 			<SidebarContent>
 				<NavMain

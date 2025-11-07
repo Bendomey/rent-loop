@@ -160,3 +160,31 @@ export const useDeleteProperty = () =>
 	useMutation({
 		mutationFn: deleteProperty,
 	})
+
+export const getClientUserProperties = async (
+	props: FetchMultipleDataInputParams<FetchClientUserPropertyFilter>,
+	apiConfig: ApiConfigForServerConfig,
+) => {
+	try {
+		const removeAllNullableValues =
+			getQueryParams<FetchClientUserPropertyFilter>(props)
+		const params = new URLSearchParams(removeAllNullableValues)
+		const response = await fetchServer<
+			ApiResponse<FetchMultipleDataResponse<ClientUserProperty>>
+		>(`${apiConfig.baseUrl}/v1/properties/me?${params.toString()}`, {
+			method: 'GET',
+			authToken: apiConfig.authToken,
+		})
+
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}

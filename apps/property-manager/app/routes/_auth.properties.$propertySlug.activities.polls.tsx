@@ -1,7 +1,7 @@
-import type { Route } from './+types/_auth._property.properties.$propertySlug.settings.documents'
+import type { Route } from './+types/_auth.properties.$propertySlug.activities.polls'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { PropertyDocumentsSettingsModule } from '~/modules'
+import { PropertyActivitiesPollsModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
 	return {
@@ -10,12 +10,12 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export const handle = {
-	breadcrumb: 'Manage Documents',
+	breadcrumb: 'Polls',
 }
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `Manage Documents | ${params.propertySlug}`,
+		title: `Polls | ${params.propertySlug}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,
@@ -26,4 +26,4 @@ export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	return meta
 }
 
-export default PropertyDocumentsSettingsModule
+export default PropertyActivitiesPollsModule

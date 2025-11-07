@@ -1,7 +1,7 @@
-import type { Route } from './+types/_auth._property.properties.$propertySlug.activities.polls'
+import type { Route } from './+types/_auth.properties.$propertySlug.activities.maintenance-requests'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { PropertyActivitiesPollsModule } from '~/modules'
+import { PropertyActivitiesMaintenanceRequestsModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
 	return {
@@ -10,12 +10,12 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export const handle = {
-	breadcrumb: 'Polls',
+	breadcrumb: 'Maintenance Requests',
 }
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `Polls | ${params.propertySlug}`,
+		title: `Maintenance Requests | ${params.propertySlug}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,
@@ -26,4 +26,4 @@ export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	return meta
 }
 
-export default PropertyActivitiesPollsModule
+export default PropertyActivitiesMaintenanceRequestsModule

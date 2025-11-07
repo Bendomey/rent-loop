@@ -1,6 +1,6 @@
-import { ChevronsUpDown, Plus } from 'lucide-react'
+import { ChevronsUpDown, Frame, FrameIcon, Plus } from 'lucide-react'
 import * as React from 'react'
-import { Link } from 'react-router'
+import { Link, useParams } from 'react-router'
 
 import {
 	DropdownMenu,
@@ -8,7 +8,6 @@ import {
 	DropdownMenuItem,
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
-	DropdownMenuShortcut,
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import {
@@ -17,18 +16,18 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from '~/components/ui/sidebar'
+import { useAuth } from '~/providers/auth-provider'
 
-export function PropertySwitcher({
-	properties,
-}: {
-	properties: {
-		name: string
-		slug: string
-		logo: React.ElementType
-	}[]
-}) {
+export function PropertySwitcher() {
+	const { clientUserProperties, currentUser } = useAuth()
 	const { isMobile } = useSidebar()
-	const [activeProperty, setActiveProperty] = React.useState(properties[0])
+	const { propertySlug } = useParams()
+	const activeProperty = React.useMemo(() => {
+		return clientUserProperties?.rows?.find(
+			(clientUserProperty) =>
+				clientUserProperty?.property?.slug === propertySlug,
+		)
+	}, [clientUserProperties, propertySlug])
 
 	if (!activeProperty) {
 		return null
@@ -44,13 +43,15 @@ export function PropertySwitcher({
 							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground mx-auto"
 						>
 							<div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-								<activeProperty.logo className="size-4" />
+								<FrameIcon className="size-4" />
 							</div>
 							<div className="grid flex-1 text-left text-sm leading-tight">
 								<span className="truncate font-medium">
-									{activeProperty.name}
+									{activeProperty?.property?.name}
 								</span>
-								<span className="truncate text-xs">{activeProperty.slug}</span>
+								<span className="truncate text-xs">
+									{activeProperty?.property?.slug}
+								</span>
 							</div>
 							<ChevronsUpDown className="ml-auto" />
 						</SidebarMenuButton>
@@ -64,31 +65,34 @@ export function PropertySwitcher({
 						<DropdownMenuLabel className="text-muted-foreground text-xs">
 							Properties
 						</DropdownMenuLabel>
-						{properties.map((property, index) => (
-							<Link key={property.name} to={`/properties/${property.slug}`}>
-								<DropdownMenuItem
-									onClick={() => setActiveProperty(property)}
-									className="gap-2 p-2"
-								>
+						{clientUserProperties?.rows?.map((clientUserProperty) => (
+							<Link
+								key={clientUserProperty.id}
+								to={`/properties/${clientUserProperty?.property?.slug}`}
+							>
+								<DropdownMenuItem className="gap-2 p-2">
 									<div className="flex size-6 items-center justify-center rounded-md border">
-										<property.logo className="size-3.5 shrink-0" />
+										<Frame className="size-3.5 shrink-0" />
 									</div>
-									{property.name}
-									<DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
+									{clientUserProperty?.property?.name}
 								</DropdownMenuItem>
 							</Link>
 						))}
-						<DropdownMenuSeparator />
-						<Link to="/properties/new">
-							<DropdownMenuItem className="gap-2 p-2">
-								<div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
-									<Plus className="size-4" />
-								</div>
-								<div className="text-muted-foreground font-medium">
-									Add property
-								</div>
-							</DropdownMenuItem>
-						</Link>
+						{currentUser?.role !== 'STAFF' ? (
+							<>
+								<DropdownMenuSeparator />
+								<Link to="/properties/new">
+									<DropdownMenuItem className="gap-2 p-2">
+										<div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
+											<Plus className="size-4" />
+										</div>
+										<div className="text-muted-foreground font-medium">
+											Add property
+										</div>
+									</DropdownMenuItem>
+								</Link>
+							</>
+						) : null}
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</SidebarMenuItem>

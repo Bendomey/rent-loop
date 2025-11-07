@@ -1,7 +1,4 @@
 import {
-	AudioWaveform,
-	Command,
-	Frame,
 	GalleryVerticalEnd,
 	Settings2,
 	LifeBuoy,
@@ -26,25 +23,7 @@ import {
 } from '~/components/ui/sidebar'
 import { APP_NAME } from '~/lib/constants'
 
-// This is sample data.
 const data = {
-	teams: [
-		{
-			name: 'Acme Inc',
-			logo: GalleryVerticalEnd,
-			plan: 'Enterprise',
-		},
-		{
-			name: 'Acme Corp.',
-			logo: AudioWaveform,
-			plan: 'Startup',
-		},
-		{
-			name: 'Evil Corp.',
-			logo: Command,
-			plan: 'Free',
-		},
-	],
 	navMain: [
 		{
 			title: 'Insights',
@@ -61,23 +40,6 @@ const data = {
 			title: 'Settings',
 			url: '/settings',
 			icon: Settings2,
-		},
-	],
-	properties: [
-		{
-			name: 'Mikasa',
-			url: `/properties/mikasa`,
-			icon: Frame,
-		},
-		{
-			name: 'Domey Villas',
-			url: `/properties/domey-villas`,
-			icon: Frame,
-		},
-		{
-			name: 'Adjirganor Houses',
-			url: '/properties/adjirganor-houses',
-			icon: Frame,
 		},
 	],
 	navSecondary: [
@@ -122,7 +84,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			</SidebarHeader>
 			<SidebarContent>
 				<NavMain items={data.navMain} />
-				<NavProperties projects={data.properties} />
+				<NavProperties />
 			</SidebarContent>
 			<SidebarFooter>
 				<NavSecondary items={data.navSecondary} className="mt-auto" />
