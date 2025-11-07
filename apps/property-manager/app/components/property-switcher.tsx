@@ -23,12 +23,17 @@ export function PropertySwitcher() {
 	const { clientUserProperties } = useAuth()
 	const { isMobile } = useSidebar()
 	const { propertySlug } = useParams()
+
 	const activeProperty = React.useMemo(() => {
 		return clientUserProperties?.rows?.find(
 			(clientUserProperty) =>
 				clientUserProperty?.property?.slug === propertySlug,
 		)
 	}, [clientUserProperties, propertySlug])
+
+	if (clientUserProperties?.rows?.length === 1) {
+		return null
+	}
 
 	if (!activeProperty) {
 		return null
@@ -66,19 +71,24 @@ export function PropertySwitcher() {
 						<DropdownMenuLabel className="text-muted-foreground text-xs">
 							Properties
 						</DropdownMenuLabel>
-						{clientUserProperties?.rows?.map((clientUserProperty) => (
-							<Link
-								key={clientUserProperty.id}
-								to={`/properties/${clientUserProperty?.property?.slug}`}
-							>
-								<DropdownMenuItem className="gap-2 p-2">
-									<div className="flex size-6 items-center justify-center rounded-md border">
-										<Frame className="size-3.5 shrink-0" />
-									</div>
-									{clientUserProperty?.property?.name}
-								</DropdownMenuItem>
-							</Link>
-						))}
+						{clientUserProperties?.rows
+							?.filter(
+								(clientUserProperty) =>
+									clientUserProperty?.property?.slug !== propertySlug,
+							)
+							?.map((clientUserProperty) => (
+								<Link
+									key={clientUserProperty.id}
+									to={`/properties/${clientUserProperty?.property?.slug}`}
+								>
+									<DropdownMenuItem className="gap-2 p-2">
+										<div className="flex size-6 items-center justify-center rounded-md border">
+											<Frame className="size-3.5 shrink-0" />
+										</div>
+										{clientUserProperty?.property?.name}
+									</DropdownMenuItem>
+								</Link>
+							))}
 						<PermissionGuard roles={['ADMIN', 'OWNER']}>
 							<DropdownMenuSeparator />
 							<Link to="/properties/new">
