@@ -26,11 +26,12 @@ export async function loader({ context }: Route.LoaderArgs) {
 	if (authData.clientUser.role === 'STAFF') {
 		if (authData.clientUserProperties.rows.length) {
 			const firstProperty = authData.clientUserProperties.rows[0]
-			return redirect(`/auth/dashboard/property/${firstProperty?.property?.slug}`)
-		} else {
-			// TODO: redirect to a "no properties assigned" page.
-			return redirect('/properties/no-assigned')
+			return redirect(
+				`/auth/dashboard/property/${firstProperty?.property?.slug}`,
+			)
 		}
+
+		return redirect('/properties/no-assigned')
 	}
 }
 
