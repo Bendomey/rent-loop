@@ -4,6 +4,7 @@ import { deleteAuthSession, getAuthSession } from './auth.session.server'
 import { USER_CACHE_KEY, userCache } from './cache.server'
 import { environmentVariables } from './env.server'
 import { getCurrentUser } from '~/api/auth'
+import { getClientUserProperties } from '~/api/properties'
 
 export const authMiddleware: MiddlewareFunction = async ({
 	request,
@@ -22,28 +23,73 @@ export const authMiddleware: MiddlewareFunction = async ({
 	}
 
 	const cacheKey = USER_CACHE_KEY.replace('{token}', authToken)
-
 	try {
 		const cached = userCache.get(cacheKey)
 		if (cached) {
 			const clientUserParsed = JSON.parse(cached as string)
-			context.set(userContext, clientUserParsed)
-			return
+
+			const clientUserPropertiesResponse = await getClientUserProperties(
+				{
+					pagination: { page: 1, per: 50 },
+					sorter: {},
+					filters: {},
+					search: {},
+					populate: ['Property'],
+				},
+				{
+					baseUrl,
+					authToken,
+				},
+			)
+
+			if (clientUserParsed && clientUserPropertiesResponse) {
+				context.set(userContext, {
+					clientUser: clientUserParsed,
+					clientUserProperties: clientUserPropertiesResponse,
+				})
+				return
+			}
 		}
 
-		const clientUser = await getCurrentUser({
-			baseUrl,
-			authToken,
-		})
+		const [clientUserSettledResult, clientUserPropertiesSettledResult] =
+			await Promise.allSettled([
+				getCurrentUser({
+					baseUrl,
+					authToken,
+				}),
+				getClientUserProperties(
+					{
+						pagination: { page: 1, per: 50 },
+						sorter: {},
+						filters: {},
+						search: {},
+						populate: ['Property'],
+					},
+					{
+						baseUrl,
+						authToken,
+					},
+				),
+			])
 
-		if (!clientUser) {
+		if (
+			clientUserSettledResult?.status === 'rejected' ||
+			clientUserPropertiesSettledResult?.status === 'rejected'
+		) {
 			throw new Error('No user found')
 		}
 
-		userCache.set(cacheKey, JSON.stringify(clientUser))
-		context.set(userContext, clientUser)
+		const clientUser = clientUserSettledResult?.value
+		const clientUserPropertiesResponse =
+			clientUserPropertiesSettledResult?.value
+		if (clientUser && clientUserPropertiesResponse) {
+			userCache.set(cacheKey, JSON.stringify(clientUserSettledResult.value))
+			context.set(userContext, {
+				clientUser,
+				clientUserProperties: clientUserPropertiesResponse,
+			})
+		}
 	} catch {
-		// if there're any errors fetching the user, logout please!
 		userCache.delete(cacheKey)
 		return redirect(redirectToLogin, {
 			headers: {

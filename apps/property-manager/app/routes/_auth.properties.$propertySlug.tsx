@@ -16,6 +16,7 @@ import {
 	SidebarProvider,
 	SidebarTrigger,
 } from '~/components/ui/sidebar'
+import { userContext } from '~/lib/actions/auth.context.server'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
@@ -34,6 +35,21 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 	const authToken = authSession.get('authToken')
 	if (!authToken) {
 		return redirect('/login')
+	}
+
+	// make sure they're allowed to access this property
+	const authData = context.get(userContext)
+	if (!authData) {
+		return redirect('/login')
+	}
+
+	const hasAccess = Boolean(
+		authData.clientUserProperties?.rows?.find(
+			(prop) => prop?.property?.slug === params.propertySlug,
+		),
+	)
+	if (!hasAccess) {
+		return redirect('/')
 	}
 
 	try {

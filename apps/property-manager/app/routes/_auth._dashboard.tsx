@@ -17,15 +17,20 @@ import {
 	SidebarTrigger,
 } from '~/components/ui/sidebar'
 import { userContext } from '~/lib/actions/auth.context.server'
-import { NOT_FOUND_ROUTE } from '~/lib/constants'
 
 export async function loader({ context }: Route.LoaderArgs) {
 	const authData = context.get(userContext)
 	if (!authData) return
 
 	// only admins and owners can access the main dashboard.
-	if (authData.role === 'STAFF') {
-		return redirect(NOT_FOUND_ROUTE)
+	if (authData.clientUser.role === 'STAFF') {
+		if (authData.clientUserProperties.rows.length) {
+			const firstProperty = authData.clientUserProperties.rows[0]
+			return redirect(`/auth/dashboard/property/${firstProperty?.property?.slug}`)
+		} else {
+			// TODO: redirect to a "no properties assigned" page.
+			return redirect('/properties/no-assigned')
+		}
 	}
 }
 
