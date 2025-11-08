@@ -38,6 +38,10 @@ type ClientUserService interface {
 		ctx context.Context,
 		filterQuery repository.ListClientUsersFilter,
 	) (int64, error)
+	GetClientUserWithPopulate(
+		context context.Context,
+		query repository.GetClientUserWithPopulateQuery,
+	) (*models.ClientUser, error)
 }
 
 type clientUserService struct {
@@ -392,4 +396,27 @@ func (s *clientUserService) CountClientUsers(
 	}
 
 	return clientUsersCount, nil
+}
+
+func (s *clientUserService) GetClientUserWithPopulate(
+	ctx context.Context,
+	query repository.GetClientUserWithPopulateQuery,
+) (*models.ClientUser, error) {
+	clientUser, err := s.repo.GetByIDWithPopulate(ctx, query)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("ClientUserNotFound", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "GetClientUserWithPopulate",
+				"action":   "fetching client user by ID with populate query",
+			},
+		})
+	}
+
+	return clientUser, nil
 }

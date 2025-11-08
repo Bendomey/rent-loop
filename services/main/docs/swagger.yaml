@@ -1282,6 +1282,50 @@ paths:
       summary: Creates new client user
       tags:
       - ClientUsers
+  /api/v1/client-users/{client_user_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get client user with populate
+      parameters:
+      - description: Client user ID
+        in: path
+        name: client_user_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Client user retrieved successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientUser'
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Client user not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get client user with populate
+      tags:
+      - ClientUsers
   /api/v1/client-users/forgot-password:
     post:
       consumes:

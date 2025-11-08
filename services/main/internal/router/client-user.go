@@ -35,6 +35,10 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			)
 			r.Get("/v1/client-users", handlers.ClientUserHandler.ListClientUsers)
 
+			r.Route("/v1/client-users/{client_user_id}", func(r chi.Router) {
+				r.Get("/", handlers.ClientUserHandler.GetClientUserWithPopulate)
+			})
+
 			// properties
 			r.Route("/v1/properties", func(r chi.Router) {
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).

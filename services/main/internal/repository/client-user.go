@@ -16,6 +16,10 @@ type ClientUserRepository interface {
 	Update(context context.Context, clientUser *models.ClientUser) error
 	List(context context.Context, filterQuery ListClientUsersFilter) (*[]models.ClientUser, error)
 	Count(context context.Context, filterQuery ListClientUsersFilter) (int64, error)
+	GetByIDWithPopulate(
+		context context.Context,
+		query GetClientUserWithPopulateQuery,
+	) (*models.ClientUser, error)
 }
 
 type clientUserRepository struct {
@@ -69,6 +73,34 @@ func (r *clientUserRepository) GetByQuery(
 
 func (r *clientUserRepository) Update(ctx context.Context, clientUser *models.ClientUser) error {
 	return r.DB.WithContext(ctx).Save(clientUser).Error
+}
+
+type GetClientUserWithPopulateQuery struct {
+	ID       string
+	ClientID string
+	Populate *[]string
+}
+
+func (r *clientUserRepository) GetByIDWithPopulate(
+	ctx context.Context,
+	query GetClientUserWithPopulateQuery,
+) (*models.ClientUser, error) {
+	var clientUser models.ClientUser
+
+	db := r.DB.WithContext(ctx).Where("id = ? AND client_id = ?", query.ID, query.ClientID)
+
+	if query.Populate != nil {
+		for _, field := range *query.Populate {
+			db = db.Preload(field)
+		}
+	}
+
+	result := db.First(&clientUser)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &clientUser, nil
 }
 
 type ListClientUsersFilter struct {
