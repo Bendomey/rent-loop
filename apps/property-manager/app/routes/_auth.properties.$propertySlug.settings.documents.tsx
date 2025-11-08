@@ -1,7 +1,7 @@
-import type { Route } from './+types/_auth._property.properties.$propertySlug.assets.facilities'
+import type { Route } from './+types/_auth.properties.$propertySlug.settings.documents'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { PropertyAssetFacilitiesModule } from '~/modules'
+import { PropertyDocumentsSettingsModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
 	return {
@@ -10,12 +10,12 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export const handle = {
-	breadcrumb: 'Facilities',
+	breadcrumb: 'Manage Documents',
 }
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `Facilities | ${params.propertySlug}`,
+		title: `Manage Documents | ${params.propertySlug}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,
@@ -26,4 +26,4 @@ export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	return meta
 }
 
-export default PropertyAssetFacilitiesModule
+export default PropertyDocumentsSettingsModule

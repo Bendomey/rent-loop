@@ -1,7 +1,7 @@
-import type { Route } from './+types/_auth._property.properties.$propertySlug.settings.general'
+import type { Route } from './+types/_auth.properties.$propertySlug.assets.units'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { PropertyGeneralSettingsModule } from '~/modules'
+import { PropertyAssetUnitsModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
 	return {
@@ -10,12 +10,12 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export const handle = {
-	breadcrumb: 'General',
+	breadcrumb: 'Units',
 }
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `General Settings | ${params.propertySlug}`,
+		title: `Apartments/Units | ${params.propertySlug}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,
@@ -26,4 +26,4 @@ export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	return meta
 }
 
-export default PropertyGeneralSettingsModule
+export default PropertyAssetUnitsModule

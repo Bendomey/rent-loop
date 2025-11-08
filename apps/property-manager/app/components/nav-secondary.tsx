@@ -2,6 +2,7 @@ import { ArrowLeft, type LucideIcon } from 'lucide-react'
 import * as React from 'react'
 import { Link } from 'react-router'
 
+import PermissionGuard from './permissions/permission-guard'
 import {
 	SidebarGroup,
 	SidebarGroupContent,
@@ -28,14 +29,16 @@ export function NavSecondary({
 			<SidebarGroupContent>
 				<SidebarMenu>
 					{onProperty ? (
-						<SidebarMenuItem>
-							<SidebarMenuButton tooltip="Main Menu" asChild size="sm">
-								<Link to="/properties">
-									<ArrowLeft />
-									<span>Main Menu</span>
-								</Link>
-							</SidebarMenuButton>
-						</SidebarMenuItem>
+						<PermissionGuard roles={['OWNER', 'ADMIN']}>
+							<SidebarMenuItem>
+								<SidebarMenuButton tooltip="Main Menu" asChild size="sm">
+									<Link to="/properties">
+										<ArrowLeft />
+										<span>Main Menu</span>
+									</Link>
+								</SidebarMenuButton>
+							</SidebarMenuItem>
+						</PermissionGuard>
 					) : null}
 					{items.map((item) => {
 						return (

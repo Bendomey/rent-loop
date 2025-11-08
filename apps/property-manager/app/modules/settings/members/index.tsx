@@ -1,7 +1,9 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { CircleCheck, CircleX, EllipsisVertical, User } from 'lucide-react'
 import { useMemo } from 'react'
+import { useSearchParams } from 'react-router'
 import { MembersController } from './controller'
+import { useGetClientUsers } from '~/api/client-users'
 import { DataTable } from '~/components/datatable'
 import {
 	AlertDialog,
@@ -24,8 +26,33 @@ import {
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
+import { PAGINATION_DEFAULTS } from '~/lib/constants'
 
 export function MembersModule() {
+	const [searchParams] = useSearchParams()
+
+	const page = searchParams.get('page')
+		? Number(searchParams.get('page'))
+		: PAGINATION_DEFAULTS.PAGE
+	const per = searchParams.get('pageSize')
+		? Number(searchParams.get('pageSize'))
+		: PAGINATION_DEFAULTS.PER_PAGE
+	const role = searchParams.get('role') ?? undefined
+	const status = searchParams.get('status') ?? undefined
+
+	const { data, isPending, isRefetching, error, refetch } = useGetClientUsers({
+		filters: { role: role, status: status },
+		pagination: { page, per },
+		populate: ['CreatedBy'],
+		sorter: { sort: 'desc', sort_by: 'created_at' },
+		search: {
+			query: searchParams.get('query') ?? undefined,
+			fields: ['name', 'email', 'phone_number'],
+		},
+	})
+
+	const isLoading = isPending || isRefetching
+
 	const columns: ColumnDef<ClientUser>[] = useMemo(() => {
 		return [
 			{
@@ -142,67 +169,27 @@ export function MembersModule() {
 					These members have access to your workspace.
 				</TypographyMuted>
 			</div>
-			<MembersController />
+			<MembersController isLoading={isLoading} refetch={refetch} />
 			<div className="h-full w-full">
 				<DataTable
 					columns={columns}
+					isLoading={isLoading}
+					refetch={refetch}
+					error={error ? 'Failed to load members.' : undefined}
 					dataResponse={{
-						rows: [
-							{
-								id: '1',
-								name: 'John Doe',
-								email: 'john.doe@example.com',
-								phone_number: '123-456-7890',
-								role: 'OWNER',
-								created_at: new Date(),
-								updated_at: new Date(),
-								client: null,
-								client_id: '1',
-								status: 'ClientUser.Status.Active',
-							},
-							{
-								id: '1',
-								name: 'John Doe',
-								email: 'john.doe@example.com',
-								phone_number: '123-456-7890',
-								role: 'OWNER',
-								created_at: new Date(),
-								updated_at: new Date(),
-								client: null,
-								client_id: '1',
-								status: 'ClientUser.Status.Active',
-							},
-							{
-								id: '1',
-								name: 'John Doe',
-								email: 'john.doe@example.com',
-								phone_number: '123-456-7890',
-								role: 'OWNER',
-								created_at: new Date(),
-								updated_at: new Date(),
-								client: null,
-								client_id: '1',
-								status: 'ClientUser.Status.Active',
-							},
-						],
-						total: 150,
-						page: 1,
-						page_size: 50,
-						order: 'desc',
-						order_by: 'created_at',
-						has_prev_page: false,
-						has_next_page: true,
+						rows: data?.rows ?? [],
+						total: data?.meta?.total ?? 0,
+						page,
+						page_size: per,
+						order: data?.meta?.order ?? 'desc',
+						order_by: data?.meta?.order_by ?? 'created_at',
+						has_prev_page: data?.meta?.has_prev_page ?? false,
+						has_next_page: data?.meta?.has_next_page ?? false,
 					}}
 					empty={{
 						message: 'No members found',
 						description:
-							"Try adjusting your search or filter to find what you're looking for.",
-						button: {
-							label: 'Add Member',
-							onClick: () => {
-								// Handle button click
-							},
-						},
+							"Try adjusting your search to find what you're looking for.",
 					}}
 				/>
 			</div>

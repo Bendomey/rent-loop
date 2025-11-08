@@ -2,10 +2,10 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Building, CircleCheck, CircleX, EllipsisVertical } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import { PropertiesController } from './controller'
-import { useDeleteProperty, useGetProperties } from '~/api/property'
+import { useDeleteProperty, useGetProperties } from '~/api/properties'
 import { DataTable } from '~/components/datatable'
 import {
 	AlertDialog,
@@ -29,6 +29,7 @@ import {
 } from '~/components/ui/dropdown-menu'
 import { Spinner } from '~/components/ui/spinner'
 import { PAGINATION_DEFAULTS, QUERY_KEYS } from '~/lib/constants'
+import { localizedDayjs } from '~/lib/date'
 
 export function PropertiesModule() {
 	const [searchParams] = useSearchParams()
@@ -68,12 +69,23 @@ export function PropertiesModule() {
 			{
 				accessorKey: 'name',
 				header: 'Name',
-				cell: ({ getValue }) => {
+				cell: ({ getValue, row }) => {
 					return (
-						<div className="min-w-32">
-							<span className="truncate text-xs text-zinc-600">
-								{getValue<string>()}
-							</span>
+						<div className="flex min-w-32 flex-col items-start gap-1">
+							<Link
+								to={`/properties/${row.original.slug}`}
+								aria-label={`View details for property ${getValue<string>()}`}
+							>
+								<span className="truncate text-xs text-blue-600 hover:underline">
+									{getValue<string>()}
+								</span>
+							</Link>
+
+							<Badge variant="outline" className="text-muted-foreground px-1.5">
+								<span className="truncate text-xs text-zinc-600">
+									{row.original.type}
+								</span>
+							</Badge>
 						</div>
 					)
 				},
@@ -88,17 +100,6 @@ export function PropertiesModule() {
 							{row.original.address}
 						</span>
 					</div>
-				),
-			},
-			{
-				accessorKey: 'type',
-				header: 'Type',
-				cell: ({ getValue }) => (
-					<Badge variant="outline" className="text-muted-foreground px-1.5">
-						<span className="truncate text-xs text-zinc-600">
-							{getValue<string>()}
-						</span>
-					</Badge>
 				),
 			},
 
@@ -123,6 +124,17 @@ export function PropertiesModule() {
 				),
 			},
 			{
+				accessorKey: 'created_at',
+				header: 'Created On',
+				cell: ({ getValue }) => (
+					<div className="min-w-32">
+						<span className="truncate text-xs text-zinc-600">
+							{localizedDayjs(getValue<Date>()).format('DD/MM/YYYY hh:mm a')}
+						</span>
+					</div>
+				),
+			},
+			{
 				id: 'actions',
 				cell: ({ row }) => (
 					<AlertDialog
@@ -141,8 +153,9 @@ export function PropertiesModule() {
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end" className="w-32">
-								<DropdownMenuItem>View</DropdownMenuItem>
-								<DropdownMenuItem>Edit</DropdownMenuItem>
+								<Link to={`/properties/${row.original.slug}`}>
+									<DropdownMenuItem>View</DropdownMenuItem>
+								</Link>
 								<DropdownMenuSeparator />
 								<AlertDialogTrigger asChild>
 									<DropdownMenuItem variant="destructive">

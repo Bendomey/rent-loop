@@ -1,7 +1,7 @@
-import type { Route } from './+types/_auth._property.properties.$propertySlug._index'
+import type { Route } from './+types/_auth.properties.$propertySlug.settings.billing'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { PropertyModule } from '~/modules'
+import { PropertyBillingSettingsModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
 	return {
@@ -10,12 +10,12 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export const handle = {
-	breadcrumb: 'Overview',
+	breadcrumb: 'Manage Billing',
 }
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `Overview | ${params.propertySlug}`,
+		title: `Billing | ${params.propertySlug}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,
@@ -26,4 +26,4 @@ export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	return meta
 }
 
-export default PropertyModule
+export default PropertyBillingSettingsModule

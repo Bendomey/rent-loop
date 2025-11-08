@@ -5,11 +5,12 @@ import { AuthMiddlewareModule } from '~/modules'
 
 export const middleware = [authMiddleware]
 
-export function loader({ context }: Route.LoaderArgs) {
+export async function loader({ context }: Route.LoaderArgs) {
 	const authData = context.get(userContext)
 
 	return {
-		currentUserData: authData,
+		currentUserData: authData?.clientUser,
+		clientUserProperties: authData?.clientUserProperties,
 	}
 }
 

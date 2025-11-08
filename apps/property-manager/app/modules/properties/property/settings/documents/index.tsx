@@ -32,29 +32,14 @@ import { localizedDayjs } from '~/lib/date'
 import { getNameInitials } from '~/lib/misc'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth._dashboard.settings.documents'
 
-// TODO: fetch single property from loader data
-const property: Property = {
-	id: 'property-id',
-	name: 'Sample Property',
-	slug: 'sample-property',
-	address: '123 Main St, Anytown, USA',
-	city: 'Anytown',
-	state: 'CA',
-	description: 'A sample property for demonstration purposes.',
-	created_at: new Date(),
-	updated_at: new Date(),
-	gps_address: '123 Main St, Anytown, USA',
-	status: 'Property.Status.Active',
-	tags: [],
-	type: 'SINGLE',
-	zip_code: '12345',
-}
 export function PropertyDocumentsSettingsModule() {
 	const { documentTemplates } = useLoaderData<typeof loader>()
 	const params = useParams()
 	const [searchParams] = useSearchParams()
+	const { property } = useProperty()
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -221,10 +206,13 @@ export function PropertyDocumentsSettingsModule() {
 					)}
 				</div>
 			</div>
-			<PropertyDocumentsController
-				property={property}
-				documentTemplates={documentTemplates}
-			/>
+			{property ? (
+				<PropertyDocumentsController
+					property={property}
+					documentTemplates={documentTemplates}
+				/>
+			) : null}
+
 			<div className="h-full w-full">
 				<DataTable
 					columns={columns}
