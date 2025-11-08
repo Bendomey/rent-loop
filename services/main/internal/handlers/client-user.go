@@ -9,6 +9,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/go-chi/chi/v5"
 )
 
 type ClientUserHandler struct {
@@ -319,4 +320,49 @@ func (h *ClientUserHandler) ListClientUsers(w http.ResponseWriter, r *http.Reque
 
 	json.NewEncoder(w).
 		Encode(lib.ReturnListResponse(filterQuery, clientUsersTransformed, clientUsersCount))
+}
+
+type GetClientUserWithPopulateQuery struct {
+	lib.GetOneQueryInput
+}
+
+// @GetClientUserWithPopulate godoc
+// @Summary		Get client user with populate
+// @Description	Get client user with populate
+// @Tags			ClientUsers
+// @Accept			json
+// @Security		BearerAuth
+// @Produce		json
+// @Param			client_user_id	path		string				true	"Client user ID"
+// @Param			q				query		GetClientUserWithPopulateQuery	true	"Client user"
+// @Success		200				{object}	object{data=transformations.OutputClientUser} "Client user retrieved successfully"
+// @Failure		401				{object}	string			"Invalid or absent authentication token"
+// @Failure		404				{object}	lib.HTTPError	"Client user not found"
+// @Failure		500				{object}	string			"An unexpected error occurred"
+// @Router			/api/v1/client-users/{client_user_id} [get]
+func (c *ClientUserHandler) GetClientUserWithPopulate(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
+	if !clientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	populateFields := GetPopulateFields(r)
+
+	clientUserId := chi.URLParam(r, "client_user_id")
+
+	query := repository.GetClientUserWithPopulateQuery{
+		ID:       clientUserId,
+		ClientID: currentClientUser.ClientID,
+		Populate: populateFields,
+	}
+	clientUser, err := c.service.GetClientUserWithPopulate(r.Context(), query)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBClientUserToRest(clientUser),
+	})
 }
