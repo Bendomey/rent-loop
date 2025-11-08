@@ -34,14 +34,7 @@ func (r *clientUserPropertyRepository) Create(
 	ctx context.Context,
 	clientUserProperty *models.ClientUserProperty,
 ) error {
-	var db *gorm.DB
-
-	tx, txOk := lib.TransactionFromContext(ctx)
-	db = tx
-
-	if !txOk || tx == nil {
-		db = r.DB
-	}
+	db := lib.ResolveDB(ctx, r.DB)
 
 	return db.WithContext(ctx).Create(clientUserProperty).Error
 }
