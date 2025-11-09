@@ -35,7 +35,7 @@ export function PropertiesModule() {
 	const [searchParams] = useSearchParams()
 	const queryClient = useQueryClient()
 	const { mutate: deleteProperty, isPending: isDeleting } = useDeleteProperty()
-	const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
+	const [deletingId, setDeletingId] = useState<string | null>(null)
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -138,8 +138,10 @@ export function PropertiesModule() {
 				id: 'actions',
 				cell: ({ row }) => (
 					<AlertDialog
-						open={openDeleteDialog}
-						onOpenChange={setOpenDeleteDialog}
+						open={deletingId === row.original.id}
+						onOpenChange={(open) => {
+							if (!open) setDeletingId(null)
+						}}
 					>
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
@@ -158,7 +160,10 @@ export function PropertiesModule() {
 								</Link>
 								<DropdownMenuSeparator />
 								<AlertDialogTrigger asChild>
-									<DropdownMenuItem variant="destructive">
+									<DropdownMenuItem
+										variant="destructive"
+										onClick={() => setDeletingId(row.original.id)}
+									>
 										Delete
 									</DropdownMenuItem>
 								</AlertDialogTrigger>
@@ -189,7 +194,7 @@ export function PropertiesModule() {
 												void queryClient.invalidateQueries({
 													queryKey: [QUERY_KEYS.PROPERTIES],
 												})
-												setOpenDeleteDialog(false)
+												setDeletingId(null)
 											},
 										})
 									}}
@@ -204,7 +209,7 @@ export function PropertiesModule() {
 				),
 			},
 		]
-	}, [deleteProperty, isDeleting, openDeleteDialog, queryClient])
+	}, [deleteProperty, isDeleting, deletingId, queryClient])
 
 	return (
 		<main className="flex flex-col gap-2 sm:gap-4">

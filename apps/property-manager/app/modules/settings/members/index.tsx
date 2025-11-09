@@ -1,10 +1,17 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { CircleCheck, CircleX, EllipsisVertical, User } from 'lucide-react'
+import {
+	AlertCircleIcon,
+	CircleCheck,
+	CircleX,
+	EllipsisVertical,
+	User,
+} from 'lucide-react'
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router'
 import { MembersController } from './controller'
 import { useGetClientUsers } from '~/api/client-users'
 import { DataTable } from '~/components/datatable'
+import { Alert, AlertTitle } from '~/components/ui/alert'
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -27,9 +34,11 @@ import {
 } from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { useAuth } from '~/providers/auth-provider'
 
 export function MembersModule() {
 	const [searchParams] = useSearchParams()
+	const { currentUser } = useAuth()
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -118,48 +127,79 @@ export function MembersModule() {
 			},
 			{
 				id: 'actions',
-				cell: () => (
-					<AlertDialog>
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="ghost"
-									className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-									size="icon"
+				cell: ({ row }) => {
+					const isCurrentUser = currentUser?.id === row.original.id
+					return (
+						<AlertDialog>
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button
+										variant="ghost"
+										className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+										size="icon"
+									>
+										<EllipsisVertical />
+										<span className="sr-only">Open menu</span>
+									</Button>
+								</DropdownMenuTrigger>
+
+								<DropdownMenuContent
+									align="end"
+									className={`${isCurrentUser ? 'w-auto' : '32'}`}
 								>
-									<EllipsisVertical />
-									<span className="sr-only">Open menu</span>
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end" className="w-32">
-								<DropdownMenuItem>Edit</DropdownMenuItem>
-								<DropdownMenuSeparator />
-								<AlertDialogTrigger asChild>
-									<DropdownMenuItem variant="destructive">
+									{isCurrentUser ? (
+										<Alert variant="destructive" className="border-0">
+											<AlertCircleIcon />
+											<AlertTitle>
+												You can't edit or deactivate your own account.
+											</AlertTitle>
+										</Alert>
+									) : (
+										<>
+											{row.original.role !== 'OWNER' ||
+											currentUser?.role === 'OWNER' ? (
+												<>
+													<DropdownMenuItem>Edit</DropdownMenuItem>
+													<DropdownMenuSeparator />
+													<AlertDialogTrigger asChild>
+														<DropdownMenuItem variant="destructive">
+															Deactivate
+														</DropdownMenuItem>
+													</AlertDialogTrigger>
+												</>
+											) : (
+												<Alert variant="destructive" className="border-0">
+													<AlertCircleIcon />
+													<AlertTitle>
+														You do not have permission to modify or deactivate
+														an "Owner" account.
+													</AlertTitle>
+												</Alert>
+											)}
+										</>
+									)}
+								</DropdownMenuContent>
+							</DropdownMenu>
+							<AlertDialogContent className="sm:max-w-[425px]">
+								<AlertDialogHeader>
+									<AlertDialogTitle>Are you sure?</AlertDialogTitle>
+									<AlertDialogDescription>
+										This will deactivate the member.
+									</AlertDialogDescription>
+								</AlertDialogHeader>
+								<AlertDialogFooter className="mt-5">
+									<AlertDialogCancel>Cancel</AlertDialogCancel>
+									<AlertDialogAction className="bg-destructive hover:bg-destructive/90 text-white">
 										Deactivate
-									</DropdownMenuItem>
-								</AlertDialogTrigger>
-							</DropdownMenuContent>
-						</DropdownMenu>
-						<AlertDialogContent className="sm:max-w-[425px]">
-							<AlertDialogHeader>
-								<AlertDialogTitle>Are you sure?</AlertDialogTitle>
-								<AlertDialogDescription>
-									This will deactivate the member.
-								</AlertDialogDescription>
-							</AlertDialogHeader>
-							<AlertDialogFooter className="mt-5">
-								<AlertDialogCancel>Cancel</AlertDialogCancel>
-								<AlertDialogAction className="bg-destructive hover:bg-destructive/90 text-white">
-									Deactivate
-								</AlertDialogAction>
-							</AlertDialogFooter>
-						</AlertDialogContent>
-					</AlertDialog>
-				),
+									</AlertDialogAction>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
+					)
+				},
 			},
 		]
-	}, [])
+	}, [currentUser])
 
 	return (
 		<main className="flex flex-col gap-2 sm:gap-4">
