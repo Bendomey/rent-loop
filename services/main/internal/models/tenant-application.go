@@ -1,35 +1,57 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 // TenantApplication represents an application submitted by a prospective tenant for a specific unit.
+// BasicInfoCompleted -> DocsSigned -> Paid -> MoveInScheduled -> Completed
 type TenantApplication struct {
 	BaseModelSoftDelete
-	DesiredUnitId string `gorm:"not null;"`
-	DesiredUnit   Unit
-
-	DesiredMoveInDate       *time.Time
-	DesiredStayDuration     *int64  // in months
-	DesiredPaymentFrequency *string // Monthly, Quarterly, BiAnnually, Annually
-	PreferredPaymentMethod  *string // BankTransfer, MobileMoney, Cash
-
-	ApprovedMoveInDate         *time.Time // move in scheduled
-	ApprovedMoveInById         *string
-	ApprovedMovedInScheduledAt *time.Time
-	ApprovedMoveInBy           *ClientUser
-
-	Status               string `gorm:"not null;default:'TenantApplication.Status.Pending'"` // BasicInfoCompleted -> DocsSigned -> Paid -> MoveInScheduled -> Completed
-	BasicInfoCompletedAt *time.Time
-
-	// Docs [{type, name, url}]
-	DocsSignedAt *time.Time
-
-	PaidAt *time.Time
+	Status string `gorm:"not null;default:'TenantApplication.Status.InProgress'"` // TenantApplication.Status.InProgress, TenantApplication.Status.Cancelled, TenantApplication.Status.Completed
 
 	CompletedAt   *time.Time
 	CompletedById *string
 	CompletedBy   *ClientUser
 
+	CancelledAt   *time.Time
+	CancelledById *string
+	CancelledBy   *ClientUser
+
+	DesiredUnitId string `gorm:"not null;"`
+	DesiredUnit   Unit
+
+	// move in details
+	MoveInDate            *time.Time
+	StayDurationFrequency *string // hours, days, months
+	StayDuration          *int64
+
+	// docs setup
+	LeaseAgreementDocumentUrl      *string // [{type, name, url}]
+	LeaseAgreementDocumentSignedAt *time.Time
+
+	// financial setup
+	RentFee          int64 // we can inherit from unit and then make arrangement for updates!
+	RentFeeCurrency  string
+	PaymentFrequency string // Hourly, Daily, Monthly, Quarterly, BiAnnually, Annually
+
+	InitialDepositFee             *int64
+	InitialDepositPaymentMethod   *string // ONLINE | CASH | EXTERNAL
+	InitialDepositReferenceNumber *string
+	InitialDepositPaidAt          *string
+	InitialDepositPaymentId       *string
+	InitialDepositPayment         *Payment
+
+	SecurityDepositFee         *int64 // if it's null or 0 then it's not opted in!
+	SecurityDepositFeeCurrency *string
+
+	SecurityDepositPaymentMethod   *string // ONLINE | CASH | EXTERNAL
+	SecurityDepositReferenceNumber *string
+	SecurityDepositPaidAt          *time.Time
+	SecurityDepositPaymentId       *string
+	SecurityDepositPayment         *Payment
+
+	// Basic details
 	FirstName       string `gorm:"not null;"`
 	OtherNames      *string
 	LastName        string `gorm:"not null;"`
