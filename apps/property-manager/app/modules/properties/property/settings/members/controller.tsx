@@ -61,11 +61,7 @@ export const MembersController = () => {
 				</div>
 				<div className="flex items-center justify-end gap-2">
 					<Link to="/settings/members/new">
-						<Button
-							variant="default"
-							size="sm"
-							className="bg-rose-600 text-white hover:bg-rose-700"
-						>
+						<Button variant="default" size="sm">
 							<Plus className="size-4" />
 							Add Member
 						</Button>

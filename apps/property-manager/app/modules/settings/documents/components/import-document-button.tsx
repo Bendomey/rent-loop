@@ -1,12 +1,12 @@
-import {
-	Dropzone,
-	DropzoneContent,
-	DropzoneEmptyState,
-} from 'components/ui/shadcn-io/dropzone'
 import { Download } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useFetcher, useNavigate } from 'react-router'
 import { toast } from 'sonner'
+import {
+	Dropzone,
+	DropzoneContent,
+	DropzoneEmptyState,
+} from '~/components/dropzone'
 import { Image } from '~/components/Image'
 import { Button } from '~/components/ui/button'
 import {
