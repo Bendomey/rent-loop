@@ -44,7 +44,7 @@ export const PropertyTenantsController = () => {
 					</InputGroup>
 				</div>
 				<div className="flex items-center justify-end gap-2">
-					<Link to="/settings/members/new">
+					<Link to="/properties/tenants/new">
 						<Button
 							variant="default"
 							size="sm"
