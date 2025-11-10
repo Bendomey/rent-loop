@@ -16,6 +16,7 @@
     "@dnd-kit/core": "6.3.1",
     "@dnd-kit/modifiers": "9.0.0",
     "@dnd-kit/sortable": "10.0.0",
+    "@dnd-kit/utilities": "3.2.2",
     "@epic-web/config": "1.21.3",
     "@hookform/resolvers": "5.2.2",
     "@lexical/code": "0.37.0",
@@ -89,6 +90,7 @@
     "recharts": "2.15.4",
     "sonner": "2.0.7",
     "tailwind-merge": "3.3.1",
+    "tunnel-rat": "0.1.2",
     "vaul": "1.1.2",
     "zod": "4.1.12"
   },
