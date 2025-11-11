@@ -23,6 +23,10 @@ type DocumentService interface {
 		filters repository.ListDocumentsFilter,
 	) ([]models.Document, error)
 	Count(ctx context.Context, filterQuery lib.FilterQuery, filters repository.ListDocumentsFilter) (int64, error)
+	GetByIDWithPopulate(
+		ctx context.Context,
+		filterQuery repository.GetDocumentWithPopulateFilter,
+	) (*models.Document, error)
 }
 
 type documentService struct {
@@ -46,7 +50,10 @@ type CreateDocumentInput struct {
 	ClientUserID string
 }
 
-func (s *documentService) Create(ctx context.Context, input CreateDocumentInput) (*models.Document, error) {
+func (s *documentService) Create(
+	ctx context.Context,
+	input CreateDocumentInput,
+) (*models.Document, error) {
 	contentBytes, contentBytesErr := json.Marshal(input.Content)
 	if contentBytesErr != nil {
 		return nil, pkg.InternalServerError(contentBytesErr.Error(), &pkg.RentLoopErrorParams{
@@ -95,7 +102,10 @@ type UpdateDocumentInput struct {
 	ClientUserID string
 }
 
-func (s *documentService) Update(ctx context.Context, input UpdateDocumentInput) (*models.Document, error) {
+func (s *documentService) Update(
+	ctx context.Context,
+	input UpdateDocumentInput,
+) (*models.Document, error) {
 	document, err := s.repo.GetByID(ctx, input.DocumentID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -170,6 +180,30 @@ func (s *documentService) GetByID(ctx context.Context, documentID string) (*mode
 			Metadata: map[string]string{
 				"function": "GetByID",
 				"action":   "fetching document by ID",
+			},
+		})
+	}
+
+	return document, nil
+}
+
+func (s *documentService) GetByIDWithPopulate(
+	ctx context.Context,
+	filter repository.GetDocumentWithPopulateFilter,
+) (*models.Document, error) {
+	document, err := s.repo.GetByIDWithPopulate(ctx, filter)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("DocumentNotFound", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "GetByIDWithPopulate",
+				"action":   "fetching document by ID with populate query",
 			},
 		})
 	}
