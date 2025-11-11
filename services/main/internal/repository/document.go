@@ -14,8 +14,20 @@ type DocumentRepository interface {
 	Create(context context.Context, document *models.Document) error
 	Update(context context.Context, document *models.Document) error
 	Delete(context context.Context, documentID string) error
-	List(context context.Context, filterQuery lib.FilterQuery, filters ListDocumentsFilter) (*[]models.Document, error)
-	Count(context context.Context, filterQuery lib.FilterQuery, filters ListDocumentsFilter) (int64, error)
+	List(
+		context context.Context,
+		filterQuery lib.FilterQuery,
+		filters ListDocumentsFilter,
+	) (*[]models.Document, error)
+	Count(
+		context context.Context,
+		filterQuery lib.FilterQuery,
+		filters ListDocumentsFilter,
+	) (int64, error)
+	GetByIDWithPopulate(
+		context context.Context,
+		query GetDocumentWithPopulateFilter,
+	) (*models.Document, error)
 }
 
 type documentRepository struct {
@@ -32,6 +44,32 @@ func (r *documentRepository) GetByID(ctx context.Context, id string) (*models.Do
 	if result.Error != nil {
 		return nil, result.Error
 	}
+	return &document, nil
+}
+
+type GetDocumentWithPopulateFilter struct {
+	ID       string
+	Populate *[]string
+}
+
+func (r *documentRepository) GetByIDWithPopulate(
+	ctx context.Context,
+	query GetDocumentWithPopulateFilter,
+) (*models.Document, error) {
+	var document models.Document
+	db := r.DB.WithContext(ctx).Where("id = ?", query.ID)
+
+	if query.Populate != nil {
+		for _, field := range *query.Populate {
+			db = db.Preload(field)
+		}
+	}
+
+	result := db.First(&document)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
 	return &document, nil
 }
 

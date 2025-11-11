@@ -188,6 +188,10 @@ func (h *DocumentHandler) DeleteDocument(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusNoContent)
 }
 
+type GetDocumentWithPopulateQuery struct {
+	lib.GetOneQueryInput
+}
+
 // GetDocumentById godoc
 //
 //	@Summary		Get document by ID
@@ -197,6 +201,7 @@ func (h *DocumentHandler) DeleteDocument(w http.ResponseWriter, r *http.Request)
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Param			document_id	path		string	true	"Document ID"
+//	@Param			q				query		GetDocumentWithPopulateQuery	true	"Client user"
 //	@Success		200			{object}	object{data=transformations.OutputDocument}
 //	@Failure		400			{object}	lib.HTTPError
 //	@Failure		401			{object}	string
@@ -205,7 +210,14 @@ func (h *DocumentHandler) DeleteDocument(w http.ResponseWriter, r *http.Request)
 func (h *DocumentHandler) GetDocumentById(w http.ResponseWriter, r *http.Request) {
 	documentID := chi.URLParam(r, "document_id")
 
-	document, err := h.service.GetByID(r.Context(), documentID)
+	populateFields := GetPopulateFields(r)
+
+	filterQuery := repository.GetDocumentWithPopulateFilter{
+		ID:       documentID,
+		Populate: populateFields,
+	}
+
+	document, err := h.service.GetByIDWithPopulate(r.Context(), filterQuery)
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return

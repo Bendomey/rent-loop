@@ -232,6 +232,7 @@ func (h *ClientApplicationHandler) ApproveClientApplication(w http.ResponseWrite
 }
 
 type ListClientApplicationsFilterRequest struct {
+	lib.FilterQueryInput
 	Status  *string `json:"status"   validate:"omitempty,oneof=ClientApplication.Status.Pending ClientApplication.Status.Approved ClientApplication.Status.Rejected"`
 	Type    *string `json:"type"     validate:"omitempty,oneof=INDIVIDUAL COMPANY"`
 	SubType *string `json:"sub_type" validate:"omitempty,oneof=LANDLORD PROPERTY_MANAGER DEVELOPER AGENCY"`
