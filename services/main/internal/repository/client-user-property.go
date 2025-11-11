@@ -20,6 +20,7 @@ type ClientUserPropertyRepository interface {
 		ctx context.Context,
 		filterQuery ListClientUserPropertiesFilter,
 	) (int64, error)
+	BulkCreate(ctx context.Context, clientUserProperty *[]models.ClientUserProperty) error
 }
 
 type clientUserPropertyRepository struct {
@@ -37,6 +38,15 @@ func (r *clientUserPropertyRepository) Create(
 	db := lib.ResolveDB(ctx, r.DB)
 
 	return db.WithContext(ctx).Create(clientUserProperty).Error
+}
+
+func (r *clientUserPropertyRepository) BulkCreate(
+	ctx context.Context,
+	clientUserProperties *[]models.ClientUserProperty,
+) error {
+	db := lib.ResolveDB(ctx, r.DB)
+
+	return db.WithContext(ctx).Create(clientUserProperties).Error
 }
 
 func (r *clientUserPropertyRepository) DeleteByPropertyID(

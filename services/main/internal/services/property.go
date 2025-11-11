@@ -137,7 +137,7 @@ func (s *propertyService) CreateProperty(
 		return nil, clientUserErr
 	}
 
-	clientUserProperty := CreateClientUserPropertyInput{
+	ownerClientUserProperty := CreateClientUserPropertyInput{
 		PropertyID:   property.ID.String(),
 		ClientUserID: clientUserOwner.ID.String(),
 		Role:         "MANAGER",
@@ -146,11 +146,29 @@ func (s *propertyService) CreateProperty(
 
 	_, linkPropertyErr := s.clientUserPropertyService.LinkClientUserProperty(
 		transCtx,
-		clientUserProperty,
+		ownerClientUserProperty,
 	)
 	if linkPropertyErr != nil {
 		transaction.Rollback()
 		return nil, linkPropertyErr
+	}
+
+	if clientUserOwner.ID.String() != input.CreatedByID {
+		creatorClientUserProperty := CreateClientUserPropertyInput{
+			PropertyID:   property.ID.String(),
+			ClientUserID: input.CreatedByID,
+			Role:         "MANAGER",
+			CreatedByID:  &input.CreatedByID,
+		}
+
+		_, linkPropertyErr := s.clientUserPropertyService.LinkClientUserProperty(
+			transCtx,
+			creatorClientUserProperty,
+		)
+		if linkPropertyErr != nil {
+			transaction.Rollback()
+			return nil, linkPropertyErr
+		}
 	}
 
 	if commitErr := transaction.Commit().Error; commitErr != nil {

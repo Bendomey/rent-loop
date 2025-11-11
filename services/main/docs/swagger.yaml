@@ -213,6 +213,25 @@ definitions:
     - status
     - type
     type: object
+  handlers.LinkClientUserToPropertiesRequest:
+    properties:
+      property_ids:
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        items:
+          type: string
+        minItems: 1
+        type: array
+      role:
+        enum:
+        - MANAGER
+        - STAFF
+        example: MANAGER
+        type: string
+    required:
+    - property_ids
+    - role
+    type: object
   handlers.LoginClientUserRequest:
     properties:
       email:
@@ -1365,6 +1384,45 @@ paths:
       summary: Get client user with populate
       tags:
       - ClientUsers
+  /api/v1/client-users/{client_user_id}/properties:link:
+    post:
+      consumes:
+      - application/json
+      description: Link client user to properties
+      parameters:
+      - description: Client user ID
+        in: path
+        name: client_user_id
+        required: true
+        type: string
+      - description: Link Client User To Properties Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LinkClientUserToPropertiesRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Client user linked to properties successfully
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error occured
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Link client user to properties
+      tags:
+      - ClientUserProperties
   /api/v1/client-users/forgot-password:
     post:
       consumes:

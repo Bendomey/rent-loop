@@ -1186,6 +1186,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/client-users/{client_user_id}/properties:link": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Link client user to properties",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUserProperties"
+                ],
+                "summary": "Link client user to properties",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client user ID",
+                        "name": "client_user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Link Client User To Properties Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LinkClientUserToPropertiesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Client user linked to properties successfully"
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error occured",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/clients/apply": {
             "post": {
                 "description": "Create a new client application",
@@ -2529,6 +2590,33 @@ const docTemplate = `{
                         "MULTI"
                     ],
                     "example": "SINGLE"
+                }
+            }
+        },
+        "handlers.LinkClientUserToPropertiesRequest": {
+            "type": "object",
+            "required": [
+                "property_ids",
+                "role"
+            ],
+            "properties": {
+                "property_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                    ]
+                },
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "MANAGER",
+                        "STAFF"
+                    ],
+                    "example": "MANAGER"
                 }
             }
         },
