@@ -41,17 +41,9 @@ const ValidationSchema = z
 			.string()
 			.max(500, 'Description must be less than 500 characters')
 			.optional(),
-		registration_number: z
-			.string()
-			.min(2, 'Please enter a valid registration number')
-			.optional(),
-		support_email: z
-			.email('Please enter a valid support email address')
-			.optional(),
-		support_phone: z
-			.string()
-			.min(9, 'Please enter a valid support phone number')
-			.optional(),
+		registration_number: z.string().optional(),
+		support_email: z.string().optional(),
+		support_phone: z.string().optional(),
 		website_url: z.url('Please enter a valid website URL').optional(),
 		contact_name: z.string().min(2, 'Please enter a valid name').optional(),
 		date_of_birth: z
