@@ -200,8 +200,8 @@ type GetDocumentWithPopulateQuery struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			document_id	path		string	true	"Document ID"
-//	@Param			q				query		GetDocumentWithPopulateQuery	true	"Client user"
+//	@Param			document_id	path		string							true	"Document ID"
+//	@Param			q			query		GetDocumentWithPopulateQuery	true	"Client user"
 //	@Success		200			{object}	object{data=transformations.OutputDocument}
 //	@Failure		400			{object}	lib.HTTPError
 //	@Failure		401			{object}	string
