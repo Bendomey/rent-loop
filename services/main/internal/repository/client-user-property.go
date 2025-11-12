@@ -11,7 +11,7 @@ import (
 type ClientUserPropertyRepository interface {
 	Create(context context.Context, clientUserProperty *models.ClientUserProperty) error
 	DeleteByPropertyID(context context.Context, propertyID string) error
-	DeleteByClientUserID(context context.Context, clientUserID string) error
+	DeleteByClientUserID(context context.Context, input UnlinkClientUserFromPropertyQuery) error
 	List(
 		ctx context.Context,
 		filterQuery ListClientUserPropertiesFilter,
@@ -60,15 +60,23 @@ func (r *clientUserPropertyRepository) DeleteByPropertyID(
 		Error
 }
 
+type UnlinkClientUserFromPropertyQuery struct {
+	ClientUserID string
+	PropertyIDs  []string
+}
+
 func (r *clientUserPropertyRepository) DeleteByClientUserID(
 	ctx context.Context,
-	clientUserID string,
+	input UnlinkClientUserFromPropertyQuery,
 ) error {
 	db := lib.ResolveDB(ctx, r.DB)
 
-	return db.WithContext(ctx).
-		Delete(&models.ClientUserProperty{}, "client_user_id = ?", clientUserID).
-		Error
+	query := db.WithContext(ctx).
+		Where("client_user_id = ?", input.ClientUserID).
+		Where("property_id IN (?)", input.PropertyIDs)
+
+	result := query.Delete(&models.ClientUserProperty{}).Error
+	return result
 }
 
 type ListClientUserPropertiesFilter struct {

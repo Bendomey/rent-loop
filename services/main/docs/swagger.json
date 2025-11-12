@@ -1239,6 +1239,55 @@
                 }
             }
         },
+        "/api/v1/client-users/{client_user_id}/properties:unlink": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Unlink client user from properties",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUserProperties"
+                ],
+                "summary": "Unlink client user from properties",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client user ID",
+                        "name": "client_user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Unlink Client User From Properties Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UnlinkClientUserFromPropertyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Client user unlinked from properties successfully"
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/clients/apply": {
             "post": {
                 "description": "Create a new client application",
@@ -2682,6 +2731,24 @@
                 "email": {
                     "type": "string",
                     "example": "client-user@example.com"
+                }
+            }
+        },
+        "handlers.UnlinkClientUserFromPropertyRequest": {
+            "type": "object",
+            "required": [
+                "property_ids"
+            ],
+            "properties": {
+                "property_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                    ]
                 }
             }
         },

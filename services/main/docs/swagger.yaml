@@ -283,6 +283,18 @@ definitions:
     required:
     - email
     type: object
+  handlers.UnlinkClientUserFromPropertyRequest:
+    properties:
+      property_ids:
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - property_ids
+    type: object
   handlers.UpdateDocumentRequest:
     properties:
       content:
@@ -1421,6 +1433,37 @@ paths:
       security:
       - BearerAuth: []
       summary: Link client user to properties
+      tags:
+      - ClientUserProperties
+  /api/v1/client-users/{client_user_id}/properties:unlink:
+    delete:
+      consumes:
+      - application/json
+      description: Unlink client user from properties
+      parameters:
+      - description: Client user ID
+        in: path
+        name: client_user_id
+        required: true
+        type: string
+      - description: Unlink Client User From Properties Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UnlinkClientUserFromPropertyRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Client user unlinked from properties successfully
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Unlink client user from properties
       tags:
       - ClientUserProperties
   /api/v1/client-users/forgot-password:
