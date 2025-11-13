@@ -194,3 +194,57 @@ func (h *ClientUserPropertyHandler) UnlinkClientUserFromProperties(w http.Respon
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+type LinkPropertyToClientUsersRequest struct {
+	ClientUserIDs []string `json:"client_user_ids" validate:"required,min=1,dive,uuid4"    example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of client user UUIDs to link"`
+	Role          string   `json:"role"            validate:"required,oneof=MANAGER STAFF" example:"MANAGER"                              description:"Role of the client user for the properties (MANAGER or STAFF)"`
+}
+
+// LinkPropertyToClientUsers godoc
+//
+//	@Summary		Link property to client users
+//	@Description	Link property to client users
+//	@Tags			ClientUserProperties
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string								true	"Property ID"
+//	@Param			body		body		LinkPropertyToClientUsersRequest	true	"Link Property To Client Users Request Body"
+//	@Success		204			{object}	nil									"Property linked to client users successfully"
+//	@Failure		422			{object}	string								"Validation error occured"
+//	@Failure		500			{object}	string								"An unexpected error occurred"
+//	@Router			/api/v1/properties/{property_id}/client-users:link [post]
+func (h *ClientUserPropertyHandler) LinkPropertyToClientUsers(w http.ResponseWriter, r *http.Request) {
+	clientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
+	if !clientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	propertyId := chi.URLParam(r, "property_id")
+	var body LinkPropertyToClientUsersRequest
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	input := services.LinkPropertyToClientUsersInput{
+		ClientUserIDs: body.ClientUserIDs,
+		Role:          body.Role,
+		PropertyID:    propertyId,
+		CreatedByID:   clientUser.ID,
+	}
+
+	linkPropertyToClientUsersErr := h.service.LinkPropertyToClientUsers(r.Context(), input)
+	if linkPropertyToClientUsersErr != nil {
+		HandleErrorResponse(w, linkPropertyToClientUsersErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
