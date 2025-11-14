@@ -2413,6 +2413,61 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/properties/{property_id}/client-users:unlink": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Unlink property from client users",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUserProperties"
+                ],
+                "summary": "Unlink property from client users",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Unlink Property From Client Users Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UnlinkPropertyFromClientUsersRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Property unlinked from client users successfully"
+                    },
+                    "422": {
+                        "description": "Validation error occured",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -2837,6 +2892,24 @@ const docTemplate = `{
             ],
             "properties": {
                 "property_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                    ]
+                }
+            }
+        },
+        "handlers.UnlinkPropertyFromClientUsersRequest": {
+            "type": "object",
+            "required": [
+                "client_user_ids"
+            ],
+            "properties": {
+                "client_user_ids": {
                     "type": "array",
                     "minItems": 1,
                     "items": {

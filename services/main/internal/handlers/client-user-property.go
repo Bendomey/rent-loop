@@ -248,3 +248,48 @@ func (h *ClientUserPropertyHandler) LinkPropertyToClientUsers(w http.ResponseWri
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+type UnlinkPropertyFromClientUsersRequest struct {
+	ClientUserIDs []string `json:"client_user_ids" validate:"required,min=1,dive,uuid4" example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of client user UUIDs to link"`
+}
+
+// UnlinkPropertyFromClientUsers godoc
+//
+//	@Summary		Unlink property from client users
+//	@Description	Unlink property from client users
+//	@Tags			ClientUserProperties
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string									true	"Property ID"
+//	@Param			body		body		UnlinkPropertyFromClientUsersRequest	true	"Unlink Property From Client Users Request Body"
+//	@Success		204			{object}	nil										"Property unlinked from client users successfully"
+//	@Failure		422			{object}	lib.HTTPError							"Validation error occured"
+//	@Failure		500			{object}	string									"An unexpected error occurred"
+//	@Router			/api/v1/properties/{property_id}/client-users:unlink [delete]
+func (h *ClientUserPropertyHandler) UnlinkPropertyFromClientUsers(w http.ResponseWriter, r *http.Request) {
+	propertyId := chi.URLParam(r, "property_id")
+	var body UnlinkPropertyFromClientUsersRequest
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	input := repository.UnlinkPropertyFromClientUsersQuery{
+		PropertyID:    propertyId,
+		ClientUserIDs: body.ClientUserIDs,
+	}
+
+	unlinkClientUserFromPropertiesErr := h.service.UnlinkPropertyFromClientUsers(r.Context(), input)
+	if unlinkClientUserFromPropertiesErr != nil {
+		HandleErrorResponse(w, unlinkClientUserFromPropertiesErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
