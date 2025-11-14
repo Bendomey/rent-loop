@@ -24,6 +24,7 @@ type ClientUserPropertyService interface {
 	) (int64, error)
 	LinkClientUserToProperties(context context.Context, input LinkClientUserToPropertiesInput) error
 	UnlinkByClientUserID(context context.Context, input repository.UnlinkClientUserFromPropertyQuery) error
+	LinkPropertyToClientUsers(context context.Context, input LinkPropertyToClientUsersInput) error
 }
 
 type clientUserPropertyService struct {
@@ -68,6 +69,43 @@ func (s *clientUserPropertyService) LinkClientUserToProperties(
 			Metadata: map[string]string{
 				"function": "LinkClientUserToProperties",
 				"action":   "creating client user properties link",
+			},
+		})
+	}
+
+	return nil
+}
+
+type LinkPropertyToClientUsersInput struct {
+	ClientUserIDs []string
+	Role          string
+	PropertyID    string
+	CreatedByID   string
+}
+
+func (s *clientUserPropertyService) LinkPropertyToClientUsers(
+	ctx context.Context,
+	input LinkPropertyToClientUsersInput,
+) error {
+	propertyClientUsersLink := make([]models.ClientUserProperty, 0, len(input.ClientUserIDs))
+	for _, clientUserID := range input.ClientUserIDs {
+		clientUserProperty := models.ClientUserProperty{
+			ClientUserID: clientUserID,
+			PropertyID:   input.PropertyID,
+			Role:         input.Role,
+			CreatedByID:  &input.CreatedByID,
+		}
+
+		propertyClientUsersLink = append(propertyClientUsersLink, clientUserProperty)
+	}
+
+	propertyClientUsersLinkErr := s.repo.BulkCreate(ctx, &propertyClientUsersLink)
+	if propertyClientUsersLinkErr != nil {
+		return pkg.InternalServerError(propertyClientUsersLinkErr.Error(), &pkg.RentLoopErrorParams{
+			Err: propertyClientUsersLinkErr,
+			Metadata: map[string]string{
+				"function": "LinkPropertyToClientUsers",
+				"action":   "creating property client users link",
 			},
 		})
 	}

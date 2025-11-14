@@ -232,6 +232,25 @@ definitions:
     - property_ids
     - role
     type: object
+  handlers.LinkPropertyToClientUsersRequest:
+    properties:
+      client_user_ids:
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        items:
+          type: string
+        minItems: 1
+        type: array
+      role:
+        enum:
+        - MANAGER
+        - STAFF
+        example: MANAGER
+        type: string
+    required:
+    - client_user_ids
+    - role
+    type: object
   handlers.LoginClientUserRequest:
     properties:
       email:
@@ -1457,6 +1476,10 @@ paths:
       responses:
         "204":
           description: Client user unlinked from properties successfully
+        "422":
+          description: Validation error occured
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
         "500":
           description: An unexpected error occurred
           schema:
@@ -2131,6 +2154,41 @@ paths:
       summary: Update an existing property
       tags:
       - Properties
+  /api/v1/properties/{property_id}/client-users:link:
+    post:
+      consumes:
+      - application/json
+      description: Link property to client users
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Link Property To Client Users Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LinkPropertyToClientUsersRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Property linked to client users successfully
+        "422":
+          description: Validation error occured
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Link property to client users
+      tags:
+      - ClientUserProperties
   /api/v1/properties/me:
     get:
       consumes:
