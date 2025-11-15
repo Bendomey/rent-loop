@@ -1251,6 +1251,143 @@ paths:
       summary: Reject a client application
       tags:
       - ClientApplications
+  /api/v1/client-user-properties:
+    get:
+      consumes:
+      - application/json
+      description: List all client user properties
+      parameters:
+      - example: a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        name: client_user_id
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - example: a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        name: property_id
+        type: string
+      - in: query
+        name: query
+        type: string
+      - enum:
+        - MANAGER
+        - STAFF
+        in: query
+        name: role
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputClientUserProperty'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List all client user properties
+      tags:
+      - ClientUserProperties
+  /api/v1/client-user-properties/{client_user_property_id}:
+    get:
+      consumes:
+      - application/json
+      description: Fetch client user property with populate
+      parameters:
+      - description: Client user property ID
+        in: path
+        name: client_user_property_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Client user property retrieved successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientUserProperty'
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Client user property not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Fetch client user property with populate
+      tags:
+      - ClientUserProperties
   /api/v1/client-users:
     get:
       consumes:
