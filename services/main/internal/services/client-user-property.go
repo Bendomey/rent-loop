@@ -2,10 +2,12 @@ package services
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"gorm.io/gorm"
 )
 
 type ClientUserPropertyService interface {
@@ -26,6 +28,10 @@ type ClientUserPropertyService interface {
 	UnlinkByClientUserID(context context.Context, input repository.UnlinkClientUserFromPropertyQuery) error
 	LinkPropertyToClientUsers(context context.Context, input LinkPropertyToClientUsersInput) error
 	UnlinkPropertyFromClientUsers(context context.Context, input repository.UnlinkPropertyFromClientUsersQuery) error
+	FetchClientUserPropertyWithPopulate(
+		context context.Context,
+		input repository.ClientUserPropertyWithPopulateQuery,
+	) (*models.ClientUserProperty, error)
 }
 
 type clientUserPropertyService struct {
@@ -233,4 +239,27 @@ func (s *clientUserPropertyService) CountClientUserProperties(
 	}
 
 	return clientUserPropertiesCount, nil
+}
+
+func (s *clientUserPropertyService) FetchClientUserPropertyWithPopulate(
+	ctx context.Context,
+	input repository.ClientUserPropertyWithPopulateQuery,
+) (*models.ClientUserProperty, error) {
+	clientUserProperty, err := s.repo.GetWithPopulate(ctx, input)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("ClientUserPropertyNotFound", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "FetchClientUserPropertyWithPopulate",
+				"action":   "fetching client user property",
+			},
+		})
+	}
+
+	return clientUserProperty, nil
 }

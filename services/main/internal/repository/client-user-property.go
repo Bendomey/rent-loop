@@ -22,6 +22,7 @@ type ClientUserPropertyRepository interface {
 	) (int64, error)
 	BulkCreate(ctx context.Context, clientUserProperty *[]models.ClientUserProperty) error
 	UnlinkPropertyFromClientUsers(context context.Context, input UnlinkPropertyFromClientUsersQuery) error
+	GetWithPopulate(ctx context.Context, query ClientUserPropertyWithPopulateQuery) (*models.ClientUserProperty, error)
 }
 
 type clientUserPropertyRepository struct {
@@ -97,6 +98,33 @@ func (r *clientUserPropertyRepository) UnlinkPropertyFromClientUsers(
 
 	result := query.Delete(&models.ClientUserProperty{}).Error
 	return result
+}
+
+type ClientUserPropertyWithPopulateQuery struct {
+	ClientUserPropertyID string
+	Populate             *[]string
+}
+
+func (r *clientUserPropertyRepository) GetWithPopulate(
+	ctx context.Context,
+	query ClientUserPropertyWithPopulateQuery,
+) (*models.ClientUserProperty, error) {
+	var clientUserProperty models.ClientUserProperty
+
+	db := r.DB.WithContext(ctx).Where("id = ?", query.ClientUserPropertyID)
+
+	if query.Populate != nil {
+		for _, field := range *query.Populate {
+			db = db.Preload(field)
+		}
+	}
+
+	result := db.First(&clientUserProperty)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &clientUserProperty, nil
 }
 
 type ListClientUserPropertiesFilter struct {

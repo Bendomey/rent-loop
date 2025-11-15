@@ -94,6 +94,109 @@ func (h *ClientUserPropertyHandler) ListClientUserProperties(w http.ResponseWrit
 	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, clientUserPropertiesTransformed, count))
 }
 
+type ListAllClientUserPropertiesFilterRequest struct {
+	lib.FilterQueryInput
+	ClientUserID string `json:"client_user_id" validate:"uuid4"               example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"Client user ID"`
+	PropertyID   string `json:"property_id"    validate:"uuid4"               example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"Property ID"`
+	Role         string `json:"role"           validate:"oneof=MANAGER STAFF"`
+}
+
+// ListAllClientUserProperties godoc
+//
+//	@Summary		List all client user properties
+//	@Description	List all client user properties
+//	@Tags			ClientUserProperties
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			q	query		ListAllClientUserPropertiesFilterRequest	true	"Client user properties"
+//	@Success		200	{object}	object{data=object{rows=[]transformations.OutputClientUserProperty,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400	{object}	lib.HTTPError
+//	@Failure		401	{object}	string
+//	@Failure		500	{object}	string
+//	@Router			/api/v1/client-user-properties [get]
+func (h *ClientUserPropertyHandler) ListAllClientUserProperties(w http.ResponseWriter, r *http.Request) {
+	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
+	if filterErr != nil {
+		HandleErrorResponse(w, filterErr)
+		return
+	}
+
+	isFiltersPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filterQuery, w)
+	if !isFiltersPassedValidation {
+		return
+	}
+
+	input := repository.ListClientUserPropertiesFilter{
+		FilterQuery:  *filterQuery,
+		ClientUserID: lib.NullOrString(r.URL.Query().Get("client_user_id")),
+		PropertyID:   lib.NullOrString(r.URL.Query().Get("property_id")),
+		Role:         lib.NullOrString(r.URL.Query().Get("role")),
+	}
+
+	properties, propertiesErr := h.service.ListClientUserProperties(r.Context(), input)
+	if propertiesErr != nil {
+		HandleErrorResponse(w, propertiesErr)
+		return
+	}
+
+	count, countErr := h.service.CountClientUserProperties(r.Context(), input)
+	if countErr != nil {
+		HandleErrorResponse(w, countErr)
+		return
+	}
+
+	clientUserPropertiesTransformed := make([]any, 0)
+	for _, clientUserProperty := range properties {
+		clientUserPropertiesTransformed = append(
+			clientUserPropertiesTransformed,
+			transformations.DBClientUserPropertyToRest(&clientUserProperty),
+		)
+	}
+
+	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, clientUserPropertiesTransformed, count))
+}
+
+type GetClientUserPropertyWithPopulateQuery struct {
+	lib.GetOneQueryInput
+}
+
+// FetchClientUserPropertyWithPopulate godoc
+//
+//	@Summary		Fetch client user property with populate
+//	@Description	Fetch client user property with populate
+//	@Tags			ClientUserProperties
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			client_user_property_id	path		string													true	"Client user property ID"
+//	@Param			q						query		GetClientUserPropertyWithPopulateQuery					true	"Client user property"
+//	@Success		200						{object}	object{data=transformations.OutputClientUserProperty}	"Client user property retrieved successfully"
+//	@Failure		401						{object}	string													"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError											"Client user property not found"
+//	@Failure		500						{object}	string													"An unexpected error occurred"
+//	@Router			/api/v1/client-user-properties/{client_user_property_id} [get]
+func (h *ClientUserPropertyHandler) FetchClientUserPropertyWithPopulate(w http.ResponseWriter, r *http.Request) {
+	clientUserPropertyId := chi.URLParam(r, "client_user_property_id")
+
+	populateQuery := GetPopulateFields(r)
+
+	input := repository.ClientUserPropertyWithPopulateQuery{
+		ClientUserPropertyID: clientUserPropertyId,
+		Populate:             populateQuery,
+	}
+
+	clientUserProperty, clientUserPropertyErr := h.service.FetchClientUserPropertyWithPopulate(r.Context(), input)
+	if clientUserPropertyErr != nil {
+		HandleErrorResponse(w, clientUserPropertyErr)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBClientUserPropertyToRest(clientUserProperty),
+	})
+}
+
 type LinkClientUserToPropertiesRequest struct {
 	PropertyIDs []string `json:"property_ids" validate:"required,min=1,dive,uuid4"    example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of property UUIDs to link"`
 	Role        string   `json:"role"         validate:"required,oneof=MANAGER STAFF" example:"MANAGER"                              description:"Role of the client user for the properties (MANAGER or STAFF)"`

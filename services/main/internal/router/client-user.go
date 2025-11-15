@@ -79,6 +79,15 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					r.Delete("/", handlers.DocumentHandler.DeleteDocument)
 				})
 			})
+
+			// client user properties
+			r.Route("/v1/client-user-properties", func(r chi.Router) {
+				r.Get("/", handlers.ClientUserPropertyHandler.ListAllClientUserProperties)
+				r.Get(
+					"/{client_user_property_id}",
+					handlers.ClientUserPropertyHandler.FetchClientUserPropertyWithPopulate,
+				)
+			})
 		})
 	}
 }
