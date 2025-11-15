@@ -314,6 +314,18 @@ definitions:
     required:
     - property_ids
     type: object
+  handlers.UnlinkPropertyFromClientUsersRequest:
+    properties:
+      client_user_ids:
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - client_user_ids
+    type: object
   handlers.UpdateDocumentRequest:
     properties:
       content:
@@ -2187,6 +2199,41 @@ paths:
       security:
       - BearerAuth: []
       summary: Link property to client users
+      tags:
+      - ClientUserProperties
+  /api/v1/properties/{property_id}/client-users:unlink:
+    delete:
+      consumes:
+      - application/json
+      description: Unlink property from client users
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Unlink Property From Client Users Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UnlinkPropertyFromClientUsersRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Property unlinked from client users successfully
+        "422":
+          description: Validation error occured
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Unlink property from client users
       tags:
       - ClientUserProperties
   /api/v1/properties/me:

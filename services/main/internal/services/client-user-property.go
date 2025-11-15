@@ -25,6 +25,7 @@ type ClientUserPropertyService interface {
 	LinkClientUserToProperties(context context.Context, input LinkClientUserToPropertiesInput) error
 	UnlinkByClientUserID(context context.Context, input repository.UnlinkClientUserFromPropertyQuery) error
 	LinkPropertyToClientUsers(context context.Context, input LinkPropertyToClientUsersInput) error
+	UnlinkPropertyFromClientUsers(context context.Context, input repository.UnlinkPropertyFromClientUsersQuery) error
 }
 
 type clientUserPropertyService struct {
@@ -106,6 +107,24 @@ func (s *clientUserPropertyService) LinkPropertyToClientUsers(
 			Metadata: map[string]string{
 				"function": "LinkPropertyToClientUsers",
 				"action":   "creating property client users link",
+			},
+		})
+	}
+
+	return nil
+}
+
+func (s *clientUserPropertyService) UnlinkPropertyFromClientUsers(
+	ctx context.Context,
+	input repository.UnlinkPropertyFromClientUsersQuery,
+) error {
+	unlinkErr := s.repo.UnlinkPropertyFromClientUsers(ctx, input)
+	if unlinkErr != nil {
+		return pkg.InternalServerError(unlinkErr.Error(), &pkg.RentLoopErrorParams{
+			Err: unlinkErr,
+			Metadata: map[string]string{
+				"function": "UnlinkPropertyFromClientUsers",
+				"action":   "deleting client user property links",
 			},
 		})
 	}

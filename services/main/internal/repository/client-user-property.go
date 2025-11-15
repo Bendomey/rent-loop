@@ -21,6 +21,7 @@ type ClientUserPropertyRepository interface {
 		filterQuery ListClientUserPropertiesFilter,
 	) (int64, error)
 	BulkCreate(ctx context.Context, clientUserProperty *[]models.ClientUserProperty) error
+	UnlinkPropertyFromClientUsers(context context.Context, input UnlinkPropertyFromClientUsersQuery) error
 }
 
 type clientUserPropertyRepository struct {
@@ -74,6 +75,25 @@ func (r *clientUserPropertyRepository) DeleteByClientUserID(
 	query := db.WithContext(ctx).
 		Where("client_user_id = ?", input.ClientUserID).
 		Where("property_id IN (?)", input.PropertyIDs)
+
+	result := query.Delete(&models.ClientUserProperty{}).Error
+	return result
+}
+
+type UnlinkPropertyFromClientUsersQuery struct {
+	PropertyID    string
+	ClientUserIDs []string
+}
+
+func (r *clientUserPropertyRepository) UnlinkPropertyFromClientUsers(
+	ctx context.Context,
+	input UnlinkPropertyFromClientUsersQuery,
+) error {
+	db := lib.ResolveDB(ctx, r.DB)
+
+	query := db.WithContext(ctx).
+		Where("property_id = ?", input.PropertyID).
+		Where("client_user_id IN (?)", input.ClientUserIDs)
 
 	result := query.Delete(&models.ClientUserProperty{}).Error
 	return result
