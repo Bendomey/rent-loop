@@ -73,7 +73,7 @@ export function MyAccountSettingsModule() {
 			<TypographyH3 className="mt-10">Account Security</TypographyH3>
 			<Separator className="bg-muted mt-2 mb-4 h-0.5" />
 
-			<section className="mx-auto mb-5 space-y-10">
+			<section className="mx-auto mb-5 space-y-6">
 				<div className="mb-6 flex items-baseline-last justify-between">
 					<Field className="w-2/5">
 						<FieldLabel htmlFor="email">Email</FieldLabel>
@@ -122,7 +122,7 @@ export function MyAccountSettingsModule() {
 			<TypographyH3 className="mt-12">Support Access</TypographyH3>
 			<Separator className="bg-muted mt-2 mb-4 h-0.5" />
 
-			<section className="mx-auto mb-5 space-y-10">
+			<section className="mx-auto mb-5 space-y-6">
 				<div className="flex items-center justify-between">
 					<Field className="">
 						<FieldLabel htmlFor="support_access">Support Access</FieldLabel>
