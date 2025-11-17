@@ -151,6 +151,8 @@ func (r *clientUserRepository) Count(
 		Model(&models.ClientUser{}).
 		Scopes(
 			ClientFilterScope("client_users", filterQuery.ClientID),
+			roleFilterScope(filterQuery.Role),
+			statusFilterScope(filterQuery.Status),
 			DateRangeScope("client_users", filterQuery.DateRange),
 			SearchScope("client_users", filterQuery.Search),
 		).Count(&count)
