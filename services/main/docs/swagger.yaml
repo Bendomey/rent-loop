@@ -638,6 +638,14 @@ definitions:
       role:
         example: STAFF
         type: string
+      status:
+        example: ClientUser.Status.Active
+        type: string
+      status_updated_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      status_updated_by_id:
+        example: 0205126b-9bbb-4a98-960a-e87d8f095335
+        type: string
       updated_at:
         example: "2023-01-01T00:00:00Z"
         type: string

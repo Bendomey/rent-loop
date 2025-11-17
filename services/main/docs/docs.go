@@ -3714,6 +3714,17 @@ const docTemplate = `{
                     "type": "string",
                     "example": "STAFF"
                 },
+                "status": {
+                    "type": "string",
+                    "example": "ClientUser.Status.Active"
+                },
+                "status_updated_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "status_updated_by_id": {
+                    "type": "string",
+                    "example": "0205126b-9bbb-4a98-960a-e87d8f095335"
+                },
                 "updated_at": {
                     "type": "string",
                     "example": "2023-01-01T00:00:00Z"
