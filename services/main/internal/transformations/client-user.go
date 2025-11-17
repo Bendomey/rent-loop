@@ -8,16 +8,19 @@ import (
 )
 
 type OutputClientUser struct {
-	ID          string       `json:"id"            example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	ClientID    string       `json:"client_id"     example:"e4ad26d4-d7e9-4599-a246-5e88abba6083"`
-	Client      OutputClient `json:"client"`
-	Name        string       `json:"name"          example:"Client User Name"`
-	PhoneNumber string       `json:"phone_number"  example:"+233281234569"`
-	Email       string       `json:"email"         example:"client-user@example.com"`
-	Role        string       `json:"role"          example:"STAFF"`
-	CreatedAt   time.Time    `json:"created_at"    example:"2023-01-01T00:00:00Z"`
-	UpdatedAt   time.Time    `json:"updated_at"    example:"2023-01-01T00:00:00Z"`
-	CreatedByID string       `json:"created_by_id" example:"0205126b-9bbb-4a98-960a-e87d8f095335"`
+	ID                string            `json:"id"                   example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	ClientID          string            `json:"client_id"            example:"e4ad26d4-d7e9-4599-a246-5e88abba6083"`
+	Client            OutputClient      `json:"client"`
+	Name              string            `json:"name"                 example:"Client User Name"`
+	PhoneNumber       string            `json:"phone_number"         example:"+233281234569"`
+	Email             string            `json:"email"                example:"client-user@example.com"`
+	Role              string            `json:"role"                 example:"STAFF"`
+	Status            string            `json:"status"               example:"ClientUser.Status.Active"`
+	CreatedAt         time.Time         `json:"created_at"           example:"2023-01-01T00:00:00Z"`
+	UpdatedAt         time.Time         `json:"updated_at"           example:"2023-01-01T00:00:00Z"`
+	CreatedByID       string            `json:"created_by_id"        example:"0205126b-9bbb-4a98-960a-e87d8f095335"`
+	StatusUpdatedByID string            `json:"status_updated_by_id" example:"0205126b-9bbb-4a98-960a-e87d8f095335"`
+	StatusUpdatedBy   *OutputClientUser `json:"status_updated_by"`
 }
 
 func DBClientUserToRest(i *models.ClientUser) interface{} {
@@ -26,18 +29,20 @@ func DBClientUserToRest(i *models.ClientUser) interface{} {
 	}
 
 	data := map[string]interface{}{
-		"id":            i.ID.String(),
-		"name":          i.Name,
-		"client_id":     i.ClientID,
-		"client":        DBClientToRestClient(&i.Client),
-		"phone_number":  i.PhoneNumber,
-		"email":         i.Email,
-		"role":          i.Role,
-		"status":        i.Status,
-		"created_at":    i.CreatedAt,
-		"updated_at":    i.UpdatedAt,
-		"created_by_id": i.CreatedByID,
-		"created_by":    DBClientUserToRest(i.CreatedBy),
+		"id":                   i.ID.String(),
+		"name":                 i.Name,
+		"client_id":            i.ClientID,
+		"client":               DBClientToRestClient(&i.Client),
+		"phone_number":         i.PhoneNumber,
+		"email":                i.Email,
+		"role":                 i.Role,
+		"status":               i.Status,
+		"created_at":           i.CreatedAt,
+		"updated_at":           i.UpdatedAt,
+		"created_by_id":        i.CreatedByID,
+		"created_by":           DBClientUserToRest(i.CreatedBy),
+		"status_updated_by_id": i.StatusUpdatedById,
+		"status_updated_by":    DBClientUserToRest(i.StatusUpdatedBy),
 	}
 
 	return data
