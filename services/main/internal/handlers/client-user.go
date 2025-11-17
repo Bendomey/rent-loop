@@ -341,7 +341,7 @@ type GetClientUserWithPopulateQuery struct {
 //	@Failure		404				{object}	lib.HTTPError									"Client user not found"
 //	@Failure		500				{object}	string											"An unexpected error occurred"
 //	@Router			/api/v1/client-users/{client_user_id} [get]
-func (c *ClientUserHandler) GetClientUserWithPopulate(w http.ResponseWriter, r *http.Request) {
+func (h *ClientUserHandler) GetClientUserWithPopulate(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -357,7 +357,107 @@ func (c *ClientUserHandler) GetClientUserWithPopulate(w http.ResponseWriter, r *
 		ClientID: currentClientUser.ClientID,
 		Populate: populateFields,
 	}
-	clientUser, err := c.service.GetClientUserWithPopulate(r.Context(), query)
+	clientUser, err := h.service.GetClientUserWithPopulate(r.Context(), query)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBClientUserToRest(clientUser),
+	})
+}
+
+type DeactivateClientUserRequest struct {
+	Reason string `json:"reason" validate:"required,min=1" example:"Reason for deactivation"`
+}
+
+// DeactivateClientUser godoc
+//
+//	@Summary		Deactivate client user
+//	@Description	Deactivate client user
+//	@Tags			ClientUsers
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			client_user_id	path		string											true	"Client user ID"
+//	@Param			body			body		DeactivateClientUserRequest						true	"Deactivate Client User Request Body"
+//	@Success		200				{object}	object{data=transformations.OutputClientUser}	"Client user deactivated successfully"
+//	@Failure		400				{object}	lib.HTTPError									"Error occurred when deactivating client user"
+//	@Failure		401				{object}	string											"Invalid or absent authentication token"
+//	@Failure		404				{object}	lib.HTTPError									"Client user not found"
+//	@Failure		422				{object}	string											"Validation error occured"
+//	@Failure		500				{object}	string											"An unexpected error occurred"
+//	@Router			/api/v1/client-users/{client_user_id}/deactivate [post]
+func (h *ClientUserHandler) DeactivateClientUser(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
+	if !clientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	clientUserId := chi.URLParam(r, "client_user_id")
+
+	var body DeactivateClientUserRequest
+
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	input := services.DeactivateClientUserInput{
+		ClientUserID:      clientUserId,
+		StatusUpdatedById: &currentClientUser.ID,
+		Reason:            body.Reason,
+	}
+
+	clientUser, err := h.service.DeactivateClientUser(r.Context(), input)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBClientUserToRest(clientUser),
+	})
+}
+
+// ActivateClientUser godoc
+//
+//	@Summary		Activate client user
+//	@Description	Activate client user
+//	@Tags			ClientUsers
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			client_user_id	path		string											true	"Client user ID"
+//	@Success		200				{object}	object{data=transformations.OutputClientUser}	"Client user activated successfully"
+//	@Failure		400				{object}	lib.HTTPError									"Error occurred when activating client user"
+//	@Failure		401				{object}	string											"Invalid or absent authentication token"
+//	@Failure		404				{object}	lib.HTTPError									"Client user not found"
+//	@Failure		422				{object}	string											"Validation error occured"
+//	@Failure		500				{object}	string											"An unexpected error occurred"
+//	@Router			/api/v1/client-users/{client_user_id}/activate [post]
+func (h *ClientUserHandler) ActivateClientUser(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
+	if !clientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	clientUserId := chi.URLParam(r, "client_user_id")
+
+	input := services.ClientUserSearchInput{
+		ClientUserID:      clientUserId,
+		StatusUpdatedById: &currentClientUser.ID,
+	}
+
+	clientUser, err := h.service.ActivateClientUser(r.Context(), input)
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return

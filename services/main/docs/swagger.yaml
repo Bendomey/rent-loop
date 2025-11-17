@@ -213,6 +213,15 @@ definitions:
     - status
     - type
     type: object
+  handlers.DeactivateClientUserRequest:
+    properties:
+      reason:
+        example: Reason for deactivation
+        minLength: 1
+        type: string
+    required:
+    - reason
+    type: object
   handlers.LinkClientUserToPropertiesRequest:
     properties:
       property_ids:
@@ -1562,6 +1571,104 @@ paths:
       security:
       - BearerAuth: []
       summary: Get client user with populate
+      tags:
+      - ClientUsers
+  /api/v1/client-users/{client_user_id}/activate:
+    post:
+      consumes:
+      - application/json
+      description: Activate client user
+      parameters:
+      - description: Client user ID
+        in: path
+        name: client_user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Client user activated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientUser'
+            type: object
+        "400":
+          description: Error occurred when activating client user
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Client user not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error occured
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Activate client user
+      tags:
+      - ClientUsers
+  /api/v1/client-users/{client_user_id}/deactivate:
+    post:
+      consumes:
+      - application/json
+      description: Deactivate client user
+      parameters:
+      - description: Client user ID
+        in: path
+        name: client_user_id
+        required: true
+        type: string
+      - description: Deactivate Client User Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.DeactivateClientUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Client user deactivated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientUser'
+            type: object
+        "400":
+          description: Error occurred when deactivating client user
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Client user not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error occured
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Deactivate client user
       tags:
       - ClientUsers
   /api/v1/client-users/{client_user_id}/properties:link:
