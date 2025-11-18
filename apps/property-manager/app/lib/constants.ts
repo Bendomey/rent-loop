@@ -15,6 +15,7 @@ export const QUERY_KEYS = {
 	DOCUMENTS: 'documents',
 	PROPERTIES: 'properties',
 	CLIENT_USERS: 'client-users',
+	CLIENT_USER_PROPERTIES: 'client-user-properties',
 } as const
 
 export const PermissionState = {
