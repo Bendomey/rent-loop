@@ -189,6 +189,9 @@ func (s *clientUserService) AuthenticateClientUser(
 			},
 		})
 	}
+	if clientUser.Status == "ClientUser.Status.Inactive" {
+		return nil, pkg.ForbiddenError("ClientUserInactive", nil)
+	}
 
 	isSame := validatehash.ValidateCipher(input.Password, clientUser.Password)
 	if !isSame {
@@ -235,6 +238,10 @@ func (s *clientUserService) GetClientUser(
 				"action":   "fetching client user by ID",
 			},
 		})
+	}
+
+	if clientUser.Status == "ClientUser.Status.Inactive" {
+		return nil, pkg.ForbiddenError("ClientUserInactive", nil)
 	}
 
 	return clientUser, nil

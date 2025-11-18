@@ -1226,6 +1226,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
+                    "403": {
+                        "description": "Forbidden Access",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
                     "500": {
                         "description": "An unexpected error occurred",
                         "schema": {
@@ -1275,6 +1281,12 @@ const docTemplate = `{
                         "description": "Unauthorized",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "500": {

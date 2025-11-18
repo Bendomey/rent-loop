@@ -100,6 +100,7 @@ type LoginClientUserRequest struct {
 //	@Param			body	body		LoginClientUserRequest									true	"Client user login credentials"
 //	@Success		200		{object}	object{data=transformations.OutputClientUserWithToken}	"Client user authenticated successfully"
 //	@Failure		400		{object}	lib.HTTPError											"Error occurred when authenticating a client user"
+//	@Failure		403		{object}	lib.HTTPError											"Forbidden Access"
 //	@Failure		500		{object}	string													"An unexpected error occurred"
 //	@Router			/api/v1/client-users/login [post]
 func (h *ClientUserHandler) AuthenticateClientUser(w http.ResponseWriter, r *http.Request) {
@@ -147,6 +148,7 @@ func (h *ClientUserHandler) AuthenticateClientUser(w http.ResponseWriter, r *htt
 //	@Success		200	{object}	object{data=transformations.OutputClientUser}
 //	@Failure		400	{object}	lib.HTTPError
 //	@Failure		401	{object}	string
+//	@Failure		403	{object}	lib.HTTPError
 //	@Failure		500	{object}	string
 //	@Router			/api/v1/client-users/me [get]
 func (h *ClientUserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
