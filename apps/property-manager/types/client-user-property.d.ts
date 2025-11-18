@@ -1,7 +1,7 @@
 interface ClientUserProperty {
 	id: string
 	client_user_id: string
-	client_user: Nullable<ClientUserProperty>
+	client_user: Nullable<ClientUser>
 	property_id: string
 	property: Nullable<Property>
 	role: 'MANAGER' | 'STAFF'
@@ -12,5 +12,6 @@ interface ClientUserProperty {
 }
 
 interface FetchClientUserPropertyFilter {
-	role?: ClientUserProperty['role']
+	role?: string
+	property_id?: string
 }

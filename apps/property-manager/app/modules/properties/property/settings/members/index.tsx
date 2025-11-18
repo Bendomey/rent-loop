@@ -1,7 +1,9 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { CircleCheck, CircleX, EllipsisVertical, User } from 'lucide-react'
 import { useMemo } from 'react'
+import { useSearchParams } from 'react-router'
 import { MembersController } from './controller'
+import { useGetClientUserProperties } from '~/api/client-user-properties'
 import { DataTable } from '~/components/datatable'
 import {
 	AlertDialog,
@@ -24,9 +26,36 @@ import {
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
+import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { useProperty } from '~/providers/property-provider'
 
 export function PropertyMembersModule() {
-	const columns: ColumnDef<ClientUser>[] = useMemo(() => {
+	const [searchParams] = useSearchParams()
+	const { property } = useProperty()
+
+	const page = searchParams.get('page')
+		? Number(searchParams.get('page'))
+		: PAGINATION_DEFAULTS.PAGE
+	const per = searchParams.get('pageSize')
+		? Number(searchParams.get('pageSize'))
+		: PAGINATION_DEFAULTS.PER_PAGE
+	const role = searchParams.get('role') ?? undefined
+
+	const { data, isPending, isRefetching, error, refetch } =
+		useGetClientUserProperties({
+			filters: { role: role, property_id: property?.id },
+			pagination: { page, per },
+			populate: ['ClientUser'],
+			sorter: { sort: 'desc', sort_by: 'created_at' },
+			search: {
+				query: searchParams.get('query') ?? undefined,
+				fields: ['property'],
+			},
+		})
+
+	const isLoading = isPending || isRefetching
+
+	const columns: ColumnDef<ClientUserProperty>[] = useMemo(() => {
 		return [
 			{
 				id: 'drag',
@@ -34,7 +63,7 @@ export function PropertyMembersModule() {
 				cell: () => <User />,
 			},
 			{
-				accessorKey: 'name',
+				accessorKey: 'client_user.name',
 				header: 'Name',
 				cell: ({ getValue }) => {
 					return (
@@ -48,7 +77,7 @@ export function PropertyMembersModule() {
 				enableHiding: false,
 			},
 			{
-				accessorKey: 'role',
+				accessorKey: 'client_user.role',
 				header: 'Role',
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
@@ -59,22 +88,22 @@ export function PropertyMembersModule() {
 				),
 			},
 			{
-				accessorKey: 'id',
+				accessorKey: 'client_user.id',
 				header: 'Contact',
 				cell: ({ row }) => (
 					<div className="flex min-w-32 flex-col items-start gap-1">
 						<span className="truncate text-xs text-zinc-600">
-							{row.original.email}
+							{row.original.client_user?.email}
 						</span>
 						<span className="truncate text-xs text-zinc-600">
-							{row.original.phone_number}
+							{row.original.client_user?.phone_number}
 						</span>
 					</div>
 				),
 			},
 
 			{
-				accessorKey: 'status',
+				accessorKey: 'client_user.status',
 				header: 'Status',
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
@@ -146,63 +175,23 @@ export function PropertyMembersModule() {
 			<div className="h-full w-full">
 				<DataTable
 					columns={columns}
+					isLoading={isLoading}
+					refetch={refetch}
+					error={error ? 'Failed to load members.' : undefined}
 					dataResponse={{
-						rows: [
-							{
-								id: '1',
-								name: 'John Doe',
-								email: 'john.doe@example.com',
-								phone_number: '123-456-7890',
-								role: 'OWNER',
-								created_at: new Date(),
-								updated_at: new Date(),
-								client: null,
-								client_id: '1',
-								status: 'ClientUser.Status.Active',
-							},
-							{
-								id: '1',
-								name: 'John Doe',
-								email: 'john.doe@example.com',
-								phone_number: '123-456-7890',
-								role: 'OWNER',
-								created_at: new Date(),
-								updated_at: new Date(),
-								client: null,
-								client_id: '1',
-								status: 'ClientUser.Status.Active',
-							},
-							{
-								id: '1',
-								name: 'John Doe',
-								email: 'john.doe@example.com',
-								phone_number: '123-456-7890',
-								role: 'OWNER',
-								created_at: new Date(),
-								updated_at: new Date(),
-								client: null,
-								client_id: '1',
-								status: 'ClientUser.Status.Active',
-							},
-						],
-						total: 150,
-						page: 1,
-						page_size: 50,
-						order: 'desc',
-						order_by: 'created_at',
-						has_prev_page: false,
-						has_next_page: true,
+						rows: data?.rows ?? [],
+						total: data?.meta?.total ?? 0,
+						page,
+						page_size: per,
+						order: data?.meta?.order ?? 'desc',
+						order_by: data?.meta?.order_by ?? 'created_at',
+						has_prev_page: data?.meta?.has_prev_page ?? false,
+						has_next_page: data?.meta?.has_next_page ?? false,
 					}}
 					empty={{
 						message: 'No members found',
 						description:
-							"Try adjusting your search or filter to find what you're looking for.",
-						button: {
-							label: 'Add Member',
-							onClick: () => {
-								// Handle button click
-							},
-						},
+							"Try adjusting your search to find what you're looking for.",
 					}}
 				/>
 			</div>
