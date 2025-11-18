@@ -1,7 +1,7 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { CircleCheck, CircleX, EllipsisVertical, User } from 'lucide-react'
 import { useMemo } from 'react'
-import { useParams, useSearchParams } from 'react-router'
+import { useSearchParams } from 'react-router'
 import { MembersController } from './controller'
 import { useGetClientUserProperties } from '~/api/client-user-properties'
 import { DataTable } from '~/components/datatable'
@@ -27,15 +27,11 @@ import {
 } from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
-import { useAuth } from '~/providers/auth-provider'
+import { useProperty } from '~/providers/property-provider'
 
 export function PropertyMembersModule() {
 	const [searchParams] = useSearchParams()
-	const params = useParams()
-
-	const { clientUserProperties } = useAuth()
-
-	const propertySlug = params?.propertySlug as string
+	const { property } = useProperty()
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -45,15 +41,9 @@ export function PropertyMembersModule() {
 		: PAGINATION_DEFAULTS.PER_PAGE
 	const role = searchParams.get('role') ?? undefined
 
-	const propertyObj = useMemo(() => {
-		return clientUserProperties?.rows?.find(
-			(item) => item.property?.slug === propertySlug,
-		)
-	}, [propertySlug, clientUserProperties?.rows])
-
 	const { data, isPending, isRefetching, error, refetch } =
 		useGetClientUserProperties({
-			filters: { role: role, property_id: propertyObj?.property_id },
+			filters: { role: role, property_id: property?.id },
 			pagination: { page, per },
 			populate: ['ClientUser'],
 			sorter: { sort: 'desc', sort_by: 'created_at' },

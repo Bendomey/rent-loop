@@ -13,6 +13,5 @@ interface ClientUserProperty {
 
 interface FetchClientUserPropertyFilter {
 	role?: string
-	client_user_id?: string
 	property_id?: string
 }
