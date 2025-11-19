@@ -42,6 +42,8 @@ type ClientUserService interface {
 		context context.Context,
 		query repository.GetClientUserWithPopulateQuery,
 	) (*models.ClientUser, error)
+	ActivateClientUser(ctx context.Context, input ClientUserSearchInput) (*models.ClientUser, error)
+	DeactivateClientUser(ctx context.Context, input DeactivateClientUserInput) (*models.ClientUser, error)
 }
 
 type clientUserService struct {
@@ -187,6 +189,9 @@ func (s *clientUserService) AuthenticateClientUser(
 			},
 		})
 	}
+	if clientUser.Status == "ClientUser.Status.Inactive" {
+		return nil, pkg.ForbiddenError("ClientUserInactive", nil)
+	}
 
 	isSame := validatehash.ValidateCipher(input.Password, clientUser.Password)
 	if !isSame {
@@ -233,6 +238,10 @@ func (s *clientUserService) GetClientUser(
 				"action":   "fetching client user by ID",
 			},
 		})
+	}
+
+	if clientUser.Status == "ClientUser.Status.Inactive" {
+		return nil, pkg.ForbiddenError("ClientUserInactive", nil)
 	}
 
 	return clientUser, nil
@@ -419,4 +428,142 @@ func (s *clientUserService) GetClientUserWithPopulate(
 	}
 
 	return clientUser, nil
+}
+
+type ClientUserSearchInput struct {
+	ClientUserID      string
+	StatusUpdatedById *string
+}
+
+func (s *clientUserService) ActivateClientUser(
+	ctx context.Context,
+	input ClientUserSearchInput,
+) (*models.ClientUser, error) {
+	clientUserToBeActivated, getClientUserErr := s.repo.GetByQuery(
+		ctx,
+		map[string]any{"id": input.ClientUserID, "status": "ClientUser.Status.Inactive"},
+	)
+	if getClientUserErr != nil {
+		if errors.Is(getClientUserErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("ClientUserNotFound", &pkg.RentLoopErrorParams{
+				Err: getClientUserErr,
+			})
+		}
+
+		return nil, pkg.InternalServerError(getClientUserErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getClientUserErr,
+			Metadata: map[string]string{
+				"function": "ActivateClientUser",
+				"action":   "fetching deactivated client user by ID",
+			},
+		})
+	}
+
+	clientUserToBeActivated.Status = "ClientUser.Status.Active"
+	clientUserToBeActivated.StatusUpdatedById = input.StatusUpdatedById
+
+	updateClientUserErr := s.repo.Update(ctx, clientUserToBeActivated)
+	if updateClientUserErr != nil {
+		return nil, pkg.InternalServerError(updateClientUserErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateClientUserErr,
+			Metadata: map[string]string{
+				"function": "ActivateClientUser",
+				"action":   "updating client user status",
+			},
+		})
+	}
+
+	r := strings.NewReplacer(
+		"{{name}}", clientUserToBeActivated.Name,
+	)
+	message := r.Replace(lib.CLIENT_USER_ACTIVATED_BODY)
+
+	go pkg.SendEmail(
+		s.appCtx,
+		pkg.SendEmailInput{
+			Recipient: clientUserToBeActivated.Email,
+			Subject:   lib.CLIENT_USER_ACTIVATED_SUBJECT,
+			TextBody:  message,
+		},
+	)
+
+	go pkg.SendSMS(
+		s.appCtx,
+		pkg.SendSMSInput{
+			Recipient: clientUserToBeActivated.PhoneNumber,
+			Message:   message,
+		},
+	)
+
+	return clientUserToBeActivated, nil
+}
+
+type DeactivateClientUserInput struct {
+	ClientUserID      string
+	StatusUpdatedById *string
+	Reason            string
+}
+
+func (s *clientUserService) DeactivateClientUser(
+	ctx context.Context,
+	input DeactivateClientUserInput,
+) (*models.ClientUser, error) {
+	clientUserToBeDeactivated, getClientUserErr := s.repo.GetByQuery(
+		ctx,
+		map[string]any{"id": input.ClientUserID, "status": "ClientUser.Status.Active"},
+	)
+	if getClientUserErr != nil {
+		if errors.Is(getClientUserErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("ClientUserNotFound", &pkg.RentLoopErrorParams{
+				Err: getClientUserErr,
+			})
+		}
+
+		return nil, pkg.InternalServerError(getClientUserErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getClientUserErr,
+			Metadata: map[string]string{
+				"function": "DeactivateClientUser",
+				"action":   "fetching activated client user by ID",
+			},
+		})
+	}
+
+	clientUserToBeDeactivated.Status = "ClientUser.Status.Inactive"
+	clientUserToBeDeactivated.StatusUpdatedById = input.StatusUpdatedById
+
+	updateClientUserErr := s.repo.Update(ctx, clientUserToBeDeactivated)
+	if updateClientUserErr != nil {
+		return nil, pkg.InternalServerError(updateClientUserErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateClientUserErr,
+			Metadata: map[string]string{
+				"function": "DeactivateClientUser",
+				"action":   "updating client user status",
+			},
+		})
+	}
+
+	r := strings.NewReplacer(
+		"{{name}}", clientUserToBeDeactivated.Name,
+		"{{reason}}", input.Reason,
+	)
+	message := r.Replace(lib.CLIENT_USER_DEACTIVATED_BODY)
+
+	go pkg.SendEmail(
+		s.appCtx,
+		pkg.SendEmailInput{
+			Recipient: clientUserToBeDeactivated.Email,
+			Subject:   lib.CLIENT_USER_DEACTIVATED_BODY,
+			TextBody:  message,
+		},
+	)
+
+	go pkg.SendSMS(
+		s.appCtx,
+		pkg.SendSMSInput{
+			Recipient: clientUserToBeDeactivated.PhoneNumber,
+			Message:   message,
+		},
+	)
+
+	return clientUserToBeDeactivated, nil
 }

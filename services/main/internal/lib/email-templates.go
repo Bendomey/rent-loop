@@ -101,3 +101,33 @@ Best regards,
 The Rentloop Team
 `
 )
+
+const (
+	CLIENT_USER_ACTIVATED_SUBJECT = "Client User Activated"
+	CLIENT_USER_ACTIVATED_BODY    = `
+Hey {{name}},
+
+Your account has been activated. You can now log back in.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The rentloop Team
+	`
+)
+
+const (
+	CLIENT_USER_DEACTIVATED_SUBJECT = "Client User Deactivated"
+	CLIENT_USER_DEACTIVATED_BODY    = `
+Hey {{name}},
+
+Your account has been deactivated. Reach out to your admin.
+
+Reason: {{reason}}
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The rentloop Team
+`
+)
