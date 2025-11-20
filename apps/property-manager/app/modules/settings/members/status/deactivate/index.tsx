@@ -63,11 +63,11 @@ function DeactivateClientUserModal({ opened, setOpened, data }: Props) {
 				method: 'POST',
 				action: '/settings/members/deactivate',
 			})
-			setOpened(false)
+			toast.success('The member has been successfully deactivated')
 			void queryClient.invalidateQueries({
 				queryKey: [QUERY_KEYS.CLIENT_USERS],
 			})
-			toast.success('The member has been successfully deactivated')
+			setOpened(false)
 		} catch {
 			toast.error('Failed to deavtivate member.')
 		}
