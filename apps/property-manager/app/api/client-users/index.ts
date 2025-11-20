@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '~/lib/constants'
 import { getQueryParams } from '~/lib/get-param'
 import { fetchClient, fetchServer } from '~/lib/transport'
@@ -75,3 +75,62 @@ export const createClientUser = async (
 		}
 	}
 }
+
+interface deactivateClientUserProps {
+	id: string
+	reason: string
+}
+
+/**
+ * deactivate client user
+ */
+export const deactivateClientUser = async (
+	{ id, reason }: deactivateClientUserProps,
+	apiConfig?: ApiConfigForServerConfig,
+) => {
+	try {
+		const response = await fetchServer<ApiResponse<ClientUser>>(
+			`${apiConfig?.baseUrl}/v1/client-users/${id}/deactivate`,
+			{
+				method: 'POST',
+				body: JSON.stringify({ reason }),
+				...(apiConfig ? apiConfig : {}),
+			},
+		)
+		return response.parsedBody.data
+	} catch (error) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+/**
+ * activate client user
+ */
+
+const activateClientUser = async (id: string) => {
+	try {
+		await fetchClient<boolean>(`/v1/client-users/${id}/activate`, {
+			method: 'POST',
+		})
+	} catch (error) {
+		if (error instanceof Error) {
+			throw error
+		}
+
+		// Error from server.
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.message)
+		}
+	}
+}
+
+export const useActivateClientUser = () =>
+	useMutation({ mutationFn: activateClientUser })
