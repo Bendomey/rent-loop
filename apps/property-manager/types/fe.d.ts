@@ -4,7 +4,7 @@ interface Filter {
 	selectType?: 'single' | 'multi'
 	label: string
 	value: SelectorFilter
-	Icon?: ReactElement
+	Icon?: React.ComponentType<any>
 }
 
 interface SelectorFilter {
