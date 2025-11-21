@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '~/lib/constants'
 import { getQueryParams } from '~/lib/get-param'
 import { fetchClient } from '~/lib/transport'
@@ -38,3 +38,40 @@ export const useGetClientUserProperties = (
 		queryKey: [QUERY_KEYS.CLIENT_USER_PROPERTIES, query],
 		queryFn: () => getClientUserProperties(query),
 	})
+
+interface clientUserPropertyLinkProps {
+	property_id: string
+	role: ClientUser['role']
+	client_user_ids: ClientUser['id'][]
+}
+
+/**
+ * Link client user to property
+ */
+const clientUserPropertyLink = async ({
+	property_id,
+	role,
+	client_user_ids,
+}: clientUserPropertyLinkProps) => {
+	try {
+		const response = await fetchClient<ApiResponse<ClientUser>>(
+			`/v1/properties/${property_id}/client-users:link`,
+			{
+				method: 'POST',
+				body: JSON.stringify({ role, client_user_ids }),
+			},
+		)
+		return response.parsedBody.data
+	} catch (error) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+export const useLinkClientUserProperty = () =>
+	useMutation({ mutationFn: clientUserPropertyLink })

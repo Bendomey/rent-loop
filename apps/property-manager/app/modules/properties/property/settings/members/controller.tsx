@@ -1,5 +1,6 @@
 import { Plus, RotateCw, Search, ToggleLeft } from 'lucide-react'
-import { Link } from 'react-router'
+import { useState } from 'react'
+import AddMemberModlue from './add'
 import { FilterSet } from '~/components/filter-set'
 import { Button } from '~/components/ui/button'
 import {
@@ -42,6 +43,8 @@ const filters: Array<Filter> = [
 ]
 
 export const MembersController = () => {
+	const [openAddMemberModal, setOpenAddMemberModal] = useState(false)
+
 	return (
 		<div className="flex w-full flex-col gap-2">
 			<div className="w-full rounded-md border p-4">
@@ -59,18 +62,24 @@ export const MembersController = () => {
 					</InputGroup>
 				</div>
 				<div className="flex items-center justify-end gap-2">
-					<Link to="/settings/members/new">
-						<Button variant="default" size="sm">
-							<Plus className="size-4" />
-							Add Member
-						</Button>
-					</Link>
+					<Button
+						variant="default"
+						size="sm"
+						onClick={() => setOpenAddMemberModal(true)}
+					>
+						<Plus className="size-4" />
+						Add Member
+					</Button>
 					<Button variant="outline" size="sm">
 						<RotateCw className="size-4" />
 						Refresh
 					</Button>
 				</div>
 			</div>
+			<AddMemberModlue
+				opened={openAddMemberModal}
+				setOpened={setOpenAddMemberModal}
+			/>
 		</div>
 	)
 }
