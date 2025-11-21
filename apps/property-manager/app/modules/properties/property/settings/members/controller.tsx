@@ -31,8 +31,7 @@ const filters: Array<Filter> = [
 		label: 'Role',
 		value: {
 			options: [
-				{ label: 'Owner', value: 'OWNER' },
-				{ label: 'Admin', value: 'ADMIN' },
+				{ label: 'Manager', value: 'MANAGER' },
 				{ label: 'Staff', value: 'STAFF' },
 			],
 			urlParam: 'role',

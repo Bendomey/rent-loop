@@ -553,7 +553,7 @@ func (s *clientUserService) DeactivateClientUser(
 		s.appCtx,
 		pkg.SendEmailInput{
 			Recipient: clientUserToBeDeactivated.Email,
-			Subject:   lib.CLIENT_USER_DEACTIVATED_BODY,
+			Subject:   lib.CLIENT_USER_DEACTIVATED_SUBJECT,
 			TextBody:  message,
 		},
 	)

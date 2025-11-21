@@ -77,7 +77,7 @@ export function PropertyMembersModule() {
 				enableHiding: false,
 			},
 			{
-				accessorKey: 'client_user.role',
+				accessorKey: 'role',
 				header: 'Role',
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
