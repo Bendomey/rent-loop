@@ -9,20 +9,10 @@ import {
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router'
 import { MembersController } from './controller'
+import { ClientUserStatus } from './status'
 import { useGetClientUsers } from '~/api/client-users'
 import { DataTable } from '~/components/datatable'
 import { Alert, AlertTitle } from '~/components/ui/alert'
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from '~/components/ui/alert-dialog'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -130,76 +120,59 @@ export function MembersModule() {
 				cell: ({ row }) => {
 					const isCurrentUser = currentUser?.id === row.original.id
 					return (
-						<AlertDialog>
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button
-										variant="ghost"
-										className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-										size="icon"
-									>
-										<EllipsisVertical />
-										<span className="sr-only">Open menu</span>
-									</Button>
-								</DropdownMenuTrigger>
-
-								<DropdownMenuContent
-									align="end"
-									className={`${isCurrentUser ? 'w-auto' : '32'}`}
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button
+									variant="ghost"
+									className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+									size="icon"
 								>
-									{isCurrentUser ? (
-										<Alert variant="destructive" className="border-0">
-											<AlertCircleIcon />
-											<AlertTitle>
-												You can't edit or deactivate your own account.
-											</AlertTitle>
-										</Alert>
-									) : (
-										<>
-											{row.original.role !== 'OWNER' ||
-											currentUser?.role === 'OWNER' ? (
-												<>
-													<DropdownMenuItem>Edit</DropdownMenuItem>
-													<DropdownMenuSeparator />
-													<AlertDialogTrigger asChild>
-														<DropdownMenuItem variant="destructive">
-															Deactivate
-														</DropdownMenuItem>
-													</AlertDialogTrigger>
-												</>
-											) : (
-												<Alert variant="destructive" className="border-0">
-													<AlertCircleIcon />
-													<AlertTitle>
-														You do not have permission to modify or deactivate
-														an "Owner" account.
-													</AlertTitle>
-												</Alert>
-											)}
-										</>
-									)}
-								</DropdownMenuContent>
-							</DropdownMenu>
-							<AlertDialogContent className="sm:max-w-[425px]">
-								<AlertDialogHeader>
-									<AlertDialogTitle>Are you sure?</AlertDialogTitle>
-									<AlertDialogDescription>
-										This will deactivate the member.
-									</AlertDialogDescription>
-								</AlertDialogHeader>
-								<AlertDialogFooter className="mt-5">
-									<AlertDialogCancel>Cancel</AlertDialogCancel>
-									<AlertDialogAction className="bg-destructive hover:bg-destructive/90 text-white">
-										Deactivate
-									</AlertDialogAction>
-								</AlertDialogFooter>
-							</AlertDialogContent>
-						</AlertDialog>
+									<EllipsisVertical />
+									<span className="sr-only">Open menu</span>
+								</Button>
+							</DropdownMenuTrigger>
+
+							<DropdownMenuContent
+								align="end"
+								className={`${isCurrentUser ? 'w-auto' : '32'}`}
+							>
+								{isCurrentUser ? (
+									<Alert variant="destructive" className="border-0">
+										<AlertCircleIcon />
+										<AlertTitle>
+											You can't edit or deactivate your own account.
+										</AlertTitle>
+									</Alert>
+								) : (
+									<>
+										{row.original.role !== 'OWNER' ||
+										currentUser?.role === 'OWNER' ? (
+											<>
+												<DropdownMenuItem>Edit</DropdownMenuItem>
+												<DropdownMenuSeparator />
+												<ClientUserStatus
+													clientUser={row.original}
+													refetch={refetch}
+												/>
+											</>
+										) : (
+											<Alert variant="destructive" className="border-0">
+												<AlertCircleIcon />
+												<AlertTitle>
+													You do not have permission to modify or deactivate an
+													"Owner" account.
+												</AlertTitle>
+											</Alert>
+										)}
+									</>
+								)}
+							</DropdownMenuContent>
+						</DropdownMenu>
 					)
 				},
 			},
 		]
-	}, [currentUser])
+	}, [currentUser, refetch])
 
 	return (
 		<main className="flex flex-col gap-2 sm:gap-4">
