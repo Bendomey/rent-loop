@@ -469,3 +469,60 @@ func (h *ClientUserHandler) ActivateClientUser(w http.ResponseWriter, r *http.Re
 		"data": transformations.DBClientUserToRest(clientUser),
 	})
 }
+
+type UpdateClientUserRequest struct {
+	Name        *string `json:"name"        validate:"omitempty,min=2" example:"John Doe"`
+	PhoneNumber *string `json:"phoneNumber" validate:"omitempty,e164"  example:"+233281234569"`
+}
+
+// UpdateClientUserSelf godoc
+//
+//	@Summary		update client user
+//	@Description	update client user
+//	@Tags			ClientUsers
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			body	body		UpdateClientUserRequest	true	"Update Client User Request Body"
+//	@Success		200		{object}	object{data=transformations.OutputClientUser}
+//	@Failure		400		{object}	lib.HTTPError	"Error occurred when updating client user"
+//	@Failure		401		{object}	string			"Invalid or absent authentication token"
+//	@Failure		404		{object}	lib.HTTPError	"Client user not found"
+//	@Failure		422		{object}	lib.HTTPError	"Validation error occured"
+//	@Failure		500		{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/client-users/me [patch]
+func (h *ClientUserHandler) UpdateClientUserSelf(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
+	if !clientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body UpdateClientUserRequest
+
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	input := services.UpdateClientUserInput{
+		ClientUserID: currentClientUser.ID,
+		Name:         body.Name,
+		PhoneNumber:  body.PhoneNumber,
+	}
+
+	clientUser, err := h.service.UpdateClientUser(r.Context(), input)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBClientUserToRest(clientUser),
+	})
+}

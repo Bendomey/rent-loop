@@ -44,6 +44,7 @@ type ClientUserService interface {
 	) (*models.ClientUser, error)
 	ActivateClientUser(ctx context.Context, input ClientUserSearchInput) (*models.ClientUser, error)
 	DeactivateClientUser(ctx context.Context, input DeactivateClientUserInput) (*models.ClientUser, error)
+	UpdateClientUser(ctx context.Context, input UpdateClientUserInput) (*models.ClientUser, error)
 }
 
 type clientUserService struct {
@@ -566,4 +567,52 @@ func (s *clientUserService) DeactivateClientUser(
 	)
 
 	return clientUserToBeDeactivated, nil
+}
+
+type UpdateClientUserInput struct {
+	ClientUserID string
+	Name         *string
+	PhoneNumber  *string
+}
+
+func (s *clientUserService) UpdateClientUser(
+	ctx context.Context,
+	input UpdateClientUserInput,
+) (*models.ClientUser, error) {
+	clientUser, err := s.repo.GetByID(ctx, input.ClientUserID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("ClientUserNotFound", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "UpdateClientUser",
+				"action":   "fetching client user by ID",
+			},
+		})
+	}
+
+	if input.Name != nil {
+		clientUser.Name = *input.Name
+	}
+
+	if input.PhoneNumber != nil {
+		clientUser.PhoneNumber = *input.PhoneNumber
+	}
+
+	updateClientUserErr := s.repo.Update(ctx, clientUser)
+	if updateClientUserErr != nil {
+		return nil, pkg.InternalServerError(updateClientUserErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateClientUserErr,
+			Metadata: map[string]string{
+				"function": "UpdateClientUser",
+				"action":   "updating client user",
+			},
+		})
+	}
+
+	return clientUser, nil
 }

@@ -34,6 +34,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				handlers.ClientUserHandler.ResetClientUserPassword,
 			)
 			r.Get("/v1/client-users", handlers.ClientUserHandler.ListClientUsers)
+			r.Patch("/v1/client-users/me", handlers.ClientUserHandler.UpdateClientUserSelf)
 
 			r.Route("/v1/client-users/{client_user_id}", func(r chi.Router) {
 				r.Get("/", handlers.ClientUserHandler.GetClientUserWithPopulate)
