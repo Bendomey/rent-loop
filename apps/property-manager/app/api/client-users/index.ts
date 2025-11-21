@@ -84,17 +84,16 @@ interface deactivateClientUserProps {
 /**
  * deactivate client user
  */
-export const deactivateClientUser = async (
-	{ id, reason }: deactivateClientUserProps,
-	apiConfig?: ApiConfigForServerConfig,
-) => {
+const deactivateClientUser = async ({
+	id,
+	reason,
+}: deactivateClientUserProps) => {
 	try {
-		const response = await fetchServer<ApiResponse<ClientUser>>(
-			`${apiConfig?.baseUrl}/v1/client-users/${id}/deactivate`,
+		const response = await fetchClient<ApiResponse<ClientUser>>(
+			`/v1/client-users/${id}/deactivate`,
 			{
 				method: 'POST',
 				body: JSON.stringify({ reason }),
-				...(apiConfig ? apiConfig : {}),
 			},
 		)
 		return response.parsedBody.data
@@ -109,6 +108,8 @@ export const deactivateClientUser = async (
 		}
 	}
 }
+export const useDeactivateClientUser = () =>
+	useMutation({ mutationFn: deactivateClientUser })
 
 /**
  * activate client user

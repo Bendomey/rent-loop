@@ -2,9 +2,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import type { Dispatch, SetStateAction } from 'react'
 import { useForm } from 'react-hook-form'
-import { useFetcher } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { useDeactivateClientUser } from '~/api/client-users'
 import {
 	AlertDialog,
 	AlertDialogContent,
@@ -21,6 +21,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
+import { Spinner } from '~/components/ui/spinner'
 import { Textarea } from '~/components/ui/textarea'
 import { QUERY_KEYS } from '~/lib/constants'
 
@@ -45,8 +46,6 @@ export type FormSchema = z.infer<typeof ValidationSchema>
 function DeactivateClientUserModal({ opened, setOpened, data }: Props) {
 	const queryClient = useQueryClient()
 
-	const createFetcher = useFetcher<{ error: string }>()
-
 	const rhfMethods = useForm<FormSchema>({
 		defaultValues: {
 			id: data?.id ?? '',
@@ -57,19 +56,29 @@ function DeactivateClientUserModal({ opened, setOpened, data }: Props) {
 
 	const { handleSubmit, control } = rhfMethods
 
+	const { mutate, isPending } = useDeactivateClientUser()
+
 	const onSubmit = (data: FormSchema) => {
-		try {
-			void createFetcher.submit(data, {
-				method: 'POST',
-				action: '/settings/members/deactivate',
-			})
-			toast.success('The member has been successfully deactivated')
-			void queryClient.invalidateQueries({
-				queryKey: [QUERY_KEYS.CLIENT_USERS],
-			})
-			setOpened(false)
-		} catch {
-			toast.error('Failed to deavtivate member.')
+		if (data) {
+			mutate(
+				{
+					id: data.id,
+					reason: data.reason,
+				},
+				{
+					onError: () => {
+						toast.error('Failed to deavtivate member. Try again later.')
+					},
+					onSuccess: () => {
+						toast.success('The member has been successfully deactivated')
+
+						void queryClient.invalidateQueries({
+							queryKey: [QUERY_KEYS.CLIENT_USERS],
+						})
+						setOpened(false)
+					},
+				},
+			)
 		}
 	}
 
@@ -110,13 +119,18 @@ function DeactivateClientUserModal({ opened, setOpened, data }: Props) {
 								<div className="flex justify-end gap-3 pt-4">
 									<Button
 										type="button"
+										disabled={isPending}
 										variant="outline"
 										onClick={() => setOpened(false)}
 									>
 										Cancel
 									</Button>
-									<Button variant="destructive" type="submit">
-										Yes, Deactivate
+									<Button
+										disabled={isPending}
+										variant="destructive"
+										type="submit"
+									>
+										{isPending ? <Spinner /> : null} Yes, Deactivate
 									</Button>
 								</div>
 							</form>

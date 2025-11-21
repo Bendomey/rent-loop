@@ -31,7 +31,7 @@ function ActivateClientUserModal({ opened, setOpened, data }: Props) {
 		if (data) {
 			mutate(data.id, {
 				onError: () => {
-					toast.error('Failed to delete property. Try again later.')
+					toast.error('Failed to activate member. Try again later.')
 				},
 				onSuccess: () => {
 					toast.success(`${data.name} was activated successfully.`)
