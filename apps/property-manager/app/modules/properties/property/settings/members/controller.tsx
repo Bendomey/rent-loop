@@ -1,6 +1,6 @@
 import { Plus, RotateCw, Search, ToggleLeft } from 'lucide-react'
 import { useState } from 'react'
-import AddMemberModlue from './add'
+import AddMemberModule from './add'
 import { FilterSet } from '~/components/filter-set'
 import { Button } from '~/components/ui/button'
 import {
@@ -76,7 +76,7 @@ export const MembersController = () => {
 					</Button>
 				</div>
 			</div>
-			<AddMemberModlue
+			<AddMemberModule
 				opened={openAddMemberModal}
 				setOpened={setOpenAddMemberModal}
 			/>

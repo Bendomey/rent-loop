@@ -77,6 +77,7 @@ export default function AddMemberModule({ opened, setOpened }: Props) {
 
 	const onSubmit = async (data: FormSchema) => {
 		if (data) {
+			const membersLength = data.members.length > 1 ? 's' : ''
 			mutate(
 				{
 					property_id: property?.id ?? '',
@@ -85,10 +86,12 @@ export default function AddMemberModule({ opened, setOpened }: Props) {
 				},
 				{
 					onError: () => {
-						toast.error('Failed to add member(s). Try again later.')
+						toast.error(
+							`Failed to add member${membersLength}. Try again later.`,
+						)
 					},
 					onSuccess: () => {
-						toast.success('Member(s) have been successfully added')
+						toast.success(`Member${membersLength} have been successfully added`)
 
 						void queryClient.invalidateQueries({
 							queryKey: [QUERY_KEYS.CLIENT_USER_PROPERTIES],
@@ -143,6 +146,12 @@ export default function AddMemberModule({ opened, setOpened }: Props) {
 										>
 											Create here
 										</Link>
+									</FormDescription>
+								</PermissionGuard>
+
+								<PermissionGuard roles={['STAFF']}>
+									<FormDescription className="mt-2">
+										New Member? Reach out to your admin
 									</FormDescription>
 								</PermissionGuard>
 							</div>

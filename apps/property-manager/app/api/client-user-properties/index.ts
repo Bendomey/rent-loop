@@ -39,7 +39,7 @@ export const useGetClientUserProperties = (
 		queryFn: () => getClientUserProperties(query),
 	})
 
-interface clientUserPropertyLinkProps {
+interface ClientUserPropertyLinkProps {
 	property_id: string
 	role: ClientUser['role']
 	client_user_ids: ClientUser['id'][]
@@ -52,7 +52,7 @@ const clientUserPropertyLink = async ({
 	property_id,
 	role,
 	client_user_ids,
-}: clientUserPropertyLinkProps) => {
+}: ClientUserPropertyLinkProps) => {
 	try {
 		const response = await fetchClient<ApiResponse<ClientUser>>(
 			`/v1/properties/${property_id}/client-users:link`,
