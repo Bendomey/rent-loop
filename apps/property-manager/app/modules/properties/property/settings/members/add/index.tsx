@@ -77,7 +77,7 @@ export default function AddMemberModule({ opened, setOpened }: Props) {
 
 	const onSubmit = async (data: FormSchema) => {
 		if (data) {
-			const membersLength = data.members.length > 1 ? 's' : ''
+			const pluralSuffix = data.members.length > 1 ? 's' : ''
 			mutate(
 				{
 					property_id: property?.id ?? '',
@@ -87,11 +87,11 @@ export default function AddMemberModule({ opened, setOpened }: Props) {
 				{
 					onError: () => {
 						toast.error(
-							`Failed to add member${membersLength}. Try again later.`,
+							`Failed to add member${pluralSuffix}. Try again later.`,
 						)
 					},
 					onSuccess: () => {
-						toast.success(`Member${membersLength} have been successfully added`)
+						toast.success(`Member${pluralSuffix} have been successfully added`)
 
 						void queryClient.invalidateQueries({
 							queryKey: [QUERY_KEYS.CLIENT_USER_PROPERTIES],
@@ -112,7 +112,7 @@ export default function AddMemberModule({ opened, setOpened }: Props) {
 					</AlertDialogTitle>
 
 					<AlertDialogDescription className="text-muted-foreground pt-1">
-						Select member(s) from the list to add to the team.
+						Select members from the list to add to the team.
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 
