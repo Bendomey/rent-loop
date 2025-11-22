@@ -15,4 +15,5 @@ interface FetchClientUserFilter {
 	role?: string
 	status?: string
 	client_id?: string
+	none_from_property_id?: string
 }
