@@ -105,9 +105,10 @@ func (r *clientUserRepository) GetByIDWithPopulate(
 
 type ListClientUsersFilter struct {
 	lib.FilterQuery
-	ClientID string
-	Role     *string
-	Status   *string
+	ClientID        string
+	Role            *string
+	Status          *string
+	NotInPropertyID *string
 }
 
 func (r *clientUserRepository) List(
@@ -120,6 +121,7 @@ func (r *clientUserRepository) List(
 		ClientFilterScope("client_users", filterQuery.ClientID),
 		roleFilterScope(filterQuery.Role),
 		statusFilterScope(filterQuery.Status),
+		notInPropertyScope(r.DB, filterQuery.NotInPropertyID),
 		DateRangeScope("client_users", filterQuery.DateRange),
 		SearchScope("client_users", filterQuery.Search),
 
@@ -153,6 +155,7 @@ func (r *clientUserRepository) Count(
 			ClientFilterScope("client_users", filterQuery.ClientID),
 			roleFilterScope(filterQuery.Role),
 			statusFilterScope(filterQuery.Status),
+			notInPropertyScope(r.DB, filterQuery.NotInPropertyID),
 			DateRangeScope("client_users", filterQuery.DateRange),
 			SearchScope("client_users", filterQuery.Search),
 		).Count(&count)
@@ -181,5 +184,17 @@ func statusFilterScope(status *string) func(db *gorm.DB) *gorm.DB {
 		}
 
 		return db.Where("client_users.status = ?", status)
+	}
+}
+
+func notInPropertyScope(cleanDB *gorm.DB, propertyID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if propertyID == nil {
+			return db
+		}
+
+		sub := cleanDB.Model(&models.ClientUserProperty{}).Select("client_user_id").Where("property_id = ?", propertyID)
+
+		return db.Where("client_users.id NOT IN (?)", sub)
 	}
 }

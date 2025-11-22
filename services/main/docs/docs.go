@@ -964,6 +964,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "example": "e4ad26d4-d7e9-4599-a246-5e88abba6083",
+                        "name": "not_in_property_id",
+                        "in": "query"
+                    },
+                    {
                         "enum": [
                             "asc",
                             "desc"
