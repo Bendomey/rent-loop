@@ -105,9 +105,10 @@ func (r *clientUserRepository) GetByIDWithPopulate(
 
 type ListClientUsersFilter struct {
 	lib.FilterQuery
-	ClientID string
-	Role     *string
-	Status   *string
+	ClientID        string
+	Role            *string
+	Status          *string
+	NotInPropertyID *string
 }
 
 func (r *clientUserRepository) List(
@@ -120,6 +121,7 @@ func (r *clientUserRepository) List(
 		ClientFilterScope("client_users", filterQuery.ClientID),
 		roleFilterScope(filterQuery.Role),
 		statusFilterScope(filterQuery.Status),
+		notInPropertyScope(filterQuery.NotInPropertyID),
 		DateRangeScope("client_users", filterQuery.DateRange),
 		SearchScope("client_users", filterQuery.Search),
 
@@ -153,6 +155,7 @@ func (r *clientUserRepository) Count(
 			ClientFilterScope("client_users", filterQuery.ClientID),
 			roleFilterScope(filterQuery.Role),
 			statusFilterScope(filterQuery.Status),
+			notInPropertyScope(filterQuery.NotInPropertyID),
 			DateRangeScope("client_users", filterQuery.DateRange),
 			SearchScope("client_users", filterQuery.Search),
 		).Count(&count)
@@ -181,5 +184,18 @@ func statusFilterScope(status *string) func(db *gorm.DB) *gorm.DB {
 		}
 
 		return db.Where("client_users.status = ?", status)
+	}
+}
+
+func notInPropertyScope(propertyID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if propertyID == nil {
+			return db
+		}
+
+		return db.Joins(
+			"LEFT JOIN client_user_properties ON client_users.id = client_user_properties.client_user_id AND client_user_properties.property_id = ? AND client_user_properties.deleted_at IS NULL",
+			propertyID,
+		).Where("client_user_properties.client_user_id IS NULL")
 	}
 }
