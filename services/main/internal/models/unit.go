@@ -21,7 +21,7 @@ type Unit struct {
 	Status string `gorm:"not null;index;"` // AVAILABLE | OCCUPIED | MAINTENANCE
 
 	Area             *float64 // in square feet or square meters
-	RentFee          float64  `gorm:"not null;"` // monthly rent amount
+	RentFee          int64    `gorm:"not null;"` // monthly rent amount
 	RentFeeCurrency  string   `gorm:"not null;"`
 	PaymentFrequency string   `gorm:"not null;"` // WEEKLY | DAILY | MONTHLY | Quarterly | BiAnnually | Annually
 

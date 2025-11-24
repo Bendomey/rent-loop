@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 // Tenant represents a tenant in the system.
 type Tenant struct {
 	BaseModelSoftDelete
@@ -8,11 +10,11 @@ type Tenant struct {
 	OtherNames      *string
 	LastName        string `gorm:"not null;"`
 	Email           *string
-	Phone           string `gorm:"not null;uniqueIndex;"`
-	Gender          string `gorm:"not null;"` // Male, Female
-	DateOfBirth     string `gorm:"not null;"`
-	Nationality     string `gorm:"not null;"`
-	MaritalStatus   string `gorm:"not null;"` // Single, Married, Divorced, Widowed
+	Phone           string    `gorm:"not null;uniqueIndex;"`
+	Gender          string    `gorm:"not null;"` // Male, Female
+	DateOfBirth     time.Time `gorm:"not null;"`
+	Nationality     string    `gorm:"not null;"`
+	MaritalStatus   string    `gorm:"not null;"` // Single, Married, Divorced, Widowed
 	ProfilePhotoUrl *string
 	IDType          string `gorm:"not null;"` // NationalID, Passport, DriverLicense
 	IDNumber        string `gorm:"not null;"`

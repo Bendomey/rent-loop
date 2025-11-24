@@ -34,7 +34,7 @@ type TenantApplication struct {
 	InitialDepositFee             *int64
 	InitialDepositPaymentMethod   *string // ONLINE | CASH | EXTERNAL
 	InitialDepositReferenceNumber *string
-	InitialDepositPaidAt          *string
+	InitialDepositPaidAt          *time.Time
 	InitialDepositPaymentId       *string
 	InitialDepositPayment         *Payment
 
@@ -52,11 +52,11 @@ type TenantApplication struct {
 	OtherNames      *string
 	LastName        string `gorm:"not null;"`
 	Email           *string
-	Phone           string `gorm:"not null;"`
-	Gender          string `gorm:"not null;"` // Male, Female
-	DateOfBirth     string `gorm:"not null;"`
-	Nationality     string `gorm:"not null;"`
-	MaritalStatus   string `gorm:"not null;"` // Single, Married, Divorced, Widowed
+	Phone           string    `gorm:"not null;"`
+	Gender          string    `gorm:"not null;"` // Male, Female
+	DateOfBirth     time.Time `gorm:"not null;"`
+	Nationality     string    `gorm:"not null;"`
+	MaritalStatus   string    `gorm:"not null;"` // Single, Married, Divorced, Widowed
 	ProfilePhotoUrl *string
 	IDNumber        string `gorm:"not null;"` // GhanaCard
 	IDFrontUrl      *string
@@ -66,7 +66,7 @@ type TenantApplication struct {
 	PreviousLandlordPhone *string
 	PreviousTenancyPeriod *string
 
-	CurrentAddress                 string
+	CurrentAddress                 string `gorm:"not null;"`
 	EmergencyContactName           string `gorm:"not null;"`
 	EmergencyContactPhone          string `gorm:"not null;"`
 	RelationshipToEmergencyContact string `gorm:"not null;"`

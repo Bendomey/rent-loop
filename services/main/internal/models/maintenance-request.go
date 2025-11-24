@@ -11,8 +11,8 @@ type MaintenanceRequest struct {
 	TenantId string `gorm:"not null;index;"`
 	Tenant   Tenant
 
-	Description string `gorm:"not null;"`
-	Attachments pq.StringArray
+	Description string         `gorm:"not null;"`
+	Attachments pq.StringArray `gorm:"type:text[]"`
 
 	Status string `gorm:"not null;"` // Pending, InProgress, Completed, Cancelled
 }
