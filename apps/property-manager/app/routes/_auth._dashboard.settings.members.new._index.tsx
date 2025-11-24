@@ -4,6 +4,7 @@ import { createClientUser } from '~/api/client-users'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'
+import { getErrorMessage } from '~/lib/error-messages'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { NewMemberModule } from '~/modules'
@@ -46,7 +47,11 @@ export async function action({ request }: Route.ActionArgs) {
 			throw new Error('Member creation returned no data')
 		}
 		return redirect('/settings/members')
-	} catch {
+	} catch (e) {
+		if (e instanceof Error) {
+			return { error: getErrorMessage(e.message, 'Failed to create member') }
+		}
+
 		return { error: 'Failed to create member' }
 	}
 }
