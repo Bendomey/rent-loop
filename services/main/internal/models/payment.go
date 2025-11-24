@@ -13,10 +13,10 @@ type Payment struct {
 
 	Email string `json:"email"` // either use system email or user email
 
-	Status       string     `gorm:"not null;default:PENDING;index" json:"status"` //PENDING,SUCCESSFUL,FAILED,EXPIRED.
-	SuccessfulAt *time.Time `json:"successfulAt"`
-	FailedAt     *time.Time `json:"failedAt"`
-	ExpiredAt    *time.Time `json:"expiredAt"`
+	Status       string `gorm:"not null;default:PENDING;index"` // PENDING,SUCCESSFUL,FAILED,EXPIRED.
+	SuccessfulAt *time.Time
+	FailedAt     *time.Time
+	ExpiredAt    *time.Time
 
 	Metadata *string `gorm:"type:jsonb"` // to store any additional data. eg {leasePaymentId: "", tenantApplicationId: "", tenantApplicationPaymentType: "SecurityDeposit"}
 }
