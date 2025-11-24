@@ -25,7 +25,7 @@ type Property struct {
 	Country    string  `gorm:"not null;"`
 	Region     string  `gorm:"not null;"`
 	City       string  `gorm:"not null;"`
-	GPSAddress string  `gorm:"not null;"`
+	GPSAddress *string
 
 	Type   string `gorm:"not null;index;"` // SINGLE | MULTI
 	Status string `gorm:"not null;index;"` // ACTIVE | MAINTENANCE | INACTIVE

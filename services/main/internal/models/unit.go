@@ -27,4 +27,6 @@ type Unit struct {
 
 	RoomsCount int `gorm:"not null"` // to hold the count of related rooms
 	Rooms      []Room
+
+	MaxOccupantsAllowed int `gorm:"not null; default:1"` // maximum number of occupants allowed
 }

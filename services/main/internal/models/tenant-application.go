@@ -31,9 +31,9 @@ type TenantApplication struct {
 	LeaseAgreementDocumentSignedAt *time.Time
 
 	// financial setup
-	RentFee          int64 // we can inherit from unit and then make arrangement for updates!
-	RentFeeCurrency  string
-	PaymentFrequency string // Hourly, Daily, Monthly, Quarterly, BiAnnually, Annually
+	RentFee          int64   `gorm:"not null;"` // we can inherit from unit and then make arrangement for updates!
+	RentFeeCurrency  string  `gorm:"not null;"`
+	PaymentFrequency *string // Hourly, Daily, Monthly, Quarterly, BiAnnually, Annually
 
 	InitialDepositFee             *int64
 	InitialDepositPaymentMethod   *string // ONLINE | CASH | EXTERNAL
