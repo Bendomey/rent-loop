@@ -1,6 +1,9 @@
 package models
 
-import "github.com/lib/pq"
+import (
+	"github.com/lib/pq"
+	"gorm.io/datatypes"
+)
 
 // Unit represents a unit within a property in the system
 type Unit struct {
@@ -28,7 +31,7 @@ type Unit struct {
 	CreatedById string `gorm:"not null;"`
 	CreatedBy   ClientUser
 
-	Features *string `gorm:"type:jsonb;"` // additional metadata in json format {bedrooms: 2, bathrooms: 1, hasBalcony: true, ...}
+	Features datatypes.JSON `gorm:"not null;type:jsonb;"` // additional metadata in json format {bedrooms: 2, bathrooms: 1, hasBalcony: true, ...}
 
 	MaxOccupantsAllowed int `gorm:"not null; default:1"` // maximum number of occupants allowed
 }

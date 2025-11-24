@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/datatypes"
+)
 
 // Payment represents a payment made via our payment gateway.
 type Payment struct {
@@ -18,5 +22,5 @@ type Payment struct {
 	FailedAt     *time.Time
 	ExpiredAt    *time.Time
 
-	Metadata *string `gorm:"type:jsonb"` // to store any additional data. eg {leasePaymentId: "", tenantApplicationId: "", tenantApplicationPaymentType: "SecurityDeposit"}
+	Metadata *datatypes.JSON `gorm:"type:jsonb"` // to store any additional data. eg {leasePaymentId: "", tenantApplicationId: "", tenantApplicationPaymentType: "SecurityDeposit"}
 }
