@@ -1,7 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { HelpCircle, Mail, Phone } from 'lucide-react'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useFetcher } from 'react-router'
+import { toast } from 'sonner'
 import { z } from 'zod'
 import type { CreateClientUserInput } from '~/api/client-users'
 import { Button } from '~/components/ui/button'
@@ -31,6 +33,7 @@ import {
 	SelectValue,
 } from '~/components/ui/select'
 import { Separator } from '~/components/ui/separator'
+import { Spinner } from '~/components/ui/spinner'
 import {
 	Tooltip,
 	TooltipContent,
@@ -66,6 +69,11 @@ export function NewMemberModule() {
 		resolver: zodResolver(ValidationSchema),
 	})
 
+	useEffect(() => {
+		if (createFetcher?.data?.error) {
+			toast.error(createFetcher?.data?.error)
+		}
+	}, [createFetcher?.data])
 	const { handleSubmit, control, getValues } = rhfMethods
 
 	const onSubmit = async (data: Partial<CreateClientUserInput>) => {
@@ -233,8 +241,8 @@ export function NewMemberModule() {
 								Cancel
 							</Button>
 						</Link>
-						<Button type="submit" className="bg-rose-600 hover:bg-rose-700">
-							Create Member
+						<Button disabled={createFetcher.state !== 'idle'} type="submit" className="bg-rose-600 hover:bg-rose-700">
+							{createFetcher.state !== 'idle' ?  <Spinner /> : null} Create Member
 						</Button>
 					</div>
 				</div>
