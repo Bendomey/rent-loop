@@ -108,7 +108,7 @@ export default function AddMemberModule({ opened, setOpened }: Props) {
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>
-						<TypographyH4>Add New Member(s)</TypographyH4>
+						<TypographyH4>Add New Member</TypographyH4>
 					</AlertDialogTitle>
 
 					<AlertDialogDescription className="text-muted-foreground pt-1">
