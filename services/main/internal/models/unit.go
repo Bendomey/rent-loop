@@ -28,7 +28,7 @@ type Unit struct {
 	CreatedById string `gorm:"not null;"`
 	CreatedBy   ClientUser
 
-	Features pq.StringArray `gorm:"type:text[]"` //{}
+	Features *string `gorm:"type:jsonb;"` // additional metadata in json format {bedrooms: 2, bathrooms: 1, hasBalcony: true, ...}
 
 	MaxOccupantsAllowed int `gorm:"not null; default:1"` // maximum number of occupants allowed
 }
