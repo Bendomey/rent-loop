@@ -13,26 +13,15 @@ type Lease struct {
 	TenantId string `gorm:"not null;"`
 	Tenant   Tenant
 
+	TenantApplicationId string `gorm:"not null;"`
+	TenantApplication   TenantApplication
+
 	// financial setup
 	RentFee          int64   `gorm:"not null;"` // we can inherit from unit and then make arrangement for updates!
 	RentFeeCurrency  string  `gorm:"not null;"`
-	PaymentFrequency *string // Hourly, Daily, Monthly, Quarterly, BiAnnually, Annually
+	PaymentFrequency *string // Hourly, Daily, Monthly, Quarterly, BiAnnually, Annually, OneTime
 
-	InitialDepositFee             *int64
-	InitialDepositPaymentMethod   *string // ONLINE | CASH | EXTERNAL
-	InitialDepositReferenceNumber *string
-	InitialDepositPaidAt          *string
-	InitialDepositPaymentId       *string
-	InitialDepositPayment         *Payment
-
-	SecurityDepositFee         *int64 // if it's null or 0 then it's not opted in!
-	SecurityDepositFeeCurrency *string
-
-	SecurityDepositPaymentMethod   *string // ONLINE | CASH | EXTERNAL
-	SecurityDepositReferenceNumber *string
-	SecurityDepositPaidAt          *time.Time
-	SecurityDepositPaymentId       *string
-	SecurityDepositPayment         *Payment
+	Meta *string `gorm:"type:jsonb;"` // additional metadata in json format
 
 	// move in details
 	MoveInDate            *time.Time
@@ -40,6 +29,13 @@ type Lease struct {
 	StayDuration          *int64
 
 	// docs setup
-	LeaseAgreementDocumentUrl      *string // [{type, name, url}]
+	LeaseAgreementDocumentUrl      *string
 	LeaseAgreementDocumentSignedAt *time.Time
+
+	TerminationLeaseAgreementDocumentUrl      *string
+	TerminationLeaseAgreementDocumentSignedAt *time.Time
+
+	// for lease renewals and extensions
+	ParentLeaseId *string `gorm:"index;"`
+	ParentLease   *Lease
 }

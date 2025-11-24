@@ -8,6 +8,9 @@ type Unit struct {
 	PropertyID string `gorm:"not null;index;"`
 	Property   Property
 
+	PropertyBlockID string `gorm:"not null;index;"`
+	PropertyBlock   PropertyBlock
+
 	Name        string         `gorm:"not null;"` // e.g., "Unit 101", "Apt 3B"
 	Slug        string         `gorm:"not null;index;"`
 	Description *string        `gorm:"type:text;"`
@@ -25,8 +28,7 @@ type Unit struct {
 	CreatedById string `gorm:"not null;"`
 	CreatedBy   ClientUser
 
-	RoomsCount int `gorm:"not null"` // to hold the count of related rooms
-	Rooms      []Room
+	Features pq.StringArray `gorm:"type:text[]"` //{}
 
 	MaxOccupantsAllowed int `gorm:"not null; default:1"` // maximum number of occupants allowed
 }

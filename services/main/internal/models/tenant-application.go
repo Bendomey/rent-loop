@@ -22,18 +22,14 @@ type TenantApplication struct {
 	DesiredUnit   Unit
 
 	// move in details
-	MoveInDate            *time.Time
+	DesiredMoveInDate     *time.Time
 	StayDurationFrequency *string // hours, days, months
 	StayDuration          *int64
-
-	// docs setup
-	LeaseAgreementDocumentUrl      *string // [{type, name, url}]
-	LeaseAgreementDocumentSignedAt *time.Time
 
 	// financial setup
 	RentFee          int64   `gorm:"not null;"` // we can inherit from unit and then make arrangement for updates!
 	RentFeeCurrency  string  `gorm:"not null;"`
-	PaymentFrequency *string // Hourly, Daily, Monthly, Quarterly, BiAnnually, Annually
+	PaymentFrequency *string // Hourly, Daily, Monthly, Quarterly, BiAnnually, Annually, OneTime
 
 	InitialDepositFee             *int64
 	InitialDepositPaymentMethod   *string // ONLINE | CASH | EXTERNAL
@@ -62,8 +58,7 @@ type TenantApplication struct {
 	Nationality     string `gorm:"not null;"`
 	MaritalStatus   string `gorm:"not null;"` // Single, Married, Divorced, Widowed
 	ProfilePhotoUrl *string
-	IDType          string `gorm:"not null;"` // NationalID, Passport, DriverLicense
-	IDNumber        string `gorm:"not null;"`
+	IDNumber        string `gorm:"not null;"` // GhanaCard
 	IDFrontUrl      *string
 	IDBackUrl       *string
 

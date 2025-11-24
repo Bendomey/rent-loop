@@ -8,8 +8,8 @@ type MaintenanceRequest struct {
 	LeaseId string `gorm:"not null;index;"`
 	Lease   Lease
 
-	TenantAccountId string `gorm:"not null;index;"`
-	TenantAccount   TenantAccount
+	TenantId string `gorm:"not null;index;"`
+	Tenant   Tenant
 
 	Description string `gorm:"not null;"`
 	Attachments pq.StringArray
