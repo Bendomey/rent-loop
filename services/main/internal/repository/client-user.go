@@ -121,7 +121,7 @@ func (r *clientUserRepository) List(
 		ClientFilterScope("client_users", filterQuery.ClientID),
 		roleFilterScope(filterQuery.Role),
 		statusFilterScope(filterQuery.Status),
-		notInPropertyScope(r.DB, filterQuery.NotInPropertyID),
+		notInPropertyScope(filterQuery.NotInPropertyID),
 		DateRangeScope("client_users", filterQuery.DateRange),
 		SearchScope("client_users", filterQuery.Search),
 
@@ -155,7 +155,7 @@ func (r *clientUserRepository) Count(
 			ClientFilterScope("client_users", filterQuery.ClientID),
 			roleFilterScope(filterQuery.Role),
 			statusFilterScope(filterQuery.Status),
-			notInPropertyScope(r.DB, filterQuery.NotInPropertyID),
+			notInPropertyScope(filterQuery.NotInPropertyID),
 			DateRangeScope("client_users", filterQuery.DateRange),
 			SearchScope("client_users", filterQuery.Search),
 		).Count(&count)
@@ -187,14 +187,15 @@ func statusFilterScope(status *string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func notInPropertyScope(cleanDB *gorm.DB, propertyID *string) func(db *gorm.DB) *gorm.DB {
+func notInPropertyScope(propertyID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if propertyID == nil {
 			return db
 		}
 
-		sub := cleanDB.Model(&models.ClientUserProperty{}).Select("client_user_id").Where("property_id = ?", propertyID)
-
-		return db.Where("client_users.id NOT IN (?)", sub)
+		return db.Joins(
+			"LEFT JOIN client_user_properties ON client_users.id = client_user_properties.client_user_id AND client_user_properties.property_id = ? AND client_user_properties.deleted_at IS NULL",
+			propertyID,
+		).Where("client_user_properties.client_user_id IS NULL")
 	}
 }
