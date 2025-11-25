@@ -51,13 +51,10 @@ export async function action({ request }: Route.ActionArgs) {
 		)
 	} catch (error) {
 		// TODO: sentry capture can be added here for better error tracking
-		console.error('Error generating signed URL:', error)
-		return new Response(
-			JSON.stringify({ error: 'FailedToGenerateSignedUrl' }),
-			{
-				headers: { 'Content-Type': 'application/json' },
-				status: 500,
-			},
-		)
+		console.error('Error uploading file to R2:', error)
+		return new Response(JSON.stringify({ error: 'FailedToUploadFileToR2' }), {
+			headers: { 'Content-Type': 'application/json' },
+			status: 500,
+		})
 	}
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useFetcher } from 'react-router'
 import { toast } from 'sonner'
+import { sanitizeFilename } from '~/lib/strings'
 
 export function useUploadObject(folder: string) {
 	const uploadFetcher = useFetcher<{ error: string; url: string }>()
@@ -13,7 +14,7 @@ export function useUploadObject(folder: string) {
 	useEffect(() => {
 		if (uploadFetcher?.data?.error) {
 			toast.error('Failed to upload file.')
-            setError(uploadFetcher?.data?.error)
+			setError(uploadFetcher?.data?.error)
 		}
 	}, [uploadFetcher?.data])
 
@@ -29,7 +30,10 @@ export function useUploadObject(folder: string) {
 		setError(undefined)
 		const formData = new FormData()
 		formData.append('file', file)
-		formData.append('objectKey', `${folder}/${new Date().toISOString()}-${file.name}`)
+		formData.append(
+			'objectKey',
+			`${folder}/${new Date().toISOString()}-${sanitizeFilename(file.name)}`,
+		)
 
 		await uploadFetcher.submit(formData, {
 			action: '/api/r2/upload',
@@ -41,7 +45,7 @@ export function useUploadObject(folder: string) {
 	return {
 		upload,
 		isLoading,
-        error,
+		error,
 		objectUrl: url,
 	}
 }

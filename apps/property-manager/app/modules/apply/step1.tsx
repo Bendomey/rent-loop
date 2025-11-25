@@ -118,7 +118,7 @@ export function Step1() {
 		},
 	})
 
-	const { upload, objectUrl } = useUploadObject('property-owners/logos');
+	const { upload, objectUrl } = useUploadObject('property-owners/logos')
 
 	const { watch, handleSubmit, control, setValue } = rhfMethods
 	const isIndividual = watch('type') === 'INDIVIDUAL'
@@ -370,8 +370,8 @@ export function Step1() {
 								hideDismissIcon={true}
 								imageSrc={safeString(objectUrl)}
 								// inputContainerClassName='bg-white dark:bg-canvas-dark'
-								label='Logo'
-								name='logo'
+								label="Logo"
+								name="logo"
 								validation={{
 									maxByteSize: 2048000, // 2MB
 								}}
