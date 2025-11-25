@@ -50,7 +50,7 @@ interface Props {
 }
 
 const ValidationSchema = z.object({
-	role: z.enum(['ADMIN', 'STAFF'], {
+	role: z.enum(['MANAGER', 'STAFF'], {
 		error: 'Please select a role',
 	}),
 	members: z.array(z.string()).min(1, 'Please select at least one member'),
@@ -178,7 +178,7 @@ export default function AddMemberModule({ opened, setOpened }: Props) {
 															Please select
 														</SelectItem>
 														<SelectLabel>All Roles</SelectLabel>
-														<SelectItem value="ADMIN">Admin</SelectItem>
+														<SelectItem value="MANAGER">Manager</SelectItem>
 														<SelectItem value="STAFF">Staff</SelectItem>
 													</SelectGroup>
 												</SelectContent>
