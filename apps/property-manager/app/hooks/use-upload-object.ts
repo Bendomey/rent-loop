@@ -25,6 +25,8 @@ export function useUploadObject(folder: string) {
 	}, [uploadFetcher?.data])
 
 	const upload = async (file: File) => {
+		setUrl(undefined)
+		setError(undefined)
 		const formData = new FormData()
 		formData.append('file', file)
 		formData.append('objectKey', `${folder}/${new Date().toISOString()}-${file.name}`)
