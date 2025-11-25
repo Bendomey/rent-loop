@@ -1,28 +1,37 @@
 package models
 
-import "github.com/lib/pq"
+import (
+	"github.com/lib/pq"
+	"gorm.io/datatypes"
+)
 
 // Unit represents a unit within a property in the system
 type Unit struct {
 	BaseModelSoftDelete
-	PropertyID string   `json:"propertyId" gorm:"not null;index;"`
-	Property   Property `json:"property"   gorm:"foreignKey:PropertyID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	PropertyID string `gorm:"not null;index;"`
+	Property   Property
 
-	Name        string         `json:"name"        gorm:"not null;"` // e.g., "Unit 101", "Apt 3B"
-	Slug        string         `json:"slug"        gorm:"not null;index;"`
-	Description *string        `json:"description"`
-	Images      pq.StringArray `json:"images"      gorm:"type:text[]"`
-	Tags        pq.StringArray `json:"tags"        gorm:"type:text[]"`
+	PropertyBlockID string `gorm:"not null;index;"`
+	PropertyBlock   PropertyBlock
 
-	Type   string `json:"type"   gorm:"not null;index;"` // APARTMENT | HOUSE | STUDIO | OFFICE | RETAIL
-	Status string `json:"status" gorm:"not null;index;"` // AVAILABLE | OCCUPIED | MAINTENANCE
+	Name        string         `gorm:"not null;"` // e.g., "Unit 101", "Apt 3B"
+	Slug        string         `gorm:"not null;index;"`
+	Description *string        `gorm:"type:text;"`
+	Images      pq.StringArray `gorm:"type:text[]"`
+	Tags        pq.StringArray `gorm:"type:text[]"`
 
-	Bedrooms      int     `json:"bedrooms"`
-	Bathrooms     float64 `json:"bathrooms"`     // e.g., 1.5 bathrooms
-	Area          float64 `json:"area"`          // in square feet or square meters
-	RentAmount    float64 `json:"rentAmount"`    // monthly rent amount
-	RentFrequency string  `json:"rentFrequency"` // WEEKLY | MONTHLY | YEARLY
+	Type   string `gorm:"not null;index;"` // APARTMENT | HOUSE | STUDIO | OFFICE | RETAIL
+	Status string `gorm:"not null;index;"` // AVAILABLE | OCCUPIED | MAINTENANCE
 
-	CreatedById string     `json:"createdById" gorm:"not null;"`
-	CreatedBy   ClientUser `json:"createdBy"   gorm:"foreignKey:CreatedById;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Area             *float64 // in square feet or square meters
+	RentFee          int64    `gorm:"not null;"` // monthly rent amount
+	RentFeeCurrency  string   `gorm:"not null;"`
+	PaymentFrequency string   `gorm:"not null;"` // WEEKLY | DAILY | MONTHLY | Quarterly | BiAnnually | Annually
+
+	CreatedById string `gorm:"not null;"`
+	CreatedBy   ClientUser
+
+	Features datatypes.JSON `gorm:"not null;type:jsonb;"` // additional metadata in json format {bedrooms: 2, bathrooms: 1, hasBalcony: true, ...}
+
+	MaxOccupantsAllowed int `gorm:"not null; default:1"` // maximum number of occupants allowed
 }
