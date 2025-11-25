@@ -41,7 +41,7 @@ export const useGetClientUserProperties = (
 
 interface ClientUserPropertyLinkProps {
 	property_id: string
-	role: ClientUser['role']
+	role: ClientUserProperty['role']
 	client_user_ids: ClientUser['id'][]
 }
 
@@ -54,7 +54,7 @@ const clientUserPropertyLink = async ({
 	client_user_ids,
 }: ClientUserPropertyLinkProps) => {
 	try {
-		const response = await fetchClient<ApiResponse<ClientUser>>(
+		const response = await fetchClient<ApiResponse<ClientUserProperty>>(
 			`/v1/properties/${property_id}/client-users:link`,
 			{
 				method: 'POST',

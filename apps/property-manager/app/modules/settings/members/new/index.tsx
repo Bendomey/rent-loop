@@ -241,8 +241,13 @@ export function NewMemberModule() {
 								Cancel
 							</Button>
 						</Link>
-						<Button disabled={createFetcher.state !== 'idle'} type="submit" className="bg-rose-600 hover:bg-rose-700">
-							{createFetcher.state !== 'idle' ?  <Spinner /> : null} Create Member
+						<Button
+							disabled={createFetcher.state !== 'idle'}
+							type="submit"
+							className="bg-rose-600 hover:bg-rose-700"
+						>
+							{createFetcher.state !== 'idle' ? <Spinner /> : null} Create
+							Member
 						</Button>
 					</div>
 				</div>
