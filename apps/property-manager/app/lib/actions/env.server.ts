@@ -11,6 +11,11 @@ const environmentSchema = z.object({
 	API_ADDRESS: z.string().min(1).default('http://localhost:5000/api'),
 	SENTRY_DSN: z.string().min(1).default('fake_dsn_for_dev'),
 	GOOGLE_MAPS_API_KEY: z.string().min(1).default('fake-api-key'),
+	CF_ACCOUNT_ID: z.string().min(1),
+	BUCKET_NAME: z.string().min(1),
+	R2_ACCESS_KEY_ID: z.string().min(1),
+	R2_SECRET_ACCESS_KEY: z.string().min(1),
+	RENTLOOP_IMAGES_BASE_URL: z.url().min(1),
 })
 
 const environmentVariables = () => environmentSchema.parse(process.env)

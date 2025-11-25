@@ -29,6 +29,8 @@ import {
 } from '~/components/ui/select'
 import { Textarea } from '~/components/ui/textarea'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
+import { useUploadObject } from '~/hooks/use-upload-object'
+import { safeString } from '~/lib/strings'
 
 const ValidationSchema = z
 	.object({
@@ -115,6 +117,8 @@ export function Step1() {
 			type: formData.type,
 		},
 	})
+
+	const { upload, objectUrl } = useUploadObject('property-owners/logos');
 
 	const { watch, handleSubmit, control, setValue } = rhfMethods
 	const isIndividual = watch('type') === 'INDIVIDUAL'
@@ -356,7 +360,22 @@ export function Step1() {
 								)}
 							/>
 
-							<ImageUpload shape="circle" hint="Optional" />
+							<ImageUpload
+								shape="circle"
+								hint="Optional"
+								acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
+								// disabled={values.usePrimaryLogo}
+								// error={errors.logo && touched.logo ? ' ' : undefined}
+								fileCallback={upload}
+								hideDismissIcon={true}
+								imageSrc={safeString(objectUrl)}
+								// inputContainerClassName='bg-white dark:bg-canvas-dark'
+								label='Logo'
+								name='logo'
+								validation={{
+									maxByteSize: 2048000, // 2MB
+								}}
+							/>
 
 							<FormField
 								name="registration_number"
