@@ -16,6 +16,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
+import { ImageUpload } from '~/components/ui/image-upload'
 import { Input } from '~/components/ui/input'
 import {
 	Select,
@@ -354,6 +355,8 @@ export function Step1() {
 									</FormItem>
 								)}
 							/>
+
+							<ImageUpload shape="circle" hint="Optional" />
 
 							<FormField
 								name="registration_number"
