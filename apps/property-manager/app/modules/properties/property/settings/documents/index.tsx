@@ -1,10 +1,16 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { EllipsisVertical, FileText, RotateCw } from 'lucide-react'
+import {
+	AlertCircleIcon,
+	EllipsisVertical,
+	FileText,
+	RotateCw,
+} from 'lucide-react'
 import { useMemo } from 'react'
-import { useLoaderData, useParams, useSearchParams } from 'react-router'
+import { Link, useLoaderData, useParams, useSearchParams } from 'react-router'
 import { PropertyDocumentsController } from './controller'
 import { useGetDocuments } from '~/api/documents'
 import { DataTable } from '~/components/datatable'
+import { Alert, AlertDescription } from '~/components/ui/alert'
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -36,10 +42,12 @@ import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth._dashboard.settings.documents'
 
 export function PropertyDocumentsSettingsModule() {
-	const { documentTemplates } = useLoaderData<typeof loader>()
+	const { documentTemplates, error: documentError } =
+		useLoaderData<typeof loader>()
 	const params = useParams()
 	const [searchParams] = useSearchParams()
 	const { property } = useProperty()
+	const property_slug = params.propertySlug
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -50,7 +58,7 @@ export function PropertyDocumentsSettingsModule() {
 
 	const { data, isPending, isRefetching, error, refetch } = useGetDocuments({
 		filters: {
-			property_slug: params.propertySlug,
+			property_slug: property_slug,
 		},
 		pagination: { page, per },
 		populate: ['CreatedBy'],
@@ -138,7 +146,7 @@ export function PropertyDocumentsSettingsModule() {
 			},
 			{
 				id: 'actions',
-				cell: () => (
+				cell: ({ row }) => (
 					<AlertDialog>
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
@@ -152,7 +160,11 @@ export function PropertyDocumentsSettingsModule() {
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end" className="w-32">
-								<DropdownMenuItem>Edit</DropdownMenuItem>
+								<Link
+									to={`/properties/${property_slug}/settings/documents/${row.original.id}`}
+								>
+									<DropdownMenuItem>Edit</DropdownMenuItem>
+								</Link>
 								<DropdownMenuSeparator />
 								<AlertDialogTrigger asChild>
 									<DropdownMenuItem variant="destructive">
@@ -179,7 +191,7 @@ export function PropertyDocumentsSettingsModule() {
 				),
 			},
 		]
-	}, [])
+	}, [property_slug])
 
 	return (
 		<main className="flex flex-col gap-2 sm:gap-4">
@@ -206,6 +218,12 @@ export function PropertyDocumentsSettingsModule() {
 					)}
 				</div>
 			</div>
+			{documentError ? (
+				<Alert variant="destructive" className="border-red-600">
+					<AlertCircleIcon />
+					<AlertDescription>{documentError}</AlertDescription>
+				</Alert>
+			) : null}
 			{property ? (
 				<PropertyDocumentsController
 					property={property}

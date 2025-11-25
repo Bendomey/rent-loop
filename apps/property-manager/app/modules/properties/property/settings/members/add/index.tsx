@@ -86,9 +86,7 @@ export default function AddMemberModule({ opened, setOpened }: Props) {
 				},
 				{
 					onError: () => {
-						toast.error(
-							`Failed to add member${pluralSuffix}. Try again later.`,
-						)
+						toast.error(`Failed to add member${pluralSuffix}. Try again later.`)
 					},
 					onSuccess: () => {
 						toast.success(`Member${pluralSuffix} have been successfully added`)
