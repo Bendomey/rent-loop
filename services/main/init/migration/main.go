@@ -13,7 +13,6 @@ import (
 
 func updateMigration(db *gorm.DB) error {
 	err := db.AutoMigrate(
-		&models.Payment{},
 
 		&models.Admin{},
 		&models.ClientApplication{},
@@ -24,15 +23,16 @@ func updateMigration(db *gorm.DB) error {
 		&models.Document{},
 		&models.PropertyBlock{},
 		&models.Unit{},
+		&models.Payment{},
 		&models.Tenant{},
 		&models.TenantApplication{},
 		&models.Lease{},
 		&models.LeaseChecklist{},
 		&models.LeaseChecklistItem{},
 		&models.LeasePayment{},
-		&models.MaintenanceRequest{},
-		&models.Announcement{},
-		&models.TenantAccount{},
+		// &models.MaintenanceRequest{},
+		// &models.Announcement{},
+		// &models.TenantAccount{},
 	)
 	return err
 }

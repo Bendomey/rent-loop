@@ -40,13 +40,17 @@ type Lease struct {
 	StayDuration          int64
 
 	// docs setup
-	LeaseAgreementDocumentUrl                     string
-	LeaseAgreementDocumentPropertyManagerSignedAt *time.Time
-	LeaseAgreementDocumentTenantSignedAt          *time.Time
+	LeaseAgreementDocumentUrl                       string
+	LeaseAgreementDocumentPropertyManagerSignedById *string
+	LeaseAgreementDocumentPropertyManagerSignedBy   *ClientUser
+	LeaseAgreementDocumentPropertyManagerSignedAt   *time.Time
+	LeaseAgreementDocumentTenantSignedAt            *time.Time
 
-	TerminationLeaseAgreementDocumentUrl                     *string
-	TerminationLeaseAgreementDocumentPropertyManagerSignedAt *time.Time
-	TerminationLeaseAgreementDocumentTenantSignedAt          *time.Time
+	TerminationLeaseAgreementDocumentUrl                       *string
+	TerminationLeaseAgreementDocumentPropertyManagerSignedAt   *time.Time
+	TerminationLeaseAgreementDocumentPropertyManagerSignedById *string
+	TerminationLeaseAgreementDocumentPropertyManagerSignedBy   *ClientUser
+	TerminationLeaseAgreementDocumentTenantSignedAt            *time.Time
 
 	// for lease renewals and extensions
 	ParentLeaseId *string `gorm:"index;"`
