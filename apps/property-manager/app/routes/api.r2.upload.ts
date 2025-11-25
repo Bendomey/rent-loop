@@ -2,17 +2,21 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import type { Route } from './+types/api.r2.upload'
 import { environmentVariables } from '~/lib/actions/env.server'
 
+let s3Client: S3Client | null = null
+
 export async function action({ request }: Route.ActionArgs) {
 	const env = environmentVariables()
 	try {
-		const client = new S3Client({
-			endpoint: `https://${env.CF_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-			region: 'auto',
-			credentials: {
-				accessKeyId: env.R2_ACCESS_KEY_ID,
-				secretAccessKey: env.R2_SECRET_ACCESS_KEY,
-			},
-		})
+		if (!s3Client) {
+			s3Client = new S3Client({
+				endpoint: `https://${env.CF_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+				region: 'auto',
+				credentials: {
+					accessKeyId: env.R2_ACCESS_KEY_ID,
+					secretAccessKey: env.R2_SECRET_ACCESS_KEY,
+				},
+			})
+		}
 
 		const form = await request.formData()
 		const file = form.get('file')
@@ -39,7 +43,7 @@ export async function action({ request }: Route.ActionArgs) {
 			ContentType: file.type,
 		})
 
-		await client.send(command)
+		await s3Client.send(command)
 
 		return new Response(
 			JSON.stringify({

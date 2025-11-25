@@ -367,7 +367,6 @@ export function Step1() {
 								// disabled={values.usePrimaryLogo}
 								// error={errors.logo && touched.logo ? ' ' : undefined}
 								fileCallback={upload}
-								hideDismissIcon={true}
 								imageSrc={safeString(objectUrl)}
 								// inputContainerClassName='bg-white dark:bg-canvas-dark'
 								label="Logo"
