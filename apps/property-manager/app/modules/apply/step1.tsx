@@ -356,7 +356,7 @@ export function Step1() {
 								)}
 							/>
 
-							<ImageUpload shape='circle' hint='Optional' />
+							<ImageUpload shape="circle" hint="Optional" />
 
 							<FormField
 								name="registration_number"
