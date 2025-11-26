@@ -1,21 +1,12 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { CircleCheck, CircleX, EllipsisVertical, User } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { MembersController } from './controller'
+import RemoveMemberModule from './remove'
 import { useGetClientUserProperties } from '~/api/client-user-properties'
 import { DataTable } from '~/components/datatable'
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from '~/components/ui/alert-dialog'
+import PermissionGuard from '~/components/permissions/permission-guard'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -32,6 +23,9 @@ import { useProperty } from '~/providers/property-provider'
 export function PropertyMembersModule() {
 	const [searchParams] = useSearchParams()
 	const { property } = useProperty()
+
+	const [selectedMember, setSelectedMember] = useState<ClientUser>()
+	const [openRemoveMemberModal, setOpenRemoveMemberModal] = useState(false)
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -120,44 +114,35 @@ export function PropertyMembersModule() {
 			},
 			{
 				id: 'actions',
-				cell: () => (
-					<AlertDialog>
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="ghost"
-									className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-									size="icon"
-								>
-									<EllipsisVertical />
-									<span className="sr-only">Open menu</span>
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end" className="w-32">
-								<DropdownMenuItem>Edit</DropdownMenuItem>
+				cell: ({ row }) => (
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="ghost"
+								className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+								size="icon"
+							>
+								<EllipsisVertical />
+								<span className="sr-only">Open menu</span>
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end" className="w-32">
+							<DropdownMenuItem>Edit</DropdownMenuItem>
+
+							<PermissionGuard roles={['ADMIN', 'OWNER']}>
 								<DropdownMenuSeparator />
-								<AlertDialogTrigger asChild>
-									<DropdownMenuItem variant="destructive">
-										Deactivate
-									</DropdownMenuItem>
-								</AlertDialogTrigger>
-							</DropdownMenuContent>
-						</DropdownMenu>
-						<AlertDialogContent className="sm:max-w-[425px]">
-							<AlertDialogHeader>
-								<AlertDialogTitle>Are you sure?</AlertDialogTitle>
-								<AlertDialogDescription>
-									This will deactivate the member.
-								</AlertDialogDescription>
-							</AlertDialogHeader>
-							<AlertDialogFooter className="mt-5">
-								<AlertDialogCancel>Cancel</AlertDialogCancel>
-								<AlertDialogAction className="bg-destructive hover:bg-destructive/90 text-white">
-									Deactivate
-								</AlertDialogAction>
-							</AlertDialogFooter>
-						</AlertDialogContent>
-					</AlertDialog>
+								<DropdownMenuItem
+									onClick={() => {
+										setSelectedMember(row.original?.client_user ?? undefined)
+										setOpenRemoveMemberModal(true)
+									}}
+									variant="destructive"
+								>
+									Remove
+								</DropdownMenuItem>
+							</PermissionGuard>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				),
 			},
 		]
@@ -195,6 +180,13 @@ export function PropertyMembersModule() {
 					}}
 				/>
 			</div>
+
+			<RemoveMemberModule
+				opened={openRemoveMemberModal}
+				setOpened={setOpenRemoveMemberModal}
+				data={selectedMember}
+				property={property}
+			/>
 		</main>
 	)
 }
