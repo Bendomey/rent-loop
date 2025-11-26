@@ -94,6 +94,8 @@ interface Props
 	shape?: ImageUploadShape
 	/** Validations to do on the desired image before being uploaded. */
 	validation?: ImageValidation
+	/** Indicates whether the image is currently uploading. */
+	isUploading?: boolean
 }
 
 interface ImageData {
@@ -144,6 +146,7 @@ export function ImageUpload({
 	preProcessing,
 	shape = 'circle',
 	validation,
+	isUploading,
 }: Props) {
 	const inputRef = useRef<HTMLInputElement>(null)
 
@@ -225,8 +228,6 @@ export function ImageUpload({
 			}))
 		}
 		switch (imageData.status) {
-			case 'pending':
-				return <Spinner className="size-8" />
 			case 'resolved':
 				// Determine if blur effect should be applied
 				const shouldApplyBlur =
@@ -466,6 +467,7 @@ export function ImageUpload({
 	const heroStyles = cn([hero ? 'aspect-video rounded-sm' : ''])
 
 	const errorMessage = error || imageData.error
+	const isLoading = imageData.status === 'pending' || isUploading
 
 	return (
 		<div className={cn([className])}>
@@ -502,6 +504,11 @@ export function ImageUpload({
 						}
 					>
 						{imageContent}
+						{isLoading ? (
+							<div className="bg-opacity-50 absolute z-10 flex h-full w-full items-center justify-center rounded-full">
+								<Spinner className="size-20 text-rose-600" />
+							</div>
+						) : null}
 					</div>
 					<Button
 						className={cn([
