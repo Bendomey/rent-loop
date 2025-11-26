@@ -47,6 +47,7 @@ const ValidationSchema = z
 		registration_number: z.string().optional(),
 		support_email: z.string().optional(),
 		support_phone: z.string().optional(),
+		logo_url: z.url('Please upload a logo').optional(),
 		website_url: z.url('Please enter a valid website URL').optional(),
 		contact_name: z.string().min(2, 'Please enter a valid name').optional(),
 		date_of_birth: z
@@ -124,6 +125,16 @@ export function Step1() {
 		isLoading: isUploading,
 	} = useUploadObject('property-owners/logos')
 
+	useEffect(() => {
+		if (objectUrl) {
+			rhfMethods.setValue('logo_url', objectUrl, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [objectUrl])
+
 	const { watch, handleSubmit, control, setValue } = rhfMethods
 	const isIndividual = watch('type') === 'INDIVIDUAL'
 
@@ -158,6 +169,13 @@ export function Step1() {
 
 		if (formData.support_phone) {
 			setValue('support_phone', formData.support_phone, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+
+		if (formData.logo_url) {
+			setValue('logo_url', formData.logo_url, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
@@ -215,6 +233,7 @@ export function Step1() {
 			support_email: data.support_email,
 			support_phone: data.support_phone,
 			website_url: data.website_url,
+			logo_url: data.logo_url,
 			contact_name: isIndividual ? data.name : data.contact_name,
 			date_of_birth: data.date_of_birth?.toISOString(),
 			id_type: data.id_type,
@@ -368,12 +387,16 @@ export function Step1() {
 								shape="circle"
 								hint="Optional"
 								acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-								// disabled={values.usePrimaryLogo}
-								// error={errors.logo && touched.logo ? ' ' : undefined}
+								error={rhfMethods.formState.errors?.logo_url?.message}
 								fileCallback={upload}
 								isUploading={isUploading}
-								imageSrc={safeString(objectUrl)}
-								// inputContainerClassName='bg-white dark:bg-canvas-dark'
+								dismissCallback={() => {
+									rhfMethods.setValue('logo_url', undefined, {
+										shouldDirty: true,
+										shouldValidate: true,
+									})
+								}}
+								imageSrc={safeString(rhfMethods.watch('logo_url'))}
 								label="Logo"
 								name="logo"
 								validation={{

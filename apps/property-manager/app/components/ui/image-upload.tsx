@@ -58,8 +58,8 @@ interface Props
 	error?: string
 	/** Callback function invoked when an image is uploaded. */
 	fileCallback?:
-	| ((file: File, image: HTMLImageElement) => Promise<void>)
-	| ((file: File, image: HTMLImageElement) => void)
+		| ((file: File, image: HTMLImageElement) => Promise<void>)
+		| ((file: File, image: HTMLImageElement) => void)
 	/** Function to throw an error message when the image if larger than the maxByteSize allowed. */
 	fileMaxKbSizeError?: (fileName: string, maxKbSize: number) => string
 	/** Function to throw an error message when the image is larger than the maxHeight or maxWidth. */
@@ -509,7 +509,8 @@ export function ImageUpload({
 								role="status"
 								aria-live="polite"
 								aria-label="Loading"
-								className="absolute z-20 flex h-full w-full items-center justify-center">
+								className="absolute z-20 flex h-full w-full items-center justify-center"
+							>
 								<Spinner className="size-20 text-rose-600" />
 							</div>
 						) : null}
@@ -544,14 +545,12 @@ export function ImageUpload({
 					/>
 				</div>
 			</div>
-			{
-				errorMessage ? (
-					<TypographyMuted className="mt-1 text-red-600">
-						{errorMessage}
-					</TypographyMuted>
-				) : null
-			}
+			{errorMessage ? (
+				<TypographyMuted className="mt-1 text-red-600">
+					{errorMessage}
+				</TypographyMuted>
+			) : null}
 			{hint ? <TypographyMuted className="mt-1">{hint}</TypographyMuted> : null}
-		</div >
+		</div>
 	)
 }
