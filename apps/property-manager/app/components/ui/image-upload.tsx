@@ -58,8 +58,8 @@ interface Props
 	error?: string
 	/** Callback function invoked when an image is uploaded. */
 	fileCallback?:
-		| ((file: File, image: HTMLImageElement) => Promise<void>)
-		| ((file: File, image: HTMLImageElement) => void)
+	| ((file: File, image: HTMLImageElement) => Promise<void>)
+	| ((file: File, image: HTMLImageElement) => void)
 	/** Function to throw an error message when the image if larger than the maxByteSize allowed. */
 	fileMaxKbSizeError?: (fileName: string, maxKbSize: number) => string
 	/** Function to throw an error message when the image is larger than the maxHeight or maxWidth. */
@@ -94,6 +94,8 @@ interface Props
 	shape?: ImageUploadShape
 	/** Validations to do on the desired image before being uploaded. */
 	validation?: ImageValidation
+	/** Indicates whether the image is currently uploading. */
+	isUploading?: boolean
 }
 
 interface ImageData {
@@ -144,6 +146,7 @@ export function ImageUpload({
 	preProcessing,
 	shape = 'circle',
 	validation,
+	isUploading,
 }: Props) {
 	const inputRef = useRef<HTMLInputElement>(null)
 
@@ -225,8 +228,6 @@ export function ImageUpload({
 			}))
 		}
 		switch (imageData.status) {
-			case 'pending':
-				return <Spinner className="size-8" />
 			case 'resolved':
 				// Determine if blur effect should be applied
 				const shouldApplyBlur =
@@ -466,6 +467,7 @@ export function ImageUpload({
 	const heroStyles = cn([hero ? 'aspect-video rounded-sm' : ''])
 
 	const errorMessage = error || imageData.error
+	const isLoading = imageData.status === 'pending' || isUploading
 
 	return (
 		<div className={cn([className])}>
@@ -502,6 +504,15 @@ export function ImageUpload({
 						}
 					>
 						{imageContent}
+						{isLoading ? (
+							<div
+								role="status"
+								aria-live="polite"
+								aria-label="Loading"
+								className="absolute z-20 flex h-full w-full items-center justify-center">
+								<Spinner className="size-20 text-rose-600" />
+							</div>
+						) : null}
 					</div>
 					<Button
 						className={cn([
@@ -533,12 +544,14 @@ export function ImageUpload({
 					/>
 				</div>
 			</div>
-			{errorMessage ? (
-				<TypographyMuted className="mt-1 text-red-600">
-					{errorMessage}
-				</TypographyMuted>
-			) : null}
+			{
+				errorMessage ? (
+					<TypographyMuted className="mt-1 text-red-600">
+						{errorMessage}
+					</TypographyMuted>
+				) : null
+			}
 			{hint ? <TypographyMuted className="mt-1">{hint}</TypographyMuted> : null}
-		</div>
+		</div >
 	)
 }

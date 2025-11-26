@@ -118,7 +118,11 @@ export function Step1() {
 		},
 	})
 
-	const { upload, objectUrl } = useUploadObject('property-owners/logos')
+	const {
+		upload,
+		objectUrl,
+		isLoading: isUploading,
+	} = useUploadObject('property-owners/logos')
 
 	const { watch, handleSubmit, control, setValue } = rhfMethods
 	const isIndividual = watch('type') === 'INDIVIDUAL'
@@ -367,6 +371,7 @@ export function Step1() {
 								// disabled={values.usePrimaryLogo}
 								// error={errors.logo && touched.logo ? ' ' : undefined}
 								fileCallback={upload}
+								isUploading={isUploading}
 								imageSrc={safeString(objectUrl)}
 								// inputContainerClassName='bg-white dark:bg-canvas-dark'
 								label="Logo"
