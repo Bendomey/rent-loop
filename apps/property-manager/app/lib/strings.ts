@@ -23,3 +23,8 @@ export const removeFileExtension = (filename: string): string => {
 	if (lastDotIndex === -1) return filename
 	return filename.substring(0, lastDotIndex)
 }
+
+// Sanitizes a filename by replacing unsafe characters with underscores.
+export function sanitizeFilename(filename: string): string {
+	return filename.replace(/[^a-zA-Z0-9.-_]/g, '_')
+}
