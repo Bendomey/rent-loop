@@ -75,3 +75,38 @@ const clientUserPropertyLink = async ({
 }
 export const useLinkClientUserProperty = () =>
 	useMutation({ mutationFn: clientUserPropertyLink })
+
+interface ClientUserPropertyUnlinkProps {
+	property_id: string
+	client_user_ids: ClientUser['id'][]
+}
+
+/**
+ * Unlink client user from property
+ */
+
+const clientUserPropertyUnlink = async ({
+	property_id,
+	client_user_ids,
+}: ClientUserPropertyUnlinkProps) => {
+	try {
+		await fetchClient<boolean>(
+			`/v1/properties/${property_id}/client-users:unlink`,
+			{
+				method: 'DELETE',
+				body: JSON.stringify({ client_user_ids }),
+			},
+		)
+	} catch (error) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+export const useUnlinkClientUserProperty = () =>
+	useMutation({ mutationFn: clientUserPropertyUnlink })
