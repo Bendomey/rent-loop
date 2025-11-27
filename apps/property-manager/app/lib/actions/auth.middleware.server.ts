@@ -30,7 +30,7 @@ export const authMiddleware: MiddlewareFunction = async ({
 
 			const clientUserPropertiesResponse = await getClientUserProperties(
 				{
-					pagination: { page: 1, per: 50 },
+					pagination: { page: 1, per: 5 },
 					sorter: {},
 					filters: {},
 					search: {},
@@ -59,7 +59,7 @@ export const authMiddleware: MiddlewareFunction = async ({
 				}),
 				getClientUserProperties(
 					{
-						pagination: { page: 1, per: 50 },
+						pagination: { page: 1, per: 5 },
 						sorter: {},
 						filters: {},
 						search: {},

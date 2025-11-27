@@ -188,3 +188,37 @@ export const getClientUserProperties = async (
 		}
 	}
 }
+
+const getClientUserPropertiesClient = async (
+	props: FetchMultipleDataInputParams<FetchClientUserPropertyFilter>,
+) => {
+	try {
+		const removeAllNullableValues =
+			getQueryParams<FetchClientUserPropertyFilter>(props)
+		const params = new URLSearchParams(removeAllNullableValues)
+		const response = await fetchClient<
+			ApiResponse<FetchMultipleDataResponse<ClientUserProperty>>
+		>(`/v1/properties/me?${params.toString()}`, {
+			method: 'GET',
+		})
+
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useGetMyProperties = (
+	query: FetchMultipleDataInputParams<FetchClientUserPropertyFilter>,
+) =>
+	useQuery({
+		queryKey: [QUERY_KEYS.CURRENT_USER, QUERY_KEYS.PROPERTIES, query],
+		queryFn: () => getClientUserPropertiesClient(query),
+	})
