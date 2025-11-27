@@ -1,11 +1,17 @@
+import { redirect } from 'react-router'
 import type { Route } from './+types/_auth.properties.$propertyId.settings.billing'
 import { propertyContext } from '~/lib/actions/property.context.server'
+import { NOT_FOUND_ROUTE } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { PropertyBillingSettingsModule } from '~/modules'
 
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const clientUserProperty = context.get(propertyContext)
+
+	if (clientUserProperty?.role !== 'MANAGER') {
+		return redirect(NOT_FOUND_ROUTE)
+	}
 
 	return {
 		origin: getDomainUrl(request),

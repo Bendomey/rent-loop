@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 import { useLinkClientUserProperty } from '~/api/client-user-properties'
 import { MembersSelect } from '~/components/MultiSelect/memebers-select'
-import PermissionGuard from '~/components/permissions/permission-guard'
+import { PermissionGuard } from '~/components/permissions/permission-guard'
 import {
 	AlertDialog,
 	AlertDialogContent,

@@ -1,7 +1,9 @@
-import { FileText, Globe, Users, Wrench } from 'lucide-react'
+import { FileText, Globe, UserCircle, Users, Wrench } from 'lucide-react'
+import { useMemo } from 'react'
 import { Outlet } from 'react-router'
 import type { Route } from './+types/_auth.properties.$propertyId.settings'
 import { NavMain } from '~/components/nav-main'
+import { useHasPropertyPermissions } from '~/components/permissions/use-has-role'
 import { Separator } from '~/components/ui/separator'
 import { TypographyH4 } from '~/components/ui/typography'
 
@@ -10,31 +12,52 @@ export const handle = {
 }
 
 export default function SettingsDashboard({ params }: Route.ComponentProps) {
-	const generalMenus = [
-		{
-			title: 'General',
-			url: '/general',
-			icon: Wrench,
-		},
-	]
+	const { hasPermissions } = useHasPropertyPermissions({ roles: ['MANAGER'] })
 
-	const workspaceMenus = [
-		{
-			title: 'Members',
-			url: '/members',
-			icon: Users,
-		},
-		{
-			title: 'Billing',
-			url: '/billing',
-			icon: Globe,
-		},
-		{
+	const generalMenus = useMemo(() => {
+		const generalMenus = []
+		if (hasPermissions === 'AUTHORIZED') {
+			generalMenus.push({
+				title: 'General',
+				url: '/general',
+				icon: Wrench,
+			})
+		} else {
+			generalMenus.push({
+				title: 'My Account',
+				url: '/my-account',
+				icon: UserCircle,
+			})
+		}
+
+		return generalMenus
+	}, [hasPermissions])
+
+	const workspaceMenus = useMemo(() => {
+		const workspaceMenus = []
+		if (hasPermissions === 'AUTHORIZED') {
+			workspaceMenus.push(
+				{
+					title: 'Members',
+					url: '/members',
+					icon: Users,
+				},
+				{
+					title: 'Billing',
+					url: '/billing',
+					icon: Globe,
+				},
+			)
+		}
+
+		workspaceMenus.push({
 			title: 'Documents',
 			url: '/documents',
 			icon: FileText,
-		},
-	]
+		})
+
+		return workspaceMenus
+	}, [hasPermissions])
 
 	return (
 		<main className="h-[calc(100vh+160px)] md:h-[calc(100vh-120px)]">
