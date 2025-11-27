@@ -1,11 +1,16 @@
-import type { Route } from './+types/_auth.properties.$propertySlug._index'
+import type { Route } from './+types/_auth.properties.$propertyId._index'
+import { propertyContext } from '~/lib/actions/property.context.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { PropertyModule } from '~/modules'
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
+	const clientUserProperty = context.get(propertyContext)
+	
+	console.log(clientUserProperty)
 	return {
 		origin: getDomainUrl(request),
+		clientUserProperty
 	}
 }
 
@@ -15,7 +20,7 @@ export const handle = {
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `Overview | ${params.propertySlug}`,
+		title: `Overview | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,

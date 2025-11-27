@@ -1,18 +1,18 @@
 import { createContext, useContext, type PropsWithChildren } from 'react'
 
 interface Props {
-	data: Property | null
+	data: ClientUserProperty | null
 }
 
 interface IPropertyContext {
-	property?: Property
+	clientUserProperty?: ClientUserProperty
 }
 
 const PropertyContext = createContext<IPropertyContext | null>(null)
 
 export function PropertyProvider({ data, children }: PropsWithChildren<Props>) {
 	return (
-		<PropertyContext.Provider value={{ property: data ?? undefined }}>
+		<PropertyContext.Provider value={{ clientUserProperty: data ?? undefined }}>
 			{children}
 		</PropertyContext.Provider>
 	)

@@ -7,14 +7,14 @@ import { TypographyH1, TypographyP } from '~/components/ui/typography'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyModule() {
-	const { property } = useProperty()
+	const { clientUserProperty } = useProperty()
 
 	return (
 		<div className="mx-auto w-full max-w-7xl px-4 py-8">
 			{/* Header */}
 			<div className="mb-8">
 				<TypographyH1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-					Property Overview {property?.name ? `— ${property.name}` : ''}
+					Property Overview {clientUserProperty?.property?.name ? `— ${clientUserProperty?.property.name}` : ''}
 				</TypographyH1>
 				<TypographyP className="text-muted-foreground mt-1 text-sm">
 					Comprehensive insights into rental performance, occupancy, and

@@ -3,6 +3,7 @@ import * as React from 'react'
 import { Link, useParams } from 'react-router'
 
 import PermissionGuard from './permissions/permission-guard'
+import { useGetClientUserProperties } from '~/api/client-user-properties'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -20,18 +21,26 @@ import {
 import { useAuth } from '~/providers/auth-provider'
 
 export function PropertySwitcher() {
-	const { clientUserProperties } = useAuth()
+	const { currentUser } = useAuth()
 	const { isMobile } = useSidebar()
-	const { propertySlug } = useParams()
+	const { propertyId } = useParams()
+
+	const { data } = useGetClientUserProperties({
+		pagination: { page: 1, per: 5 },
+		sorter: {},
+		search: {},
+		populate: ['Property'],
+		filters: { client_user_id: currentUser?.id },
+	})
 
 	const activeProperty = React.useMemo(() => {
-		return clientUserProperties?.rows?.find(
+		return data?.rows?.find(
 			(clientUserProperty) =>
-				clientUserProperty?.property?.slug === propertySlug,
+				clientUserProperty?.property?.id === propertyId,
 		)
-	}, [clientUserProperties, propertySlug])
+	}, [data, propertyId])
 
-	if (clientUserProperties?.rows?.length === 1) {
+	if (data?.rows?.length === 1) {
 		return null
 	}
 
@@ -71,15 +80,15 @@ export function PropertySwitcher() {
 						<DropdownMenuLabel className="text-muted-foreground text-xs">
 							Properties
 						</DropdownMenuLabel>
-						{clientUserProperties?.rows
+						{data?.rows
 							?.filter(
 								(clientUserProperty) =>
-									clientUserProperty?.property?.slug !== propertySlug,
+									clientUserProperty?.property?.id !== propertyId,
 							)
 							?.map((clientUserProperty) => (
 								<Link
 									key={clientUserProperty.id}
-									to={`/properties/${clientUserProperty?.property?.slug}`}
+									to={`/properties/${clientUserProperty?.property?.id}`}
 								>
 									<DropdownMenuItem className="gap-2 p-2">
 										<div className="flex size-6 items-center justify-center rounded-md border">

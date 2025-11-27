@@ -1,11 +1,15 @@
-import type { Route } from './+types/_auth.properties.$propertySlug.tenants.applications'
+import type { Route } from './+types/_auth.properties.$propertyId.tenants.applications'
+import { propertyContext } from '~/lib/actions/property.context.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { PropertyTenantApplicationsModule } from '~/modules'
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
+	const clientUserProperty = context.get(propertyContext)
+
 	return {
 		origin: getDomainUrl(request),
+		clientUserProperty
 	}
 }
 
@@ -15,7 +19,7 @@ export const handle = {
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `Tenant Applications | ${params.propertySlug}`,
+		title: `Tenant Applications | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,

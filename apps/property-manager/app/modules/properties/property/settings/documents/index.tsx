@@ -6,7 +6,7 @@ import {
 	RotateCw,
 } from 'lucide-react'
 import { useMemo } from 'react'
-import { Link, useLoaderData, useParams, useSearchParams } from 'react-router'
+import { Link, useLoaderData, useSearchParams } from 'react-router'
 import { PropertyDocumentsController } from './controller'
 import { useGetDocuments } from '~/api/documents'
 import { DataTable } from '~/components/datatable'
@@ -44,10 +44,8 @@ import type { loader } from '~/routes/_auth._dashboard.settings.documents'
 export function PropertyDocumentsSettingsModule() {
 	const { documentTemplates, error: documentError } =
 		useLoaderData<typeof loader>()
-	const params = useParams()
 	const [searchParams] = useSearchParams()
-	const { property } = useProperty()
-	const property_slug = params.propertySlug
+	const { clientUserProperty } = useProperty()
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -58,7 +56,7 @@ export function PropertyDocumentsSettingsModule() {
 
 	const { data, isPending, isRefetching, error, refetch } = useGetDocuments({
 		filters: {
-			property_slug: property_slug,
+			property_id: clientUserProperty?.property?.id,
 		},
 		pagination: { page, per },
 		populate: ['CreatedBy'],
@@ -161,7 +159,7 @@ export function PropertyDocumentsSettingsModule() {
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end" className="w-32">
 								<Link
-									to={`/properties/${property_slug}/settings/documents/${row.original.id}`}
+									to={`/properties/${clientUserProperty?.property?.id}/settings/documents/${row.original.id}`}
 								>
 									<DropdownMenuItem>Edit</DropdownMenuItem>
 								</Link>
@@ -191,7 +189,7 @@ export function PropertyDocumentsSettingsModule() {
 				),
 			},
 		]
-	}, [property_slug])
+	}, [clientUserProperty?.property?.id])
 
 	return (
 		<main className="flex flex-col gap-2 sm:gap-4">
@@ -224,9 +222,9 @@ export function PropertyDocumentsSettingsModule() {
 					<AlertDescription>{documentError}</AlertDescription>
 				</Alert>
 			) : null}
-			{property ? (
+			{clientUserProperty?.property ? (
 				<PropertyDocumentsController
-					property={property}
+					property={clientUserProperty.property}
 					documentTemplates={documentTemplates}
 				/>
 			) : null}

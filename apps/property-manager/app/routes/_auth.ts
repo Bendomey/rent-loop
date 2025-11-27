@@ -10,7 +10,6 @@ export async function loader({ context }: Route.LoaderArgs) {
 
 	return {
 		currentUserData: authData?.clientUser,
-		clientUserProperties: authData?.clientUserProperties,
 	}
 }
 

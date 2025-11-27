@@ -6,7 +6,6 @@ import { fetchClient } from '~/lib/transport'
 /**
  * GET all client users (Members) for a particular property based on a query.
  */
-
 const getClientUserProperties = async (
 	props: FetchMultipleDataInputParams<FetchClientUserPropertyFilter>,
 ) => {

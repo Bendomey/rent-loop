@@ -47,7 +47,7 @@ export function PropertiesModule() {
 					return (
 						<div className="flex min-w-32 flex-col items-start gap-1">
 							<Link
-								to={`/properties/${row.original.property?.slug}`}
+								to={`/properties/${row.original.property?.id}`}
 								aria-label={`View details for property ${getValue<string>()}`}
 							>
 								<span className="truncate text-xs text-blue-600 hover:underline">
@@ -111,7 +111,7 @@ export function PropertiesModule() {
 			{
 				id: 'actions',
 				cell: ({ row }) => (
-					<Link to={`/properties/${row.original.property?.slug}`}>
+					<Link to={`/properties/${row.original.property?.id}`}>
 						<Button
 							variant="ghost"
 							className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
