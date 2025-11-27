@@ -39,6 +39,10 @@ const data = {
 			icon: House,
 			items: [
 				{
+					title: 'Blocks',
+					url: '/blocks',
+				},
+				{
 					title: 'Apartments/Units',
 					url: '/units',
 				},
