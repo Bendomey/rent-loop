@@ -1,21 +1,13 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { CircleCheck, CircleX, EllipsisVertical, User } from 'lucide-react'
+import { CircleCheck, CircleX, Trash, User } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { MembersController } from './controller'
 import RemoveMemberModule from './remove'
 import { useGetClientUserProperties } from '~/api/client-user-properties'
 import { DataTable } from '~/components/datatable'
-import { PermissionGuard } from '~/components/permissions/permission-guard'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { useProperty } from '~/providers/property-provider'
@@ -114,39 +106,31 @@ export function PropertyMembersModule() {
 			},
 			{
 				id: 'actions',
-				cell: ({ row }) => (
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button
-								variant="ghost"
-								className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-								size="icon"
-							>
-								<EllipsisVertical />
-								<span className="sr-only">Open menu</span>
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end" className="w-32">
-							<DropdownMenuItem>Edit</DropdownMenuItem>
+				cell: ({ row }) => {
+					if (
+						clientUserProperty?.client_user_id === row.original.client_user_id
+					) {
+						return null
+					}
 
-							<PermissionGuard roles={['ADMIN', 'OWNER']}>
-								<DropdownMenuSeparator />
-								<DropdownMenuItem
-									onClick={() => {
-										setSelectedMember(row.original?.client_user ?? undefined)
-										setOpenRemoveMemberModal(true)
-									}}
-									variant="destructive"
-								>
-									Remove
-								</DropdownMenuItem>
-							</PermissionGuard>
-						</DropdownMenuContent>
-					</DropdownMenu>
-				),
+					return (
+						<Button
+							variant="ghost"
+							className="flex size-8 text-red-600 hover:bg-red-100 hover:text-red-600"
+							size="icon"
+							onClick={() => {
+								setSelectedMember(row.original?.client_user ?? undefined)
+								setOpenRemoveMemberModal(true)
+							}}
+						>
+							<Trash />
+							<span className="sr-only">Remove Member</span>
+						</Button>
+					)
+				},
 			},
 		]
-	}, [])
+	}, [clientUserProperty?.client_user_id])
 
 	return (
 		<main className="flex flex-col gap-2 sm:gap-4">
