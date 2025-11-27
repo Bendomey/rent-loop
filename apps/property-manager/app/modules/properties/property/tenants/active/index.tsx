@@ -70,13 +70,13 @@ const tenants = [
 ]
 
 export function PropertyTenantsModule() {
-	const { property } = useProperty()
+	const { clientUserProperty } = useProperty()
 
 	return (
 		<div className="mx-6 my-6 flex flex-col gap-4 sm:gap-6">
 			<div>
 				<TypographyH4 className="mb-1">
-					Manage {property?.name ?? 'Property'}'s Tenants
+					Manage {clientUserProperty?.property?.name ?? 'Property'}'s Tenants
 				</TypographyH4>
 				<TypographyMuted>
 					Tenants with active access and contact details.

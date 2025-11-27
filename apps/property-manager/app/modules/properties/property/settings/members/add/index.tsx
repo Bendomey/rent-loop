@@ -61,7 +61,7 @@ type FormSchema = z.infer<typeof ValidationSchema>
 export default function AddMemberModule({ opened, setOpened }: Props) {
 	const queryClient = useQueryClient()
 
-	const { property } = useProperty()
+	const { clientUserProperty } = useProperty()
 
 	const rhfMethods = useForm<FormSchema>({
 		defaultValues: {
@@ -80,7 +80,7 @@ export default function AddMemberModule({ opened, setOpened }: Props) {
 			const pluralSuffix = data.members.length > 1 ? 's' : ''
 			mutate(
 				{
-					property_id: property?.id ?? '',
+					property_id: clientUserProperty?.property?.id ?? '',
 					role: data.role,
 					client_user_ids: data.members,
 				},
@@ -126,7 +126,10 @@ export default function AddMemberModule({ opened, setOpened }: Props) {
 										<FormItem>
 											<FormControl>
 												<MembersSelect
-													filters={{ not_in_property_id: property?.id }}
+													filters={{
+														not_in_property_id:
+															clientUserProperty?.property?.id,
+													}}
 													onChange={(values) => field.onChange(values)}
 												/>
 											</FormControl>

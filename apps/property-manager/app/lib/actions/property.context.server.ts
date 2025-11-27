@@ -1,3 +1,3 @@
 import { createContext } from 'react-router'
 
-export const propertyContext = createContext<Property | null>(null)
+export const propertyContext = createContext<ClientUserProperty | null>(null)

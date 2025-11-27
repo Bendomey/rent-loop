@@ -22,7 +22,7 @@ import { useProperty } from '~/providers/property-provider'
 
 export function PropertyMembersModule() {
 	const [searchParams] = useSearchParams()
-	const { property } = useProperty()
+	const { clientUserProperty } = useProperty()
 
 	const [selectedMember, setSelectedMember] = useState<ClientUser>()
 	const [openRemoveMemberModal, setOpenRemoveMemberModal] = useState(false)
@@ -37,7 +37,7 @@ export function PropertyMembersModule() {
 
 	const { data, isPending, isRefetching, error, refetch } =
 		useGetClientUserProperties({
-			filters: { role: role, property_id: property?.id },
+			filters: { role: role, property_id: clientUserProperty?.property?.id },
 			pagination: { page, per },
 			populate: ['ClientUser'],
 			sorter: { sort: 'desc', sort_by: 'created_at' },
@@ -181,12 +181,14 @@ export function PropertyMembersModule() {
 				/>
 			</div>
 
-			<RemoveMemberModule
-				opened={openRemoveMemberModal}
-				setOpened={setOpenRemoveMemberModal}
-				data={selectedMember}
-				property={property}
-			/>
+			{clientUserProperty?.property ? (
+				<RemoveMemberModule
+					opened={openRemoveMemberModal}
+					setOpened={setOpenRemoveMemberModal}
+					data={selectedMember}
+					property={clientUserProperty?.property}
+				/>
+			) : null}
 		</main>
 	)
 }

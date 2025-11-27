@@ -155,7 +155,7 @@ export function PropertySidebar({
 				<NavMain
 					title="Property Navigation"
 					items={data.navMain}
-					baseRoute={`/properties/${params?.propertySlug}`}
+					baseRoute={`/properties/${params?.propertyId}`}
 				/>
 			</SidebarContent>
 			<SidebarFooter>

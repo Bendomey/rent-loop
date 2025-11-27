@@ -1,6 +1,6 @@
 import { FileText, Globe, Users, Wrench } from 'lucide-react'
 import { Outlet } from 'react-router'
-import type { Route } from './+types/_auth.properties.$propertySlug.settings'
+import type { Route } from './+types/_auth.properties.$propertyId.settings'
 import { NavMain } from '~/components/nav-main'
 import { Separator } from '~/components/ui/separator'
 import { TypographyH4 } from '~/components/ui/typography'
@@ -45,14 +45,14 @@ export default function SettingsDashboard({ params }: Route.ComponentProps) {
 				<div className="h-full w-4/12 overflow-auto border-r">
 					<NavMain
 						items={generalMenus}
-						baseRoute={`/properties/${params.propertySlug}/settings`}
+						baseRoute={`/properties/${params.propertyId}/settings`}
 						title="General Settings"
 						titleClassName="text-zinc-500"
 					/>
 					<Separator className="my-2" />
 					<NavMain
 						items={workspaceMenus}
-						baseRoute={`/properties/${params.propertySlug}/settings`}
+						baseRoute={`/properties/${params.propertyId}/settings`}
 						title="Property Settings"
 						titleClassName="text-zinc-500"
 					/>

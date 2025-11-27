@@ -1,6 +1,7 @@
 import { Link, Outlet, redirect } from 'react-router'
 import pkgJson from '../../package.json'
 import type { Route } from './+types/_auth._dashboard'
+import { getClientUserPropertiesForServer } from '~/api/client-user-properties/server'
 import { AppSidebar } from '~/components/app-sidebar'
 import {
 	Breadcrumb,
@@ -17,16 +18,40 @@ import {
 	SidebarTrigger,
 } from '~/components/ui/sidebar'
 import { userContext } from '~/lib/actions/auth.context.server'
+import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { environmentVariables } from '~/lib/actions/env.server'
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
+	const baseUrl = environmentVariables().API_ADDRESS
+	const authSession = await getAuthSession(request.headers.get('Cookie'))
+	const authToken = authSession.get('authToken')
+	if (!authToken) {
+		return redirect('/login')
+	}
+
 	const authData = context.get(userContext)
 	if (!authData) return
 
 	// only admins and owners can access the main dashboard.
 	if (authData.clientUser.role === 'STAFF') {
-		if (authData.clientUserProperties.rows.length) {
-			const firstProperty = authData.clientUserProperties.rows[0]
-			return redirect(`/properties/${firstProperty?.property?.slug}`)
+		const clientUserProperties = await getClientUserPropertiesForServer(
+			{
+				filters: { client_user_id: authData.clientUser.id },
+				pagination: { page: 1, per: 1 },
+				populate: ['Property'],
+				search: {},
+				sorter: {},
+			},
+			{
+				authToken,
+				baseUrl,
+			},
+		)
+
+		const clientUserProperty = clientUserProperties?.rows?.at(0)
+
+		if (clientUserProperty) {
+			return redirect(`/properties/${clientUserProperty?.property?.id}`)
 		}
 
 		return redirect('/properties/no-assigned')

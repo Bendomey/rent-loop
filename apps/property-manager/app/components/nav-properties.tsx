@@ -2,6 +2,7 @@ import { Eye, Frame, PlusCircleIcon } from 'lucide-react'
 import { Link } from 'react-router'
 
 import PermissionGuard from './permissions/permission-guard'
+import { useGetClientUserProperties } from '~/api/client-user-properties'
 import {
 	SidebarGroup,
 	SidebarGroupAction,
@@ -13,10 +14,18 @@ import {
 import { useAuth } from '~/providers/auth-provider'
 
 export function NavProperties() {
-	const { clientUserProperties } = useAuth()
-	if (clientUserProperties?.rows.length === 0) return null
+	const { currentUser } = useAuth()
+	const { data } = useGetClientUserProperties({
+		pagination: { page: 1, per: 5 },
+		sorter: {},
+		search: {},
+		populate: ['Property'],
+		filters: { client_user_id: currentUser?.id },
+	})
 
-	const hasMoreProperties = clientUserProperties?.meta?.has_next_page
+	if (!data?.rows.length) return null
+
+	const hasMoreProperties = data?.meta?.has_next_page
 
 	return (
 		<SidebarGroup className="group-data-[collapsible=icon]:hidden">
@@ -29,10 +38,10 @@ export function NavProperties() {
 				</Link>
 			</PermissionGuard>
 			<SidebarMenu>
-				{clientUserProperties?.rows?.map((item) => (
+				{data?.rows?.map((item) => (
 					<SidebarMenuItem key={item.id}>
 						<SidebarMenuButton asChild>
-							<Link to={`/properties/${item?.property?.slug}`}>
+							<Link to={`/properties/${item?.property?.id}`}>
 								<Frame />
 								<span>{item?.property?.name}</span>
 							</Link>

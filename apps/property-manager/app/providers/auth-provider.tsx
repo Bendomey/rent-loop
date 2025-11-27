@@ -2,25 +2,17 @@ import { createContext, useContext, type PropsWithChildren } from 'react'
 
 interface Props {
 	data?: ClientUser
-	clientUserProperties?: FetchMultipleDataResponse<ClientUserProperty>
 }
 
 interface IAuthContext {
 	currentUser?: ClientUser
-	clientUserProperties?: FetchMultipleDataResponse<ClientUserProperty>
 }
 
 const AuthContext = createContext<IAuthContext | null>(null)
 
-export function AuthProvider({
-	data,
-	clientUserProperties,
-	children,
-}: PropsWithChildren<Props>) {
+export function AuthProvider({ data, children }: PropsWithChildren<Props>) {
 	return (
-		<AuthContext.Provider
-			value={{ currentUser: data ?? undefined, clientUserProperties }}
-		>
+		<AuthContext.Provider value={{ currentUser: data ?? undefined }}>
 			{children}
 		</AuthContext.Provider>
 	)

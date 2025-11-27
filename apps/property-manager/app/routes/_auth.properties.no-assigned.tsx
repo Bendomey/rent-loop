@@ -2,6 +2,7 @@ import { GalleryVerticalEnd, SearchIcon } from 'lucide-react'
 import { Form, redirect } from 'react-router'
 import type { Route } from './+types/_auth.properties.no-assigned'
 
+import { getClientUserPropertiesForServer } from '~/api/client-user-properties/server'
 import { Button } from '~/components/ui/button'
 import {
 	Empty,
@@ -16,11 +17,20 @@ import {
 } from '~/components/ui/input-group'
 import { TypographyH1 } from '~/components/ui/typography'
 import { userContext } from '~/lib/actions/auth.context.server'
+import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { environmentVariables } from '~/lib/actions/env.server'
 import { APP_NAME } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 
 export async function loader({ request, context }: Route.LoaderArgs) {
+	const baseUrl = environmentVariables().API_ADDRESS
+	const authSession = await getAuthSession(request.headers.get('Cookie'))
+	const authToken = authSession.get('authToken')
+	if (!authToken) {
+		return redirect('/login')
+	}
+
 	const authData = context.get(userContext)
 	if (!authData) {
 		return redirect('/login')
@@ -30,12 +40,25 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 		return redirect('/')
 	}
 
-	if (
-		authData.clientUser.role === 'STAFF' &&
-		authData.clientUserProperties.rows.length
-	) {
-		const firstProperty = authData.clientUserProperties.rows[0]
-		return redirect(`/properties/${firstProperty?.property?.slug}`)
+	if (authData.clientUser.role === 'STAFF') {
+		const clientUserProperties = await getClientUserPropertiesForServer(
+			{
+				filters: { client_user_id: authData.clientUser.id },
+				pagination: { page: 1, per: 1 },
+				populate: ['Property'],
+				search: {},
+				sorter: {},
+			},
+			{
+				authToken,
+				baseUrl,
+			},
+		)
+		const clientUserProperty = clientUserProperties?.rows?.at(0)
+
+		if (clientUserProperty) {
+			return redirect(`/properties/${clientUserProperty?.property?.id}`)
+		}
 	}
 
 	return {

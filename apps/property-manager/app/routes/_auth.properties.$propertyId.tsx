@@ -1,8 +1,7 @@
 import { Fragment } from 'react'
-import { Outlet, redirect, useLoaderData } from 'react-router'
+import { Outlet, useLoaderData } from 'react-router'
 import pkgJson from '../../package.json'
-import type { Route } from './+types/_auth.properties.$propertySlug._index'
-import { getPropertyBySlug } from '~/api/properties'
+import type { Route } from './+types/_auth.properties.$propertyId'
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -17,59 +16,24 @@ import {
 	SidebarProvider,
 	SidebarTrigger,
 } from '~/components/ui/sidebar'
-import { userContext } from '~/lib/actions/auth.context.server'
-import { getAuthSession } from '~/lib/actions/auth.session.server'
-import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
-import { NOT_FOUND_ROUTE } from '~/lib/constants'
+import { propertyMiddleware } from '~/lib/actions/property.middleware.server'
 import { getDomainUrl } from '~/lib/misc'
 import { PropertySidebar } from '~/modules'
 import { PropertyProvider } from '~/providers/property-provider'
+
+export const middleware = [propertyMiddleware]
 
 export const handle = {
 	breadcrumb: 'Property',
 }
 
-export async function loader({ request, params, context }: Route.LoaderArgs) {
-	const baseUrl = environmentVariables().API_ADDRESS
-	const authSession = await getAuthSession(request.headers.get('Cookie'))
-	const authToken = authSession.get('authToken')
-	if (!authToken) {
-		return redirect('/login')
-	}
+export async function loader({ request, context }: Route.LoaderArgs) {
+	const clientUserProperty = context.get(propertyContext)
 
-	// make sure they're allowed to access this property
-	const authData = context.get(userContext)
-	if (!authData) {
-		return redirect('/login')
-	}
-
-	const hasAccess = Boolean(
-		authData.clientUserProperties?.rows?.find(
-			(prop) => prop?.property?.slug === params.propertySlug,
-		),
-	)
-	if (!hasAccess) {
-		return redirect('/')
-	}
-
-	try {
-		const property = await getPropertyBySlug(params.propertySlug, {
-			authToken,
-			baseUrl,
-		})
-
-		if (!property) {
-			throw new Error('Property not found')
-		}
-
-		context.set(propertyContext, property)
-		return {
-			origin: getDomainUrl(request),
-			property,
-		}
-	} catch {
-		return redirect(NOT_FOUND_ROUTE)
+	return {
+		origin: getDomainUrl(request),
+		clientUserProperty,
 	}
 }
 
@@ -81,12 +45,14 @@ export default function PropertyDashboard({ matches }: Route.ComponentProps) {
 		.map((m) => {
 			const breadcrumb = (m?.handle as { breadcrumb: string }).breadcrumb
 			const name =
-				breadcrumb === 'Property' ? loaderData?.property?.name : breadcrumb
+				breadcrumb === 'Property'
+					? loaderData?.clientUserProperty?.property?.name
+					: breadcrumb
 			return { name, pathname: m?.pathname, id: m?.id }
 		})
 
 	return (
-		<PropertyProvider data={loaderData?.property ?? null}>
+		<PropertyProvider data={loaderData?.clientUserProperty ?? null}>
 			<SidebarProvider>
 				<PropertySidebar />
 				<SidebarInset>
