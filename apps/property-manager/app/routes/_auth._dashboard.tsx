@@ -34,16 +34,19 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 	// only admins and owners can access the main dashboard.
 	if (authData.clientUser.role === 'STAFF') {
-		const clientUserProperties = await getClientUserPropertiesForServer({
-			filters: { client_user_id: authData.clientUser.id },
-			pagination: { page: 1, per: 1 },
-			populate: ['Property'],
-			search: {},
-			sorter: {},
-		}, {
-			authToken,
-			baseUrl,
-		})
+		const clientUserProperties = await getClientUserPropertiesForServer(
+			{
+				filters: { client_user_id: authData.clientUser.id },
+				pagination: { page: 1, per: 1 },
+				populate: ['Property'],
+				search: {},
+				sorter: {},
+			},
+			{
+				authToken,
+				baseUrl,
+			},
+		)
 
 		const clientUserProperty = clientUserProperties?.rows?.at(0)
 

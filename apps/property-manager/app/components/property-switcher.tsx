@@ -35,8 +35,7 @@ export function PropertySwitcher() {
 
 	const activeProperty = React.useMemo(() => {
 		return data?.rows?.find(
-			(clientUserProperty) =>
-				clientUserProperty?.property?.id === propertyId,
+			(clientUserProperty) => clientUserProperty?.property?.id === propertyId,
 		)
 	}, [data, propertyId])
 

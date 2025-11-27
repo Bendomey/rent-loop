@@ -6,9 +6,7 @@ export function AuthMiddlewareModule() {
 	const loaderData = useLoaderData<typeof loader>()
 
 	return (
-		<AuthProvider
-			data={loaderData?.currentUserData ?? undefined}
-		>
+		<AuthProvider data={loaderData?.currentUserData ?? undefined}>
 			<Outlet />
 		</AuthProvider>
 	)

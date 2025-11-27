@@ -6,10 +6,10 @@ import { PropertyBillingSettingsModule } from '~/modules'
 
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const clientUserProperty = context.get(propertyContext)
-	
+
 	return {
 		origin: getDomainUrl(request),
-		clientUserProperty
+		clientUserProperty,
 	}
 }
 

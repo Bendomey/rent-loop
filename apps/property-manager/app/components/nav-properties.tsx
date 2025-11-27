@@ -15,7 +15,7 @@ import { useAuth } from '~/providers/auth-provider'
 
 export function NavProperties() {
 	const { currentUser } = useAuth()
-	const { data, } = useGetClientUserProperties({
+	const { data } = useGetClientUserProperties({
 		pagination: { page: 1, per: 5 },
 		sorter: {},
 		search: {},

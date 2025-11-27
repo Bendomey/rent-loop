@@ -22,7 +22,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 			origin: getDomainUrl(request),
 			error,
 			documentTemplates,
-			clientUserProperty
+			clientUserProperty,
 		},
 		{
 			headers: {

@@ -181,17 +181,14 @@ export function PropertyMembersModule() {
 				/>
 			</div>
 
-			{
-				clientUserProperty?.property ? (
-					<RemoveMemberModule
-						opened={openRemoveMemberModal}
-						setOpened={setOpenRemoveMemberModal}
-						data={selectedMember}
-						property={clientUserProperty?.property}
-					/>
-				) : null
-			}
-
+			{clientUserProperty?.property ? (
+				<RemoveMemberModule
+					opened={openRemoveMemberModal}
+					setOpened={setOpenRemoveMemberModal}
+					data={selectedMember}
+					property={clientUserProperty?.property}
+				/>
+			) : null}
 		</main>
 	)
 }

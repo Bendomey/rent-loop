@@ -14,7 +14,10 @@ export function PropertyModule() {
 			{/* Header */}
 			<div className="mb-8">
 				<TypographyH1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-					Property Overview {clientUserProperty?.property?.name ? `— ${clientUserProperty?.property.name}` : ''}
+					Property Overview{' '}
+					{clientUserProperty?.property?.name
+						? `— ${clientUserProperty?.property.name}`
+						: ''}
 				</TypographyH1>
 				<TypographyP className="text-muted-foreground mt-1 text-sm">
 					Comprehensive insights into rental performance, occupancy, and

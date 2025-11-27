@@ -10,14 +10,9 @@ interface IAuthContext {
 
 const AuthContext = createContext<IAuthContext | null>(null)
 
-export function AuthProvider({
-	data,
-	children,
-}: PropsWithChildren<Props>) {
+export function AuthProvider({ data, children }: PropsWithChildren<Props>) {
 	return (
-		<AuthContext.Provider
-			value={{ currentUser: data ?? undefined }}
-		>
+		<AuthContext.Provider value={{ currentUser: data ?? undefined }}>
 			{children}
 		</AuthContext.Provider>
 	)

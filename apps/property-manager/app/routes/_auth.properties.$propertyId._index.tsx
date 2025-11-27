@@ -6,11 +6,10 @@ import { PropertyModule } from '~/modules'
 
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const clientUserProperty = context.get(propertyContext)
-	
-	console.log(clientUserProperty)
+
 	return {
 		origin: getDomainUrl(request),
-		clientUserProperty
+		clientUserProperty,
 	}
 }
 

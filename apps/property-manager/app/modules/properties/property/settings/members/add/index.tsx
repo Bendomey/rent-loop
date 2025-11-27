@@ -126,7 +126,10 @@ export default function AddMemberModule({ opened, setOpened }: Props) {
 										<FormItem>
 											<FormControl>
 												<MembersSelect
-													filters={{ not_in_property_id: clientUserProperty?.property?.id }}
+													filters={{
+														not_in_property_id:
+															clientUserProperty?.property?.id,
+													}}
 													onChange={(values) => field.onChange(values)}
 												/>
 											</FormControl>

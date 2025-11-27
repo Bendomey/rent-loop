@@ -9,7 +9,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 	return {
 		origin: getDomainUrl(request),
-		clientUserProperty
+		clientUserProperty,
 	}
 }
 

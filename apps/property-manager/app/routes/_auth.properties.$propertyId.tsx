@@ -45,7 +45,9 @@ export default function PropertyDashboard({ matches }: Route.ComponentProps) {
 		.map((m) => {
 			const breadcrumb = (m?.handle as { breadcrumb: string }).breadcrumb
 			const name =
-				breadcrumb === 'Property' ? loaderData?.clientUserProperty?.property?.name : breadcrumb
+				breadcrumb === 'Property'
+					? loaderData?.clientUserProperty?.property?.name
+					: breadcrumb
 			return { name, pathname: m?.pathname, id: m?.id }
 		})
 

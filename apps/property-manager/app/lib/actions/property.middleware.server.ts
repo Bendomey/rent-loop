@@ -9,7 +9,7 @@ import { getClientUserPropertiesForServer } from '~/api/client-user-properties/s
 export const propertyMiddleware: MiddlewareFunction = async ({
 	request,
 	context,
-	params
+	params,
 }) => {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
