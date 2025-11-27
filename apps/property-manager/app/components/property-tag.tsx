@@ -1,31 +1,37 @@
 import { X } from 'lucide-react'
 import { useState } from 'react'
+import { useFormContext } from 'react-hook-form'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
 import { Field, FieldLabel } from './ui/field'
 import { Input } from './ui/input'
 
-interface PropertyTagInputProps {
-	value: string[]
-	onChange: (tags: string[]) => void
-}
-
-export function PropertyTagInput({
-	value = [],
-	onChange,
-}: PropertyTagInputProps) {
+export function PropertyTagInput() {
+	const { setValue, watch } = useFormContext<{ tags: string[] }>()
 	const [inputValue, setInputValue] = useState('')
+
+	const value = watch('tags') || []
 
 	const addTag = () => {
 		const newTag = inputValue.trim()
 		if (newTag && !value.includes(newTag)) {
-			onChange([...value, newTag])
+			setValue('tags', [...value, newTag], {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
 			setInputValue('')
 		}
 	}
 
 	const removeTag = (tag: string) => {
-		onChange(value.filter((t) => t !== tag))
+		setValue(
+			'tags',
+			value.filter((t) => t !== tag),
+			{
+				shouldDirty: true,
+				shouldValidate: true,
+			},
+		)
 	}
 
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
