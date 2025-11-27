@@ -1,16 +1,16 @@
 import { redirect } from 'react-router'
-import type { Route } from './+types/_auth.properties.$propertyId.settings.members'
+import type { Route } from './+types/_auth.properties.$propertyId.settings.my-account'
 import { propertyContext } from '~/lib/actions/property.context.server'
-import { NOT_FOUND_ROUTE } from '~/lib/constants'
+import { APP_NAME } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { PropertyMembersModule } from '~/modules'
+import { MyAccountSettingsModule } from '~/modules'
 
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const clientUserProperty = context.get(propertyContext)
 
-	if (clientUserProperty?.role !== 'MANAGER') {
-		return redirect(NOT_FOUND_ROUTE)
+	if (clientUserProperty?.role === 'MANAGER') {
+		return redirect(`/settings/my-account`)
 	}
 
 	return {
@@ -20,12 +20,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export const handle = {
-	breadcrumb: 'Members',
+	breadcrumb: 'My Account',
 }
 
-export function meta({ loaderData, location, params }: Route.MetaArgs) {
+export function meta({ loaderData, location }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `Members | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
+		title: `My Account | ${APP_NAME}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,
@@ -36,4 +36,4 @@ export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	return meta
 }
 
-export default PropertyMembersModule
+export default MyAccountSettingsModule

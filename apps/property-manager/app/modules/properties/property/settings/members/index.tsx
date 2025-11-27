@@ -6,7 +6,7 @@ import { MembersController } from './controller'
 import RemoveMemberModule from './remove'
 import { useGetClientUserProperties } from '~/api/client-user-properties'
 import { DataTable } from '~/components/datatable'
-import PermissionGuard from '~/components/permissions/permission-guard'
+import { PermissionGuard } from '~/components/permissions/permission-guard'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {

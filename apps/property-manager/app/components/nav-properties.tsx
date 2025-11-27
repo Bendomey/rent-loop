@@ -1,7 +1,7 @@
 import { Eye, Frame, PlusCircleIcon } from 'lucide-react'
 import { Link } from 'react-router'
 
-import PermissionGuard from './permissions/permission-guard'
+import { PermissionGuard } from './permissions/permission-guard'
 import { useGetClientUserProperties } from '~/api/client-user-properties'
 import {
 	SidebarGroup,

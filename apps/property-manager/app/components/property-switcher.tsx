@@ -2,7 +2,7 @@ import { ChevronsUpDown, Frame, FrameIcon, Plus } from 'lucide-react'
 import * as React from 'react'
 import { Link, useParams } from 'react-router'
 
-import PermissionGuard from './permissions/permission-guard'
+import { PermissionGuard } from './permissions/permission-guard'
 import { useGetClientUserProperties } from '~/api/client-user-properties'
 import {
 	DropdownMenu,
