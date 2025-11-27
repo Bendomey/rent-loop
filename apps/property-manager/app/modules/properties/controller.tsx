@@ -25,7 +25,7 @@ import { cn } from '~/lib/utils'
 // 		Icon: ToggleLeft,
 // 	},
 // 	{
-// 		id: 1,
+// 		id: 2,
 // 		type: 'selector',
 // 		selectType: 'single',
 // 		label: 'Type',
@@ -48,8 +48,6 @@ export const PropertiesController = ({
 	isLoading: boolean
 	refetch: VoidFunction
 }) => {
-	// 	Manage Members
-	// These members have access to your workspace.
 	return (
 		<div className="flex w-full flex-col gap-2">
 			<div className="flex flex-row items-center justify-between">

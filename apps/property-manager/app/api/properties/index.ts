@@ -189,7 +189,7 @@ export const getClientUserProperties = async (
 	}
 }
 
-const getClientUserPropertiesClient = async (
+const getClientUserPropertiesForClient = async (
 	props: FetchMultipleDataInputParams<FetchClientUserPropertyFilter>,
 ) => {
 	try {
@@ -220,5 +220,5 @@ export const useGetMyProperties = (
 ) =>
 	useQuery({
 		queryKey: [QUERY_KEYS.CURRENT_USER, QUERY_KEYS.PROPERTIES, query],
-		queryFn: () => getClientUserPropertiesClient(query),
+		queryFn: () => getClientUserPropertiesForClient(query),
 	})
