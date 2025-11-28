@@ -28,13 +28,16 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			// client users
 			r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 				Post("/v1/client-users", handlers.ClientUserHandler.CreateClientUser)
-			r.Get("/v1/client-users/me", handlers.ClientUserHandler.GetMe)
 			r.Post(
 				"/v1/client-users/reset-password",
 				handlers.ClientUserHandler.ResetClientUserPassword,
 			)
 			r.Get("/v1/client-users", handlers.ClientUserHandler.ListClientUsers)
-			r.Patch("/v1/client-users/me", handlers.ClientUserHandler.UpdateClientUserSelf)
+			r.Route("/v1/client-users/me", func(r chi.Router) {
+				r.Get("/", handlers.ClientUserHandler.GetMe)
+				r.Patch("/", handlers.ClientUserHandler.UpdateClientUserSelf)
+				r.Patch("/password", handlers.ClientUserHandler.UpdateClientUserPassword)
+			})
 
 			r.Route("/v1/client-users/{client_user_id}", func(r chi.Router) {
 				r.Get("/", handlers.ClientUserHandler.GetClientUserWithPopulate)

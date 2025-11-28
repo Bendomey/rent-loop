@@ -131,3 +131,17 @@ Best regards,
 The rentloop Team
 `
 )
+
+const (
+	CLIENT_USER_PASSWORD_UPDATED_SUBJECT = "Your Rentloop Password Updated"
+	CLIENT_USER_PASSWORD_UPDATED_BODY    = `
+Hey {{name}},
+
+Your password has been changed successfully. if you didn't change this, reach out to support.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The rentloop Team
+`
+)

@@ -1368,6 +1368,80 @@
                 }
             }
         },
+        "/api/v1/client-users/me/password": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update client user password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Update client user password",
+                "parameters": [
+                    {
+                        "description": "Update Client User Password Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateClientUserPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientUser"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating client user password",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Client user not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error occured",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/client-users/reset-password": {
             "post": {
                 "security": [
@@ -3380,6 +3454,25 @@
                     "example": [
                         "a8098c1a-f86e-11da-bd1a-00112444be1e"
                     ]
+                }
+            }
+        },
+        "handlers.UpdateClientUserPasswordRequest": {
+            "type": "object",
+            "required": [
+                "new_password",
+                "old_password"
+            ],
+            "properties": {
+                "new_password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "newpassword123"
+                },
+                "old_password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "oldpassword123"
                 }
             }
         },
