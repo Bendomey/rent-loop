@@ -528,3 +528,59 @@ func (h *ClientUserHandler) UpdateClientUserSelf(w http.ResponseWriter, r *http.
 		"data": transformations.DBClientUserToRest(clientUser),
 	})
 }
+
+type UpdateClientUserPasswordRequest struct {
+	OldPassword string `json:"old_password" validate:"required,min=6" example:"oldpassword123"`
+	NewPassword string `json:"new_password" validate:"required,min=6" example:"newpassword123"`
+}
+
+// UpdateClientUserPassword godoc
+//
+//	@Summary		Update client user password
+//	@Description	Update client user password
+//	@Tags			ClientUsers
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			body	body		UpdateClientUserPasswordRequest	true	"Update Client User Password Request Body"
+//	@Success		200		{object}	object{data=transformations.OutputClientUser}
+//	@Failure		400		{object}	lib.HTTPError	"Error occurred when updating client user password"
+//	@Failure		401		{object}	string			"Invalid or absent authentication token"
+//	@Failure		404		{object}	lib.HTTPError	"Client user not found"
+//	@Failure		422		{object}	lib.HTTPError	"Validation error occured"
+//	@Failure		500		{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/client-users/me/password [patch]
+func (h *ClientUserHandler) UpdateClientUserPassword(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
+	if !clientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body UpdateClientUserPasswordRequest
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	input := services.UpdateClientUserPasswordInput{
+		ClientUserID: currentClientUser.ID,
+		OldPassword:  body.OldPassword,
+		NewPassword:  body.NewPassword,
+	}
+
+	updatedClientUser, err := h.service.UpateClientUserPassword(r.Context(), input)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBClientUserToRest(updatedClientUser),
+	})
+}

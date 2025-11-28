@@ -335,6 +335,20 @@ definitions:
     required:
     - client_user_ids
     type: object
+  handlers.UpdateClientUserPasswordRequest:
+    properties:
+      new_password:
+        example: newpassword123
+        minLength: 6
+        type: string
+      old_password:
+        example: oldpassword123
+        minLength: 6
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
   handlers.UpdateClientUserRequest:
     properties:
       name:
@@ -1911,6 +1925,53 @@ paths:
       security:
       - BearerAuth: []
       summary: update client user
+      tags:
+      - ClientUsers
+  /api/v1/client-users/me/password:
+    patch:
+      consumes:
+      - application/json
+      description: Update client user password
+      parameters:
+      - description: Update Client User Password Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateClientUserPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientUser'
+            type: object
+        "400":
+          description: Error occurred when updating client user password
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Client user not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error occured
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update client user password
       tags:
       - ClientUsers
   /api/v1/client-users/reset-password:

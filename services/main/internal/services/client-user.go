@@ -45,6 +45,7 @@ type ClientUserService interface {
 	ActivateClientUser(ctx context.Context, input ClientUserSearchInput) (*models.ClientUser, error)
 	DeactivateClientUser(ctx context.Context, input DeactivateClientUserInput) (*models.ClientUser, error)
 	UpdateClientUser(ctx context.Context, input UpdateClientUserInput) (*models.ClientUser, error)
+	UpateClientUserPassword(ctx context.Context, input UpdateClientUserPasswordInput) (*models.ClientUser, error)
 }
 
 type clientUserService struct {
@@ -613,6 +614,96 @@ func (s *clientUserService) UpdateClientUser(
 			},
 		})
 	}
+
+	return clientUser, nil
+}
+
+type UpdateClientUserPasswordInput struct {
+	ClientUserID string
+	OldPassword  string
+	NewPassword  string
+}
+
+func (s *clientUserService) UpateClientUserPassword(
+	ctx context.Context,
+	input UpdateClientUserPasswordInput,
+) (*models.ClientUser, error) {
+	clientUser, err := s.repo.GetByID(ctx, input.ClientUserID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("ClientUserNotFound", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "UpateClientUserPassword",
+				"action":   "fetching client user by ID",
+			},
+		})
+	}
+
+	if clientUser.Status == "ClientUser.Status.Inactive" {
+		return nil, pkg.ForbiddenError("ClientUserInactive", nil)
+	}
+
+	isSame := validatehash.ValidateCipher(input.OldPassword, clientUser.Password)
+	if !isSame {
+		return nil, pkg.BadRequestError("PasswordIncorrect", nil)
+	}
+
+	isRepeated := validatehash.ValidateCipher(input.NewPassword, clientUser.Password)
+	if isRepeated {
+		return nil, pkg.BadRequestError("PasswordRepeated", nil)
+	}
+
+	hashed, hashErr := hashpassword.HashPassword(input.NewPassword)
+	if hashErr != nil {
+		return nil, pkg.InternalServerError(hashErr.Error(), &pkg.RentLoopErrorParams{
+			Err: hashErr,
+			Metadata: map[string]string{
+				"function": "UpateClientUserPassword",
+				"action":   "hashing new password",
+			},
+		})
+	}
+
+	clientUser.Password = hashed
+
+	updateClientUserErr := s.repo.Update(ctx, clientUser)
+	if updateClientUserErr != nil {
+		return nil, pkg.InternalServerError(updateClientUserErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateClientUserErr,
+			Metadata: map[string]string{
+				"function": "UpdateClientUserPassword",
+				"action":   "Updating client user password",
+			},
+		})
+	}
+
+	r := strings.NewReplacer(
+		"{{name}}", clientUser.Name,
+	)
+	message := r.Replace(lib.CLIENT_USER_PASSWORD_UPDATED_BODY)
+
+	go pkg.SendEmail(
+		s.appCtx,
+		pkg.SendEmailInput{
+			Recipient: clientUser.Email,
+			Subject:   lib.CLIENT_USER_PASSWORD_UPDATED_SUBJECT,
+			TextBody:  message,
+		},
+	)
+
+	go pkg.SendSMS(
+		s.appCtx,
+		pkg.SendSMSInput{
+			Recipient: clientUser.PhoneNumber,
+			Message:   message,
+		},
+	)
 
 	return clientUser, nil
 }
