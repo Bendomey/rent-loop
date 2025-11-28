@@ -17,6 +17,7 @@ import {
 	SidebarMenuSubButton,
 	SidebarMenuSubItem,
 } from '~/components/ui/sidebar'
+import { COMING_SOON_ROUTE } from '~/lib/constants'
 
 export function NavMain({
 	items,
@@ -95,7 +96,7 @@ export function NavMain({
 
 												let link = `${baseRoute}${item.url}${subItem.url}`
 												if (subItem.isComingSoon) {
-													link = '/coming-soon'
+													link = COMING_SOON_ROUTE
 												}
 												return (
 													<SidebarMenuSubItem key={subItem.title}>
@@ -136,7 +137,7 @@ export function NavMain({
 
 					let link = `${baseRoute}${item.url}`
 					if (item.isComingSoon) {
-						link = '/coming-soon'
+						link = COMING_SOON_ROUTE
 					}
 
 					return (

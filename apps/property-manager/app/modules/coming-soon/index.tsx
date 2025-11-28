@@ -3,10 +3,10 @@ export function ComingSoonModule() {
 		<div className="flex h-screen flex-col bg-white pt-16 pb-12">
 			<main className="mx-auto flex w-full max-w-7xl grow flex-col justify-center px-6 lg:px-8">
 				<div className="flex shrink-0 justify-center">
-					<a href="#" className="inline-flex">
+					<a href="/" className="inline-flex">
 						<span className="sr-only">Rentloop</span>
 						<img
-							alt=""
+							alt="Rentloop logo"
 							src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=rose&shade=600"
 							className="h-12 w-auto"
 						/>
