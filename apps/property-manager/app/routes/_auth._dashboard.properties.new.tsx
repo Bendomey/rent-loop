@@ -65,7 +65,7 @@ export async function action({ request }: Route.ActionArgs) {
 			throw new Error('Property creation returned no data')
 		}
 
-		return redirect(`/properties/${property.slug}`)
+		return redirect(`/properties/${property.id}`)
 	} catch {
 		return { error: 'Failed to create property' }
 	}
