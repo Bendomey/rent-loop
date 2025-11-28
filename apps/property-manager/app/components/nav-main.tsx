@@ -1,6 +1,7 @@
 import { ChevronRight, type LucideIcon } from 'lucide-react'
 import { Link, useLocation } from 'react-router'
 
+import { Badge } from './ui/badge'
 import {
 	Collapsible,
 	CollapsibleContent,
@@ -16,6 +17,7 @@ import {
 	SidebarMenuSubButton,
 	SidebarMenuSubItem,
 } from '~/components/ui/sidebar'
+import { COMING_SOON_ROUTE } from '~/lib/constants'
 
 export function NavMain({
 	items,
@@ -31,9 +33,13 @@ export function NavMain({
 		url: string
 		icon?: LucideIcon
 		isActive?: boolean
+		isComingSoon?: boolean
 		isHome?: boolean
 		items?: {
 			title: string
+			isComingSoon?: boolean
+			isBeta?: boolean
+			isNew?: boolean
 			url: string
 		}[]
 	}[]
@@ -87,13 +93,29 @@ export function NavMain({
 												const isActive =
 													location.pathname ===
 													`${baseRoute}${item.url}${subItem.url}`
+
+												let link = `${baseRoute}${item.url}${subItem.url}`
+												if (subItem.isComingSoon) {
+													link = COMING_SOON_ROUTE
+												}
 												return (
 													<SidebarMenuSubItem key={subItem.title}>
 														<SidebarMenuSubButton asChild isActive={isActive}>
-															<Link
-																to={`${baseRoute}${item.url}${subItem.url}`}
-															>
+															<Link to={link}>
 																<span>{subItem.title}</span>
+																{subItem.isComingSoon ? (
+																	<Badge className="h-4 min-w-3 bg-yellow-600 text-[8px] text-white">
+																		Coming Soon
+																	</Badge>
+																) : subItem.isBeta ? (
+																	<Badge className="h-4 min-w-3 bg-blue-700 text-[8px] text-white">
+																		Beta
+																	</Badge>
+																) : subItem.isNew ? (
+																	<Badge className="h-4 min-w-3 bg-green-700 text-[8px] text-white">
+																		New
+																	</Badge>
+																) : null}
 															</Link>
 														</SidebarMenuSubButton>
 													</SidebarMenuSubItem>
@@ -113,6 +135,11 @@ export function NavMain({
 						isActive = location.pathname === url || item.isActive
 					}
 
+					let link = `${baseRoute}${item.url}`
+					if (item.isComingSoon) {
+						link = COMING_SOON_ROUTE
+					}
+
 					return (
 						<SidebarMenuItem key={item.title}>
 							<SidebarMenuButton
@@ -124,7 +151,7 @@ export function NavMain({
 								tooltip={item.title}
 								asChild
 							>
-								<Link to={`${baseRoute}${item.url}`}>
+								<Link to={link}>
 									{item.icon && <item.icon />}
 									<span>{item.title}</span>
 								</Link>
