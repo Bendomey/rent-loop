@@ -34,8 +34,16 @@ export * from './properties/property/assets/blocks'
 export * from './properties/property/assets/blocks/new'
 export * from './properties/property/assets/units'
 export * from './properties/property/assets/facilities'
+
 export * from './properties/property/tenants/active'
+export * from './properties/property/tenants/active/tenant'
+export * from './properties/property/tenants/active/tenant/profile'
+export * from './properties/property/tenants/active/tenant/leases'
+export * from './properties/property/tenants/active/tenant/payments'
+export * from './properties/property/tenants/active/tenant/maintenance-requests'
+
 export * from './properties/property/tenants/applications'
+
 export * from './properties/property/activities/announcements'
 export * from './properties/property/activities/inspections'
 export * from './properties/property/activities/maintenance-requests'

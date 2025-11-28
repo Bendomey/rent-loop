@@ -5,6 +5,7 @@ import {
 	MessageCircle,
 	Phone,
 } from 'lucide-react'
+import { Link } from 'react-router'
 import { PropertyTenantsController } from './controller'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Badge } from '~/components/ui/badge'
@@ -86,31 +87,20 @@ export function PropertyTenantsModule() {
 			<PropertyTenantsController />
 
 			<div className="h-full w-full">
-				<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+				<div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 					{tenants.map((tenant) => (
-						<Card
-							key={tenant.id}
-							className="transform transition-shadow will-change-transform hover:-translate-y-0.5 hover:shadow-lg"
-						>
+						<Card key={tenant.id} className="shadow-none">
 							<CardHeader className="flex items-start justify-between gap-3">
 								<CardTitle>
 									<Badge
-										variant={tenant.status === 'Active' ? 'outline' : 'default'}
+										variant={
+											tenant.status === 'Active' ? 'secondary' : 'default'
+										}
 										className="px-2 py-1 text-xs"
 									>
 										{tenant.status}
 									</Badge>
 								</CardTitle>
-
-								<CardAction className="flex items-center gap-2">
-									<Button variant="outline" size="icon-sm" title="Message">
-										<MessageCircle />
-									</Button>
-
-									<Button variant="outline" size="icon-sm" title="More">
-										<CircleEllipsis />
-									</Button>
-								</CardAction>
 							</CardHeader>
 
 							<CardContent className="space-y-3">
@@ -157,9 +147,14 @@ export function PropertyTenantsModule() {
 							</CardContent>
 
 							<CardFooter>
-								<Button size="sm" variant="outline" className="w-full">
-									View Profile
-								</Button>
+								<Link
+									className="w-full"
+									to={`/properties/${clientUserProperty?.property_id}/tenants/${tenant.id}`}
+								>
+									<Button size="sm" variant="outline" className="w-full">
+										View Profile
+									</Button>
+								</Link>
 							</CardFooter>
 						</Card>
 					))}
