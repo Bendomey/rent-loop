@@ -21,7 +21,7 @@ type Unit struct {
 	Tags        pq.StringArray `gorm:"type:text[]"`
 
 	Type   string `gorm:"not null;index;"` // APARTMENT | HOUSE | STUDIO | OFFICE | RETAIL
-	Status string `gorm:"not null;index;"` // AVAILABLE | OCCUPIED | MAINTENANCE
+	Status string `gorm:"not null;index;"` // DRAFT | AVAILABLE | OCCUPIED | MAINTENANCE
 
 	Area             *float64 // in square feet or square meters
 	RentFee          int64    `gorm:"not null;"` // monthly rent amount

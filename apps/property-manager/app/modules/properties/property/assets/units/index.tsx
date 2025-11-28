@@ -1,4 +1,4 @@
-import { BadgeCent, CircleCheck, House, MapPin, Wrench } from 'lucide-react'
+import { CircleCheck, House, MapPin, Wrench } from 'lucide-react'
 import { PropertyAssetUnitsController } from './controller'
 import { Image } from '~/components/Image'
 import { Badge } from '~/components/ui/badge'
@@ -87,11 +87,11 @@ export function PropertyAssetUnitsModule() {
 
 			<PropertyAssetUnitsController />
 
-			<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+			<div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
 				{Units.map((unit) => (
 					<Card
 						key={unit.id}
-						className="gap-2 overflow-hidden pt-0 pb-3 transition-all duration-300 ease-out hover:-translate-y-[2px] hover:scale-[1.02] hover:shadow-lg"
+						className="gap-2 overflow-hidden pt-0 pb-3 shadow-none"
 					>
 						<div className="h-44 w-full overflow-hidden">
 							<Image
@@ -130,7 +130,7 @@ export function PropertyAssetUnitsModule() {
 							</div>
 						</CardContent>
 
-						<CardFooter className="flex justify-between border-t-[1px] pt-3">
+						<CardFooter className="flex justify-around border-t-[1px] pt-3">
 							<Button
 								type="button"
 								variant="ghost"
@@ -141,7 +141,7 @@ export function PropertyAssetUnitsModule() {
 								Tenants
 							</Button>
 
-							<Button
+							{/* <Button
 								type="button"
 								variant="ghost"
 								size="icon-sm"
@@ -149,7 +149,7 @@ export function PropertyAssetUnitsModule() {
 							>
 								<BadgeCent />
 								Accounting
-							</Button>
+							</Button> */}
 
 							<Button
 								type="button"
