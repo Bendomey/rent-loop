@@ -1,4 +1,6 @@
 export * from './404-page'
+export * from './coming-soon'
+
 export * from './login'
 export * from './forgot-your-password'
 export * from './reset-your-password'

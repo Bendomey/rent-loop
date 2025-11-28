@@ -49,6 +49,7 @@ const data = {
 				{
 					title: 'Facilities',
 					url: '/facilities',
+					isComingSoon: true,
 				},
 			],
 		},
@@ -79,14 +80,17 @@ const data = {
 				{
 					title: 'Announcements',
 					url: '/announcements',
+					isComingSoon: true,
 				},
 				{
 					title: 'Inspections',
 					url: '/inspections',
+					isComingSoon: true,
 				},
 				{
 					title: 'Polls',
 					url: '/polls',
+					isComingSoon: true,
 				},
 			],
 		},
@@ -102,10 +106,12 @@ const data = {
 				{
 					title: 'Expenses',
 					url: '/expenses',
+					isComingSoon: true,
 				},
 				{
 					title: 'Reports',
 					url: '/reports',
+					isComingSoon: true,
 				},
 			],
 		},
