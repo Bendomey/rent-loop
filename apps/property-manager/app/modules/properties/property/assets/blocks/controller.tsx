@@ -18,31 +18,20 @@ const filters: Array<Filter> = [
 		label: 'Status',
 		value: {
 			options: [
-				{ label: 'Active', value: 'Unit.Status.Active' },
-				{ label: 'Inactive', value: 'Unit.Status.Inactive' },
-				{ label: 'Maintenance', value: 'Unit.Status.Maintenance' },
+				{ label: 'Active', value: 'PropertyBlock.Status.Active' },
+				{ label: 'Inactive', value: 'PropertyBlock.Status.Inactive' },
+				{ label: 'Maintenance', value: 'PropertyBlock.Status.Maintenance' },
 			],
 			urlParam: 'status',
 			defaultValues: [],
 		},
 		Icon: ToggleLeft,
 	},
-	{
-		id: 2,
-		type: 'selector',
-		selectType: 'single',
-		label: 'Blocks',
-		value: {
-			options: [{ label: 'Block A', value: 'block-1' }],
-			urlParam: 'blocks',
-			defaultValues: [],
-		},
-		Icon: ToggleLeft,
-	},
 ]
 
-export const PropertyAssetUnitsController = () => {
+export const PropertyAssetBlocksController = () => {
 	const { clientUserProperty } = useProperty()
+
 	return (
 		<div className="flex w-full flex-col gap-2">
 			<div className="w-full rounded-md border p-4">
@@ -53,7 +42,7 @@ export const PropertyAssetUnitsController = () => {
 			<div className="flex flex-wrap items-center justify-between gap-4">
 				<div className="flex items-center gap-2 text-sm">
 					<InputGroup>
-						<InputGroupInput placeholder="Search units ..." />
+						<InputGroupInput placeholder="Search blocks ..." />
 						<InputGroupAddon>
 							<Search />
 						</InputGroupAddon>
@@ -62,7 +51,7 @@ export const PropertyAssetUnitsController = () => {
 				<div className="flex items-center justify-end gap-2">
 					<PropertyPermissionGuard roles={['MANAGER']}>
 						<Link
-							to={`/properties/${clientUserProperty?.property_id}/assets/units/new`}
+							to={`/properties/${clientUserProperty?.property_id}/assets/blocks/new`}
 						>
 							<Button
 								variant="default"
@@ -70,7 +59,7 @@ export const PropertyAssetUnitsController = () => {
 								className="bg-rose-600 text-white hover:bg-rose-700"
 							>
 								<Plus className="size-4" />
-								Add Unit
+								Add Block
 							</Button>
 						</Link>
 					</PropertyPermissionGuard>
