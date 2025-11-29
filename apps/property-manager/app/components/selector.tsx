@@ -102,16 +102,14 @@ export function Selector(props: Props) {
 										<Badge
 											key={option.value}
 											variant="outline"
+											onClick={(e) => {
+												e.stopPropagation()
+												props.onRemove(option)
+											}}
 											className="text-foreground rounded-sm px-1 py-0.5 text-xs"
 										>
 											<span className="text-xs">{option.label}</span>
-											<X
-												onClick={(e) => {
-													e.stopPropagation()
-													props.onRemove(option)
-												}}
-												className="size-3 shrink-0 cursor-pointer"
-											/>
+											<X className="size-3 shrink-0 cursor-pointer" />
 										</Badge>
 									))}
 								</div>
@@ -199,7 +197,7 @@ export function Selector(props: Props) {
 										<div className="flex items-center gap-2">
 											<Checkbox
 												checked={true}
-												className="data-[state=checked]:border-rose-600 data-[state=checked]:bg-rose-600 data-[state=checked]:[&>svg]:fill-white"
+												className="data-[state=checked]:border-rose-600 data-[state=checked]:bg-rose-600 data-[state=checked]:text-white data-[state=checked]:[&>svg]:fill-white"
 											/>
 											<span className="text-sm">{option.label}</span>
 										</div>

@@ -1,8 +1,8 @@
-import type { Route } from './+types/_auth.properties.$propertyId.assets.units'
+import type { Route } from './+types/_auth.properties.$propertyId.assets.facilities'
 import { propertyContext } from '~/lib/actions/property.context.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { PropertyAssetUnitsModule } from '~/modules'
+import { PropertyAssetBlocksModule } from '~/modules'
 
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const clientUserProperty = context.get(propertyContext)
@@ -13,13 +13,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	}
 }
 
-export const handle = {
-	breadcrumb: 'Units',
-}
-
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `Units | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
+		title: `Blocks | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,
@@ -30,4 +26,4 @@ export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	return meta
 }
 
-export default PropertyAssetUnitsModule
+export default PropertyAssetBlocksModule

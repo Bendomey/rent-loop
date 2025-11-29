@@ -12,7 +12,6 @@ import {
 	CardTitle,
 } from '~/components/ui/card'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
-import { useProperty } from '~/providers/property-provider'
 
 const Units = [
 	{
@@ -74,14 +73,10 @@ const Units = [
 ]
 
 export function PropertyAssetUnitsModule() {
-	const { clientUserProperty } = useProperty()
-
 	return (
 		<div className="mx-6 my-6 flex flex-col gap-4 sm:gap-6">
 			<div>
-				<TypographyH4 className="mb-1">
-					Manage {clientUserProperty?.property?.name ?? 'Property'}'s Units
-				</TypographyH4>
+				<TypographyH4 className="mb-1">Manage Units</TypographyH4>
 				<TypographyMuted>Manage all units under this property.</TypographyMuted>
 			</div>
 

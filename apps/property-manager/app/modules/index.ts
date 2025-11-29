@@ -30,9 +30,13 @@ export * from './settings/my-account'
 // property
 export * from './properties/property/layout/sidebar'
 export * from './properties/property'
+
 export * from './properties/property/assets/blocks'
 export * from './properties/property/assets/blocks/new'
+
 export * from './properties/property/assets/units'
+export * from './properties/property/assets/units/new'
+
 export * from './properties/property/assets/facilities'
 
 export * from './properties/property/tenants/active'
