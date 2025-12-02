@@ -6,6 +6,8 @@ interface Property {
 	description: Nullable<string>
 	address: string
 	gps_address: string
+	country: string
+	region: string
 	city: string
 	state: string
 	type: 'SINGLE' | 'MULTI'
@@ -14,6 +16,7 @@ interface Property {
 		| 'Property.Status.Inactive'
 		| 'Property.Status.Maintenance'
 	zip_code: string
+	image: string[]
 	tags: string[]
 	created_at: Date
 	updated_at: Date
