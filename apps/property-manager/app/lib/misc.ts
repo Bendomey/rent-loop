@@ -56,10 +56,14 @@ export function isEqual<T>(a: T, b: T): boolean {
 	return JSON.stringify(a) === JSON.stringify(b)
 }
 
-
 /**
  * Converts a string into a slug by replacing spaces with hyphens and removing special characters.
  */
 export const convertToSlug = (value: string): string => {
-  return value.trim().toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
-};
+	return value
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9\s-]/g, '')
+		.replace(/\s+/g, '-')
+		.replace(/-+/g, '-')
+}
