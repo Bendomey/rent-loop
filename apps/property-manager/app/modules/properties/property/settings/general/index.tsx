@@ -1,6 +1,7 @@
 import { Edit } from 'lucide-react'
 import { useState } from 'react'
 import ConfirmDeletePropertyModule from './delete'
+import { PermissionGuard } from '~/components/permissions/permission-guard'
 import { Button } from '~/components/ui/button'
 import { Field, FieldDescription, FieldLabel } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
@@ -153,51 +154,38 @@ export function PropertyGeneralSettingsModule() {
 				<TypographyH3>Support Access</TypographyH3>
 				<Separator />
 
-				{/* <section className="mx-auto mb-5 space-y-6"> */}
 				<div className="flex items-center justify-between">
 					<Field className="">
 						<FieldLabel htmlFor="support_access">Support Access</FieldLabel>
 						<FieldDescription>
-							Allow support agents to access your account to help troubleshoot
+							Allow support agents to access this property to help troubleshoot
 							issues.
 						</FieldDescription>
 					</Field>
 					<Switch id="support_access" />
 				</div>
 
-				<div className="flex items-center justify-between">
-					<Field className="">
-						<FieldLabel htmlFor="logout_all_devices">
-							Log out of all devices
-						</FieldLabel>
-						<FieldDescription>
-							Log out of all other active sessions when changing your password.
-						</FieldDescription>
-					</Field>
-					<Button size="sm" variant="secondary">
-						Log out
-					</Button>
-				</div>
-
-				<div className="flex items-center justify-between">
-					<Field className="">
-						<FieldLabel htmlFor="delete_account" className="text-rose-600">
-							Delete my Account
-						</FieldLabel>
-						<FieldDescription>
-							Permanetly delete your account and all associated data.
-						</FieldDescription>
-					</Field>
-					<Button
-						size="sm"
-						variant="secondary"
-						onClick={() => {
-							setOpenDeletePropertyModal(true)
-						}}
-					>
-						Delete Account
-					</Button>
-				</div>
+				<PermissionGuard roles={['OWNER']}>
+					<div className="flex items-center justify-between">
+						<Field className="">
+							<FieldLabel htmlFor="delete_property" className="text-rose-600">
+								Delete Property
+							</FieldLabel>
+							<FieldDescription>
+								Permanetly delete this property and all associated data.
+							</FieldDescription>
+						</Field>
+						<Button
+							size="sm"
+							variant="secondary"
+							onClick={() => {
+								setOpenDeletePropertyModal(true)
+							}}
+						>
+							Delete Property
+						</Button>
+					</div>
+				</PermissionGuard>
 			</section>
 
 			<ConfirmDeletePropertyModule
