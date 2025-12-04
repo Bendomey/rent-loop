@@ -26,8 +26,6 @@ type CreatePropertyBlockInput struct {
 	PropertyID  string
 	Name        string
 	Description *string
-	FloorsCount *int
-	UnitsCount  int
 	Images      []string
 	Status      string
 }
@@ -47,8 +45,7 @@ func (s *propertyBlockService) CreatePropertyBlock(
 		PropertyID:  input.PropertyID,
 		Name:        input.Name,
 		Description: input.Description,
-		FloorsCount: input.FloorsCount,
-		UnitsCount:  input.UnitsCount,
+		UnitsCount:  0,
 		Images:      images,
 		Status:      input.Status,
 	}

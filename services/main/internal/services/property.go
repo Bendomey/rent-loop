@@ -177,7 +177,6 @@ func (s *propertyService) CreateProperty(
 	createPropertyBlockInput := CreatePropertyBlockInput{
 		PropertyID: property.ID.String(),
 		Name:       property.Name + "-Block A",
-		UnitsCount: 1,
 		Status:     "PropertyBlock.Status.Active",
 	}
 	_, createPropertyBlockErr := s.propertyBlockService.CreatePropertyBlock(transCtx, createPropertyBlockInput)
