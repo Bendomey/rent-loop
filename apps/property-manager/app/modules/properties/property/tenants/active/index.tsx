@@ -1,10 +1,4 @@
-import {
-	Building,
-	CircleEllipsis,
-	Mail,
-	MessageCircle,
-	Phone,
-} from 'lucide-react'
+import { Building, Mail, Phone } from 'lucide-react'
 import { Link } from 'react-router'
 import { PropertyTenantsController } from './controller'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
@@ -12,7 +6,6 @@ import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
 	Card,
-	CardAction,
 	CardContent,
 	CardFooter,
 	CardHeader,
