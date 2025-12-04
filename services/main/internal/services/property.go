@@ -40,6 +40,7 @@ type propertyService struct {
 	clientUserService         ClientUserService
 	clientUserPropertyService ClientUserPropertyService
 	unitService               UnitService
+	propertyBlockService      PropertyBlockService
 }
 
 type PropertyServiceDependencies struct {
@@ -48,6 +49,7 @@ type PropertyServiceDependencies struct {
 	ClientUserService         ClientUserService
 	ClientUserPropertyService ClientUserPropertyService
 	UnitService               UnitService
+	PropertyBlockService      PropertyBlockService
 }
 
 func NewPropertyService(deps PropertyServiceDependencies) PropertyService {
@@ -57,6 +59,7 @@ func NewPropertyService(deps PropertyServiceDependencies) PropertyService {
 		clientUserService:         deps.ClientUserService,
 		clientUserPropertyService: deps.ClientUserPropertyService,
 		unitService:               deps.UnitService,
+		propertyBlockService:      deps.PropertyBlockService,
 	}
 }
 
@@ -169,6 +172,23 @@ func (s *propertyService) CreateProperty(
 			transaction.Rollback()
 			return nil, linkPropertyErr
 		}
+	}
+
+	createPropertyBlockInput := CreatePropertyBlockInput{
+		PropertyID: property.ID.String(),
+		Name:       property.Name + "-Block A",
+		Status:     "PropertyBlock.Status.Active",
+	}
+	_, createPropertyBlockErr := s.propertyBlockService.CreatePropertyBlock(transCtx, createPropertyBlockInput)
+	if createPropertyBlockErr != nil {
+		transaction.Rollback()
+		return nil, pkg.InternalServerError(createPropertyBlockErr.Error(), &pkg.RentLoopErrorParams{
+			Err: createPropertyBlockErr,
+			Metadata: map[string]string{
+				"function": "CreateProperty",
+				"action":   "creating property block",
+			},
+		})
 	}
 
 	if commitErr := transaction.Commit().Error; commitErr != nil {
