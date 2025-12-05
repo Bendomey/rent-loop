@@ -1,0 +1,79 @@
+package handlers
+
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/services"
+	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
+	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/go-chi/chi/v5"
+)
+
+type PropertyBlockHandler struct {
+	appCtx  pkg.AppContext
+	service services.PropertyBlockService
+}
+
+func NewPropertyBlockHandler(appCtx pkg.AppContext, service services.PropertyBlockService) PropertyBlockHandler {
+	return PropertyBlockHandler{appCtx, service}
+}
+
+type CreatePropertyBlockRequest struct {
+	Name        string   `json:"name"                  validate:"required,min=2,max=100"                                                                                    example:"Luxury Apartment"`
+	Images      []string `json:"images"                validate:"required,dive,url"                                                                                         example:"https://example.com/image1.jpg,https://example.com/image2.jpg"`
+	Description *string  `json:"description,omitempty" validate:"omitempty"                                                                                                 example:"Spacious apartment with sea view."`
+	Status      string   `json:"status"                validate:"required,oneof=PropertyBlock.Status.Active PropertyBlock.Status.Maintenance PropertyBlock.Status.Inactive" example:"PropertyBlock.Status.Active"                                   description:"Current operational status of the property block"`
+}
+
+// CreatePropertyBlock godoc
+//
+//	@Summary		Create a new property block
+//	@Description	Create a new property block
+//	@Tags			PropertyBlocks
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string												true	"Property ID"
+//	@Param			body		body		CreatePropertyBlockRequest							true	"Property block details"
+//	@Success		201			{object}	object{data=transformations.OutputPropertyBlock}	"Property block created successfully"
+//	@Failure		400			{object}	lib.HTTPError										"Error occurred when creating a property block"
+//	@Failure		401			{object}	string												"Invalid or absent authentication token"
+//	@Failure		403			{object}	lib.HTTPError										"Forbidden access"
+//	@Failure		422			{object}	lib.HTTPError										"Invalid request body"
+//	@Failure		500			{object}	string												"An unexpected error occurred"
+//	@Router			/api/v1/properties/{property_id}/blocks [post]
+func (h PropertyBlockHandler) CreatePropertyBlock(w http.ResponseWriter, r *http.Request) {
+	propertyID := chi.URLParam(r, "property_id")
+
+	var body CreatePropertyBlockRequest
+
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	input := services.CreatePropertyBlockInput{
+		PropertyID:  propertyID,
+		Name:        body.Name,
+		Images:      body.Images,
+		Description: body.Description,
+		Status:      body.Status,
+	}
+	propertyBlock, createPropertyBlockErr := h.service.CreatePropertyBlock(r.Context(), input)
+	if createPropertyBlockErr != nil {
+		HandleErrorResponse(w, createPropertyBlockErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBPropertyBlockToRest(propertyBlock),
+	})
+}
