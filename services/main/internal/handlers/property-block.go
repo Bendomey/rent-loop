@@ -22,7 +22,7 @@ func NewPropertyBlockHandler(appCtx pkg.AppContext, service services.PropertyBlo
 
 type CreatePropertyBlockRequest struct {
 	Name        string   `json:"name"                  validate:"required,min=2,max=100"                                                                                    example:"Luxury Apartment"`
-	Images      []string `json:"images"                validate:"required,dive,url"                                                                                         example:"https://example.com/image1.jpg,https://example.com/image2.jpg"`
+	Images      []string `json:"images,omitempty"      validate:"omitempty,dive,url"                                                                                        example:"https://example.com/image1.jpg,https://example.com/image2.jpg"`
 	Description *string  `json:"description,omitempty" validate:"omitempty"                                                                                                 example:"Spacious apartment with sea view."`
 	Status      string   `json:"status"                validate:"required,oneof=PropertyBlock.Status.Active PropertyBlock.Status.Maintenance PropertyBlock.Status.Inactive" example:"PropertyBlock.Status.Active"                                   description:"Current operational status of the property block"`
 }

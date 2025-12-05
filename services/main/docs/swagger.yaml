@@ -162,7 +162,6 @@ definitions:
         example: PropertyBlock.Status.Active
         type: string
     required:
-    - images
     - name
     - status
     type: object

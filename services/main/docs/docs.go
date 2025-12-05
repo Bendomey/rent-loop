@@ -3275,7 +3275,6 @@ const docTemplate = `{
         "handlers.CreatePropertyBlockRequest": {
             "type": "object",
             "required": [
-                "images",
                 "name",
                 "status"
             ],
