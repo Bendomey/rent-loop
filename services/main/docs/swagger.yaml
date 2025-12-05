@@ -137,6 +137,34 @@ definitions:
     - size
     - title
     type: object
+  handlers.CreatePropertyBlockRequest:
+    properties:
+      description:
+        example: Spacious apartment with sea view.
+        type: string
+      images:
+        example:
+        - https://example.com/image1.jpg
+        - https://example.com/image2.jpg
+        items:
+          type: string
+        type: array
+      name:
+        example: Luxury Apartment
+        maxLength: 100
+        minLength: 2
+        type: string
+      status:
+        enum:
+        - PropertyBlock.Status.Active
+        - PropertyBlock.Status.Maintenance
+        - PropertyBlock.Status.Inactive
+        example: PropertyBlock.Status.Active
+        type: string
+    required:
+    - name
+    - status
+    type: object
   handlers.CreatePropertyRequest:
     properties:
       address:
@@ -826,6 +854,49 @@ definitions:
       type:
         example: SINGLE
         type: string
+      updated_at:
+        example: "2023-01-01T00:00:00Z"
+        format: date-time
+        type: string
+    type: object
+  transformations.OutputPropertyBlock:
+    properties:
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        format: date-time
+        type: string
+      description:
+        example: Very elegant place
+        type: string
+      floors_count:
+        example: 3
+        type: integer
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        format: uuid
+        type: string
+      images:
+        example:
+        - https://example.com/image1.jpg
+        - https://example.com/image2.jpg
+        items:
+          type: string
+        type: array
+      name:
+        example: Block A
+        type: string
+      property:
+        $ref: '#/definitions/transformations.OutputProperty'
+      property_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        format: uuid
+        type: string
+      status:
+        example: PropertyBlock.Status.Active
+        type: string
+      units_count:
+        example: 3
+        type: integer
       updated_at:
         example: "2023-01-01T00:00:00Z"
         format: date-time
@@ -2547,6 +2618,58 @@ paths:
       summary: Update an existing property
       tags:
       - Properties
+  /api/v1/properties/{property_id}/blocks:
+    post:
+      consumes:
+      - application/json
+      description: Create a new property block
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Property block details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreatePropertyBlockRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Property block created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputPropertyBlock'
+            type: object
+        "400":
+          description: Error occurred when creating a property block
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Forbidden access
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a new property block
+      tags:
+      - PropertyBlocks
   /api/v1/properties/{property_id}/client-users:link:
     post:
       consumes:

@@ -3,12 +3,14 @@ package middlewares
 import (
 	"errors"
 	"net/http"
+	"slices"
 
 	"github.com/Bendomey/goutilities/pkg/validatetoken"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/go-chi/chi/v5"
 )
 
 func InjectClientUserAuthMiddleware(appCtx pkg.AppContext) func(http.Handler) http.Handler {
@@ -93,6 +95,42 @@ func ValidateRoleClientUserMiddleware(appCtx pkg.AppContext, allowedRoles ...str
 					break
 				}
 			}
+
+			if !hasAllowedRole {
+				http.Error(w, "Forbidden", http.StatusForbidden)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func ValidateRoleClientUserPropertyMiddleware(
+	appCtx pkg.AppContext,
+	allowedRoles ...string,
+) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			clientCtx, ok := lib.ClientUserFromContext(r.Context())
+			if !ok || clientCtx == nil {
+				http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
+				return
+			}
+
+			propertyID := chi.URLParam(r, "property_id")
+
+			// TODO: Add a cache layer here later
+			var clientUserProperty models.ClientUserProperty
+			result := appCtx.DB.Select("id", "role").
+				Where("client_user_id = ? AND property_id = ?", clientCtx.ID, propertyID).
+				First(&clientUserProperty)
+			if result.Error != nil {
+				http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
+				return
+			}
+
+			hasAllowedRole := slices.Contains(allowedRoles, clientUserProperty.Role)
 
 			if !hasAllowedRole {
 				http.Error(w, "Forbidden", http.StatusForbidden)
