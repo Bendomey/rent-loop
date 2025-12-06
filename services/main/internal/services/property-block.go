@@ -11,6 +11,11 @@ import (
 
 type PropertyBlockService interface {
 	CreatePropertyBlock(context context.Context, input CreatePropertyBlockInput) (*models.PropertyBlock, error)
+	ListPropertyBlocks(
+		context context.Context,
+		filterQuery repository.ListPropertyBlocksFilter,
+	) ([]models.PropertyBlock, error)
+	CountPropertyBlocks(context context.Context, filterQuery repository.ListPropertyBlocksFilter) (int64, error)
 }
 
 type propertyBlockService struct {
@@ -61,4 +66,40 @@ func (s *propertyBlockService) CreatePropertyBlock(
 		})
 	}
 	return &propertyBlock, nil
+}
+
+func (s *propertyBlockService) ListPropertyBlocks(
+	ctx context.Context,
+	filterQuery repository.ListPropertyBlocksFilter,
+) ([]models.PropertyBlock, error) {
+	propertyBlocks, listPropertyBlocksErr := s.repo.List(ctx, filterQuery)
+	if listPropertyBlocksErr != nil {
+		return nil, pkg.InternalServerError(listPropertyBlocksErr.Error(), &pkg.RentLoopErrorParams{
+			Err: listPropertyBlocksErr,
+			Metadata: map[string]string{
+				"function": "ListPropertyBlocks",
+				"action":   "listing property blocks",
+			},
+		})
+	}
+
+	return *propertyBlocks, nil
+}
+
+func (s *propertyBlockService) CountPropertyBlocks(
+	ctx context.Context,
+	filterQuery repository.ListPropertyBlocksFilter,
+) (int64, error) {
+	propertyBlocksCount, countPropertyBlocksErr := s.repo.Count(ctx, filterQuery)
+	if countPropertyBlocksErr != nil {
+		return 0, pkg.InternalServerError(countPropertyBlocksErr.Error(), &pkg.RentLoopErrorParams{
+			Err: countPropertyBlocksErr,
+			Metadata: map[string]string{
+				"function": "CountPropertyBlocks",
+				"action":   "counting property blocks",
+			},
+		})
+	}
+
+	return propertyBlocksCount, nil
 }
