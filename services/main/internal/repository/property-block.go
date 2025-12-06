@@ -10,6 +10,7 @@ import (
 
 type PropertyBlockRepository interface {
 	Create(context context.Context, propertyBlock *models.PropertyBlock) error
+	GetByIDWithQuery(context context.Context, query GetPropertyBlockQuery) (*models.PropertyBlock, error)
 	List(context context.Context, filterQuery ListPropertyBlocksFilter) (*[]models.PropertyBlock, error)
 	Count(context context.Context, filterQuery ListPropertyBlocksFilter) (int64, error)
 }
@@ -26,6 +27,34 @@ func (r *propertyBlockRepository) Create(ctx context.Context, propertyBlock *mod
 	db := lib.ResolveDB(ctx, r.DB)
 
 	return db.Create(propertyBlock).Error
+}
+
+type GetPropertyBlockQuery struct {
+	PropertyBlockID string
+	PropertyID      string
+	Populate        *[]string
+}
+
+func (r *propertyBlockRepository) GetByIDWithQuery(
+	ctx context.Context,
+	query GetPropertyBlockQuery,
+) (*models.PropertyBlock, error) {
+	var propertyBlock models.PropertyBlock
+
+	db := r.DB.WithContext(ctx).Where("id = ? AND property_id = ?", query.PropertyBlockID, query.PropertyID)
+
+	if query.Populate != nil {
+		for _, field := range *query.Populate {
+			db = db.Preload(field)
+		}
+	}
+
+	result := db.First(&propertyBlock)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &propertyBlock, nil
 }
 
 type ListPropertyBlocksFilter struct {

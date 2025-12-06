@@ -78,6 +78,9 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 							Post("/", handlers.PropertyBlockHandler.CreatePropertyBlock)
 						r.Get("/", handlers.PropertyBlockHandler.ListPropertyBlocks)
+						r.Route("/{block_id}", func(r chi.Router) {
+							r.Get("/", handlers.PropertyBlockHandler.GetPropertyBlock)
+						})
 					})
 				})
 			})

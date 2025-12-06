@@ -139,3 +139,47 @@ func (h *PropertyBlockHandler) ListPropertyBlocks(w http.ResponseWriter, r *http
 
 	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, propertyBlocksTransformed, count))
 }
+
+type GetPropertyBlockQuery struct {
+	lib.GetOneQueryInput
+}
+
+// GetPropertyBlock godoc
+//
+//	@Summary		Get property block by ID
+//	@Description	Get property block by ID
+//	@Tags			PropertyBlocks
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string												true	"Property ID"
+//	@Param			block_id	path		string												true	"Property block ID"
+//	@Param			q			query		GetPropertyBlockQuery								true	"Property blocks"
+//	@Success		200			{object}	object{data=transformations.OutputPropertyBlock}	"Property block retrieved successfully"
+//	@Failure		400			{object}	lib.HTTPError										"Error occurred when fetching a property block"
+//	@Failure		401			{object}	string												"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError										"Property block not found"
+//	@Failure		500			{object}	string												"An unexpected error occured"
+//	@Router			/api/v1/properties/{property_id}/blocks/{block_id} [get]
+func (h *PropertyBlockHandler) GetPropertyBlock(w http.ResponseWriter, r *http.Request) {
+	populate := GetPopulateFields(r)
+
+	propertyID := chi.URLParam(r, "property_id")
+	propertyBlockID := chi.URLParam(r, "block_id")
+
+	input := repository.GetPropertyBlockQuery{
+		PropertyBlockID: propertyBlockID,
+		PropertyID:      propertyID,
+		Populate:        populate,
+	}
+
+	propertyBlock, getPropertyBlockErr := h.service.GetPropertyBlock(r.Context(), input)
+	if getPropertyBlockErr != nil {
+		HandleErrorResponse(w, getPropertyBlockErr)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBPropertyBlockToRest(propertyBlock),
+	})
+}
