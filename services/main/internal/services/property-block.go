@@ -2,15 +2,18 @@ package services
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/lib/pq"
+	"gorm.io/gorm"
 )
 
 type PropertyBlockService interface {
 	CreatePropertyBlock(context context.Context, input CreatePropertyBlockInput) (*models.PropertyBlock, error)
+	GetPropertyBlock(context context.Context, query repository.GetPropertyBlockQuery) (*models.PropertyBlock, error)
 	ListPropertyBlocks(
 		context context.Context,
 		filterQuery repository.ListPropertyBlocksFilter,
@@ -66,6 +69,30 @@ func (s *propertyBlockService) CreatePropertyBlock(
 		})
 	}
 	return &propertyBlock, nil
+}
+
+func (s *propertyBlockService) GetPropertyBlock(
+	ctx context.Context,
+	query repository.GetPropertyBlockQuery,
+) (*models.PropertyBlock, error) {
+	propertyBlock, getPropertyBlockByIDErr := s.repo.GetByIDWithQuery(ctx, query)
+	if getPropertyBlockByIDErr != nil {
+		if errors.Is(getPropertyBlockByIDErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("PropertyBlockNotFound", &pkg.RentLoopErrorParams{
+				Err: getPropertyBlockByIDErr,
+			})
+		}
+
+		return nil, pkg.InternalServerError(getPropertyBlockByIDErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getPropertyBlockByIDErr,
+			Metadata: map[string]string{
+				"function": "FindPropertyBlockByIDWithQuery",
+				"action":   "fetching property block by ID",
+			},
+		})
+	}
+
+	return propertyBlock, nil
 }
 
 func (s *propertyBlockService) ListPropertyBlocks(

@@ -2761,6 +2761,59 @@ paths:
       summary: Create a new property block
       tags:
       - PropertyBlocks
+  /api/v1/properties/{property_id}/blocks/{block_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get property block by ID
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Property block ID
+        in: path
+        name: block_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Property block retrieved successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputPropertyBlock'
+            type: object
+        "400":
+          description: Error occurred when fetching a property block
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Property block not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occured
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get property block by ID
+      tags:
+      - PropertyBlocks
   /api/v1/properties/{property_id}/client-users:link:
     post:
       consumes:
