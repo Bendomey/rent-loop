@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -76,4 +77,65 @@ func (h PropertyBlockHandler) CreatePropertyBlock(w http.ResponseWriter, r *http
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": transformations.DBPropertyBlockToRest(propertyBlock),
 	})
+}
+
+type PropertyBlockListQueryFilters struct {
+	lib.FilterQueryInput
+	Status *string `json:"status,omitempty" validate:"omitempty,oneof=PropertyBlock.Status.Active PropertyBlock.Status.Inactive PropertyBlock.Status.Maintenance" example:"PropertyBlock.Status.Active"`
+}
+
+// ListPropertyBlocks godoc
+//
+//	@Summary		List property blocks
+//	@Description	List property blocks
+//	@Tags			PropertyBlocks
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string							true	"Property ID"
+//	@Param			q			query		PropertyBlockListQueryFilters	true	"Property blocks"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.OutputPropertyBlock,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400			{object}	lib.HTTPError
+//	@Failure		401			{object}	string
+//	@Failure		500			{object}	string
+//	@Router			/api/v1/properties/{property_id}/blocks [get]
+func (h *PropertyBlockHandler) ListPropertyBlocks(w http.ResponseWriter, r *http.Request) {
+	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
+	if filterErr != nil {
+		HandleErrorResponse(w, filterErr)
+		return
+	}
+
+	isFilterPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filterQuery, w)
+	if !isFilterPassedValidation {
+		return
+	}
+
+	input := repository.ListPropertyBlocksFilter{
+		FilterQuery: *filterQuery,
+		PropertyID:  chi.URLParam(r, "property_id"),
+		Status:      lib.NullOrString(r.URL.Query().Get("status")),
+	}
+
+	propertyBlocks, propertyBlocksErr := h.service.ListPropertyBlocks(r.Context(), input)
+	if propertyBlocksErr != nil {
+		HandleErrorResponse(w, propertyBlocksErr)
+		return
+	}
+
+	count, countErr := h.service.CountPropertyBlocks(r.Context(), input)
+	if countErr != nil {
+		HandleErrorResponse(w, countErr)
+		return
+	}
+
+	propertyBlocksTransformed := make([]any, 0)
+	for _, propertyBlock := range propertyBlocks {
+		propertyBlocksTransformed = append(
+			propertyBlocksTransformed,
+			transformations.DBPropertyBlockToRest(&propertyBlock),
+		)
+	}
+
+	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, propertyBlocksTransformed, count))
 }
