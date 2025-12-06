@@ -82,6 +82,11 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 							r.Get("/", handlers.PropertyBlockHandler.GetPropertyBlock)
 						})
 					})
+
+					// units
+					r.Route("/units", func(r chi.Router) {
+						r.Get("/", handlers.UnitHandler.ListUnits)
+					})
 				})
 			})
 
