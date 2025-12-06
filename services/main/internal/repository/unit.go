@@ -9,6 +9,7 @@ import (
 )
 
 type UnitRepository interface {
+	List(context context.Context, filterQuery ListUnitsFilter) (*[]models.Unit, error)
 	Count(context context.Context, filterQuery ListUnitsFilter) (int64, error)
 }
 
@@ -22,9 +23,41 @@ func NewUnitRepository(DB *gorm.DB) UnitRepository {
 
 type ListUnitsFilter struct {
 	lib.FilterQuery
-	PropertyID string
-	Status     *string
-	Type       *string
+	PropertyID       string
+	Status           *string
+	Type             *string
+	PaymentFrequency *string
+	BlockIDs         *[]string
+}
+
+func (r *unitRepository) List(ctx context.Context, filterQuery ListUnitsFilter) (*[]models.Unit, error) {
+	var units []models.Unit
+
+	db := r.DB.WithContext(ctx).Scopes(
+		propertyFilterScope(filterQuery.PropertyID),
+		unitStatusScope(filterQuery.Status),
+		unitTypeScope(filterQuery.Type),
+		unitBlockIDsScope(filterQuery.BlockIDs),
+		unitPaymentFrequencyScope(filterQuery.PaymentFrequency),
+		DateRangeScope("units", filterQuery.DateRange),
+		SearchScope("units", filterQuery.Search),
+
+		PaginationScope(filterQuery.Page, filterQuery.PageSize),
+		OrderScope("units", filterQuery.OrderBy, filterQuery.Order),
+	)
+
+	if filterQuery.Populate != nil {
+		for _, field := range *filterQuery.Populate {
+			db = db.Preload(field)
+		}
+	}
+
+	results := db.Find(&units)
+
+	if results.Error != nil {
+		return nil, results.Error
+	}
+	return &units, nil
 }
 
 func (r *unitRepository) Count(ctx context.Context, filterQuery ListUnitsFilter) (int64, error) {
@@ -36,6 +69,8 @@ func (r *unitRepository) Count(ctx context.Context, filterQuery ListUnitsFilter)
 			propertyFilterScope(filterQuery.PropertyID),
 			unitStatusScope(filterQuery.Status),
 			unitTypeScope(filterQuery.Type),
+			unitBlockIDsScope(filterQuery.BlockIDs),
+			unitPaymentFrequencyScope(filterQuery.PaymentFrequency),
 			DateRangeScope("units", filterQuery.DateRange),
 			SearchScope("units", filterQuery.Search),
 		).
@@ -75,5 +110,25 @@ func unitTypeScope(unitType *string) func(db *gorm.DB) *gorm.DB {
 		}
 
 		return db.Where("units.type = ?", unitType)
+	}
+}
+
+func unitBlockIDsScope(blockIDs *[]string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if blockIDs == nil {
+			return db
+		}
+
+		return db.Where("units.property_block_id IN (?)", *blockIDs)
+	}
+}
+
+func unitPaymentFrequencyScope(paymentFrequency *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if paymentFrequency == nil {
+			return db
+		}
+
+		return db.Where("units.payment_frequency = ?", *paymentFrequency)
 	}
 }
