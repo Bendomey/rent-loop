@@ -18,7 +18,7 @@ const getPropertyBlocks = async (
 		const params = new URLSearchParams(removeAllNullableValues)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<PropertyBlock>>
-		>(`/v1/properties/${props.property_id}/blocksd?${params.toString()}`)
+		>(`/v1/properties/${props.property_id}/blocks?${params.toString()}`)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {
