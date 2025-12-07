@@ -2,8 +2,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link } from 'react-router'
+import { Link, redirect } from 'react-router'
+import { toast } from 'sonner'
 import { z } from 'zod'
+import { useCreatePropertyBlock } from '~/api/blocks'
 import { Button } from '~/components/ui/button'
 import { FieldGroup } from '~/components/ui/field'
 import {
@@ -17,24 +19,57 @@ import {
 } from '~/components/ui/form'
 import { ImageUpload } from '~/components/ui/image-upload'
 import { Input } from '~/components/ui/input'
+import { Spinner } from '~/components/ui/spinner'
 import { Textarea } from '~/components/ui/textarea'
-import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
+import {
+	TypographyH2,
+	TypographyMuted,
+	TypographySmall,
+} from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
+import { cn } from '~/lib/utils'
+import { useProperty } from '~/providers/property-provider'
 
 const ValidationSchema = z.object({
 	name: z.string({ error: 'Name is required' }),
-	image_url: z.url('Please upload an image').optional(),
+	images: z
+		.array(z.string().url('Please provide a valid image url'))
+		.optional(),
 	description: z
 		.string()
 		.max(500, 'Description must be less than 500 characters')
 		.optional(),
+	status: z.enum(
+		[
+			'PropertyBlock.Status.Active',
+			'PropertyBlock.Status.Maintenance',
+			'PropertyBlock.Status.Inactive',
+		],
+		{
+			error: 'Please select a status',
+		},
+	),
 })
 
 type FormSchema = z.infer<typeof ValidationSchema>
 
+const status: Array<{ label: string; value: PropertyBlock['status'] }> = [
+	{ label: 'Active', value: 'PropertyBlock.Status.Active' },
+	{ label: 'Inactive', value: 'PropertyBlock.Status.Inactive' },
+	{ label: 'Maintenance', value: 'PropertyBlock.Status.Maintenance' },
+]
+
 export function NewPropertyAssetBlocksModule() {
+	const { clientUserProperty } = useProperty()
+
 	const rhfMethods = useForm<FormSchema>({
+		defaultValues: {
+			name: '',
+			description: '',
+			images: [],
+			status: 'PropertyBlock.Status.Active',
+		},
 		resolver: zodResolver(ValidationSchema),
 	})
 
@@ -46,7 +81,8 @@ export function NewPropertyAssetBlocksModule() {
 
 	useEffect(() => {
 		if (objectUrl) {
-			rhfMethods.setValue('image_url', objectUrl, {
+			const prev: string[] = rhfMethods.getValues('images') ?? []
+			rhfMethods.setValue('images', [...prev, objectUrl], {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
@@ -54,7 +90,34 @@ export function NewPropertyAssetBlocksModule() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [objectUrl])
 
-	const onSubmit = (_: FormSchema) => {}
+	const { mutate, isPending } = useCreatePropertyBlock()
+
+	const onSubmit = async (data: FormSchema) => {
+		if (data) {
+			mutate(
+				{
+					property_id: clientUserProperty?.property?.id ?? '',
+					name: data.name,
+					description: data.description,
+					images: data.images,
+					status: data.status,
+				},
+				{
+					onError: () => {
+						toast.error(`Failed to create property block. Try again later.`)
+					},
+					onSuccess: () => {
+						toast.success(`Property block has been successfully created`)
+						return redirect(
+							`/properties/${clientUserProperty?.property?.id}/assets/blocks`,
+						)
+					},
+				},
+			)
+		}
+	}
+
+	const { watch, formState, setValue } = rhfMethods
 
 	return (
 		<Form {...rhfMethods}>
@@ -104,23 +167,53 @@ export function NewPropertyAssetBlocksModule() {
 						)}
 					/>
 
+					<div className="flex flex-col items-center space-x-6 md:flex-row">
+						<FormLabel>Status: </FormLabel>
+						<div className="flex space-x-3">
+							{status.map((status) => {
+								const isSelected = watch('status') === status.value
+								return (
+									<Button
+										type="button"
+										onClick={() =>
+											setValue('status', status.value, {
+												shouldDirty: true,
+												shouldValidate: true,
+											})
+										}
+										key={status.value}
+										variant={isSelected ? 'default' : 'outline'}
+										className={cn({ 'bg-rose-600 text-white': isSelected })}
+									>
+										{status.label}
+									</Button>
+								)
+							})}
+						</div>
+						{formState.errors?.status ? (
+							<TypographySmall className="text-destructive mt-3">
+								{formState.errors.status.message}
+							</TypographySmall>
+						) : null}
+					</div>
+
 					<ImageUpload
 						hero
 						shape="square"
 						hint="Optional"
 						acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-						error={rhfMethods.formState.errors?.image_url?.message}
+						error={rhfMethods.formState.errors?.images?.message}
 						fileCallback={upload}
 						isUploading={isUploading}
 						dismissCallback={() => {
-							rhfMethods.setValue('image_url', undefined, {
+							rhfMethods.setValue('images', undefined, {
 								shouldDirty: true,
 								shouldValidate: true,
 							})
 						}}
-						imageSrc={safeString(rhfMethods.watch('image_url'))}
+						imageSrc={safeString(rhfMethods.watch('images')?.[0])}
 						label="Block Image"
-						name="image_url"
+						name="images"
 						validation={{
 							maxByteSize: 5242880, // 5MB
 						}}
@@ -129,17 +222,23 @@ export function NewPropertyAssetBlocksModule() {
 
 				<div className="mt-10 flex items-center justify-end space-x-5">
 					<Link to="..">
-						<Button type="button" size="sm" variant="ghost">
+						<Button
+							type="button"
+							size="sm"
+							variant="ghost"
+							disabled={isPending}
+						>
 							<ArrowLeft />
 							Cancel
 						</Button>
 					</Link>
 					<Button
+						disabled={isPending}
 						size="lg"
 						variant="default"
 						className="bg-rose-600 hover:bg-rose-700"
 					>
-						Submit
+						{isPending ? <Spinner /> : null} Submit
 					</Button>
 				</div>
 			</form>
