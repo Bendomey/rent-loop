@@ -1,5 +1,5 @@
-import { Cloud } from 'lucide-react'
-import { Button } from '~/components/ui/button'
+import { CloudAlert, RotateCcw } from 'lucide-react'
+import { Button } from '../ui/button'
 import {
 	Empty,
 	EmptyContent,
@@ -7,9 +7,9 @@ import {
 	EmptyHeader,
 	EmptyMedia,
 	EmptyTitle,
-} from '~/components/ui/empty'
+} from '../ui/empty'
 
-export interface EmptyOutlineProps {
+export interface ErrorProps {
 	message?: string
 	description?: string
 	button?: {
@@ -19,24 +19,29 @@ export interface EmptyOutlineProps {
 	height?: string
 }
 
-export function EmptyOutline({
-	message = 'No data available',
-	description = 'There is currently no data to display.',
+export const ErrorContainer = ({
+	message = 'An Error Occurred',
+	description = 'Something went wrong while fetching the data.',
 	button,
 	height = 'h-96',
-}: EmptyOutlineProps) {
+}: ErrorProps) => {
 	return (
-		<Empty className={`border border-dashed ${height}`}>
+		<Empty className={`w-full border border-dashed ${height}`}>
 			<EmptyHeader>
 				<EmptyMedia variant="icon">
-					<Cloud />
+					<CloudAlert className="text-red-600" />
 				</EmptyMedia>
 				<EmptyTitle>{message}</EmptyTitle>
 				<EmptyDescription>{description}</EmptyDescription>
 			</EmptyHeader>
 			<EmptyContent>
 				{button ? (
-					<Button onClick={button.onClick} variant="outline" size="sm">
+					<Button
+						onClick={() => button.onClick()}
+						variant={'outline'}
+						size="sm"
+					>
+						<RotateCcw />
 						{button.label}
 					</Button>
 				) : null}

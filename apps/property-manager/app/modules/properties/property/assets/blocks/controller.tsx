@@ -8,6 +8,7 @@ import {
 	InputGroupAddon,
 	InputGroupInput,
 } from '~/components/ui/input-group'
+import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
 
 const filters: Array<Filter> = [
@@ -29,7 +30,13 @@ const filters: Array<Filter> = [
 	},
 ]
 
-export const PropertyAssetBlocksController = () => {
+export const PropertyAssetBlocksController = ({
+	isLoading,
+	refetch,
+}: {
+	isLoading: boolean
+	refetch: VoidFunction
+}) => {
 	const { clientUserProperty } = useProperty()
 
 	return (
@@ -63,8 +70,13 @@ export const PropertyAssetBlocksController = () => {
 							</Button>
 						</Link>
 					</PropertyPermissionGuard>
-					<Button variant="outline" size="sm">
-						<RotateCw className="size-4" />
+					<Button
+						onClick={() => refetch()}
+						disabled={isLoading}
+						variant="outline"
+						size="sm"
+					>
+						<RotateCw className={cn('size-4', { 'animate-spin': isLoading })} />
 						Refresh
 					</Button>
 				</div>
