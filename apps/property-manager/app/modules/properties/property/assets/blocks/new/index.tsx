@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, redirect } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useCreatePropertyBlock } from '~/api/blocks'
@@ -62,6 +62,7 @@ const status: Array<{ label: string; value: PropertyBlock['status'] }> = [
 
 export function NewPropertyAssetBlocksModule() {
 	const { clientUserProperty } = useProperty()
+	const navigate = useNavigate()
 
 	const rhfMethods = useForm<FormSchema>({
 		defaultValues: {
@@ -108,9 +109,11 @@ export function NewPropertyAssetBlocksModule() {
 					},
 					onSuccess: () => {
 						toast.success(`Property block has been successfully created`)
-						return redirect(
-							`/properties/${clientUserProperty?.property?.id}/assets/blocks`,
-						)
+						setTimeout(() => {
+							void navigate(
+								`/properties/${clientUserProperty?.property?.id}/assets/blocks`,
+							)
+						}, 1000)
 					},
 				},
 			)
