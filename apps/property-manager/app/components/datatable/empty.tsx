@@ -16,17 +16,17 @@ export interface EmptyOutlineProps {
 		label: string
 		onClick: () => void
 	}
-	height?: string
+	className?: string
 }
 
 export function EmptyOutline({
 	message = 'No data available',
 	description = 'There is currently no data to display.',
 	button,
-	height = 'h-96',
+	className = 'h-96',
 }: EmptyOutlineProps) {
 	return (
-		<Empty className={`border border-dashed ${height}`}>
+		<Empty className={`border border-dashed ${className}`}>
 			<EmptyHeader>
 				<EmptyMedia variant="icon">
 					<Cloud />

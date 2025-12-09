@@ -9,10 +9,8 @@ import {
 import { useNavigate, useSearchParams } from 'react-router'
 import { PropertyAssetBlocksController } from './controller'
 import { useGetPropertyBlocks } from '~/api/blocks'
-import { EmptyOutline } from '~/components/datatable/empty'
-import { ErrorContainer } from '~/components/ErrorContainer'
+import { GridElement } from '~/components/Grid'
 import { Image } from '~/components/Image'
-import { LoadingContainer } from '~/components/LoadingContainer'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { ButtonGroup } from '~/components/ui/button-group'
@@ -73,35 +71,32 @@ export function PropertyAssetBlocksModule() {
 
 			<PropertyAssetBlocksController isLoading={isLoading} refetch={refetch} />
 
-			{isLoading ? (
-				<LoadingContainer />
-			) : error ? (
-				<ErrorContainer />
-			) : !data?.rows.length ? (
-				<EmptyOutline />
-			) : (
-				<div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
-					{data?.rows.map((block) => (
+			<div>
+				<GridElement
+					boxHeight={62}
+					isLoading={isLoading}
+					gridColumns={{ sm: 2, md: 2, lg: 3, xl: 4 }}
+					gridElement={({ data }: { data: PropertyBlock }) => (
 						<Card
-							key={block.id}
+							key={data.id}
 							className="gap-2 overflow-hidden pt-0 pb-3 shadow-none"
 						>
 							<div className="h-44 w-full overflow-hidden">
 								<Image
 									className="h-full w-full object-cover"
-									src={block.images?.[0] ?? 'https://placehold.co/600x400'}
-									alt={block.name}
+									src={data.images?.[0] ?? 'https://placehold.co/600x400'}
+									alt={data.name}
 								/>
 							</div>
 
 							<CardHeader className="flex items-center justify-between">
-								<CardTitle className="">{block.name}</CardTitle>
+								<CardTitle className="">{data.name}</CardTitle>
 							</CardHeader>
 
 							<CardContent className="mt-2 space-y-2 pb-2">
 								<Badge
 									className={
-										block.status === 'PropertyBlock.Status.Active'
+										data.status === 'PropertyBlock.Status.Active'
 											? 'bg-teal-500 text-white'
 											: 'bg-rose-500 text-white'
 									}
@@ -111,13 +106,13 @@ export function PropertyAssetBlocksModule() {
 								<div className="flex items-center gap-2">
 									<Building className="text-zinc-500" size={16} />
 									<TypographyMuted className="truncate">
-										{block.unitsCount} Units
+										{data.unitsCount} Units
 									</TypographyMuted>
 								</div>
 								<div className="flex items-center gap-2">
 									<Clock className="text-zinc-500" size={16} />
 									<TypographyMuted className="truncate">
-										{dayjs(block.created_at).format('MMM D, YYYY')}
+										{dayjs(data.created_at).format('MMM D, YYYY')}
 									</TypographyMuted>
 								</div>
 							</CardContent>
@@ -128,7 +123,7 @@ export function PropertyAssetBlocksModule() {
 										<Button
 											onClick={() =>
 												navigate(
-													`/properties/${clientUserProperty?.property_id}/assets/units?filters=blocks&blocks=${block.id}`,
+													`/properties/${clientUserProperty?.property_id}/assets/units?filters=blocks&blocks=${data.id}`,
 												)
 											}
 											variant="outline"
@@ -162,9 +157,26 @@ export function PropertyAssetBlocksModule() {
 								</div>
 							</CardFooter>
 						</Card>
-					))}
-				</div>
-			)}
+					)}
+					dataResponse={{
+						rows: data?.rows ?? [],
+						total: data?.meta?.total ?? 0,
+						page,
+						page_size: per,
+						order: data?.meta?.order ?? 'desc',
+						order_by: data?.meta?.order_by ?? 'created_at',
+						has_prev_page: data?.meta?.has_prev_page ?? false,
+						has_next_page: data?.meta?.has_next_page ?? false,
+					}}
+					error={error ? { message: 'Failed to load blocks.' } : undefined}
+					empty={{
+						message: 'No blocks found',
+						description:
+							"Try adjusting your search to find what you're looking for.",
+					}}
+					refetch={refetch}
+				/>
+			</div>
 		</div>
 	)
 }

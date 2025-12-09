@@ -33,9 +33,7 @@ import { useProperty } from '~/providers/property-provider'
 
 const ValidationSchema = z.object({
 	name: z.string({ error: 'Name is required' }),
-	images: z
-		.array(z.string().url('Please provide a valid image url'))
-		.optional(),
+	image_url: z.url('Please upload an image').optional(),
 	description: z
 		.string()
 		.max(500, 'Description must be less than 500 characters')
@@ -68,7 +66,7 @@ export function NewPropertyAssetBlocksModule() {
 		defaultValues: {
 			name: '',
 			description: '',
-			images: [],
+			image_url: '',
 			status: 'PropertyBlock.Status.Active',
 		},
 		resolver: zodResolver(ValidationSchema),
@@ -82,8 +80,7 @@ export function NewPropertyAssetBlocksModule() {
 
 	useEffect(() => {
 		if (objectUrl) {
-			const prev: string[] = rhfMethods.getValues('images') ?? []
-			rhfMethods.setValue('images', [...prev, objectUrl], {
+			rhfMethods.setValue('image_url', objectUrl, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
@@ -100,7 +97,7 @@ export function NewPropertyAssetBlocksModule() {
 					property_id: clientUserProperty?.property?.id ?? '',
 					name: data.name,
 					description: data.description,
-					images: data.images,
+					images: data.image_url ? [data.image_url] : null,
 					status: data.status,
 				},
 				{
@@ -205,18 +202,18 @@ export function NewPropertyAssetBlocksModule() {
 						shape="square"
 						hint="Optional"
 						acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-						error={rhfMethods.formState.errors?.images?.message}
+						error={rhfMethods.formState.errors?.image_url?.message}
 						fileCallback={upload}
 						isUploading={isUploading}
 						dismissCallback={() => {
-							rhfMethods.setValue('images', undefined, {
+							rhfMethods.setValue('image_url', undefined, {
 								shouldDirty: true,
 								shouldValidate: true,
 							})
 						}}
-						imageSrc={safeString(rhfMethods.watch('images')?.[0])}
+						imageSrc={safeString(rhfMethods.watch('image_url')?.[0])}
 						label="Block Image"
-						name="images"
+						name="image_url"
 						validation={{
 							maxByteSize: 5242880, // 5MB
 						}}
