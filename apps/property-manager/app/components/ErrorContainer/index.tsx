@@ -8,6 +8,7 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from '../ui/empty'
+import { cn } from '~/lib/utils'
 
 export interface ErrorProps {
 	message?: string
@@ -16,17 +17,17 @@ export interface ErrorProps {
 		label: string
 		onClick: () => void
 	}
-	height?: string
+	className?: string
 }
 
 export const ErrorContainer = ({
 	message = 'An Error Occurred',
 	description = 'Something went wrong while fetching the data.',
 	button,
-	height = 'h-96',
+	className = 'h-96',
 }: ErrorProps) => {
 	return (
-		<Empty className={`w-full border border-dashed ${height}`}>
+		<Empty className={cn('w-full border border-dashed', className)}>
 			<EmptyHeader>
 				<EmptyMedia variant="icon">
 					<CloudAlert className="text-red-600" />
