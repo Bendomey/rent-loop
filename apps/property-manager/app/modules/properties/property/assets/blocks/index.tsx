@@ -99,10 +99,16 @@ export function PropertyAssetBlocksModule() {
 									className={
 										data.status === 'PropertyBlock.Status.Active'
 											? 'bg-teal-500 text-white'
-											: 'bg-rose-500 text-white'
+											: data.status === 'PropertyBlock.Status.Maintenance'
+												? 'bg-yellow-500 text-white'
+												: 'bg-rose-500 text-white'
 									}
 								>
-									Active
+									{data.status === 'PropertyBlock.Status.Active'
+										? 'Active'
+										: data.status === 'PropertyBlock.Status.Maintenance'
+											? 'Maintenance'
+											: 'Inactive'}
 								</Badge>
 								<div className="flex items-center gap-2">
 									<Building className="text-zinc-500" size={16} />
