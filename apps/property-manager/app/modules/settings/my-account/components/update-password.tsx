@@ -39,7 +39,7 @@ const ValidationSchema = z
 			.string()
 			.min(1, 'Current password is required')
 			.min(5, 'Current password must be at least 5 characters'),
-		new_password: z.string().min(5, 'Password must be at least 5 characters'),
+		new_password: z.string().min(6, 'Password must be at least 6 characters'),
 		confirm_password: z.string().min(1, 'Confirm password is required'),
 	})
 	.refine((data) => data.new_password === data.confirm_password, {
@@ -73,14 +73,15 @@ export default function UpdatePasswordModal({ opened, setOpened }: Props) {
 				new_password: data.new_password,
 			},
 			{
-				onError: (e: any) => {
-					// toast.error('Failed to update password. Try again later.')
-					toast.error(
-						getErrorMessage(
-							e.message,
-							'Failed to update password. Try again later.',
-						),
-					)
+				onError: (e: unknown) => {
+					if (e instanceof Error) {
+						toast.error(
+							getErrorMessage(
+								e.message,
+								'Failed to update password. Try again later.',
+							),
+						)
+					}
 				},
 				onSuccess: () => {
 					toast.success('Password updated successfully')
