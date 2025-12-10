@@ -114,10 +114,9 @@ export const resetPassword = async (
 	}
 }
 
-
 interface UpdatePasswordProps {
-  new_password: string
-  old_password: string
+	new_password: string
+	old_password: string
 }
 
 /**
@@ -125,13 +124,16 @@ interface UpdatePasswordProps {
  */
 
 const updatePassword = async (props: UpdatePasswordProps) => {
-  try {
-   const response = await fetchClient<ApiResponse<ClientUser>>(`/v1/client-users/me/password`, {
-      method: 'PATCH',
-      body: JSON.stringify(props),
-    })
-	return response.parsedBody.data
- } catch (error: unknown) {
+	try {
+		const response = await fetchClient<ApiResponse<ClientUser>>(
+			`/v1/client-users/me/password`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify(props),
+			},
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
 			throw new Error(response.errors?.message || 'Unknown error')
@@ -143,4 +145,5 @@ const updatePassword = async (props: UpdatePasswordProps) => {
 	}
 }
 
-export const useUpdatePassword = () => useMutation({mutationFn: updatePassword})
+export const useUpdatePassword = () =>
+	useMutation({ mutationFn: updatePassword })

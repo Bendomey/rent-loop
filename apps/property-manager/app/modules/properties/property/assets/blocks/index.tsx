@@ -44,11 +44,12 @@ export function PropertyAssetBlocksModule() {
 	const per = searchParams.get('pageSize')
 		? Number(searchParams.get('pageSize'))
 		: PAGINATION_DEFAULTS.PER_PAGE
+	const status = searchParams.get('status') ?? undefined
 
 	const { data, isPending, isRefetching, error, refetch } =
 		useGetPropertyBlocks({
 			property_id: clientUserProperty?.property?.id!,
-			filters: {},
+			filters: { status: status },
 			pagination: { page, per },
 			populate: [],
 			sorter: { sort: 'desc', sort_by: 'created_at' },
@@ -106,7 +107,7 @@ export function PropertyAssetBlocksModule() {
 								<div className="flex items-center gap-2">
 									<Building className="text-zinc-500" size={16} />
 									<TypographyMuted className="truncate">
-										{data.unitsCount} Units
+										{data.units_count} Units
 									</TypographyMuted>
 								</div>
 								<div className="flex items-center gap-2">
