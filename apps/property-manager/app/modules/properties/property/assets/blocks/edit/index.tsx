@@ -72,8 +72,8 @@ export function EditPropertyAssetBlocksModule() {
 		data,
 		error,
 	} = useGetPropertyBlock({
-		property_id: clientUserProperty?.property?.id ?? '',
-		id: blockId ?? '',
+		property_id: safeString(clientUserProperty?.property?.id),
+		id: safeString(blockId),
 	})
 	const { mutate, isPending } = useUpdatePropertyBlock()
 
@@ -97,9 +97,9 @@ export function EditPropertyAssetBlocksModule() {
 	useEffect(() => {
 		if (data) {
 			rhfMethods.reset({
-				name: data.name ?? '',
-				description: data.description ?? '',
-				image_url: data.images?.[0] ?? '',
+				name: safeString(data.name),
+				description: safeString(data.description),
+				image_url: safeString(data.images?.[0]),
 				status: data.status ?? 'PropertyBlock.Status.Active',
 			})
 		}
@@ -118,9 +118,9 @@ export function EditPropertyAssetBlocksModule() {
 	const onSubmit = async (formData: FormSchema) => {
 		mutate(
 			{
-				id: blockId ?? '',
+				id: safeString(blockId),
 				data: {
-					property_id: clientUserProperty?.property?.id ?? '',
+					property_id: safeString(clientUserProperty?.property?.id),
 					name: formState.dirtyFields.name ? formData.name : undefined,
 					description: formState.dirtyFields.description
 						? formData.description
