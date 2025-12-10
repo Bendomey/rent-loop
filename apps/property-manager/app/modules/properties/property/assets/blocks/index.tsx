@@ -143,7 +143,13 @@ export function PropertyAssetBlocksModule() {
 											</DropdownMenuTrigger>
 											<DropdownMenuContent align="end" className="w-52">
 												<DropdownMenuGroup>
-													<DropdownMenuItem>
+													<DropdownMenuItem
+														onClick={() =>
+															navigate(
+																`/properties/${clientUserProperty?.property_id}/assets/blocks/${data.id}/edit`,
+															)
+														}
+													>
 														<Pencil />
 														Edit
 													</DropdownMenuItem>
