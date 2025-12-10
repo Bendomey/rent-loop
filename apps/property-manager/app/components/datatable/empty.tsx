@@ -8,6 +8,7 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from '~/components/ui/empty'
+import { cn } from '~/lib/utils'
 
 export interface EmptyOutlineProps {
 	message?: string
@@ -26,7 +27,7 @@ export function EmptyOutline({
 	className = 'h-96',
 }: EmptyOutlineProps) {
 	return (
-		<Empty className={`border border-dashed ${className}`}>
+		<Empty className={cn('border border-dashed', className)}>
 			<EmptyHeader>
 				<EmptyMedia variant="icon">
 					<Cloud />

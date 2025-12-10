@@ -1,4 +1,5 @@
-import { fetchServer } from '~/lib/transport'
+import { useMutation } from '@tanstack/react-query'
+import { fetchClient, fetchServer } from '~/lib/transport'
 
 export interface LoginClientUserInput {
 	email: string
@@ -112,3 +113,34 @@ export const resetPassword = async (
 		}
 	}
 }
+
+
+interface UpdatePasswordProps {
+  new_password: string
+  old_password: string
+}
+
+/**
+ * Update Password
+ */
+
+const updatePassword = async (props: UpdatePasswordProps) => {
+  try {
+   const response = await fetchClient<ApiResponse<ClientUser>>(`/v1/client-users/me/password`, {
+      method: 'PATCH',
+      body: JSON.stringify(props),
+    })
+	return response.parsedBody.data
+ } catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useUpdatePassword = () => useMutation({mutationFn: updatePassword})
