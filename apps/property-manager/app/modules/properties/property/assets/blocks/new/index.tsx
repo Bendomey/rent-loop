@@ -32,8 +32,8 @@ import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
 
 const ValidationSchema = z.object({
-	name: z.string({ error: 'Name is required' }),
-	image_url: z.url('Please upload an image').optional(),
+	name:  z.string().min(1, 'Name is required'),
+	image_url:  z.union([z.string().url('Please upload a valid image URL'),z.literal(""),]).optional(),
 	description: z
 		.string()
 		.max(500, 'Description must be less than 500 characters')
