@@ -6,8 +6,10 @@ import {
 	Pencil,
 	Trash,
 } from 'lucide-react'
+import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { PropertyAssetBlocksController } from './controller'
+import DeletePropertyBlockModal from './delete'
 import { useGetPropertyBlocks } from '~/api/blocks'
 import { GridElement } from '~/components/Grid'
 import { Image } from '~/components/Image'
@@ -35,6 +37,11 @@ import { useProperty } from '~/providers/property-provider'
 export function PropertyAssetBlocksModule() {
 	const { clientUserProperty } = useProperty()
 	const navigate = useNavigate()
+
+	const [selectedPropertyBlock, setSelectedPropertyBlock] =
+		useState<PropertyBlock>()
+	const [openDeletePropertyBlockModal, setOpenDeletePropertyBlockModal] =
+		useState(false)
 
 	const [searchParams] = useSearchParams()
 
@@ -147,7 +154,13 @@ export function PropertyAssetBlocksModule() {
 														<Pencil />
 														Edit
 													</DropdownMenuItem>
-													<DropdownMenuItem variant="destructive">
+													<DropdownMenuItem
+														variant="destructive"
+														onClick={() => {
+															setSelectedPropertyBlock(data)
+															setOpenDeletePropertyBlockModal(true)
+														}}
+													>
 														<Trash />
 														Delete
 													</DropdownMenuItem>
@@ -178,6 +191,12 @@ export function PropertyAssetBlocksModule() {
 					refetch={refetch}
 				/>
 			</div>
+
+			<DeletePropertyBlockModal
+				opened={openDeletePropertyBlockModal}
+				setOpened={setOpenDeletePropertyBlockModal}
+				data={selectedPropertyBlock}
+			/>
 		</div>
 	)
 }
