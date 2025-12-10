@@ -1,5 +1,7 @@
 import { Separator } from '@radix-ui/react-separator'
 import { Plus } from 'lucide-react'
+import { useState } from 'react'
+import UpdatePasswordModal from './components/update-password'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
 import {
@@ -14,6 +16,8 @@ import { Switch } from '~/components/ui/switch'
 import { TypographyH3, TypographyP } from '~/components/ui/typography'
 
 export function MyAccountSettingsModule() {
+	const [openUpdatePasswordModal, setOpenUpdatePasswordModal] = useState(false)
+
 	return (
 		<div className="px-4 py-4">
 			<TypographyH3 className="">My Profile</TypographyH3>
@@ -100,7 +104,13 @@ export function MyAccountSettingsModule() {
 							disabled
 						/>
 					</Field>
-					<Button size="sm" variant="secondary">
+					<Button
+						size="sm"
+						variant="secondary"
+						onClick={() => {
+							setOpenUpdatePasswordModal(true)
+						}}
+					>
 						Change password
 					</Button>
 				</div>
@@ -162,6 +172,11 @@ export function MyAccountSettingsModule() {
 					</Button>
 				</div>
 			</section>
+
+			<UpdatePasswordModal
+				opened={openUpdatePasswordModal}
+				setOpened={setOpenUpdatePasswordModal}
+			/>
 		</div>
 	)
 }
