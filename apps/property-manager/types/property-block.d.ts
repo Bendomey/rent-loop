@@ -15,7 +15,7 @@ interface PropertyBlock {
 	updated_at: Date
 }
 
-interface FetchPropertyFilter {
+interface FetchPropertyBlockFilter {
 	property_id?: string
 	status?: string
 }
