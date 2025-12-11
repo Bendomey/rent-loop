@@ -1,3 +1,12 @@
+import {
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from '../ui/empty'
+import { Spinner } from '../ui/spinner'
+
 interface LoadingContainerProps {
 	size?: 'full' | 'default'
 }
@@ -9,7 +18,17 @@ export const LoadingContainer = ({
 
 	return (
 		<div className={`${sizeClass} flex flex-col items-center justify-center`}>
-			<div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+			<Empty className="w-full">
+				<EmptyHeader>
+					<EmptyMedia variant="icon">
+						<Spinner />
+					</EmptyMedia>
+					<EmptyTitle>Loading...</EmptyTitle>
+					<EmptyDescription>
+						Please wait while we load your request. Do not refresh the page.
+					</EmptyDescription>
+				</EmptyHeader>
+			</Empty>
 		</div>
 	)
 }

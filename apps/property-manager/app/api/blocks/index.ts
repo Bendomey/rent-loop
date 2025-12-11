@@ -140,3 +140,34 @@ const updatePropertyBlock = async (props: UpdatePropertyBlockProps) => {
 
 export const useUpdatePropertyBlock = () =>
 	useMutation({ mutationFn: updatePropertyBlock })
+
+/**
+ * Delete property block
+ */
+const deletePropertyBlock = async (props: {
+	property_id: string
+	block_id: string
+}) => {
+	try {
+		await fetchClient(
+			`/v1/properties/${props.property_id}/blocks/${props.block_id}`,
+			{
+				method: 'DELETE',
+			},
+		)
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useDeletePropertyBlock = () =>
+	useMutation({
+		mutationFn: deletePropertyBlock,
+	})
