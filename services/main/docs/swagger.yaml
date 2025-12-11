@@ -409,6 +409,24 @@ definitions:
         example: Updated Lease Agreement
         type: string
     type: object
+  handlers.UpdatePropertyBlockRequest:
+    properties:
+      description:
+        example: Spacious apartment with sea view.
+        type: string
+      images:
+        example:
+        - https://example.com/image1.jpg
+        - https://example.com/image2.jpg
+        items:
+          type: string
+        type: array
+      name:
+        example: Luxury Apartment
+        maxLength: 100
+        minLength: 2
+        type: string
+    type: object
   handlers.UpdatePropertyRequest:
     properties:
       address:
@@ -2891,6 +2909,66 @@ paths:
       security:
       - BearerAuth: []
       summary: Get property block by ID
+      tags:
+      - PropertyBlocks
+    patch:
+      consumes:
+      - application/json
+      description: Update a property block
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Property block ID
+        in: path
+        name: block_id
+        required: true
+        type: string
+      - description: Property block details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdatePropertyBlockRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Property block updated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputPropertyBlock'
+            type: object
+        "400":
+          description: Error occurred when updating a property block
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Forbidden access
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Property block not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update a property block
       tags:
       - PropertyBlocks
   /api/v1/properties/{property_id}/client-users:link:

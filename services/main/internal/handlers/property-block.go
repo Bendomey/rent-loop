@@ -183,3 +183,63 @@ func (h *PropertyBlockHandler) GetPropertyBlock(w http.ResponseWriter, r *http.R
 		"data": transformations.DBPropertyBlockToRest(propertyBlock),
 	})
 }
+
+type UpdatePropertyBlockRequest struct {
+	Name        *string   `json:"name,omitempty"        validate:"omitempty,min=2,max=100" example:"Luxury Apartment"`
+	Images      *[]string `json:"images,omitempty"      validate:"omitempty,dive,url"      example:"https://example.com/image1.jpg,https://example.com/image2.jpg"`
+	Description *string   `json:"description,omitempty" validate:"omitempty"               example:"Spacious apartment with sea view."`
+}
+
+// UpdatePropertyBlock godoc
+//
+//	@Summary		Update a property block
+//	@Description	Update a property block
+//	@Tags			PropertyBlocks
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string												true	"Property ID"
+//	@Param			block_id	path		string												true	"Property block ID"
+//	@Param			body		body		UpdatePropertyBlockRequest							true	"Property block details"
+//	@Success		200			{object}	object{data=transformations.OutputPropertyBlock}	"Property block updated successfully"
+//	@Failure		400			{object}	lib.HTTPError										"Error occurred when updating a property block"
+//	@Failure		401			{object}	string												"Invalid or absent authentication token"
+//	@Failure		403			{object}	lib.HTTPError										"Forbidden access"
+//	@Failure		404			{object}	lib.HTTPError										"Property block not found"
+//	@Failure		422			{object}	lib.HTTPError										"Invalid request body"
+//	@Failure		500			{object}	string												"An unexpected error occurred"
+//	@Router			/api/v1/properties/{property_id}/blocks/{block_id} [patch]
+func (h *PropertyBlockHandler) UpdatePropertyBlock(w http.ResponseWriter, r *http.Request) {
+	propertyID := chi.URLParam(r, "property_id")
+	propertyBlockID := chi.URLParam(r, "block_id")
+
+	var body UpdatePropertyBlockRequest
+
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	input := services.UpdatePropertyBlockInput{
+		PropertyBlockID: propertyBlockID,
+		PropertyID:      propertyID,
+		Name:            body.Name,
+		Images:          body.Images,
+		Description:     body.Description,
+	}
+
+	updatedPropertyBlock, updatePropertyBlockErr := h.service.UpdatePropertyBlock(r.Context(), input)
+	if updatePropertyBlockErr != nil {
+		HandleErrorResponse(w, updatePropertyBlockErr)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBPropertyBlockToRest(updatedPropertyBlock),
+	})
+}
