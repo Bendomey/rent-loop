@@ -1,13 +1,10 @@
-import { Plus, RotateCw, Search, ToggleLeft } from 'lucide-react'
+import { Plus, RotateCw, ToggleLeft } from 'lucide-react'
 import { Link } from 'react-router'
 import { FilterSet } from '~/components/filter-set'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
+import { SearchInput } from '~/components/search'
 import { Button } from '~/components/ui/button'
-import {
-	InputGroup,
-	InputGroupAddon,
-	InputGroupInput,
-} from '~/components/ui/input-group'
+import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
 
 const filters: Array<Filter> = [
@@ -41,7 +38,13 @@ const filters: Array<Filter> = [
 	},
 ]
 
-export const PropertyAssetUnitsController = () => {
+export const PropertyAssetUnitsController = ({
+	isLoading,
+	refetch,
+}: {
+	isLoading: boolean
+	refetch: VoidFunction
+}) => {
 	const { clientUserProperty } = useProperty()
 	return (
 		<div className="flex w-full flex-col gap-2">
@@ -52,12 +55,7 @@ export const PropertyAssetUnitsController = () => {
 			</div>
 			<div className="flex flex-wrap items-center justify-between gap-4">
 				<div className="flex items-center gap-2 text-sm">
-					<InputGroup>
-						<InputGroupInput placeholder="Search units ..." />
-						<InputGroupAddon>
-							<Search />
-						</InputGroupAddon>
-					</InputGroup>
+					<SearchInput placeholder="Search units..." />
 				</div>
 				<div className="flex items-center justify-end gap-2">
 					<PropertyPermissionGuard roles={['MANAGER']}>
@@ -74,8 +72,13 @@ export const PropertyAssetUnitsController = () => {
 							</Button>
 						</Link>
 					</PropertyPermissionGuard>
-					<Button variant="outline" size="sm">
-						<RotateCw className="size-4" />
+					<Button
+						onClick={() => refetch()}
+						disabled={isLoading}
+						variant="outline"
+						size="sm"
+					>
+						<RotateCw className={cn('size-4', { 'animate-spin': isLoading })} />
 						Refresh
 					</Button>
 				</div>
