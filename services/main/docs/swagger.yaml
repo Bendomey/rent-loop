@@ -2859,6 +2859,51 @@ paths:
       tags:
       - PropertyBlocks
   /api/v1/properties/{property_id}/blocks/{block_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a property block
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Property block ID
+        in: path
+        name: block_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Property block deleted successfully
+        "400":
+          description: Error occurred when deleting a property block
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Forbidden access
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Property block not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete a property block
+      tags:
+      - PropertyBlocks
     get:
       consumes:
       - application/json
