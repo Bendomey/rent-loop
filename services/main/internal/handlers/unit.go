@@ -27,7 +27,7 @@ type ListUnitsFilterRequest struct {
 	Status           string   `json:"status"            validate:"omitempty,oneof=Unit.Status.Draft Unit.Status.Available Unit.Status.Occupied Unit.Status.Maintenance" example:"Unit.Status.Active"                                                        description:"Status of the unit. Allowed values: Unit.Status.Active, Unit.Status.Inactive, Unit.Status.Maintenance"`
 	Type             string   `json:"type"              validate:"omitempty,oneof=APARTMENT HOUSE STUDIO OFFICE RETAIL"                                                 example:"SINGLE"                                                                    description:"Type of unit. Allowed values: SINGLE, MULTI"`
 	PaymentFrequency string   `json:"payment_frequency" validate:"omitempty,oneof=WEEKLY DAILY MONTHLY QUARTERLY BIANNUALLY ANNUALLY"                                   example:"WEEKLY"                                                                    description:"Payment frequency. Allowed values: WEEKLY, DAILY, MONTHLY, QUARTERLY, BIANNUALLY, ANNUALLY"`
-	BlockIDs         []string `json:"block_ids"         validate:"omitempty,dive,uuid"                                                                                  example:"767d8e23-8c9f-4c51-85af-5908039869da,3d90d606-2a22-4487-9431-69736829094f" description:"List of block IDs to filter units by"`
+	BlockIDs         []string `json:"block_ids"         validate:"omitempty,dive,uuid"                                                                                  example:"767d8e23-8c9f-4c51-85af-5908039869da,3d90d606-2a22-4487-9431-69736829094f" description:"List of block IDs to filter units by"                                                                  collectionFormat:"multi"`
 }
 
 // ListUnits godoc
@@ -64,7 +64,7 @@ func (h *UnitHandler) ListUnits(w http.ResponseWriter, r *http.Request) {
 		Status:           lib.NullOrString(r.URL.Query().Get("status")),
 		Type:             lib.NullOrString(r.URL.Query().Get("type")),
 		PaymentFrequency: lib.NullOrString(r.URL.Query().Get("payment_frequency")),
-		BlockIDs:         lib.NullOrStringSlice(r.URL.Query().Get("block_ids")),
+		BlockIDs:         lib.NullOrStringArray(r.URL.Query()["block_ids"]),
 	}
 
 	units, unitsErr := h.service.ListUnits(r.Context(), input)

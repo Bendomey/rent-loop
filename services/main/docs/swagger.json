@@ -3326,7 +3326,7 @@
                         "items": {
                             "type": "string"
                         },
-                        "collectionFormat": "csv",
+                        "collectionFormat": "multi",
                         "example": [
                             "767d8e23-8c9f-4c51-85af-5908039869da",
                             "3d90d606-2a22-4487-9431-69736829094f"
