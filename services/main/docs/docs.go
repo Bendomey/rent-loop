@@ -3302,6 +3302,195 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/properties/{property_id}/units": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List units",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Units"
+                ],
+                "summary": "List units",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "767d8e23-8c9f-4c51-85af-5908039869da",
+                            "3d90d606-2a22-4487-9431-69736829094f"
+                        ],
+                        "name": "block_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "WEEKLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY"
+                        ],
+                        "type": "string",
+                        "example": "WEEKLY",
+                        "name": "payment_frequency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "prop_123",
+                        "name": "property_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Unit.Status.Draft",
+                            "Unit.Status.Available",
+                            "Unit.Status.Occupied",
+                            "Unit.Status.Maintenance"
+                        ],
+                        "type": "string",
+                        "example": "Unit.Status.Active",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "APARTMENT",
+                            "HOUSE",
+                            "STUDIO",
+                            "OFFICE",
+                            "RETAIL"
+                        ],
+                        "type": "string",
+                        "example": "SINGLE",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputUnit"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -4536,6 +4725,113 @@ const docTemplate = `{
                 "units_count": {
                     "type": "integer",
                     "example": 3
+                },
+                "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2023-01-01T00:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputUnit": {
+            "type": "object",
+            "properties": {
+                "area": {
+                    "type": "number",
+                    "example": 120.5
+                },
+                "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "created_by_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "1e81fea0-5e8b-4535-b449-1a2133e94a7a"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Spacious apartment with balcony"
+                },
+                "features": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "http://www.images/unit101.jpg"
+                    ]
+                },
+                "max_occupants_allowed": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Unit 101"
+                },
+                "payment_frequency": {
+                    "type": "string",
+                    "example": "MONTHLY"
+                },
+                "property": {
+                    "$ref": "#/definitions/transformations.OutputProperty"
+                },
+                "property_block": {
+                    "$ref": "#/definitions/transformations.OutputPropertyBlock"
+                },
+                "property_block_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "a12345ee-1a70-436e-ba24-572078895982"
+                },
+                "property_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "b50874ee-1a70-436e-ba24-572078895982"
+                },
+                "rent_fee": {
+                    "type": "integer",
+                    "example": 1500
+                },
+                "rent_fee_currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "slug": {
+                    "type": "string",
+                    "example": "unit-101-abcde1876drkjy"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "Unit.Status.Available"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "apartment",
+                        "balcony"
+                    ]
+                },
+                "type": {
+                    "type": "string",
+                    "example": "APARTMENT"
                 },
                 "updated_at": {
                     "type": "string",

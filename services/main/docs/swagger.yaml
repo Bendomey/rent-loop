@@ -902,6 +902,85 @@ definitions:
         format: date-time
         type: string
     type: object
+  transformations.OutputUnit:
+    properties:
+      area:
+        example: 120.5
+        type: number
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        format: date-time
+        type: string
+      created_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      created_by_id:
+        example: 1e81fea0-5e8b-4535-b449-1a2133e94a7a
+        format: uuid
+        type: string
+      description:
+        example: Spacious apartment with balcony
+        type: string
+      features:
+        additionalProperties: {}
+        type: object
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        format: uuid
+        type: string
+      images:
+        example:
+        - http://www.images/unit101.jpg
+        items:
+          type: string
+        type: array
+      max_occupants_allowed:
+        example: 4
+        type: integer
+      name:
+        example: Unit 101
+        type: string
+      payment_frequency:
+        example: MONTHLY
+        type: string
+      property:
+        $ref: '#/definitions/transformations.OutputProperty'
+      property_block:
+        $ref: '#/definitions/transformations.OutputPropertyBlock'
+      property_block_id:
+        example: a12345ee-1a70-436e-ba24-572078895982
+        format: uuid
+        type: string
+      property_id:
+        example: b50874ee-1a70-436e-ba24-572078895982
+        format: uuid
+        type: string
+      rent_fee:
+        example: 1500
+        type: integer
+      rent_fee_currency:
+        example: USD
+        type: string
+      slug:
+        example: unit-101-abcde1876drkjy
+        type: string
+      status:
+        example: Unit.Status.Available
+        type: string
+      tags:
+        example:
+        - apartment
+        - balcony
+        items:
+          type: string
+        type: array
+      type:
+        example: APARTMENT
+        type: string
+      updated_at:
+        example: "2023-01-01T00:00:00Z"
+        format: date-time
+        type: string
+    type: object
 info:
   contact:
     email: domeybenjamin1@gmail.com
@@ -2884,6 +2963,133 @@ paths:
       summary: Unlink property from client users
       tags:
       - ClientUserProperties
+  /api/v1/properties/{property_id}/units:
+    get:
+      consumes:
+      - application/json
+      description: List units
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - collectionFormat: multi
+        example:
+        - 767d8e23-8c9f-4c51-85af-5908039869da
+        - 3d90d606-2a22-4487-9431-69736829094f
+        in: query
+        items:
+          type: string
+        name: block_ids
+        type: array
+      - in: query
+        name: end_date
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - enum:
+        - WEEKLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        example: WEEKLY
+        in: query
+        name: payment_frequency
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - example: prop_123
+        in: query
+        name: property_id
+        type: string
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - Unit.Status.Draft
+        - Unit.Status.Available
+        - Unit.Status.Occupied
+        - Unit.Status.Maintenance
+        example: Unit.Status.Active
+        in: query
+        name: status
+        type: string
+      - enum:
+        - APARTMENT
+        - HOUSE
+        - STUDIO
+        - OFFICE
+        - RETAIL
+        example: SINGLE
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputUnit'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List units
+      tags:
+      - Units
   /api/v1/properties/me:
     get:
       consumes:
