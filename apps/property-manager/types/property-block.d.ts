@@ -4,8 +4,8 @@ interface PropertyBlock {
 	property: Nullable<Property>
 	name: string
 	description: Nullable<string>
-	floorsCount: Nullable<number>
-	unitsCount: number
+	floors_count: Nullable<number>
+	units_count: number
 	images: Array<string>
 	status:
 		| 'PropertyBlock.Status.Active'
@@ -15,7 +15,7 @@ interface PropertyBlock {
 	updated_at: Date
 }
 
-interface FetchPropertyFilter {
+interface FetchPropertyBlockFilter {
 	property_id?: string
 	status?: string
 }
