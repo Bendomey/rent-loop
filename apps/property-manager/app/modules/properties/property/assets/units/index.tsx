@@ -17,6 +17,7 @@ import {
 } from '~/components/ui/card'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyAssetUnitsModule() {
@@ -34,7 +35,7 @@ export function PropertyAssetUnitsModule() {
 
 	const { data, isPending, isRefetching, error, refetch } = useGetPropertyUnits(
 		{
-			property_id: clientUserProperty?.property?.id!,
+			property_id: safeString(clientUserProperty?.property?.id),
 			filters: { status: status },
 			pagination: { page, per },
 			populate: [],
