@@ -47,7 +47,7 @@ export function PropertyAssetUnitsModule() {
 	)
 
 	const isLoading = isPending || isRefetching
-	console.log('data', data)
+
 	return (
 		<div className="mx-6 my-6 flex flex-col gap-4 sm:gap-6">
 			<div>
