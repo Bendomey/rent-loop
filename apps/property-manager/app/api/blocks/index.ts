@@ -141,6 +141,41 @@ const updatePropertyBlock = async (props: UpdatePropertyBlockProps) => {
 export const useUpdatePropertyBlock = () =>
 	useMutation({ mutationFn: updatePropertyBlock })
 
+interface UpdatePropertyBlockStatusProps {
+	id: string
+	property_id: string
+	status: PropertyBlock['status']
+}
+/**
+ * Update Property Block Status
+ */
+
+const updatePropertyBlockStatus = async (
+	props: UpdatePropertyBlockStatusProps,
+) => {
+	try {
+		await fetchClient<PropertyBlock>(
+			`/v1/properties/${props.property_id}/blocks/${props.id}/status`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify({ status: props.status }),
+			},
+		)
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useUpdatePropertyBlockStatus = () =>
+	useMutation({ mutationFn: updatePropertyBlockStatus })
+
 /**
  * Delete property block
  */

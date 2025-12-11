@@ -4,12 +4,14 @@ import {
 	Clock,
 	MoreHorizontalIcon,
 	Pencil,
+	Shuffle,
 	Trash,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { PropertyAssetBlocksController } from './controller'
 import DeletePropertyBlockModal from './delete'
+import EditPropertyBlockStatusModal from './edit/edit-status'
 import { useGetPropertyBlocks } from '~/api/blocks'
 import { GridElement } from '~/components/Grid'
 import { Image } from '~/components/Image'
@@ -43,6 +45,7 @@ export function PropertyAssetBlocksModule() {
 		useState<PropertyBlock>()
 	const [openDeletePropertyBlockModal, setOpenDeletePropertyBlockModal] =
 		useState(false)
+	const [openEditStatusModal, setOpenEditStatusModal] = useState(false)
 
 	const [searchParams] = useSearchParams()
 
@@ -168,6 +171,15 @@ export function PropertyAssetBlocksModule() {
 														Edit
 													</DropdownMenuItem>
 													<DropdownMenuItem
+														onClick={() => {
+															setSelectedPropertyBlock(data)
+															setOpenEditStatusModal(true)
+														}}
+													>
+														<Shuffle />
+														Edit Status
+													</DropdownMenuItem>
+													<DropdownMenuItem
 														variant="destructive"
 														onClick={() => {
 															setSelectedPropertyBlock(data)
@@ -208,6 +220,12 @@ export function PropertyAssetBlocksModule() {
 			<DeletePropertyBlockModal
 				opened={openDeletePropertyBlockModal}
 				setOpened={setOpenDeletePropertyBlockModal}
+				data={selectedPropertyBlock}
+			/>
+
+			<EditPropertyBlockStatusModal
+				opened={openEditStatusModal}
+				setOpened={setOpenEditStatusModal}
 				data={selectedPropertyBlock}
 			/>
 		</div>

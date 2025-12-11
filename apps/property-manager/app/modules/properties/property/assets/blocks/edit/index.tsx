@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
@@ -23,14 +24,10 @@ import { ImageUpload } from '~/components/ui/image-upload'
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
 import { Textarea } from '~/components/ui/textarea'
-import {
-	TypographyH2,
-	TypographyMuted,
-	TypographySmall,
-} from '~/components/ui/typography'
+import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
+import { QUERY_KEYS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
-import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
 
 const ValidationSchema = z.object({
@@ -44,28 +41,15 @@ const ValidationSchema = z.object({
 		.string()
 		.max(500, 'Description must be less than 500 characters')
 		.optional(),
-	status: z.enum(
-		[
-			'PropertyBlock.Status.Active',
-			'PropertyBlock.Status.Maintenance',
-			'PropertyBlock.Status.Inactive',
-		],
-		{ error: 'Please select a status' },
-	),
 })
 
 type FormSchema = z.infer<typeof ValidationSchema>
-
-const statusOptions: Array<{ label: string; value: FormSchema['status'] }> = [
-	{ label: 'Active', value: 'PropertyBlock.Status.Active' },
-	{ label: 'Inactive', value: 'PropertyBlock.Status.Inactive' },
-	{ label: 'Maintenance', value: 'PropertyBlock.Status.Maintenance' },
-]
 
 export function EditPropertyAssetBlocksModule() {
 	const { clientUserProperty } = useProperty()
 	const navigate = useNavigate()
 	const { blockId } = useParams()
+	const queryClient = useQueryClient()
 
 	const {
 		isPending: isLoadingData,
@@ -83,7 +67,6 @@ export function EditPropertyAssetBlocksModule() {
 			name: '',
 			description: '',
 			image_url: '',
-			status: 'PropertyBlock.Status.Active',
 		},
 	})
 
@@ -100,7 +83,6 @@ export function EditPropertyAssetBlocksModule() {
 				name: safeString(data.name),
 				description: safeString(data.description),
 				image_url: safeString(data.images?.[0]),
-				status: data.status ?? 'PropertyBlock.Status.Active',
 			})
 		}
 	}, [data, rhfMethods])
@@ -129,7 +111,6 @@ export function EditPropertyAssetBlocksModule() {
 						formState.dirtyFields.image_url && formData.image_url
 							? [formData.image_url]
 							: undefined,
-					status: formState.dirtyFields.status ? formData.status : undefined,
 				},
 			},
 			{
@@ -137,9 +118,14 @@ export function EditPropertyAssetBlocksModule() {
 					toast.error('Failed to update property block. Try again later.'),
 				onSuccess: () => {
 					toast.success('Property block has been successfully updated')
-					void navigate(
-						`/properties/${clientUserProperty?.property?.id}/assets/blocks`,
-					)
+					void queryClient.invalidateQueries({
+						queryKey: [QUERY_KEYS.PROPERTY_BLOCKS],
+					})
+					setTimeout(() => {
+						void navigate(
+							`/properties/${clientUserProperty?.property?.id}/assets/blocks`,
+						)
+					}, 500)
 				},
 			},
 		)
@@ -197,36 +183,6 @@ export function EditPropertyAssetBlocksModule() {
 							</FormItem>
 						)}
 					/>
-
-					<div className="flex flex-col items-center space-x-6 md:flex-row">
-						<FormLabel>Status: </FormLabel>
-						<div className="flex space-x-3">
-							{statusOptions.map((option) => {
-								const isSelected = watch('status') === option.value
-								return (
-									<Button
-										type="button"
-										onClick={() =>
-											setValue('status', option.value, {
-												shouldDirty: true,
-												shouldValidate: true,
-											})
-										}
-										key={option.value}
-										variant={isSelected ? 'default' : 'outline'}
-										className={cn({ 'bg-rose-600 text-white': isSelected })}
-									>
-										{option.label}
-									</Button>
-								)
-							})}
-						</div>
-						{formState.errors?.status && (
-							<TypographySmall className="text-destructive mt-3">
-								{formState.errors.status.message}
-							</TypographySmall>
-						)}
-					</div>
 
 					<ImageUpload
 						hero
