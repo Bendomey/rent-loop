@@ -20,6 +20,7 @@ type PropertyBlockService interface {
 	) ([]models.PropertyBlock, error)
 	CountPropertyBlocks(context context.Context, filterQuery repository.ListPropertyBlocksFilter) (int64, error)
 	UpdatePropertyBlock(context context.Context, input UpdatePropertyBlockInput) (*models.PropertyBlock, error)
+	DeletePropertyBlock(context context.Context, input repository.DeletePropertyBlockInput) error
 }
 
 type propertyBlockService struct {
@@ -149,6 +150,23 @@ func (s *propertyBlockService) UpdatePropertyBlock(
 	}
 
 	return propertyBlock, nil
+}
+
+func (s *propertyBlockService) DeletePropertyBlock(
+	ctx context.Context,
+	input repository.DeletePropertyBlockInput,
+) error {
+	deletePropertyBlockErr := s.repo.Delete(ctx, input)
+	if deletePropertyBlockErr != nil {
+		return pkg.InternalServerError(deletePropertyBlockErr.Error(), &pkg.RentLoopErrorParams{
+			Err: deletePropertyBlockErr,
+			Metadata: map[string]string{
+				"function": "DeletePropertyBlock",
+				"action":   "deleting property block",
+			},
+		})
+	}
+	return nil
 }
 
 func (s *propertyBlockService) ListPropertyBlocks(
