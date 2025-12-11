@@ -34,19 +34,15 @@ export default function DeletePropertyBlockModal({
 		if (data) {
 			mutate(
 				{
-					property_id: data?.property_id ?? '',
-					block_id: data?.id ?? '',
+					property_id: data.property_id,
+					block_id: data.id,
 				},
 				{
 					onError: () => {
-						toast.error(
-							`Failed to delete ${data ? data.name : 'block'}. Try again later.`,
-						)
+						toast.error(`Failed to delete ${data.name}. Try again later.`)
 					},
 					onSuccess: () => {
-						toast.success(
-							`${data ? data.name : 'Block'} has been successfully deleted`,
-						)
+						toast.success(`${data.name} has been successfully deleted`)
 
 						void queryClient.invalidateQueries({
 							queryKey: [QUERY_KEYS.PROPERTY_BLOCKS],
