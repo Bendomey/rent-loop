@@ -19,6 +19,7 @@ type PropertyBlockService interface {
 		filterQuery repository.ListPropertyBlocksFilter,
 	) ([]models.PropertyBlock, error)
 	CountPropertyBlocks(context context.Context, filterQuery repository.ListPropertyBlocksFilter) (int64, error)
+	UpdatePropertyBlock(context context.Context, input UpdatePropertyBlockInput) (*models.PropertyBlock, error)
 }
 
 type propertyBlockService struct {
@@ -88,6 +89,61 @@ func (s *propertyBlockService) GetPropertyBlock(
 			Metadata: map[string]string{
 				"function": "FindPropertyBlockByIDWithQuery",
 				"action":   "fetching property block by ID",
+			},
+		})
+	}
+
+	return propertyBlock, nil
+}
+
+type UpdatePropertyBlockInput struct {
+	PropertyBlockID string
+	PropertyID      string
+	Name            *string
+	Description     *string
+	Images          *[]string
+}
+
+func (s *propertyBlockService) UpdatePropertyBlock(
+	ctx context.Context,
+	input UpdatePropertyBlockInput,
+) (*models.PropertyBlock, error) {
+	propertyBlock, getPropertyBlockErr := s.repo.GetByIDWithQuery(ctx, repository.GetPropertyBlockQuery{
+		PropertyBlockID: input.PropertyBlockID,
+		PropertyID:      input.PropertyID,
+	})
+	if getPropertyBlockErr != nil {
+		if errors.Is(getPropertyBlockErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("PropertyBlockNotFound", &pkg.RentLoopErrorParams{
+				Err: getPropertyBlockErr,
+			})
+		}
+		return nil, pkg.InternalServerError(getPropertyBlockErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getPropertyBlockErr,
+			Metadata: map[string]string{
+				"function": "FindPropertyBlockByIDWithQuery",
+				"action":   "fetching property block by ID",
+			},
+		})
+	}
+
+	if input.Name != nil {
+		propertyBlock.Name = *input.Name
+	}
+
+	if input.Images != nil {
+		propertyBlock.Images = pq.StringArray(*input.Images)
+	}
+
+	propertyBlock.Description = input.Description
+
+	updatePropertyBlockErr := s.repo.Update(ctx, propertyBlock)
+	if updatePropertyBlockErr != nil {
+		return nil, pkg.InternalServerError(updatePropertyBlockErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updatePropertyBlockErr,
+			Metadata: map[string]string{
+				"function": "UpdatePropertyBlock",
+				"action":   "updating property block",
 			},
 		})
 	}

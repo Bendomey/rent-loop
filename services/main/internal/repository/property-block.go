@@ -13,6 +13,7 @@ type PropertyBlockRepository interface {
 	GetByIDWithQuery(context context.Context, query GetPropertyBlockQuery) (*models.PropertyBlock, error)
 	List(context context.Context, filterQuery ListPropertyBlocksFilter) (*[]models.PropertyBlock, error)
 	Count(context context.Context, filterQuery ListPropertyBlocksFilter) (int64, error)
+	Update(context context.Context, propertyBlock *models.PropertyBlock) error
 }
 
 type propertyBlockRepository struct {
@@ -55,6 +56,11 @@ func (r *propertyBlockRepository) GetByIDWithQuery(
 		return nil, result.Error
 	}
 	return &propertyBlock, nil
+}
+
+func (r *propertyBlockRepository) Update(ctx context.Context, propertyBlock *models.PropertyBlock) error {
+	db := lib.ResolveDB(ctx, r.DB)
+	return db.Save(propertyBlock).Error
 }
 
 type ListPropertyBlocksFilter struct {
