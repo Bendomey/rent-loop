@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"gorm.io/datatypes"
 )
@@ -34,14 +33,6 @@ func NullOrString(input string) *string {
 	}
 
 	return &input
-}
-
-func NullOrStringSlice(input string) *[]string {
-	if input == "" {
-		return nil
-	}
-	slice := strings.Split(input, ",")
-	return &slice
 }
 
 func NullOrStringArray(input []string) *[]string {
