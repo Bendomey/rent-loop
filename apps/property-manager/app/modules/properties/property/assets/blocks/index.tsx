@@ -32,6 +32,7 @@ import {
 } from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyAssetBlocksModule() {
@@ -55,7 +56,7 @@ export function PropertyAssetBlocksModule() {
 
 	const { data, isPending, isRefetching, error, refetch } =
 		useGetPropertyBlocks({
-			property_id: clientUserProperty?.property?.id!,
+			property_id: safeString(clientUserProperty?.property?.id),
 			filters: { status: status },
 			pagination: { page, per },
 			populate: [],

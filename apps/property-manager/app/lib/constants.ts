@@ -16,6 +16,7 @@ export const QUERY_KEYS = {
 	DOCUMENTS: 'documents',
 	PROPERTIES: 'properties',
 	PROPERTY_BLOCKS: 'property-blocks',
+	PROPERTY_UNITS: 'property-units',
 	CLIENT_USERS: 'client-users',
 	CLIENT_USER_PROPERTIES: 'client-user-properties',
 } as const
