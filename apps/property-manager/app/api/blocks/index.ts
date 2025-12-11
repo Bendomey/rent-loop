@@ -77,6 +77,71 @@ export const useCreatePropertyBlock = () =>
 	useMutation({ mutationFn: createPropertyBlock })
 
 /**
+ * Get single property block by ID
+ */
+
+const getPropertyBlock = async (props: { property_id: string; id: string }) => {
+	try {
+		const response = await fetchClient<ApiResponse<PropertyBlock>>(
+			`/v1/properties/${props.property_id}/blocks/${props.id}`,
+		)
+
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useGetPropertyBlock = (props: {
+	property_id: string
+	id: string
+}) =>
+	useQuery({
+		queryKey: [QUERY_KEYS.PROPERTY_BLOCKS, props],
+		queryFn: () => getPropertyBlock(props),
+	})
+
+interface UpdatePropertyBlockProps {
+	id: string
+	data: Partial<CreatePropertyBlockInput>
+}
+
+/**
+ * Update Property Block
+ */
+
+const updatePropertyBlock = async (props: UpdatePropertyBlockProps) => {
+	try {
+		await fetchClient<PropertyBlock>(
+			`/v1/properties/${props.data.property_id}/blocks/${props.id}`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify(props.data),
+			},
+		)
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useUpdatePropertyBlock = () =>
+	useMutation({ mutationFn: updatePropertyBlock })
+
+/**
  * Delete property block
  */
 const deletePropertyBlock = async (props: {

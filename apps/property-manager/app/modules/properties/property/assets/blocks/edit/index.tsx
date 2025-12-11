@@ -2,10 +2,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useNavigate } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import { useCreatePropertyBlock } from '~/api/blocks'
+import { useGetPropertyBlock, useUpdatePropertyBlock } from '~/api/blocks'
+import { ErrorContainer } from '~/components/ErrorContainer'
+import { LoadingContainer } from '~/components/LoadingContainer'
 import { Button } from '~/components/ui/button'
 import { FieldGroup } from '~/components/ui/field'
 import {
@@ -34,8 +36,10 @@ import { useProperty } from '~/providers/property-provider'
 const ValidationSchema = z.object({
 	name: z.string().min(1, 'Name is required'),
 	image_url: z
-		.union([z.string().url('Please upload a valid image URL'), z.literal('')])
-		.optional(),
+		.string()
+		.url('Please upload an image')
+		.optional()
+		.or(z.literal('')),
 	description: z
 		.string()
 		.max(500, 'Description must be less than 500 characters')
@@ -46,32 +50,41 @@ const ValidationSchema = z.object({
 			'PropertyBlock.Status.Maintenance',
 			'PropertyBlock.Status.Inactive',
 		],
-		{
-			error: 'Please select a status',
-		},
+		{ error: 'Please select a status' },
 	),
 })
 
 type FormSchema = z.infer<typeof ValidationSchema>
 
-const status: Array<{ label: string; value: PropertyBlock['status'] }> = [
+const statusOptions: Array<{ label: string; value: FormSchema['status'] }> = [
 	{ label: 'Active', value: 'PropertyBlock.Status.Active' },
 	{ label: 'Inactive', value: 'PropertyBlock.Status.Inactive' },
 	{ label: 'Maintenance', value: 'PropertyBlock.Status.Maintenance' },
 ]
 
-export function NewPropertyAssetBlocksModule() {
+export function EditPropertyAssetBlocksModule() {
 	const { clientUserProperty } = useProperty()
 	const navigate = useNavigate()
+	const { blockId } = useParams()
+
+	const {
+		isPending: isLoadingData,
+		data,
+		error,
+	} = useGetPropertyBlock({
+		property_id: safeString(clientUserProperty?.property?.id),
+		id: safeString(blockId),
+	})
+	const { mutate, isPending } = useUpdatePropertyBlock()
 
 	const rhfMethods = useForm<FormSchema>({
+		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
 			name: '',
 			description: '',
 			image_url: '',
 			status: 'PropertyBlock.Status.Active',
 		},
-		resolver: zodResolver(ValidationSchema),
 	})
 
 	const {
@@ -80,6 +93,19 @@ export function NewPropertyAssetBlocksModule() {
 		isLoading: isUploading,
 	} = useUploadObject('blocks/images')
 
+	// Reset form when data loads
+	useEffect(() => {
+		if (data) {
+			rhfMethods.reset({
+				name: safeString(data.name),
+				description: safeString(data.description),
+				image_url: safeString(data.images?.[0]),
+				status: data.status ?? 'PropertyBlock.Status.Active',
+			})
+		}
+	}, [data, rhfMethods])
+
+	// Update form when new image is uploaded
 	useEffect(() => {
 		if (objectUrl) {
 			rhfMethods.setValue('image_url', objectUrl, {
@@ -87,39 +113,42 @@ export function NewPropertyAssetBlocksModule() {
 				shouldValidate: true,
 			})
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [objectUrl])
+	}, [objectUrl, rhfMethods])
 
-	const { mutate, isPending } = useCreatePropertyBlock()
-
-	const onSubmit = async (data: FormSchema) => {
-		if (data) {
-			mutate(
-				{
-					property_id: clientUserProperty?.property?.id ?? '',
-					name: data.name,
-					description: data.description,
-					images: data.image_url ? [data.image_url] : null,
-					status: data.status,
+	const onSubmit = async (formData: FormSchema) => {
+		mutate(
+			{
+				id: safeString(blockId),
+				data: {
+					property_id: safeString(clientUserProperty?.property?.id),
+					name: formState.dirtyFields.name ? formData.name : undefined,
+					description: formState.dirtyFields.description
+						? formData.description
+						: undefined,
+					images:
+						formState.dirtyFields.image_url && formData.image_url
+							? [formData.image_url]
+							: undefined,
+					status: formState.dirtyFields.status ? formData.status : undefined,
 				},
-				{
-					onError: () => {
-						toast.error(`Failed to create property block. Try again later.`)
-					},
-					onSuccess: () => {
-						toast.success(`Property block has been successfully created`)
-						setTimeout(() => {
-							void navigate(
-								`/properties/${clientUserProperty?.property?.id}/assets/blocks`,
-							)
-						}, 1000)
-					},
+			},
+			{
+				onError: () =>
+					toast.error('Failed to update property block. Try again later.'),
+				onSuccess: () => {
+					toast.success('Property block has been successfully updated')
+					void navigate(
+						`/properties/${clientUserProperty?.property?.id}/assets/blocks`,
+					)
 				},
-			)
-		}
+			},
+		)
 	}
 
 	const { watch, formState, setValue } = rhfMethods
+
+	if (isLoadingData) return <LoadingContainer />
+	if (error) return <ErrorContainer className="h-4/5 border-none" />
 
 	return (
 		<Form {...rhfMethods}>
@@ -128,8 +157,8 @@ export function NewPropertyAssetBlocksModule() {
 				className="mx-6 my-6 space-y-6 md:mx-auto md:max-w-2/3"
 			>
 				<div className="space-y-2">
-					<TypographyH2 className="">Add New Block</TypographyH2>
-					<TypographyMuted className="">
+					<TypographyH2>Edit {data ? data.name : 'Block'}</TypographyH2>
+					<TypographyMuted>
 						We break down property assets into blocks to better organize and
 						manage them.
 					</TypographyMuted>
@@ -172,31 +201,31 @@ export function NewPropertyAssetBlocksModule() {
 					<div className="flex flex-col items-center space-x-6 md:flex-row">
 						<FormLabel>Status: </FormLabel>
 						<div className="flex space-x-3">
-							{status.map((status) => {
-								const isSelected = watch('status') === status.value
+							{statusOptions.map((option) => {
+								const isSelected = watch('status') === option.value
 								return (
 									<Button
 										type="button"
 										onClick={() =>
-											setValue('status', status.value, {
+											setValue('status', option.value, {
 												shouldDirty: true,
 												shouldValidate: true,
 											})
 										}
-										key={status.value}
+										key={option.value}
 										variant={isSelected ? 'default' : 'outline'}
 										className={cn({ 'bg-rose-600 text-white': isSelected })}
 									>
-										{status.label}
+										{option.label}
 									</Button>
 								)
 							})}
 						</div>
-						{formState.errors?.status ? (
+						{formState.errors?.status && (
 							<TypographySmall className="text-destructive mt-3">
 								{formState.errors.status.message}
 							</TypographySmall>
-						) : null}
+						)}
 					</div>
 
 					<ImageUpload
@@ -204,21 +233,19 @@ export function NewPropertyAssetBlocksModule() {
 						shape="square"
 						hint="Optional"
 						acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-						error={rhfMethods.formState.errors?.image_url?.message}
+						error={formState.errors?.image_url?.message}
 						fileCallback={upload}
 						isUploading={isUploading}
 						dismissCallback={() => {
-							rhfMethods.setValue('image_url', undefined, {
+							setValue('image_url', '', {
 								shouldDirty: true,
 								shouldValidate: true,
 							})
 						}}
-						imageSrc={safeString(rhfMethods.watch('image_url')?.[0])}
+						imageSrc={safeString(watch('image_url') ?? '')}
 						label="Block Image"
 						name="image_url"
-						validation={{
-							maxByteSize: 5242880, // 5MB
-						}}
+						validation={{ maxByteSize: 5242880 }} // 5MB
 					/>
 				</FieldGroup>
 
@@ -230,17 +257,16 @@ export function NewPropertyAssetBlocksModule() {
 							variant="ghost"
 							disabled={isPending}
 						>
-							<ArrowLeft />
-							Cancel
+							<ArrowLeft /> Cancel
 						</Button>
 					</Link>
 					<Button
-						disabled={isPending}
+						disabled={isPending || !formState.isDirty}
 						size="lg"
 						variant="default"
 						className="bg-rose-600 hover:bg-rose-700"
 					>
-						{isPending ? <Spinner /> : null} Submit
+						{isPending && <Spinner />} Update
 					</Button>
 				</div>
 			</form>
