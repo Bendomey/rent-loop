@@ -103,6 +103,7 @@ type UpdatePropertyBlockInput struct {
 	Name            *string
 	Description     *string
 	Images          *[]string
+	Status          *string
 }
 
 func (s *propertyBlockService) UpdatePropertyBlock(
@@ -134,6 +135,10 @@ func (s *propertyBlockService) UpdatePropertyBlock(
 
 	if input.Images != nil {
 		propertyBlock.Images = pq.StringArray(*input.Images)
+	}
+
+	if input.Status != nil {
+		propertyBlock.Status = *input.Status
 	}
 
 	propertyBlock.Description = input.Description

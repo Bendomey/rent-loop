@@ -185,9 +185,10 @@ func (h *PropertyBlockHandler) GetPropertyBlock(w http.ResponseWriter, r *http.R
 }
 
 type UpdatePropertyBlockRequest struct {
-	Name        *string   `json:"name,omitempty"        validate:"omitempty,min=2,max=100" example:"Luxury Apartment"`
-	Images      *[]string `json:"images,omitempty"      validate:"omitempty,dive,url"      example:"https://example.com/image1.jpg,https://example.com/image2.jpg"`
-	Description *string   `json:"description,omitempty" validate:"omitempty"               example:"Spacious apartment with sea view."`
+	Name        *string   `json:"name,omitempty"        validate:"omitempty,min=2,max=100"                                                                                    example:"Luxury Apartment"`
+	Images      *[]string `json:"images,omitempty"      validate:"omitempty,dive,url"                                                                                         example:"https://example.com/image1.jpg,https://example.com/image2.jpg"`
+	Description *string   `json:"description,omitempty" validate:"omitempty"                                                                                                  example:"Spacious apartment with sea view."`
+	Status      *string   `json:"status,omitempty"      validate:"omitempty,oneof=PropertyBlock.Status.Active PropertyBlock.Status.Maintenance PropertyBlock.Status.Inactive" example:"PropertyBlock.Status.Active"`
 }
 
 // UpdatePropertyBlock godoc
@@ -231,6 +232,7 @@ func (h *PropertyBlockHandler) UpdatePropertyBlock(w http.ResponseWriter, r *htt
 		Name:            body.Name,
 		Images:          body.Images,
 		Description:     body.Description,
+		Status:          body.Status,
 	}
 
 	updatedPropertyBlock, updatePropertyBlockErr := h.service.UpdatePropertyBlock(r.Context(), input)

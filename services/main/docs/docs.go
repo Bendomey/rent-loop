@@ -4242,6 +4242,15 @@ const docTemplate = `{
                     "maxLength": 100,
                     "minLength": 2,
                     "example": "Luxury Apartment"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "PropertyBlock.Status.Active",
+                        "PropertyBlock.Status.Maintenance",
+                        "PropertyBlock.Status.Inactive"
+                    ],
+                    "example": "PropertyBlock.Status.Active"
                 }
             }
         },
