@@ -21,6 +21,91 @@ func NewUnitHandler(appCtx pkg.AppContext, service services.UnitService) UnitHan
 	return UnitHandler{appCtx, service}
 }
 
+type CreateUnitRequest struct {
+	Name                string          `json:"name"                  validate:"required"                                                                                            example:"Unit 101"                        description:"Name of the unit"`
+	Description         *string         `json:"description"           validate:"omitempty"                                                                                           example:"Spacious apartment with balcony" description:"Optional description of the unit"`
+	Images              *[]string       `json:"images"                validate:"omitempty,dive,url"                                                                                  example:"http://www.images/unit101.jpg"   description:"List of image URLs for the unit"`
+	Tags                *[]string       `json:"tags"                  validate:"omitempty,dive"                                                                                      example:"apartment,balcony"               description:"Tags associated with the unit"`
+	Type                string          `json:"type"                  validate:"required,oneof=APARTMENT HOUSE STUDIO OFFICE RETAIL"                                                 example:"APARTMENT"                       description:"Type of the unit (e.g., APARTMENT, HOUSE, STUDIO, OFFICE, RETAIL)"`
+	Status              string          `json:"status"                validate:"required,oneof=Unit.Status.Draft Unit.Status.Available Unit.Status.Occupied Unit.Status.Maintenance" example:"Unit.Status.Available"           description:"Current status of the unit (e.g., Unit.Status.Draft Unit.Status.Available Unit.Status.Occupied Unit.Status.Maintenance)"`
+	Area                *float64        `json:"area"                  validate:"omitempty"                                                                                           example:"120.5"                           description:"Area of the unit in square feet or square meters"`
+	RentFee             int64           `json:"rent_fee"              validate:"required"                                                                                            example:"1500"                            description:"Rent amount"`
+	RentFeeCurrency     string          `json:"rent_fee_currency"     validate:"required"                                                                                            example:"USD"                             description:"Currency for the rent fee"`
+	PaymentFrequency    string          `json:"payment_frequency"     validate:"required,oneof=WEEKLY DAILY MONTHLY QUARTERLY BIANNUALLY ANNUALLY"                                   example:"WEEKLY"                          description:"Payment frequency (e.g., WEEKLY, DAILY, MONTHLY, QUARTERLY, BIANNUALLY, ANNUALLY)"`
+	Features            *map[string]any `json:"features"              validate:"omitempty"                                                                                                                                     description:"Additional metadata in JSON format"`
+	MaxOccupantsAllowed int             `json:"max_occupants_allowed" validate:"required"                                                                                            example:"4"                               description:"Maximum number of occupants allowed"`
+}
+
+// CreateUnit godoc
+//
+//	@Summary		Create unit
+//	@Description	Create unit
+//	@Tags			Units
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string				true	"Property ID"
+//	@Param			block_id	path		string				true	"Property block ID"
+//	@Param			body		body		CreateUnitRequest	true	"Unit"
+//	@Success		201			{object}	object{data=transformations.OutputUnit}
+//	@Failure		400			{object}	lib.HTTPError	"Error occurred when creating a unit"
+//	@Failure		401			{object}	string			"Invalid or absent authentication token"
+//	@Failure		403			{object}	lib.HTTPError	"Forbidden access"
+//	@Failure		422			{object}	lib.HTTPError	"Invalid request body"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/properties/{property_id}/blocks/{block_id}/units [post]
+func (h *UnitHandler) CreateUnit(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
+	if !clientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	propertyID := chi.URLParam(r, "property_id")
+	propertyBlockID := chi.URLParam(r, "block_id")
+
+	var body CreateUnitRequest
+
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	input := services.CreateUnitInput{
+		PropertyID:          propertyID,
+		PropertyBlockID:     propertyBlockID,
+		Name:                body.Name,
+		Description:         body.Description,
+		Images:              body.Images,
+		Tags:                body.Tags,
+		Type:                body.Type,
+		Status:              body.Status,
+		Area:                body.Area,
+		RentFee:             body.RentFee,
+		RentFeeCurrency:     body.RentFeeCurrency,
+		PaymentFrequency:    body.PaymentFrequency,
+		Features:            body.Features,
+		MaxOccupantsAllowed: body.MaxOccupantsAllowed,
+		CreatedByID:         currentClientUser.ID,
+	}
+
+	unit, createUnitErr := h.service.CreateUnit(r.Context(), input)
+	if createUnitErr != nil {
+		HandleErrorResponse(w, createUnitErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBUnitToRest(unit),
+	})
+}
+
 type ListUnitsFilterRequest struct {
 	lib.FilterQueryInput
 	PropertyID       string   `json:"property_id"       validate:"omitempty"                                                                                            example:"prop_123"                                                                  description:"ID of the property to filter units by"`

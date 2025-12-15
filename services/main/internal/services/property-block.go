@@ -100,6 +100,7 @@ func (s *propertyBlockService) GetPropertyBlock(
 type UpdatePropertyBlockInput struct {
 	PropertyBlockID string
 	PropertyID      string
+	UnitCount       *int
 	Name            *string
 	Description     *string
 	Images          *[]string
@@ -139,6 +140,10 @@ func (s *propertyBlockService) UpdatePropertyBlock(
 
 	if input.Status != nil {
 		propertyBlock.Status = *input.Status
+	}
+
+	if input.UnitCount != nil {
+		propertyBlock.UnitsCount = *input.UnitCount
 	}
 
 	propertyBlock.Description = input.Description
