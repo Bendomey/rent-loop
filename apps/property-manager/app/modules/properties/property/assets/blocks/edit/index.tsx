@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
@@ -29,6 +30,7 @@ import {
 	TypographySmall,
 } from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
+import { QUERY_KEYS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
@@ -66,6 +68,7 @@ export function EditPropertyAssetBlocksModule() {
 	const { clientUserProperty } = useProperty()
 	const navigate = useNavigate()
 	const { blockId } = useParams()
+	const queryClient = useQueryClient()
 
 	const {
 		isPending: isLoadingData,
@@ -137,9 +140,14 @@ export function EditPropertyAssetBlocksModule() {
 					toast.error('Failed to update property block. Try again later.'),
 				onSuccess: () => {
 					toast.success('Property block has been successfully updated')
-					void navigate(
-						`/properties/${clientUserProperty?.property?.id}/assets/blocks`,
-					)
+					void queryClient.invalidateQueries({
+						queryKey: [QUERY_KEYS.PROPERTY_BLOCKS],
+					})
+					setTimeout(() => {
+						void navigate(
+							`/properties/${clientUserProperty?.property?.id}/assets/blocks`,
+						)
+					}, 500)
 				},
 			},
 		)
