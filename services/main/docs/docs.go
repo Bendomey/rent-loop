@@ -3354,6 +3354,94 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/properties/{property_id}/blocks/{block_id}/units": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create unit",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Create unit",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property block ID",
+                        "name": "block_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Unit",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateUnitRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputUnit"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when creating a unit",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden access",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/properties/{property_id}/client-users:link": {
             "post": {
                 "security": [
@@ -3977,6 +4065,100 @@ const docTemplate = `{
                         "MULTI"
                     ],
                     "example": "SINGLE"
+                }
+            }
+        },
+        "handlers.CreateUnitRequest": {
+            "type": "object",
+            "required": [
+                "max_occupants_allowed",
+                "name",
+                "payment_frequency",
+                "rent_fee",
+                "rent_fee_currency",
+                "status",
+                "type"
+            ],
+            "properties": {
+                "area": {
+                    "type": "number",
+                    "example": 120.5
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Spacious apartment with balcony"
+                },
+                "features": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "http://www.images/unit101.jpg"
+                    ]
+                },
+                "max_occupants_allowed": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Unit 101"
+                },
+                "payment_frequency": {
+                    "type": "string",
+                    "enum": [
+                        "WEEKLY",
+                        "DAILY",
+                        "MONTHLY",
+                        "QUARTERLY",
+                        "BIANNUALLY",
+                        "ANNUALLY"
+                    ],
+                    "example": "WEEKLY"
+                },
+                "rent_fee": {
+                    "type": "integer",
+                    "example": 1500
+                },
+                "rent_fee_currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "Unit.Status.Draft",
+                        "Unit.Status.Available",
+                        "Unit.Status.Occupied",
+                        "Unit.Status.Maintenance"
+                    ],
+                    "example": "Unit.Status.Available"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "apartment",
+                        "balcony"
+                    ]
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "APARTMENT",
+                        "HOUSE",
+                        "STUDIO",
+                        "OFFICE",
+                        "RETAIL"
+                    ],
+                    "example": "APARTMENT"
                 }
             }
         },

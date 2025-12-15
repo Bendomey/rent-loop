@@ -84,6 +84,11 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 								Patch("/", handlers.PropertyBlockHandler.UpdatePropertyBlock)
 							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Delete("/", handlers.PropertyBlockHandler.DeletePropertyBlock)
+
+							r.Route("/units", func(r chi.Router) {
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Post("/", handlers.UnitHandler.CreateUnit)
+							})
 						})
 					})
 

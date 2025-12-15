@@ -34,9 +34,13 @@ func NewServices(appCtx pkg.AppContext, repository repository.Repository) Servic
 		repository.ClientUserPropertyRepository,
 	)
 
-	unitService := NewUnitService(appCtx, repository.UnitRepository)
-
 	propertyBlockService := NewPropertyBlockService(appCtx, repository.PropertyBlockRepository)
+
+	unitService := NewUnitService(UnitServiceDependencies{
+		AppCtx:               appCtx,
+		Repo:                 repository.UnitRepository,
+		PropertyBlockService: propertyBlockService,
+	})
 
 	propertyService := NewPropertyService(
 		PropertyServiceDependencies{

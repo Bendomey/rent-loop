@@ -241,6 +241,78 @@ definitions:
     - status
     - type
     type: object
+  handlers.CreateUnitRequest:
+    properties:
+      area:
+        example: 120.5
+        type: number
+      description:
+        example: Spacious apartment with balcony
+        type: string
+      features:
+        additionalProperties: {}
+        type: object
+      images:
+        example:
+        - http://www.images/unit101.jpg
+        items:
+          type: string
+        type: array
+      max_occupants_allowed:
+        example: 4
+        type: integer
+      name:
+        example: Unit 101
+        type: string
+      payment_frequency:
+        enum:
+        - WEEKLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        example: WEEKLY
+        type: string
+      rent_fee:
+        example: 1500
+        type: integer
+      rent_fee_currency:
+        example: USD
+        type: string
+      status:
+        enum:
+        - Unit.Status.Draft
+        - Unit.Status.Available
+        - Unit.Status.Occupied
+        - Unit.Status.Maintenance
+        example: Unit.Status.Available
+        type: string
+      tags:
+        example:
+        - apartment
+        - balcony
+        items:
+          type: string
+        type: array
+      type:
+        enum:
+        - APARTMENT
+        - HOUSE
+        - STUDIO
+        - OFFICE
+        - RETAIL
+        example: APARTMENT
+        type: string
+    required:
+    - max_occupants_allowed
+    - name
+    - payment_frequency
+    - rent_fee
+    - rent_fee_currency
+    - status
+    - type
+    type: object
   handlers.DeactivateClientUserRequest:
     properties:
       reason:
@@ -3023,6 +3095,63 @@ paths:
       summary: Update a property block
       tags:
       - PropertyBlocks
+  /api/v1/properties/{property_id}/blocks/{block_id}/units:
+    post:
+      consumes:
+      - application/json
+      description: Create unit
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Property block ID
+        in: path
+        name: block_id
+        required: true
+        type: string
+      - description: Unit
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateUnitRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputUnit'
+            type: object
+        "400":
+          description: Error occurred when creating a unit
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Forbidden access
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create unit
+      tags:
+      - Units
   /api/v1/properties/{property_id}/client-users:link:
     post:
       consumes:
