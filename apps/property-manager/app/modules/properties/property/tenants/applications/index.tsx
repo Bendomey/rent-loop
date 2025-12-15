@@ -53,7 +53,7 @@ const applications: TenantApplication[] = [
 		cancelled_by_id: null,
 		cancelled_by: null,
 		desired_unit_id: 'unit_1',
-		desired_unit: null,
+		desired_unit: { name: 'Unit 203' },
 		previous_landlord_name: null,
 		previous_landlord_phone: null,
 		previous_tenancy_period: null,
@@ -93,7 +93,7 @@ const applications: TenantApplication[] = [
 		cancelled_by_id: null,
 		cancelled_by: null,
 		desired_unit_id: 'unit_1',
-		desired_unit: null,
+		desired_unit: { name: 'Unit 3' },
 		previous_landlord_name: 'Mrs. Yeboah',
 		previous_landlord_phone: '+233208554433',
 		previous_tenancy_period: '2 years',
@@ -133,7 +133,7 @@ const applications: TenantApplication[] = [
 		cancelled_by_id: 'user_1',
 		cancelled_by: null,
 		desired_unit_id: 'unit_1',
-		desired_unit: null,
+		desired_unit: { name: 'Unit 101' },
 		previous_landlord_name: null,
 		previous_landlord_phone: null,
 		previous_tenancy_period: null,
@@ -173,7 +173,7 @@ const applications: TenantApplication[] = [
 		cancelled_by_id: null,
 		cancelled_by: null,
 		desired_unit_id: 'unit_1',
-		desired_unit: null,
+		desired_unit: { name: 'Unit 31' },
 		previous_landlord_name: null,
 		previous_landlord_phone: null,
 		previous_tenancy_period: null,
@@ -288,6 +288,15 @@ export function PropertyTenantApplicationsModule() {
 							{row.original.phone}
 						</span>
 					</div>
+				),
+			},
+			{
+				accessorKey: 'desired_unit.name',
+				header: 'Desired Unit',
+				cell: ({ getValue }) => (
+					<span className="truncate text-xs text-zinc-600">
+						{getValue<string>() ?? 'N/A'}
+					</span>
 				),
 			},
 			{

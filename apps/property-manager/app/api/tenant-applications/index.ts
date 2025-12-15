@@ -18,7 +18,9 @@ const getPropertyTenantApplications = async (
 		const params = new URLSearchParams(removeAllNullableValues)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<TenantApplication>>
-		>(`/v1/tenant-applications/${props.property_id}?${params.toString()}`)
+		>(
+			`/v1/properties/${props.property_id}/tenant-applications?${params.toString()}`,
+		)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {

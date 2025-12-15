@@ -25,7 +25,23 @@ const filters: Array<Filter> = [
 		Icon: ToggleLeft,
 	},
 	{
-		id: 1,
+		id: 2,
+		type: 'selector',
+		selectType: 'single',
+		label: 'Desired Unit',
+		value: {
+			options: [
+				// TODO: get unit values from API
+				{ label: 'Unit 101', value: 'unit_101' },
+				{ label: 'Unit 102', value: 'unit_102' },
+			],
+			urlParam: 'desired_unit',
+			defaultValues: [],
+		},
+		Icon: ToggleLeft,
+	},
+	{
+		id: 3,
 		type: 'selector',
 		selectType: 'single',
 		label: 'Gender',
@@ -40,7 +56,7 @@ const filters: Array<Filter> = [
 		Icon: ToggleLeft,
 	},
 	{
-		id: 1,
+		id: 4,
 		type: 'selector',
 		selectType: 'single',
 		label: 'Marital Status',
