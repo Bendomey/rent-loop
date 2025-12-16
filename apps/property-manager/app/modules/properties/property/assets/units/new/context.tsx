@@ -16,7 +16,7 @@ interface CreateNewPropertyUnitContextType {
 	onSubmit: (data: Partial<CreatePropertyUnitInput>) => Promise<void>
 }
 
-export const CreatePropertyContext = createContext<
+export const CreatePropertyUnitContext = createContext<
 	CreateNewPropertyUnitContextType | undefined
 >(undefined)
 
@@ -73,15 +73,15 @@ export function CreatePropertyUnitProvider({
 	}
 
 	return (
-		<CreatePropertyContext.Provider value={contextValue}>
+		<CreatePropertyUnitContext.Provider value={contextValue}>
 			{children}
 			<BlockNavigationDialog blocker={blocker} />
-		</CreatePropertyContext.Provider>
+		</CreatePropertyUnitContext.Provider>
 	)
 }
 
 export function useCreatePropertyUnitContext() {
-	const context = useContext(CreatePropertyContext)
+	const context = useContext(CreatePropertyUnitContext)
 
 	if (!context) {
 		throw new Error(

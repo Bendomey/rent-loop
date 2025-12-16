@@ -26,13 +26,13 @@ export function getPropertyUnitStatusLabel(
 	propertyStatus: PropertyUnit['status'],
 ) {
 	switch (propertyStatus) {
-		case 'PropertyUnit.Status.Draft':
+		case 'Unit.Status.Draft':
 			return 'Draft'
-		case 'PropertyUnit.Status.Available':
+		case 'Unit.Status.Available':
 			return 'Available'
-		case 'PropertyUnit.Status.Occupied':
+		case 'Unit.Status.Occupied':
 			return 'Occupied'
-		case 'PropertyUnit.Status.Maintenance':
+		case 'Unit.Status.Maintenance':
 			return 'Maintenance'
 		default:
 			return 'Unknown'

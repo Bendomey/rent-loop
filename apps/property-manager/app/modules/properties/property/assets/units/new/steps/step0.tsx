@@ -31,10 +31,10 @@ const ValidationSchema = z.object({
 	}),
 	status: z.enum(
 		[
-			'PropertyUnit.Status.Draft',
-			'PropertyUnit.Status.Available',
-			'PropertyUnit.Status.Occupied',
-			'PropertyUnit.Status.Maintenance',
+			'Unit.Status.Draft',
+			'Unit.Status.Available',
+			'Unit.Status.Occupied',
+			'Unit.Status.Maintenance',
 		],
 		{
 			error: 'Please select a status',
@@ -83,10 +83,10 @@ const models = [
 ]
 
 const status: Array<{ label: string; value: PropertyUnit['status'] }> = [
-	{ label: 'Draft', value: 'PropertyUnit.Status.Draft' },
-	{ label: 'Available', value: 'PropertyUnit.Status.Available' },
-	{ label: 'Occupied', value: 'PropertyUnit.Status.Occupied' },
-	{ label: 'Maintenance', value: 'PropertyUnit.Status.Maintenance' },
+	{ label: 'Draft', value: 'Unit.Status.Draft' },
+	{ label: 'Available', value: 'Unit.Status.Available' },
+	{ label: 'Occupied', value: 'Unit.Status.Occupied' },
+	{ label: 'Maintenance', value: 'Unit.Status.Maintenance' },
 ]
 
 export function Step0() {
@@ -96,7 +96,7 @@ export function Step0() {
 	const { watch, setValue, formState, handleSubmit } = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
-			status: 'PropertyUnit.Status.Draft',
+			status: 'Unit.Status.Draft',
 		},
 	})
 

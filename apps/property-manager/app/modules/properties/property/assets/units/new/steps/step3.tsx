@@ -11,15 +11,29 @@ export function Step3() {
 	const { goBack, goToPage, formData, onSubmit, isSubmitting } =
 		useCreatePropertyUnitContext()
 
-	const renderField = (label: string, value?: string | string[]) => (
+	const renderField = (
+		label: string,
+		value?: string | string[] | Record<string, string>,
+	) => (
 		<Field>
 			<FieldLabel>{label}</FieldLabel>
-			<div className="text-sm text-zinc-700">
-				{Array.isArray(value)
-					? value.length
-						? value.join(', ')
-						: '—'
-					: (value ?? '—')}
+			<div className="flex flex-wrap gap-2 text-sm text-zinc-700">
+				{value == null
+					? '—'
+					: Array.isArray(value)
+						? value.length
+							? value.join(', ')
+							: '—'
+						: typeof value === 'object'
+							? Object.entries(value).map(([key, val]) => (
+									<span
+										key={key}
+										className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-800"
+									>
+										{key}: {val}
+									</span>
+								))
+							: value}
 			</div>
 		</Field>
 	)
@@ -74,6 +88,7 @@ export function Step3() {
 							<div className="mt-3 grid gap-2 sm:grid-cols-2">
 								{renderField('Name', formData.name)}
 								{renderField('Tags', formData.tags)}
+								{renderField('Features', formData.features)}
 							</div>
 							<div className="mt-2 grid gap-2 sm:grid-cols-1">
 								{renderField('Description', formData.description ?? 'N/A')}
@@ -98,6 +113,10 @@ export function Step3() {
 							<h3 className="text-sm font-semibold">Pricing & Area</h3>
 							<div className="mt-3 grid gap-2 sm:grid-cols-2">
 								{renderField('Area', formData.area?.toString())}
+								{renderField(
+									'Max Occupants Allowed',
+									formData.max_occupants_allowed?.toString(),
+								)}
 								{renderField(
 									'Rent Fee',
 									formData?.rent_fee != null

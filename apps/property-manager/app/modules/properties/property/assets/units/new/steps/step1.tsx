@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useCreatePropertyUnitContext } from '../context'
+import { FeatureInput } from '~/components/feature'
 import { PropertyTagInput } from '~/components/property-tag'
 import { Button } from '~/components/ui/button'
 import { FieldGroup } from '~/components/ui/field'
@@ -33,6 +34,7 @@ const ValidationSchema = z.object({
 		.max(500, 'Description must be less than 500 characters')
 		.optional(),
 	tags: z.array(z.string().min(1).max(10)).optional(),
+	features: z.record(z.string(), z.string()).optional(),
 })
 
 export type FormSchema = z.infer<typeof ValidationSchema>
@@ -89,6 +91,13 @@ export function Step1() {
 				shouldValidate: true,
 			})
 		}
+
+		if (formData.features) {
+			setValue('features', formData.features, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
@@ -97,6 +106,7 @@ export function Step1() {
 			name: data.name,
 			description: data.description,
 			tags: data.tags,
+			features: data.features,
 			images: data.image_url ? [data.image_url] : [],
 		})
 		goNext()
@@ -165,6 +175,8 @@ export function Step1() {
 								</FormItem>
 							)}
 						/>
+
+						<FeatureInput />
 						<PropertyTagInput />
 					</FieldGroup>
 

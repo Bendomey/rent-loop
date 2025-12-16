@@ -82,20 +82,20 @@ export function PropertyAssetUnitsModule() {
 									<Badge
 										variant="outline"
 										className={
-											data.status === 'PropertyUnit.Status.Available'
+											data.status === 'Unit.Status.Available'
 												? 'bg-teal-500 text-white'
-												: data.status === 'PropertyUnit.Status.Maintenance'
+												: data.status === 'Unit.Status.Maintenance'
 													? 'bg-yellow-500 text-white'
-													: data.status === 'PropertyUnit.Status.Occupied'
+													: data.status === 'Unit.Status.Occupied'
 														? 'bg-rose-500 text-white'
 														: 'bg-zinc-400 text-white'
 										}
 									>
-										{data.status === 'PropertyUnit.Status.Available'
+										{data.status === 'Unit.Status.Available'
 											? 'Available'
-											: data.status === 'PropertyUnit.Status.Maintenance'
+											: data.status === 'Unit.Status.Maintenance'
 												? 'Maintenance'
-												: data.status === 'PropertyUnit.Status.Occupied'
+												: data.status === 'Unit.Status.Occupied'
 													? 'Occupied'
 													: 'Draft'}
 									</Badge>

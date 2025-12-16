@@ -33,6 +33,10 @@ import { cn } from '~/lib/utils'
 const ValidationSchema = z.object({
 	area: z.number().positive('Area must be a positive number').optional(),
 
+	max_occupants_allowed: z
+		.number()
+		.positive('Max occupants allowed must be a positive number'),
+
 	rent_fee: z.number().positive('Rent fee must be a positive number'),
 
 	rent_fee_currency: z.string().min(1, 'Currency is required'),
@@ -76,6 +80,7 @@ export function Step2() {
 	const onSubmit = async (data: FormSchema) => {
 		updateFormData({
 			area: data.area,
+			max_occupants_allowed: data.max_occupants_allowed,
 			rent_fee: data.rent_fee,
 			rent_fee_currency: data.rent_fee_currency,
 			payment_frequency: data.payment_frequency,
@@ -93,6 +98,12 @@ export function Step2() {
 
 		if (formData.rent_fee) {
 			setValue('rent_fee', formData.rent_fee, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		if (formData.max_occupants_allowed) {
+			setValue('max_occupants_allowed', formData.max_occupants_allowed, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
@@ -137,6 +148,25 @@ export function Step2() {
 									type="number"
 									step="0.01"
 									placeholder="e.g., 250.50"
+									{...field}
+									onChange={(e) => field.onChange(e.target.valueAsNumber)}
+								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<FormField
+					name="max_occupants_allowed"
+					control={control}
+					render={({ field }) => (
+						<FormItem className="col-span-4">
+							<FormLabel>Rent Fee</FormLabel>
+							<FormControl>
+								<Input
+									type="number"
+									placeholder="e.g., 4"
 									{...field}
 									onChange={(e) => field.onChange(e.target.valueAsNumber)}
 								/>

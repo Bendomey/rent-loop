@@ -35,12 +35,20 @@ export async function action({ request }: Route.ActionArgs) {
 	const description = formData.get('description') as string | null
 	const images = (formData.getAll('images') as string[])?.filter(Boolean) ?? []
 	const tags = (formData.getAll('tags') as string[])?.filter(Boolean) ?? []
+	const max_occupants_allowed = Number(formData.get('max_occupants_allowed'))
 	const area = parseFloat(formData.get('area') as string)
 	const rent_fee_currency = formData.get('rent_fee_currency') as string
 	const rent_fee = Number(formData.get('rent_fee'))
 	const payment_frequency = formData.get(
 		'payment_frequency',
 	) as PropertyUnit['payment_frequency']
+
+	const featuresArray = formData.getAll('features') as string[]
+	const features: StringRecord = {}
+	featuresArray.forEach((item) => {
+		const [key, value] = item.split(':')
+		if (key && value) features[key] = value
+	})
 
 	try {
 		const property = await createPropertyUnit(
@@ -53,6 +61,8 @@ export async function action({ request }: Route.ActionArgs) {
 				description,
 				images,
 				tags,
+				features,
+				max_occupants_allowed,
 				area,
 				rent_fee,
 				rent_fee_currency,
@@ -68,7 +78,7 @@ export async function action({ request }: Route.ActionArgs) {
 			throw new Error('Property unit creation returned no data')
 		}
 
-		return redirect(`/properties/${property.id}/assests/units`)
+		return redirect(`/properties/${property_id}/assets/units`)
 	} catch {
 		return { error: 'Failed to create property unit' }
 	}

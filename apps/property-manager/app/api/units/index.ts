@@ -53,6 +53,8 @@ export interface CreatePropertyUnitInput {
 	description: Maybe<string>
 	images: Maybe<string[]>
 	tags: string[]
+	features: StringRecord
+	max_occupants_allowed: number
 	area: Maybe<number>
 	rent_fee: number
 	rent_fee_currency: string
@@ -65,14 +67,13 @@ export const createPropertyUnit = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<PropertyUnit>>(
-			`${apiConfig?.baseUrl}/v1/properties/${props.property_id}/units`,
+			`${apiConfig?.baseUrl}/v1/properties/${props.property_id}/blocks/${props.property_block_id}/units`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),
 				...(apiConfig ? apiConfig : {}),
 			},
 		)
-
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
