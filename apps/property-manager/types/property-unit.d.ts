@@ -18,9 +18,11 @@ interface PropertyUnit {
 		| 'BIANNUALLY'
 		| 'ANNUALLY'
 	max_occupants_allowed: Nullable<number>
+	type: 'APARTMENT' | 'HOUSE' | 'STUDIO' | 'OFFICE' | 'RETAIL'
 	status:
-		| 'PropertyUnit.Status.Active'
-		| 'PropertyUnit.Status.Inactive'
+		| 'PropertyUnit.Status.Draft'
+		| 'PropertyUnit.Status.Available'
+		| 'PropertyUnit.Status.Occupied'
 		| 'PropertyUnit.Status.Maintenance'
 	created_at: Date
 	updated_at: Date
