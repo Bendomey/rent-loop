@@ -11,6 +11,7 @@ import (
 type UnitRepository interface {
 	List(context context.Context, filterQuery ListUnitsFilter) (*[]models.Unit, error)
 	Count(context context.Context, filterQuery ListUnitsFilter) (int64, error)
+	Create(context context.Context, unit *models.Unit) error
 }
 
 type unitRepository struct {
@@ -19,6 +20,12 @@ type unitRepository struct {
 
 func NewUnitRepository(DB *gorm.DB) UnitRepository {
 	return &unitRepository{DB: DB}
+}
+
+func (r *unitRepository) Create(ctx context.Context, unit *models.Unit) error {
+	db := lib.ResolveDB(ctx, r.DB)
+
+	return db.WithContext(ctx).Create(unit).Error
 }
 
 type ListUnitsFilter struct {
@@ -63,7 +70,9 @@ func (r *unitRepository) List(ctx context.Context, filterQuery ListUnitsFilter) 
 func (r *unitRepository) Count(ctx context.Context, filterQuery ListUnitsFilter) (int64, error) {
 	var count int64
 
-	result := r.DB.WithContext(ctx).
+	db := lib.ResolveDB(ctx, r.DB)
+
+	result := db.WithContext(ctx).
 		Model(&models.Unit{}).
 		Scopes(
 			propertyFilterScope(filterQuery.PropertyID),

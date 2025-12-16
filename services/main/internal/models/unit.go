@@ -1,8 +1,11 @@
 package models
 
 import (
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/getsentry/raven-go"
 	"github.com/lib/pq"
 	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 // Unit represents a unit within a property in the system
@@ -34,4 +37,18 @@ type Unit struct {
 	Features datatypes.JSON `gorm:"not null;type:jsonb;"` // additional metadata in json format {bedrooms: 2, bathrooms: 1, hasBalcony: true, ...}
 
 	MaxOccupantsAllowed int `gorm:"not null; default:1"` // maximum number of occupants allowed
+}
+
+func (u *Unit) BeforeCreate(tx *gorm.DB) (err error) {
+	slug, slugErr := lib.GenerateSlug(u.Name)
+	if slugErr != nil {
+		raven.CaptureError(err, map[string]string{
+			"function": "BeforeCreateUnitHook",
+			"action":   "Generating a slug",
+		})
+		return slugErr
+	}
+
+	u.Slug = slug
+	return
 }
