@@ -95,6 +95,9 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					// units
 					r.Route("/units", func(r chi.Router) {
 						r.Get("/", handlers.UnitHandler.ListUnits)
+						r.Route("/{unit_id}", func(r chi.Router) {
+							r.Get("/", handlers.UnitHandler.GetUnit)
+						})
 					})
 				})
 			})

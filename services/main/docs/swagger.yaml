@@ -3349,6 +3349,59 @@ paths:
       summary: List units
       tags:
       - Units
+  /api/v1/properties/{property_id}/units/{unit_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get unit
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Unit ID
+        in: path
+        name: unit_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Unit retrieved successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputUnit'
+            type: object
+        "400":
+          description: Error occurred when fetching a unit
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Unit not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get unit
+      tags:
+      - Units
   /api/v1/properties/me:
     get:
       consumes:

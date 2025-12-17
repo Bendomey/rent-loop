@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
@@ -10,12 +11,14 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/lib/pq"
 	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 type UnitService interface {
 	ListUnits(context context.Context, filterQuery repository.ListUnitsFilter) ([]models.Unit, error)
 	CountUnits(context context.Context, filterQuery repository.ListUnitsFilter) (int64, error)
 	CreateUnit(context context.Context, input CreateUnitInput) (*models.Unit, error)
+	GetUnit(context context.Context, query repository.GetUnitQuery) (*models.Unit, error)
 }
 
 type unitService struct {
@@ -159,6 +162,26 @@ func (s *unitService) CreateUnit(ctx context.Context, input CreateUnitInput) (*m
 	}
 
 	return &unit, nil
+}
+
+func (s *unitService) GetUnit(ctx context.Context, query repository.GetUnitQuery) (*models.Unit, error) {
+	unit, getUnitErr := s.repo.GetOneWithQuery(ctx, query)
+	if getUnitErr != nil {
+		if errors.Is(getUnitErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("UnitNotFound", &pkg.RentLoopErrorParams{
+				Err: getUnitErr,
+			})
+		}
+		return nil, pkg.InternalServerError(getUnitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getUnitErr,
+			Metadata: map[string]string{
+				"function": "GetUnit",
+				"action":   "fetching unit",
+			},
+		})
+	}
+
+	return unit, nil
 }
 
 func (s *unitService) ListUnits(ctx context.Context, filterQuery repository.ListUnitsFilter) ([]models.Unit, error) {
