@@ -185,7 +185,6 @@ type GetUnitQuery struct {
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Param			property_id	path		string									true	"Property ID"
-//	@Param			block_id	path		string									true	"Property block ID"
 //	@Param			unit_id		path		string									true	"Unit ID"
 //	@Param			q			query		GetUnitQuery							true	"Units"
 //	@Success		200			{object}	object{data=transformations.OutputUnit}	"Unit retrieved successfully"
@@ -193,19 +192,17 @@ type GetUnitQuery struct {
 //	@Failure		401			{object}	string									"Invalid or absent authentication token"
 //	@Failure		404			{object}	lib.HTTPError							"Unit not found"
 //	@Failure		500			{object}	string									"An unexpected error occurred"
-//	@Router			/api/v1/properties/{property_id}/blocks/{block_id}/units/{unit_id} [get]
+//	@Router			/api/v1/properties/{property_id}/units/{unit_id} [get]
 func (s *UnitHandler) GetUnit(w http.ResponseWriter, r *http.Request) {
 	propertyID := chi.URLParam(r, "property_id")
-	propertyBlockID := chi.URLParam(r, "block_id")
 	unitID := chi.URLParam(r, "unit_id")
 
 	populate := GetPopulateFields(r)
 
 	query := repository.GetUnitQuery{
-		PropertyID:      propertyID,
-		PropertyBlockID: propertyBlockID,
-		UnitID:          unitID,
-		Populate:        populate,
+		PropertyID: propertyID,
+		UnitID:     unitID,
+		Populate:   populate,
 	}
 
 	unit, getUnitErr := s.service.GetUnit(r.Context(), query)

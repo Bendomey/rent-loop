@@ -30,17 +30,16 @@ func (r *unitRepository) Create(ctx context.Context, unit *models.Unit) error {
 }
 
 type GetUnitQuery struct {
-	PropertyID      string
-	PropertyBlockID string
-	UnitID          string
-	Populate        *[]string
+	PropertyID string
+	UnitID     string
+	Populate   *[]string
 }
 
 func (r *unitRepository) GetOneWithQuery(ctx context.Context, query GetUnitQuery) (*models.Unit, error) {
 	var unit models.Unit
 
 	db := r.DB.WithContext(ctx).
-		Where("id = ? AND property_block_id = ? AND property_id = ?", query.UnitID, query.PropertyBlockID, query.PropertyID)
+		Where("id = ? AND property_id = ?", query.UnitID, query.PropertyID)
 
 	if query.Populate != nil {
 		for _, field := range *query.Populate {
