@@ -12,6 +12,7 @@ type UnitRepository interface {
 	List(context context.Context, filterQuery ListUnitsFilter) (*[]models.Unit, error)
 	Count(context context.Context, filterQuery ListUnitsFilter) (int64, error)
 	Create(context context.Context, unit *models.Unit) error
+	GetOneWithQuery(context context.Context, query GetUnitQuery) (*models.Unit, error)
 }
 
 type unitRepository struct {
@@ -26,6 +27,34 @@ func (r *unitRepository) Create(ctx context.Context, unit *models.Unit) error {
 	db := lib.ResolveDB(ctx, r.DB)
 
 	return db.WithContext(ctx).Create(unit).Error
+}
+
+type GetUnitQuery struct {
+	PropertyID      string
+	PropertyBlockID string
+	UnitID          string
+	Populate        *[]string
+}
+
+func (r *unitRepository) GetOneWithQuery(ctx context.Context, query GetUnitQuery) (*models.Unit, error) {
+	var unit models.Unit
+
+	db := r.DB.WithContext(ctx).
+		Where("id = ? AND property_block_id = ? AND property_id = ?", query.UnitID, query.PropertyBlockID, query.PropertyID)
+
+	if query.Populate != nil {
+		for _, field := range *query.Populate {
+			db = db.Preload(field)
+		}
+	}
+
+	result := db.First(&unit)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &unit, nil
 }
 
 type ListUnitsFilter struct {

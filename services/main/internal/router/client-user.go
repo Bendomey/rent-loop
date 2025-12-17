@@ -88,6 +88,9 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 							r.Route("/units", func(r chi.Router) {
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 									Post("/", handlers.UnitHandler.CreateUnit)
+								r.Route("/{unit_id}", func(r chi.Router) {
+									r.Get("/", handlers.UnitHandler.GetUnit)
+								})
 							})
 						})
 					})
