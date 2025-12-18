@@ -32,11 +32,12 @@ export function PropertyAssetUnitsModule() {
 		? Number(searchParams.get('pageSize'))
 		: PAGINATION_DEFAULTS.PER_PAGE
 	const status = searchParams.get('status') ?? undefined
+	const block_ids = searchParams.getAll('blocks') ?? undefined
 
 	const { data, isPending, isRefetching, error, refetch } = useGetPropertyUnits(
 		{
 			property_id: safeString(clientUserProperty?.property?.id),
-			filters: { status: status },
+			filters: { status: status, block_ids: block_ids },
 			pagination: { page, per },
 			populate: [],
 			sorter: { sort: 'desc', sort_by: 'created_at' },

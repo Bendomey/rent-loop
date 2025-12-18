@@ -1,42 +1,11 @@
 import { Plus, RotateCw, ToggleLeft } from 'lucide-react'
-import { Link } from 'react-router'
+import { Link, useLoaderData } from 'react-router'
 import { FilterSet } from '~/components/filter-set'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { SearchInput } from '~/components/search'
 import { Button } from '~/components/ui/button'
 import { cn } from '~/lib/utils'
-import { useProperty } from '~/providers/property-provider'
-
-const filters: Array<Filter> = [
-	{
-		id: 1,
-		type: 'selector',
-		selectType: 'single',
-		label: 'Status',
-		value: {
-			options: [
-				{ label: 'Active', value: 'Unit.Status.Active' },
-				{ label: 'Inactive', value: 'Unit.Status.Inactive' },
-				{ label: 'Maintenance', value: 'Unit.Status.Maintenance' },
-			],
-			urlParam: 'status',
-			defaultValues: [],
-		},
-		Icon: ToggleLeft,
-	},
-	{
-		id: 2,
-		type: 'selector',
-		selectType: 'single',
-		label: 'Blocks',
-		value: {
-			options: [{ label: 'Block A', value: 'block-1' }],
-			urlParam: 'blocks',
-			defaultValues: [],
-		},
-		Icon: ToggleLeft,
-	},
-]
+import type { loader } from '~/routes/_auth.properties.$propertyId.assets.units._index'
 
 export const PropertyAssetUnitsController = ({
 	isLoading,
@@ -45,7 +14,43 @@ export const PropertyAssetUnitsController = ({
 	isLoading: boolean
 	refetch: VoidFunction
 }) => {
-	const { clientUserProperty } = useProperty()
+	const { clientUserProperty, blocks } = useLoaderData<typeof loader>()
+	const blockOptions = (blocks?.rows ?? []).map((block) => ({
+		label: block.name,
+		value: block.id,
+	}))
+
+	const filters: Array<Filter> = [
+		{
+			id: 1,
+			type: 'selector',
+			selectType: 'single',
+			label: 'Status',
+			value: {
+				options: [
+					{ label: 'Active', value: 'Unit.Status.Active' },
+					{ label: 'Inactive', value: 'Unit.Status.Inactive' },
+					{ label: 'Maintenance', value: 'Unit.Status.Maintenance' },
+				],
+				urlParam: 'status',
+				defaultValues: [],
+			},
+			Icon: ToggleLeft,
+		},
+		{
+			id: 2,
+			type: 'selector',
+			selectType: 'single',
+			label: 'Blocks',
+			value: {
+				options: blockOptions,
+				urlParam: 'blocks',
+				defaultValues: [],
+			},
+			Icon: ToggleLeft,
+		},
+	]
+
 	return (
 		<div className="flex w-full flex-col gap-2">
 			<div className="w-full rounded-md border p-4">
