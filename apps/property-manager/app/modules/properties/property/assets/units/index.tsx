@@ -1,7 +1,17 @@
 import dayjs from 'dayjs'
-import { CircleCheck, House, MapPin, Wrench } from 'lucide-react'
+import {
+	CircleCheck,
+	House,
+	MapPin,
+	MoreHorizontalIcon,
+	Pencil,
+	Trash,
+	Wrench,
+} from 'lucide-react'
+import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { PropertyAssetUnitsController } from './controller'
+import DeletePropertyUnitModal from './delete'
 import { useGetPropertyUnits } from '~/api/units'
 import { GridElement } from '~/components/Grid'
 import { Image } from '~/components/Image'
@@ -15,6 +25,13 @@ import {
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuGroup,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
@@ -22,8 +39,12 @@ import { useProperty } from '~/providers/property-provider'
 
 export function PropertyAssetUnitsModule() {
 	const { clientUserProperty } = useProperty()
-
 	const [searchParams] = useSearchParams()
+
+	const [selectedPropertyUnit, setSelectedPropertyUnit] =
+		useState<PropertyUnit>()
+	const [openDeletePropertyUnitModal, setOpenDeletePropertyUnitModal] =
+		useState(false)
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -37,7 +58,7 @@ export function PropertyAssetUnitsModule() {
 	const { data, isPending, isRefetching, error, refetch } = useGetPropertyUnits(
 		{
 			property_id: safeString(clientUserProperty?.property?.id),
-			filters: { status: status, block_ids: block_ids },
+			filters: { status: status, block_ids: block_ids.length ? block_ids : undefined },
 			pagination: { page, per },
 			populate: [],
 			sorter: { sort: 'desc', sort_by: 'created_at' },
@@ -63,7 +84,7 @@ export function PropertyAssetUnitsModule() {
 				<GridElement
 					boxHeight={62}
 					isLoading={isLoading}
-					gridColumns={{ sm: 2, md: 2, lg: 3, xl: 4 }}
+					gridColumns={{ sm: 1, md: 2, lg: 3, xl: 4 }}
 					gridElement={({ data }: { data: PropertyUnit }) => (
 						<Card
 							key={data.id}
@@ -146,6 +167,38 @@ export function PropertyAssetUnitsModule() {
 									<Wrench />
 									Maintenance
 								</Button>
+
+								<div className="flex items-center">
+									<DropdownMenu>
+										<DropdownMenuTrigger asChild>
+											<Button
+												variant="outline"
+												size="icon"
+												aria-label="More Options"
+											>
+												<MoreHorizontalIcon />
+											</Button>
+										</DropdownMenuTrigger>
+										<DropdownMenuContent align="end" className="w-52">
+											<DropdownMenuGroup>
+												<DropdownMenuItem onClick={() => {}}>
+													<Pencil />
+													Edit
+												</DropdownMenuItem>
+												<DropdownMenuItem
+													variant="destructive"
+													onClick={() => {
+														setSelectedPropertyUnit(data)
+														setOpenDeletePropertyUnitModal(true)
+													}}
+												>
+													<Trash />
+													Delete
+												</DropdownMenuItem>
+											</DropdownMenuGroup>
+										</DropdownMenuContent>
+									</DropdownMenu>
+								</div>
 							</CardFooter>
 						</Card>
 					)}
@@ -168,6 +221,12 @@ export function PropertyAssetUnitsModule() {
 					refetch={refetch}
 				/>
 			</div>
+
+			<DeletePropertyUnitModal
+				opened={openDeletePropertyUnitModal}
+				setOpened={setOpenDeletePropertyUnitModal}
+				data={selectedPropertyUnit}
+			/>
 		</div>
 	)
 }
