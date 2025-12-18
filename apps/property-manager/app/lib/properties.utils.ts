@@ -21,3 +21,20 @@ export function getPropertyTypeLabel(propertyType: Property['type']) {
 			return 'Unknown'
 	}
 }
+
+export function getPropertyUnitStatusLabel(
+	propertyStatus: PropertyUnit['status'],
+) {
+	switch (propertyStatus) {
+		case 'Unit.Status.Draft':
+			return 'Draft'
+		case 'Unit.Status.Available':
+			return 'Available'
+		case 'Unit.Status.Occupied':
+			return 'Occupied'
+		case 'Unit.Status.Maintenance':
+			return 'Maintenance'
+		default:
+			return 'Unknown'
+	}
+}

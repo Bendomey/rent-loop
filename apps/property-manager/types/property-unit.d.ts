@@ -10,6 +10,7 @@ interface PropertyUnit {
 	area: Nullable<number>
 	rent_fee: number
 	rent_fee_currency: string
+	features: Nullable<StringRecord>
 	payment_frequency:
 		| 'WEEKLY'
 		| 'DAILY'
@@ -18,10 +19,12 @@ interface PropertyUnit {
 		| 'BIANNUALLY'
 		| 'ANNUALLY'
 	max_occupants_allowed: Nullable<number>
+	type: 'APARTMENT' | 'HOUSE' | 'STUDIO' | 'OFFICE' | 'RETAIL'
 	status:
-		| 'PropertyUnit.Status.Active'
-		| 'PropertyUnit.Status.Inactive'
-		| 'PropertyUnit.Status.Maintenance'
+		| 'Unit.Status.Draft'
+		| 'Unit.Status.Available'
+		| 'Unit.Status.Occupied'
+		| 'Unit.Status.Maintenance'
 	created_at: Date
 	updated_at: Date
 }
