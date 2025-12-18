@@ -13,6 +13,8 @@ type UnitRepository interface {
 	Count(context context.Context, filterQuery ListUnitsFilter) (int64, error)
 	Create(context context.Context, unit *models.Unit) error
 	GetOneWithQuery(context context.Context, query GetUnitQuery) (*models.Unit, error)
+	GetOne(context context.Context, query map[string]any) (*models.Unit, error)
+	Update(context context.Context, unit *models.Unit) error
 }
 
 type unitRepository struct {
@@ -54,6 +56,22 @@ func (r *unitRepository) GetOneWithQuery(ctx context.Context, query GetUnitQuery
 	}
 
 	return &unit, nil
+}
+
+func (r *unitRepository) GetOne(ctx context.Context, query map[string]any) (*models.Unit, error) {
+	var unit models.Unit
+	result := r.DB.WithContext(ctx).Where(query).First(&unit)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &unit, nil
+}
+
+func (r *unitRepository) Update(ctx context.Context, unit *models.Unit) error {
+	db := lib.ResolveDB(ctx, r.DB)
+	return db.WithContext(ctx).Save(unit).Error
 }
 
 type ListUnitsFilter struct {
