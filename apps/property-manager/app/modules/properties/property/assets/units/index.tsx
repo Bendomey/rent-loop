@@ -53,11 +53,12 @@ export function PropertyAssetUnitsModule() {
 		? Number(searchParams.get('pageSize'))
 		: PAGINATION_DEFAULTS.PER_PAGE
 	const status = searchParams.get('status') ?? undefined
+	const block_ids = searchParams.getAll('blocks') ?? undefined
 
 	const { data, isPending, isRefetching, error, refetch } = useGetPropertyUnits(
 		{
 			property_id: safeString(clientUserProperty?.property?.id),
-			filters: { status: status },
+			filters: { status: status, block_ids: block_ids.length ? block_ids : undefined },
 			pagination: { page, per },
 			populate: [],
 			sorter: { sort: 'desc', sort_by: 'created_at' },
@@ -103,18 +104,22 @@ export function PropertyAssetUnitsModule() {
 									<Badge
 										variant="outline"
 										className={
-											data.status === 'PropertyUnit.Status.Active'
+											data.status === 'Unit.Status.Available'
 												? 'bg-teal-500 text-white'
-												: data.status === 'PropertyUnit.Status.Maintenance'
+												: data.status === 'Unit.Status.Maintenance'
 													? 'bg-yellow-500 text-white'
-													: 'bg-rose-500 text-white'
+													: data.status === 'Unit.Status.Occupied'
+														? 'bg-rose-500 text-white'
+														: 'bg-zinc-400 text-white'
 										}
 									>
-										{data.status === 'PropertyUnit.Status.Active'
-											? 'Active'
-											: data.status === 'PropertyUnit.Status.Maintenance'
+										{data.status === 'Unit.Status.Available'
+											? 'Available'
+											: data.status === 'Unit.Status.Maintenance'
 												? 'Maintenance'
-												: 'Inactive'}
+												: data.status === 'Unit.Status.Occupied'
+													? 'Occupied'
+													: 'Draft'}
 									</Badge>
 								</CardAction>
 							</CardHeader>
