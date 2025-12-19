@@ -19,6 +19,7 @@ type UnitService interface {
 	CountUnits(context context.Context, filterQuery repository.ListUnitsFilter) (int64, error)
 	CreateUnit(context context.Context, input CreateUnitInput) (*models.Unit, error)
 	GetUnit(context context.Context, query repository.GetUnitQuery) (*models.Unit, error)
+	UpdateUnit(context context.Context, input UpdateUnitInput) (*models.Unit, error)
 }
 
 type unitService struct {
@@ -177,6 +178,111 @@ func (s *unitService) GetUnit(ctx context.Context, query repository.GetUnitQuery
 			Metadata: map[string]string{
 				"function": "GetUnit",
 				"action":   "fetching unit",
+			},
+		})
+	}
+
+	return unit, nil
+}
+
+type UpdateUnitInput struct {
+	PropertyID          string
+	UnitID              string
+	Name                *string
+	Description         *string
+	Images              *[]string
+	Tags                *[]string
+	Type                *string
+	Area                *float64
+	RentFee             *int64
+	RentFeeCurrency     *string
+	PaymentFrequency    *string
+	Features            *map[string]any
+	MaxOccupantsAllowed *int
+}
+
+func (s *unitService) UpdateUnit(ctx context.Context, input UpdateUnitInput) (*models.Unit, error) {
+	unit, getUnitErr := s.repo.GetOne(ctx, map[string]any{
+		"id":          input.UnitID,
+		"property_id": input.PropertyID,
+	})
+
+	if getUnitErr != nil {
+		if errors.Is(getUnitErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("UnitNotFound", &pkg.RentLoopErrorParams{
+				Err: getUnitErr,
+			})
+		}
+		return nil, pkg.InternalServerError(getUnitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getUnitErr,
+			Metadata: map[string]string{
+				"function": "UpdateUnit",
+				"action":   "fetching unit",
+			},
+		})
+	}
+
+	if unit.Status != "Unit.Status.Draft" {
+		return nil, pkg.ForbiddenError("UnitNotInDraftState", nil)
+	}
+
+	if input.Name != nil {
+		unit.Name = *input.Name
+	}
+
+	if input.Type != nil {
+		unit.Type = *input.Type
+	}
+
+	if input.RentFee != nil {
+		unit.RentFee = *input.RentFee
+	}
+
+	if input.RentFeeCurrency != nil {
+		unit.RentFeeCurrency = *input.RentFeeCurrency
+	}
+
+	if input.PaymentFrequency != nil {
+		unit.PaymentFrequency = *input.PaymentFrequency
+	}
+
+	if input.MaxOccupantsAllowed != nil {
+		unit.MaxOccupantsAllowed = *input.MaxOccupantsAllowed
+	}
+
+	if input.Features != nil {
+		unmarshalledFeatures, err := json.Marshal(input.Features)
+		if err != nil {
+			return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+				Err: err,
+				Metadata: map[string]string{
+					"function": "UpdateUnit",
+					"action":   "marshalling features",
+				},
+			})
+		}
+		unit.Features = datatypes.JSON(unmarshalledFeatures)
+	}
+
+	if input.Images != nil {
+		unit.Images = pq.StringArray(*input.Images)
+	}
+
+	if input.Tags != nil {
+		unit.Tags = pq.StringArray(*input.Tags)
+	}
+
+	unit.Description = input.Description
+
+	unit.Area = input.Area
+
+	updateUnitErr := s.repo.Update(ctx, unit)
+	if updateUnitErr != nil {
+		return nil, pkg.InternalServerError(updateUnitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateUnitErr,
+			Metadata: map[string]string{
+				"function": "UpdateUnit",
+				"action":   "updating unit",
 			},
 		})
 	}

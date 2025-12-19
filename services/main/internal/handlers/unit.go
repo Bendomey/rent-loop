@@ -215,3 +215,79 @@ func (s *UnitHandler) GetUnit(w http.ResponseWriter, r *http.Request) {
 		"data": transformations.DBUnitToRest(unit),
 	})
 }
+
+type UpdateUnitRequest struct {
+	Name                *string         `json:"name"                  validate:"omitempty"                                                          example:"Unit 101"                        description:"Name of the unit"`
+	Description         *string         `json:"description"           validate:"omitempty"                                                          example:"Spacious apartment with balcony" description:"Optional description of the unit"`
+	Images              *[]string       `json:"images"                validate:"omitempty,dive,url"                                                 example:"http://www.images/unit101.jpg"   description:"List of image URLs for the unit"`
+	Tags                *[]string       `json:"tags"                  validate:"omitempty,dive"                                                     example:"apartment,balcony"               description:"Tags associated with the unit"`
+	Type                *string         `json:"type"                  validate:"omitempty,oneof=APARTMENT HOUSE STUDIO OFFICE RETAIL"               example:"APARTMENT"                       description:"Type of the unit (e.g., APARTMENT, HOUSE, STUDIO, OFFICE, RETAIL)"`
+	Area                *float64        `json:"area"                  validate:"omitempty"                                                          example:"120.5"                           description:"Area of the unit in square feet or square meters"`
+	RentFee             *int64          `json:"rent_fee"              validate:"omitempty"                                                          example:"1500"                            description:"Rent amount"`
+	RentFeeCurrency     *string         `json:"rent_fee_currency"     validate:"omitempty"                                                          example:"USD"                             description:"Currency for the rent fee"`
+	PaymentFrequency    *string         `json:"payment_frequency"     validate:"omitempty,oneof=WEEKLY DAILY MONTHLY QUARTERLY BIANNUALLY ANNUALLY" example:"WEEKLY"                          description:"Payment frequency (e.g., WEEKLY, DAILY, MONTHLY, QUARTERLY, BIANNUALLY, ANNUALLY)"`
+	Features            *map[string]any `json:"features"              validate:"omitempty"                                                                                                    description:"Additional metadata in JSON format"`
+	MaxOccupantsAllowed *int            `json:"max_occupants_allowed" validate:"omitempty"                                                          example:"4"                               description:"Maximum number of occupants allowed"`
+}
+
+// UpdateUnit godoc
+//
+//	@Summary		Update unit
+//	@Description	Update unit
+//	@Tags			Units
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string				true	"Property ID"
+//	@Param			unit_id		path		string				true	"Unit ID"
+//	@Param			body		body		UpdateUnitRequest	true	"Unit"
+//	@Success		200			{object}	object{data=transformations.OutputUnit}
+//	@Failure		400			{object}	lib.HTTPError	"Error occurred when updating a unit"
+//	@Failure		401			{object}	string			"Invalid or absent authentication token"
+//	@Failure		403			{object}	lib.HTTPError	"Forbidden access"
+//	@Failure		404			{object}	lib.HTTPError	"Unit not found"
+//	@Failure		422			{object}	lib.HTTPError	"Invalid request body"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/properties/{property_id}/units/{unit_id} [patch]
+func (h *UnitHandler) UpdateUnit(w http.ResponseWriter, r *http.Request) {
+	propertyID := chi.URLParam(r, "property_id")
+	unitID := chi.URLParam(r, "unit_id")
+
+	var body UpdateUnitRequest
+
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	input := services.UpdateUnitInput{
+		PropertyID:          propertyID,
+		UnitID:              unitID,
+		Name:                body.Name,
+		Description:         body.Description,
+		Images:              body.Images,
+		Tags:                body.Tags,
+		Type:                body.Type,
+		Area:                body.Area,
+		RentFee:             body.RentFee,
+		RentFeeCurrency:     body.RentFeeCurrency,
+		PaymentFrequency:    body.PaymentFrequency,
+		Features:            body.Features,
+		MaxOccupantsAllowed: body.MaxOccupantsAllowed,
+	}
+
+	unit, updateUnitErr := h.service.UpdateUnit(r.Context(), input)
+	if updateUnitErr != nil {
+		HandleErrorResponse(w, updateUnitErr)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBUnitToRest(unit),
+	})
+}

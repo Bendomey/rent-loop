@@ -559,6 +559,62 @@ definitions:
           type: string
         type: array
     type: object
+  handlers.UpdateUnitRequest:
+    properties:
+      area:
+        example: 120.5
+        type: number
+      description:
+        example: Spacious apartment with balcony
+        type: string
+      features:
+        additionalProperties: {}
+        type: object
+      images:
+        example:
+        - http://www.images/unit101.jpg
+        items:
+          type: string
+        type: array
+      max_occupants_allowed:
+        example: 4
+        type: integer
+      name:
+        example: Unit 101
+        type: string
+      payment_frequency:
+        enum:
+        - WEEKLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        example: WEEKLY
+        type: string
+      rent_fee:
+        example: 1500
+        type: integer
+      rent_fee_currency:
+        example: USD
+        type: string
+      tags:
+        example:
+        - apartment
+        - balcony
+        items:
+          type: string
+        type: array
+      type:
+        enum:
+        - APARTMENT
+        - HOUSE
+        - STUDIO
+        - OFFICE
+        - RETAIL
+        example: APARTMENT
+        type: string
+    type: object
   lib.HTTPError:
     properties:
       errors:
@@ -3400,6 +3456,66 @@ paths:
       security:
       - BearerAuth: []
       summary: Get unit
+      tags:
+      - Units
+    patch:
+      consumes:
+      - application/json
+      description: Update unit
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Unit ID
+        in: path
+        name: unit_id
+        required: true
+        type: string
+      - description: Unit
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateUnitRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputUnit'
+            type: object
+        "400":
+          description: Error occurred when updating a unit
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Forbidden access
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Unit not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update unit
       tags:
       - Units
   /api/v1/properties/me:
