@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { useGetPropertyBlocks } from '~/api/blocks'
 import {
 	Select,
 	SelectContent,
@@ -7,6 +6,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '../ui/select'
+import { useGetPropertyBlocks } from '~/api/blocks'
 
 interface BlockSelectProps
 	extends FetchMultipleDataInputParams<FetchClientUserFilter> {
