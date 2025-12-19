@@ -205,8 +205,8 @@ func (s *unitService) UpdateUnit(ctx context.Context, input UpdateUnitInput) (*m
 	unit, getUnitErr := s.repo.GetOne(ctx, map[string]any{
 		"id":          input.UnitID,
 		"property_id": input.PropertyID,
-		"status":      "Unit.Status.Draft",
 	})
+
 	if getUnitErr != nil {
 		if errors.Is(getUnitErr, gorm.ErrRecordNotFound) {
 			return nil, pkg.NotFoundError("UnitNotFound", &pkg.RentLoopErrorParams{
@@ -220,6 +220,10 @@ func (s *unitService) UpdateUnit(ctx context.Context, input UpdateUnitInput) (*m
 				"action":   "fetching unit",
 			},
 		})
+	}
+
+	if unit.Status != "Unit.Status.Draft" {
+		return nil, pkg.ForbiddenError("UnitNotInDraftState", nil)
 	}
 
 	if input.Name != nil {
