@@ -3406,6 +3406,51 @@ paths:
       tags:
       - Units
   /api/v1/properties/{property_id}/units/{unit_id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete a unit
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Unit ID
+        in: path
+        name: unit_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Unit deleted successfully
+        "400":
+          description: Error occurred when deleting a unit
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Forbidden access
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Unit not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: delete a unit
+      tags:
+      - Units
     get:
       consumes:
       - application/json

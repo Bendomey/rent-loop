@@ -291,3 +291,38 @@ func (h *UnitHandler) UpdateUnit(w http.ResponseWriter, r *http.Request) {
 		"data": transformations.DBUnitToRest(unit),
 	})
 }
+
+// DeleteUnit godoc
+//
+//	@Summary		delete a unit
+//	@Description	delete a unit
+//	@Tags			Units
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string			true	"Property ID"
+//	@Param			unit_id		path		string			true	"Unit ID"
+//	@Success		204			{object}	nil				"Unit deleted successfully"
+//	@Failure		400			{object}	lib.HTTPError	"Error occurred when deleting a unit"
+//	@Failure		401			{object}	string			"Invalid or absent authentication token"
+//	@Failure		403			{object}	lib.HTTPError	"Forbidden access"
+//	@Failure		404			{object}	lib.HTTPError	"Unit not found"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/properties/{property_id}/units/{unit_id} [delete]
+func (h *UnitHandler) DeleteUnit(w http.ResponseWriter, r *http.Request) {
+	propertyID := chi.URLParam(r, "property_id")
+	unitID := chi.URLParam(r, "unit_id")
+
+	input := repository.DeleteUnitInput{
+		UnitID:     unitID,
+		PropertyID: propertyID,
+	}
+
+	deleteUnitErr := h.service.DeleteUnit(r.Context(), input)
+	if deleteUnitErr != nil {
+		HandleErrorResponse(w, deleteUnitErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

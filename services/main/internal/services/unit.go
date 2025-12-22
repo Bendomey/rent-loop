@@ -20,6 +20,8 @@ type UnitService interface {
 	CreateUnit(context context.Context, input CreateUnitInput) (*models.Unit, error)
 	GetUnit(context context.Context, query repository.GetUnitQuery) (*models.Unit, error)
 	UpdateUnit(context context.Context, input UpdateUnitInput) (*models.Unit, error)
+	DeleteUnit(ctx context.Context, input repository.DeleteUnitInput) error
+	updateUnitCount(ctx context.Context, input UpdateUnitCountInput) error
 }
 
 type unitService struct {
@@ -116,37 +118,17 @@ func (s *unitService) CreateUnit(ctx context.Context, input CreateUnitInput) (*m
 		})
 	}
 
-	countUnitsFilter := repository.ListUnitsFilter{
-		PropertyID: input.PropertyID,
-		BlockIDs:   &[]string{input.PropertyBlockID},
-	}
-
-	unitsCount, countUnitsErr := s.CountUnits(transCtx, countUnitsFilter)
-	if countUnitsErr != nil {
-		transaction.Rollback()
-		return nil, pkg.InternalServerError(countUnitsErr.Error(), &pkg.RentLoopErrorParams{
-			Err: countUnitsErr,
-			Metadata: map[string]string{
-				"function": "CreateUnit",
-				"action":   "counting units",
-			},
-		})
-	}
-
-	count := int(unitsCount)
-	updatePropertyBlockInput := UpdatePropertyBlockInput{
-		PropertyBlockID: input.PropertyBlockID,
+	updateUnitCountErr := s.updateUnitCount(transCtx, UpdateUnitCountInput{
 		PropertyID:      input.PropertyID,
-		UnitCount:       &count,
-	}
-	_, updatePropertyBlockErr := s.propertyBlockService.UpdatePropertyBlock(transCtx, updatePropertyBlockInput)
-	if updatePropertyBlockErr != nil {
+		PropertyBlockID: input.PropertyBlockID,
+	})
+	if updateUnitCountErr != nil {
 		transaction.Rollback()
-		return nil, pkg.InternalServerError(updatePropertyBlockErr.Error(), &pkg.RentLoopErrorParams{
-			Err: updatePropertyBlockErr,
+		return nil, pkg.InternalServerError(updateUnitCountErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateUnitCountErr,
 			Metadata: map[string]string{
 				"function": "CreateUnit",
-				"action":   "updating property block unit count",
+				"action":   "updating unit count",
 			},
 		})
 	}
@@ -290,6 +272,74 @@ func (s *unitService) UpdateUnit(ctx context.Context, input UpdateUnitInput) (*m
 	return unit, nil
 }
 
+func (s *unitService) DeleteUnit(ctx context.Context, input repository.DeleteUnitInput) error {
+	unit, getUnitErr := s.repo.GetOne(ctx, map[string]any{
+		"id":          input.UnitID,
+		"property_id": input.PropertyID,
+	})
+	if getUnitErr != nil {
+		if errors.Is(getUnitErr, gorm.ErrRecordNotFound) {
+			return pkg.NotFoundError("UnitNotFound", &pkg.RentLoopErrorParams{
+				Err: getUnitErr,
+			})
+		}
+		return pkg.InternalServerError(getUnitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getUnitErr,
+			Metadata: map[string]string{
+				"function": "DeleteUnit",
+				"action":   "fetching unit",
+			},
+		})
+	}
+
+	if unit.Status == "Unit.Status.Occupied" {
+		return pkg.ForbiddenError("UnitIsOccupied", nil)
+	}
+
+	transaction := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, transaction)
+
+	deleteUnitErr := s.repo.Delete(transCtx, input)
+	if deleteUnitErr != nil {
+		transaction.Rollback()
+		return pkg.InternalServerError(deleteUnitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: deleteUnitErr,
+			Metadata: map[string]string{
+				"function": "DeleteUnit",
+				"action":   "deleting unit",
+			},
+		})
+	}
+
+	updateUnitCountErr := s.updateUnitCount(transCtx, UpdateUnitCountInput{
+		PropertyID:      unit.PropertyID,
+		PropertyBlockID: unit.PropertyBlockID,
+	})
+	if updateUnitCountErr != nil {
+		transaction.Rollback()
+		return pkg.InternalServerError(updateUnitCountErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateUnitCountErr,
+			Metadata: map[string]string{
+				"function": "DeleteUnit",
+				"action":   "updating unit count",
+			},
+		})
+	}
+
+	if commitErr := transaction.Commit().Error; commitErr != nil {
+		transaction.Rollback()
+		return pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: commitErr,
+			Metadata: map[string]string{
+				"function": "DeleteUnit",
+				"action":   "committing transaction",
+			},
+		})
+	}
+
+	return nil
+}
+
 func (s *unitService) ListUnits(ctx context.Context, filterQuery repository.ListUnitsFilter) ([]models.Unit, error) {
 	units, listUnitsErr := s.repo.List(ctx, filterQuery)
 	if listUnitsErr != nil {
@@ -321,4 +371,46 @@ func (s *unitService) CountUnits(
 	}
 
 	return unitCount, nil
+}
+
+type UpdateUnitCountInput struct {
+	PropertyID      string
+	PropertyBlockID string
+}
+
+func (s *unitService) updateUnitCount(ctx context.Context, input UpdateUnitCountInput) error {
+	countUnitsFilter := repository.ListUnitsFilter{
+		PropertyID: input.PropertyID,
+		BlockIDs:   &[]string{input.PropertyBlockID},
+	}
+
+	unitsCount, countUnitsErr := s.CountUnits(ctx, countUnitsFilter)
+	if countUnitsErr != nil {
+		return pkg.InternalServerError(countUnitsErr.Error(), &pkg.RentLoopErrorParams{
+			Err: countUnitsErr,
+			Metadata: map[string]string{
+				"function": "CreateUnit",
+				"action":   "counting units",
+			},
+		})
+	}
+
+	count := int(unitsCount)
+	updatePropertyBlockInput := UpdatePropertyBlockInput{
+		PropertyBlockID: input.PropertyBlockID,
+		PropertyID:      input.PropertyID,
+		UnitCount:       &count,
+	}
+	_, updatePropertyBlockErr := s.propertyBlockService.UpdatePropertyBlock(ctx, updatePropertyBlockInput)
+	if updatePropertyBlockErr != nil {
+		return pkg.InternalServerError(updatePropertyBlockErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updatePropertyBlockErr,
+			Metadata: map[string]string{
+				"function": "CreateUnit",
+				"action":   "updating property block unit count",
+			},
+		})
+	}
+
+	return nil
 }

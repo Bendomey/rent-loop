@@ -15,6 +15,7 @@ type UnitRepository interface {
 	GetOneWithQuery(context context.Context, query GetUnitQuery) (*models.Unit, error)
 	GetOne(context context.Context, query map[string]any) (*models.Unit, error)
 	Update(context context.Context, unit *models.Unit) error
+	Delete(context context.Context, input DeleteUnitInput) error
 }
 
 type unitRepository struct {
@@ -72,6 +73,20 @@ func (r *unitRepository) GetOne(ctx context.Context, query map[string]any) (*mod
 func (r *unitRepository) Update(ctx context.Context, unit *models.Unit) error {
 	db := lib.ResolveDB(ctx, r.DB)
 	return db.WithContext(ctx).Save(unit).Error
+}
+
+type DeleteUnitInput struct {
+	UnitID     string
+	PropertyID string
+}
+
+func (r *unitRepository) Delete(ctx context.Context, input DeleteUnitInput) error {
+	db := lib.ResolveDB(ctx, r.DB)
+
+	return db.WithContext(ctx).
+		Where("id = ? AND property_id = ?", input.UnitID, input.PropertyID).
+		Delete(&models.Unit{}).
+		Error
 }
 
 type ListUnitsFilter struct {
