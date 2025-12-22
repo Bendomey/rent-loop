@@ -292,6 +292,10 @@ func (s *unitService) DeleteUnit(ctx context.Context, input repository.DeleteUni
 		})
 	}
 
+	if unit.Status == "Unit.Status.Occupied" {
+		return pkg.ForbiddenError("UnitIsOccupied", nil)
+	}
+
 	transaction := s.appCtx.DB.Begin()
 	transCtx := lib.WithTransaction(ctx, transaction)
 
