@@ -54,6 +54,7 @@ interface Client {
 	longitude: number
 
 	client_application_id: string
+	client_application: Nullable<ClientApplication>
 
 	created_at: Date
 	updated_at: Date
