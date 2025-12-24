@@ -137,6 +137,10 @@ func (h *ClientUserHandler) AuthenticateClientUser(w http.ResponseWriter, r *htt
 	})
 }
 
+type GetClientUserQuery struct {
+	lib.GetOneQueryInput
+}
+
 // GetCurrentClientUser godoc
 //
 //	@Summary		Get the currently authenticated client user
@@ -145,6 +149,7 @@ func (h *ClientUserHandler) AuthenticateClientUser(w http.ResponseWriter, r *htt
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
+//	@Param			q	query		GetClientUserQuery	true	"Client user"
 //	@Success		200	{object}	object{data=transformations.OutputClientUser}
 //	@Failure		400	{object}	lib.HTTPError
 //	@Failure		401	{object}	string
@@ -159,7 +164,14 @@ func (h *ClientUserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientUser, err := h.service.GetClientUser(r.Context(), currentClientUser.ID)
+	populateFields := GetPopulateFields(r)
+
+	query := repository.GetClientUserWithPopulateQuery{
+		ID:       currentClientUser.ID,
+		ClientID: currentClientUser.ClientID,
+		Populate: populateFields,
+	}
+	clientUser, err := h.service.GetClientUser(r.Context(), query)
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return

@@ -1265,6 +1265,17 @@ const docTemplate = `{
                     "ClientUsers"
                 ],
                 "summary": "Get the currently authenticated client user",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

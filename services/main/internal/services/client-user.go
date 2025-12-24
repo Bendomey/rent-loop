@@ -23,7 +23,7 @@ type ClientUserService interface {
 		ctx context.Context,
 		input AuthenticateClientUserInput,
 	) (*AuthenticateClientUserResponse, error)
-	GetClientUser(ctx context.Context, clientUserId string) (*models.ClientUser, error)
+	GetClientUser(ctx context.Context, query repository.GetClientUserWithPopulateQuery) (*models.ClientUser, error)
 	SendForgotPasswordResetLink(ctx context.Context, email string) (*models.ClientUser, error)
 	ResetPassword(
 		ctx context.Context,
@@ -223,9 +223,9 @@ func (s *clientUserService) AuthenticateClientUser(
 
 func (s *clientUserService) GetClientUser(
 	ctx context.Context,
-	clientUserId string,
+	query repository.GetClientUserWithPopulateQuery,
 ) (*models.ClientUser, error) {
-	clientUser, err := s.repo.GetByID(ctx, clientUserId)
+	clientUser, err := s.repo.GetByIDWithPopulate(ctx, query)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, pkg.NotFoundError("ClientUserNotFound", &pkg.RentLoopErrorParams{

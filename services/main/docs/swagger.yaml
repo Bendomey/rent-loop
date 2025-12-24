@@ -2153,6 +2153,13 @@ paths:
       consumes:
       - application/json
       description: Get the currently authenticated client user
+      parameters:
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
       produces:
       - application/json
       responses:
