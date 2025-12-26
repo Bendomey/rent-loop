@@ -59,6 +59,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 
 	m = gormigrate.New(db, gormigrate.DefaultOptions, []*gormigrate.Migration{
 		jobs.SeedSuperAdmin(),
+		jobs.AddClientContactInfo(),
 	})
 	m.Migrate()
 

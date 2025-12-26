@@ -18,6 +18,9 @@ type OutputClient struct {
 	City                string                   `json:"city"                  example:"San Francisco"`
 	Latitude            float64                  `json:"latitude"              example:"37.7749"`
 	Longitude           float64                  `json:"longitude"             example:"-122.4194"`
+	WebsiteUrl          *string                  `json:"website_url"           example:"https://www.somewebiste.com"`
+	SupportPhone        *string                  `json:"support_phone"         example:"+233551235555"`
+	SupportEmail        *string                  `json:"support_email"         example:"support@somewebiste.com"`
 	ClientApplicationId string                   `json:"client_application_id" example:"app-1234"`
 	ClientApplication   *OutputClientApplication `json:"client_application"`
 	CreatedAt           time.Time                `json:"created_at"            example:"2023-01-01T00:00:00Z"`
@@ -40,6 +43,9 @@ func DBClientToRestClient(i *models.Client) interface{} {
 		"city":                  i.City,
 		"latitude":              i.Latitude,
 		"longitude":             i.Longitude,
+		"website_url":           i.WebsiteUrl,
+		"support_phone":         i.SupportPhone,
+		"support_email":         i.SupportEmail,
 		"client_application_id": i.ClientApplicationId,
 		"client_application":    DBClientApplicationToRestClientApplication(&i.ClientApplication),
 		"created_at":            i.CreatedAt,

@@ -4968,6 +4968,14 @@ const docTemplate = `{
                     "type": "string",
                     "example": "LANDLORD"
                 },
+                "support_email": {
+                    "type": "string",
+                    "example": "support@somewebiste.com"
+                },
+                "support_phone": {
+                    "type": "string",
+                    "example": "+233551235555"
+                },
                 "type": {
                     "type": "string",
                     "example": "INDIVIDUAL"
@@ -4975,6 +4983,10 @@ const docTemplate = `{
                 "updated_at": {
                     "type": "string",
                     "example": "2023-01-01T00:00:00Z"
+                },
+                "website_url": {
+                    "type": "string",
+                    "example": "https://www.somewebiste.com"
                 }
             }
         },

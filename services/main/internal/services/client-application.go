@@ -262,6 +262,9 @@ func (s *clientApplicationService) ApproveClientApplication(
 		City:                clientApplication.City,
 		Longitude:           clientApplication.Longitude,
 		Latitude:            clientApplication.Latitude,
+		WebsiteUrl:          clientApplication.WebsiteURL,
+		SupportPhone:        clientApplication.SupportPhone,
+		SupportEmail:        clientApplication.SupportEmail,
 		ClientApplicationId: clientApplication.ID.String(),
 	}
 

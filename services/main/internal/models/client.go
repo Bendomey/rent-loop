@@ -8,12 +8,15 @@ type Client struct {
 	Name    string `gorm:"not null;"`       // company name or individual full name
 
 	// company address or individual home address
-	Address   string  `gorm:"not null;"`
-	Country   string  `gorm:"not null;"`
-	Region    string  `gorm:"not null;"`
-	City      string  `gorm:"not null;"`
-	Latitude  float64 `gorm:"not null;"`
-	Longitude float64 `gorm:"not null;"`
+	Address      string  `gorm:"not null;"`
+	Country      string  `gorm:"not null;"`
+	Region       string  `gorm:"not null;"`
+	City         string  `gorm:"not null;"`
+	Latitude     float64 `gorm:"not null;"`
+	Longitude    float64 `gorm:"not null;"`
+	WebsiteUrl   *string
+	SupportPhone *string
+	SupportEmail *string
 
 	ClientApplicationId string `gorm:"not null;"`
 	ClientApplication   ClientApplication

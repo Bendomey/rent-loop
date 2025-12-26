@@ -710,11 +710,20 @@ definitions:
       sub_type:
         example: LANDLORD
         type: string
+      support_email:
+        example: support@somewebiste.com
+        type: string
+      support_phone:
+        example: "+233551235555"
+        type: string
       type:
         example: INDIVIDUAL
         type: string
       updated_at:
         example: "2023-01-01T00:00:00Z"
+        type: string
+      website_url:
+        example: https://www.somewebiste.com
         type: string
     type: object
   transformations.OutputClientApplication:
