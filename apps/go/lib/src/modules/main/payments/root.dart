@@ -12,7 +12,12 @@ class _PaymentsScreen extends ConsumerState<PaymentsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Payments')),
+      appBar: AppBar(
+        title: Text(
+          'Payments Overview',
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 20),
+        ),
+      ),
       body: Text('Payments Screen'),
     );
   }

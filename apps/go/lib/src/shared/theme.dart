@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 ThemeData getThemeData(BuildContext context) => ThemeData(
   useMaterial3: true,
+  fontFamily: 'Inter',
   colorScheme: ColorScheme.fromSeed(
-    seedColor: Colors.grey,
+    seedColor: Colors.grey.shade600,
     surface: Colors.white,
     primary: const Color.fromARGB(255, 230, 2, 63),
     secondary: Colors.white,
-    background: Colors.white,
   ),
   appBarTheme: AppBarTheme.of(context).copyWith(
     surfaceTintColor: Colors.white70,
