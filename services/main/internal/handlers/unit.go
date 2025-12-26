@@ -109,10 +109,10 @@ func (h *UnitHandler) CreateUnit(w http.ResponseWriter, r *http.Request) {
 type ListUnitsFilterRequest struct {
 	lib.FilterQueryInput
 	PropertyID       string   `json:"property_id"       validate:"omitempty"                                                                                            example:"prop_123"                                                                  description:"ID of the property to filter units by"`
-	Status           string   `json:"status"            validate:"omitempty,oneof=Unit.Status.Draft Unit.Status.Available Unit.Status.Occupied Unit.Status.Maintenance" example:"Unit.Status.Active"                                                        description:"Status of the unit. Allowed values: Unit.Status.Active, Unit.Status.Inactive, Unit.Status.Maintenance"`
+	Status           string   `json:"status"            validate:"omitempty,oneof=Unit.Status.Draft Unit.Status.Available Unit.Status.Occupied Unit.Status.Maintenance" example:"Unit.Status.Available"                                                     description:"Status of the unit. Allowed values: Unit.Status.Draft, Unit.Status.Available, Unit.Status.Occupied, Unit.Status.Maintenance"`
 	Type             string   `json:"type"              validate:"omitempty,oneof=APARTMENT HOUSE STUDIO OFFICE RETAIL"                                                 example:"SINGLE"                                                                    description:"Type of unit. Allowed values: SINGLE, MULTI"`
 	PaymentFrequency string   `json:"payment_frequency" validate:"omitempty,oneof=WEEKLY DAILY MONTHLY QUARTERLY BIANNUALLY ANNUALLY"                                   example:"WEEKLY"                                                                    description:"Payment frequency. Allowed values: WEEKLY, DAILY, MONTHLY, QUARTERLY, BIANNUALLY, ANNUALLY"`
-	BlockIDs         []string `json:"block_ids"         validate:"omitempty,dive,uuid"                                                                                  example:"767d8e23-8c9f-4c51-85af-5908039869da,3d90d606-2a22-4487-9431-69736829094f" description:"List of block IDs to filter units by"                                                                  collectionFormat:"multi"`
+	BlockIDs         []string `json:"block_ids"         validate:"omitempty,dive,uuid"                                                                                  example:"767d8e23-8c9f-4c51-85af-5908039869da,3d90d606-2a22-4487-9431-69736829094f" description:"List of block IDs to filter units by"                                                                                        collectionFormat:"multi"`
 }
 
 // ListUnits godoc
@@ -290,6 +290,114 @@ func (h *UnitHandler) UpdateUnit(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": transformations.DBUnitToRest(unit),
 	})
+}
+
+// UpdateUnitToDraftStatus godoc
+//
+//	@Summary		Update unit status to draft
+//	@Description	Update unit status to draft
+//	@Tags			Units
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string			true	"Property ID"
+//	@Param			unit_id		path		string			true	"Unit ID"
+//	@Success		204			{object}	nil				"Unit status updated successfully"
+//	@Failure		400			{object}	lib.HTTPError	"Error occurred when updating unit status"
+//	@Failure		401			{object}	string			"Invalid or absent authentication token"
+//	@Failure		403			{object}	lib.HTTPError	"Forbidden access"
+//	@Failure		404			{object}	lib.HTTPError	"Unit not found"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/properties/{property_id}/units/{unit_id}/status:draft [patch]
+func (h *UnitHandler) UpdateUnitToDraftStatus(w http.ResponseWriter, r *http.Request) {
+	propertyID := chi.URLParam(r, "property_id")
+	unitID := chi.URLParam(r, "unit_id")
+
+	input := services.UpdateUnitStatusInput{
+		PropertyID: propertyID,
+		UnitID:     unitID,
+		Status:     "Unit.Status.Draft",
+	}
+
+	updateUnitStatusErr := h.service.UpdateUnitStatus(r.Context(), input)
+	if updateUnitStatusErr != nil {
+		HandleErrorResponse(w, updateUnitStatusErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// UpdateUnitToMaintenanceStatus godoc
+//
+//	@Summary		Update unit status to maintenance
+//	@Description	Update unit status to maintenance
+//	@Tags			Units
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string			true	"Property ID"
+//	@Param			unit_id		path		string			true	"Unit ID"
+//	@Success		204			{object}	nil				"Unit status updated successfully"
+//	@Failure		400			{object}	lib.HTTPError	"Error occurred when updating unit status"
+//	@Failure		401			{object}	string			"Invalid or absent authentication token"
+//	@Failure		403			{object}	lib.HTTPError	"Forbidden access"
+//	@Failure		404			{object}	lib.HTTPError	"Unit not found"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/properties/{property_id}/units/{unit_id}/status:maintenance [patch]
+func (h *UnitHandler) UpdateUnitToMaintenanceStatus(w http.ResponseWriter, r *http.Request) {
+	propertyID := chi.URLParam(r, "property_id")
+	unitID := chi.URLParam(r, "unit_id")
+
+	input := services.UpdateUnitStatusInput{
+		PropertyID: propertyID,
+		UnitID:     unitID,
+		Status:     "Unit.Status.Maintenance",
+	}
+
+	updateUnitStatusErr := h.service.UpdateUnitStatus(r.Context(), input)
+	if updateUnitStatusErr != nil {
+		HandleErrorResponse(w, updateUnitStatusErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// UpdateUnitToAvailableStatus godoc
+//
+//	@Summary		Update unit status to available
+//	@Description	Update unit status to available
+//	@Tags			Units
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string			true	"Property ID"
+//	@Param			unit_id		path		string			true	"Unit ID"
+//	@Success		204			{object}	nil				"Unit status updated successfully"
+//	@Failure		400			{object}	lib.HTTPError	"Error occurred when updating unit status"
+//	@Failure		401			{object}	string			"Invalid or absent authentication token"
+//	@Failure		403			{object}	lib.HTTPError	"Forbidden access"
+//	@Failure		404			{object}	lib.HTTPError	"Unit not found"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/properties/{property_id}/units/{unit_id}/status:available [patch]
+func (h *UnitHandler) UpdateUnitToAvailableStatus(w http.ResponseWriter, r *http.Request) {
+	propertyID := chi.URLParam(r, "property_id")
+	unitID := chi.URLParam(r, "unit_id")
+
+	input := services.UpdateUnitStatusInput{
+		PropertyID: propertyID,
+		UnitID:     unitID,
+		Status:     "Unit.Status.Available",
+	}
+
+	updateUnitStatusErr := h.service.UpdateUnitStatus(r.Context(), input)
+	if updateUnitStatusErr != nil {
+		HandleErrorResponse(w, updateUnitStatusErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // DeleteUnit godoc
