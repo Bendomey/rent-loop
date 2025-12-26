@@ -58,7 +58,10 @@ export function PropertyAssetUnitsModule() {
 	const { data, isPending, isRefetching, error, refetch } = useGetPropertyUnits(
 		{
 			property_id: safeString(clientUserProperty?.property?.id),
-			filters: { status: status, block_ids: block_ids.length ? block_ids : undefined },
+			filters: {
+				status: status,
+				block_ids: block_ids.length ? block_ids : undefined,
+			},
 			pagination: { page, per },
 			populate: [],
 			sorter: { sort: 'desc', sort_by: 'created_at' },
