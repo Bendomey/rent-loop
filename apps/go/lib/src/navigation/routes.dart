@@ -20,7 +20,7 @@ GoRouter buildRoutes() {
     ],
     navigatorKey: navigatorKey,
     restorationScopeId: 'rentloop-router',
-    initialLocation: '/splash',
+    initialLocation: '/',
     routes: [
       GoRoute(
         path: '/splash',

@@ -20,3 +20,5 @@ export 'package:dart_date/dart_date.dart';
 // export 'package:firebase_storage/firebase_storage.dart';
 
 export 'package:loading_animation_widget/loading_animation_widget.dart';
+
+export 'package:haptic_feedback/haptic_feedback.dart';

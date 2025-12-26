@@ -12,7 +12,12 @@ class _HomeScreen extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Home')),
+      appBar: AppBar(
+        title: Text(
+          'Overview',
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 20),
+        ),
+      ),
       body: Text('Home Screen'),
     );
   }

@@ -13,7 +13,8 @@ class MainNavigator extends StatelessWidget {
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
-        destinations: const [
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        destinations: [
           NavigationDestination(
             icon: Icon(Icons.pie_chart_outline),
             label: 'Home',
@@ -25,9 +26,14 @@ class MainNavigator extends StatelessWidget {
             selectedIcon: Icon(Icons.payments, color: Colors.white),
           ),
           NavigationDestination(
-            icon: Icon(Icons.build_outlined),
+            icon: Badge.count(count: 10, child: Icon(Icons.build_outlined)),
             label: 'Maintenance',
-            selectedIcon: Icon(Icons.build, color: Colors.white),
+            selectedIcon: Badge.count(
+              count: 10,
+              backgroundColor: Colors.white,
+              textColor: Colors.red,
+              child: Icon(Icons.build, color: Colors.white),
+            ),
           ),
           NavigationDestination(
             icon: Icon(Icons.menu_outlined),
@@ -44,6 +50,7 @@ class MainNavigator extends StatelessWidget {
   }
 
   void _onTap(index) {
+    Haptics.vibrate(HapticsType.selection);
     navigationShell.goBranch(
       index,
       // A common pattern when using bottom navigation bars is to support
