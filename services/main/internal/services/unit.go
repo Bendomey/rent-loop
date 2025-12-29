@@ -20,6 +20,7 @@ type UnitService interface {
 	CreateUnit(context context.Context, input CreateUnitInput) (*models.Unit, error)
 	GetUnit(context context.Context, query repository.GetUnitQuery) (*models.Unit, error)
 	UpdateUnit(context context.Context, input UpdateUnitInput) (*models.Unit, error)
+	UpdateUnitStatus(ctx context.Context, input UpdateUnitStatusInput) error
 	DeleteUnit(ctx context.Context, input repository.DeleteUnitInput) error
 	updateUnitCount(ctx context.Context, input UpdateUnitCountInput) error
 }
@@ -270,6 +271,51 @@ func (s *unitService) UpdateUnit(ctx context.Context, input UpdateUnitInput) (*m
 	}
 
 	return unit, nil
+}
+
+type UpdateUnitStatusInput struct {
+	PropertyID string
+	UnitID     string
+	Status     string
+}
+
+func (s *unitService) UpdateUnitStatus(ctx context.Context, input UpdateUnitStatusInput) error {
+	unit, getUnitErr := s.repo.GetOne(ctx, map[string]any{
+		"id":          input.UnitID,
+		"property_id": input.PropertyID,
+	})
+	if getUnitErr != nil {
+		if errors.Is(getUnitErr, gorm.ErrRecordNotFound) {
+			return pkg.NotFoundError("UnitNotFound", &pkg.RentLoopErrorParams{
+				Err: getUnitErr,
+			})
+		}
+		return pkg.InternalServerError(getUnitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getUnitErr,
+			Metadata: map[string]string{
+				"function": "UpdateUnitStatus",
+				"action":   "fetching unit",
+			},
+		})
+	}
+
+	if unit.Status == "Unit.Status.Occupied" {
+		return pkg.ForbiddenError("UnitIsOccupied", nil)
+	}
+
+	unit.Status = input.Status
+
+	updateUnitErr := s.repo.Update(ctx, unit)
+	if updateUnitErr != nil {
+		return pkg.InternalServerError(updateUnitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateUnitErr,
+			Metadata: map[string]string{
+				"function": "UpdateUnitStatus",
+				"action":   "updating unit",
+			},
+		})
+	}
+	return nil
 }
 
 func (s *unitService) DeleteUnit(ctx context.Context, input repository.DeleteUnitInput) error {

@@ -3373,7 +3373,7 @@ paths:
         - Unit.Status.Available
         - Unit.Status.Occupied
         - Unit.Status.Maintenance
-        example: Unit.Status.Active
+        example: Unit.Status.Available
         in: query
         name: status
         type: string
@@ -3577,6 +3577,144 @@ paths:
       security:
       - BearerAuth: []
       summary: Update unit
+      tags:
+      - Units
+  /api/v1/properties/{property_id}/units/{unit_id}/status:available:
+    patch:
+      consumes:
+      - application/json
+      description: Update unit status to available
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Unit ID
+        in: path
+        name: unit_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Unit status updated successfully
+        "400":
+          description: Error occurred when updating unit status
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Forbidden access
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Unit not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update unit status to available
+      tags:
+      - Units
+  /api/v1/properties/{property_id}/units/{unit_id}/status:draft:
+    patch:
+      consumes:
+      - application/json
+      description: Update unit status to draft
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Unit ID
+        in: path
+        name: unit_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Unit status updated successfully
+        "400":
+          description: Error occurred when updating unit status
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Forbidden access
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Unit not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update unit status to draft
+      tags:
+      - Units
+  /api/v1/properties/{property_id}/units/{unit_id}/status:maintenance:
+    patch:
+      consumes:
+      - application/json
+      description: Update unit status to maintenance
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Unit ID
+        in: path
+        name: unit_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Unit status updated successfully
+        "400":
+          description: Error occurred when updating unit status
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Forbidden access
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Unit not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update unit status to maintenance
       tags:
       - Units
   /api/v1/properties/me:

@@ -101,6 +101,12 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 								Patch("/", handlers.UnitHandler.UpdateUnit)
 							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Delete("/", handlers.UnitHandler.DeleteUnit)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Patch("/status:draft", handlers.UnitHandler.UpdateUnitToDraftStatus)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Patch("/status:maintenance", handlers.UnitHandler.UpdateUnitToMaintenanceStatus)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Patch("/status:available", handlers.UnitHandler.UpdateUnitToAvailableStatus)
 						})
 					})
 				})
