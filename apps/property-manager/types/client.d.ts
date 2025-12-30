@@ -53,6 +53,12 @@ interface Client {
 	latitude: number
 	longitude: number
 
+	registration_number: Nullable<string>
+	description: Nullable<string>
+	website_url: Nullable<string>
+	support_email: Nullable<string>
+	support_phone: Nullable<string>
+
 	client_application_id: string
 	client_application: Nullable<ClientApplication>
 
