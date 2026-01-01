@@ -40,7 +40,7 @@ export const login = async (
 export const getCurrentUser = async (apiConfig?: ApiConfigForServerConfig) => {
 	try {
 		const response = await fetchServer<ApiResponse<ClientUser>>(
-			`${apiConfig?.baseUrl}/v1/client-users/me`,
+			`${apiConfig?.baseUrl}/v1/client-users/me?populate=Client`,
 			{
 				method: 'GET',
 				...(apiConfig ? apiConfig : {}),
