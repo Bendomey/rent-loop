@@ -241,6 +241,97 @@ definitions:
     - status
     - type
     type: object
+  handlers.CreateTenantApplicationRequest:
+    properties:
+      current_address:
+        example: 123 Main St, Accra
+        type: string
+      date_of_birth:
+        example: "1990-01-01T00:00:00Z"
+        type: string
+      desired_unit_id:
+        example: b4d0243c-6581-4104-8185-d83a45ebe41b
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+      emergency_contact_name:
+        example: Jane Doe
+        type: string
+      emergency_contact_phone:
+        example: "+233281434579"
+        type: string
+      employer:
+        example: Acme Corp
+        type: string
+      first_name:
+        example: John
+        type: string
+      gender:
+        example: Male
+        type: string
+      id_number:
+        example: GHA-123456789
+        type: string
+      last_name:
+        example: Doe
+        type: string
+      marital_status:
+        example: Single
+        type: string
+      nationality:
+        example: Ghanaian
+        type: string
+      occupation:
+        example: Software Engineer
+        type: string
+      occupation_address:
+        example: 456 Tech Ave, Accra
+        type: string
+      other_names:
+        example: Michael
+        type: string
+      phone:
+        example: "+233281234569"
+        type: string
+      relationship_to_emergency_contact:
+        example: Sister
+        type: string
+      rent_fee:
+        example: 1200
+        minimum: 0
+        type: integer
+      rent_fee_currency:
+        example: USD
+        type: string
+      status:
+        enum:
+        - TenantApplication.Status.InProgress
+        - TenantApplication.Status.Cancelled
+        - TenantApplication.Status.Completed
+        example: TenantApplication.Status.InProgress
+        type: string
+    required:
+    - current_address
+    - date_of_birth
+    - desired_unit_id
+    - emergency_contact_name
+    - emergency_contact_phone
+    - employer
+    - first_name
+    - gender
+    - id_number
+    - last_name
+    - marital_status
+    - nationality
+    - occupation
+    - occupation_address
+    - phone
+    - relationship_to_emergency_contact
+    - rent_fee
+    - rent_fee_currency
+    - status
+    type: object
   handlers.CreateUnitRequest:
     properties:
       area:
@@ -1062,6 +1153,165 @@ definitions:
       updated_at:
         example: "2023-01-01T00:00:00Z"
         format: date-time
+        type: string
+    type: object
+  transformations.OutputTenantApplication:
+    properties:
+      cancelled_at:
+        example: "2024-06-02T12:00:00Z"
+        type: string
+      cancelled_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      cancelled_by_id:
+        example: user-456
+        type: string
+      completed_at:
+        example: "2024-06-01T12:00:00Z"
+        type: string
+      completed_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      completed_by_id:
+        example: user-123
+        type: string
+      created_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      current_address:
+        example: 123 Main St, Accra
+        type: string
+      date_of_birth:
+        example: "1990-01-01"
+        type: string
+      desired_move_in_date:
+        example: "2024-07-01T00:00:00Z"
+        type: string
+      desired_unit:
+        $ref: '#/definitions/transformations.OutputUnit'
+      desired_unit_id:
+        example: unit-789
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+      emergency_contact_name:
+        example: Mary Doe
+        type: string
+      emergency_contact_phone:
+        example: "+1122334455"
+        type: string
+      employer:
+        example: Tech Ltd.
+        type: string
+      first_name:
+        example: John
+        type: string
+      gender:
+        example: male
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      id_back_url:
+        example: https://example.com/id-back.jpg
+        type: string
+      id_front_url:
+        example: https://example.com/id-front.jpg
+        type: string
+      id_number:
+        example: ID123456
+        type: string
+      initial_deposit_fee:
+        example: 500
+        type: integer
+      initial_deposit_paid_at:
+        example: "2024-06-05T10:00:00Z"
+        type: string
+      initial_deposit_payment_id:
+        example: pay-001
+        type: string
+      initial_deposit_payment_method:
+        example: bank_transfer
+        type: string
+      initial_deposit_reference_number:
+        example: REF123
+        type: string
+      last_name:
+        example: Doe
+        type: string
+      marital_status:
+        example: single
+        type: string
+      nationality:
+        example: Ghanaian
+        type: string
+      occupation:
+        example: Software Engineer
+        type: string
+      occupation_address:
+        example: 456 Tech Ave, Accra
+        type: string
+      other_names:
+        example: Michael
+        type: string
+      payment_frequency:
+        example: monthly
+        type: string
+      phone:
+        example: "+1234567890"
+        type: string
+      previous_landlord_name:
+        example: Jane Smith
+        type: string
+      previous_landlord_phone:
+        example: "+1987654321"
+        type: string
+      previous_tenancy_period:
+        example: 2022-2023
+        type: string
+      profile_photo_url:
+        example: https://example.com/photo.jpg
+        type: string
+      proof_of_income_url:
+        example: https://example.com/income.pdf
+        type: string
+      relationship_to_emergency_contact:
+        example: sister
+        type: string
+      rent_fee:
+        example: 1500
+        type: integer
+      rent_fee_currency:
+        example: USD
+        type: string
+      security_deposit_fee:
+        example: 1000
+        type: integer
+      security_deposit_fee_currency:
+        example: USD
+        type: string
+      security_deposit_paid_at:
+        example: "2024-06-06T11:00:00Z"
+        type: string
+      security_deposit_payment_id:
+        example: pay-002
+        type: string
+      security_deposit_payment_method:
+        example: cash
+        type: string
+      security_deposit_reference_number:
+        example: SECREF456
+        type: string
+      status:
+        example: TenantApplication.Status.InProgress
+        type: string
+      stay_duration:
+        example: 12
+        type: integer
+      stay_duration_frequency:
+        example: monthly
+        type: string
+      updated_at:
+        example: "2024-06-10T09:00:00Z"
         type: string
     type: object
   transformations.OutputUnit:
@@ -3850,6 +4100,43 @@ paths:
       summary: Get property by slug
       tags:
       - Properties
+  /api/v1/tenant-applications:
+    post:
+      consumes:
+      - application/json
+      description: Create a new tenant application
+      parameters:
+      - description: Create Tenant Application Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateTenantApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Tenant application created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputTenantApplication'
+            type: object
+        "400":
+          description: Error occurred when creating a tenant application
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Create a new tenant application
+      tags:
+      - TenantApplication
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

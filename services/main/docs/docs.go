@@ -4207,6 +4207,63 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/tenant-applications": {
+            "post": {
+                "description": "Create a new tenant application",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TenantApplication"
+                ],
+                "summary": "Create a new tenant application",
+                "parameters": [
+                    {
+                        "description": "Create Tenant Application Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateTenantApplicationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Tenant application created successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputTenantApplication"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when creating a tenant application",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -4532,6 +4589,122 @@ const docTemplate = `{
                         "MULTI"
                     ],
                     "example": "SINGLE"
+                }
+            }
+        },
+        "handlers.CreateTenantApplicationRequest": {
+            "type": "object",
+            "required": [
+                "current_address",
+                "date_of_birth",
+                "desired_unit_id",
+                "emergency_contact_name",
+                "emergency_contact_phone",
+                "employer",
+                "first_name",
+                "gender",
+                "id_number",
+                "last_name",
+                "marital_status",
+                "nationality",
+                "occupation",
+                "occupation_address",
+                "phone",
+                "relationship_to_emergency_contact",
+                "rent_fee",
+                "rent_fee_currency",
+                "status"
+            ],
+            "properties": {
+                "current_address": {
+                    "type": "string",
+                    "example": "123 Main St, Accra"
+                },
+                "date_of_birth": {
+                    "type": "string",
+                    "example": "1990-01-01T00:00:00Z"
+                },
+                "desired_unit_id": {
+                    "type": "string",
+                    "example": "b4d0243c-6581-4104-8185-d83a45ebe41b"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "emergency_contact_name": {
+                    "type": "string",
+                    "example": "Jane Doe"
+                },
+                "emergency_contact_phone": {
+                    "type": "string",
+                    "example": "+233281434579"
+                },
+                "employer": {
+                    "type": "string",
+                    "example": "Acme Corp"
+                },
+                "first_name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "gender": {
+                    "type": "string",
+                    "example": "Male"
+                },
+                "id_number": {
+                    "type": "string",
+                    "example": "GHA-123456789"
+                },
+                "last_name": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "marital_status": {
+                    "type": "string",
+                    "example": "Single"
+                },
+                "nationality": {
+                    "type": "string",
+                    "example": "Ghanaian"
+                },
+                "occupation": {
+                    "type": "string",
+                    "example": "Software Engineer"
+                },
+                "occupation_address": {
+                    "type": "string",
+                    "example": "456 Tech Ave, Accra"
+                },
+                "other_names": {
+                    "type": "string",
+                    "example": "Michael"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+233281234569"
+                },
+                "relationship_to_emergency_contact": {
+                    "type": "string",
+                    "example": "Sister"
+                },
+                "rent_fee": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 1200
+                },
+                "rent_fee_currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "TenantApplication.Status.InProgress",
+                        "TenantApplication.Status.Cancelled",
+                        "TenantApplication.Status.Completed"
+                    ],
+                    "example": "TenantApplication.Status.InProgress"
                 }
             }
         },
@@ -5661,6 +5834,220 @@ const docTemplate = `{
                     "type": "string",
                     "format": "date-time",
                     "example": "2023-01-01T00:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputTenantApplication": {
+            "type": "object",
+            "properties": {
+                "cancelled_at": {
+                    "type": "string",
+                    "example": "2024-06-02T12:00:00Z"
+                },
+                "cancelled_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "cancelled_by_id": {
+                    "type": "string",
+                    "example": "user-456"
+                },
+                "completed_at": {
+                    "type": "string",
+                    "example": "2024-06-01T12:00:00Z"
+                },
+                "completed_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "completed_by_id": {
+                    "type": "string",
+                    "example": "user-123"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "current_address": {
+                    "type": "string",
+                    "example": "123 Main St, Accra"
+                },
+                "date_of_birth": {
+                    "type": "string",
+                    "example": "1990-01-01"
+                },
+                "desired_move_in_date": {
+                    "type": "string",
+                    "example": "2024-07-01T00:00:00Z"
+                },
+                "desired_unit": {
+                    "$ref": "#/definitions/transformations.OutputUnit"
+                },
+                "desired_unit_id": {
+                    "type": "string",
+                    "example": "unit-789"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "emergency_contact_name": {
+                    "type": "string",
+                    "example": "Mary Doe"
+                },
+                "emergency_contact_phone": {
+                    "type": "string",
+                    "example": "+1122334455"
+                },
+                "employer": {
+                    "type": "string",
+                    "example": "Tech Ltd."
+                },
+                "first_name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "gender": {
+                    "type": "string",
+                    "example": "male"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "id_back_url": {
+                    "type": "string",
+                    "example": "https://example.com/id-back.jpg"
+                },
+                "id_front_url": {
+                    "type": "string",
+                    "example": "https://example.com/id-front.jpg"
+                },
+                "id_number": {
+                    "type": "string",
+                    "example": "ID123456"
+                },
+                "initial_deposit_fee": {
+                    "type": "integer",
+                    "example": 500
+                },
+                "initial_deposit_paid_at": {
+                    "type": "string",
+                    "example": "2024-06-05T10:00:00Z"
+                },
+                "initial_deposit_payment_id": {
+                    "type": "string",
+                    "example": "pay-001"
+                },
+                "initial_deposit_payment_method": {
+                    "type": "string",
+                    "example": "bank_transfer"
+                },
+                "initial_deposit_reference_number": {
+                    "type": "string",
+                    "example": "REF123"
+                },
+                "last_name": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "marital_status": {
+                    "type": "string",
+                    "example": "single"
+                },
+                "nationality": {
+                    "type": "string",
+                    "example": "Ghanaian"
+                },
+                "occupation": {
+                    "type": "string",
+                    "example": "Software Engineer"
+                },
+                "occupation_address": {
+                    "type": "string",
+                    "example": "456 Tech Ave, Accra"
+                },
+                "other_names": {
+                    "type": "string",
+                    "example": "Michael"
+                },
+                "payment_frequency": {
+                    "type": "string",
+                    "example": "monthly"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+1234567890"
+                },
+                "previous_landlord_name": {
+                    "type": "string",
+                    "example": "Jane Smith"
+                },
+                "previous_landlord_phone": {
+                    "type": "string",
+                    "example": "+1987654321"
+                },
+                "previous_tenancy_period": {
+                    "type": "string",
+                    "example": "2022-2023"
+                },
+                "profile_photo_url": {
+                    "type": "string",
+                    "example": "https://example.com/photo.jpg"
+                },
+                "proof_of_income_url": {
+                    "type": "string",
+                    "example": "https://example.com/income.pdf"
+                },
+                "relationship_to_emergency_contact": {
+                    "type": "string",
+                    "example": "sister"
+                },
+                "rent_fee": {
+                    "type": "integer",
+                    "example": 1500
+                },
+                "rent_fee_currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "security_deposit_fee": {
+                    "type": "integer",
+                    "example": 1000
+                },
+                "security_deposit_fee_currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "security_deposit_paid_at": {
+                    "type": "string",
+                    "example": "2024-06-06T11:00:00Z"
+                },
+                "security_deposit_payment_id": {
+                    "type": "string",
+                    "example": "pay-002"
+                },
+                "security_deposit_payment_method": {
+                    "type": "string",
+                    "example": "cash"
+                },
+                "security_deposit_reference_number": {
+                    "type": "string",
+                    "example": "SECREF456"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "TenantApplication.Status.InProgress"
+                },
+                "stay_duration": {
+                    "type": "integer",
+                    "example": 12
+                },
+                "stay_duration_frequency": {
+                    "type": "string",
+                    "example": "monthly"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-06-10T09:00:00Z"
                 }
             }
         },
