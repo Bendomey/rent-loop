@@ -1,5 +1,6 @@
 import { ArrowLeft, Pencil } from 'lucide-react'
 import { useCreatePropertyContext } from '../context'
+import { Image } from '~/components/Image'
 import { Button } from '~/components/ui/button'
 import { Field, FieldLabel } from '~/components/ui/field'
 import { Spinner } from '~/components/ui/spinner'
@@ -32,7 +33,7 @@ export function Step3() {
 				e.preventDefault()
 				await onSubmit(formData)
 			}}
-			className="mx-auto mb-5 space-y-8 md:max-w-2/3"
+			className="mx-auto mt-10 mb-5 space-y-8 md:max-w-2/3"
 		>
 			<div className="space-y-2">
 				<TypographyH2>Preview and Submit</TypographyH2>
@@ -43,6 +44,34 @@ export function Step3() {
 			</div>
 
 			<section className="grid gap-4">
+				{formData.images && formData.images.length > 0 ? (
+					<div className="space-y-2">
+						<div className="flex items-center justify-between">
+							<h3 className="text-sm font-semibold">Image</h3>
+							<div>
+								<Button
+									type="button"
+									size="sm"
+									variant="ghost"
+									onClick={() => goToPage(1)}
+								>
+									<Pencil className="mr-2" /> Edit
+								</Button>
+							</div>
+						</div>
+						<div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+							{formData.images.map((imageUrl, index) => (
+								<div key={index}>
+									<Image
+										src={imageUrl}
+										alt={`Property image ${index + 1}`}
+										className="h-full w-full rounded-md object-cover"
+									/>
+								</div>
+							))}
+						</div>
+					</div>
+				) : null}
 				<div className="rounded-md border p-4">
 					<div className="flex items-start justify-between">
 						<div>

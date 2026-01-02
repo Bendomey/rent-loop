@@ -155,7 +155,7 @@ export function Step1() {
 						control={control}
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>Property Details</FormLabel>
+								<FormLabel>Details</FormLabel>
 								<FormControl>
 									<Textarea
 										placeholder="Briefly describe your property (e.g., size, features, or highlights)..."

@@ -44,7 +44,7 @@ export function PropertyTagInput() {
 	return (
 		<div className="w-full">
 			<Field>
-				<FieldLabel htmlFor="tags">Property Tags</FieldLabel>
+				<FieldLabel htmlFor="tags">Tags</FieldLabel>
 
 				<div className="flex gap-2">
 					<Input
@@ -64,6 +64,10 @@ export function PropertyTagInput() {
 						Create
 					</Button>
 				</div>
+				<p className="text-muted-foreground text-sm">
+					Add tags to help categorize and identify the property. This is
+					optional.
+				</p>
 			</Field>
 
 			<div className="mt-2 mb-2 flex flex-wrap gap-2">
@@ -84,9 +88,6 @@ export function PropertyTagInput() {
 					</Badge>
 				))}
 			</div>
-			{value.length ? null : (
-				<p className="text-muted-foreground text-sm">Optional</p>
-			)}
 		</div>
 	)
 }

@@ -36,7 +36,7 @@ export function CreatePropertyProvider({
 	// where there is an error in the action data, show an error toast
 	useEffect(() => {
 		if (createFetcher?.data?.error) {
-			toast.error('Failed to fetch file')
+			toast.error('Failed to create property. Please try again.')
 		}
 	}, [createFetcher?.data])
 

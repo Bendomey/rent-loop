@@ -33,7 +33,7 @@ export function ApplyProvider({ children }: { children: React.ReactNode }) {
 	// where there is an error in the action data, show an error toast
 	useEffect(() => {
 		if (applyFetcher?.data?.error) {
-			toast.error('Failed to fetch file')
+			toast.error('Failed to apply. Please try again.')
 		}
 	}, [applyFetcher?.data])
 
