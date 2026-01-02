@@ -78,6 +78,7 @@ export const createPropertyUnit = async (
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
+			console.log(response)
 			throw new Error(response.errors?.message || 'Unknown error')
 		}
 

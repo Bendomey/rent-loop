@@ -1,6 +1,8 @@
 import { redirect } from 'react-router'
 import type { Route } from './+types/_auth._dashboard.properties.new'
+import { createPropertyBlockForServer } from '~/api/blocks/server'
 import { createProperty } from '~/api/properties'
+import { createPropertyUnit } from '~/api/units'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'
@@ -39,6 +41,10 @@ export async function action({ request }: Route.ActionArgs) {
 	const longitude = parseFloat(formData.get('longitude') as string)
 
 	try {
+		const authData = {
+			baseUrl,
+			authToken: authSession.get('authToken'),
+		}
 		const property = await createProperty(
 			replaceNullUndefinedWithUndefined({
 				type,
@@ -55,14 +61,49 @@ export async function action({ request }: Route.ActionArgs) {
 				latitude,
 				longitude,
 			}),
-			{
-				baseUrl,
-				authToken: authSession.get('authToken'),
-			},
+			authData,
 		)
 
 		if (!property) {
 			throw new Error('Property creation returned no data')
+		}
+
+		// every unit should have at least one block
+		const propertyBlock = await createPropertyBlockForServer(
+			{
+				name: 'Main',
+				description: 'This is the main block for the property',
+				property_id: property.id,
+				status: status.replace(
+					'Property',
+					'PropertyBlock',
+				) as PropertyBlock['status'],
+				images,
+			},
+			authData,
+		)
+
+		// create a unit automatically since there should be technically at least one unit for a single property
+		if (type === 'SINGLE' && propertyBlock) {
+			await createPropertyUnit(
+				replaceNullUndefinedWithUndefined({
+					property_id: property.id,
+					property_block_id: propertyBlock.id,
+					type: 'HOUSE',
+					status: 'Unit.Status.Draft',
+					name: name,
+					description: description,
+					max_occupants_allowed: 1,
+					rent_fee: 10,
+					rent_fee_currency: 'GHS',
+					payment_frequency: 'MONTHLY',
+					tags: tags,
+					area: null,
+					features: {},
+					images: images,
+				}),
+				authData,
+			)
 		}
 
 		return redirect(`/properties/${property.id}`)
