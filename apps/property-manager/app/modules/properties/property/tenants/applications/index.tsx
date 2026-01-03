@@ -23,6 +23,7 @@ import { useProperty } from '~/providers/property-provider'
 const applications: TenantApplication[] = [
 	{
 		id: 'app_001',
+		on_boarding_method: 'SELF',
 		first_name: 'John',
 		other_names: null,
 		last_name: 'Mensah',
@@ -63,6 +64,7 @@ const applications: TenantApplication[] = [
 
 	{
 		id: 'app_002',
+		on_boarding_method: 'ADMIN',
 		first_name: 'Angela',
 		other_names: 'Naa',
 		last_name: 'Owusu',
@@ -103,6 +105,7 @@ const applications: TenantApplication[] = [
 
 	{
 		id: 'app_003',
+		on_boarding_method: 'ADMIN',
 		first_name: 'Kwame',
 		other_names: null,
 		last_name: 'Boateng',
@@ -143,6 +146,7 @@ const applications: TenantApplication[] = [
 
 	{
 		id: 'app_004',
+		on_boarding_method: 'SELF',
 		first_name: 'Linda',
 		other_names: null,
 		last_name: 'Addo',
@@ -183,6 +187,7 @@ const applications: TenantApplication[] = [
 
 	{
 		id: 'app_005',
+		on_boarding_method: 'SELF',
 		first_name: 'Samuel',
 		other_names: 'K.',
 		last_name: 'Amoah',

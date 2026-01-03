@@ -1,5 +1,6 @@
 interface TenantApplication {
 	id: string
+	on_boarding_method: 'SELF' | 'ADMIN'
 	first_name: string
 	other_names: Nullable<string>
 	last_name: string
