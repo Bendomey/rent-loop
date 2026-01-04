@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { Link, useLoaderData } from 'react-router'
 import { z } from 'zod'
 import { useCreatePropertyTenantApplicationContext } from '../context'
+import { UnitSelect } from '~/components/SingleSelect/unit-select'
 import { Button } from '~/components/ui/button'
 import {
 	Item,
@@ -12,16 +13,15 @@ import {
 	ItemDescription,
 	ItemGroup,
 } from '~/components/ui/item'
+import { Label } from '~/components/ui/label'
 import {
 	TypographyH2,
 	TypographyMuted,
 	TypographySmall,
 } from '~/components/ui/typography'
+import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import type { loader } from '~/routes/_auth.properties.$propertyId.settings.billing'
-import { safeString } from '~/lib/strings'
-import { UnitSelect } from '~/components/SingleSelect/unit-select'
-import { Label } from '~/components/ui/label'
 
 const ValidationSchema = z.object({
 	desired_unit_id: z.string({
@@ -82,12 +82,19 @@ export function Step0() {
 				},
 			)
 		}
+		if (formData.desired_unit) {
+			setValue('desired_unit', formData.desired_unit, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
 	}, [formData, setValue])
 
 	const onSubmit = async (data: FormSchema) => {
 		updateFormData({
 			property_id,
 			desired_unit_id: data.desired_unit_id,
+			desired_unit: data.desired_unit,
 			on_boarding_method: data.on_boarding_method,
 		})
 		goNext()

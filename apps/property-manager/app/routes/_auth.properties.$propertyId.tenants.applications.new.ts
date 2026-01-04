@@ -1,13 +1,13 @@
-import { createTenantApplication } from '~/api/tenant-applications'
+import { redirect } from 'react-router'
 import type { Route } from './+types/_auth.properties.$propertyId.tenants.applications._index'
+import { createTenantApplication } from '~/api/tenant-applications'
+import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
+import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { NewPropertyTenantApplicationModule } from '~/modules'
-import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'
-import { getAuthSession } from '~/lib/actions/auth.session.server'
-import { environmentVariables } from '~/lib/actions/env.server'
-import { redirect } from 'react-router'
 
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const clientUserProperty = context.get(propertyContext)
@@ -45,15 +45,21 @@ export async function action({ request }: Route.ActionArgs) {
 	const id_number = formData.get('id_number') as string
 	const id_front_url = formData.get('id_front_url') as string | null
 	const id_back_url = formData.get('id_back_url') as string | null
-	const emergency_contact_name = formData.get('emergency_contact_name') as string
-	const emergency_contact_phone = formData.get('emergency_contact_phone') as string
+	const emergency_contact_name = formData.get(
+		'emergency_contact_name',
+	) as string
+	const emergency_contact_phone = formData.get(
+		'emergency_contact_phone',
+	) as string
 	const relationship_to_emergency_contact = formData.get(
 		'relationship_to_emergency_contact',
 	) as string
 	const occupation = formData.get('occupation') as string
 	const employer = formData.get('employer') as string
 	const occupation_address = formData.get('occupation_address') as string
-	const proof_of_income_url = formData.get('proof_of_income_url') as string | null
+	const proof_of_income_url = formData.get('proof_of_income_url') as
+		| string
+		| null
 
 	try {
 		const property = await createTenantApplication(
@@ -74,13 +80,13 @@ export async function action({ request }: Route.ActionArgs) {
 				id_number,
 				id_front_url,
 				id_back_url,
-					emergency_contact_name,
-	emergency_contact_phone,
-	relationship_to_emergency_contact,
-	occupation,
-	employer,
-	occupation_address,
-	proof_of_income_url
+				emergency_contact_name,
+				emergency_contact_phone,
+				relationship_to_emergency_contact,
+				occupation,
+				employer,
+				occupation_address,
+				proof_of_income_url,
 			}),
 			{
 				baseUrl,

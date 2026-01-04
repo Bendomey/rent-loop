@@ -16,7 +16,11 @@ import {
 } from '~/components/ui/form'
 import { ImageUpload } from '~/components/ui/image-upload'
 import { Input } from '~/components/ui/input'
-import { TypographyH2, TypographyH3, TypographyH4, TypographyMuted } from '~/components/ui/typography'
+import {
+	TypographyH2,
+	TypographyH4,
+	TypographyMuted,
+} from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
 
@@ -30,9 +34,9 @@ const ValidationSchema = z.object({
 	emergency_contact_phone: z
 		.string({ error: 'Phone Number is required' })
 		.min(9, 'Please enter a valid phone number'),
-	occupation: z.string({ error: 'Occupation is required' }).min(2, 'Please enter a valid occupation'),
-	employer: z.string({ error: 'Employer is required' }).min(2, 'Please enter a valid employer'),
-	occupation_address: z.string({ error: 'Employer is required' }).min(2, 'Please enter a valid employer'),
+	occupation: z.string().optional(),
+	employer: z.string().optional(),
+	occupation_address: z.string().optional(),
 	proof_of_income_url: z.url('Please upload proof of income').optional(),
 })
 
@@ -62,7 +66,7 @@ export function Step3() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [proofOfIncomeUrl])
 
-	const { watch, handleSubmit, control, setValue } = rhfMethods
+	const { handleSubmit, control, setValue } = rhfMethods
 
 	useEffect(() => {
 		if (formData.emergency_contact_name) {
@@ -72,10 +76,14 @@ export function Step3() {
 			})
 		}
 		if (formData.relationship_to_emergency_contact) {
-			setValue('relationship_to_emergency_contact', formData.relationship_to_emergency_contact, {
-				shouldDirty: true,
-				shouldValidate: true,
-			})
+			setValue(
+				'relationship_to_emergency_contact',
+				formData.relationship_to_emergency_contact,
+				{
+					shouldDirty: true,
+					shouldValidate: true,
+				},
+			)
 		}
 		if (formData.emergency_contact_phone) {
 			setValue('emergency_contact_phone', formData.emergency_contact_phone, {
@@ -131,19 +139,18 @@ export function Step3() {
 			>
 				{/* Header Section */}
 				<div className="space-y-2 border-b pb-6">
-					<TypographyH2 >
-					Emergency Contact & Employment
-				</TypographyH2>
-				<TypographyMuted className="text-base">
-					Please provide your emergency contact information and employment details.
-				</TypographyMuted>
-			</div>
+					<TypographyH2>Emergency Contact & Employment</TypographyH2>
+					<TypographyMuted className="text-base">
+						Please provide your emergency contact information and employment
+						details.
+					</TypographyMuted>
+				</div>
 
 				<FieldGroup className="space-y-6">
 					{/* Emergency Contact Section */}
 					<div className="space-y-4">
 						<div className="space-y-1">
-							<TypographyH4 >Emergency Contact</TypographyH4>
+							<TypographyH4>Emergency Contact</TypographyH4>
 						</div>
 						<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 							<FormField
@@ -205,7 +212,7 @@ export function Step3() {
 					{/* Employment Section */}
 					<div className="space-y-4 border-t pt-6">
 						<div className="space-y-1">
-							<TypographyH4 >Employment Information</TypographyH4>
+							<TypographyH4>Employment Information</TypographyH4>
 						</div>
 						<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 							<FormField
@@ -269,12 +276,13 @@ export function Step3() {
 						<div className="space-y-1">
 							<h3 className="font-semibold">Proof of Income</h3>
 							<TypographyMuted>
-								Upload a document proving your income (pay stub, tax return, etc.)
+								Upload a document proving your income (pay stub, tax return,
+								etc.)
 							</TypographyMuted>
 						</div>
 
 						<ImageUpload
-						hero
+							hero
 							shape="square"
 							hint="Optional"
 							acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
@@ -307,12 +315,11 @@ export function Step3() {
 						variant="default"
 						className="bg-rose-600 hover:bg-rose-700"
 					>
-						Next <ArrowRight className="ml-2 h-4 w-4" />
+						Preview & Submit
+						<ArrowRight className="ml-2 h-4 w-4" />
 					</Button>
 				</div>
 			</form>
 		</Form>
 	)
 }
-
-

@@ -1,8 +1,13 @@
-import { ArrowLeft, Pencil, Check } from 'lucide-react'
+import { ArrowLeft, Pencil } from 'lucide-react'
 import { useCreatePropertyTenantApplicationContext } from '../context'
+import { Image } from '~/components/Image'
 import { Button } from '~/components/ui/button'
 import { Spinner } from '~/components/ui/spinner'
-import { TypographyH2, TypographyMuted, TypographySmall } from '~/components/ui/typography'
+import {
+	TypographyH2,
+	TypographyMuted,
+	TypographyP,
+} from '~/components/ui/typography'
 
 const renderPreviewField = (label: string, value?: string | null) => (
 	<div className="py-3">
@@ -15,7 +20,6 @@ const PreviewCard = ({
 	title,
 	subtitle,
 	children,
-	stepNumber,
 	onEdit,
 }: {
 	title: string
@@ -27,8 +31,10 @@ const PreviewCard = ({
 	<div className="rounded-lg border bg-white p-6">
 		<div className="mb-4 flex items-start justify-between">
 			<div>
-				<h3 className="font-semibold text-foreground">{title}</h3>
-				{subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
+				<h3 className="text-foreground font-semibold">{title}</h3>
+				{subtitle && (
+					<p className="text-muted-foreground mt-1 text-sm">{subtitle}</p>
+				)}
 			</div>
 			<Button
 				type="button"
@@ -58,9 +64,12 @@ export function Step4() {
 		>
 			{/* Header Section */}
 			<div className="space-y-2 border-b pb-6">
-				<TypographyH2 className="text-2xl font-bold">Review Application</TypographyH2>
+				<TypographyH2 className="text-2xl font-bold">
+					Review Application
+				</TypographyH2>
 				<TypographyMuted className="text-base">
-					Review all information below. Click Edit to make changes before submitting.
+					Review all information below. Click Edit to make changes before
+					submitting.
 				</TypographyMuted>
 			</div>
 
@@ -71,11 +80,29 @@ export function Step4() {
 				stepNumber={0}
 				onEdit={() => goToPage(0)}
 			>
-				{renderPreviewField('Unit', formData.desired_unit)}
-				{renderPreviewField(
-					'Onboarding Method',
-					formData.on_boarding_method === 'SELF' ? 'Self Onboarding' : 'Admin Onboarding',
-				)}
+				<div className="grid grid-cols-2 items-center gap-x-4 gap-y-0">
+					<div>
+						{renderPreviewField('Unit', formData.desired_unit)}
+						{renderPreviewField(
+							'Onboarding Method',
+							formData.on_boarding_method === 'SELF'
+								? 'Self Onboarding'
+								: 'Admin Onboarding',
+						)}
+					</div>
+					<div className="">
+						{/* Profile Photo */}
+						{formData.profile_photo_url && (
+							<div className="py-3">
+								<Image
+									src={formData.profile_photo_url}
+									alt="Profile"
+									className="max-h-48 rounded-md object-cover"
+								/>
+							</div>
+						)}
+					</div>
+				</div>
 			</PreviewCard>
 
 			{/* Basic Information */}
@@ -85,19 +112,20 @@ export function Step4() {
 				stepNumber={1}
 				onEdit={() => goToPage(1)}
 			>
-				<div className='grid grid-cols-2 gap-y-0 gap-x-4'>
-				{renderPreviewField('First Name', formData.first_name)}
-				{renderPreviewField('Last Name', formData.last_name)}
-				{formData.other_names && renderPreviewField('Other Names', formData.other_names)}
-				{renderPreviewField('Gender', formData.gender)}
-				{renderPreviewField('Email', formData.email)}
-				{renderPreviewField('Phone', formData.phone)}
-				{formData.date_of_birth &&
-					renderPreviewField(
-						'Date of Birth',
-						new Date(formData.date_of_birth).toLocaleDateString(),
-					)}
-					</div>
+				<div className="grid grid-cols-2 gap-x-4 gap-y-0">
+					{renderPreviewField('First Name', formData.first_name)}
+					{renderPreviewField('Last Name', formData.last_name)}
+					{formData.other_names &&
+						renderPreviewField('Other Names', formData.other_names)}
+					{renderPreviewField('Gender', formData.gender)}
+					{renderPreviewField('Email', formData.email)}
+					{renderPreviewField('Phone', formData.phone)}
+					{formData.date_of_birth &&
+						renderPreviewField(
+							'Date of Birth',
+							new Date(formData.date_of_birth).toLocaleDateString(),
+						)}
+				</div>
 			</PreviewCard>
 
 			{/* Identity Verification */}
@@ -107,56 +135,102 @@ export function Step4() {
 				stepNumber={2}
 				onEdit={() => goToPage(2)}
 			>
-								<div className='grid grid-cols-2 gap-y-0 gap-x-4'>
-				{renderPreviewField('Nationality', formData.nationality)}
-				{renderPreviewField('ID Type', formData.id_type)}
-				<div className='col-span-2'>
-				{renderPreviewField('ID Number', formData.id_number)}
+				<div className="grid grid-cols-2 gap-x-4 gap-y-0">
+					{renderPreviewField('Nationality', formData.nationality)}
+					{renderPreviewField('ID Type', formData.id_type)}
+					<div className="col-span-2">
+						{renderPreviewField('ID Number', formData.id_number)}
+					</div>
+					{formData.id_front_url && (
+						<div className="py-3">
+							<TypographyP className="text-sm font-medium text-slate-600">
+								ID Front
+							</TypographyP>
+							<div className="mt-2">
+								<Image
+									src={formData.id_front_url}
+									alt="ID Front"
+									className="max-h-40 rounded-md object-cover"
+								/>
+							</div>
+						</div>
+					)}
+					{formData.id_back_url && (
+						<div className="py-3">
+							<TypographyP className="text-sm font-medium text-slate-600">
+								ID Back
+							</TypographyP>
+							<div className="mt-2">
+								<Image
+									src={formData.id_back_url}
+									alt="ID Back"
+									className="max-h-40 rounded-md object-cover"
+								/>
+							</div>
+						</div>
+					)}
 				</div>
-				{formData.id_front_url && (
-					<div className="py-3">
-						<p className="text-sm font-medium text-slate-600">ID Front</p>
-						<div className="mt-2">
-							<img
-								src={formData.id_front_url}
-								alt="ID Front"
-								className="max-h-40 rounded-md object-cover"
-							/>
-						</div>
-					</div>
-				)}
-				{formData.id_back_url && (
-					<div className="py-3">
-						<p className="text-sm font-medium text-slate-600">ID Back</p>
-						<div className="mt-2">
-							<img
-								src={formData.id_back_url}
-								alt="ID Back"
-								className="max-h-40 rounded-md object-cover"
-							/>
-						</div>
-					</div>
-				)}
-			</div>
 			</PreviewCard>
 
-			{/* Profile Photo */}
-			{formData.profile_photo_url && (
-				<PreviewCard
-					title="Profile Photo"
-					subtitle="Tenant profile picture"
-					stepNumber={1}
-					onEdit={() => goToPage(1)}
-				>
-					<div className="py-3">
-						<img
-							src={formData.profile_photo_url}
-							alt="Profile"
-							className="max-h-48 rounded-md object-cover"
-						/>
+			{/* Emergency Contact & Employment */}
+			<PreviewCard
+				title="Emergency Contact & Employment"
+				subtitle="Emergency contact and employment information"
+				stepNumber={3}
+				onEdit={() => goToPage(3)}
+			>
+				<div className="space-y-4">
+					<div>
+						<TypographyP className="text-foreground mb-3 font-semibold">
+							Emergency Contact
+						</TypographyP>
+						<div className="grid grid-cols-2 gap-x-4 gap-y-0">
+							{renderPreviewField('Full Name', formData.emergency_contact_name)}
+							{renderPreviewField(
+								'Relationship',
+								formData.relationship_to_emergency_contact,
+							)}
+							<div className="col-span-2">
+								{renderPreviewField(
+									'Phone Number',
+									formData.emergency_contact_phone,
+								)}
+							</div>
+						</div>
 					</div>
-				</PreviewCard>
-			)}
+
+					<div className="border-t pt-4">
+						<TypographyP className="text-foreground mb-3 font-semibold">
+							Employment Information
+						</TypographyP>
+						<div className="grid grid-cols-2 gap-x-4 gap-y-0">
+							{renderPreviewField('Occupation', formData.occupation)}
+							{renderPreviewField('Employer', formData.employer)}
+							<div className="col-span-2">
+								{renderPreviewField(
+									'Employer Address',
+									formData.occupation_address,
+								)}
+							</div>
+						</div>
+					</div>
+
+					{formData.proof_of_income_url && (
+						<div className="border-t pt-4">
+							<TypographyP className="mb-3 text-sm font-medium text-slate-600">
+								Proof of Income
+							</TypographyP>
+							<div className="mt-2">
+								<Image
+									src={formData.proof_of_income_url}
+									alt="Proof of Income"
+									className="max-h-40 rounded-md object-cover"
+								/>
+							</div>
+						</div>
+					)}
+				</div>
+			</PreviewCard>
 
 			{/* Action Buttons */}
 			<div className="mt-10 flex items-center justify-between border-t pt-6">

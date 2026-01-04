@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useCreatePropertyTenantApplicationContext } from '../context'
+import { DatePickerInput } from '~/components/date-picker-input'
 import { Button } from '~/components/ui/button'
 import { FieldGroup } from '~/components/ui/field'
 import {
@@ -17,10 +18,6 @@ import {
 } from '~/components/ui/form'
 import { ImageUpload } from '~/components/ui/image-upload'
 import { Input } from '~/components/ui/input'
-import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
-import { useUploadObject } from '~/hooks/use-upload-object'
-import { safeString } from '~/lib/strings'
-import { DatePickerInput } from '~/components/date-picker-input'
 import {
 	Select,
 	SelectContent,
@@ -28,7 +25,10 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '~/components/ui/select'
-
+import { Spinner } from '~/components/ui/spinner'
+import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
+import { useUploadObject } from '~/hooks/use-upload-object'
+import { safeString } from '~/lib/strings'
 
 const ValidationSchema = z.object({
 	on_boarding_method: z.enum(['SELF', 'ADMIN'], {
@@ -89,15 +89,15 @@ export function Step1() {
 	const { watch, handleSubmit, control, setValue } = rhfMethods
 	const isSelfOnboarding = watch('on_boarding_method') === 'SELF'
 
-		useEffect(() => {
-			if (profilePhotoUrl) {
-				rhfMethods.setValue('profile_photo_url', profilePhotoUrl, {
-					shouldDirty: true,
-					shouldValidate: true,
-				})
-			}
-			// eslint-disable-next-line react-hooks/exhaustive-deps
-		}, [profilePhotoUrl])
+	useEffect(() => {
+		if (profilePhotoUrl) {
+			rhfMethods.setValue('profile_photo_url', profilePhotoUrl, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [profilePhotoUrl])
 
 	useEffect(() => {
 		if (formData.first_name) {
@@ -242,7 +242,7 @@ export function Step1() {
 								<FormItem>
 									<FormLabel>Gender</FormLabel>
 									<FormControl>
-										<Select onValueChange={field.onChange} value={field.value} >
+										<Select value={field.value} onValueChange={field.onChange}>
 											<SelectTrigger className="w-full">
 												<SelectValue placeholder="Select gender" />
 											</SelectTrigger>
@@ -350,7 +350,18 @@ export function Step1() {
 						variant="default"
 						className="bg-rose-600 hover:bg-rose-700"
 					>
-						{isSelfOnboarding ? 'Submit Application' : <>Next <ArrowRight className="ml-2 h-4 w-4" /></>}
+						{isSubmitting ? (
+							<>
+								<Spinner className="mr-2 h-4 w-4" />
+								Submitting...
+							</>
+						) : isSelfOnboarding ? (
+							'Submit Application'
+						) : (
+							<>
+								Next <ArrowRight className="ml-2 h-4 w-4" />
+							</>
+						)}
 					</Button>
 				</div>
 			</form>

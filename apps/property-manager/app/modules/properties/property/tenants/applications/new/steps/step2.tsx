@@ -93,7 +93,7 @@ export function Step2() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [frontUrl, backUrl])
 
-	const { watch, handleSubmit, control, setValue } = rhfMethods
+	const { handleSubmit, control, setValue } = rhfMethods
 
 	useEffect(() => {
 		if (formData.nationality) {
@@ -170,7 +170,7 @@ export function Step2() {
 										<FormControl>
 											<Input
 												type="text"
-												placeholder="e.g., United States"
+												placeholder="e.g., Ghanaian"
 												{...field}
 											/>
 										</FormControl>
@@ -243,7 +243,7 @@ export function Step2() {
 
 						<div className="grid grid-cols-1 gap-6 md:grid-cols-2">
 							<ImageUpload
-							hero
+								hero
 								shape="square"
 								hint="Optional"
 								acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
@@ -265,7 +265,7 @@ export function Step2() {
 							/>
 
 							<ImageUpload
-							hero
+								hero
 								shape="square"
 								hint="Optional"
 								acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
