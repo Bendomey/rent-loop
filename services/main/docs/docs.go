@@ -4264,6 +4264,72 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/tenant-applications/invite": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sends a tenant invite to a possible tenant",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TenantApplication"
+                ],
+                "summary": "Sends a tenant invite to a possible tenant",
+                "parameters": [
+                    {
+                        "description": "Send Tenant Invite Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SendTenantInviteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Tenant invite sent successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when sending tenant invite",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "TenantApplication not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -4923,6 +4989,26 @@ const docTemplate = `{
                 "email": {
                     "type": "string",
                     "example": "client-user@example.com"
+                }
+            }
+        },
+        "handlers.SendTenantInviteRequest": {
+            "type": "object",
+            "required": [
+                "unit_id"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+233281234569"
+                },
+                "unit_id": {
+                    "type": "string",
+                    "example": "b4d0243c-6581-4104-8185-d83a45ebe41b"
                 }
             }
         },

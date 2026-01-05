@@ -489,6 +489,20 @@ definitions:
     required:
     - email
     type: object
+  handlers.SendTenantInviteRequest:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      phone:
+        example: "+233281234569"
+        type: string
+      unit_id:
+        example: b4d0243c-6581-4104-8185-d83a45ebe41b
+        type: string
+    required:
+    - unit_id
+    type: object
   handlers.UnlinkClientUserFromPropertyRequest:
     properties:
       property_ids:
@@ -4127,6 +4141,48 @@ paths:
           schema:
             type: string
       summary: Create a new tenant application
+      tags:
+      - TenantApplication
+  /api/v1/tenant-applications/invite:
+    post:
+      consumes:
+      - application/json
+      description: Sends a tenant invite to a possible tenant
+      parameters:
+      - description: Send Tenant Invite Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SendTenantInviteRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Tenant invite sent successfully
+        "400":
+          description: Error occurred when sending tenant invite
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: TenantApplication not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Sends a tenant invite to a possible tenant
       tags:
       - TenantApplication
 securityDefinitions:
