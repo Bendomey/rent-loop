@@ -16,9 +16,12 @@ export const getPropertyUnitsForServer = async (
 		const params = new URLSearchParams(removeAllNullableValues)
 		const response = await fetchServer<
 			ApiResponse<FetchMultipleDataResponse<PropertyUnit>>
-		>(`${apiConfig.baseUrl}/v1/properties/${props.property_id}/units?${params.toString()}`, {
-            ...apiConfig
-        })
+		>(
+			`${apiConfig.baseUrl}/v1/properties/${props.property_id}/units?${params.toString()}`,
+			{
+				...apiConfig,
+			},
+		)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {

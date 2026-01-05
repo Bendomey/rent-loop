@@ -11,7 +11,7 @@ export const handle = {
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const clientUserProperty = context.get(propertyContext)
 
-	if(clientUserProperty?.property?.type === 'SINGLE'){
+	if (clientUserProperty?.property?.type === 'SINGLE') {
 		return redirect(NOT_FOUND_ROUTE)
 	}
 

@@ -31,7 +31,7 @@ export function PropertySidebar({
 }: React.ComponentProps<typeof Sidebar>) {
 	const sidebarState = useSidebar()
 	const params = useParams()
-	const { clientUserProperty } = useProperty();
+	const { clientUserProperty } = useProperty()
 
 	const data = {
 		navMain: [
@@ -52,7 +52,10 @@ export function PropertySidebar({
 						isHidden: clientUserProperty?.property?.type === 'SINGLE',
 					},
 					{
-						title: clientUserProperty?.property?.type === 'SINGLE' ? 'Unit' : 'Apartments/Units',
+						title:
+							clientUserProperty?.property?.type === 'SINGLE'
+								? 'Unit'
+								: 'Apartments/Units',
 						url: '/units',
 					},
 					{
