@@ -161,8 +161,6 @@ This link is intended for you only. If you weren’t expecting this email, you c
 
 If you have any questions or experience issues while applying, please contact us at {{admin_email}}.
 
-{{SUPPORT_DETAILS_TEMPLATE}}
-
 Best regards,
 The Rentloop team
 `
