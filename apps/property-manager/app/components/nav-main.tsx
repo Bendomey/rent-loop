@@ -35,11 +35,13 @@ export function NavMain({
 		isActive?: boolean
 		isComingSoon?: boolean
 		isHome?: boolean
+		isHidden?: boolean
 		items?: {
 			title: string
 			isComingSoon?: boolean
 			isBeta?: boolean
 			isNew?: boolean
+			isHidden?: boolean
 			url: string
 		}[]
 	}[]
@@ -65,6 +67,8 @@ export function NavMain({
 
 								return isActive
 							})
+
+						if (item.isHidden) return null
 						return (
 							<Collapsible
 								key={item.title}
@@ -98,6 +102,9 @@ export function NavMain({
 												if (subItem.isComingSoon) {
 													link = COMING_SOON_ROUTE
 												}
+
+												if (subItem.isHidden) return null
+
 												return (
 													<SidebarMenuSubItem key={subItem.title}>
 														<SidebarMenuSubButton asChild isActive={isActive}>
