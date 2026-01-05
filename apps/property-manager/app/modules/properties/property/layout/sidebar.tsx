@@ -24,122 +24,128 @@ import {
 	useSidebar,
 } from '~/components/ui/sidebar'
 import { APP_NAME } from '~/lib/constants'
-
-const data = {
-	navMain: [
-		{
-			title: 'Overview',
-			isHome: true,
-			url: '',
-			icon: PieChart,
-		},
-		{
-			title: 'Assets',
-			url: '/assets',
-			icon: House,
-			items: [
-				{
-					title: 'Blocks',
-					url: '/blocks',
-				},
-				{
-					title: 'Apartments/Units',
-					url: '/units',
-				},
-				{
-					title: 'Facilities',
-					url: '/facilities',
-					isComingSoon: true,
-				},
-			],
-		},
-		{
-			title: 'Tenants',
-			url: '/tenants',
-			icon: Contact,
-			items: [
-				{
-					title: 'All Tenants',
-					url: '',
-				},
-				{
-					title: 'Applications',
-					url: '/applications',
-				},
-			],
-		},
-		{
-			title: 'Activities',
-			url: '/activities',
-			icon: Headset,
-			items: [
-				{
-					title: 'Maintenance Requests',
-					url: '/maintenance-requests',
-				},
-				{
-					title: 'Announcements',
-					url: '/announcements',
-					isComingSoon: true,
-				},
-				{
-					title: 'Inspections',
-					url: '/inspections',
-					isComingSoon: true,
-				},
-				{
-					title: 'Polls',
-					url: '/polls',
-					isComingSoon: true,
-				},
-			],
-		},
-		{
-			title: 'Transactions',
-			url: '/transactions',
-			icon: DollarSign,
-			items: [
-				{
-					title: 'Rent Payments',
-					url: '/rent-payments',
-				},
-				{
-					title: 'Expenses',
-					url: '/expenses',
-					isComingSoon: true,
-				},
-				{
-					title: 'Reports',
-					url: '/reports',
-					isComingSoon: true,
-				},
-			],
-		},
-		{
-			title: 'Settings',
-			url: '/settings',
-			icon: Settings2,
-		},
-	],
-	navSecondary: [
-		{
-			title: 'Support',
-			onClick: () => window?.Tawk_API?.toggle(),
-			icon: LifeBuoy,
-		},
-		{
-			title: 'Changelog',
-			url: '/changelog',
-			icon: BookOpenText,
-		},
-	],
-}
+import { useProperty } from '~/providers/property-provider'
 
 export function PropertySidebar({
 	...props
 }: React.ComponentProps<typeof Sidebar>) {
 	const sidebarState = useSidebar()
 	const params = useParams()
+	const { clientUserProperty } = useProperty()
+
+	const data = {
+		navMain: [
+			{
+				title: 'Overview',
+				isHome: true,
+				url: '',
+				icon: PieChart,
+			},
+			{
+				title: 'Assets',
+				url: '/assets',
+				icon: House,
+				items: [
+					{
+						title: 'Blocks',
+						url: '/blocks',
+						isHidden: clientUserProperty?.property?.type === 'SINGLE',
+					},
+					{
+						title:
+							clientUserProperty?.property?.type === 'SINGLE'
+								? 'Unit'
+								: 'Apartments/Units',
+						url: '/units',
+					},
+					{
+						title: 'Facilities',
+						url: '/facilities',
+						isComingSoon: true,
+					},
+				],
+			},
+			{
+				title: 'Tenants',
+				url: '/tenants',
+				icon: Contact,
+				items: [
+					{
+						title: 'All Tenants',
+						url: '',
+					},
+					{
+						title: 'Applications',
+						url: '/applications',
+					},
+				],
+			},
+			{
+				title: 'Activities',
+				url: '/activities',
+				icon: Headset,
+				items: [
+					{
+						title: 'Maintenance Requests',
+						url: '/maintenance-requests',
+					},
+					{
+						title: 'Announcements',
+						url: '/announcements',
+						isComingSoon: true,
+					},
+					{
+						title: 'Inspections',
+						url: '/inspections',
+						isComingSoon: true,
+					},
+					{
+						title: 'Polls',
+						url: '/polls',
+						isComingSoon: true,
+					},
+				],
+			},
+			{
+				title: 'Transactions',
+				url: '/transactions',
+				icon: DollarSign,
+				items: [
+					{
+						title: 'Rent Payments',
+						url: '/rent-payments',
+					},
+					{
+						title: 'Expenses',
+						url: '/expenses',
+						isComingSoon: true,
+					},
+					{
+						title: 'Reports',
+						url: '/reports',
+						isComingSoon: true,
+					},
+				],
+			},
+			{
+				title: 'Settings',
+				url: '/settings',
+				icon: Settings2,
+			},
+		],
+		navSecondary: [
+			{
+				title: 'Support',
+				onClick: () => window?.Tawk_API?.toggle(),
+				icon: LifeBuoy,
+			},
+			{
+				title: 'Changelog',
+				url: '/changelog',
+				icon: BookOpenText,
+			},
+		],
+	}
 
 	return (
 		<Sidebar collapsible="icon" {...props}>
