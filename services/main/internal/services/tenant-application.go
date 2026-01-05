@@ -51,7 +51,7 @@ type CreateTenantApplicationInput struct {
 	Occupation                     string
 	Employer                       string
 	OccupationAddress              string
-	CreatedById                    *string
+	CreatedById                    string
 }
 
 func (s *tenantApplicationService) CreateTenantApplication(
@@ -90,7 +90,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		Occupation:                     input.Occupation,
 		Employer:                       input.Employer,
 		OccupationAddress:              input.OccupationAddress,
-		CreatedById:                    input.CreatedById,
+		CreatedById:                    &input.CreatedById,
 		Status:                         "TenantApplication.Status.InProgress",
 	}
 

@@ -43,7 +43,7 @@ type CreateTenantApplicationRequest struct {
 	Occupation                     string    `json:"occupation"                        validate:"required"        example:"Software Engineer"                    description:"Occupation of the applicant"`
 	Employer                       string    `json:"employer"                          validate:"required"        example:"Acme Corp"                            description:"Employer of the applicant"`
 	OccupationAddress              string    `json:"occupation_address"                validate:"required"        example:"456 Tech Ave, Accra"                  description:"Occupation address"`
-	CreatedById                    *string   `json:"created_by_id,omitempty"           validate:"required,uuid"   example:"72432ce6-5620-4ecf-a862-4bf2140556a1" description:"ID of the user who created the tenant application"`
+	CreatedById                    string    `json:"created_by_id"                     validate:"required,uuid"   example:"72432ce6-5620-4ecf-a862-4bf2140556a1" description:"ID of the user who created the tenant application"`
 }
 
 // CreateTenantApplication godoc
