@@ -59,7 +59,11 @@ func NewServices(appCtx pkg.AppContext, repository repository.Repository) Servic
 		repository.DocumentRepository,
 	)
 
-	tenantApplicationService := NewTenantApplicationService(appCtx, repository.TenantApplicationRepository)
+	tenantApplicationService := NewTenantApplicationService(TenantApplicationServiceDeps{
+		AppCtx:      appCtx,
+		Repo:        repository.TenantApplicationRepository,
+		UnitService: unitService,
+	})
 
 	return Services{
 		AdminService:              adminService,

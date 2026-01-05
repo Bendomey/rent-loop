@@ -73,6 +73,9 @@ type OutputTenantApplication struct {
 	OccupationAddress string  `json:"occupation_address"            example:"456 Tech Ave, Accra"`
 	ProofOfIncomeUrl  *string `json:"proof_of_income_url,omitempty" example:"https://example.com/income.pdf"`
 
+	CreatedByID *string `json:"created_by_id,omitempty" example:"72432ce6-5620-4ecf-a862-4bf2140556a1"`
+	CreatedBy   *OutputClientUser
+
 	CreatedAt time.Time `json:"created_at" example:"2024-06-01T09:00:00Z"`
 	UpdatedAt time.Time `json:"updated_at" example:"2024-06-10T09:00:00Z"`
 }
@@ -134,6 +137,8 @@ func DBTenantApplicationToRest(i *models.TenantApplication) any {
 		"employer":                          i.Employer,
 		"occupation_address":                i.OccupationAddress,
 		"proof_of_income_url":               i.ProofOfIncomeUrl,
+		"created_by_id":                     i.CreatedById,
+		"created_by":                        DBClientUserToRest(i.CreatedBy),
 		"created_at":                        i.CreatedAt,
 		"updated_at":                        i.UpdatedAt,
 	}

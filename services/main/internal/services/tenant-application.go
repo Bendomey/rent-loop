@@ -17,21 +17,23 @@ type TenantApplicationService interface {
 }
 
 type tenantApplicationService struct {
-	appCtx pkg.AppContext
-	repo   repository.TenantApplicationRepository
+	appCtx      pkg.AppContext
+	repo        repository.TenantApplicationRepository
+	unitService UnitService
 }
 
-func NewTenantApplicationService(
-	appCtx pkg.AppContext,
-	repo repository.TenantApplicationRepository,
-) TenantApplicationService {
-	return &tenantApplicationService{appCtx: appCtx, repo: repo}
+type TenantApplicationServiceDeps struct {
+	AppCtx      pkg.AppContext
+	Repo        repository.TenantApplicationRepository
+	UnitService UnitService
+}
+
+func NewTenantApplicationService(deps TenantApplicationServiceDeps) TenantApplicationService {
+	return &tenantApplicationService{appCtx: deps.AppCtx, repo: deps.Repo, unitService: deps.UnitService}
 }
 
 type CreateTenantApplicationInput struct {
 	DesiredUnitId                  string
-	RentFee                        int64
-	RentFeeCurrency                string
 	FirstName                      string
 	OtherNames                     *string
 	LastName                       string
@@ -49,17 +51,28 @@ type CreateTenantApplicationInput struct {
 	Occupation                     string
 	Employer                       string
 	OccupationAddress              string
-	Status                         string
+	CreatedById                    *string
 }
 
 func (s *tenantApplicationService) CreateTenantApplication(
 	ctx context.Context,
 	input CreateTenantApplicationInput,
 ) (*models.TenantApplication, error) {
+	unit, getUnitErr := s.unitService.GetUnitByID(ctx, input.DesiredUnitId)
+	if getUnitErr != nil {
+		return nil, pkg.InternalServerError(getUnitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getUnitErr,
+			Metadata: map[string]string{
+				"function": "CreateTenantApplication",
+				"action":   "fetching unit",
+			},
+		})
+	}
+
 	tenantApplication := models.TenantApplication{
 		DesiredUnitId:                  input.DesiredUnitId,
-		RentFee:                        input.RentFee,
-		RentFeeCurrency:                input.RentFeeCurrency,
+		RentFee:                        unit.RentFee,
+		RentFeeCurrency:                unit.RentFeeCurrency,
 		FirstName:                      input.FirstName,
 		OtherNames:                     input.OtherNames,
 		LastName:                       input.LastName,
@@ -77,7 +90,8 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		Occupation:                     input.Occupation,
 		Employer:                       input.Employer,
 		OccupationAddress:              input.OccupationAddress,
-		Status:                         input.Status,
+		CreatedById:                    input.CreatedById,
+		Status:                         "TenantApplication.Status.InProgress",
 	}
 
 	createTenantApplicationErr := s.repo.Create(ctx, &tenantApplication)

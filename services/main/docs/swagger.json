@@ -4587,6 +4587,7 @@
         "handlers.CreateTenantApplicationRequest": {
             "type": "object",
             "required": [
+                "created_by_id",
                 "current_address",
                 "date_of_birth",
                 "desired_unit_id",
@@ -4602,12 +4603,13 @@
                 "occupation",
                 "occupation_address",
                 "phone",
-                "relationship_to_emergency_contact",
-                "rent_fee",
-                "rent_fee_currency",
-                "status"
+                "relationship_to_emergency_contact"
             ],
             "properties": {
+                "created_by_id": {
+                    "type": "string",
+                    "example": "72432ce6-5620-4ecf-a862-4bf2140556a1"
+                },
                 "current_address": {
                     "type": "string",
                     "example": "123 Main St, Accra"
@@ -4679,24 +4681,6 @@
                 "relationship_to_emergency_contact": {
                     "type": "string",
                     "example": "Sister"
-                },
-                "rent_fee": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "example": 1200
-                },
-                "rent_fee_currency": {
-                    "type": "string",
-                    "example": "USD"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "TenantApplication.Status.InProgress",
-                        "TenantApplication.Status.Cancelled",
-                        "TenantApplication.Status.Completed"
-                    ],
-                    "example": "TenantApplication.Status.InProgress"
                 }
             }
         },
@@ -5854,9 +5838,16 @@
                     "type": "string",
                     "example": "user-123"
                 },
+                "createdBy": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
                 "created_at": {
                     "type": "string",
                     "example": "2024-06-01T09:00:00Z"
+                },
+                "created_by_id": {
+                    "type": "string",
+                    "example": "72432ce6-5620-4ecf-a862-4bf2140556a1"
                 },
                 "current_address": {
                     "type": "string",

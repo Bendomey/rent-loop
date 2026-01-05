@@ -243,6 +243,9 @@ definitions:
     type: object
   handlers.CreateTenantApplicationRequest:
     properties:
+      created_by_id:
+        example: 72432ce6-5620-4ecf-a862-4bf2140556a1
+        type: string
       current_address:
         example: 123 Main St, Accra
         type: string
@@ -297,21 +300,8 @@ definitions:
       relationship_to_emergency_contact:
         example: Sister
         type: string
-      rent_fee:
-        example: 1200
-        minimum: 0
-        type: integer
-      rent_fee_currency:
-        example: USD
-        type: string
-      status:
-        enum:
-        - TenantApplication.Status.InProgress
-        - TenantApplication.Status.Cancelled
-        - TenantApplication.Status.Completed
-        example: TenantApplication.Status.InProgress
-        type: string
     required:
+    - created_by_id
     - current_address
     - date_of_birth
     - desired_unit_id
@@ -328,9 +318,6 @@ definitions:
     - occupation_address
     - phone
     - relationship_to_emergency_contact
-    - rent_fee
-    - rent_fee_currency
-    - status
     type: object
   handlers.CreateUnitRequest:
     properties:
@@ -1176,6 +1163,11 @@ definitions:
       created_at:
         example: "2024-06-01T09:00:00Z"
         type: string
+      created_by_id:
+        example: 72432ce6-5620-4ecf-a862-4bf2140556a1
+        type: string
+      createdBy:
+        $ref: '#/definitions/transformations.OutputClientUser'
       current_address:
         example: 123 Main St, Accra
         type: string
