@@ -14,6 +14,7 @@ type Services struct {
 	UnitService               UnitService
 	ClientUserPropertyService ClientUserPropertyService
 	PropertyBlockService      PropertyBlockService
+	TenantApplicationService  TenantApplicationService
 }
 
 func NewServices(appCtx pkg.AppContext, repository repository.Repository) Services {
@@ -58,6 +59,12 @@ func NewServices(appCtx pkg.AppContext, repository repository.Repository) Servic
 		repository.DocumentRepository,
 	)
 
+	tenantApplicationService := NewTenantApplicationService(TenantApplicationServiceDeps{
+		AppCtx:      appCtx,
+		Repo:        repository.TenantApplicationRepository,
+		UnitService: unitService,
+	})
+
 	return Services{
 		AdminService:              adminService,
 		ClientApplicationService:  clientApplicationService,
@@ -67,5 +74,6 @@ func NewServices(appCtx pkg.AppContext, repository repository.Repository) Servic
 		UnitService:               unitService,
 		ClientUserPropertyService: clientUserPropertyService,
 		PropertyBlockService:      propertyBlockService,
+		TenantApplicationService:  tenantApplicationService,
 	}
 }

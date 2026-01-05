@@ -14,6 +14,7 @@ type Handlers struct {
 	DocumentHandler           DocumentHandler
 	PropertyBlockHandler      PropertyBlockHandler
 	UnitHandler               UnitHandler
+	TenantApplicationHandler  TenantApplicationHandler
 }
 
 func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
@@ -25,6 +26,7 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 	documentHandler := NewDocumentHandler(appCtx, services.DocumentService)
 	propertyBlockHandler := NewPropertyBlockHandler(appCtx, services.PropertyBlockService)
 	unitHandler := NewUnitHandler(appCtx, services.UnitService)
+	tenantApplicationHandler := NewTenantApplicationHandler(appCtx, services.TenantApplicationService)
 
 	return Handlers{
 		ClientApplicationHandler:  clientApplicationHandler,
@@ -35,5 +37,6 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 		DocumentHandler:           documentHandler,
 		PropertyBlockHandler:      propertyBlockHandler,
 		UnitHandler:               unitHandler,
+		TenantApplicationHandler:  tenantApplicationHandler,
 	}
 }

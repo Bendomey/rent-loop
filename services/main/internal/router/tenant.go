@@ -12,7 +12,9 @@ func NewTenantAccountRouter(appCtx pkg.AppContext, handlers handlers.Handlers) f
 		r.Use(middlewares.InjectTenantAuthMiddleware(appCtx))
 
 		// unprotected tenant user routes
-		r.Group(func(r chi.Router) {})
+		r.Group(func(r chi.Router) {
+			r.Post("/v1/tenant-applications", handlers.TenantApplicationHandler.CreateTenantApplication)
+		})
 
 		// protected tenant user routes
 		r.Group(func(r chi.Router) {

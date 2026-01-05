@@ -19,6 +19,7 @@ type UnitService interface {
 	CountUnits(context context.Context, filterQuery repository.ListUnitsFilter) (int64, error)
 	CreateUnit(context context.Context, input CreateUnitInput) (*models.Unit, error)
 	GetUnit(context context.Context, query repository.GetUnitQuery) (*models.Unit, error)
+	GetUnitByID(context context.Context, id string) (*models.Unit, error)
 	UpdateUnit(context context.Context, input UpdateUnitInput) (*models.Unit, error)
 	UpdateUnitStatus(ctx context.Context, input UpdateUnitStatusInput) error
 	DeleteUnit(ctx context.Context, input repository.DeleteUnitInput) error
@@ -160,6 +161,26 @@ func (s *unitService) GetUnit(ctx context.Context, query repository.GetUnitQuery
 			Err: getUnitErr,
 			Metadata: map[string]string{
 				"function": "GetUnit",
+				"action":   "fetching unit",
+			},
+		})
+	}
+
+	return unit, nil
+}
+
+func (s *unitService) GetUnitByID(ctx context.Context, id string) (*models.Unit, error) {
+	unit, getUnitErr := s.repo.GetOne(ctx, map[string]any{"id": id})
+	if getUnitErr != nil {
+		if errors.Is(getUnitErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("UnitNotFound", &pkg.RentLoopErrorParams{
+				Err: getUnitErr,
+			})
+		}
+		return nil, pkg.InternalServerError(getUnitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getUnitErr,
+			Metadata: map[string]string{
+				"function": "GetUnitByID",
 				"action":   "fetching unit",
 			},
 		})
