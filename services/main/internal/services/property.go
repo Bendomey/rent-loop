@@ -174,23 +174,6 @@ func (s *propertyService) CreateProperty(
 		}
 	}
 
-	createPropertyBlockInput := CreatePropertyBlockInput{
-		PropertyID: property.ID.String(),
-		Name:       property.Name + "-Block A",
-		Status:     "PropertyBlock.Status.Active",
-	}
-	_, createPropertyBlockErr := s.propertyBlockService.CreatePropertyBlock(transCtx, createPropertyBlockInput)
-	if createPropertyBlockErr != nil {
-		transaction.Rollback()
-		return nil, pkg.InternalServerError(createPropertyBlockErr.Error(), &pkg.RentLoopErrorParams{
-			Err: createPropertyBlockErr,
-			Metadata: map[string]string{
-				"function": "CreateProperty",
-				"action":   "creating property block",
-			},
-		})
-	}
-
 	if commitErr := transaction.Commit().Error; commitErr != nil {
 		transaction.Rollback()
 		return nil, pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{

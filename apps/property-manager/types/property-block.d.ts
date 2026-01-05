@@ -16,6 +16,5 @@ interface PropertyBlock {
 }
 
 interface FetchPropertyBlockFilter {
-	property_id?: string
 	status?: string
 }
