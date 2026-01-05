@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '~/lib/constants'
 import { getQueryParams } from '~/lib/get-param'
 import { fetchClient, fetchServer } from '~/lib/transport'
@@ -104,3 +104,33 @@ export const createTenantApplication = async (
 		}
 	}
 }
+
+/**
+ * Invite tenant to a property.
+ */
+const inviteTenantToProperty = async (props: {
+	desired_unit_id: string
+	email: Maybe<string>
+	phone: Maybe<string>
+}) => {
+	try {
+		await fetchClient(`/v1/tenants-application/invite`, {
+			method: 'POST',
+			body: JSON.stringify(props),
+		})
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useInviteTenateToProperty = () =>
+	useMutation({
+		mutationFn: inviteTenantToProperty,
+	})

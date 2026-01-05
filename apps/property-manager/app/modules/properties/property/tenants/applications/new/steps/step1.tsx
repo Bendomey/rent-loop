@@ -25,7 +25,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '~/components/ui/select'
-import { Spinner } from '~/components/ui/spinner'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
@@ -65,14 +64,8 @@ const gender: Array<{ label: string; value: TenantApplication['gender'] }> = [
 export type FormSchema = z.infer<typeof ValidationSchema>
 
 export function Step1() {
-	const {
-		goBack,
-		goNext,
-		formData,
-		onSubmit: submit,
-		isSubmitting,
-		updateFormData,
-	} = useCreatePropertyTenantApplicationContext()
+	const { goBack, goNext, formData, updateFormData } =
+		useCreatePropertyTenantApplicationContext()
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
@@ -86,8 +79,7 @@ export function Step1() {
 		isLoading: isUploading,
 	} = useUploadObject('tenant-application/profile-pictures')
 
-	const { watch, handleSubmit, control, setValue } = rhfMethods
-	const isSelfOnboarding = watch('on_boarding_method') === 'SELF'
+	const { handleSubmit, control, setValue } = rhfMethods
 
 	useEffect(() => {
 		if (profilePhotoUrl) {
@@ -168,18 +160,7 @@ export function Step1() {
 			date_of_birth: data.date_of_birth?.toISOString(),
 			gender: data.gender,
 		})
-
-		if (isSelfOnboarding) {
-			// Submit the entire form for self-onboarding
-			await submit({
-				...formData,
-				...data,
-				date_of_birth: data.date_of_birth?.toISOString(),
-			})
-		} else {
-			// Move to next step for admin onboarding
-			goNext()
-		}
+		goNext()
 	}
 
 	return (
@@ -270,9 +251,7 @@ export function Step1() {
 										<Input {...field} type="text" />
 									</FormControl>
 									<FormDescription>
-										{isSelfOnboarding
-											? "We'll send a completion link and notifications to this email"
-											: "We'll send notifications to this email"}
+										We'll send notifications to this email
 									</FormDescription>
 									<FormMessage />
 								</FormItem>
@@ -288,56 +267,51 @@ export function Step1() {
 										<Input {...field} type="text" />
 									</FormControl>
 									<FormDescription>
-										{isSelfOnboarding
-											? "We'll send a completion link and notifications to this phone number"
-											: "We'll send notifications to this number"}
+										We'll send notifications to this number
 									</FormDescription>
 									<FormMessage />
 								</FormItem>
 							)}
 						/>
 					</div>
-					{!isSelfOnboarding ? (
-						<>
-							<FormField
-								name="date_of_birth"
-								control={control}
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Date of birth</FormLabel>
-										<FormControl>
-											<DatePickerInput
-												value={field.value}
-												onChange={field.onChange}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<ImageUpload
-								hero
-								shape="square"
-								hint="Optional"
-								acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-								error={rhfMethods.formState.errors?.profile_photo_url?.message}
-								fileCallback={upload}
-								isUploading={isUploading}
-								dismissCallback={() => {
-									rhfMethods.setValue('profile_photo_url', undefined, {
-										shouldDirty: true,
-										shouldValidate: true,
-									})
-								}}
-								imageSrc={safeString(rhfMethods.watch('profile_photo_url'))}
-								label="Profile Picture"
-								name="image_url"
-								validation={{
-									maxByteSize: 5242880, // 5MB
-								}}
-							/>
-						</>
-					) : null}
+
+					<FormField
+						name="date_of_birth"
+						control={control}
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Date of birth</FormLabel>
+								<FormControl>
+									<DatePickerInput
+										value={field.value}
+										onChange={field.onChange}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+					<ImageUpload
+						hero
+						shape="square"
+						hint="Optional"
+						acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
+						error={rhfMethods.formState.errors?.profile_photo_url?.message}
+						fileCallback={upload}
+						isUploading={isUploading}
+						dismissCallback={() => {
+							rhfMethods.setValue('profile_photo_url', undefined, {
+								shouldDirty: true,
+								shouldValidate: true,
+							})
+						}}
+						imageSrc={safeString(rhfMethods.watch('profile_photo_url'))}
+						label="Profile Picture"
+						name="image_url"
+						validation={{
+							maxByteSize: 5242880, // 5MB
+						}}
+					/>
 				</FieldGroup>
 
 				<div className="mt-10 flex items-center justify-between space-x-5">
@@ -350,18 +324,7 @@ export function Step1() {
 						variant="default"
 						className="bg-rose-600 hover:bg-rose-700"
 					>
-						{isSubmitting ? (
-							<>
-								<Spinner className="mr-2 h-4 w-4" />
-								Submitting...
-							</>
-						) : isSelfOnboarding ? (
-							'Submit Application'
-						) : (
-							<>
-								Next <ArrowRight className="ml-2 h-4 w-4" />
-							</>
-						)}
+						Next <ArrowRight className="ml-2 h-4 w-4" />
 					</Button>
 				</div>
 			</form>
