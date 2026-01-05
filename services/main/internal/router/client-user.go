@@ -132,6 +132,11 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					handlers.ClientUserPropertyHandler.FetchClientUserPropertyWithPopulate,
 				)
 			})
+
+			r.Route("/v1/tenant-applications", func(r chi.Router) {
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Post("/invite", handlers.TenantApplicationHandler.SendTenantInvite)
+			})
 		})
 	}
 }

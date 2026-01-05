@@ -145,3 +145,25 @@ Best regards,
 The rentloop Team
 `
 )
+
+const (
+	TENANT_INVITED_SUBJECT = "Complete your tenant application on Rentloop"
+	TENANT_INVITED_BODY    = `
+Hi,
+
+You’ve been invited to apply for a tenancy on Rentloop.
+
+To get started, please complete your tenant application using the secure link below:
+{{property_manager_portal_url}}/tenants/apply?unit={{unit_id}}&refered_by={{admin_id}}
+
+The application helps the property owner review your details and proceed with the tenancy process.
+This link is intended for you only. If you weren’t expecting this email, you can safely ignore it.
+
+If you have any questions or experience issues while applying, please contact us at {{admin_email}}.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop team
+`
+)

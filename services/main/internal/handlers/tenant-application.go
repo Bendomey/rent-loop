@@ -106,3 +106,60 @@ func (h *TenantApplicationHandler) CreateTenantApplication(w http.ResponseWriter
 		"data": transformations.DBTenantApplicationToRest(tenantApplication),
 	})
 }
+
+type SendTenantInviteRequest struct {
+	Email  *string `json:"email,omitempty" validate:"omitempty,email" example:"john.doe@example.com"                 description:"Email address of the applicant"`
+	Phone  *string `json:"phone,omitempty" validate:"omitempty,e164"  example:"+233281234569"                        description:"Phone number of the applicant"`
+	UnitId string  `json:"unit_id"         validate:"required,uuid"   example:"b4d0243c-6581-4104-8185-d83a45ebe41b" description:"Desired unit ID"`
+}
+
+// SendTenantInvite godoc
+//
+//	@Summary		Sends a tenant invite to a possible tenant
+//	@Description	Sends a tenant invite to a possible tenant
+//	@Tags			TenantApplication
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			body	body	SendTenantInviteRequest	true	"Send Tenant Invite Request Body"
+//	@Success		204		"Tenant invite sent successfully"
+//	@Failure		400		{object}	lib.HTTPError	"Error occurred when sending tenant invite"
+//	@Failure		401		{object}	string			"Invalid or absent authentication token"
+//	@Failure		404		{object}	lib.HTTPError	"TenantApplication not found"
+//	@Failure		422		{object}	string			"Validation error"
+//	@Failure		500		{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/tenant-applications/invite [post]
+func (h *TenantApplicationHandler) SendTenantInvite(w http.ResponseWriter, r *http.Request) {
+	adminClientUser, adminClientUserOk := lib.ClientUserFromContext(r.Context())
+	if !adminClientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	var body SendTenantInviteRequest
+
+	decodeErr := json.NewDecoder(r.Body).Decode(&body)
+	if decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	input := services.InviteTenantInput{
+		Email:   body.Email,
+		Phone:   body.Phone,
+		UnitId:  body.UnitId,
+		AdminId: adminClientUser.ID,
+	}
+
+	sendInviteErr := h.service.InviteTenant(r.Context(), input)
+	if sendInviteErr != nil {
+		HandleErrorResponse(w, sendInviteErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

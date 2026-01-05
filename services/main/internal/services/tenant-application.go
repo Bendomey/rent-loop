@@ -2,8 +2,10 @@ package services
 
 import (
 	"context"
+	"strings"
 	"time"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -14,22 +16,30 @@ type TenantApplicationService interface {
 		context context.Context,
 		input CreateTenantApplicationInput,
 	) (*models.TenantApplication, error)
+	InviteTenant(context context.Context, input InviteTenantInput) error
 }
 
 type tenantApplicationService struct {
-	appCtx      pkg.AppContext
-	repo        repository.TenantApplicationRepository
-	unitService UnitService
+	appCtx            pkg.AppContext
+	repo              repository.TenantApplicationRepository
+	unitService       UnitService
+	clientUserService ClientUserService
 }
 
 type TenantApplicationServiceDeps struct {
-	AppCtx      pkg.AppContext
-	Repo        repository.TenantApplicationRepository
-	UnitService UnitService
+	AppCtx            pkg.AppContext
+	Repo              repository.TenantApplicationRepository
+	UnitService       UnitService
+	ClientUserService ClientUserService
 }
 
 func NewTenantApplicationService(deps TenantApplicationServiceDeps) TenantApplicationService {
-	return &tenantApplicationService{appCtx: deps.AppCtx, repo: deps.Repo, unitService: deps.UnitService}
+	return &tenantApplicationService{
+		appCtx:            deps.AppCtx,
+		repo:              deps.Repo,
+		unitService:       deps.UnitService,
+		clientUserService: deps.ClientUserService,
+	}
 }
 
 type CreateTenantApplicationInput struct {
@@ -106,4 +116,60 @@ func (s *tenantApplicationService) CreateTenantApplication(
 	}
 
 	return &tenantApplication, nil
+}
+
+type InviteTenantInput struct {
+	Email   *string
+	Phone   *string
+	UnitId  string
+	AdminId string
+}
+
+func (s *tenantApplicationService) InviteTenant(ctx context.Context, input InviteTenantInput) error {
+	if input.Email == nil && input.Phone == nil {
+		return pkg.BadRequestError("PhoneOrEmailRequired", nil)
+	}
+
+	admin, getAdminErr := s.clientUserService.GetClientUserByQuery(ctx, map[string]any{"id": input.AdminId})
+	if getAdminErr != nil {
+		return getAdminErr
+	}
+
+	_, getUnitErr := s.unitService.GetUnitByID(ctx, input.UnitId)
+
+	if getUnitErr != nil {
+		return getUnitErr
+	}
+
+	r := strings.NewReplacer(
+		"{{property_manager_portal_url}}", s.appCtx.Config.Portals.PropertyManagerPortalURL,
+		"{{unit_id}}", input.UnitId,
+		"{{admin_id}}", input.AdminId,
+		"{{admin_email}}", admin.Email,
+	)
+
+	message := r.Replace(lib.TENANT_INVITED_BODY)
+
+	if input.Email != nil {
+		go pkg.SendEmail(
+			s.appCtx,
+			pkg.SendEmailInput{
+				Recipient: *input.Email,
+				Subject:   lib.TENANT_INVITED_SUBJECT,
+				TextBody:  message,
+			},
+		)
+	}
+
+	if input.Phone != nil {
+		go pkg.SendSMS(
+			s.appCtx,
+			pkg.SendSMSInput{
+				Recipient: *input.Phone,
+				Message:   message,
+			},
+		)
+	}
+
+	return nil
 }
