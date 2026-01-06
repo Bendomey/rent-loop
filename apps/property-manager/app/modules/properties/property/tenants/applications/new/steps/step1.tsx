@@ -18,6 +18,7 @@ import {
 } from '~/components/ui/form'
 import { ImageUpload } from '~/components/ui/image-upload'
 import { Input } from '~/components/ui/input'
+import { Label } from '~/components/ui/label'
 import {
 	Select,
 	SelectContent,
@@ -25,9 +26,14 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '~/components/ui/select'
-import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
+import {
+	TypographyH2,
+	TypographyMuted,
+	TypographySmall,
+} from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
+import { cn } from '~/lib/utils'
 
 const ValidationSchema = z.object({
 	on_boarding_method: z.enum(['SELF', 'ADMIN'], {
@@ -54,11 +60,22 @@ const ValidationSchema = z.object({
 		}, 'You must be at least 14 years old')
 		.optional(),
 	gender: z.enum(['MALE', 'FEMALE'], { error: 'Please select a gender' }),
+	employment_type: z.enum(['STUDENT', 'WORKER'], {
+		error: 'Please select an employment type',
+	}),
 })
 
 const gender: Array<{ label: string; value: TenantApplication['gender'] }> = [
 	{ label: 'Male', value: 'MALE' },
 	{ label: 'Female', value: 'FEMALE' },
+]
+
+const employment_type: Array<{
+	label: string
+	value: TenantApplication['employment_type']
+}> = [
+	{ label: 'Student', value: 'STUDENT' },
+	{ label: 'Worker', value: 'WORKER' },
 ]
 
 export type FormSchema = z.infer<typeof ValidationSchema>
@@ -70,6 +87,7 @@ export function Step1() {
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
 			on_boarding_method: formData.on_boarding_method,
+			employment_type: 'STUDENT',
 		},
 	})
 
@@ -79,7 +97,7 @@ export function Step1() {
 		isLoading: isUploading,
 	} = useUploadObject('tenant-application/profile-pictures')
 
-	const { handleSubmit, control, setValue } = rhfMethods
+	const { watch, handleSubmit, formState, control, setValue } = rhfMethods
 
 	useEffect(() => {
 		if (profilePhotoUrl) {
@@ -139,6 +157,12 @@ export function Step1() {
 				shouldValidate: true,
 			})
 		}
+		if (formData.employment_type) {
+			setValue('employment_type', formData.employment_type, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
 
 		if (formData.profile_photo_url) {
 			setValue('profile_photo_url', formData.profile_photo_url, {
@@ -156,6 +180,7 @@ export function Step1() {
 			last_name: data.last_name,
 			email: data.email,
 			phone: data.phone,
+			employment_type: data.employment_type,
 			profile_photo_url: data.profile_photo_url,
 			date_of_birth: data.date_of_birth?.toISOString(),
 			gender: data.gender,
@@ -291,6 +316,39 @@ export function Step1() {
 							</FormItem>
 						)}
 					/>
+
+					<div className="w-full">
+						<Label>Employment Type</Label>
+						<div className="mt-3 flex space-x-3">
+							{employment_type.map((employment_type) => {
+								const isSelected =
+									watch('employment_type') === employment_type.value
+								return (
+									<Button
+										type="button"
+										onClick={() =>
+											setValue('employment_type', employment_type.value, {
+												shouldDirty: true,
+												shouldValidate: true,
+											})
+										}
+										key={employment_type.value}
+										variant={isSelected ? 'default' : 'outline'}
+										className={cn('w-1/3', {
+											'bg-rose-600 text-white': isSelected,
+										})}
+									>
+										{employment_type.label}
+									</Button>
+								)
+							})}
+						</div>
+						{formState.errors?.employment_type ? (
+							<TypographySmall className="text-destructive mt-3">
+								{formState.errors.employment_type.message}
+							</TypographySmall>
+						) : null}
+					</div>
 					<ImageUpload
 						hero
 						shape="square"

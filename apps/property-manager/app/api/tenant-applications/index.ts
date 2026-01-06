@@ -72,6 +72,7 @@ export interface CreatePropertyTenantApplicationInput {
 	relationship_to_emergency_contact: string
 
 	// Occupation_Details
+	employment_type: TenantApplication['employment_type']
 	occupation: string
 	employer: string
 	occupation_address: string
@@ -84,7 +85,7 @@ export const createTenantApplication = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<TenantApplication>>(
-			`${apiConfig?.baseUrl}/v1/properties/${props.property_id}/tenant-applications/${props.desired_unit_id}/create`,
+			`${apiConfig?.baseUrl}/v1/tenant-applications`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),
@@ -109,12 +110,12 @@ export const createTenantApplication = async (
  * Invite tenant to a property.
  */
 const inviteTenantToProperty = async (props: {
-	desired_unit_id: string
+	unit_id: string
 	email: Maybe<string>
 	phone: Maybe<string>
 }) => {
 	try {
-		await fetchClient(`/v1/tenants-application/invite`, {
+		await fetchClient(`/v1/tenant-applications/invite`, {
 			method: 'POST',
 			body: JSON.stringify(props),
 		})

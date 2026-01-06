@@ -55,6 +55,7 @@ const onboardingOptions = [
 export function Step0() {
 	const { clientUserProperty } = useLoaderData<typeof loader>()
 	const property_id = safeString(clientUserProperty?.property?.id)
+	const admin_id = safeString(clientUserProperty?.client_user_id)
 
 	const [openInviteTenantModal, setOpenInviteTenantModal] = useState(false)
 
@@ -259,6 +260,7 @@ export function Step0() {
 				setOpened={setOpenInviteTenantModal}
 				data={formData}
 				property_id={property_id}
+				admin_id={admin_id}
 			/>
 		</>
 	)

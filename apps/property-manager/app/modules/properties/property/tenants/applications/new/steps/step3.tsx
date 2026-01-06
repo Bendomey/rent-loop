@@ -34,6 +34,9 @@ const ValidationSchema = z.object({
 	emergency_contact_phone: z
 		.string({ error: 'Phone Number is required' })
 		.min(9, 'Please enter a valid phone number'),
+	employment_type: z.enum(['STUDENT', 'WORKER'], {
+		error: 'Please select an employment type',
+	}),
 	occupation: z.string().optional(),
 	employer: z.string().optional(),
 	occupation_address: z.string().optional(),
@@ -48,6 +51,9 @@ export function Step3() {
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
+		defaultValues: {
+			employment_type: formData.employment_type,
+		},
 	})
 
 	const {
@@ -66,7 +72,9 @@ export function Step3() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [proofOfIncomeUrl])
 
-	const { handleSubmit, control, setValue } = rhfMethods
+	const { watch, handleSubmit, control, setValue } = rhfMethods
+
+	const isStudent = watch('employment_type') === 'STUDENT'
 
 	useEffect(() => {
 		if (formData.emergency_contact_name) {
@@ -139,10 +147,13 @@ export function Step3() {
 			>
 				{/* Header Section */}
 				<div className="space-y-2 border-b pb-6">
-					<TypographyH2>Emergency Contact & Employment</TypographyH2>
+					<TypographyH2>
+						Emergency Contact &{' '}
+						{isStudent ? 'Student Information' : 'Employment Information'}
+					</TypographyH2>
 					<TypographyMuted className="text-base">
-						Please provide your emergency contact information and employment
-						details.
+						Please provide your emergency contact information and{' '}
+						{isStudent ? 'student' : 'employment'} details.
 					</TypographyMuted>
 				</div>
 
@@ -212,37 +223,45 @@ export function Step3() {
 					{/* Employment Section */}
 					<div className="space-y-4 border-t pt-6">
 						<div className="space-y-1">
-							<TypographyH4>Employment Information</TypographyH4>
+							<TypographyH4>
+								{isStudent ? 'Student Information' : 'Employment Information'}
+							</TypographyH4>
 						</div>
-						<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-							<FormField
-								name="occupation"
-								control={control}
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Occupation</FormLabel>
-										<FormControl>
-											<Input
-												type="text"
-												placeholder="e.g., Software Engineer"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
+						<div
+							className={`grid grid-cols-1 gap-4 ${isStudent ? 'md:grid-cols-1' : 'md:grid-cols-2'}`}
+						>
+							{!isStudent && (
+								<FormField
+									name="occupation"
+									control={control}
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Occupation</FormLabel>
+											<FormControl>
+												<Input
+													type="text"
+													placeholder="e.g., Software Engineer"
+													{...field}
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							)}
 
 							<FormField
 								name="employer"
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Employer</FormLabel>
+										<FormLabel>
+											{isStudent ? 'Institution/School' : 'Employer'}
+										</FormLabel>
 										<FormControl>
 											<Input
 												type="text"
-												placeholder="e.g., Company Name"
+												placeholder={`e.g., ${isStudent ? 'Institution/School' : 'Company Name'}`}
 												{...field}
 											/>
 										</FormControl>
@@ -257,7 +276,7 @@ export function Step3() {
 							control={control}
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Employer Address</FormLabel>
+									<FormLabel>Address</FormLabel>
 									<FormControl>
 										<Input
 											type="text"
@@ -274,11 +293,23 @@ export function Step3() {
 					{/* Proof of Income */}
 					<div className="space-y-4 border-t pt-6">
 						<div className="space-y-1">
-							<h3 className="font-semibold">Proof of Income</h3>
-							<TypographyMuted>
-								Upload a document proving your income (pay stub, tax return,
-								etc.)
-							</TypographyMuted>
+							{isStudent ? (
+								<>
+									<h3 className="font-semibold">Proof of Admission</h3>
+									<TypographyMuted>
+										Upload a document proving your admission (acceptance letter,
+										enrollment verification, etc.)
+									</TypographyMuted>
+								</>
+							) : (
+								<>
+									<h3 className="font-semibold">Proof of Income</h3>
+									<TypographyMuted>
+										Upload a document proving your income (pay stub, tax return,
+										etc.)
+									</TypographyMuted>
+								</>
+							)}
 						</div>
 
 						<ImageUpload
@@ -296,7 +327,7 @@ export function Step3() {
 								})
 							}}
 							imageSrc={safeString(rhfMethods.watch('proof_of_income_url'))}
-							label="Proof of Income"
+							label={`${isStudent ? 'Proof of Admission' : 'Proof of Income'}`}
 							name="proof_of_income"
 							validation={{
 								maxByteSize: 5242880, // 5MB

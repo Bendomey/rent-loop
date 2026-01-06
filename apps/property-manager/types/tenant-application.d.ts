@@ -25,6 +25,7 @@ interface TenantApplication {
 	emergency_contact_name: string
 	emergency_contact_phone: string
 	relationship_to_emergency_contact: string
+	employment_type: 'WORKER' | 'STUDENT'
 	occupation: string
 	employer: string
 	occupation_address: string

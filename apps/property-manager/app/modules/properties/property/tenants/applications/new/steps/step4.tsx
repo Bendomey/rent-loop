@@ -54,6 +54,8 @@ export function Step4() {
 	const { goBack, goToPage, formData, onSubmit, isSubmitting } =
 		useCreatePropertyTenantApplicationContext()
 
+	const isStudent = formData.employment_type === 'STUDENT'
+
 	return (
 		<form
 			onSubmit={async (e) => {
@@ -174,8 +176,8 @@ export function Step4() {
 
 			{/* Emergency Contact & Employment */}
 			<PreviewCard
-				title="Emergency Contact & Employment"
-				subtitle="Emergency contact and employment information"
+				title={`${isStudent ? 'Emergency Contact & Student Information' : 'Emergency Contact & Employment Information'}`}
+				subtitle={`Emergency contact and ${isStudent ? 'student' : 'employment'} information`}
 				stepNumber={3}
 				onEdit={() => goToPage(3)}
 			>
@@ -201,16 +203,18 @@ export function Step4() {
 
 					<div className="border-t pt-4">
 						<TypographyP className="text-foreground mb-3 font-semibold">
-							Employment Information
+							{isStudent ? 'Student Information' : 'Employment Information'}
 						</TypographyP>
 						<div className="grid grid-cols-2 gap-x-4 gap-y-0">
-							{renderPreviewField('Occupation', formData.occupation)}
-							{renderPreviewField('Employer', formData.employer)}
+							{isStudent
+								? null
+								: renderPreviewField('Occupation', formData.occupation)}
+							{renderPreviewField(
+								isStudent ? 'Institution/School' : 'Employer',
+								formData.employer,
+							)}
 							<div className="col-span-2">
-								{renderPreviewField(
-									'Employer Address',
-									formData.occupation_address,
-								)}
+								{renderPreviewField('Address', formData.occupation_address)}
 							</div>
 						</div>
 					</div>
@@ -218,12 +222,12 @@ export function Step4() {
 					{formData.proof_of_income_url && (
 						<div className="border-t pt-4">
 							<TypographyP className="mb-3 text-sm font-medium text-slate-600">
-								Proof of Income
+								Proof of {isStudent ? 'Admission' : 'Income'}
 							</TypographyP>
 							<div className="mt-2">
 								<Image
 									src={formData.proof_of_income_url}
-									alt="Proof of Income"
+									alt={`Proof of ${isStudent ? 'Admission' : 'Income'}`}
 									className="max-h-40 rounded-md object-cover"
 								/>
 							</div>
