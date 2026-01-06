@@ -23,6 +23,7 @@ import { useProperty } from '~/providers/property-provider'
 const applications: TenantApplication[] = [
 	{
 		id: 'app_001',
+		on_boarding_method: 'SELF',
 		first_name: 'John',
 		other_names: null,
 		last_name: 'Mensah',
@@ -42,6 +43,7 @@ const applications: TenantApplication[] = [
 		emergency_contact_name: 'Kofi Mensah',
 		emergency_contact_phone: '+233209876543',
 		relationship_to_emergency_contact: 'Brother',
+		employment_type: 'WORKER',
 		occupation: 'Software Developer',
 		employer: 'TechHub Ghana',
 		occupation_address: 'Airport City',
@@ -63,6 +65,7 @@ const applications: TenantApplication[] = [
 
 	{
 		id: 'app_002',
+		on_boarding_method: 'ADMIN',
 		first_name: 'Angela',
 		other_names: 'Naa',
 		last_name: 'Owusu',
@@ -82,6 +85,7 @@ const applications: TenantApplication[] = [
 		emergency_contact_name: 'Michael Owusu',
 		emergency_contact_phone: '+233201112233',
 		relationship_to_emergency_contact: 'Husband',
+		employment_type: 'WORKER',
 		occupation: 'Nurse',
 		employer: 'Korle-Bu Teaching Hospital',
 		occupation_address: 'Korle-Bu',
@@ -103,6 +107,7 @@ const applications: TenantApplication[] = [
 
 	{
 		id: 'app_003',
+		on_boarding_method: 'ADMIN',
 		first_name: 'Kwame',
 		other_names: null,
 		last_name: 'Boateng',
@@ -122,6 +127,7 @@ const applications: TenantApplication[] = [
 		emergency_contact_name: 'Adwoa Boateng',
 		emergency_contact_phone: '+233202224444',
 		relationship_to_emergency_contact: 'Sister',
+		employment_type: 'STUDENT',
 		occupation: 'Electrician',
 		employer: 'PowerTech Services',
 		occupation_address: 'Tema Heavy Industrial Area',
@@ -143,6 +149,7 @@ const applications: TenantApplication[] = [
 
 	{
 		id: 'app_004',
+		on_boarding_method: 'SELF',
 		first_name: 'Linda',
 		other_names: null,
 		last_name: 'Addo',
@@ -162,6 +169,7 @@ const applications: TenantApplication[] = [
 		emergency_contact_name: 'Ama Addo',
 		emergency_contact_phone: '+233209887733',
 		relationship_to_emergency_contact: 'Mother',
+		employment_type: 'STUDENT',
 		occupation: 'Student',
 		employer: 'University of Ghana',
 		occupation_address: 'Legon',
@@ -183,6 +191,7 @@ const applications: TenantApplication[] = [
 
 	{
 		id: 'app_005',
+		on_boarding_method: 'SELF',
 		first_name: 'Samuel',
 		other_names: 'K.',
 		last_name: 'Amoah',
@@ -202,6 +211,7 @@ const applications: TenantApplication[] = [
 		emergency_contact_name: 'Rita Amoah',
 		emergency_contact_phone: '+233503345566',
 		relationship_to_emergency_contact: 'Wife',
+		employment_type: 'WORKER',
 		occupation: 'Teacher',
 		employer: 'St. Peter’s SHS',
 		occupation_address: 'Nkwatia',

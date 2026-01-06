@@ -48,6 +48,7 @@ export * from './properties/property/tenants/active/tenant/payments'
 export * from './properties/property/tenants/active/tenant/maintenance-requests'
 
 export * from './properties/property/tenants/applications'
+export * from './properties/property/tenants/applications/new'
 
 export * from './properties/property/activities/announcements'
 export * from './properties/property/activities/inspections'
