@@ -53,7 +53,6 @@ const PreviewCard = ({
 export function Step4() {
 	const { goBack, goToPage, formData, onSubmit, isSubmitting } =
 		useCreatePropertyTenantApplicationContext()
-
 	const isStudent = formData.employment_type === 'STUDENT'
 
 	return (
@@ -120,6 +119,7 @@ export function Step4() {
 					{formData.other_names &&
 						renderPreviewField('Other Names', formData.other_names)}
 					{renderPreviewField('Gender', formData.gender)}
+					{renderPreviewField('Marital Status', formData.marital_status)}
 					{renderPreviewField('Email', formData.email)}
 					{renderPreviewField('Phone', formData.phone)}
 					{formData.date_of_birth &&
@@ -127,6 +127,7 @@ export function Step4() {
 							'Date of Birth',
 							new Date(formData.date_of_birth).toLocaleDateString(),
 						)}
+					{renderPreviewField('Address', formData.current_address)}
 				</div>
 			</PreviewCard>
 

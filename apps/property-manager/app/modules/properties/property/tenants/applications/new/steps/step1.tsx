@@ -18,7 +18,6 @@ import {
 } from '~/components/ui/form'
 import { ImageUpload } from '~/components/ui/image-upload'
 import { Input } from '~/components/ui/input'
-import { Label } from '~/components/ui/label'
 import {
 	Select,
 	SelectContent,
@@ -26,14 +25,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '~/components/ui/select'
-import {
-	TypographyH2,
-	TypographyMuted,
-	TypographySmall,
-} from '~/components/ui/typography'
+import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
-import { cn } from '~/lib/utils'
 
 const ValidationSchema = z.object({
 	on_boarding_method: z.enum(['SELF', 'ADMIN'], {
@@ -59,9 +53,12 @@ const ValidationSchema = z.object({
 			return age >= 14
 		}, 'You must be at least 14 years old')
 		.optional(),
+	current_address: z
+		.string({ error: 'Current Address is required' })
+		.min(5, 'Please enter a valid address'),
 	gender: z.enum(['MALE', 'FEMALE'], { error: 'Please select a gender' }),
-	employment_type: z.enum(['STUDENT', 'WORKER'], {
-		error: 'Please select an employment type',
+	marital_status: z.enum(['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'], {
+		error: 'Please select a marital status',
 	}),
 })
 
@@ -70,12 +67,14 @@ const gender: Array<{ label: string; value: TenantApplication['gender'] }> = [
 	{ label: 'Female', value: 'FEMALE' },
 ]
 
-const employment_type: Array<{
+const marital_status: Array<{
 	label: string
-	value: TenantApplication['employment_type']
+	value: TenantApplication['marital_status']
 }> = [
-	{ label: 'Student', value: 'STUDENT' },
-	{ label: 'Worker', value: 'WORKER' },
+	{ label: 'Single', value: 'SINGLE' },
+	{ label: 'Married', value: 'MARRIED' },
+	{ label: 'Divorced', value: 'DIVORCED' },
+	{ label: 'Widowed', value: 'WIDOWED' },
 ]
 
 export type FormSchema = z.infer<typeof ValidationSchema>
@@ -87,7 +86,8 @@ export function Step1() {
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
 			on_boarding_method: formData.on_boarding_method,
-			employment_type: 'STUDENT',
+			marital_status: formData.marital_status || 'SINGLE',
+			gender: formData.gender || 'MALE',
 		},
 	})
 
@@ -97,7 +97,7 @@ export function Step1() {
 		isLoading: isUploading,
 	} = useUploadObject('tenant-application/profile-pictures')
 
-	const { watch, handleSubmit, formState, control, setValue } = rhfMethods
+	const { handleSubmit, control, setValue } = rhfMethods
 
 	useEffect(() => {
 		if (profilePhotoUrl) {
@@ -138,6 +138,13 @@ export function Step1() {
 			})
 		}
 
+		if (formData.marital_status) {
+			setValue('marital_status', formData.marital_status, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+
 		if (formData.email) {
 			setValue('email', formData.email, {
 				shouldDirty: true,
@@ -151,14 +158,15 @@ export function Step1() {
 				shouldValidate: true,
 			})
 		}
-		if (formData.date_of_birth) {
-			setValue('date_of_birth', new Date(formData.date_of_birth), {
+
+		if (formData.current_address) {
+			setValue('current_address', formData.current_address, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
 		}
-		if (formData.employment_type) {
-			setValue('employment_type', formData.employment_type, {
+		if (formData.date_of_birth) {
+			setValue('date_of_birth', new Date(formData.date_of_birth), {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
@@ -180,10 +188,11 @@ export function Step1() {
 			last_name: data.last_name,
 			email: data.email,
 			phone: data.phone,
-			employment_type: data.employment_type,
+			current_address: data.current_address,
 			profile_photo_url: data.profile_photo_url,
 			date_of_birth: data.date_of_birth?.toISOString(),
 			gender: data.gender,
+			marital_status: data.marital_status,
 		})
 		goNext()
 	}
@@ -298,18 +307,61 @@ export function Step1() {
 								</FormItem>
 							)}
 						/>
+
+						<FormField
+							name="date_of_birth"
+							control={control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Date of birth</FormLabel>
+									<FormControl>
+										<DatePickerInput
+											value={field.value}
+											onChange={field.onChange}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<FormField
+							name="marital_status"
+							control={control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Marital Status</FormLabel>
+									<FormControl>
+										<Select value={field.value} onValueChange={field.onChange}>
+											<SelectTrigger className="w-full">
+												<SelectValue placeholder="Select marital status" />
+											</SelectTrigger>
+											<SelectContent>
+												{marital_status.map((item) => (
+													<SelectItem key={item.value} value={item.value}>
+														{item.label}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
 					</div>
 
 					<FormField
-						name="date_of_birth"
+						name="current_address"
 						control={control}
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>Date of birth</FormLabel>
+								<FormLabel>Address</FormLabel>
 								<FormControl>
-									<DatePickerInput
-										value={field.value}
-										onChange={field.onChange}
+									<Input
+										type="text"
+										placeholder="e.g.,East Legon, Accra"
+										{...field}
 									/>
 								</FormControl>
 								<FormMessage />
@@ -317,38 +369,6 @@ export function Step1() {
 						)}
 					/>
 
-					<div className="w-full">
-						<Label>Employment Type</Label>
-						<div className="mt-3 flex space-x-3">
-							{employment_type.map((employment_type) => {
-								const isSelected =
-									watch('employment_type') === employment_type.value
-								return (
-									<Button
-										type="button"
-										onClick={() =>
-											setValue('employment_type', employment_type.value, {
-												shouldDirty: true,
-												shouldValidate: true,
-											})
-										}
-										key={employment_type.value}
-										variant={isSelected ? 'default' : 'outline'}
-										className={cn('w-1/3', {
-											'bg-rose-600 text-white': isSelected,
-										})}
-									>
-										{employment_type.label}
-									</Button>
-								)
-							})}
-						</div>
-						{formState.errors?.employment_type ? (
-							<TypographySmall className="text-destructive mt-3">
-								{formState.errors.employment_type.message}
-							</TypographySmall>
-						) : null}
-					</div>
 					<ImageUpload
 						hero
 						shape="square"

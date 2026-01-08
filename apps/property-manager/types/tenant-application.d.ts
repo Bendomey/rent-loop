@@ -30,12 +30,18 @@ interface TenantApplication {
 	employer: string
 	occupation_address: string
 	proof_of_income_url: Nullable<string>
+
+	created_by: Nullable<ClientUser>
+	created_by_id: string
+
 	completed_at: Nullable<Date>
 	completed_by_id: Nullable<string>
 	completed_by: Nullable<ClientUser>
+
 	cancelled_at: Nullable<Date>
 	cancelled_by_id: Nullable<string>
 	cancelled_by: Nullable<ClientUser>
+
 	desired_unit_id: string
 	desired_unit: Unit
 	previous_landlord_name: Nullable<string>
