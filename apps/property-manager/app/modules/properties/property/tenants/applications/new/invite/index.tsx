@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Copy, Phone, Mail } from 'lucide-react'
 import { useEffect, type Dispatch, type SetStateAction } from 'react'
 import { useForm } from 'react-hook-form'
-import { useNavigate } from 'react-router'
+import { useLoaderData, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useInviteTenateToProperty } from '~/api/tenant-applications'
@@ -28,11 +28,11 @@ import { Spinner } from '~/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { TypographyH3, TypographyMuted } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
-import { getDisplayUrl } from '~/lib/misc'
+import { safeString } from '~/lib/strings'
+import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.applications.new'
 
 interface Props {
 	data?: Partial<TenantApplication>
-	property_id: string
 	admin_id: string
 	opened: boolean
 	setOpened: Dispatch<SetStateAction<boolean>>
@@ -67,18 +67,13 @@ const ValidationSchema = z
 
 export type FormSchema = z.infer<typeof ValidationSchema>
 
-function InviteTenantModal({
-	opened,
-	setOpened,
-	data,
-	property_id,
-	admin_id,
-}: Props) {
+function InviteTenantModal({ opened, setOpened, data, admin_id }: Props) {
 	const queryClient = useQueryClient()
 	const navigate = useNavigate()
-	const baseUrl = getDisplayUrl()
+	const { clientUserProperty, origin } = useLoaderData<typeof loader>()
+	const property_id = safeString(clientUserProperty?.property?.id)
 
-	const generatedLink = `${baseUrl}/tenants/apply?unit=${data?.desired_unit_id}&refered_by=${admin_id}`
+	const generatedLink = `${origin}/tenants/apply?unit=${data?.desired_unit_id}&refered_by=${admin_id}`
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),

@@ -259,7 +259,6 @@ export function Step0() {
 				opened={openInviteTenantModal}
 				setOpened={setOpenInviteTenantModal}
 				data={formData}
-				property_id={property_id}
 				admin_id={admin_id}
 			/>
 		</>
