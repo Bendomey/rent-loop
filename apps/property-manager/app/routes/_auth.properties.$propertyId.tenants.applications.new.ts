@@ -38,6 +38,7 @@ export async function action({ request }: Route.ActionArgs) {
 	const email = formData.get('email') as string
 	const phone = formData.get('phone') as string
 	const gender = formData.get('gender') as TenantApplication['gender']
+	const marital_status = formData.get('marital_status') as TenantApplication['marital_status']
 	const profile_photo_url = formData.get('profile_photo_url') as string
 	const date_of_birth = formData.get('date_of_birth') as string
 	const nationality = formData.get('nationality') as string
@@ -76,6 +77,7 @@ export async function action({ request }: Route.ActionArgs) {
 				email,
 				phone,
 				gender,
+				marital_status,
 				profile_photo_url,
 				date_of_birth,
 				nationality,

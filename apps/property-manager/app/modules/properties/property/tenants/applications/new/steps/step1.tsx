@@ -60,6 +60,7 @@ const ValidationSchema = z.object({
 		}, 'You must be at least 14 years old')
 		.optional(),
 	gender: z.enum(['MALE', 'FEMALE'], { error: 'Please select a gender' }),
+	marital_status: z.enum(['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'], { error: 'Please select a marital status' }),
 	employment_type: z.enum(['STUDENT', 'WORKER'], {
 		error: 'Please select an employment type',
 	}),
@@ -68,6 +69,13 @@ const ValidationSchema = z.object({
 const gender: Array<{ label: string; value: TenantApplication['gender'] }> = [
 	{ label: 'Male', value: 'MALE' },
 	{ label: 'Female', value: 'FEMALE' },
+]
+
+const marital_status: Array<{ label: string; value: TenantApplication['marital_status'] }> = [
+	{ label: 'Single', value: 'SINGLE' },
+	{ label: 'Married', value: 'MARRIED' },
+	{ label: 'Divorced', value: 'DIVORCED' },
+	{ label: 'Widowed', value: 'WIDOWED' },
 ]
 
 const employment_type: Array<{
@@ -88,6 +96,7 @@ export function Step1() {
 		defaultValues: {
 			on_boarding_method: formData.on_boarding_method,
 			employment_type: 'STUDENT',
+			marital_status: 'SINGLE'
 		},
 	})
 
@@ -133,6 +142,13 @@ export function Step1() {
 
 		if (formData.gender) {
 			setValue('gender', formData.gender, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+
+		if (formData.marital_status) {
+			setValue('marital_status', formData.marital_status, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
@@ -184,6 +200,7 @@ export function Step1() {
 			profile_photo_url: data.profile_photo_url,
 			date_of_birth: data.date_of_birth?.toISOString(),
 			gender: data.gender,
+			marital_status: data.marital_status,
 		})
 		goNext()
 	}
@@ -298,7 +315,6 @@ export function Step1() {
 								</FormItem>
 							)}
 						/>
-					</div>
 
 					<FormField
 						name="date_of_birth"
@@ -316,6 +332,32 @@ export function Step1() {
 							</FormItem>
 						)}
 					/>
+
+						<FormField
+							name="marital_status"
+							control={control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Marital Status</FormLabel>
+									<FormControl>
+										<Select value={field.value} onValueChange={field.onChange}>
+											<SelectTrigger className="w-full">
+												<SelectValue placeholder="Select marital status" />
+											</SelectTrigger>
+											<SelectContent>
+												{marital_status.map((item) => (
+													<SelectItem key={item.value} value={item.value}>
+														{item.label}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
 
 					<div className="w-full">
 						<Label>Employment Type</Label>

@@ -56,6 +56,7 @@ export interface CreatePropertyTenantApplicationInput {
 	email: string
 	phone: string
 	gender: TenantApplication['gender']
+	marital_status: TenantApplication['marital_status']
 	profile_photo_url: Maybe<string>
 	date_of_birth: string
 
