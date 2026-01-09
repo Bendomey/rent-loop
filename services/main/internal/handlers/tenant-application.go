@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -162,4 +163,78 @@ func (h *TenantApplicationHandler) SendTenantInvite(w http.ResponseWriter, r *ht
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+type ListTenantApplicationsQuery struct {
+	lib.FilterQueryInput
+	Status                       *string `json:"status,omitempty"                          validate:"omitempty,oneof=TenantApplication.Status.InProgress TenantApplication.Status.Cancelled TenantApplication.Status.Completed"`
+	StayDurationFrequency        *string `json:"stay_duration_frequency,omitempty"         validate:"omitempty,oneof=Hours Days Months"`
+	PaymentFrequency             *string `json:"payment_frequency,omitempty"               validate:"omitempty,oneof=Hourly Daily Monthly Quarterly BiAnnually Annually OneTime"`
+	InitialDepositPaymentMethod  *string `json:"initial_deposit_payment_method,omitempty"  validate:"omitempty,oneof=ONLINE CASH EXTERNAL"`
+	SecurityDepositPaymentMethod *string `json:"security_deposit_payment_method,omitempty" validate:"omitempty,oneof=ONLINE CASH EXTERNAL"`
+	Gender                       *string `json:"gender,omitempty"                          validate:"omitempty,oneof=Male Female"`
+	MaritalStatus                *string `json:"marital_status,omitempty"                  validate:"omitempty,oneof=Single Married Divorced Widowed"`
+	CreatedById                  *string `json:"created_by_id,omitempty"                   validate:"omitempty,uuid"                                                                                                            example:"72432ce6-5620-4ecf-a862-4bf2140556a1" description:"ID of the user who created the tenant application"`
+}
+
+// ListTenantApplications godoc
+//
+//	@Summary		List all tenant applications
+//	@Description	List all tenant applications
+//	@Tags			TenantApplication
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			q	query		ListTenantApplicationsQuery	true	"Tenant applications"
+//	@Success		200	{object}	object{data=object{rows=[]transformations.OutputTenantApplication,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400	{object}	lib.HTTPError	"An error occurred while filtering tenant applications"
+//	@Failure		401	{object}	string			"Absent or invalid authentication token"
+//	@Failure		500	{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/tenant-applications [get]
+func (h *TenantApplicationHandler) ListTenantApplications(w http.ResponseWriter, r *http.Request) {
+	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
+	if filterQueryErr != nil {
+		HandleErrorResponse(w, filterQueryErr)
+		return
+	}
+
+	isFilterQueryPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filterQuery, w)
+	if !isFilterQueryPassedValidation {
+		return
+	}
+
+	input := repository.ListTenantApplicationsQuery{
+		FilterQuery:                  *filterQuery,
+		Status:                       lib.NullOrString(r.URL.Query().Get("status")),
+		StayDurationFrequency:        lib.NullOrString(r.URL.Query().Get("stay_duration_frequency")),
+		PaymentFrequency:             lib.NullOrString(r.URL.Query().Get("payment_frequency")),
+		InitialDepositPaymentMethod:  lib.NullOrString(r.URL.Query().Get("initial_deposit_payment_method")),
+		SecurityDepositPaymentMethod: lib.NullOrString(r.URL.Query().Get("security_deposit_payment_method")),
+		Gender:                       lib.NullOrString(r.URL.Query().Get("gender")),
+		MaritalStatus:                lib.NullOrString(r.URL.Query().Get("marital_status")),
+		CreatedById:                  lib.NullOrString(r.URL.Query().Get("created_by_id")),
+	}
+
+	tenantApplications, tenantApplicationsErr := h.service.ListTenantApplications(r.Context(), input)
+	if tenantApplicationsErr != nil {
+		HandleErrorResponse(w, tenantApplicationsErr)
+		return
+	}
+
+	tenantApplicationsCount, tenantApplicationsCountErr := h.service.CountTenantApplications(r.Context(), input)
+	if tenantApplicationsCountErr != nil {
+		HandleErrorResponse(w, tenantApplicationsCountErr)
+		return
+	}
+
+	tenantApplicationsTransformed := make([]any, 0)
+	for _, tenantApplication := range tenantApplications {
+		tenantApplicationsTransformed = append(
+			tenantApplicationsTransformed,
+			transformations.DBTenantApplicationToRest(&tenantApplication),
+		)
+	}
+
+	json.NewEncoder(w).
+		Encode(lib.ReturnListResponse(filterQuery, tenantApplicationsTransformed, tenantApplicationsCount))
 }

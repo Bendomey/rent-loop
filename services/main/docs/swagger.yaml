@@ -4107,6 +4107,141 @@ paths:
       tags:
       - Properties
   /api/v1/tenant-applications:
+    get:
+      consumes:
+      - application/json
+      description: List all tenant applications
+      parameters:
+      - example: 72432ce6-5620-4ecf-a862-4bf2140556a1
+        in: query
+        name: created_by_id
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - enum:
+        - Male
+        - Female
+        in: query
+        name: gender
+        type: string
+      - enum:
+        - ONLINE
+        - CASH
+        - EXTERNAL
+        in: query
+        name: initial_deposit_payment_method
+        type: string
+      - enum:
+        - Single
+        - Married
+        - Divorced
+        - Widowed
+        in: query
+        name: marital_status
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - enum:
+        - Hourly
+        - Daily
+        - Monthly
+        - Quarterly
+        - BiAnnually
+        - Annually
+        - OneTime
+        in: query
+        name: payment_frequency
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - enum:
+        - ONLINE
+        - CASH
+        - EXTERNAL
+        in: query
+        name: security_deposit_payment_method
+        type: string
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - TenantApplication.Status.InProgress
+        - TenantApplication.Status.Cancelled
+        - TenantApplication.Status.Completed
+        in: query
+        name: status
+        type: string
+      - enum:
+        - Hours
+        - Days
+        - Months
+        in: query
+        name: stay_duration_frequency
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputTenantApplication'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: An error occurred while filtering tenant applications
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Absent or invalid authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List all tenant applications
+      tags:
+      - TenantApplication
     post:
       consumes:
       - application/json

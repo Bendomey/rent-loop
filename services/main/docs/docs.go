@@ -4209,6 +4209,208 @@ const docTemplate = `{
             }
         },
         "/api/v1/tenant-applications": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List all tenant applications",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TenantApplication"
+                ],
+                "summary": "List all tenant applications",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "72432ce6-5620-4ecf-a862-4bf2140556a1",
+                        "name": "created_by_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Male",
+                            "Female"
+                        ],
+                        "type": "string",
+                        "name": "gender",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "ONLINE",
+                            "CASH",
+                            "EXTERNAL"
+                        ],
+                        "type": "string",
+                        "name": "initial_deposit_payment_method",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Single",
+                            "Married",
+                            "Divorced",
+                            "Widowed"
+                        ],
+                        "type": "string",
+                        "name": "marital_status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Hourly",
+                            "Daily",
+                            "Monthly",
+                            "Quarterly",
+                            "BiAnnually",
+                            "Annually",
+                            "OneTime"
+                        ],
+                        "type": "string",
+                        "name": "payment_frequency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "ONLINE",
+                            "CASH",
+                            "EXTERNAL"
+                        ],
+                        "type": "string",
+                        "name": "security_deposit_payment_method",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "TenantApplication.Status.InProgress",
+                            "TenantApplication.Status.Cancelled",
+                            "TenantApplication.Status.Completed"
+                        ],
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Hours",
+                            "Days",
+                            "Months"
+                        ],
+                        "type": "string",
+                        "name": "stay_duration_frequency",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputTenantApplication"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "An error occurred while filtering tenant applications",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Absent or invalid authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Create a new tenant application",
                 "consumes": [
