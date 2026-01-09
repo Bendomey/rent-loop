@@ -20,9 +20,11 @@ import {
 	TypographyH2,
 	TypographyH4,
 	TypographyMuted,
+	TypographySmall,
 } from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
+import { cn } from '~/lib/utils'
 
 const ValidationSchema = z.object({
 	emergency_contact_name: z
@@ -43,6 +45,14 @@ const ValidationSchema = z.object({
 	proof_of_income_url: z.url('Please upload proof of income').optional(),
 })
 
+const employment_type: Array<{
+	label: string
+	value: TenantApplication['employment_type']
+}> = [
+	{ label: 'Student', value: 'STUDENT' },
+	{ label: 'Worker', value: 'WORKER' },
+]
+
 export type FormSchema = z.infer<typeof ValidationSchema>
 
 export function Step3() {
@@ -52,7 +62,7 @@ export function Step3() {
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
-			employment_type: formData.employment_type,
+			employment_type: 'STUDENT',
 		},
 	})
 
@@ -72,7 +82,7 @@ export function Step3() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [proofOfIncomeUrl])
 
-	const { watch, handleSubmit, control, setValue } = rhfMethods
+	const { watch, handleSubmit, formState, control, setValue } = rhfMethods
 
 	const isStudent = watch('employment_type') === 'STUDENT'
 
@@ -95,6 +105,12 @@ export function Step3() {
 		}
 		if (formData.emergency_contact_phone) {
 			setValue('emergency_contact_phone', formData.emergency_contact_phone, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		if (formData.employment_type) {
+			setValue('employment_type', formData.employment_type, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
@@ -131,7 +147,11 @@ export function Step3() {
 			emergency_contact_name: data.emergency_contact_name,
 			relationship_to_emergency_contact: data.relationship_to_emergency_contact,
 			emergency_contact_phone: data.emergency_contact_phone,
-			occupation: data.occupation,
+			employment_type: data.employment_type,
+			occupation:
+				data.employment_type === 'STUDENT'
+					? data.employment_type
+					: data.occupation,
 			employer: data.employer,
 			occupation_address: data.occupation_address,
 			proof_of_income_url: data.proof_of_income_url,
@@ -148,12 +168,11 @@ export function Step3() {
 				{/* Header Section */}
 				<div className="space-y-2 border-b pb-6">
 					<TypographyH2>
-						Emergency Contact &{' '}
-						{isStudent ? 'Student Information' : 'Employment Information'}
+						Emergency Contact & Background Information
 					</TypographyH2>
 					<TypographyMuted className="text-base">
-						Please provide your emergency contact information and{' '}
-						{isStudent ? 'student' : 'employment'} details.
+						Please provide your emergency contact information and background
+						details.
 					</TypographyMuted>
 				</div>
 
@@ -221,7 +240,44 @@ export function Step3() {
 					</div>
 
 					{/* Employment Section */}
-					<div className="space-y-4 border-t pt-6">
+					<div className="space-y-4 border-t pt-4">
+						<div className="w-full">
+							<TypographyH4>Employment Type</TypographyH4>
+							<TypographyMuted className="mb-3 text-sm">
+								Select your current employment status
+							</TypographyMuted>
+
+							<div className="flex space-x-3">
+								{employment_type.map((employment_type) => {
+									const isSelected =
+										watch('employment_type') === employment_type.value
+									return (
+										<Button
+											type="button"
+											onClick={() =>
+												setValue('employment_type', employment_type.value, {
+													shouldDirty: true,
+													shouldValidate: true,
+												})
+											}
+											key={employment_type.value}
+											variant={isSelected ? 'default' : 'outline'}
+											className={cn('w-1/2', {
+												'bg-rose-600 text-white': isSelected,
+											})}
+										>
+											{employment_type.label}
+										</Button>
+									)
+								})}
+							</div>
+							{formState.errors?.employment_type ? (
+								<TypographySmall className="text-destructive mt-3">
+									{formState.errors.employment_type.message}
+								</TypographySmall>
+							) : null}
+						</div>
+
 						<div className="space-y-1">
 							<TypographyH4>
 								{isStudent ? 'Student Information' : 'Employment Information'}
@@ -336,7 +392,7 @@ export function Step3() {
 					</div>
 				</FieldGroup>
 
-				<div className="mt-10 flex items-center justify-between border-t pt-6">
+				<div className="mt-12 flex items-center justify-between border-t pt-8">
 					<Button onClick={goBack} type="button" size="lg" variant="outline">
 						<ArrowLeft className="mr-2 h-4 w-4" />
 						Go Back

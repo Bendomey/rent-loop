@@ -22,9 +22,10 @@ export const handle = {
 	breadcrumb: 'New Tenant Application',
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
+	const clientUserProperty = context.get(propertyContext)
 
 	let formData = await request.formData()
 	const property_id = formData.get('property_id') as string
@@ -38,9 +39,13 @@ export async function action({ request }: Route.ActionArgs) {
 	const email = formData.get('email') as string
 	const phone = formData.get('phone') as string
 	const gender = formData.get('gender') as TenantApplication['gender']
+	const marital_status = formData.get(
+		'marital_status',
+	) as TenantApplication['marital_status']
 	const profile_photo_url = formData.get('profile_photo_url') as string
 	const date_of_birth = formData.get('date_of_birth') as string
 	const nationality = formData.get('nationality') as string
+	const current_address = formData.get('current_address') as string
 	const id_type = formData.get('id_type') as Maybe<TenantApplication['id_type']>
 	const id_number = formData.get('id_number') as string
 	const id_front_url = formData.get('id_front_url') as string | null
@@ -63,9 +68,10 @@ export async function action({ request }: Route.ActionArgs) {
 	const proof_of_income_url = formData.get('proof_of_income_url') as
 		| string
 		| null
+	const created_by_id = clientUserProperty?.client_user_id as ClientUser['id']
 
 	try {
-		const property = await createTenantApplication(
+		const tenantApplication = await createTenantApplication(
 			replaceNullUndefinedWithUndefined({
 				property_id,
 				desired_unit_id,
@@ -76,6 +82,8 @@ export async function action({ request }: Route.ActionArgs) {
 				email,
 				phone,
 				gender,
+				marital_status,
+				current_address,
 				profile_photo_url,
 				date_of_birth,
 				nationality,
@@ -91,6 +99,7 @@ export async function action({ request }: Route.ActionArgs) {
 				employer,
 				occupation_address,
 				proof_of_income_url,
+				created_by_id,
 			}),
 			{
 				baseUrl,
@@ -98,7 +107,7 @@ export async function action({ request }: Route.ActionArgs) {
 			},
 		)
 
-		if (!property) {
+		if (!tenantApplication) {
 			throw new Error('Tenant application creation returned no data')
 		}
 

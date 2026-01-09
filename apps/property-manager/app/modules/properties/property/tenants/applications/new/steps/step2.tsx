@@ -64,6 +64,9 @@ export function Step2() {
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
+		defaultValues: {
+			id_type: formData.id_type || 'NATIONAL_ID',
+		},
 	})
 
 	const {

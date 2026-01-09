@@ -63,9 +63,17 @@ export function CreateNewPropertyTenantApplicationProvider({
 	) => {
 		const updatedData = { ...data }
 
+		if (formData.phone) {
+			updatedData.phone = `+233${formData.phone.slice(-9)}`
+		}
+
+		if (formData.emergency_contact_phone) {
+			updatedData.emergency_contact_phone = `+233${formData.emergency_contact_phone.slice(-9)}`
+		}
+
 		await createFetcher.submit(updatedData, {
 			method: 'POST',
-			action: '/properties/new',
+			action: `/properties/${formData.property_id}/tenants/applications/new`,
 		})
 	}
 

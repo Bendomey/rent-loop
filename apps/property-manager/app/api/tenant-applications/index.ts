@@ -56,8 +56,10 @@ export interface CreatePropertyTenantApplicationInput {
 	email: string
 	phone: string
 	gender: TenantApplication['gender']
+	marital_status: TenantApplication['marital_status']
 	profile_photo_url: Maybe<string>
 	date_of_birth: string
+	current_address: string
 
 	// Identity
 	nationality: string
@@ -77,6 +79,8 @@ export interface CreatePropertyTenantApplicationInput {
 	employer: string
 	occupation_address: string
 	proof_of_income_url: Nullable<string>
+
+	created_by_id: ClientUser['id']
 }
 
 export const createTenantApplication = async (
@@ -96,7 +100,6 @@ export const createTenantApplication = async (
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
-			console.log(response)
 			throw new Error(response.errors?.message || 'Unknown error')
 		}
 
