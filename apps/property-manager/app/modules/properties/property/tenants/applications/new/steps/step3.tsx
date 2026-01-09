@@ -244,7 +244,7 @@ export function Step3() {
 						<div className="w-full">
 							<TypographyH4>Employment Type</TypographyH4>
 							<TypographyMuted className="mb-3 text-sm">
-								Select your current status to show relevant fields
+								Select your current employment status
 							</TypographyMuted>
 
 							<div className="flex space-x-3">
