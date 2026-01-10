@@ -17,6 +17,11 @@ type TenantApplicationService interface {
 		input CreateTenantApplicationInput,
 	) (*models.TenantApplication, error)
 	InviteTenant(context context.Context, input InviteTenantInput) error
+	ListTenantApplications(
+		context context.Context,
+		query repository.ListTenantApplicationsQuery,
+	) ([]models.TenantApplication, error)
+	CountTenantApplications(context context.Context, query repository.ListTenantApplicationsQuery) (int64, error)
 }
 
 type tenantApplicationService struct {
@@ -172,4 +177,40 @@ func (s *tenantApplicationService) InviteTenant(ctx context.Context, input Invit
 	}
 
 	return nil
+}
+
+func (s *tenantApplicationService) ListTenantApplications(
+	ctx context.Context,
+	query repository.ListTenantApplicationsQuery,
+) ([]models.TenantApplication, error) {
+	tenantApplications, err := s.repo.List(ctx, query)
+	if err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ListTenantApplications",
+				"action":   "listing tenant applications",
+			},
+		})
+	}
+
+	return *tenantApplications, nil
+}
+
+func (s *tenantApplicationService) CountTenantApplications(
+	ctx context.Context,
+	query repository.ListTenantApplicationsQuery,
+) (int64, error) {
+	tenantApplicationsCount, err := s.repo.Count(ctx, query)
+	if err != nil {
+		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CountTenantApplications",
+				"action":   "counting tenant applications",
+			},
+		})
+	}
+
+	return tenantApplicationsCount, nil
 }
