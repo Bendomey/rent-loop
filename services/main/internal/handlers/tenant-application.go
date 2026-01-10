@@ -10,6 +10,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/go-chi/chi/v5"
 )
 
 type TenantApplicationHandler struct {
@@ -243,4 +244,44 @@ func (h *TenantApplicationHandler) ListTenantApplications(w http.ResponseWriter,
 
 	json.NewEncoder(w).
 		Encode(lib.ReturnListResponse(filterQuery, tenantApplicationsTransformed, tenantApplicationsCount))
+}
+
+type GetTenantApplicationQuery struct {
+	lib.GetOneQueryInput
+}
+
+// GetTenantApplication godoc
+//
+//	@Summary		Get tenant application
+//	@Description	Get tenant application
+//	@Tags			TenantApplication
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			tenant_application_id	path		string													true	"Tenant application ID"
+//	@Param			q						query		GetTenantApplicationQuery								true	"Tenant application"
+//	@Success		200						{object}	object{data=transformations.OutputTenantApplication}	"Tenant application retrieved successfully"
+//	@Failure		400						{object}	lib.HTTPError											"Error occurred when fetching a tenant application"
+//	@Failure		401						{object}	string													"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError											"Tenant application not found"
+//	@Failure		500						{object}	string													"An unexpected error occurred"
+//	@Router			/api/v1/tenant-applications/{tenant_application_id} [get]
+func (h *TenantApplicationHandler) GetTenantApplication(w http.ResponseWriter, r *http.Request) {
+	populate := GetPopulateFields(r)
+	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
+
+	query := repository.GetTenantApplicationQuery{
+		TenantApplicationID: tenantApplicationID,
+		Populate:            populate,
+	}
+
+	tenantApplication, getTenantApplicationErr := h.service.GetOneTenantApplication(r.Context(), query)
+	if getTenantApplicationErr != nil {
+		HandleErrorResponse(w, getTenantApplicationErr)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBTenantApplicationToRest(tenantApplication),
+	})
 }
