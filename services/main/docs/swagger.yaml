@@ -4116,6 +4116,19 @@ paths:
         in: query
         name: created_by_id
         type: string
+      - example: 72432ce6-5620-4ecf-a862-4bf2140556a1
+        in: query
+        name: desired_unit_id
+        type: string
+      - collectionFormat: multi
+        example:
+        - john.doe@example.com
+        - email@example.com
+        in: query
+        items:
+          type: string
+        name: email
+        type: array
       - in: query
         name: end_date
         type: string
@@ -4168,6 +4181,15 @@ paths:
         in: query
         name: payment_frequency
         type: string
+      - collectionFormat: multi
+        example:
+        - "+233281234569"
+        - "+233281234569"
+        in: query
+        items:
+          type: string
+        name: phone
+        type: array
       - collectionFormat: csv
         in: query
         items:

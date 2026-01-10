@@ -167,14 +167,17 @@ func (h *TenantApplicationHandler) SendTenantInvite(w http.ResponseWriter, r *ht
 
 type ListTenantApplicationsQuery struct {
 	lib.FilterQueryInput
-	Status                       *string `json:"status,omitempty"                          validate:"omitempty,oneof=TenantApplication.Status.InProgress TenantApplication.Status.Cancelled TenantApplication.Status.Completed"`
-	StayDurationFrequency        *string `json:"stay_duration_frequency,omitempty"         validate:"omitempty,oneof=Hours Days Months"`
-	PaymentFrequency             *string `json:"payment_frequency,omitempty"               validate:"omitempty,oneof=Hourly Daily Monthly Quarterly BiAnnually Annually OneTime"`
-	InitialDepositPaymentMethod  *string `json:"initial_deposit_payment_method,omitempty"  validate:"omitempty,oneof=ONLINE CASH EXTERNAL"`
-	SecurityDepositPaymentMethod *string `json:"security_deposit_payment_method,omitempty" validate:"omitempty,oneof=ONLINE CASH EXTERNAL"`
-	Gender                       *string `json:"gender,omitempty"                          validate:"omitempty,oneof=Male Female"`
-	MaritalStatus                *string `json:"marital_status,omitempty"                  validate:"omitempty,oneof=Single Married Divorced Widowed"`
-	CreatedById                  *string `json:"created_by_id,omitempty"                   validate:"omitempty,uuid"                                                                                                            example:"72432ce6-5620-4ecf-a862-4bf2140556a1" description:"ID of the user who created the tenant application"`
+	Status                       *string   `json:"status,omitempty"                          validate:"omitempty,oneof=TenantApplication.Status.InProgress TenantApplication.Status.Cancelled TenantApplication.Status.Completed"`
+	StayDurationFrequency        *string   `json:"stay_duration_frequency,omitempty"         validate:"omitempty,oneof=Hours Days Months"`
+	PaymentFrequency             *string   `json:"payment_frequency,omitempty"               validate:"omitempty,oneof=Hourly Daily Monthly Quarterly BiAnnually Annually OneTime"`
+	InitialDepositPaymentMethod  *string   `json:"initial_deposit_payment_method,omitempty"  validate:"omitempty,oneof=ONLINE CASH EXTERNAL"`
+	SecurityDepositPaymentMethod *string   `json:"security_deposit_payment_method,omitempty" validate:"omitempty,oneof=ONLINE CASH EXTERNAL"`
+	Gender                       *string   `json:"gender,omitempty"                          validate:"omitempty,oneof=Male Female"`
+	MaritalStatus                *string   `json:"marital_status,omitempty"                  validate:"omitempty,oneof=Single Married Divorced Widowed"`
+	CreatedById                  *string   `json:"created_by_id,omitempty"                   validate:"omitempty,uuid"                                                                                                            example:"72432ce6-5620-4ecf-a862-4bf2140556a1"   description:"ID of the user who created the tenant application"`
+	DesiredUnitId                *string   `json:"desired_unit_id,omitempty"                 validate:"omitempty,uuid"                                                                                                            example:"72432ce6-5620-4ecf-a862-4bf2140556a1"   description:"ID of the unit that the tenant application is desired for"`
+	Email                        *[]string `json:"email,omitempty"                           validate:"omitempty,dive,email"                                                                                                      example:"john.doe@example.com,email@example.com" description:"Email address of the applicant"                            collectionFormat:"multi"`
+	Phone                        *[]string `json:"phone,omitempty"                           validate:"omitempty,dive,e164"                                                                                                       example:"+233281234569,+233281234569"            description:"Phone number of the applicant"                             collectionFormat:"multi"`
 }
 
 // ListTenantApplications godoc
@@ -213,6 +216,9 @@ func (h *TenantApplicationHandler) ListTenantApplications(w http.ResponseWriter,
 		Gender:                       lib.NullOrString(r.URL.Query().Get("gender")),
 		MaritalStatus:                lib.NullOrString(r.URL.Query().Get("marital_status")),
 		CreatedById:                  lib.NullOrString(r.URL.Query().Get("created_by_id")),
+		DesiredUnitId:                lib.NullOrString(r.URL.Query().Get("desired_unit_id")),
+		Email:                        lib.NullOrStringArray(r.URL.Query()["email"]),
+		Phone:                        lib.NullOrStringArray(r.URL.Query()["phone"]),
 	}
 
 	tenantApplications, tenantApplicationsErr := h.service.ListTenantApplications(r.Context(), input)

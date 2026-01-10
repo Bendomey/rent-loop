@@ -38,6 +38,9 @@ type ListTenantApplicationsQuery struct {
 	Gender                       *string
 	MaritalStatus                *string
 	CreatedById                  *string
+	DesiredUnitId                *string
+	Email                        *[]string
+	Phone                        *[]string
 }
 
 func (r *tenantApplicationRepository) List(
@@ -55,6 +58,9 @@ func (r *tenantApplicationRepository) List(
 		tenantApplicationFilterScope("gender", filterQuery.Gender),
 		tenantApplicationFilterScope("marital_status", filterQuery.MaritalStatus),
 		tenantApplicationFilterScope("created_by_id", filterQuery.CreatedById),
+		tenantApplicationFilterScope("desired_unit_id", filterQuery.DesiredUnitId),
+		tenantAplicationArrayFilterScope("email", filterQuery.Email),
+		tenantAplicationArrayFilterScope("phone", filterQuery.Phone),
 		DateRangeScope("tenant_applications", filterQuery.DateRange),
 		SearchScope("tenant_applications", filterQuery.Search),
 
@@ -92,6 +98,9 @@ func (r *tenantApplicationRepository) Count(
 		tenantApplicationFilterScope("created_by_id", filterQuery.CreatedById),
 		DateRangeScope("tenant_applications", filterQuery.DateRange),
 		SearchScope("tenant_applications", filterQuery.Search),
+		tenantApplicationFilterScope("desired_unit_id", filterQuery.DesiredUnitId),
+		tenantAplicationArrayFilterScope("email", filterQuery.Email),
+		tenantAplicationArrayFilterScope("phone", filterQuery.Phone),
 	).Count(&count)
 
 	if result.Error != nil {
@@ -109,5 +118,16 @@ func tenantApplicationFilterScope(field string, value *string) func(db *gorm.DB)
 
 		query := fmt.Sprintf("tenant_applications.%s = ?", field)
 		return db.Where(query, value)
+	}
+}
+
+func tenantAplicationArrayFilterScope(field string, value *[]string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if value == nil {
+			return db
+		}
+
+		query := fmt.Sprintf("tenant_applications.%s IN (?)", field)
+		return db.Where(query, *value)
 	}
 }

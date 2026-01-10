@@ -4235,6 +4235,25 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "example": "72432ce6-5620-4ecf-a862-4bf2140556a1",
+                        "name": "desired_unit_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "john.doe@example.com",
+                            "email@example.com"
+                        ],
+                        "name": "email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "end_date",
                         "in": "query"
                     },
@@ -4306,6 +4325,19 @@ const docTemplate = `{
                         ],
                         "type": "string",
                         "name": "payment_frequency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "+233281234569",
+                            "+233281234569"
+                        ],
+                        "name": "phone",
                         "in": "query"
                     },
                     {
