@@ -13,6 +13,7 @@ type TenantApplicationRepository interface {
 	Create(context.Context, *models.TenantApplication) error
 	List(context context.Context, filter ListTenantApplicationsQuery) (*[]models.TenantApplication, error)
 	Count(context context.Context, filter ListTenantApplicationsQuery) (int64, error)
+	GetOneWithQuery(context context.Context, query GetTenantApplicationQuery) (*models.TenantApplication, error)
 }
 
 type tenantApplicationRepository struct {
@@ -130,4 +131,32 @@ func tenantAplicationArrayFilterScope(field string, value *[]string) func(db *go
 		query := fmt.Sprintf("tenant_applications.%s IN (?)", field)
 		return db.Where(query, *value)
 	}
+}
+
+type GetTenantApplicationQuery struct {
+	TenantApplicationID string
+	Populate            *[]string
+}
+
+func (r *tenantApplicationRepository) GetOneWithQuery(
+	ctx context.Context,
+	query GetTenantApplicationQuery,
+) (*models.TenantApplication, error) {
+	var tenantApplication models.TenantApplication
+
+	db := r.DB.WithContext(ctx).Where("id = ?", query.TenantApplicationID)
+
+	if query.Populate != nil {
+		for _, field := range *query.Populate {
+			db = db.Preload(field)
+		}
+	}
+
+	result := db.First(&tenantApplication)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &tenantApplication, nil
 }
