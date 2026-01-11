@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"gorm.io/gorm"
 )
 
 type TenantApplicationService interface {
@@ -22,6 +24,10 @@ type TenantApplicationService interface {
 		query repository.ListTenantApplicationsQuery,
 	) ([]models.TenantApplication, error)
 	CountTenantApplications(context context.Context, query repository.ListTenantApplicationsQuery) (int64, error)
+	GetOneTenantApplication(
+		context context.Context,
+		query repository.GetTenantApplicationQuery,
+	) (*models.TenantApplication, error)
 }
 
 type tenantApplicationService struct {
@@ -213,4 +219,27 @@ func (s *tenantApplicationService) CountTenantApplications(
 	}
 
 	return tenantApplicationsCount, nil
+}
+
+func (s *tenantApplicationService) GetOneTenantApplication(
+	ctx context.Context,
+	query repository.GetTenantApplicationQuery,
+) (*models.TenantApplication, error) {
+	tenantApplication, err := s.repo.GetOneWithQuery(ctx, query)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError(err.Error(), &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "GetOneTenantApplication",
+				"action":   "fetching tenant application",
+			},
+		})
+	}
+
+	return tenantApplication, nil
 }
