@@ -651,6 +651,163 @@ definitions:
           type: string
         type: array
     type: object
+  handlers.UpdateTenantApplicationRequest:
+    properties:
+      current_address:
+        example: 123 Main St, Accra
+        type: string
+      date_of_birth:
+        example: "1990-01-01T00:00:00Z"
+        type: string
+      desired_move_in_date:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      desired_unit_id:
+        example: b4d0243c-6581-4104-8185-d83a45ebe41b
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+      emergency_contact_name:
+        example: Jane Doe
+        type: string
+      emergency_contact_phone:
+        example: "+233281434579"
+        type: string
+      employer:
+        example: Acme Corp
+        type: string
+      first_name:
+        example: John
+        type: string
+      gender:
+        enum:
+        - Male
+        - Female
+        example: Male
+        type: string
+      id_back_url:
+        example: https://example.com/id-back.jpg
+        type: string
+      id_front_url:
+        example: https://example.com/id-front.jpg
+        type: string
+      id_number:
+        example: GHA-123456789
+        type: string
+      initial_deposit_fee:
+        example: 1000
+        type: integer
+      initial_deposit_paid_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      initial_deposit_payment_id:
+        example: "123456789"
+        type: string
+      initial_deposit_payment_method:
+        enum:
+        - ONLINE
+        - CASH
+        - EXTERNAL
+        example: ONLINE
+        type: string
+      initial_deposit_reference_number:
+        example: "123456789"
+        type: string
+      last_name:
+        example: Doe
+        type: string
+      marital_status:
+        enum:
+        - Single
+        - Married
+        - Divorced
+        - Widowed
+        example: Single
+        type: string
+      nationality:
+        example: Ghanaian
+        type: string
+      occupation:
+        example: Software Engineer
+        type: string
+      occupation_address:
+        example: 456 Tech Ave, Accra
+        type: string
+      other_names:
+        example: Michael
+        type: string
+      payment_frequency:
+        enum:
+        - Hourly
+        - Daily
+        - Monthly
+        - Quarterly
+        - BiAnnually
+        - Annually
+        - OneTime
+        example: Hourly
+        type: string
+      phone:
+        example: "+233281234569"
+        type: string
+      previous_landlord_name:
+        example: Mr. Smith
+        type: string
+      previous_landlord_phone:
+        example: "+233281234570"
+        type: string
+      previous_tenancy_period:
+        example: 2020-2022
+        type: string
+      profile_photo_url:
+        example: https://example.com/photo.jpg
+        type: string
+      proof_of_income_url:
+        example: https://example.com/income.pdf
+        type: string
+      relationship_to_emergency_contact:
+        example: Sister
+        type: string
+      rent_fee:
+        example: 1000
+        type: integer
+      rent_fee_currency:
+        example: GHS
+        type: string
+      security_deposit_fee:
+        example: 1000
+        type: integer
+      security_deposit_fee_currency:
+        example: GHS
+        type: string
+      security_deposit_paid_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      security_deposit_payment_id:
+        example: "123456789"
+        type: string
+      security_deposit_payment_method:
+        enum:
+        - ONLINE
+        - CASH
+        - EXTERNAL
+        example: ONLINE
+        type: string
+      security_deposit_reference_number:
+        example: "123456789"
+        type: string
+      stay_duration:
+        example: 10
+        type: integer
+      stay_duration_frequency:
+        enum:
+        - Hours
+        - Days
+        - Months
+        example: Hours
+        type: string
+    type: object
   handlers.UpdateUnitRequest:
     properties:
       area:
@@ -4346,6 +4503,57 @@ paths:
       security:
       - BearerAuth: []
       summary: Get tenant application
+      tags:
+      - TenantApplication
+    patch:
+      consumes:
+      - application/json
+      description: Update a tenant application
+      parameters:
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      - description: Update Tenant Application Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateTenantApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tenant application updated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputTenantApplication'
+            type: object
+        "400":
+          description: Error occurred when updating a tenant application
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update a tenant application
       tags:
       - TenantApplication
   /api/v1/tenant-applications/invite:

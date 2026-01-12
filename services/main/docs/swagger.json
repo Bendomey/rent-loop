@@ -4630,6 +4630,85 @@
                         }
                     }
                 }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a tenant application",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TenantApplication"
+                ],
+                "summary": "Update a tenant application",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tenant application ID",
+                        "name": "tenant_application_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Tenant Application Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateTenantApplicationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tenant application updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputTenantApplication"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating a tenant application",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Tenant application not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
             }
         }
     },
@@ -5514,6 +5593,213 @@
                         "beachfront",
                         "furnished"
                     ]
+                }
+            }
+        },
+        "handlers.UpdateTenantApplicationRequest": {
+            "type": "object",
+            "properties": {
+                "current_address": {
+                    "type": "string",
+                    "example": "123 Main St, Accra"
+                },
+                "date_of_birth": {
+                    "type": "string",
+                    "example": "1990-01-01T00:00:00Z"
+                },
+                "desired_move_in_date": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "desired_unit_id": {
+                    "type": "string",
+                    "example": "b4d0243c-6581-4104-8185-d83a45ebe41b"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "emergency_contact_name": {
+                    "type": "string",
+                    "example": "Jane Doe"
+                },
+                "emergency_contact_phone": {
+                    "type": "string",
+                    "example": "+233281434579"
+                },
+                "employer": {
+                    "type": "string",
+                    "example": "Acme Corp"
+                },
+                "first_name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "gender": {
+                    "type": "string",
+                    "enum": [
+                        "Male",
+                        "Female"
+                    ],
+                    "example": "Male"
+                },
+                "id_back_url": {
+                    "type": "string",
+                    "example": "https://example.com/id-back.jpg"
+                },
+                "id_front_url": {
+                    "type": "string",
+                    "example": "https://example.com/id-front.jpg"
+                },
+                "id_number": {
+                    "type": "string",
+                    "example": "GHA-123456789"
+                },
+                "initial_deposit_fee": {
+                    "type": "integer",
+                    "example": 1000
+                },
+                "initial_deposit_paid_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "initial_deposit_payment_id": {
+                    "type": "string",
+                    "example": "123456789"
+                },
+                "initial_deposit_payment_method": {
+                    "type": "string",
+                    "enum": [
+                        "ONLINE",
+                        "CASH",
+                        "EXTERNAL"
+                    ],
+                    "example": "ONLINE"
+                },
+                "initial_deposit_reference_number": {
+                    "type": "string",
+                    "example": "123456789"
+                },
+                "last_name": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "marital_status": {
+                    "type": "string",
+                    "enum": [
+                        "Single",
+                        "Married",
+                        "Divorced",
+                        "Widowed"
+                    ],
+                    "example": "Single"
+                },
+                "nationality": {
+                    "type": "string",
+                    "example": "Ghanaian"
+                },
+                "occupation": {
+                    "type": "string",
+                    "example": "Software Engineer"
+                },
+                "occupation_address": {
+                    "type": "string",
+                    "example": "456 Tech Ave, Accra"
+                },
+                "other_names": {
+                    "type": "string",
+                    "example": "Michael"
+                },
+                "payment_frequency": {
+                    "type": "string",
+                    "enum": [
+                        "Hourly",
+                        "Daily",
+                        "Monthly",
+                        "Quarterly",
+                        "BiAnnually",
+                        "Annually",
+                        "OneTime"
+                    ],
+                    "example": "Hourly"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+233281234569"
+                },
+                "previous_landlord_name": {
+                    "type": "string",
+                    "example": "Mr. Smith"
+                },
+                "previous_landlord_phone": {
+                    "type": "string",
+                    "example": "+233281234570"
+                },
+                "previous_tenancy_period": {
+                    "type": "string",
+                    "example": "2020-2022"
+                },
+                "profile_photo_url": {
+                    "type": "string",
+                    "example": "https://example.com/photo.jpg"
+                },
+                "proof_of_income_url": {
+                    "type": "string",
+                    "example": "https://example.com/income.pdf"
+                },
+                "relationship_to_emergency_contact": {
+                    "type": "string",
+                    "example": "Sister"
+                },
+                "rent_fee": {
+                    "type": "integer",
+                    "example": 1000
+                },
+                "rent_fee_currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
+                "security_deposit_fee": {
+                    "type": "integer",
+                    "example": 1000
+                },
+                "security_deposit_fee_currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
+                "security_deposit_paid_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "security_deposit_payment_id": {
+                    "type": "string",
+                    "example": "123456789"
+                },
+                "security_deposit_payment_method": {
+                    "type": "string",
+                    "enum": [
+                        "ONLINE",
+                        "CASH",
+                        "EXTERNAL"
+                    ],
+                    "example": "ONLINE"
+                },
+                "security_deposit_reference_number": {
+                    "type": "string",
+                    "example": "123456789"
+                },
+                "stay_duration": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "stay_duration_frequency": {
+                    "type": "string",
+                    "enum": [
+                        "Hours",
+                        "Days",
+                        "Months"
+                    ],
+                    "example": "Hours"
                 }
             }
         },

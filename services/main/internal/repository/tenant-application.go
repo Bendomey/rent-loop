@@ -14,6 +14,7 @@ type TenantApplicationRepository interface {
 	List(context context.Context, filter ListTenantApplicationsQuery) (*[]models.TenantApplication, error)
 	Count(context context.Context, filter ListTenantApplicationsQuery) (int64, error)
 	GetOneWithQuery(context context.Context, query GetTenantApplicationQuery) (*models.TenantApplication, error)
+	Update(context context.Context, tenantApplication models.TenantApplication) error
 }
 
 type tenantApplicationRepository struct {
@@ -159,4 +160,10 @@ func (r *tenantApplicationRepository) GetOneWithQuery(
 	}
 
 	return &tenantApplication, nil
+}
+
+func (r *tenantApplicationRepository) Update(ctx context.Context, tenantApplication models.TenantApplication) error {
+	db := lib.ResolveDB(ctx, r.DB)
+
+	return db.WithContext(ctx).Save(tenantApplication).Error
 }
