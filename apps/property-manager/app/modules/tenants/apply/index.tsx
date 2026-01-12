@@ -46,7 +46,7 @@ export function TenantApply({ isValidUrl }: { isValidUrl: boolean }) {
 
 	return (
 		<main className="w-full">
-			<div className="border-b py-4 md:py-6">
+			<div className="border-b p-4 md:px-0 md:py-6">
 				<Link to="/login">
 					<TypographyH3 className="text-center capitalize">
 						Welcome to{' '}
@@ -57,7 +57,8 @@ export function TenantApply({ isValidUrl }: { isValidUrl: boolean }) {
 					</TypographyH3>
 				</Link>
 				<TypographyMuted className="text-center">
-					Once you've completed all steps, you will be registered as a tenant.
+					Once you've completed all steps, we'll review your application and
+					reach out with the next steps.
 				</TypographyMuted>
 			</div>
 			<div
