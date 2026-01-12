@@ -159,7 +159,7 @@ class _MoreScreen extends ConsumerState<MoreScreen> {
             ),
           ),
           InkWell(
-            onTap: () => context.push('/settings/delete-account'),
+            onTap: () => context.push('/more/delete-account'),
             child: const ListTile(
               leading: Icon(Icons.delete, color: Colors.red),
               title: Text(

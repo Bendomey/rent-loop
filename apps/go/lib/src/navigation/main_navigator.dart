@@ -36,9 +36,9 @@ class MainNavigator extends StatelessWidget {
             ),
           ),
           NavigationDestination(
-            icon: Icon(Icons.menu_outlined),
+            icon: Icon(Icons.more_horiz_outlined),
             label: 'More',
-            selectedIcon: Icon(Icons.menu, color: Colors.white),
+            selectedIcon: Icon(Icons.more_horiz, color: Colors.white),
           ),
         ],
         onDestinationSelected: _onTap,
