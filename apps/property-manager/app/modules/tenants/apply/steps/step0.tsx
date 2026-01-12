@@ -452,9 +452,14 @@ export function Step0() {
 					</div>
 				</FieldGroup>
 
-				<div className="mt-12 flex items-center justify-between space-x-4">
+				<div className="mt-10 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
 					<Link to={`/`}>
-						<Button type="button" size="lg" variant="outline">
+						<Button
+							type="button"
+							size="lg"
+							variant="outline"
+							className="w-full md:w-auto"
+						>
 							<Home className="mr-2 h-4 w-4" />
 							Go Home
 						</Button>
@@ -462,7 +467,7 @@ export function Step0() {
 					<Button
 						size="lg"
 						variant="default"
-						className="bg-rose-600 hover:bg-rose-700"
+						className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
 					>
 						Next <ArrowRight className="ml-2 h-4 w-4" />
 					</Button>

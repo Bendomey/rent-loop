@@ -61,7 +61,7 @@ export function Step3() {
 				e.preventDefault()
 				await onSubmit(formData)
 			}}
-			className="mx-auto md:my-8 my-4 md:space-y-8 space-y-4 md:max-w-2xl"
+			className="mx-auto my-4 space-y-4 md:my-8 md:max-w-2xl md:space-y-8"
 		>
 			{/* Header Section */}
 			<div className="space-y-2 border-b pb-6">
@@ -224,8 +224,14 @@ export function Step3() {
 			</PreviewCard>
 
 			{/* Action Buttons */}
-			<div className="mt-10 flex items-center justify-between border-t pt-6">
-				<Button onClick={goBack} type="button" size="lg" variant="outline">
+			<div className="mt-10 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
+				<Button
+					onClick={goBack}
+					type="button"
+					size="lg"
+					variant="outline"
+					className="w-full md:w-auto"
+				>
 					<ArrowLeft className="mr-2 h-4 w-4" />
 					Go Back
 				</Button>
@@ -233,7 +239,7 @@ export function Step3() {
 					disabled={isSubmitting}
 					size="lg"
 					variant="default"
-					className="bg-rose-600 hover:bg-rose-700"
+					className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
 				>
 					{isSubmitting ? (
 						<>
