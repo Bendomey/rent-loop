@@ -73,7 +73,7 @@ function InviteTenantModal({ opened, setOpened, data, admin_id }: Props) {
 	const { clientUserProperty, origin } = useLoaderData<typeof loader>()
 	const property_id = safeString(clientUserProperty?.property?.id)
 
-	const generatedLink = `${origin}/tenants/apply?unit=${data?.desired_unit_id}&refered_by=${admin_id}`
+	const generatedLink = `${origin}/tenants/apply?unit=${data?.desired_unit_id}&referred_by=${admin_id}`
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),

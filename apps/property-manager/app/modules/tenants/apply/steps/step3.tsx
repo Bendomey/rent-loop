@@ -61,7 +61,7 @@ export function Step3() {
 				e.preventDefault()
 				await onSubmit(formData)
 			}}
-			className="mx-auto md:my-8 my-4 md:space-y-8 space-y-4 md:max-w-2xl"
+			className="mx-auto my-4 space-y-4 md:my-8 md:max-w-2xl md:space-y-8"
 		>
 			{/* Header Section */}
 			<div className="space-y-2 border-b pb-6">

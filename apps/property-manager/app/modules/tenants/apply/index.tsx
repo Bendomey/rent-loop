@@ -57,7 +57,8 @@ export function TenantApply({ isValidUrl }: { isValidUrl: boolean }) {
 					</TypographyH3>
 				</Link>
 				<TypographyMuted className="text-center">
-					Once you've completed all steps, you will be registered as a tenant.
+					Once you've completed all steps, we'll review your application and
+					reach out with the next steps.
 				</TypographyMuted>
 			</div>
 			<div
