@@ -26,7 +26,7 @@ class _ManageAttachmentsWidget extends ConsumerState<ManageAttachmentsWidget> {
   String? imageType;
 
   // Pick image from gallery
-  Future<void> _pickImageFromGallery(BuildContext context) async {
+  Future<void> _pickImageFromGallery() async {
     try {
       final List<XFile> pickedFiles = await _picker.pickMultiImage(
         maxWidth: 1800,
@@ -44,19 +44,17 @@ class _ManageAttachmentsWidget extends ConsumerState<ManageAttachmentsWidget> {
 
       widget.setAttachments(copyAttachments);
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error picking image: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error picking image: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   // Pick image from camera
-  Future<void> _pickImageFromCamera(BuildContext context) async {
+  Future<void> _pickImageFromCamera() async {
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: ImageSource.camera,
@@ -73,14 +71,12 @@ class _ManageAttachmentsWidget extends ConsumerState<ManageAttachmentsWidget> {
         widget.setAttachments(copyAttachments);
       }
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error capturing image: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error capturing image: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -108,9 +104,9 @@ class _ManageAttachmentsWidget extends ConsumerState<ManageAttachmentsWidget> {
             onSelected: (value) async {
               await Haptics.vibrate(HapticsType.selection);
               if (value == 'camera') {
-                await _pickImageFromCamera(context);
+                await _pickImageFromCamera();
               } else if (value == 'picker') {
-                await _pickImageFromGallery(context);
+                await _pickImageFromGallery();
               }
             },
             icon: Card(
