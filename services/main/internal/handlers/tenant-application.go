@@ -285,3 +285,138 @@ func (h *TenantApplicationHandler) GetTenantApplication(w http.ResponseWriter, r
 		"data": transformations.DBTenantApplicationToRest(tenantApplication),
 	})
 }
+
+type UpdateTenantApplicationRequest struct {
+	DesiredUnitId                  *string    `json:"desired_unit_id,omitempty"                   validate:"omitempty,uuid"                                                             example:"b4d0243c-6581-4104-8185-d83a45ebe41b" description:"Desired unit ID"`
+	RentFee                        *int64     `json:"rent_fee,omitempty"                          validate:"omitempty"                                                                  example:"1000"                                 description:"Rent fee of the applicant"`
+	RentFeeCurrency                *string    `json:"rent_fee_currency,omitempty"                 validate:"omitempty"                                                                  example:"GHS"                                  description:"Rent fee currency of the applicant"`
+	FirstName                      *string    `json:"first_name,omitempty"                        validate:"omitempty"                                                                  example:"John"                                 description:"First name of the applicant"`
+	LastName                       *string    `json:"last_name,omitempty"                         validate:"omitempty"                                                                  example:"Doe"                                  description:"Last name of the applicant"`
+	Phone                          *string    `json:"phone,omitempty"                             validate:"omitempty,e164"                                                             example:"+233281234569"                        description:"Phone number of the applicant"`
+	Gender                         *string    `json:"gender,omitempty"                            validate:"omitempty,oneof=Male Female"                                                example:"Male"                                 description:"Gender of the applicant"`
+	DateOfBirth                    *time.Time `json:"date_of_birth,omitempty"                     validate:"omitempty"                                                                  example:"1990-01-01T00:00:00Z"                 description:"Date of birth of the applicant"`
+	Nationality                    *string    `json:"nationality,omitempty"                       validate:"omitempty"                                                                  example:"Ghanaian"                             description:"Nationality of the applicant"`
+	MaritalStatus                  *string    `json:"marital_status,omitempty"                    validate:"omitempty,oneof=Single Married Divorced Widowed"                            example:"Single"                               description:"Marital status of the applicant"`
+	IDNumber                       *string    `json:"id_number,omitempty"                         validate:"omitempty"                                                                  example:"GHA-123456789"                        description:"ID number of the applicant"`
+	CurrentAddress                 *string    `json:"current_address,omitempty"                   validate:"omitempty"                                                                  example:"123 Main St, Accra"                   description:"Current address of the applicant"`
+	EmergencyContactName           *string    `json:"emergency_contact_name,omitempty"            validate:"omitempty"                                                                  example:"Jane Doe"                             description:"Emergency contact name"`
+	EmergencyContactPhone          *string    `json:"emergency_contact_phone,omitempty"           validate:"omitempty,e164"                                                             example:"+233281434579"                        description:"Emergency contact phone"`
+	RelationshipToEmergencyContact *string    `json:"relationship_to_emergency_contact,omitempty" validate:"omitempty"                                                                  example:"Sister"                               description:"Relationship to emergency contact"`
+	Occupation                     *string    `json:"occupation,omitempty"                        validate:"omitempty"                                                                  example:"Software Engineer"                    description:"Occupation of the applicant"`
+	Employer                       *string    `json:"employer,omitempty"                          validate:"omitempty"                                                                  example:"Acme Corp"                            description:"Employer of the applicant"`
+	OccupationAddress              *string    `json:"occupation_address,omitempty"                validate:"omitempty"                                                                  example:"456 Tech Ave, Accra"                  description:"Occupation address"`
+	DesiredMoveInDate              *time.Time `json:"desired_move_in_date,omitempty"              validate:"omitempty"                                                                  example:"2023-01-01T00:00:00Z"                 description:"Desired move in date"`
+	StayDurationFrequency          *string    `json:"stay_duration_frequency,omitempty"           validate:"omitempty,oneof=Hours Days Months"                                          example:"Hours"                                description:"Stay duration frequency"`
+	StayDuration                   *int64     `json:"stay_duration,omitempty"                     validate:"omitempty"                                                                  example:"10"                                   description:"Stay duration"`
+	PaymentFrequency               *string    `json:"payment_frequency,omitempty"                 validate:"omitempty,oneof=Hourly Daily Monthly Quarterly BiAnnually Annually OneTime" example:"Hourly"                               description:"Payment frequency"`
+	InitialDepositFee              *int64     `json:"initial_deposit_fee,omitempty"               validate:"omitempty"                                                                  example:"1000"                                 description:"Initial deposit fee"`
+	InitialDepositPaymentMethod    *string    `json:"initial_deposit_payment_method,omitempty"    validate:"omitempty,oneof=ONLINE CASH EXTERNAL"                                       example:"ONLINE"                               description:"Initial deposit payment method"`
+	InitialDepositReferenceNumber  *string    `json:"initial_deposit_reference_number,omitempty"  validate:"omitempty"                                                                  example:"123456789"                            description:"Initial deposit reference number"`
+	InitialDepositPaidAt           *time.Time `json:"initial_deposit_paid_at,omitempty"           validate:"omitempty"                                                                  example:"2023-01-01T00:00:00Z"                 description:"Initial deposit paid at"`
+	InitialDepositPaymentId        *string    `json:"initial_deposit_payment_id,omitempty"        validate:"omitempty"                                                                  example:"123456789"                            description:"Initial deposit payment ID"`
+	SecurityDepositFee             *int64     `json:"security_deposit_fee,omitempty"              validate:"omitempty"                                                                  example:"1000"                                 description:"Security deposit fee"`
+	SecurityDepositFeeCurrency     *string    `json:"security_deposit_fee_currency,omitempty"     validate:"omitempty"                                                                  example:"GHS"                                  description:"Security deposit fee currency"`
+	SecurityDepositPaymentMethod   *string    `json:"security_deposit_payment_method,omitempty"   validate:"omitempty,oneof=ONLINE CASH EXTERNAL"                                       example:"ONLINE"                               description:"Security deposit payment method"`
+	SecurityDepositReferenceNumber *string    `json:"security_deposit_reference_number,omitempty" validate:"omitempty"                                                                  example:"123456789"                            description:"Security deposit reference number"`
+	SecurityDepositPaidAt          *time.Time `json:"security_deposit_paid_at,omitempty"          validate:"omitempty"                                                                  example:"2023-01-01T00:00:00Z"                 description:"Security deposit paid at"`
+	SecurityDepositPaymentId       *string    `json:"security_deposit_payment_id,omitempty"       validate:"omitempty"                                                                  example:"123456789"                            description:"Security deposit payment ID"`
+	OtherNames                     *string    `json:"other_names,omitempty"                       validate:"omitempty"                                                                  example:"Michael"                              description:"Other names of the applicant"`
+	Email                          *string    `json:"email,omitempty"                             validate:"omitempty,email"                                                            example:"john.doe@example.com"                 description:"Email address of the applicant"`
+	ProfilePhotoUrl                *string    `json:"profile_photo_url,omitempty"                 validate:"omitempty,url"                                                              example:"https://example.com/photo.jpg"        description:"Profile photo URL"`
+	IDFrontUrl                     *string    `json:"id_front_url,omitempty"                      validate:"omitempty,url"                                                              example:"https://example.com/id-front.jpg"     description:"ID front image URL"`
+	IDBackUrl                      *string    `json:"id_back_url,omitempty"                       validate:"omitempty,url"                                                              example:"https://example.com/id-back.jpg"      description:"ID back image URL"`
+	PreviousLandlordName           *string    `json:"previous_landlord_name,omitempty"            validate:"omitempty"                                                                  example:"Mr. Smith"                            description:"Previous landlord name"`
+	PreviousLandlordPhone          *string    `json:"previous_landlord_phone,omitempty"           validate:"omitempty,e164"                                                             example:"+233281234570"                        description:"Previous landlord phone"`
+	PreviousTenancyPeriod          *string    `json:"previous_tenancy_period,omitempty"           validate:"omitempty"                                                                  example:"2020-2022"                            description:"Previous tenancy period"`
+	ProofOfIncomeUrl               *string    `json:"proof_of_income_url,omitempty"               validate:"omitempty,url"                                                              example:"https://example.com/income.pdf"       description:"Proof of income URL"`
+}
+
+// UpdateTenantApplication godoc
+//
+//	@Summary		Update a tenant application
+//	@Description	Update a tenant application
+//	@Tags			TenantApplication
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			tenant_application_id	path		string													true	"Tenant application ID"
+//	@Param			body					body		UpdateTenantApplicationRequest							true	"Update Tenant Application Request Body"
+//	@Success		200						{object}	object{data=transformations.OutputTenantApplication}	"Tenant application updated successfully"
+//	@Failure		400						{object}	lib.HTTPError											"Error occurred when updating a tenant application"
+//	@Failure		401						{object}	string													"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError											"Tenant application not found"
+//	@Failure		422						{object}	lib.HTTPError											"Validation error"
+//	@Failure		500						{object}	string													"An unexpected error occurred"
+//	@Router			/api/v1/tenant-applications/{tenant_application_id} [patch]
+func (h *TenantApplicationHandler) UpdateTenantApplication(w http.ResponseWriter, r *http.Request) {
+	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
+
+	var body UpdateTenantApplicationRequest
+
+	decodeErr := json.NewDecoder(r.Body).Decode(&body)
+	if decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	input := services.UpdateTenantApplicationInput{
+		TenantApplicationID:            tenantApplicationID,
+		DesiredUnitId:                  body.DesiredUnitId,
+		RentFee:                        body.RentFee,
+		RentFeeCurrency:                body.RentFeeCurrency,
+		FirstName:                      body.FirstName,
+		LastName:                       body.LastName,
+		Phone:                          body.Phone,
+		Gender:                         body.Gender,
+		DateOfBirth:                    body.DateOfBirth,
+		Nationality:                    body.Nationality,
+		MaritalStatus:                  body.MaritalStatus,
+		IDNumber:                       body.IDNumber,
+		CurrentAddress:                 body.CurrentAddress,
+		EmergencyContactName:           body.EmergencyContactName,
+		EmergencyContactPhone:          body.EmergencyContactPhone,
+		RelationshipToEmergencyContact: body.RelationshipToEmergencyContact,
+		Occupation:                     body.Occupation,
+		Employer:                       body.Employer,
+		OccupationAddress:              body.OccupationAddress,
+		DesiredMoveInDate:              body.DesiredMoveInDate,
+		StayDurationFrequency:          body.StayDurationFrequency,
+		StayDuration:                   body.StayDuration,
+		PaymentFrequency:               body.PaymentFrequency,
+		InitialDepositFee:              body.InitialDepositFee,
+		InitialDepositPaymentMethod:    body.InitialDepositPaymentMethod,
+		InitialDepositReferenceNumber:  body.InitialDepositReferenceNumber,
+		InitialDepositPaidAt:           body.InitialDepositPaidAt,
+		InitialDepositPaymentId:        body.InitialDepositPaymentId,
+		SecurityDepositFee:             body.SecurityDepositFee,
+		SecurityDepositFeeCurrency:     body.SecurityDepositFeeCurrency,
+		SecurityDepositPaymentMethod:   body.SecurityDepositPaymentMethod,
+		SecurityDepositReferenceNumber: body.SecurityDepositReferenceNumber,
+		SecurityDepositPaidAt:          body.SecurityDepositPaidAt,
+		SecurityDepositPaymentId:       body.SecurityDepositPaymentId,
+		OtherNames:                     body.OtherNames,
+		Email:                          body.Email,
+		ProfilePhotoUrl:                body.ProfilePhotoUrl,
+		IDFrontUrl:                     body.IDFrontUrl,
+		IDBackUrl:                      body.IDBackUrl,
+		PreviousLandlordName:           body.PreviousLandlordName,
+		PreviousLandlordPhone:          body.PreviousLandlordPhone,
+		PreviousTenancyPeriod:          body.PreviousTenancyPeriod,
+		ProofOfIncomeUrl:               body.ProofOfIncomeUrl,
+	}
+
+	tenantApplication, updateTenantApplicationErr := h.service.UpdateTenantApplication(r.Context(), input)
+	if updateTenantApplicationErr != nil {
+		HandleErrorResponse(w, updateTenantApplicationErr)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBTenantApplicationToRest(tenantApplication),
+	})
+}

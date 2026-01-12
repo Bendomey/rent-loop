@@ -28,6 +28,10 @@ type TenantApplicationService interface {
 		context context.Context,
 		query repository.GetTenantApplicationQuery,
 	) (*models.TenantApplication, error)
+	UpdateTenantApplication(
+		context context.Context,
+		input UpdateTenantApplicationInput,
+	) (*models.TenantApplication, error)
 }
 
 type tenantApplicationService struct {
@@ -237,6 +241,193 @@ func (s *tenantApplicationService) GetOneTenantApplication(
 			Metadata: map[string]string{
 				"function": "GetOneTenantApplication",
 				"action":   "fetching tenant application",
+			},
+		})
+	}
+
+	return tenantApplication, nil
+}
+
+type UpdateTenantApplicationInput struct {
+	TenantApplicationID            string
+	DesiredUnitId                  *string
+	RentFee                        *int64
+	RentFeeCurrency                *string
+	FirstName                      *string
+	LastName                       *string
+	Phone                          *string
+	Gender                         *string
+	DateOfBirth                    *time.Time
+	Nationality                    *string
+	MaritalStatus                  *string
+	IDNumber                       *string
+	CurrentAddress                 *string
+	EmergencyContactName           *string
+	EmergencyContactPhone          *string
+	RelationshipToEmergencyContact *string
+	Occupation                     *string
+	Employer                       *string
+	OccupationAddress              *string
+	DesiredMoveInDate              *time.Time
+	StayDurationFrequency          *string
+	StayDuration                   *int64
+	PaymentFrequency               *string
+	InitialDepositFee              *int64
+	InitialDepositPaymentMethod    *string
+	InitialDepositReferenceNumber  *string
+	InitialDepositPaidAt           *time.Time
+	InitialDepositPaymentId        *string
+	SecurityDepositFee             *int64
+	SecurityDepositFeeCurrency     *string
+	SecurityDepositPaymentMethod   *string
+	SecurityDepositReferenceNumber *string
+	SecurityDepositPaidAt          *time.Time
+	SecurityDepositPaymentId       *string
+	OtherNames                     *string
+	Email                          *string
+	ProfilePhotoUrl                *string
+	IDFrontUrl                     *string
+	IDBackUrl                      *string
+	PreviousLandlordName           *string
+	PreviousLandlordPhone          *string
+	PreviousTenancyPeriod          *string
+	ProofOfIncomeUrl               *string
+}
+
+func (s *tenantApplicationService) UpdateTenantApplication(
+	ctx context.Context,
+	input UpdateTenantApplicationInput,
+) (*models.TenantApplication, error) {
+	tenantApplication, getTenantApplicationErr := s.repo.GetOneWithQuery(ctx, repository.GetTenantApplicationQuery{
+		TenantApplicationID: input.TenantApplicationID,
+	})
+	if getTenantApplicationErr != nil {
+		if errors.Is(getTenantApplicationErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("TenantApplicationNotFound", &pkg.RentLoopErrorParams{
+				Err: getTenantApplicationErr,
+			})
+		}
+
+		return nil, pkg.InternalServerError(getTenantApplicationErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getTenantApplicationErr,
+			Metadata: map[string]string{
+				"function": "UpdateTenantApplication",
+				"action":   "fetching tenant application",
+			},
+		})
+	}
+
+	if input.DesiredUnitId != nil {
+		tenantApplication.DesiredUnitId = *input.DesiredUnitId
+	}
+
+	if input.RentFee != nil {
+		tenantApplication.RentFee = *input.RentFee
+	}
+
+	if input.RentFeeCurrency != nil {
+		tenantApplication.RentFeeCurrency = *input.RentFeeCurrency
+	}
+
+	if input.FirstName != nil {
+		tenantApplication.FirstName = *input.FirstName
+	}
+
+	if input.LastName != nil {
+		tenantApplication.LastName = *input.LastName
+	}
+
+	if input.Phone != nil {
+		tenantApplication.Phone = *input.Phone
+	}
+
+	if input.Gender != nil {
+		tenantApplication.Gender = *input.Gender
+	}
+
+	if input.DateOfBirth != nil {
+		tenantApplication.DateOfBirth = *input.DateOfBirth
+	}
+
+	if input.Nationality != nil {
+		tenantApplication.Nationality = *input.Nationality
+	}
+
+	if input.MaritalStatus != nil {
+		tenantApplication.MaritalStatus = *input.MaritalStatus
+	}
+
+	if input.IDNumber != nil {
+		tenantApplication.IDNumber = *input.IDNumber
+	}
+
+	if input.CurrentAddress != nil {
+		tenantApplication.CurrentAddress = *input.CurrentAddress
+	}
+
+	if input.EmergencyContactName != nil {
+		tenantApplication.EmergencyContactName = *input.EmergencyContactName
+	}
+
+	if input.EmergencyContactPhone != nil {
+		tenantApplication.EmergencyContactPhone = *input.EmergencyContactPhone
+	}
+
+	if input.RelationshipToEmergencyContact != nil {
+		tenantApplication.RelationshipToEmergencyContact = *input.RelationshipToEmergencyContact
+	}
+
+	if input.Occupation != nil {
+		tenantApplication.Occupation = *input.Occupation
+	}
+
+	if input.Employer != nil {
+		tenantApplication.Employer = *input.Employer
+	}
+
+	if input.OccupationAddress != nil {
+		tenantApplication.OccupationAddress = *input.OccupationAddress
+	}
+
+	tenantApplication.DesiredMoveInDate = input.DesiredMoveInDate
+	tenantApplication.StayDurationFrequency = input.StayDurationFrequency
+	tenantApplication.StayDuration = input.StayDuration
+
+	tenantApplication.PaymentFrequency = input.PaymentFrequency
+
+	tenantApplication.InitialDepositFee = input.InitialDepositFee
+	tenantApplication.InitialDepositPaymentMethod = input.InitialDepositPaymentMethod
+	tenantApplication.InitialDepositReferenceNumber = input.InitialDepositReferenceNumber
+	tenantApplication.InitialDepositPaidAt = input.InitialDepositPaidAt
+	tenantApplication.InitialDepositPaymentId = input.InitialDepositPaymentId
+
+	tenantApplication.SecurityDepositFee = input.SecurityDepositFee
+	tenantApplication.SecurityDepositFeeCurrency = input.SecurityDepositFeeCurrency
+
+	tenantApplication.SecurityDepositPaymentMethod = input.SecurityDepositPaymentMethod
+	tenantApplication.SecurityDepositReferenceNumber = input.SecurityDepositReferenceNumber
+	tenantApplication.SecurityDepositPaidAt = input.SecurityDepositPaidAt
+	tenantApplication.SecurityDepositPaymentId = input.SecurityDepositPaymentId
+
+	tenantApplication.OtherNames = input.OtherNames
+	tenantApplication.Email = input.Email
+	tenantApplication.ProfilePhotoUrl = input.ProfilePhotoUrl
+	tenantApplication.IDFrontUrl = input.IDFrontUrl
+	tenantApplication.IDBackUrl = input.IDBackUrl
+
+	tenantApplication.PreviousLandlordName = input.PreviousLandlordName
+	tenantApplication.PreviousLandlordPhone = input.PreviousLandlordPhone
+	tenantApplication.PreviousTenancyPeriod = input.PreviousTenancyPeriod
+
+	tenantApplication.ProofOfIncomeUrl = input.ProofOfIncomeUrl
+
+	updateTenantApplicationErr := s.repo.Update(ctx, *tenantApplication)
+	if updateTenantApplicationErr != nil {
+		return nil, pkg.InternalServerError(updateTenantApplicationErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateTenantApplicationErr,
+			Metadata: map[string]string{
+				"function": "UpdateTenantApplication",
+				"action":   "updating tenant application",
 			},
 		})
 	}

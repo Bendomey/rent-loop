@@ -138,6 +138,8 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					Post("/invite", handlers.TenantApplicationHandler.SendTenantInvite)
 				r.Get("/", handlers.TenantApplicationHandler.ListTenantApplications)
 				r.Get("/{tenant_application_id}", handlers.TenantApplicationHandler.GetTenantApplication)
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Patch("/{tenant_application_id}", handlers.TenantApplicationHandler.UpdateTenantApplication)
 			})
 		})
 	}
