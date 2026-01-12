@@ -178,7 +178,7 @@ export function Step2() {
 
 				<FieldGroup className="space-y-6">
 					{/* Emergency Contact Section */}
-						<div className="space-y-4 rounded-lg bg-slate-50 border border-slate-100 p-5">
+					<div className="space-y-4 rounded-lg border border-slate-100 bg-slate-50 p-5">
 						<div className="space-y-1">
 							<TypographyH4>Emergency Contact</TypographyH4>
 						</div>
@@ -240,7 +240,7 @@ export function Step2() {
 					</div>
 
 					{/* Employment Section */}
-					<div className="space-y-4 border-t rounded-lg bg-slate-50 border border-slate-100 p-5">
+					<div className="space-y-4 rounded-lg border border-t border-slate-100 bg-slate-50 p-5">
 						<div className="w-full">
 							<TypographyH4>Employment Type</TypographyH4>
 							<TypographyMuted className="mb-3 text-sm">
@@ -347,7 +347,7 @@ export function Step2() {
 					</div>
 
 					{/* Proof of Income */}
-					<div className="space-y-4 rounded-lg bg-slate-50 border border-slate-100 p-5">
+					<div className="space-y-4 rounded-lg border border-slate-100 bg-slate-50 p-5">
 						<div className="space-y-1">
 							{isStudent ? (
 								<>

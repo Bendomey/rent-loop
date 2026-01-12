@@ -160,11 +160,12 @@ export function Step1() {
 					</TypographyMuted>
 				</div>
 
-
 				<FieldGroup className="space-y-4">
 					{/* Nationality and ID Type */}
-					<div className="rounded-lg bg-slate-50 border border-slate-100 p-5">
-						<h3 className="font-semibold text-slate-900 text-lg mb-5">Identification Details</h3>
+					<div className="rounded-lg border border-slate-100 bg-slate-50 p-5">
+						<h3 className="mb-5 text-lg font-semibold text-slate-900">
+							Identification Details
+						</h3>
 						<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 							<FormField
 								name="nationality"
@@ -238,7 +239,7 @@ export function Step1() {
 					</div>
 
 					{/* ID Document Images */}
-										<div className="space-y-4 rounded-lg bg-slate-50 border border-slate-100 p-5">
+					<div className="space-y-4 rounded-lg border border-slate-100 bg-slate-50 p-5">
 						<div className="space-y-1">
 							<h3 className="font-semibold">ID Document Images</h3>
 							<TypographyMuted>

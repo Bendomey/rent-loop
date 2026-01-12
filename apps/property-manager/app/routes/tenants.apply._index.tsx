@@ -9,8 +9,15 @@ import { getSocialMetas } from '~/lib/seo'
 import { TenantApplyModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
+	const url = new URL(request.url)
+	const referredBy = url.searchParams.get('referred_by')
+	const unitId = url.searchParams.get('unit')
+
 	return {
 		origin: getDomainUrl(request),
+		referredBy,
+		unitId,
+		isValidUrl: !!(referredBy && unitId),
 	}
 }
 
@@ -20,6 +27,7 @@ export async function action({ request }: Route.ActionArgs) {
 	let formData = await request.formData()
 	const property_id = formData.get('property_id') as string
 	const desired_unit_id = formData.get('desired_unit_id') as string
+	const created_by_id = formData.get('created_by_id') as string
 	const on_boarding_method = formData.get(
 		'on_boarding_method',
 	) as TenantApplication['on_boarding_method']
@@ -58,8 +66,6 @@ export async function action({ request }: Route.ActionArgs) {
 	const proof_of_income_url = formData.get('proof_of_income_url') as
 		| string
 		| null
-	// const created_by_id = clientUserProperty?.client_user_id as ClientUser['id']
-	const created_by_id = "clientUserProperty?.client_user_id" as ClientUser['id']
 
 	try {
 		const tenantApplication = await createTenantApplication(
@@ -101,7 +107,7 @@ export async function action({ request }: Route.ActionArgs) {
 			throw new Error('Tenant application creation returned no data')
 		}
 
-		return redirect(`/properties/${property_id}/tenants/applications`)
+		return redirect(`/tenants/success`)
 	} catch {
 		return { error: 'Failed to submit tenant application' }
 	}

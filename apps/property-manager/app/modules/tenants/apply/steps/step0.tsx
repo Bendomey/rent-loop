@@ -1,7 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, ArrowRight, Home } from 'lucide-react'
+import { ArrowRight, Home } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
+import { Link, useLoaderData } from 'react-router'
 import { z } from 'zod'
 import { useTenantApplicationContext } from '../context'
 import { DatePickerInput } from '~/components/date-picker-input'
@@ -28,9 +29,15 @@ import {
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
-import { Link } from 'react-router'
+import type { loader } from '~/routes/tenants.apply._index'
 
 const ValidationSchema = z.object({
+	desired_unit_id: z.string({
+		error: 'Invalid referral code',
+	}),
+	created_by_id: z.string({
+		error: 'Invalid referral code',
+	}),
 	first_name: z
 		.string({ error: 'First Name is required' })
 		.min(2, 'Please enter a valid name'),
@@ -78,13 +85,17 @@ const marital_status: Array<{
 export type FormSchema = z.infer<typeof ValidationSchema>
 
 export function Step0() {
-	const { goBack, goNext, formData, updateFormData } =
-		useTenantApplicationContext()
+	const { referredBy, unitId } = useLoaderData<typeof loader>()
+
+	const { goNext, formData, updateFormData } = useTenantApplicationContext()
+
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
 			marital_status: formData.marital_status || 'SINGLE',
 			gender: formData.gender || 'MALE',
+			created_by_id: formData.created_by_id || referredBy || undefined,
+			desired_unit_id: formData.desired_unit_id || unitId || undefined,
 		},
 	})
 
@@ -180,6 +191,8 @@ export function Step0() {
 
 	const onSubmit = async (data: FormSchema) => {
 		updateFormData({
+			desired_unit_id: data.desired_unit_id,
+			created_by_id: data.created_by_id,
 			first_name: data.first_name,
 			other_names: data.other_names,
 			last_name: data.last_name,
@@ -200,9 +213,14 @@ export function Step0() {
 				onSubmit={handleSubmit(onSubmit)}
 				className="mx-auto my-8 space-y-8 md:max-w-2xl"
 			>
+				<Input type="hidden" {...rhfMethods.register('created_by_id')} />
+				<Input type="hidden" {...rhfMethods.register('desired_unit_id')} />
+
 				{/* Header Section */}
 				<div className="space-y-3 border-b pb-6">
-					<TypographyH2 className="text-3xl font-bold">Basic Information</TypographyH2>
+					<TypographyH2 className="text-3xl font-bold">
+						Basic Information
+					</TypographyH2>
 					<TypographyMuted className="text-base leading-relaxed">
 						Let's start by collecting your personal information
 					</TypographyMuted>
@@ -210,154 +228,164 @@ export function Step0() {
 
 				<FieldGroup className="space-y-2">
 					{/* Personal Details Grid */}
-					<div className="space-y-5 rounded-lg bg-slate-50 border border-slate-100 p-5">
-						<h3 className="font-semibold text-slate-900 text-lg">Personal Details</h3>
+					<div className="space-y-5 rounded-lg border border-slate-100 bg-slate-50 p-5">
+						<h3 className="text-lg font-semibold text-slate-900">
+							Personal Details
+						</h3>
 						<div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-						<FormField
-							name="first_name"
-							control={control}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>First Name</FormLabel>
-									<FormControl>
-										<Input type="text" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							name="other_names"
-							control={control}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Other Names</FormLabel>
-									<FormControl>
-										<Input type="text" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							name="last_name"
-							control={control}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Last Name</FormLabel>
-									<FormControl>
-										<Input type="text" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+							<FormField
+								name="first_name"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>First Name</FormLabel>
+										<FormControl>
+											<Input type="text" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								name="other_names"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Other Names</FormLabel>
+										<FormControl>
+											<Input type="text" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								name="last_name"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Last Name</FormLabel>
+										<FormControl>
+											<Input type="text" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 
-						<FormField
-							name="gender"
-							control={control}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Gender</FormLabel>
-									<FormControl>
-										<Select value={field.value} onValueChange={field.onChange}>
-											<SelectTrigger className="w-full">
-												<SelectValue placeholder="Select gender" />
-											</SelectTrigger>
-											<SelectContent>
-												{gender.map((item) => (
-													<SelectItem key={item.value} value={item.value}>
-														{item.label}
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+							<FormField
+								name="gender"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Gender</FormLabel>
+										<FormControl>
+											<Select
+												value={field.value}
+												onValueChange={field.onChange}
+											>
+												<SelectTrigger className="w-full">
+													<SelectValue placeholder="Select gender" />
+												</SelectTrigger>
+												<SelectContent>
+													{gender.map((item) => (
+														<SelectItem key={item.value} value={item.value}>
+															{item.label}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 
-						<FormField
-							name="email"
-							control={control}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Email</FormLabel>
-									<FormControl>
-										<Input {...field} type="text" />
-									</FormControl>
-									<FormDescription>
-										We'll send notifications to this email
-									</FormDescription>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							name="phone"
-							control={control}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Phone</FormLabel>
-									<FormControl>
-										<Input {...field} type="text" />
-									</FormControl>
-									<FormDescription>
-										We'll send notifications to this number
-									</FormDescription>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+							<FormField
+								name="email"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Email</FormLabel>
+										<FormControl>
+											<Input {...field} type="text" />
+										</FormControl>
+										<FormDescription>
+											We'll send notifications to this email
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								name="phone"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Phone</FormLabel>
+										<FormControl>
+											<Input {...field} type="text" />
+										</FormControl>
+										<FormDescription>
+											We'll send notifications to this number
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 
-						<FormField
-							name="date_of_birth"
-							control={control}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Date of birth</FormLabel>
-									<FormControl>
-										<DatePickerInput
-											value={field.value}
-											onChange={field.onChange}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+							<FormField
+								name="date_of_birth"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Date of birth</FormLabel>
+										<FormControl>
+											<DatePickerInput
+												value={field.value}
+												onChange={field.onChange}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 
-						<FormField
-							name="marital_status"
-							control={control}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Marital Status</FormLabel>
-									<FormControl>
-										<Select value={field.value} onValueChange={field.onChange}>
-											<SelectTrigger className="w-full">
-												<SelectValue placeholder="Select marital status" />
-											</SelectTrigger>
-											<SelectContent>
-												{marital_status.map((item) => (
-													<SelectItem key={item.value} value={item.value}>
-														{item.label}
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-					</div>
+							<FormField
+								name="marital_status"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Marital Status</FormLabel>
+										<FormControl>
+											<Select
+												value={field.value}
+												onValueChange={field.onChange}
+											>
+												<SelectTrigger className="w-full">
+													<SelectValue placeholder="Select marital status" />
+												</SelectTrigger>
+												<SelectContent>
+													{marital_status.map((item) => (
+														<SelectItem key={item.value} value={item.value}>
+															{item.label}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
 					</div>
 
 					{/* Contact & Address Section */}
-					<div className="space-y-5 rounded-lg bg-slate-50 p-5 border border-slate-100">
-						<h3 className="font-semibold text-slate-900 text-lg">Contact Information</h3>
+					<div className="space-y-5 rounded-lg border border-slate-100 bg-slate-50 p-5">
+						<h3 className="text-lg font-semibold text-slate-900">
+							Contact Information
+						</h3>
 						<div className="space-y-5">
 							<FormField
 								name="current_address"
@@ -380,8 +408,10 @@ export function Step0() {
 					</div>
 
 					{/* Profile Picture Section */}
-					<div className="space-y-5 rounded-lg bg-slate-50 p-5 border border-slate-100">
-						<h3 className="font-semibold text-slate-900 text-lg">Profile Picture</h3>
+					<div className="space-y-5 rounded-lg border border-slate-100 bg-slate-50 p-5">
+						<h3 className="text-lg font-semibold text-slate-900">
+							Profile Picture
+						</h3>
 						<ImageUpload
 							hero
 							shape="square"
@@ -407,12 +437,12 @@ export function Step0() {
 				</FieldGroup>
 
 				<div className="mt-12 flex items-center justify-between space-x-4">
-										<Link to={`/`}>
-					<Button type="button" size="lg" variant="outline">
+					<Link to={`/`}>
+						<Button type="button" size="lg" variant="outline">
 							<Home className="mr-2 h-4 w-4" />
 							Go Home
 						</Button>
-										</Link>
+					</Link>
 					<Button
 						size="lg"
 						variant="default"

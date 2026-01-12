@@ -74,44 +74,30 @@ export function Step3() {
 				</TypographyMuted>
 			</div>
 
-			{/* Unit & Onboarding Method */}
-			<PreviewCard
-				title="Unit & Onboarding"
-				subtitle="Selected unit and onboarding method"
-				stepNumber={0}
-				onEdit={() => goToPage(0)}
-			>
-				<div className="grid grid-cols-2 items-center gap-x-4 gap-y-0">
-					<div>
-						{renderPreviewField('Unit', formData.desired_unit)}
-						{renderPreviewField(
-							'Onboarding Method',
-							formData.on_boarding_method === 'SELF'
-								? 'Self Onboarding'
-								: 'Admin Onboarding',
-						)}
+			{/* Profile Photo */}
+			{formData.profile_photo_url && (
+				<PreviewCard
+					title="Profile Photo"
+					subtitle="Identification photo"
+					stepNumber={0}
+					onEdit={() => goToPage(0)}
+				>
+					<div className="py-3">
+						<Image
+							src={formData.profile_photo_url}
+							alt="Profile"
+							className="max-h-48 rounded-md object-cover"
+						/>
 					</div>
-					<div className="">
-						{/* Profile Photo */}
-						{formData.profile_photo_url && (
-							<div className="py-3">
-								<Image
-									src={formData.profile_photo_url}
-									alt="Profile"
-									className="max-h-48 rounded-md object-cover"
-								/>
-							</div>
-						)}
-					</div>
-				</div>
-			</PreviewCard>
+				</PreviewCard>
+			)}
 
 			{/* Basic Information */}
 			<PreviewCard
 				title="Basic Information"
 				subtitle="Personal details"
-				stepNumber={1}
-				onEdit={() => goToPage(1)}
+				stepNumber={0}
+				onEdit={() => goToPage(0)}
 			>
 				<div className="grid grid-cols-2 gap-x-4 gap-y-0">
 					{renderPreviewField('First Name', formData.first_name)}
@@ -135,8 +121,8 @@ export function Step3() {
 			<PreviewCard
 				title="Identity Verification"
 				subtitle="Identification details"
-				stepNumber={2}
-				onEdit={() => goToPage(2)}
+				stepNumber={1}
+				onEdit={() => goToPage(1)}
 			>
 				<div className="grid grid-cols-2 gap-x-4 gap-y-0">
 					{renderPreviewField('Nationality', formData.nationality)}
@@ -179,8 +165,8 @@ export function Step3() {
 			<PreviewCard
 				title={`${isStudent ? 'Emergency Contact & Student Information' : 'Emergency Contact & Employment Information'}`}
 				subtitle={`Emergency contact and ${isStudent ? 'student' : 'employment'} information`}
-				stepNumber={3}
-				onEdit={() => goToPage(3)}
+				stepNumber={2}
+				onEdit={() => goToPage(2)}
 			>
 				<div className="space-y-4">
 					<div>
