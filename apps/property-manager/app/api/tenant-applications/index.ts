@@ -8,9 +8,7 @@ import { fetchClient, fetchServer } from '~/lib/transport'
  */
 
 const getPropertyTenantApplications = async (
-	props: FetchMultipleDataInputParams<FetchTenantApplicationFilter> & {
-		property_id: string
-	},
+	props: FetchMultipleDataInputParams<FetchTenantApplicationFilter>,
 ) => {
 	try {
 		const removeAllNullableValues =
@@ -18,9 +16,7 @@ const getPropertyTenantApplications = async (
 		const params = new URLSearchParams(removeAllNullableValues)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<TenantApplication>>
-		>(
-			`/v1/properties/${props.property_id}/tenant-applications?${params.toString()}`,
-		)
+		>(`/v1/tenant-applications?${params.toString()}`)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -36,9 +32,7 @@ const getPropertyTenantApplications = async (
 }
 
 export const useGetPropertyTenantApplications = (
-	query: FetchMultipleDataInputParams<FetchTenantApplicationFilter> & {
-		property_id: string
-	},
+	query: FetchMultipleDataInputParams<FetchTenantApplicationFilter>,
 ) =>
 	useQuery({
 		queryKey: [QUERY_KEYS.PROPERTY_TENANT_APPLICATIONS, query],
