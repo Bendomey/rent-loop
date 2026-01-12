@@ -46,7 +46,7 @@ export function TenantApply({ isValidUrl }: { isValidUrl: boolean }) {
 
 	return (
 		<main className="w-full">
-			<div className="border-b py-4 md:py-6">
+			<div className="border-b p-4 md:px-0 md:py-6">
 				<Link to="/login">
 					<TypographyH3 className="text-center capitalize">
 						Welcome to{' '}

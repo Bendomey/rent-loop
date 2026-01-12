@@ -299,15 +299,22 @@ export function Step1() {
 					</div>
 				</FieldGroup>
 
-				<div className="mt-10 flex items-center justify-between border-t pt-6">
-					<Button onClick={goBack} type="button" size="lg" variant="outline">
+				<div className="mt-10 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
+					<Button
+						onClick={goBack}
+						type="button"
+						size="lg"
+						variant="outline"
+						className="w-full md:w-auto"
+					>
 						<ArrowLeft className="mr-2 h-4 w-4" />
 						Go Back
 					</Button>
+
 					<Button
 						size="lg"
 						variant="default"
-						className="bg-rose-600 hover:bg-rose-700"
+						className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
 					>
 						Next <ArrowRight className="ml-2 h-4 w-4" />
 					</Button>
