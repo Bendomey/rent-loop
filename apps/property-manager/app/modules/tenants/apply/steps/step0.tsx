@@ -211,13 +211,13 @@ export function Step0() {
 		<Form {...rhfMethods}>
 			<form
 				onSubmit={handleSubmit(onSubmit)}
-				className="mx-auto my-8 space-y-8 md:max-w-2xl"
+				className="mx-auto my-4 space-y-4 md:my-8 md:max-w-2xl"
 			>
 				<Input type="hidden" {...rhfMethods.register('created_by_id')} />
 				<Input type="hidden" {...rhfMethods.register('desired_unit_id')} />
 
 				{/* Header Section */}
-				<div className="space-y-3 border-b pb-6">
+				<div className="space-y-1 border-b pb-6 md:space-y-3">
 					<TypographyH2 className="text-3xl font-bold">
 						Basic Information
 					</TypographyH2>
@@ -238,7 +238,9 @@ export function Step0() {
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>First Name</FormLabel>
+										<FormLabel>
+											First Name <span className="text-red-500">*</span>
+										</FormLabel>
 										<FormControl>
 											<Input type="text" {...field} />
 										</FormControl>
@@ -264,7 +266,9 @@ export function Step0() {
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Last Name</FormLabel>
+										<FormLabel>
+											Last Name <span className="text-red-500">*</span>
+										</FormLabel>
 										<FormControl>
 											<Input type="text" {...field} />
 										</FormControl>
@@ -278,7 +282,9 @@ export function Step0() {
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Gender</FormLabel>
+										<FormLabel>
+											Gender <span className="text-red-500">*</span>
+										</FormLabel>
 										<FormControl>
 											<Select
 												value={field.value}
@@ -306,7 +312,9 @@ export function Step0() {
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Email</FormLabel>
+										<FormLabel>
+											Email <span className="text-red-500">*</span>
+										</FormLabel>
 										<FormControl>
 											<Input {...field} type="text" />
 										</FormControl>
@@ -322,7 +330,9 @@ export function Step0() {
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Phone</FormLabel>
+										<FormLabel>
+											Phone <span className="text-red-500">*</span>
+										</FormLabel>
 										<FormControl>
 											<Input {...field} type="text" />
 										</FormControl>
@@ -339,7 +349,9 @@ export function Step0() {
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Date of birth</FormLabel>
+										<FormLabel>
+											Date of birth <span className="text-red-500">*</span>
+										</FormLabel>
 										<FormControl>
 											<DatePickerInput
 												value={field.value}
@@ -356,7 +368,9 @@ export function Step0() {
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Marital Status</FormLabel>
+										<FormLabel>
+											Marital Status <span className="text-red-500">*</span>
+										</FormLabel>
 										<FormControl>
 											<Select
 												value={field.value}
@@ -392,7 +406,9 @@ export function Step0() {
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Address</FormLabel>
+										<FormLabel>
+											Address <span className="text-red-500">*</span>
+										</FormLabel>
 										<FormControl>
 											<Input
 												type="text"

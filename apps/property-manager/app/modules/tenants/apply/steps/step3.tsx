@@ -61,7 +61,7 @@ export function Step3() {
 				e.preventDefault()
 				await onSubmit(formData)
 			}}
-			className="mx-auto my-8 space-y-8 md:max-w-2xl"
+			className="mx-auto md:my-8 my-4 md:space-y-8 space-y-4 md:max-w-2xl"
 		>
 			{/* Header Section */}
 			<div className="space-y-2 border-b pb-6">
@@ -106,8 +106,8 @@ export function Step3() {
 						renderPreviewField('Other Names', formData.other_names)}
 					{renderPreviewField('Gender', formData.gender)}
 					{renderPreviewField('Marital Status', formData.marital_status)}
-					{renderPreviewField('Email', formData.email)}
 					{renderPreviewField('Phone', formData.phone)}
+					{renderPreviewField('Email', formData.email)}
 					{formData.date_of_birth &&
 						renderPreviewField(
 							'Date of Birth',

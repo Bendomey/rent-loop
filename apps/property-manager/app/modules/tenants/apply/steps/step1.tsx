@@ -172,7 +172,9 @@ export function Step1() {
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Nationality</FormLabel>
+										<FormLabel>
+											Nationality <span className="text-red-500">*</span>
+										</FormLabel>
 										<FormControl>
 											<Input
 												type="text"
@@ -223,7 +225,9 @@ export function Step1() {
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>ID Number</FormLabel>
+										<FormLabel>
+											ID Number <span className="text-red-500">*</span>
+										</FormLabel>
 										<FormControl>
 											<Input
 												type="text"

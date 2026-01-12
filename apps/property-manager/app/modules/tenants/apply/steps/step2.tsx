@@ -163,7 +163,7 @@ export function Step2() {
 		<Form {...rhfMethods}>
 			<form
 				onSubmit={handleSubmit(onSubmit)}
-				className="mx-auto my-8 space-y-8 md:max-w-2xl"
+				className="mx-auto my-4 space-y-4 md:my-8 md:max-w-2xl md:space-y-8"
 			>
 				{/* Header Section */}
 				<div className="space-y-2 border-b pb-6">
@@ -188,7 +188,9 @@ export function Step2() {
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Full Name</FormLabel>
+										<FormLabel>
+											Full Name <span className="text-red-500">*</span>
+										</FormLabel>
 										<FormControl>
 											<Input
 												type="text"
@@ -206,7 +208,9 @@ export function Step2() {
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Relationship</FormLabel>
+										<FormLabel>
+											Relationship <span className="text-red-500">*</span>
+										</FormLabel>
 										<FormControl>
 											<Input
 												type="text"
@@ -225,7 +229,9 @@ export function Step2() {
 							control={control}
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Phone Number</FormLabel>
+									<FormLabel>
+										Phone Number <span className="text-red-500">*</span>
+									</FormLabel>
 									<FormControl>
 										<Input
 											type="tel"
@@ -292,7 +298,9 @@ export function Step2() {
 									control={control}
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>Occupation</FormLabel>
+											<FormLabel>
+												Occupation <span className="text-red-500">*</span>
+											</FormLabel>
 											<FormControl>
 												<Input
 													type="text"
@@ -312,7 +320,8 @@ export function Step2() {
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>
-											{isStudent ? 'Institution/School' : 'Employer'}
+											{isStudent ? 'Institution/School' : 'Employer'}{' '}
+											<span className="text-red-500">*</span>
 										</FormLabel>
 										<FormControl>
 											<Input
@@ -332,7 +341,9 @@ export function Step2() {
 							control={control}
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Address</FormLabel>
+									<FormLabel>
+										Address <span className="text-red-500">*</span>
+									</FormLabel>
 									<FormControl>
 										<Input
 											type="text"
