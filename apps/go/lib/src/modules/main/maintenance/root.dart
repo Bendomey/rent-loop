@@ -5,7 +5,9 @@ import 'package:rentloop_go/src/shared/adaptive/search_input.dart';
 import './request_card.dart';
 
 class MaintenanceScreen extends ConsumerStatefulWidget {
-  const MaintenanceScreen({super.key});
+  const MaintenanceScreen({super.key, this.statusFilter});
+
+  final String? statusFilter;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _MaintenanceScreen();
@@ -15,6 +17,15 @@ class _MaintenanceScreen extends ConsumerState<MaintenanceScreen> {
   // add state to hide and show search bar
   bool _showSearchBar = false;
   String statusFilter = 'all';
+
+  @override
+  void initState() {
+    if (widget.statusFilter != null) {
+      statusFilter = widget.statusFilter!;
+    }
+
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,8 +115,10 @@ class _MaintenanceScreen extends ConsumerState<MaintenanceScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          // Action for the button
           await Haptics.vibrate(HapticsType.selection);
+          if (context.mounted) {
+            context.push('/maintenance/new');
+          }
         },
         shape: CircleBorder(),
         child: Icon(Icons.add, color: Colors.white),

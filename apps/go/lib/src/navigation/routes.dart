@@ -70,7 +70,12 @@ GoRouter buildRoutes() {
               GoRoute(
                 path: '/maintenance',
                 name: "Maintenance",
-                builder: (context, state) => const MaintenanceScreen(),
+                builder: (context, state) {
+                  return MaintenanceScreen(
+                    statusFilter: state.uri.queryParameters['status'],
+                  );
+                },
+                routes: [],
               ),
             ],
           ),
@@ -84,6 +89,19 @@ GoRouter buildRoutes() {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: '/maintenance/new',
+        name: "NewMaintenanceRequest",
+        builder: (context, state) => const NewMaintenanceScreen(),
+      ),
+      GoRoute(
+        path: '/maintenance/:id',
+        name: "MaintenanceDetail",
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return MaintenanceDetailsScreen(requestId: id);
+        },
       ),
     ],
   );

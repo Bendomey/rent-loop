@@ -16,14 +16,21 @@ class _HomeScreen extends ConsumerState<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         actions: [
+          IconButton(
+            padding: EdgeInsets.zero,
+            icon: Badge.count(
+              count: 4,
+              backgroundColor: Colors.red,
+              child: Icon(Icons.notifications_outlined),
+            ),
+            onPressed: () async {
+              await Haptics.vibrate(HapticsType.selection);
+            },
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 10),
             child: IconButton(
-              icon: Badge.count(
-                count: 4,
-                backgroundColor: Colors.red,
-                child: Icon(Icons.notifications_outlined),
-              ),
+              icon: Icon(Icons.refresh),
               onPressed: () async {
                 await Haptics.vibrate(HapticsType.selection);
               },
@@ -42,35 +49,53 @@ class _HomeScreen extends ConsumerState<HomeScreen> {
           ),
           Container(
             margin: EdgeInsets.all(10),
-            child: MaterialBanner(
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Announcement",
-                    style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    "Your rent for June is due in 5 days. Please ensure timely payment to avoid late fees.",
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
+            child: Card(
+              elevation: 0,
+              color: Colors.orange.shade50,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(color: Colors.orange.shade100),
               ),
-              leading: const Icon(Icons.info),
-              padding: EdgeInsets.all(10),
-              backgroundColor: Colors.grey.shade100,
-              actions: [
-                IconButton(
-                  onPressed: () =>
-                      ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
-                  icon: const Icon(Icons.remove_red_eye, color: Colors.red),
+              child: Padding(
+                padding: EdgeInsets.all(15),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.lightbulb, color: Colors.orange.shade600),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Announcements",
+                            style: Theme.of(
+                              context,
+                            ).textTheme.displaySmall!.copyWith(fontSize: 17),
+                          ),
+                          SizedBox(height: 5),
+                          Text(
+                            "Your rent for June is due in 5 days. Please ensure timely payment to avoid late fees.",
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall!.copyWith(fontSize: 14),
+                          ),
+                          SizedBox(height: 5),
+                          FilledButton(
+                            onPressed: () async {
+                              await Haptics.vibrate(HapticsType.selection);
+                              if (context.mounted) {
+                                context.push('/more/annoucements');
+                              }
+                            },
+                            child: const Text("VIEW "),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-              dividerColor:
-                  Colors.transparent, // removes bottom divider entirely
+              ),
             ),
           ),
           Padding(
