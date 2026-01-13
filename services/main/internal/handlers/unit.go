@@ -47,7 +47,7 @@ type CreateUnitRequest struct {
 //	@Param			property_id	path		string				true	"Property ID"
 //	@Param			block_id	path		string				true	"Property block ID"
 //	@Param			body		body		CreateUnitRequest	true	"Unit"
-//	@Success		201			{object}	object{data=transformations.OutputUnit}
+//	@Success		201			{object}	object{data=transformations.AdminOutputUnit}
 //	@Failure		400			{object}	lib.HTTPError	"Error occurred when creating a unit"
 //	@Failure		401			{object}	string			"Invalid or absent authentication token"
 //	@Failure		403			{object}	lib.HTTPError	"Forbidden access"
@@ -102,7 +102,7 @@ func (h *UnitHandler) CreateUnit(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBUnitToRest(unit),
+		"data": transformations.DBAdminUnitToRest(unit),
 	})
 }
 
@@ -125,7 +125,7 @@ type ListUnitsFilterRequest struct {
 //	@Produce		json
 //	@Param			property_id	path		string					true	"Property ID"
 //	@Param			q			query		ListUnitsFilterRequest	true	"Units"
-//	@Success		200			{object}	object{data=object{rows=[]transformations.OutputUnit,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Success		200			{object}	object{data=object{rows=[]transformations.AdminOutputUnit,meta=lib.HTTPReturnPaginatedMetaResponse}}
 //	@Failure		400			{object}	lib.HTTPError
 //	@Failure		401			{object}	string
 //	@Failure		500			{object}	string
@@ -166,7 +166,7 @@ func (h *UnitHandler) ListUnits(w http.ResponseWriter, r *http.Request) {
 
 	unitsTransformed := make([]any, 0)
 	for _, unit := range units {
-		unitsTransformed = append(unitsTransformed, transformations.DBUnitToRest(&unit))
+		unitsTransformed = append(unitsTransformed, transformations.DBAdminUnitToRest(&unit))
 	}
 
 	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, unitsTransformed, count))
@@ -184,14 +184,14 @@ type GetUnitQuery struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			property_id	path		string									true	"Property ID"
-//	@Param			unit_id		path		string									true	"Unit ID"
-//	@Param			q			query		GetUnitQuery							true	"Units"
-//	@Success		200			{object}	object{data=transformations.OutputUnit}	"Unit retrieved successfully"
-//	@Failure		400			{object}	lib.HTTPError							"Error occurred when fetching a unit"
-//	@Failure		401			{object}	string									"Invalid or absent authentication token"
-//	@Failure		404			{object}	lib.HTTPError							"Unit not found"
-//	@Failure		500			{object}	string									"An unexpected error occurred"
+//	@Param			property_id	path		string											true	"Property ID"
+//	@Param			unit_id		path		string											true	"Unit ID"
+//	@Param			q			query		GetUnitQuery									true	"Units"
+//	@Success		200			{object}	object{data=transformations.AdminOutputUnit}	"Unit retrieved successfully"
+//	@Failure		400			{object}	lib.HTTPError									"Error occurred when fetching a unit"
+//	@Failure		401			{object}	string											"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError									"Unit not found"
+//	@Failure		500			{object}	string											"An unexpected error occurred"
 //	@Router			/api/v1/properties/{property_id}/units/{unit_id} [get]
 func (s *UnitHandler) GetUnit(w http.ResponseWriter, r *http.Request) {
 	propertyID := chi.URLParam(r, "property_id")
@@ -212,7 +212,7 @@ func (s *UnitHandler) GetUnit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBUnitToRest(unit),
+		"data": transformations.DBAdminUnitToRest(unit),
 	})
 }
 
@@ -241,7 +241,7 @@ type UpdateUnitRequest struct {
 //	@Param			property_id	path		string				true	"Property ID"
 //	@Param			unit_id		path		string				true	"Unit ID"
 //	@Param			body		body		UpdateUnitRequest	true	"Unit"
-//	@Success		200			{object}	object{data=transformations.OutputUnit}
+//	@Success		200			{object}	object{data=transformations.AdminOutputUnit}
 //	@Failure		400			{object}	lib.HTTPError	"Error occurred when updating a unit"
 //	@Failure		401			{object}	string			"Invalid or absent authentication token"
 //	@Failure		403			{object}	lib.HTTPError	"Forbidden access"
@@ -288,7 +288,7 @@ func (h *UnitHandler) UpdateUnit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBUnitToRest(unit),
+		"data": transformations.DBAdminUnitToRest(unit),
 	})
 }
 
@@ -433,4 +433,31 @@ func (h *UnitHandler) DeleteUnit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// FetchClientUnit godoc
+//
+//	@Summary		Fetch unit subset
+//	@Description	Fetch unit subset
+//	@Tags			Units
+//	@Accept			json
+//	@Produce		json
+//	@Param			unit_id	path		string	true	"Unit ID"
+//	@Success		200		{object}	object{data=transformations.OutputUnit}
+//	@Failure		400		{object}	lib.HTTPError	"Error occurred when fetching a unit"
+//	@Failure		404		{object}	lib.HTTPError	"Unit not found"
+//	@Failure		500		{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/units/{unit_id} [get]
+func (h *UnitHandler) FetchClientUnit(w http.ResponseWriter, r *http.Request) {
+	unitID := chi.URLParam(r, "unit_id")
+
+	unit, getUnitErr := h.service.GetUnitByID(r.Context(), unitID)
+	if getUnitErr != nil {
+		HandleErrorResponse(w, getUnitErr)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBUnitToRest(unit),
+	})
 }

@@ -17,40 +17,43 @@ import {
 import { ImageUpload } from '~/components/ui/image-upload'
 import { Input } from '~/components/ui/input'
 import {
-	TypographyH2,
-	TypographyH4,
-	TypographyMuted,
-	TypographySmall,
-} from '~/components/ui/typography'
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectLabel,
+	SelectTrigger,
+	SelectValue,
+} from '~/components/ui/select'
+import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
-import { cn } from '~/lib/utils'
 
 const ValidationSchema = z.object({
-	emergency_contact_name: z
-		.string({ error: 'Emergency Contact Name is required' })
-		.min(2, 'Please enter a valid name'),
-	relationship_to_emergency_contact: z
-		.string({ error: 'Relationship to Emergency Contact is required' })
-		.min(2, 'Please enter a valid relationship'),
-	emergency_contact_phone: z
-		.string({ error: 'Phone Number is required' })
-		.min(9, 'Please enter a valid phone number'),
-	employment_type: z.enum(['STUDENT', 'WORKER'], {
-		error: 'Please select an employment type',
-	}),
-	occupation: z.string().optional(),
-	employer: z.string().optional(),
-	occupation_address: z.string().optional(),
-	proof_of_income_url: z.url('Please upload proof of income').optional(),
+	nationality: z
+		.string({ error: 'Nationality is required' })
+		.min(2, 'Please enter a valid nationality'),
+	id_type: z.enum(
+		['DRIVERS_LICENSE', 'PASSPORT', 'NATIONAL_ID', 'STUDENT_ID'],
+		{
+			error: 'Please select an ID type',
+		},
+	),
+	id_number: z
+		.string({ error: 'ID number is required' })
+		.min(2, 'Please enter a valid ID number'),
+	id_front_url: z.url('Please upload the front side of the ID').optional(),
+	id_back_url: z.url('Please upload the back side of the ID').optional(),
 })
 
-const employment_type: Array<{
+const idTypes: Array<{
 	label: string
-	value: TenantApplication['employment_type']
+	value: 'DRIVERS_LICENSE' | 'PASSPORT' | 'NATIONAL_ID' | 'STUDENT_ID'
 }> = [
-	{ label: 'Student', value: 'STUDENT' },
-	{ label: 'Worker', value: 'WORKER' },
+	{ label: 'National ID', value: 'NATIONAL_ID' },
+	{ label: 'Passport', value: 'PASSPORT' },
+	{ label: "Driver's License", value: 'DRIVERS_LICENSE' },
+	{ label: 'Student ID', value: 'STUDENT_ID' },
 ]
 
 export type FormSchema = z.infer<typeof ValidationSchema>
@@ -62,79 +65,66 @@ export function Step2() {
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
-			employment_type: 'STUDENT',
+			id_type: formData.id_type || 'NATIONAL_ID',
 		},
 	})
 
 	const {
-		upload: uploadProofOfIncome,
-		objectUrl: proofOfIncomeUrl,
-		isLoading: isUploadingProofOfIncome,
-	} = useUploadObject('tenant-applications/proof-of-income')
+		upload: uploadFront,
+		objectUrl: frontUrl,
+		isLoading: isUploadingFront,
+	} = useUploadObject('tenant-applications/id-fronts')
+	const {
+		upload: uploadBack,
+		objectUrl: backUrl,
+		isLoading: isUploadingBack,
+	} = useUploadObject('tenant-applications/id-backs')
 
 	useEffect(() => {
-		if (proofOfIncomeUrl) {
-			rhfMethods.setValue('proof_of_income_url', proofOfIncomeUrl, {
+		if (frontUrl) {
+			rhfMethods.setValue('id_front_url', frontUrl, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		if (backUrl) {
+			rhfMethods.setValue('id_back_url', backUrl, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [proofOfIncomeUrl])
+	}, [frontUrl, backUrl])
 
-	const { watch, handleSubmit, formState, control, setValue } = rhfMethods
-
-	const isStudent = watch('employment_type') === 'STUDENT'
+	const { handleSubmit, control, setValue } = rhfMethods
 
 	useEffect(() => {
-		if (formData.emergency_contact_name) {
-			setValue('emergency_contact_name', formData.emergency_contact_name, {
+		if (formData.nationality) {
+			setValue('nationality', formData.nationality, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
 		}
-		if (formData.relationship_to_emergency_contact) {
-			setValue(
-				'relationship_to_emergency_contact',
-				formData.relationship_to_emergency_contact,
-				{
-					shouldDirty: true,
-					shouldValidate: true,
-				},
-			)
-		}
-		if (formData.emergency_contact_phone) {
-			setValue('emergency_contact_phone', formData.emergency_contact_phone, {
+		if (formData.id_type) {
+			setValue('id_type', formData.id_type as any, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
 		}
-		if (formData.employment_type) {
-			setValue('employment_type', formData.employment_type, {
+		if (formData.id_number) {
+			setValue('id_number', formData.id_number, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
 		}
-		if (formData.occupation) {
-			setValue('occupation', formData.occupation, {
+		if (formData.id_front_url) {
+			setValue('id_front_url', formData.id_front_url, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
 		}
-		if (formData.employer) {
-			setValue('employer', formData.employer, {
-				shouldDirty: true,
-				shouldValidate: true,
-			})
-		}
-		if (formData.occupation_address) {
-			setValue('occupation_address', formData.occupation_address, {
-				shouldDirty: true,
-				shouldValidate: true,
-			})
-		}
-		if (formData.proof_of_income_url) {
-			setValue('proof_of_income_url', formData.proof_of_income_url, {
+		if (formData.id_back_url) {
+			setValue('id_back_url', formData.id_back_url, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
@@ -144,17 +134,11 @@ export function Step2() {
 
 	const onSubmit = async (data: FormSchema) => {
 		updateFormData({
-			emergency_contact_name: data.emergency_contact_name,
-			relationship_to_emergency_contact: data.relationship_to_emergency_contact,
-			emergency_contact_phone: data.emergency_contact_phone,
-			employment_type: data.employment_type,
-			occupation:
-				data.employment_type === 'STUDENT'
-					? data.employment_type
-					: data.occupation,
-			employer: data.employer,
-			occupation_address: data.occupation_address,
-			proof_of_income_url: data.proof_of_income_url,
+			nationality: data.nationality,
+			id_type: data.id_type,
+			id_number: data.id_number,
+			id_front_url: data.id_front_url,
+			id_back_url: data.id_back_url,
 		})
 		goNext()
 	}
@@ -163,38 +147,38 @@ export function Step2() {
 		<Form {...rhfMethods}>
 			<form
 				onSubmit={handleSubmit(onSubmit)}
-				className="mx-auto my-4 space-y-4 md:my-8 md:max-w-2xl md:space-y-8"
+				className="mx-auto my-8 space-y-8 md:max-w-2xl"
 			>
 				{/* Header Section */}
 				<div className="space-y-2 border-b pb-6">
-					<TypographyH2>
-						Emergency Contact & Background Information
+					<TypographyH2 className="text-2xl font-bold">
+						Identity Verification
 					</TypographyH2>
 					<TypographyMuted className="text-base">
-						Please provide your emergency contact information and background
-						details.
+						Please provide your identification details and document images for
+						verification.
 					</TypographyMuted>
 				</div>
 
-				<FieldGroup className="space-y-6">
-					{/* Emergency Contact Section */}
-					<div className="space-y-4 rounded-lg border border-slate-100 bg-slate-50 p-5">
-						<div className="space-y-1">
-							<TypographyH4>Emergency Contact</TypographyH4>
-						</div>
+				<FieldGroup className="space-y-4">
+					{/* Nationality and ID Type */}
+					<div className="rounded-lg border border-slate-100 bg-slate-50 p-5">
+						<h3 className="mb-5 text-lg font-semibold text-slate-900">
+							Identification Details
+						</h3>
 						<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 							<FormField
-								name="emergency_contact_name"
+								name="nationality"
 								control={control}
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>
-											Full Name <span className="text-red-500">*</span>
+											Nationality <span className="text-red-500">*</span>
 										</FormLabel>
 										<FormControl>
 											<Input
 												type="text"
-												placeholder="Enter full name"
+												placeholder="e.g., Ghanaian"
 												{...field}
 											/>
 										</FormControl>
@@ -204,19 +188,30 @@ export function Step2() {
 							/>
 
 							<FormField
-								name="relationship_to_emergency_contact"
+								name="id_type"
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>
-											Relationship <span className="text-red-500">*</span>
-										</FormLabel>
+										<FormLabel>ID Type</FormLabel>
 										<FormControl>
-											<Input
-												type="text"
-												placeholder="e.g., Sibling, Parent, Friend"
-												{...field}
-											/>
+											<Select
+												onValueChange={field.onChange}
+												value={field.value || ''}
+											>
+												<SelectTrigger className="w-full">
+													<SelectValue placeholder="Select ID type" />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectGroup>
+														<SelectLabel>Document Type</SelectLabel>
+														{idTypes.map((type) => (
+															<SelectItem key={type.value} value={type.value}>
+																{type.label}
+															</SelectItem>
+														))}
+													</SelectGroup>
+												</SelectContent>
+											</Select>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -224,109 +219,19 @@ export function Step2() {
 							/>
 						</div>
 
-						<FormField
-							name="emergency_contact_phone"
-							control={control}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>
-										Phone Number <span className="text-red-500">*</span>
-									</FormLabel>
-									<FormControl>
-										<Input
-											type="tel"
-											placeholder="e.g., +233 54-123-4567"
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-					</div>
-
-					{/* Employment Section */}
-					<div className="space-y-4 rounded-lg border border-t border-slate-100 bg-slate-50 p-5">
-						<div className="w-full">
-							<TypographyH4>Employment Type</TypographyH4>
-							<TypographyMuted className="mb-3 text-sm">
-								Select your current employment status
-							</TypographyMuted>
-
-							<div className="flex space-x-3 pb-3">
-								{employment_type.map((employment_type) => {
-									const isSelected =
-										watch('employment_type') === employment_type.value
-									return (
-										<Button
-											type="button"
-											onClick={() =>
-												setValue('employment_type', employment_type.value, {
-													shouldDirty: true,
-													shouldValidate: true,
-												})
-											}
-											key={employment_type.value}
-											variant={isSelected ? 'default' : 'outline'}
-											className={cn('w-1/2', {
-												'bg-rose-600 text-white': isSelected,
-											})}
-										>
-											{employment_type.label}
-										</Button>
-									)
-								})}
-							</div>
-							{formState.errors?.employment_type ? (
-								<TypographySmall className="text-destructive mt-3">
-									{formState.errors.employment_type.message}
-								</TypographySmall>
-							) : null}
-						</div>
-
-						<div className="space-y-1 border-t pt-6">
-							<TypographyH4>
-								{isStudent ? 'Student Information' : 'Employment Information'}
-							</TypographyH4>
-						</div>
-						<div
-							className={`grid grid-cols-1 gap-4 ${isStudent ? 'md:grid-cols-1' : 'md:grid-cols-2'}`}
-						>
-							{!isStudent && (
-								<FormField
-									name="occupation"
-									control={control}
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>
-												Occupation <span className="text-red-500">*</span>
-											</FormLabel>
-											<FormControl>
-												<Input
-													type="text"
-													placeholder="e.g., Software Engineer"
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							)}
-
+						<div className="mt-8">
 							<FormField
-								name="employer"
+								name="id_number"
 								control={control}
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>
-											{isStudent ? 'Institution/School' : 'Employer'}{' '}
-											<span className="text-red-500">*</span>
+											ID Number <span className="text-red-500">*</span>
 										</FormLabel>
 										<FormControl>
 											<Input
 												type="text"
-												placeholder={`e.g., ${isStudent ? 'Institution/School' : 'Company Name'}`}
+												placeholder="Enter your ID number"
 												{...field}
 											/>
 										</FormControl>
@@ -335,71 +240,62 @@ export function Step2() {
 								)}
 							/>
 						</div>
-
-						<FormField
-							name="occupation_address"
-							control={control}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>
-										Address <span className="text-red-500">*</span>
-									</FormLabel>
-									<FormControl>
-										<Input
-											type="text"
-											placeholder="e.g., 123 Business St, City, Country"
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
 					</div>
 
-					{/* Proof of Income */}
+					{/* ID Document Images */}
 					<div className="space-y-4 rounded-lg border border-slate-100 bg-slate-50 p-5">
 						<div className="space-y-1">
-							{isStudent ? (
-								<>
-									<TypographyH4>Proof of Admission</TypographyH4>
-									<TypographyMuted>
-										Upload a document proving your admission (acceptance letter,
-										enrollment verification, etc.)
-									</TypographyMuted>
-								</>
-							) : (
-								<>
-									<h3 className="font-semibold">Proof of Income</h3>
-									<TypographyMuted>
-										Upload a document proving your income (pay stub, tax return,
-										etc.)
-									</TypographyMuted>
-								</>
-							)}
+							<h3 className="font-semibold">ID Document Images</h3>
+							<TypographyMuted>
+								Upload clear photos of both sides of your ID
+							</TypographyMuted>
 						</div>
 
-						<ImageUpload
-							hero
-							shape="square"
-							hint="Optional"
-							acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-							error={rhfMethods.formState.errors?.proof_of_income_url?.message}
-							fileCallback={uploadProofOfIncome}
-							isUploading={isUploadingProofOfIncome}
-							dismissCallback={() => {
-								rhfMethods.setValue('proof_of_income_url', undefined, {
-									shouldDirty: true,
-									shouldValidate: true,
-								})
-							}}
-							imageSrc={safeString(rhfMethods.watch('proof_of_income_url'))}
-							label={`${isStudent ? 'Proof of Admission' : 'Proof of Income'}`}
-							name="proof_of_income"
-							validation={{
-								maxByteSize: 5242880, // 5MB
-							}}
-						/>
+						<div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+							<ImageUpload
+								hero
+								shape="square"
+								hint="Optional"
+								acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
+								error={rhfMethods.formState.errors?.id_front_url?.message}
+								fileCallback={uploadFront}
+								isUploading={isUploadingFront}
+								dismissCallback={() => {
+									rhfMethods.setValue('id_front_url', undefined, {
+										shouldDirty: true,
+										shouldValidate: true,
+									})
+								}}
+								imageSrc={safeString(rhfMethods.watch('id_front_url'))}
+								label="Front of ID"
+								name="id_front"
+								validation={{
+									maxByteSize: 5242880, // 5MB
+								}}
+							/>
+
+							<ImageUpload
+								hero
+								shape="square"
+								hint="Optional"
+								acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
+								error={rhfMethods.formState.errors?.id_back_url?.message}
+								fileCallback={uploadBack}
+								isUploading={isUploadingBack}
+								dismissCallback={() => {
+									rhfMethods.setValue('id_back_url', undefined, {
+										shouldDirty: true,
+										shouldValidate: true,
+									})
+								}}
+								imageSrc={safeString(rhfMethods.watch('id_back_url'))}
+								label="Back of ID"
+								name="id_back"
+								validation={{
+									maxByteSize: 5242880, // 5MB
+								}}
+							/>
+						</div>
 					</div>
 				</FieldGroup>
 
@@ -420,7 +316,7 @@ export function Step2() {
 						variant="default"
 						className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
 					>
-						Preview & Submit <ArrowRight className="ml-2 h-4 w-4" />
+						Next <ArrowRight className="ml-2 h-4 w-4" />
 					</Button>
 				</div>
 			</form>

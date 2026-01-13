@@ -896,6 +896,85 @@ definitions:
         example: 100
         type: integer
     type: object
+  transformations.AdminOutputUnit:
+    properties:
+      area:
+        example: 120.5
+        type: number
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        format: date-time
+        type: string
+      created_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      created_by_id:
+        example: 1e81fea0-5e8b-4535-b449-1a2133e94a7a
+        format: uuid
+        type: string
+      description:
+        example: Spacious apartment with balcony
+        type: string
+      features:
+        additionalProperties: {}
+        type: object
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        format: uuid
+        type: string
+      images:
+        example:
+        - http://www.images/unit101.jpg
+        items:
+          type: string
+        type: array
+      max_occupants_allowed:
+        example: 4
+        type: integer
+      name:
+        example: Unit 101
+        type: string
+      payment_frequency:
+        example: MONTHLY
+        type: string
+      property:
+        $ref: '#/definitions/transformations.OutputProperty'
+      property_block:
+        $ref: '#/definitions/transformations.OutputPropertyBlock'
+      property_block_id:
+        example: a12345ee-1a70-436e-ba24-572078895982
+        format: uuid
+        type: string
+      property_id:
+        example: b50874ee-1a70-436e-ba24-572078895982
+        format: uuid
+        type: string
+      rent_fee:
+        example: 1500
+        type: integer
+      rent_fee_currency:
+        example: USD
+        type: string
+      slug:
+        example: unit-101-abcde1876drkjy
+        type: string
+      status:
+        example: Unit.Status.Available
+        type: string
+      tags:
+        example:
+        - apartment
+        - balcony
+        items:
+          type: string
+        type: array
+      type:
+        example: APARTMENT
+        type: string
+      updated_at:
+        example: "2023-01-01T00:00:00Z"
+        format: date-time
+        type: string
+    type: object
   transformations.OutputAdmin:
     properties:
       created_at:
@@ -1482,16 +1561,6 @@ definitions:
       area:
         example: 120.5
         type: number
-      created_at:
-        example: "2023-01-01T00:00:00Z"
-        format: date-time
-        type: string
-      created_by:
-        $ref: '#/definitions/transformations.OutputClientUser'
-      created_by_id:
-        example: 1e81fea0-5e8b-4535-b449-1a2133e94a7a
-        format: uuid
-        type: string
       description:
         example: Spacious apartment with balcony
         type: string
@@ -1508,26 +1577,11 @@ definitions:
         items:
           type: string
         type: array
-      max_occupants_allowed:
-        example: 4
-        type: integer
       name:
         example: Unit 101
         type: string
       payment_frequency:
         example: MONTHLY
-        type: string
-      property:
-        $ref: '#/definitions/transformations.OutputProperty'
-      property_block:
-        $ref: '#/definitions/transformations.OutputPropertyBlock'
-      property_block_id:
-        example: a12345ee-1a70-436e-ba24-572078895982
-        format: uuid
-        type: string
-      property_id:
-        example: b50874ee-1a70-436e-ba24-572078895982
-        format: uuid
         type: string
       rent_fee:
         example: 1500
@@ -1538,9 +1592,6 @@ definitions:
       slug:
         example: unit-101-abcde1876drkjy
         type: string
-      status:
-        example: Unit.Status.Available
-        type: string
       tags:
         example:
         - apartment
@@ -1550,10 +1601,6 @@ definitions:
         type: array
       type:
         example: APARTMENT
-        type: string
-      updated_at:
-        example: "2023-01-01T00:00:00Z"
-        format: date-time
         type: string
     type: object
 info:
@@ -3610,7 +3657,7 @@ paths:
           schema:
             properties:
               data:
-                $ref: '#/definitions/transformations.OutputUnit'
+                $ref: '#/definitions/transformations.AdminOutputUnit'
             type: object
         "400":
           description: Error occurred when creating a unit
@@ -3813,7 +3860,7 @@ paths:
                     $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
                   rows:
                     items:
-                      $ref: '#/definitions/transformations.OutputUnit'
+                      $ref: '#/definitions/transformations.AdminOutputUnit'
                     type: array
                 type: object
             type: object
@@ -3909,7 +3956,7 @@ paths:
           schema:
             properties:
               data:
-                $ref: '#/definitions/transformations.OutputUnit'
+                $ref: '#/definitions/transformations.AdminOutputUnit'
             type: object
         "400":
           description: Error occurred when fetching a unit
@@ -3961,7 +4008,7 @@ paths:
           schema:
             properties:
               data:
-                $ref: '#/definitions/transformations.OutputUnit'
+                $ref: '#/definitions/transformations.AdminOutputUnit'
             type: object
         "400":
           description: Error occurred when updating a unit
@@ -4598,6 +4645,42 @@ paths:
       summary: Sends a tenant invite to a possible tenant
       tags:
       - TenantApplication
+  /api/v1/units/{unit_id}:
+    get:
+      consumes:
+      - application/json
+      description: Fetch unit subset
+      parameters:
+      - description: Unit ID
+        in: path
+        name: unit_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputUnit'
+            type: object
+        "400":
+          description: Error occurred when fetching a unit
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Unit not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Fetch unit subset
+      tags:
+      - Units
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.
