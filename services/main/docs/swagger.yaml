@@ -4400,6 +4400,10 @@ paths:
           type: string
         name: populate
         type: array
+      - example: 72432ce6-5620-4ecf-a862-4bf2140556a1
+        in: query
+        name: property_id
+        type: string
       - in: query
         name: query
         type: string
@@ -4505,6 +4509,44 @@ paths:
       tags:
       - TenantApplication
   /api/v1/tenant-applications/{tenant_application_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a tenant application. Only applications with status 'TenantApplication.Status.Cancelled'
+        can be deleted.
+      parameters:
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Tenant application deleted successfully
+        "400":
+          description: Error occurred when deleting a tenant application or application
+            is not cancelled
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete a tenant application
+      tags:
+      - TenantApplication
     get:
       consumes:
       - application/json
