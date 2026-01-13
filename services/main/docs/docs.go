@@ -3415,7 +3415,7 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "$ref": "#/definitions/transformations.OutputUnit"
+                                    "$ref": "#/definitions/transformations.AdminOutputUnit"
                                 }
                             }
                         }
@@ -3723,7 +3723,7 @@ const docTemplate = `{
                                         "rows": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/transformations.OutputUnit"
+                                                "$ref": "#/definitions/transformations.AdminOutputUnit"
                                             }
                                         }
                                     }
@@ -3802,7 +3802,7 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "$ref": "#/definitions/transformations.OutputUnit"
+                                    "$ref": "#/definitions/transformations.AdminOutputUnit"
                                 }
                             }
                         }
@@ -3951,7 +3951,7 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "$ref": "#/definitions/transformations.OutputUnit"
+                                    "$ref": "#/definitions/transformations.AdminOutputUnit"
                                 }
                             }
                         }
@@ -4706,6 +4706,61 @@ const docTemplate = `{
                     },
                     "422": {
                         "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/units/{unit_id}": {
+            "get": {
+                "description": "Fetch unit subset",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Fetch unit subset",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Unit ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputUnit"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when fetching a unit",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Unit not found",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -5932,6 +5987,113 @@ const docTemplate = `{
                 }
             }
         },
+        "transformations.AdminOutputUnit": {
+            "type": "object",
+            "properties": {
+                "area": {
+                    "type": "number",
+                    "example": 120.5
+                },
+                "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "created_by_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "1e81fea0-5e8b-4535-b449-1a2133e94a7a"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Spacious apartment with balcony"
+                },
+                "features": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "http://www.images/unit101.jpg"
+                    ]
+                },
+                "max_occupants_allowed": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Unit 101"
+                },
+                "payment_frequency": {
+                    "type": "string",
+                    "example": "MONTHLY"
+                },
+                "property": {
+                    "$ref": "#/definitions/transformations.OutputProperty"
+                },
+                "property_block": {
+                    "$ref": "#/definitions/transformations.OutputPropertyBlock"
+                },
+                "property_block_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "a12345ee-1a70-436e-ba24-572078895982"
+                },
+                "property_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "b50874ee-1a70-436e-ba24-572078895982"
+                },
+                "rent_fee": {
+                    "type": "integer",
+                    "example": 1500
+                },
+                "rent_fee_currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "slug": {
+                    "type": "string",
+                    "example": "unit-101-abcde1876drkjy"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "Unit.Status.Available"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "apartment",
+                        "balcony"
+                    ]
+                },
+                "type": {
+                    "type": "string",
+                    "example": "APARTMENT"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2023-01-01T00:00:00Z"
+                }
+            }
+        },
         "transformations.OutputAdmin": {
             "type": "object",
             "properties": {
@@ -6730,19 +6892,6 @@ const docTemplate = `{
                     "type": "number",
                     "example": 120.5
                 },
-                "created_at": {
-                    "type": "string",
-                    "format": "date-time",
-                    "example": "2023-01-01T00:00:00Z"
-                },
-                "created_by": {
-                    "$ref": "#/definitions/transformations.OutputClientUser"
-                },
-                "created_by_id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "example": "1e81fea0-5e8b-4535-b449-1a2133e94a7a"
-                },
                 "description": {
                     "type": "string",
                     "example": "Spacious apartment with balcony"
@@ -6765,10 +6914,6 @@ const docTemplate = `{
                         "http://www.images/unit101.jpg"
                     ]
                 },
-                "max_occupants_allowed": {
-                    "type": "integer",
-                    "example": 4
-                },
                 "name": {
                     "type": "string",
                     "example": "Unit 101"
@@ -6776,22 +6921,6 @@ const docTemplate = `{
                 "payment_frequency": {
                     "type": "string",
                     "example": "MONTHLY"
-                },
-                "property": {
-                    "$ref": "#/definitions/transformations.OutputProperty"
-                },
-                "property_block": {
-                    "$ref": "#/definitions/transformations.OutputPropertyBlock"
-                },
-                "property_block_id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "example": "a12345ee-1a70-436e-ba24-572078895982"
-                },
-                "property_id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "example": "b50874ee-1a70-436e-ba24-572078895982"
                 },
                 "rent_fee": {
                     "type": "integer",
@@ -6804,10 +6933,6 @@ const docTemplate = `{
                 "slug": {
                     "type": "string",
                     "example": "unit-101-abcde1876drkjy"
-                },
-                "status": {
-                    "type": "string",
-                    "example": "Unit.Status.Available"
                 },
                 "tags": {
                     "type": "array",
@@ -6822,11 +6947,6 @@ const docTemplate = `{
                 "type": {
                     "type": "string",
                     "example": "APARTMENT"
-                },
-                "updated_at": {
-                    "type": "string",
-                    "format": "date-time",
-                    "example": "2023-01-01T00:00:00Z"
                 }
             }
         }
