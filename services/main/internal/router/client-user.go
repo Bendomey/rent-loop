@@ -141,6 +141,8 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				r.Get("/{tenant_application_id}", handlers.TenantApplicationHandler.GetTenantApplication)
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Patch("/{tenant_application_id}", handlers.TenantApplicationHandler.UpdateTenantApplication)
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Delete("/{tenant_application_id}", handlers.TenantApplicationHandler.DeleteTenantApplication)
 			})
 		})
 	}
