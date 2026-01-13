@@ -1,14 +1,17 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Home } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
+import { Link, useLoaderData } from 'react-router'
 import { z } from 'zod'
 import { useTenantApplicationContext } from '../context'
+import { DatePickerInput } from '~/components/date-picker-input'
 import { Button } from '~/components/ui/button'
 import { FieldGroup } from '~/components/ui/field'
 import {
 	Form,
 	FormControl,
+	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -19,112 +22,166 @@ import { Input } from '~/components/ui/input'
 import {
 	Select,
 	SelectContent,
-	SelectGroup,
 	SelectItem,
-	SelectLabel,
 	SelectTrigger,
 	SelectValue,
 } from '~/components/ui/select'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
+import type { loader } from '~/routes/tenants.apply._index'
 
 const ValidationSchema = z.object({
-	nationality: z
-		.string({ error: 'Nationality is required' })
-		.min(2, 'Please enter a valid nationality'),
-	id_type: z.enum(
-		['DRIVERS_LICENSE', 'PASSPORT', 'NATIONAL_ID', 'STUDENT_ID'],
-		{
-			error: 'Please select an ID type',
-		},
-	),
-	id_number: z
-		.string({ error: 'ID number is required' })
-		.min(2, 'Please enter a valid ID number'),
-	id_front_url: z.url('Please upload the front side of the ID').optional(),
-	id_back_url: z.url('Please upload the back side of the ID').optional(),
+	desired_unit_id: z.string({
+		error: 'Invalid referral code',
+	}),
+	created_by_id: z.string({
+		error: 'Invalid referral code',
+	}),
+	first_name: z
+		.string({ error: 'First Name is required' })
+		.min(2, 'Please enter a valid name'),
+	other_names: z.string().optional(),
+	last_name: z
+		.string({ error: 'Last Name is required' })
+		.min(2, 'Please enter a valid name'),
+	email: z.email('Please enter a valid email address'),
+	phone: z
+		.string({ error: 'Phone Number is required' })
+		.min(9, 'Please enter a valid phone number'),
+	profile_photo_url: z.url('Please upload a logo').optional(),
+	date_of_birth: z
+		.date()
+		.refine((date) => {
+			const today = new Date()
+			const age = today.getFullYear() - date.getFullYear()
+			return age >= 14
+		}, 'You must be at least 14 years old')
+		.optional(),
+	current_address: z
+		.string({ error: 'Current Address is required' })
+		.min(5, 'Please enter a valid address'),
+	gender: z.enum(['MALE', 'FEMALE'], { error: 'Please select a gender' }),
+	marital_status: z.enum(['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'], {
+		error: 'Please select a marital status',
+	}),
 })
 
-const idTypes: Array<{
+const gender: Array<{ label: string; value: TenantApplication['gender'] }> = [
+	{ label: 'Male', value: 'MALE' },
+	{ label: 'Female', value: 'FEMALE' },
+]
+
+const marital_status: Array<{
 	label: string
-	value: 'DRIVERS_LICENSE' | 'PASSPORT' | 'NATIONAL_ID' | 'STUDENT_ID'
+	value: TenantApplication['marital_status']
 }> = [
-	{ label: 'National ID', value: 'NATIONAL_ID' },
-	{ label: 'Passport', value: 'PASSPORT' },
-	{ label: "Driver's License", value: 'DRIVERS_LICENSE' },
-	{ label: 'Student ID', value: 'STUDENT_ID' },
+	{ label: 'Single', value: 'SINGLE' },
+	{ label: 'Married', value: 'MARRIED' },
+	{ label: 'Divorced', value: 'DIVORCED' },
+	{ label: 'Widowed', value: 'WIDOWED' },
 ]
 
 export type FormSchema = z.infer<typeof ValidationSchema>
 
 export function Step1() {
-	const { goBack, goNext, formData, updateFormData } =
-		useTenantApplicationContext()
+	const { referredBy, unitId } = useLoaderData<typeof loader>()
+
+	const { goBack, goNext, formData, updateFormData } = useTenantApplicationContext()
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
-			id_type: formData.id_type || 'NATIONAL_ID',
+			marital_status: formData.marital_status || 'SINGLE',
+			gender: formData.gender || 'MALE',
+			created_by_id: formData.created_by_id || referredBy || undefined,
+			desired_unit_id: formData.desired_unit_id || unitId || undefined,
 		},
 	})
 
 	const {
-		upload: uploadFront,
-		objectUrl: frontUrl,
-		isLoading: isUploadingFront,
-	} = useUploadObject('tenant-applications/id-fronts')
-	const {
-		upload: uploadBack,
-		objectUrl: backUrl,
-		isLoading: isUploadingBack,
-	} = useUploadObject('tenant-applications/id-backs')
+		upload,
+		objectUrl: profilePhotoUrl,
+		isLoading: isUploading,
+	} = useUploadObject('tenant-application/profile-pictures')
+
+	const { handleSubmit, control, setValue } = rhfMethods
 
 	useEffect(() => {
-		if (frontUrl) {
-			rhfMethods.setValue('id_front_url', frontUrl, {
-				shouldDirty: true,
-				shouldValidate: true,
-			})
-		}
-		if (backUrl) {
-			rhfMethods.setValue('id_back_url', backUrl, {
+		if (profilePhotoUrl) {
+			rhfMethods.setValue('profile_photo_url', profilePhotoUrl, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [frontUrl, backUrl])
-
-	const { handleSubmit, control, setValue } = rhfMethods
+	}, [profilePhotoUrl])
 
 	useEffect(() => {
-		if (formData.nationality) {
-			setValue('nationality', formData.nationality, {
+		if (formData.first_name) {
+			setValue('first_name', formData.first_name, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
 		}
-		if (formData.id_type) {
-			setValue('id_type', formData.id_type as any, {
+
+		if (formData.last_name) {
+			setValue('last_name', formData.last_name, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
 		}
-		if (formData.id_number) {
-			setValue('id_number', formData.id_number, {
+
+		if (formData.other_names) {
+			setValue('other_names', formData.other_names, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
 		}
-		if (formData.id_front_url) {
-			setValue('id_front_url', formData.id_front_url, {
+
+		if (formData.gender) {
+			setValue('gender', formData.gender, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
 		}
-		if (formData.id_back_url) {
-			setValue('id_back_url', formData.id_back_url, {
+
+		if (formData.marital_status) {
+			setValue('marital_status', formData.marital_status, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+
+		if (formData.email) {
+			setValue('email', formData.email, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+
+		if (formData.phone) {
+			setValue('phone', formData.phone, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+
+		if (formData.current_address) {
+			setValue('current_address', formData.current_address, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		if (formData.date_of_birth) {
+			setValue('date_of_birth', new Date(formData.date_of_birth), {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+
+		if (formData.profile_photo_url) {
+			setValue('profile_photo_url', formData.profile_photo_url, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
@@ -134,11 +191,18 @@ export function Step1() {
 
 	const onSubmit = async (data: FormSchema) => {
 		updateFormData({
-			nationality: data.nationality,
-			id_type: data.id_type,
-			id_number: data.id_number,
-			id_front_url: data.id_front_url,
-			id_back_url: data.id_back_url,
+			desired_unit_id: data.desired_unit_id,
+			created_by_id: data.created_by_id,
+			first_name: data.first_name,
+			other_names: data.other_names,
+			last_name: data.last_name,
+			email: data.email,
+			phone: data.phone,
+			current_address: data.current_address,
+			profile_photo_url: data.profile_photo_url,
+			date_of_birth: data.date_of_birth?.toISOString(),
+			gender: data.gender,
+			marital_status: data.marital_status,
 		})
 		goNext()
 	}
@@ -147,39 +211,151 @@ export function Step1() {
 		<Form {...rhfMethods}>
 			<form
 				onSubmit={handleSubmit(onSubmit)}
-				className="mx-auto my-8 space-y-8 md:max-w-2xl"
+				className="mx-auto my-4 space-y-4 md:my-8 md:max-w-2xl"
 			>
+				<Input type="hidden" {...rhfMethods.register('created_by_id')} />
+				<Input type="hidden" {...rhfMethods.register('desired_unit_id')} />
+
 				{/* Header Section */}
-				<div className="space-y-2 border-b pb-6">
-					<TypographyH2 className="text-2xl font-bold">
-						Identity Verification
+				<div className="space-y-1 border-b pb-6 md:space-y-3">
+					<TypographyH2 className="text-3xl font-bold">
+						Basic Information
 					</TypographyH2>
-					<TypographyMuted className="text-base">
-						Please provide your identification details and document images for
-						verification.
+					<TypographyMuted className="text-base leading-relaxed">
+						Let's start by collecting your personal information
 					</TypographyMuted>
 				</div>
 
-				<FieldGroup className="space-y-4">
-					{/* Nationality and ID Type */}
-					<div className="rounded-lg border border-slate-100 bg-slate-50 p-5">
-						<h3 className="mb-5 text-lg font-semibold text-slate-900">
-							Identification Details
+				<FieldGroup className="space-y-2">
+					{/* Personal Details Grid */}
+					<div className="space-y-5 rounded-lg border border-slate-100 bg-slate-50 p-5">
+						<h3 className="text-lg font-semibold text-slate-900">
+							Personal Details
 						</h3>
-						<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+						<div className="grid grid-cols-1 gap-5 md:grid-cols-2">
 							<FormField
-								name="nationality"
+								name="first_name"
 								control={control}
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>
-											Nationality <span className="text-red-500">*</span>
+											First Name <span className="text-red-500">*</span>
 										</FormLabel>
 										<FormControl>
-											<Input
-												type="text"
-												placeholder="e.g., Ghanaian"
-												{...field}
+											<Input type="text" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								name="other_names"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Other Names</FormLabel>
+										<FormControl>
+											<Input type="text" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								name="last_name"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>
+											Last Name <span className="text-red-500">*</span>
+										</FormLabel>
+										<FormControl>
+											<Input type="text" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								name="gender"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>
+											Gender <span className="text-red-500">*</span>
+										</FormLabel>
+										<FormControl>
+											<Select
+												value={field.value}
+												onValueChange={field.onChange}
+											>
+												<SelectTrigger className="w-full">
+													<SelectValue placeholder="Select gender" />
+												</SelectTrigger>
+												<SelectContent>
+													{gender.map((item) => (
+														<SelectItem key={item.value} value={item.value}>
+															{item.label}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								name="email"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>
+											Email <span className="text-red-500">*</span>
+										</FormLabel>
+										<FormControl>
+											<Input {...field} type="text" />
+										</FormControl>
+										<FormDescription>
+											We'll send notifications to this email
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								name="phone"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>
+											Phone <span className="text-red-500">*</span>
+										</FormLabel>
+										<FormControl>
+											<Input {...field} type="text" />
+										</FormControl>
+										<FormDescription>
+											We'll send notifications to this number
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								name="date_of_birth"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>
+											Date of birth <span className="text-red-500">*</span>
+										</FormLabel>
+										<FormControl>
+											<DatePickerInput
+												value={field.value}
+												onChange={field.onChange}
 											/>
 										</FormControl>
 										<FormMessage />
@@ -188,28 +364,27 @@ export function Step1() {
 							/>
 
 							<FormField
-								name="id_type"
+								name="marital_status"
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>ID Type</FormLabel>
+										<FormLabel>
+											Marital Status <span className="text-red-500">*</span>
+										</FormLabel>
 										<FormControl>
 											<Select
+												value={field.value}
 												onValueChange={field.onChange}
-												value={field.value || ''}
 											>
 												<SelectTrigger className="w-full">
-													<SelectValue placeholder="Select ID type" />
+													<SelectValue placeholder="Select marital status" />
 												</SelectTrigger>
 												<SelectContent>
-													<SelectGroup>
-														<SelectLabel>Document Type</SelectLabel>
-														{idTypes.map((type) => (
-															<SelectItem key={type.value} value={type.value}>
-																{type.label}
-															</SelectItem>
-														))}
-													</SelectGroup>
+													{marital_status.map((item) => (
+														<SelectItem key={item.value} value={item.value}>
+															{item.label}
+														</SelectItem>
+													))}
 												</SelectContent>
 											</Select>
 										</FormControl>
@@ -218,20 +393,26 @@ export function Step1() {
 								)}
 							/>
 						</div>
+					</div>
 
-						<div className="mt-8">
+					{/* Contact & Address Section */}
+					<div className="space-y-5 rounded-lg border border-slate-100 bg-slate-50 p-5">
+						<h3 className="text-lg font-semibold text-slate-900">
+							Contact Information
+						</h3>
+						<div className="space-y-5">
 							<FormField
-								name="id_number"
+								name="current_address"
 								control={control}
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>
-											ID Number <span className="text-red-500">*</span>
+											Address <span className="text-red-500">*</span>
 										</FormLabel>
 										<FormControl>
 											<Input
 												type="text"
-												placeholder="Enter your ID number"
+												placeholder="e.g., East Legon, Accra"
 												{...field}
 											/>
 										</FormControl>
@@ -242,60 +423,32 @@ export function Step1() {
 						</div>
 					</div>
 
-					{/* ID Document Images */}
-					<div className="space-y-4 rounded-lg border border-slate-100 bg-slate-50 p-5">
-						<div className="space-y-1">
-							<h3 className="font-semibold">ID Document Images</h3>
-							<TypographyMuted>
-								Upload clear photos of both sides of your ID
-							</TypographyMuted>
-						</div>
-
-						<div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-							<ImageUpload
-								hero
-								shape="square"
-								hint="Optional"
-								acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-								error={rhfMethods.formState.errors?.id_front_url?.message}
-								fileCallback={uploadFront}
-								isUploading={isUploadingFront}
-								dismissCallback={() => {
-									rhfMethods.setValue('id_front_url', undefined, {
-										shouldDirty: true,
-										shouldValidate: true,
-									})
-								}}
-								imageSrc={safeString(rhfMethods.watch('id_front_url'))}
-								label="Front of ID"
-								name="id_front"
-								validation={{
-									maxByteSize: 5242880, // 5MB
-								}}
-							/>
-
-							<ImageUpload
-								hero
-								shape="square"
-								hint="Optional"
-								acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-								error={rhfMethods.formState.errors?.id_back_url?.message}
-								fileCallback={uploadBack}
-								isUploading={isUploadingBack}
-								dismissCallback={() => {
-									rhfMethods.setValue('id_back_url', undefined, {
-										shouldDirty: true,
-										shouldValidate: true,
-									})
-								}}
-								imageSrc={safeString(rhfMethods.watch('id_back_url'))}
-								label="Back of ID"
-								name="id_back"
-								validation={{
-									maxByteSize: 5242880, // 5MB
-								}}
-							/>
-						</div>
+					{/* Profile Picture Section */}
+					<div className="space-y-5 rounded-lg border border-slate-100 bg-slate-50 p-5">
+						<h3 className="text-lg font-semibold text-slate-900">
+							Profile Picture
+						</h3>
+						<ImageUpload
+							hero
+							shape="square"
+							hint="Optional"
+							acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
+							error={rhfMethods.formState.errors?.profile_photo_url?.message}
+							fileCallback={upload}
+							isUploading={isUploading}
+							dismissCallback={() => {
+								rhfMethods.setValue('profile_photo_url', undefined, {
+									shouldDirty: true,
+									shouldValidate: true,
+								})
+							}}
+							imageSrc={safeString(rhfMethods.watch('profile_photo_url'))}
+							label="Profile Picture"
+							name="image_url"
+							validation={{
+								maxByteSize: 5242880, // 5MB
+							}}
+						/>
 					</div>
 				</FieldGroup>
 
@@ -310,7 +463,6 @@ export function Step1() {
 						<ArrowLeft className="mr-2 h-4 w-4" />
 						Go Back
 					</Button>
-
 					<Button
 						size="lg"
 						variant="default"

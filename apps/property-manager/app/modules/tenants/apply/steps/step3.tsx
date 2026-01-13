@@ -1,256 +1,429 @@
-import { ArrowLeft, Pencil } from 'lucide-react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
 import { useTenantApplicationContext } from '../context'
-import { Image } from '~/components/Image'
 import { Button } from '~/components/ui/button'
-import { Spinner } from '~/components/ui/spinner'
+import { FieldGroup } from '~/components/ui/field'
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from '~/components/ui/form'
+import { ImageUpload } from '~/components/ui/image-upload'
+import { Input } from '~/components/ui/input'
 import {
 	TypographyH2,
+	TypographyH4,
 	TypographyMuted,
-	TypographyP,
+	TypographySmall,
 } from '~/components/ui/typography'
+import { useUploadObject } from '~/hooks/use-upload-object'
+import { safeString } from '~/lib/strings'
+import { cn } from '~/lib/utils'
 
-const renderPreviewField = (label: string, value?: string | null) => (
-	<div className="py-3">
-		<p className="text-sm font-medium text-slate-600">{label}</p>
-		<p className="mt-1 text-sm text-slate-900">{value || '—'}</p>
-	</div>
-)
+const ValidationSchema = z.object({
+	emergency_contact_name: z
+		.string({ error: 'Emergency Contact Name is required' })
+		.min(2, 'Please enter a valid name'),
+	relationship_to_emergency_contact: z
+		.string({ error: 'Relationship to Emergency Contact is required' })
+		.min(2, 'Please enter a valid relationship'),
+	emergency_contact_phone: z
+		.string({ error: 'Phone Number is required' })
+		.min(9, 'Please enter a valid phone number'),
+	employment_type: z.enum(['STUDENT', 'WORKER'], {
+		error: 'Please select an employment type',
+	}),
+	occupation: z.string().optional(),
+	employer: z.string().optional(),
+	occupation_address: z.string().optional(),
+	proof_of_income_url: z.url('Please upload proof of income').optional(),
+})
 
-const PreviewCard = ({
-	title,
-	subtitle,
-	children,
-	onEdit,
-}: {
-	title: string
-	subtitle?: string
-	children: React.ReactNode
-	stepNumber: number
-	onEdit: () => void
-}) => (
-	<div className="rounded-lg border bg-white p-6">
-		<div className="mb-4 flex items-start justify-between">
-			<div>
-				<h3 className="text-foreground font-semibold">{title}</h3>
-				{subtitle && (
-					<p className="text-muted-foreground mt-1 text-sm">{subtitle}</p>
-				)}
-			</div>
-			<Button
-				type="button"
-				size="sm"
-				variant="ghost"
-				onClick={onEdit}
-				className="text-rose-600 hover:text-rose-700"
-			>
-				<Pencil className="h-4 w-4" />
-			</Button>
-		</div>
-		<div className="space-y-0">{children}</div>
-	</div>
-)
+const employment_type: Array<{
+	label: string
+	value: TenantApplication['employment_type']
+}> = [
+	{ label: 'Student', value: 'STUDENT' },
+	{ label: 'Worker', value: 'WORKER' },
+]
+
+export type FormSchema = z.infer<typeof ValidationSchema>
 
 export function Step3() {
-	const { goBack, goToPage, formData, onSubmit, isSubmitting } =
+	const { goBack, goNext, formData, updateFormData } =
 		useTenantApplicationContext()
-	const isStudent = formData.employment_type === 'STUDENT'
+
+	const rhfMethods = useForm<FormSchema>({
+		resolver: zodResolver(ValidationSchema),
+		defaultValues: {
+			employment_type: 'STUDENT',
+		},
+	})
+
+	const {
+		upload: uploadProofOfIncome,
+		objectUrl: proofOfIncomeUrl,
+		isLoading: isUploadingProofOfIncome,
+	} = useUploadObject('tenant-applications/proof-of-income')
+
+	useEffect(() => {
+		if (proofOfIncomeUrl) {
+			rhfMethods.setValue('proof_of_income_url', proofOfIncomeUrl, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [proofOfIncomeUrl])
+
+	const { watch, handleSubmit, formState, control, setValue } = rhfMethods
+
+	const isStudent = watch('employment_type') === 'STUDENT'
+
+	useEffect(() => {
+		if (formData.emergency_contact_name) {
+			setValue('emergency_contact_name', formData.emergency_contact_name, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		if (formData.relationship_to_emergency_contact) {
+			setValue(
+				'relationship_to_emergency_contact',
+				formData.relationship_to_emergency_contact,
+				{
+					shouldDirty: true,
+					shouldValidate: true,
+				},
+			)
+		}
+		if (formData.emergency_contact_phone) {
+			setValue('emergency_contact_phone', formData.emergency_contact_phone, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		if (formData.employment_type) {
+			setValue('employment_type', formData.employment_type, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		if (formData.occupation) {
+			setValue('occupation', formData.occupation, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		if (formData.employer) {
+			setValue('employer', formData.employer, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		if (formData.occupation_address) {
+			setValue('occupation_address', formData.occupation_address, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		if (formData.proof_of_income_url) {
+			setValue('proof_of_income_url', formData.proof_of_income_url, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [formData])
+
+	const onSubmit = async (data: FormSchema) => {
+		updateFormData({
+			emergency_contact_name: data.emergency_contact_name,
+			relationship_to_emergency_contact: data.relationship_to_emergency_contact,
+			emergency_contact_phone: data.emergency_contact_phone,
+			employment_type: data.employment_type,
+			occupation:
+				data.employment_type === 'STUDENT'
+					? data.employment_type
+					: data.occupation,
+			employer: data.employer,
+			occupation_address: data.occupation_address,
+			proof_of_income_url: data.proof_of_income_url,
+		})
+		goNext()
+	}
 
 	return (
-		<form
-			onSubmit={async (e) => {
-				e.preventDefault()
-				await onSubmit(formData)
-			}}
-			className="mx-auto my-4 space-y-4 md:my-8 md:max-w-2xl md:space-y-8"
-		>
-			{/* Header Section */}
-			<div className="space-y-2 border-b pb-6">
-				<TypographyH2 className="text-2xl font-bold">
-					Review Application
-				</TypographyH2>
-				<TypographyMuted className="text-base">
-					Review all information below. Click Edit to make changes before
-					submitting.
-				</TypographyMuted>
-			</div>
+		<Form {...rhfMethods}>
+			<form
+				onSubmit={handleSubmit(onSubmit)}
+				className="mx-auto my-4 space-y-4 md:my-8 md:max-w-2xl md:space-y-8"
+			>
+				{/* Header Section */}
+				<div className="space-y-2 border-b pb-6">
+					<TypographyH2>
+						Emergency Contact & Background Information
+					</TypographyH2>
+					<TypographyMuted className="text-base">
+						Please provide your emergency contact information and background
+						details.
+					</TypographyMuted>
+				</div>
 
-			{/* Profile Photo */}
-			{formData.profile_photo_url && (
-				<PreviewCard
-					title="Profile Photo"
-					subtitle="Identification photo"
-					stepNumber={0}
-					onEdit={() => goToPage(0)}
-				>
-					<div className="py-3">
-						<Image
-							src={formData.profile_photo_url}
-							alt="Profile"
-							className="max-h-48 rounded-md object-cover"
+				<FieldGroup className="space-y-6">
+					{/* Emergency Contact Section */}
+					<div className="space-y-4 rounded-lg border border-slate-100 bg-slate-50 p-5">
+						<div className="space-y-1">
+							<TypographyH4>Emergency Contact</TypographyH4>
+						</div>
+						<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+							<FormField
+								name="emergency_contact_name"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>
+											Full Name <span className="text-red-500">*</span>
+										</FormLabel>
+										<FormControl>
+											<Input
+												type="text"
+												placeholder="Enter full name"
+												{...field}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								name="relationship_to_emergency_contact"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>
+											Relationship <span className="text-red-500">*</span>
+										</FormLabel>
+										<FormControl>
+											<Input
+												type="text"
+												placeholder="e.g., Sibling, Parent, Friend"
+												{...field}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
+
+						<FormField
+							name="emergency_contact_phone"
+							control={control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>
+										Phone Number <span className="text-red-500">*</span>
+									</FormLabel>
+									<FormControl>
+										<Input
+											type="tel"
+											placeholder="e.g., +233 54-123-4567"
+											{...field}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
 						/>
 					</div>
-				</PreviewCard>
-			)}
 
-			{/* Basic Information */}
-			<PreviewCard
-				title="Basic Information"
-				subtitle="Personal details"
-				stepNumber={0}
-				onEdit={() => goToPage(0)}
-			>
-				<div className="grid grid-cols-2 gap-x-4 gap-y-0">
-					{renderPreviewField('First Name', formData.first_name)}
-					{renderPreviewField('Last Name', formData.last_name)}
-					{formData.other_names &&
-						renderPreviewField('Other Names', formData.other_names)}
-					{renderPreviewField('Gender', formData.gender)}
-					{renderPreviewField('Marital Status', formData.marital_status)}
-					{renderPreviewField('Phone', formData.phone)}
-					{renderPreviewField('Email', formData.email)}
-					{formData.date_of_birth &&
-						renderPreviewField(
-							'Date of Birth',
-							new Date(formData.date_of_birth).toLocaleDateString(),
-						)}
-					{renderPreviewField('Address', formData.current_address)}
-				</div>
-			</PreviewCard>
+					{/* Employment Section */}
+					<div className="space-y-4 rounded-lg border border-t border-slate-100 bg-slate-50 p-5">
+						<div className="w-full">
+							<TypographyH4>Employment Type</TypographyH4>
+							<TypographyMuted className="mb-3 text-sm">
+								Select your current employment status
+							</TypographyMuted>
 
-			{/* Identity Verification */}
-			<PreviewCard
-				title="Identity Verification"
-				subtitle="Identification details"
-				stepNumber={1}
-				onEdit={() => goToPage(1)}
-			>
-				<div className="grid grid-cols-2 gap-x-4 gap-y-0">
-					{renderPreviewField('Nationality', formData.nationality)}
-					{renderPreviewField('ID Type', formData.id_type)}
-					<div className="col-span-2">
-						{renderPreviewField('ID Number', formData.id_number)}
-					</div>
-					{formData.id_front_url && (
-						<div className="py-3">
-							<TypographyP className="text-sm font-medium text-slate-600">
-								ID Front
-							</TypographyP>
-							<div className="mt-2">
-								<Image
-									src={formData.id_front_url}
-									alt="ID Front"
-									className="max-h-40 rounded-md object-cover"
-								/>
+							<div className="flex space-x-3 pb-3">
+								{employment_type.map((employment_type) => {
+									const isSelected =
+										watch('employment_type') === employment_type.value
+									return (
+										<Button
+											type="button"
+											onClick={() =>
+												setValue('employment_type', employment_type.value, {
+													shouldDirty: true,
+													shouldValidate: true,
+												})
+											}
+											key={employment_type.value}
+											variant={isSelected ? 'default' : 'outline'}
+											className={cn('w-1/2', {
+												'bg-rose-600 text-white': isSelected,
+											})}
+										>
+											{employment_type.label}
+										</Button>
+									)
+								})}
 							</div>
+							{formState.errors?.employment_type ? (
+								<TypographySmall className="text-destructive mt-3">
+									{formState.errors.employment_type.message}
+								</TypographySmall>
+							) : null}
 						</div>
-					)}
-					{formData.id_back_url && (
-						<div className="py-3">
-							<TypographyP className="text-sm font-medium text-slate-600">
-								ID Back
-							</TypographyP>
-							<div className="mt-2">
-								<Image
-									src={formData.id_back_url}
-									alt="ID Back"
-									className="max-h-40 rounded-md object-cover"
-								/>
-							</div>
-						</div>
-					)}
-				</div>
-			</PreviewCard>
 
-			{/* Emergency Contact & Employment */}
-			<PreviewCard
-				title={`${isStudent ? 'Emergency Contact & Student Information' : 'Emergency Contact & Employment Information'}`}
-				subtitle={`Emergency contact and ${isStudent ? 'student' : 'employment'} information`}
-				stepNumber={2}
-				onEdit={() => goToPage(2)}
-			>
-				<div className="space-y-4">
-					<div>
-						<TypographyP className="text-foreground mb-3 font-semibold">
-							Emergency Contact
-						</TypographyP>
-						<div className="grid grid-cols-2 gap-x-4 gap-y-0">
-							{renderPreviewField('Full Name', formData.emergency_contact_name)}
-							{renderPreviewField(
-								'Relationship',
-								formData.relationship_to_emergency_contact,
+						<div className="space-y-1 border-t pt-6">
+							<TypographyH4>
+								{isStudent ? 'Student Information' : 'Employment Information'}
+							</TypographyH4>
+						</div>
+						<div
+							className={`grid grid-cols-1 gap-4 ${isStudent ? 'md:grid-cols-1' : 'md:grid-cols-2'}`}
+						>
+							{!isStudent && (
+								<FormField
+									name="occupation"
+									control={control}
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>
+												Occupation <span className="text-red-500">*</span>
+											</FormLabel>
+											<FormControl>
+												<Input
+													type="text"
+													placeholder="e.g., Software Engineer"
+													{...field}
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
 							)}
-							<div className="col-span-2">
-								{renderPreviewField(
-									'Phone Number',
-									formData.emergency_contact_phone,
+
+							<FormField
+								name="employer"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>
+											{isStudent ? 'Institution/School' : 'Employer'}{' '}
+											<span className="text-red-500">*</span>
+										</FormLabel>
+										<FormControl>
+											<Input
+												type="text"
+												placeholder={`e.g., ${isStudent ? 'Institution/School' : 'Company Name'}`}
+												{...field}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
 								)}
-							</div>
+							/>
 						</div>
-					</div>
 
-					<div className="border-t pt-4">
-						<TypographyP className="text-foreground mb-3 font-semibold">
-							{isStudent ? 'Student Information' : 'Employment Information'}
-						</TypographyP>
-						<div className="grid grid-cols-2 gap-x-4 gap-y-0">
-							{isStudent
-								? null
-								: renderPreviewField('Occupation', formData.occupation)}
-							{renderPreviewField(
-								isStudent ? 'Institution/School' : 'Employer',
-								formData.employer,
+						<FormField
+							name="occupation_address"
+							control={control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>
+										Address <span className="text-red-500">*</span>
+									</FormLabel>
+									<FormControl>
+										<Input
+											type="text"
+											placeholder="e.g., 123 Business St, City, Country"
+											{...field}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
 							)}
-							<div className="col-span-2">
-								{renderPreviewField('Address', formData.occupation_address)}
-							</div>
-						</div>
+						/>
 					</div>
 
-					{formData.proof_of_income_url && (
-						<div className="border-t pt-4">
-							<TypographyP className="mb-3 text-sm font-medium text-slate-600">
-								Proof of {isStudent ? 'Admission' : 'Income'}
-							</TypographyP>
-							<div className="mt-2">
-								<Image
-									src={formData.proof_of_income_url}
-									alt={`Proof of ${isStudent ? 'Admission' : 'Income'}`}
-									className="max-h-40 rounded-md object-cover"
-								/>
-							</div>
+					{/* Proof of Income */}
+					<div className="space-y-4 rounded-lg border border-slate-100 bg-slate-50 p-5">
+						<div className="space-y-1">
+							{isStudent ? (
+								<>
+									<TypographyH4>Proof of Admission</TypographyH4>
+									<TypographyMuted>
+										Upload a document proving your admission (acceptance letter,
+										enrollment verification, etc.)
+									</TypographyMuted>
+								</>
+							) : (
+								<>
+									<h3 className="font-semibold">Proof of Income</h3>
+									<TypographyMuted>
+										Upload a document proving your income (pay stub, tax return,
+										etc.)
+									</TypographyMuted>
+								</>
+							)}
 						</div>
-					)}
-				</div>
-			</PreviewCard>
 
-			{/* Action Buttons */}
-			<div className="mt-10 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
-				<Button
-					onClick={goBack}
-					type="button"
-					size="lg"
-					variant="outline"
-					className="w-full md:w-auto"
-				>
-					<ArrowLeft className="mr-2 h-4 w-4" />
-					Go Back
-				</Button>
-				<Button
-					disabled={isSubmitting}
-					size="lg"
-					variant="default"
-					className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
-				>
-					{isSubmitting ? (
-						<>
-							<Spinner className="mr-2 h-4 w-4" />
-							Submitting...
-						</>
-					) : (
-						'Submit Application'
-					)}
-				</Button>
-			</div>
-		</form>
+						<ImageUpload
+							hero
+							shape="square"
+							hint="Optional"
+							acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
+							error={rhfMethods.formState.errors?.proof_of_income_url?.message}
+							fileCallback={uploadProofOfIncome}
+							isUploading={isUploadingProofOfIncome}
+							dismissCallback={() => {
+								rhfMethods.setValue('proof_of_income_url', undefined, {
+									shouldDirty: true,
+									shouldValidate: true,
+								})
+							}}
+							imageSrc={safeString(rhfMethods.watch('proof_of_income_url'))}
+							label={`${isStudent ? 'Proof of Admission' : 'Proof of Income'}`}
+							name="proof_of_income"
+							validation={{
+								maxByteSize: 5242880, // 5MB
+							}}
+						/>
+					</div>
+				</FieldGroup>
+
+				<div className="mt-10 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
+					<Button
+						onClick={goBack}
+						type="button"
+						size="lg"
+						variant="outline"
+						className="w-full md:w-auto"
+					>
+						<ArrowLeft className="mr-2 h-4 w-4" />
+						Go Back
+					</Button>
+
+					<Button
+						size="lg"
+						variant="default"
+						className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
+					>
+						Preview & Submit <ArrowRight className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
+			</form>
+		</Form>
 	)
 }
