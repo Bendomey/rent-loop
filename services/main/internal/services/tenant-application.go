@@ -32,6 +32,7 @@ type TenantApplicationService interface {
 		context context.Context,
 		input UpdateTenantApplicationInput,
 	) (*models.TenantApplication, error)
+	DeleteTenantApplication(context context.Context, tenantApplicationID string) error
 }
 
 type tenantApplicationService struct {
@@ -433,4 +434,45 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 	}
 
 	return tenantApplication, nil
+}
+
+func (s *tenantApplicationService) DeleteTenantApplication(
+	ctx context.Context,
+	tenantApplicationID string,
+) error {
+	tenantApplication, getTenantApplicationErr := s.repo.GetOneWithQuery(ctx, repository.GetTenantApplicationQuery{
+		TenantApplicationID: tenantApplicationID,
+	})
+	if getTenantApplicationErr != nil {
+		if errors.Is(getTenantApplicationErr, gorm.ErrRecordNotFound) {
+			return pkg.NotFoundError("TenantApplicationNotFound", &pkg.RentLoopErrorParams{
+				Err: getTenantApplicationErr,
+			})
+		}
+
+		return pkg.InternalServerError(getTenantApplicationErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getTenantApplicationErr,
+			Metadata: map[string]string{
+				"function": "DeleteTenantApplication",
+				"action":   "fetching tenant application",
+			},
+		})
+	}
+
+	if tenantApplication.Status != "TenantApplication.Status.Cancelled" {
+		return pkg.BadRequestError("TenantApplicationNotCancelled", nil)
+	}
+
+	deleteErr := s.repo.Delete(ctx, tenantApplicationID)
+	if deleteErr != nil {
+		return pkg.InternalServerError(deleteErr.Error(), &pkg.RentLoopErrorParams{
+			Err: deleteErr,
+			Metadata: map[string]string{
+				"function": "DeleteTenantApplication",
+				"action":   "deleting tenant application",
+			},
+		})
+	}
+
+	return nil
 }

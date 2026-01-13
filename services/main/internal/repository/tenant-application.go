@@ -15,6 +15,7 @@ type TenantApplicationRepository interface {
 	Count(context context.Context, filter ListTenantApplicationsQuery) (int64, error)
 	GetOneWithQuery(context context.Context, query GetTenantApplicationQuery) (*models.TenantApplication, error)
 	Update(context context.Context, tenantApplication models.TenantApplication) error
+	Delete(context context.Context, tenantApplicationID string) error
 }
 
 type tenantApplicationRepository struct {
@@ -166,4 +167,10 @@ func (r *tenantApplicationRepository) Update(ctx context.Context, tenantApplicat
 	db := lib.ResolveDB(ctx, r.DB)
 
 	return db.WithContext(ctx).Save(tenantApplication).Error
+}
+
+func (r *tenantApplicationRepository) Delete(ctx context.Context, tenantApplicationID string) error {
+	db := lib.ResolveDB(ctx, r.DB)
+
+	return db.WithContext(ctx).Where("id = ?", tenantApplicationID).Delete(&models.TenantApplication{}).Error
 }

@@ -420,3 +420,30 @@ func (h *TenantApplicationHandler) UpdateTenantApplication(w http.ResponseWriter
 		"data": transformations.DBTenantApplicationToRest(tenantApplication),
 	})
 }
+
+// DeleteTenantApplication godoc
+//
+//	@Summary		Delete a tenant application
+//	@Description	Delete a tenant application. Only applications with status 'TenantApplication.Status.Cancelled' can be deleted.
+//	@Tags			TenantApplication
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			tenant_application_id	path	string	true	"Tenant application ID"
+//	@Success		204						"Tenant application deleted successfully"
+//	@Failure		400						{object}	lib.HTTPError	"Error occurred when deleting a tenant application or application is not cancelled"
+//	@Failure		401						{object}	string			"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError	"Tenant application not found"
+//	@Failure		500						{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/tenant-applications/{tenant_application_id} [delete]
+func (h *TenantApplicationHandler) DeleteTenantApplication(w http.ResponseWriter, r *http.Request) {
+	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
+
+	deleteTenantApplicationErr := h.service.DeleteTenantApplication(r.Context(), tenantApplicationID)
+	if deleteTenantApplicationErr != nil {
+		HandleErrorResponse(w, deleteTenantApplicationErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
