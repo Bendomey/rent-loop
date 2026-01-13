@@ -1,8 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, ArrowRight, Home } from 'lucide-react'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useLoaderData } from 'react-router'
 import { z } from 'zod'
 import { useTenantApplicationContext } from '../context'
 import { DatePickerInput } from '~/components/date-picker-input'
@@ -29,15 +28,8 @@ import {
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
-import type { loader } from '~/routes/tenants.apply._index'
 
 const ValidationSchema = z.object({
-	desired_unit_id: z.string({
-		error: 'Invalid referral code',
-	}),
-	created_by_id: z.string({
-		error: 'Invalid referral code',
-	}),
 	first_name: z
 		.string({ error: 'First Name is required' })
 		.min(2, 'Please enter a valid name'),
@@ -85,17 +77,14 @@ const marital_status: Array<{
 export type FormSchema = z.infer<typeof ValidationSchema>
 
 export function Step1() {
-	const { referredBy, unitId } = useLoaderData<typeof loader>()
-
-	const { goBack, goNext, formData, updateFormData } = useTenantApplicationContext()
+	const { goBack, goNext, formData, updateFormData } =
+		useTenantApplicationContext()
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
 			marital_status: formData.marital_status || 'SINGLE',
 			gender: formData.gender || 'MALE',
-			created_by_id: formData.created_by_id || referredBy || undefined,
-			desired_unit_id: formData.desired_unit_id || unitId || undefined,
 		},
 	})
 
@@ -191,8 +180,6 @@ export function Step1() {
 
 	const onSubmit = async (data: FormSchema) => {
 		updateFormData({
-			desired_unit_id: data.desired_unit_id,
-			created_by_id: data.created_by_id,
 			first_name: data.first_name,
 			other_names: data.other_names,
 			last_name: data.last_name,
@@ -213,9 +200,6 @@ export function Step1() {
 				onSubmit={handleSubmit(onSubmit)}
 				className="mx-auto my-4 space-y-4 md:my-8 md:max-w-2xl"
 			>
-				<Input type="hidden" {...rhfMethods.register('created_by_id')} />
-				<Input type="hidden" {...rhfMethods.register('desired_unit_id')} />
-
 				{/* Header Section */}
 				<div className="space-y-1 border-b pb-6 md:space-y-3">
 					<TypographyH2 className="text-3xl font-bold">

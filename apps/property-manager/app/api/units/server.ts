@@ -36,7 +36,6 @@ export const getPropertyUnitsForServer = async (
 	}
 }
 
-
 /**
  * GET single property apartment/unit by ID.
  */

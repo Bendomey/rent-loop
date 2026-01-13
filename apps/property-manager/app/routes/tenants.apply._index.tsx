@@ -1,13 +1,13 @@
 import { redirect } from 'react-router'
 import type { Route } from './+types/apply._index'
 import { createTenantApplication } from '~/api/tenant-applications'
+import { getPropertyUnitForServer } from '~/api/units/server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'
 import { APP_NAME } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { TenantApplyModule } from '~/modules'
-import { getPropertyUnitForServer } from '~/api/units/server'
 
 export async function loader({ request }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
@@ -15,13 +15,13 @@ export async function loader({ request }: Route.LoaderArgs) {
 	const referredBy = url.searchParams.get('referred_by')
 	const unitId = url.searchParams.get('unit')
 
-		const unit = await getPropertyUnitForServer(
-				{ unit_id: unitId as string },
-				{
-					baseUrl,
-				},
-			)
-	
+	const unit = await getPropertyUnitForServer(
+		{ unit_id: unitId as string },
+		{
+			baseUrl,
+		},
+	)
+
 	return {
 		origin: getDomainUrl(request),
 		referredBy,
