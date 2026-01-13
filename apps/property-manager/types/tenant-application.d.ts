@@ -55,4 +55,5 @@ interface FetchTenantApplicationFilter {
 	status?: string
 	gender?: string
 	marital_status?: string
+	property_id?: string
 }

@@ -39,6 +39,7 @@ export function PropertyTenantApplicationsModule() {
 				status: status,
 				gender: gender,
 				marital_status: marital_status,
+				property_id: clientUserProperty?.property?.id,
 			},
 			pagination: { page, per },
 			populate: ['DesiredUnit'],
