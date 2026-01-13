@@ -41,6 +41,7 @@ type ListTenantApplicationsQuery struct {
 	MaritalStatus                *string
 	CreatedById                  *string
 	DesiredUnitId                *string
+	PropertyId                   *string
 	Email                        *[]string
 	Phone                        *[]string
 }
@@ -61,6 +62,7 @@ func (r *tenantApplicationRepository) List(
 		tenantApplicationFilterScope("marital_status", filterQuery.MaritalStatus),
 		tenantApplicationFilterScope("created_by_id", filterQuery.CreatedById),
 		tenantApplicationFilterScope("desired_unit_id", filterQuery.DesiredUnitId),
+		tenantApplicationPropertyIdFilterScope(filterQuery.PropertyId),
 		tenantAplicationArrayFilterScope("email", filterQuery.Email),
 		tenantAplicationArrayFilterScope("phone", filterQuery.Phone),
 		DateRangeScope("tenant_applications", filterQuery.DateRange),
@@ -101,6 +103,7 @@ func (r *tenantApplicationRepository) Count(
 		DateRangeScope("tenant_applications", filterQuery.DateRange),
 		SearchScope("tenant_applications", filterQuery.Search),
 		tenantApplicationFilterScope("desired_unit_id", filterQuery.DesiredUnitId),
+		tenantApplicationPropertyIdFilterScope(filterQuery.PropertyId),
 		tenantAplicationArrayFilterScope("email", filterQuery.Email),
 		tenantAplicationArrayFilterScope("phone", filterQuery.Phone),
 	).Count(&count)
@@ -131,6 +134,17 @@ func tenantAplicationArrayFilterScope(field string, value *[]string) func(db *go
 
 		query := fmt.Sprintf("tenant_applications.%s IN (?)", field)
 		return db.Where(query, *value)
+	}
+}
+
+func tenantApplicationPropertyIdFilterScope(propertyId *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if propertyId == nil {
+			return db
+		}
+
+		return db.Joins("JOIN units ON tenant_applications.desired_unit_id = units.id").
+			Where("units.property_id = ?", *propertyId)
 	}
 }
 
