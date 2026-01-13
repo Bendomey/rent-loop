@@ -1,7 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:flutter/material.dart';
 import 'maintenance_stats_card.dart';
 import 'upcoming_payment_card.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -11,35 +13,106 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreen extends ConsumerState<HomeScreen> {
+  void showIOSModal(BuildContext context) {
+    showCupertinoModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        child: CupertinoPageScaffold(
+          navigationBar: CupertinoNavigationBar(
+            leading: CupertinoButton(
+              padding: EdgeInsets.zero,
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+            middle: Text('iOS Modal'),
+          ),
+          child: SafeArea(child: Center(child: Text('Content'))),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        actions: [
-          IconButton(
-            padding: EdgeInsets.zero,
-            icon: Badge.count(
-              count: 4,
-              backgroundColor: Colors.red,
-              child: Icon(Icons.notifications_outlined),
-            ),
-            onPressed: () async {
-              await Haptics.vibrate(HapticsType.selection);
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: IconButton(
-              icon: Icon(Icons.refresh),
-              onPressed: () async {
-                await Haptics.vibrate(HapticsType.selection);
-              },
-            ),
-          ),
-        ],
-      ),
       body: ListView(
         children: <Widget>[
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 10),
+            child: Card(
+              elevation: 0,
+              color: Colors.grey.shade50,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(50),
+                side: BorderSide(color: Colors.grey.shade100),
+              ),
+              child: Padding(
+                padding: EdgeInsets.only(left: 8, top: 5, bottom: 5, right: 5),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    InkWell(
+                      borderRadius: BorderRadius.circular(50),
+                      onTap: () async {
+                        await Haptics.vibrate(HapticsType.selection);
+                        showIOSModal(context);
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 7,
+                          horizontal: 7,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.apartment),
+                            SizedBox(width: 10),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "unit-102-0j88kwrzp9",
+                                  style: Theme.of(context).textTheme.bodySmall!,
+                                ),
+                              ],
+                            ),
+                            Icon(
+                              Icons.keyboard_arrow_down,
+                              size: 20,
+                              color: Colors.grey.shade500,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: Badge.count(
+                            count: 4,
+                            backgroundColor: Colors.red,
+                            child: Icon(Icons.notifications_outlined),
+                          ),
+                          onPressed: () async {
+                            await Haptics.vibrate(HapticsType.selection);
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.refresh),
+                          onPressed: () async {
+                            await Haptics.vibrate(HapticsType.selection);
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 20),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 10),
             child: Text(
@@ -47,6 +120,7 @@ class _HomeScreen extends ConsumerState<HomeScreen> {
               style: Theme.of(context).textTheme.displaySmall,
             ),
           ),
+          SizedBox(height: 5),
           Container(
             margin: EdgeInsets.all(10),
             child: Card(

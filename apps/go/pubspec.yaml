@@ -52,6 +52,7 @@ dependencies:
   haptic_feedback: ^0.6.4+3
   image_picker: ^1.2.1
   timeline_tile: ^2.0.0
+  modal_bottom_sheet: ^3.0.0
 
 dev_dependencies:
   flutter_test:
