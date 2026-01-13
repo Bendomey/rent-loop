@@ -19,6 +19,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				"/v1/client-users/forgot-password",
 				handlers.ClientUserHandler.SendForgotPasswordResetLink,
 			)
+			r.Get("/v1/units/{unit_id}", handlers.UnitHandler.FetchClientUnit)
 		})
 
 		// protected client user routes
