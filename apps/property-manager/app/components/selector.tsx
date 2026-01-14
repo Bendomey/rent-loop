@@ -28,17 +28,66 @@ interface Props {
 	onSelect: (value: IMultiSelectOption) => void
 	onRemove: (value: IMultiSelectOption) => void
 	onClear: () => void
+	onSearch?: SelectorFilter['onSearch']
 }
 
 export function Selector(props: Props) {
 	const { isOpened, setIsOpened } = useDisclosure()
+	const [options, setOptions] = React.useState<IMultiSelectOption[]>(() => props.options ?? [])
+	const [selectedOptions, setSelectedOptions] = React.useState<IMultiSelectOption[]>([])
+	const [isFindSelectedOptions, setIsFindSelectedOptions] = React.useState(false)
+	const [isSearching, setIsSearching] = React.useState(false)
 
-	const selectedOptions = props.selectedOptions ?? []
 	const availableOptions =
-		props?.options?.filter(
+		options?.filter(
 			(result) =>
 				!selectedOptions.find((selected) => selected.value === result.value),
 		) ?? []
+
+	// use onsearch to find the options without labels
+	React.useEffect(() => {
+		const optionsWithoutLabels = props.selectedOptions?.filter(
+			(option) => !option.label,
+		)
+
+		if (!optionsWithoutLabels?.length) {
+			return setSelectedOptions(props.selectedOptions || [])
+		}
+
+		if (!selectedOptions.length && optionsWithoutLabels?.length && props.onSearch) {
+			setIsFindSelectedOptions(true)
+			props.onSearch?.(
+				{
+					ids: optionsWithoutLabels.map((option) => option.value),
+				}
+			)
+				.then((fetchedOptions) => {
+					const optionsWithLabels = props.selectedOptions?.filter(
+						(option) => option.label,
+					) ?? []
+					setSelectedOptions([...optionsWithLabels, ...fetchedOptions])
+				})
+				.catch(() => { })
+				.finally(() => {
+					setIsFindSelectedOptions(false)
+				})
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [props.selectedOptions, props.onSearch, selectedOptions.length])
+
+	// Fetch options when popover opens if onSearch is provided and options is not
+	React.useEffect(() => {
+		if (isOpened && !options.length && props.onSearch) {
+			setIsSearching(true)
+			props.onSearch({})
+				.then(setOptions)
+				.catch(() => { })
+				.finally(() => {
+					setIsSearching(false)
+				})
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [isOpened, props.onSearch, options])
 
 	return (
 		<Popover open={isOpened} onOpenChange={setIsOpened}>
@@ -161,6 +210,9 @@ export function Selector(props: Props) {
 							</Badge>
 						</div>
 					)}
+					{
+						isFindSelectedOptions ? <Spinner className='h-3 w-auto text-foregroun' /> : null
+					}
 					<ChevronDown className="text-foreground size-3 shrink-0 opacity-50" />
 				</Button>
 			</PopoverTrigger>
@@ -171,14 +223,6 @@ export function Selector(props: Props) {
 						className="text-xs focus:ring-0"
 						placeholder="Search options..."
 					/>
-					{!props.options?.length ? (
-						<div className="flex w-full items-center justify-between gap-2 border-t">
-							<div className="flex w-full items-center p-2 px-2 text-xs">
-								<AlertCircle className="mr-1 size-3" />
-								<span className="text-xs">No options found</span>
-							</div>
-						</div>
-					) : null}
 					<CommandList className="p-1">
 						{selectedOptions.length > 0 && (
 							<>
@@ -211,35 +255,55 @@ export function Selector(props: Props) {
 										)}
 									</CommandItem>
 								))}
-								<div className="text-muted-foreground px-2 py-1.5 text-xs font-medium">
-									Available Options
-								</div>
+
 							</>
 						)}
-						{availableOptions.map((option) => (
-							<CommandItem
-								className="flex flex-col items-start truncate overflow-hidden"
-								key={option.value}
-								value={option.value}
-								onSelect={() => {
-									if (props.selectType === 'single') {
-										props.onClear()
-									}
-									props.onSelect(option)
-								}}
-							>
-								<div className="flex items-center gap-2">
-									<Checkbox checked={false} />
-									<span className="text-sm">{option.label}</span>
+
+						<div className="text-muted-foreground px-2 py-1.5 text-xs font-medium">
+							Available Options
+						</div>
+						{
+							isSearching ? (
+								<div className="flex w-full items-center p-2 px-2 text-xs space-x-2">
+									<Spinner className="size-4 text-gray-400" />
+									<span className="text-xs text-gray-400">Loading...</span>
 								</div>
-								{option.title && (
-									<div className="text-muted-foreground flex items-center text-xs">
-										<span>{option.title}</span>
-										<span className="xxs-text ml-2">{option.description}</span>
-									</div>
-								)}
-							</CommandItem>
-						))}
+							) : availableOptions.length === 0 ? (
+								<div className="flex w-full items-center p-2 px-2 text-xs">
+									<AlertCircle className="mr-1 size-3 text-gray-400" />
+									<span className="text-xs text-gray-400">No more options available</span>
+								</div>
+							) : (
+								<>
+									{availableOptions.map((option) => (
+										<CommandItem
+											className="flex flex-col items-start truncate overflow-hidden"
+											key={option.value}
+											value={option.value}
+											onSelect={() => {
+												if (props.selectType === 'single') {
+													props.onClear()
+												}
+												props.onSelect(option)
+											}}
+										>
+											<div className="flex items-center gap-2">
+												<Checkbox checked={false} />
+												<span className="text-sm">{option.label}</span>
+											</div>
+											{option.title && (
+												<div className="text-muted-foreground flex items-center text-xs">
+													<span>{option.title}</span>
+													<span className="xxs-text ml-2">{option.description}</span>
+												</div>
+											)}
+										</CommandItem>
+									))}
+								</>
+							)
+						}
+
+
 					</CommandList>
 				</Command>
 

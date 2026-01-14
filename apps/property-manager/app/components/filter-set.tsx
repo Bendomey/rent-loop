@@ -79,39 +79,39 @@ function FilterSelector({ filter }: { filter: Filter }) {
 	const selectedOptions = useMemo(() => {
 		const values = searchParams.getAll(filter.value.urlParam)
 
-		return filter.value.options
-			?.filter((option) => {
-				return values?.includes(option.value)
-			})
-			.map((option) => ({
-				label: option.label,
-				value: option.value,
-			}))
-	}, [filter.value.options, filter.value.urlParam, searchParams])
+		return values.map((value) => {
+			const option = filter.value.options?.find((opt) => opt.value === value)
+			return {
+				label: option?.label,
+				value: value,
+			}
+		});
+}, [filter.value.options, filter.value.urlParam, searchParams])
 
-	return (
-		<Selector
-			type={filter.type}
-			selectType={filter.selectType}
-			label={filter.label}
-			options={filter.value.options}
-			onClear={() => {
-				searchParams.delete(filter.value.urlParam)
-				setSearchParams(searchParams)
-			}}
-			onRemove={(valOption) => {
-				searchParams.delete(filter.value.urlParam, valOption.value)
-				setSearchParams(searchParams)
-			}}
-			onSelect={(valOption) => {
-				searchParams.append(filter.value.urlParam, valOption.value)
-				setSearchParams(searchParams)
-			}}
-			selectedOptions={selectedOptions}
-			urlParam={filter.value.urlParam}
-			Icon={filter.Icon}
-			className={filter.value.className}
-			defaultMessage="Showing all"
-		/>
-	)
+return (
+	<Selector
+		type={filter.type}
+		selectType={filter.selectType}
+		onSearch={filter.value.onSearch}
+		label={filter.label}
+		options={filter.value.options}
+		onClear={() => {
+			searchParams.delete(filter.value.urlParam)
+			setSearchParams(searchParams)
+		}}
+		onRemove={(valOption) => {
+			searchParams.delete(filter.value.urlParam, valOption.value)
+			setSearchParams(searchParams)
+		}}
+		onSelect={(valOption) => {
+			searchParams.append(filter.value.urlParam, valOption.value)
+			setSearchParams(searchParams)
+		}}
+		selectedOptions={selectedOptions}
+		urlParam={filter.value.urlParam}
+		Icon={filter.Icon}
+		className={filter.value.className}
+		defaultMessage="Showing all"
+	/>
+)
 }
