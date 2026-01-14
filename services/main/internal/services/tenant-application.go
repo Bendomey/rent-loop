@@ -33,6 +33,7 @@ type TenantApplicationService interface {
 		input UpdateTenantApplicationInput,
 	) (*models.TenantApplication, error)
 	DeleteTenantApplication(context context.Context, tenantApplicationID string) error
+	CancelTenantApplication(context context.Context, input CancelTenantApplicationInput) error
 }
 
 type tenantApplicationService struct {
@@ -473,6 +474,82 @@ func (s *tenantApplicationService) DeleteTenantApplication(
 			},
 		})
 	}
+
+	return nil
+}
+
+type CancelTenantApplicationInput struct {
+	TenantApplicationID string
+	CancelledById       string
+	Reason              string
+}
+
+func (s *tenantApplicationService) CancelTenantApplication(
+	ctx context.Context,
+	input CancelTenantApplicationInput,
+) error {
+	tenantApplication, getTenantApplicationErr := s.repo.GetOneWithQuery(ctx, repository.GetTenantApplicationQuery{
+		TenantApplicationID: input.TenantApplicationID,
+	})
+	if getTenantApplicationErr != nil {
+		if errors.Is(getTenantApplicationErr, gorm.ErrRecordNotFound) {
+			return pkg.NotFoundError("TenantApplicationNotFound", &pkg.RentLoopErrorParams{
+				Err: getTenantApplicationErr,
+			})
+		}
+		return pkg.InternalServerError(getTenantApplicationErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getTenantApplicationErr,
+			Metadata: map[string]string{
+				"function": "CancelTenantApplication",
+				"action":   "fetching tenant application",
+			},
+		})
+	}
+
+	if tenantApplication.Status == "TenantApplication.Status.Completed" {
+		return pkg.BadRequestError("TenantApplicationAlreadyCompleted", nil)
+	}
+
+	tenantApplication.Status = "TenantApplication.Status.Cancelled"
+	now := time.Now()
+	tenantApplication.CancelledAt = &now
+	tenantApplication.CancelledById = &input.CancelledById
+
+	updateTenantApplicationErr := s.repo.Update(ctx, *tenantApplication)
+	if updateTenantApplicationErr != nil {
+		return pkg.InternalServerError(updateTenantApplicationErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateTenantApplicationErr,
+			Metadata: map[string]string{
+				"function": "CancelTenantApplication",
+				"action":   "updating tenant application",
+			},
+		})
+	}
+
+	message := strings.NewReplacer(
+		"{{applicant_name}}", tenantApplication.FirstName,
+		"{{application_id}}", tenantApplication.ID.String(),
+		"{{reason}}", input.Reason,
+	).Replace(lib.TENANT_CANCELLED_BODY)
+
+	if tenantApplication.Email != nil {
+		go pkg.SendEmail(
+			s.appCtx,
+			pkg.SendEmailInput{
+				Recipient: *tenantApplication.Email,
+				Subject:   lib.TENANT_CANCELLED_SUBJECT,
+				TextBody:  message,
+			},
+		)
+	}
+
+	go pkg.SendSMS(
+		s.appCtx,
+		pkg.SendSMSInput{
+			Recipient: tenantApplication.Phone,
+			Message:   message,
+		},
+	)
 
 	return nil
 }
