@@ -6,8 +6,7 @@ import { fetchClient } from '~/lib/transport'
 /**
  * GET all property blocks based on a query.
  */
-
-const getPropertyBlocks = async (
+export const getPropertyBlocks = async (
 	props: FetchMultipleDataInputParams<FetchPropertyBlockFilter> & {
 		property_id: string
 	},

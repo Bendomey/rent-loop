@@ -9,4 +9,5 @@ interface Maintenance {
 
 interface FetchMaintenanceFilter {
 	status?: string
+	ids?: Array<string>
 }
