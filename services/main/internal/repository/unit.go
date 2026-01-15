@@ -96,12 +96,14 @@ type ListUnitsFilter struct {
 	Type             *string
 	PaymentFrequency *string
 	BlockIDs         *[]string
+	IDs              *[]string
 }
 
 func (r *unitRepository) List(ctx context.Context, filterQuery ListUnitsFilter) (*[]models.Unit, error) {
 	var units []models.Unit
 
 	db := r.DB.WithContext(ctx).Scopes(
+		IDsFilterScope("units", filterQuery.IDs),
 		propertyFilterScope(filterQuery.PropertyID),
 		unitStatusScope(filterQuery.Status),
 		unitTypeScope(filterQuery.Type),
@@ -136,6 +138,7 @@ func (r *unitRepository) Count(ctx context.Context, filterQuery ListUnitsFilter)
 	result := db.WithContext(ctx).
 		Model(&models.Unit{}).
 		Scopes(
+			IDsFilterScope("units", filterQuery.IDs),
 			propertyFilterScope(filterQuery.PropertyID),
 			unitStatusScope(filterQuery.Status),
 			unitTypeScope(filterQuery.Type),

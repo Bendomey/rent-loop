@@ -45,6 +45,7 @@ type ListTenantApplicationsQuery struct {
 	PropertyId                   *string
 	Email                        *[]string
 	Phone                        *[]string
+	IDs                          *[]string
 }
 
 func (r *tenantApplicationRepository) List(
@@ -54,6 +55,7 @@ func (r *tenantApplicationRepository) List(
 	var tenantApplications []models.TenantApplication
 
 	db := r.DB.WithContext(ctx).Scopes(
+		IDsFilterScope("tenant_applications", filterQuery.IDs),
 		tenantApplicationFilterScope("status", filterQuery.Status),
 		tenantApplicationFilterScope("stay_duration_frequency", filterQuery.StayDurationFrequency),
 		tenantApplicationFilterScope("payment_frequency", filterQuery.PaymentFrequency),
@@ -93,6 +95,7 @@ func (r *tenantApplicationRepository) Count(
 	var count int64
 
 	result := r.DB.WithContext(ctx).Model(models.TenantApplication{}).Scopes(
+		IDsFilterScope("tenant_applications", filterQuery.IDs),
 		tenantApplicationFilterScope("status", filterQuery.Status),
 		tenantApplicationFilterScope("stay_duration_frequency", filterQuery.StayDurationFrequency),
 		tenantApplicationFilterScope("payment_frequency", filterQuery.PaymentFrequency),

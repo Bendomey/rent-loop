@@ -269,9 +269,10 @@ func (h *ClientUserHandler) ResetClientUserPassword(w http.ResponseWriter, r *ht
 
 type ListClientUsersFilterRequest struct {
 	lib.FilterQueryInput
-	Status          string `json:"status"             validate:"oneof=ClientUser.Status.Active ClientUser.Status.Inactive" example:"ClientUser.Status.Active"`
-	Role            string `json:"role"               validate:"oneof=OWNER ADMIN STAFF"                                   example:"OWNER"`
-	NotInPropertyID string `json:"not_in_property_id" validate:"uuid"                                                      example:"e4ad26d4-d7e9-4599-a246-5e88abba6083"`
+	Status          string   `json:"status"             validate:"oneof=ClientUser.Status.Active ClientUser.Status.Inactive" example:"ClientUser.Status.Active"`
+	Role            string   `json:"role"               validate:"oneof=OWNER ADMIN STAFF"                                   example:"OWNER"`
+	NotInPropertyID string   `json:"not_in_property_id" validate:"uuid"                                                      example:"e4ad26d4-d7e9-4599-a246-5e88abba6083"`
+	IDs             []string `json:"ids"                validate:"omitempty,dive,uuid4"                                      example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of client user IDs to filter by" collectionFormat:"multi"`
 }
 
 // ListClientUsers godoc
@@ -312,6 +313,7 @@ func (h *ClientUserHandler) ListClientUsers(w http.ResponseWriter, r *http.Reque
 		Status:          lib.NullOrString(r.URL.Query().Get("status")),
 		Role:            lib.NullOrString(r.URL.Query().Get("role")),
 		NotInPropertyID: lib.NullOrString(r.URL.Query().Get("not_in_property_id")),
+		IDs:             lib.NullOrStringArray(r.URL.Query()["ids"]),
 	}
 
 	clientUsers, clientUsersErr := h.service.ListClientUsers(r.Context(), input)

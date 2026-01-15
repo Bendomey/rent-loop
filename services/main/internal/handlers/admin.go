@@ -185,6 +185,7 @@ func (h *AdminHandler) GetAdminById(w http.ResponseWriter, r *http.Request) {
 
 type ListAdminsFilterRequest struct {
 	lib.FilterQueryInput
+	IDs []string `json:"ids" validate:"omitempty,dive,uuid4" example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of admin IDs to filter by" collectionFormat:"multi"`
 }
 
 // GetAdmins godoc
@@ -209,7 +210,9 @@ func (h *AdminHandler) ListAdmins(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filters := ListAdminsFilterRequest{}
+	filters := ListAdminsFilterRequest{
+		IDs: r.URL.Query()["ids"],
+	}
 
 	isFiltersPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filters, w)
 	if !isFiltersPassedValidation {
@@ -227,10 +230,14 @@ func (h *AdminHandler) ListAdmins(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	input := repository.ListAdminsFilter{
+		IDs: lib.NullOrStringArray(filters.IDs),
+	}
+
 	admins, adminsErr := h.service.ListAdmins(
 		r.Context(),
 		*filterQuery,
-		repository.ListAdminsFilter{},
+		input,
 	)
 
 	if adminsErr != nil {
@@ -241,7 +248,7 @@ func (h *AdminHandler) ListAdmins(w http.ResponseWriter, r *http.Request) {
 	count, countsErr := h.service.CountAdmins(
 		r.Context(),
 		*filterQuery,
-		repository.ListAdminsFilter{},
+		input,
 	)
 
 	if countsErr != nil {

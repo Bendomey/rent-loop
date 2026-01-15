@@ -113,6 +113,7 @@ type ListUnitsFilterRequest struct {
 	Type             string   `json:"type"              validate:"omitempty,oneof=APARTMENT HOUSE STUDIO OFFICE RETAIL"                                                 example:"SINGLE"                                                                    description:"Type of unit. Allowed values: SINGLE, MULTI"`
 	PaymentFrequency string   `json:"payment_frequency" validate:"omitempty,oneof=WEEKLY DAILY MONTHLY QUARTERLY BIANNUALLY ANNUALLY"                                   example:"WEEKLY"                                                                    description:"Payment frequency. Allowed values: WEEKLY, DAILY, MONTHLY, QUARTERLY, BIANNUALLY, ANNUALLY"`
 	BlockIDs         []string `json:"block_ids"         validate:"omitempty,dive,uuid"                                                                                  example:"767d8e23-8c9f-4c51-85af-5908039869da,3d90d606-2a22-4487-9431-69736829094f" description:"List of block IDs to filter units by"                                                                                        collectionFormat:"multi"`
+	IDs              []string `json:"ids"               validate:"omitempty,dive,uuid4"                                                                                 example:"a8098c1a-f86e-11da-bd1a-00112444be1e"                                      description:"List of unit IDs to filter by"                                                                                               collectionFormat:"multi"`
 }
 
 // ListUnits godoc
@@ -150,6 +151,7 @@ func (h *UnitHandler) ListUnits(w http.ResponseWriter, r *http.Request) {
 		Type:             lib.NullOrString(r.URL.Query().Get("type")),
 		PaymentFrequency: lib.NullOrString(r.URL.Query().Get("payment_frequency")),
 		BlockIDs:         lib.NullOrStringArray(r.URL.Query()["block_ids"]),
+		IDs:              lib.NullOrStringArray(r.URL.Query()["ids"]),
 	}
 
 	units, unitsErr := h.service.ListUnits(r.Context(), input)

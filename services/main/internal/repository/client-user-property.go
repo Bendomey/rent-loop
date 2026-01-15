@@ -132,6 +132,7 @@ type ListClientUserPropertiesFilter struct {
 	ClientUserID *string
 	PropertyID   *string
 	Role         *string
+	IDs          *[]string
 }
 
 func (r *clientUserPropertyRepository) List(
@@ -141,6 +142,7 @@ func (r *clientUserPropertyRepository) List(
 	var clientUserproperties []models.ClientUserProperty
 
 	db := r.DB.WithContext(ctx).Scopes(
+		IDsFilterScope("client_user_properties", filterQuery.IDs),
 		DateRangeScope("client_user_properties", filterQuery.DateRange),
 		SearchScope("client_user_properties", filterQuery.Search),
 
@@ -174,6 +176,7 @@ func (r *clientUserPropertyRepository) Count(
 	result := r.DB.WithContext(ctx).
 		Model(&models.ClientUserProperty{}).
 		Scopes(
+			IDsFilterScope("client_user_properties", filterQuery.IDs),
 			DateRangeScope("client_user_properties", filterQuery.DateRange),
 			SearchScope("client_user_properties", filterQuery.Search),
 

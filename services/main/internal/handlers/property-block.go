@@ -81,7 +81,8 @@ func (h PropertyBlockHandler) CreatePropertyBlock(w http.ResponseWriter, r *http
 
 type PropertyBlockListQueryFilters struct {
 	lib.FilterQueryInput
-	Status *string `json:"status,omitempty" validate:"omitempty,oneof=PropertyBlock.Status.Active PropertyBlock.Status.Inactive PropertyBlock.Status.Maintenance" example:"PropertyBlock.Status.Active"`
+	Status *string  `json:"status,omitempty" validate:"omitempty,oneof=PropertyBlock.Status.Active PropertyBlock.Status.Inactive PropertyBlock.Status.Maintenance" example:"PropertyBlock.Status.Active"`
+	IDs    []string `json:"ids"              validate:"omitempty,dive,uuid4"                                                                                       example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of property block IDs to filter by" collectionFormat:"multi"`
 }
 
 // ListPropertyBlocks godoc
@@ -115,6 +116,7 @@ func (h *PropertyBlockHandler) ListPropertyBlocks(w http.ResponseWriter, r *http
 		FilterQuery: *filterQuery,
 		PropertyID:  chi.URLParam(r, "property_id"),
 		Status:      lib.NullOrString(r.URL.Query().Get("status")),
+		IDs:         lib.NullOrStringArray(r.URL.Query()["ids"]),
 	}
 
 	propertyBlocks, propertyBlocksErr := h.service.ListPropertyBlocks(r.Context(), input)

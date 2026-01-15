@@ -180,6 +180,7 @@ type ListTenantApplicationsQuery struct {
 	PropertyId                   *string   `json:"property_id,omitempty"                     validate:"omitempty,uuid"                                                                                                            example:"72432ce6-5620-4ecf-a862-4bf2140556a1"   description:"ID of the property to filter tenant applications by"`
 	Email                        *[]string `json:"email,omitempty"                           validate:"omitempty,dive,email"                                                                                                      example:"john.doe@example.com,email@example.com" description:"Email address of the applicant"                            collectionFormat:"multi"`
 	Phone                        *[]string `json:"phone,omitempty"                           validate:"omitempty,dive,e164"                                                                                                       example:"+233281234569,+233281234569"            description:"Phone number of the applicant"                             collectionFormat:"multi"`
+	IDs                          []string  `json:"ids"                                       validate:"omitempty,dive,uuid4"                                                                                                      example:"a8098c1a-f86e-11da-bd1a-00112444be1e"   description:"List of tenant application IDs to filter by"               collectionFormat:"multi"`
 }
 
 // ListTenantApplications godoc
@@ -222,6 +223,7 @@ func (h *TenantApplicationHandler) ListTenantApplications(w http.ResponseWriter,
 		PropertyId:                   lib.NullOrString(r.URL.Query().Get("property_id")),
 		Email:                        lib.NullOrStringArray(r.URL.Query()["email"]),
 		Phone:                        lib.NullOrStringArray(r.URL.Query()["phone"]),
+		IDs:                          lib.NullOrStringArray(r.URL.Query()["ids"]),
 	}
 
 	tenantApplications, tenantApplicationsErr := h.service.ListTenantApplications(r.Context(), input)

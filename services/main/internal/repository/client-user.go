@@ -109,6 +109,7 @@ type ListClientUsersFilter struct {
 	Role            *string
 	Status          *string
 	NotInPropertyID *string
+	IDs             *[]string
 }
 
 func (r *clientUserRepository) List(
@@ -118,6 +119,7 @@ func (r *clientUserRepository) List(
 	var clientUsers []models.ClientUser
 
 	db := r.DB.WithContext(ctx).Scopes(
+		IDsFilterScope("client_users", filterQuery.IDs),
 		ClientFilterScope("client_users", filterQuery.ClientID),
 		roleFilterScope(filterQuery.Role),
 		statusFilterScope(filterQuery.Status),
@@ -152,6 +154,7 @@ func (r *clientUserRepository) Count(
 	result := r.DB.WithContext(ctx).
 		Model(&models.ClientUser{}).
 		Scopes(
+			IDsFilterScope("client_users", filterQuery.IDs),
 			ClientFilterScope("client_users", filterQuery.ClientID),
 			roleFilterScope(filterQuery.Role),
 			statusFilterScope(filterQuery.Status),

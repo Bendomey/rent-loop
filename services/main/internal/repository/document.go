@@ -90,6 +90,7 @@ type ListDocumentsFilter struct {
 	PropertyID   *string
 	PropertySlug *string
 	ClientID     string
+	IDs          *[]string
 }
 
 func (r *documentRepository) List(
@@ -101,6 +102,7 @@ func (r *documentRepository) List(
 
 	db := r.DB.WithContext(ctx).
 		Scopes(
+			IDsFilterScope("documents", filters.IDs),
 			DateRangeScope("documents", filterQuery.DateRange),
 			SearchScope("documents", filterQuery.Search),
 			ClientIDFilterScope(filters.ClientID),
@@ -138,6 +140,7 @@ func (r *documentRepository) Count(
 		WithContext(ctx).
 		Model(&models.Document{}).
 		Scopes(
+			IDsFilterScope("documents", filters.IDs),
 			DateRangeScope("documents", filterQuery.DateRange),
 			SearchScope("documents", filterQuery.Search),
 			ClientIDFilterScope(filters.ClientID),

@@ -47,7 +47,9 @@ func (r *adminRepository) Create(ctx context.Context, admin *models.Admin) error
 	return r.DB.WithContext(ctx).Create(admin).Error
 }
 
-type ListAdminsFilter struct{}
+type ListAdminsFilter struct {
+	IDs *[]string
+}
 
 func (r *adminRepository) List(
 	ctx context.Context,
@@ -58,6 +60,7 @@ func (r *adminRepository) List(
 
 	db := r.DB.WithContext(ctx).
 		Scopes(
+			IDsFilterScope("admins", filters.IDs),
 			DateRangeScope("admins", filterQuery.DateRange),
 			SearchScope("admins", filterQuery.Search),
 
@@ -91,6 +94,7 @@ func (r *adminRepository) Count(
 		WithContext(ctx).
 		Model(&models.Admin{}).
 		Scopes(
+			IDsFilterScope("admins", filters.IDs),
 			DateRangeScope("admins", filterQuery.DateRange),
 			SearchScope("admins", filterQuery.Search),
 		).

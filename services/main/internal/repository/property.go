@@ -66,6 +66,7 @@ type ListPropertiesFilter struct {
 	ClientID string
 	Status   *string
 	Type     *string
+	IDs      *[]string
 }
 
 func (r *propertyRepository) List(
@@ -75,6 +76,7 @@ func (r *propertyRepository) List(
 	var properties []models.Property
 
 	db := r.DB.WithContext(ctx).Scopes(
+		IDsFilterScope("properties", filterQuery.IDs),
 		ClientFilterScope("properties", filterQuery.ClientID),
 		propertyStatusScope("properties", filterQuery.Status),
 		propertyTypeScope("properties", filterQuery.Type),
@@ -107,6 +109,7 @@ func (r *propertyRepository) Count(
 	result := r.DB.WithContext(ctx).
 		Model(&models.Property{}).
 		Scopes(
+			IDsFilterScope("properties", filterQuery.IDs),
 			ClientFilterScope("properties", filterQuery.ClientID),
 			propertyStatusScope("properties", filterQuery.Status),
 			propertyTypeScope("properties", filterQuery.Type),
