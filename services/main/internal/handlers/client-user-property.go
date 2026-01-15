@@ -94,8 +94,6 @@ func (h *ClientUserPropertyHandler) ListClientUserProperties(w http.ResponseWrit
 	}
 
 	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, clientUserPropertiesTransformed, count))
-
-	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, clientUserPropertiesTransformed, count))
 }
 
 type ListAllClientUserPropertiesFilterRequest struct {
