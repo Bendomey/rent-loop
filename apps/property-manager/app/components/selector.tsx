@@ -285,7 +285,7 @@ export function Selector(props: Props) {
 							<div className="flex w-full items-center p-2 px-2 text-xs">
 								<AlertCircle className="mr-1 size-3 text-gray-400" />
 								<span className="text-xs text-gray-400">
-									No more options available
+									No options available
 								</span>
 							</div>
 						) : (

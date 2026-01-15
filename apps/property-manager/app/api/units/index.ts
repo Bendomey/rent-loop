@@ -7,7 +7,7 @@ import { fetchClient, fetchServer } from '~/lib/transport'
  * GET all property apartments/units based on a query.
  */
 
-const getPropertyUnits = async (
+export const getPropertyUnits = async (
 	props: FetchMultipleDataInputParams<FetchPropertyUnitFilter> & {
 		property_id: string
 	},
