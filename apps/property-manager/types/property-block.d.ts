@@ -17,4 +17,5 @@ interface PropertyBlock {
 
 interface FetchPropertyBlockFilter {
 	status?: string
+	ids?: Array<string>
 }

@@ -15,4 +15,5 @@ interface FetchClientUserPropertyFilter {
 	role?: string
 	property_id?: string
 	client_user_id?: string
+	ids?: Array<string>
 }

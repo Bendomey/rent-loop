@@ -22,4 +22,5 @@ interface FetchRentloopDocumentFilter {
 	property_id?: string
 	property_slug?: string
 	tags?: Array<string>
+	ids?: Array<string>
 }

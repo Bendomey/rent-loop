@@ -1,6 +1,5 @@
 import { redirect } from 'react-router'
 import type { Route } from './+types/_auth.properties.$propertyId.assets.units._index'
-import { getPropertyBlocksForServer } from '~/api/blocks/server'
 import { getPropertyUnitsForServer } from '~/api/units/server'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
@@ -45,18 +44,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 		return redirect(NOT_FOUND_ROUTE)
 	}
 
-	const blocks = await getPropertyBlocksForServer(
-		{ property_id },
-		{
-			authToken,
-			baseUrl,
-		},
-	)
-
 	return {
 		origin: getDomainUrl(request),
 		clientUserProperty,
-		blocks,
 	}
 }
 

@@ -1,9 +1,11 @@
 import { Plus, RotateCw, ToggleLeft } from 'lucide-react'
 import { Link, useLoaderData } from 'react-router'
+import { getPropertyBlocks } from '~/api/blocks'
 import { FilterSet } from '~/components/filter-set'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { SearchInput } from '~/components/search'
 import { Button } from '~/components/ui/button'
+import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { cn } from '~/lib/utils'
 import type { loader } from '~/routes/_auth.properties.$propertyId.assets.units._index'
 
@@ -14,11 +16,7 @@ export const PropertyAssetUnitsController = ({
 	isLoading: boolean
 	refetch: VoidFunction
 }) => {
-	const { clientUserProperty, blocks } = useLoaderData<typeof loader>()
-	const blockOptions = (blocks?.rows ?? []).map((block) => ({
-		label: block.name,
-		value: block.id,
-	}))
+	const { clientUserProperty } = useLoaderData<typeof loader>()
 
 	const filters: Array<Filter> = [
 		{
@@ -43,7 +41,28 @@ export const PropertyAssetUnitsController = ({
 			selectType: 'single',
 			label: 'Blocks',
 			value: {
-				options: blockOptions,
+				onSearch: async ({ ids }) => {
+					if (!clientUserProperty?.property_id) {
+						return []
+					}
+
+					const data = await getPropertyBlocks({
+						property_id: clientUserProperty?.property_id,
+						pagination: {
+							page: PAGINATION_DEFAULTS.PAGE,
+							per: PAGINATION_DEFAULTS.PER_PAGE,
+						},
+						filters: {
+							ids: ids?.map((id) => id.toString()) || undefined,
+						},
+					})
+
+					return data?.rows.map((block) => ({
+						label: block.name,
+						value: block.id,
+					})) ?? []
+
+				},
 				urlParam: 'blocks',
 				defaultValues: [],
 			},

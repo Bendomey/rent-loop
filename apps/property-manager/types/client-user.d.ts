@@ -16,4 +16,5 @@ interface FetchClientUserFilter {
 	status?: string
 	client_id?: string
 	not_in_property_id?: string
+	ids?: Array<string>
 }

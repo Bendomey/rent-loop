@@ -26,4 +26,5 @@ interface FetchPropertyFilter {
 	type?: string
 	status?: string
 	tags?: Array<string>
+	ids?: Array<string>
 }
