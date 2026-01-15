@@ -449,3 +449,58 @@ func (h *TenantApplicationHandler) DeleteTenantApplication(w http.ResponseWriter
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+type CancelTenantApplicationRequest struct {
+	Reason string `json:"reason" validate:"required,min=1" example:"Tenant application cancelled due to incomplete application"`
+}
+
+// CancelTenantApplication godoc
+//
+//	@Summary		Cancel a tenant application
+//	@Description	Cancel a tenant application
+//	@Tags			TenantApplication
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			tenant_application_id	path	string							true	"Tenant application ID"
+//	@Param			body					body	CancelTenantApplicationRequest	true	"Cancel Tenant Application Request Body"
+//	@Success		204						"Tenant application cancelled successfully"
+//	@Failure		400						{object}	lib.HTTPError	"Error occurred when cancelling a tenant application"
+//	@Failure		401						{object}	string			"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError	"Tenant application not found"
+//	@Failure		422						{object}	lib.HTTPError	"Validation error"
+//	@Failure		500						{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/tenant-applications/{tenant_application_id}/cancel [patch]
+func (h *TenantApplicationHandler) CancelTenantApplication(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
+	if !currentClientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body CancelTenantApplicationRequest
+
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
+
+	cancelTenantApplicationErr := h.service.CancelTenantApplication(r.Context(), services.CancelTenantApplicationInput{
+		TenantApplicationID: tenantApplicationID,
+		CancelledById:       currentClientUser.ID,
+		Reason:              body.Reason,
+	})
+	if cancelTenantApplicationErr != nil {
+		HandleErrorResponse(w, cancelTenantApplicationErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

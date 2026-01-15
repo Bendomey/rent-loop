@@ -1,4 +1,13 @@
 definitions:
+  handlers.CancelTenantApplicationRequest:
+    properties:
+      reason:
+        example: Tenant application cancelled due to incomplete application
+        minLength: 1
+        type: string
+    required:
+    - reason
+    type: object
   handlers.CreateAdminRequest:
     properties:
       email:
@@ -4643,6 +4652,53 @@ paths:
       security:
       - BearerAuth: []
       summary: Update a tenant application
+      tags:
+      - TenantApplication
+  /api/v1/tenant-applications/{tenant_application_id}/cancel:
+    patch:
+      consumes:
+      - application/json
+      description: Cancel a tenant application
+      parameters:
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      - description: Cancel Tenant Application Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CancelTenantApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Tenant application cancelled successfully
+        "400":
+          description: Error occurred when cancelling a tenant application
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Cancel a tenant application
       tags:
       - TenantApplication
   /api/v1/tenant-applications/invite:
