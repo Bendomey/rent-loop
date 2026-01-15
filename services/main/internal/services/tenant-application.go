@@ -510,6 +510,10 @@ func (s *tenantApplicationService) CancelTenantApplication(
 		return pkg.BadRequestError("TenantApplicationAlreadyCompleted", nil)
 	}
 
+	if tenantApplication.Status == "TenantApplication.Status.Cancelled" {
+		return pkg.BadRequestError("TenantApplicationAlreadyCancelled", nil)
+	}
+
 	tenantApplication.Status = "TenantApplication.Status.Cancelled"
 	now := time.Now()
 	tenantApplication.CancelledAt = &now
