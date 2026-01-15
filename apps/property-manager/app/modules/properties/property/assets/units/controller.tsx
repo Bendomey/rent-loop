@@ -27,31 +27,11 @@ export const PropertyAssetUnitsController = ({
 			selectType: 'single',
 			label: 'Status',
 			value: {
-				// options: [
-				// 	{ label: 'Active', value: 'Unit.Status.Active' },
-				// 	{ label: 'Inactive', value: 'Unit.Status.Inactive' },
-				// 	{ label: 'Maintenance', value: 'Unit.Status.Maintenance' },
-				// ],
-				// simulate onSearch
-				onSearch: async ({ ids }) => {
-					const allOPtions = [
-						{ label: 'Active', value: 'Unit.Status.Active' },
-						{ label: 'Inactive', value: 'Unit.Status.Inactive' },
-						{ label: 'Maintenance', value: 'Unit.Status.Maintenance' },
-					]
-					// wait 1 minute to return data
-
-					return new Promise<IMultiSelectOption[]>((resolve) => {
-						setTimeout(() => {
-
-							if (ids && ids.length > 0) {
-								return resolve(allOPtions.filter((option) => ids.includes(option.value)))
-							}
-
-							resolve(allOPtions)
-						}, 1000)
-					})
-				},
+				options: [
+					{ label: 'Active', value: 'Unit.Status.Active' },
+					{ label: 'Inactive', value: 'Unit.Status.Inactive' },
+					{ label: 'Maintenance', value: 'Unit.Status.Maintenance' },
+				],
 				urlParam: 'status',
 				defaultValues: [],
 			},
