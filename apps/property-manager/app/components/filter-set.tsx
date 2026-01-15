@@ -1,5 +1,4 @@
 import { ChevronRightIcon, Settings2 } from 'lucide-react'
-import { useMemo } from 'react'
 import { useSearchParams } from 'react-router'
 import { Selector } from './selector'
 
@@ -12,18 +11,7 @@ interface Props {
 export function FilterSet(props: Props) {
 	const [searchParams, setSearchParams] = useSearchParams()
 
-	const selectedOptions = useMemo(() => {
-		const values = searchParams.getAll(props.urlParam)
-
-		return props.filters
-			.filter((filter) => {
-				return values?.includes(filter.value.urlParam)
-			})
-			.map((filter) => ({
-				label: filter.label,
-				value: filter.value.urlParam,
-			}))
-	}, [props.filters, props.urlParam, searchParams])
+	const selectedOptions = searchParams.getAll(props.urlParam)
 
 	return (
 		<>
@@ -61,7 +49,7 @@ export function FilterSet(props: Props) {
 
 			{selectedOptions.map((selectedOption, selectedOptionIdx) => {
 				const filter = props.filters.find(
-					(filter) => filter.value.urlParam === selectedOption.value,
+					(filter) => filter.value.urlParam === selectedOption,
 				)
 				if (!filter) {
 					return null
@@ -76,42 +64,30 @@ export function FilterSet(props: Props) {
 function FilterSelector({ filter }: { filter: Filter }) {
 	const [searchParams, setSearchParams] = useSearchParams()
 
-	const selectedOptions = useMemo(() => {
-		const values = searchParams.getAll(filter.value.urlParam)
-
-		return values.map((value) => {
-			const option = filter.value.options?.find((opt) => opt.value === value)
-			return {
-				label: option?.label,
-				value: value,
-			}
-		});
-}, [filter.value.options, filter.value.urlParam, searchParams])
-
-return (
-	<Selector
-		type={filter.type}
-		selectType={filter.selectType}
-		onSearch={filter.value.onSearch}
-		label={filter.label}
-		options={filter.value.options}
-		onClear={() => {
-			searchParams.delete(filter.value.urlParam)
-			setSearchParams(searchParams)
-		}}
-		onRemove={(valOption) => {
-			searchParams.delete(filter.value.urlParam, valOption.value)
-			setSearchParams(searchParams)
-		}}
-		onSelect={(valOption) => {
-			searchParams.append(filter.value.urlParam, valOption.value)
-			setSearchParams(searchParams)
-		}}
-		selectedOptions={selectedOptions}
-		urlParam={filter.value.urlParam}
-		Icon={filter.Icon}
-		className={filter.value.className}
-		defaultMessage="Showing all"
-	/>
-)
+	return (
+		<Selector
+			type={filter.type}
+			selectType={filter.selectType}
+			onSearch={filter.value.onSearch}
+			label={filter.label}
+			options={filter.value.options}
+			onClear={() => {
+				searchParams.delete(filter.value.urlParam)
+				setSearchParams(searchParams)
+			}}
+			onRemove={(valOption) => {
+				searchParams.delete(filter.value.urlParam, valOption.value)
+				setSearchParams(searchParams)
+			}}
+			onSelect={(valOption) => {
+				searchParams.append(filter.value.urlParam, valOption.value)
+				setSearchParams(searchParams)
+			}}
+			selectedOptions={searchParams.getAll(filter.value.urlParam)}
+			urlParam={filter.value.urlParam}
+			Icon={filter.Icon}
+			className={filter.value.className}
+			defaultMessage="Showing all"
+		/>
+	)
 }

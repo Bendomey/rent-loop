@@ -18,7 +18,7 @@ interface Props {
 	type: 'selector' | 'input'
 	selectType?: 'single' | 'multi'
 	options?: Array<IMultiSelectOption>
-	selectedOptions?: IMultiSelectOption[]
+	selectedOptions?: Array<string>
 	disabled?: boolean
 	size?: 'sm' | 'lg' | 'default'
 	disabledMessage?: string
@@ -46,12 +46,17 @@ export function Selector(props: Props) {
 
 	// use onsearch to find the options without labels
 	React.useEffect(() => {
-		const optionsWithoutLabels = props.selectedOptions?.filter(
+		const selectedOptionsWithLabels = props.selectedOptions?.map((selectedOption) => {
+			const option = options.find((opt) => opt.value === selectedOption)
+			return option ? option : { value: selectedOption }
+		})
+
+		const optionsWithoutLabels = selectedOptionsWithLabels?.filter(
 			(option) => !option.label,
 		)
 
 		if (!optionsWithoutLabels?.length) {
-			return setSelectedOptions(props.selectedOptions || [])
+			return setSelectedOptions(selectedOptionsWithLabels || [])
 		}
 
 		if (!selectedOptions.length && optionsWithoutLabels?.length && props.onSearch) {
@@ -62,7 +67,7 @@ export function Selector(props: Props) {
 				}
 			)
 				.then((fetchedOptions) => {
-					const optionsWithLabels = props.selectedOptions?.filter(
+					const optionsWithLabels = selectedOptionsWithLabels?.filter(
 						(option) => option.label,
 					) ?? []
 					setSelectedOptions([...optionsWithLabels, ...fetchedOptions])
@@ -72,8 +77,8 @@ export function Selector(props: Props) {
 					setIsFindSelectedOptions(false)
 				})
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [props.selectedOptions, props.onSearch, selectedOptions.length])
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [options, props.selectedOptions, props.onSearch])
 
 	// Fetch options when popover opens if onSearch is provided and options is not
 	React.useEffect(() => {
