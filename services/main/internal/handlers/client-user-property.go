@@ -29,7 +29,8 @@ func NewClientUserPropertyHandler(
 
 type ListMyPropertiesFilterRequest struct {
 	lib.FilterQueryInput
-	Role string `json:"role" validate:"oneof=MANAGER STAFF"`
+	Role string   `json:"role" validate:"oneof=MANAGER STAFF"`
+	IDs  []string `json:"ids"  validate:"omitempty,dive,uuid4" example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of client user property IDs to filter by" collectionFormat:"multi"`
 }
 
 // GetMyProperties godoc
@@ -69,6 +70,7 @@ func (h *ClientUserPropertyHandler) ListClientUserProperties(w http.ResponseWrit
 		FilterQuery:  *filterQuery,
 		ClientUserID: &clientUser.ID,
 		Role:         lib.NullOrString(r.URL.Query().Get("role")),
+		IDs:          lib.NullOrStringArray(r.URL.Query()["ids"]),
 	}
 
 	properties, propertiesErr := h.service.ListClientUserProperties(r.Context(), input)
@@ -96,9 +98,10 @@ func (h *ClientUserPropertyHandler) ListClientUserProperties(w http.ResponseWrit
 
 type ListAllClientUserPropertiesFilterRequest struct {
 	lib.FilterQueryInput
-	ClientUserID string `json:"client_user_id" validate:"uuid4"               example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"Client user ID"`
-	PropertyID   string `json:"property_id"    validate:"uuid4"               example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"Property ID"`
-	Role         string `json:"role"           validate:"oneof=MANAGER STAFF"`
+	ClientUserID string   `json:"client_user_id" validate:"uuid4"                example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"Client user ID"`
+	PropertyID   string   `json:"property_id"    validate:"uuid4"                example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"Property ID"`
+	Role         string   `json:"role"           validate:"oneof=MANAGER STAFF"`
+	IDs          []string `json:"ids"            validate:"omitempty,dive,uuid4" example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of client user property IDs to filter by" collectionFormat:"multi"`
 }
 
 // ListAllClientUserProperties godoc
@@ -132,6 +135,7 @@ func (h *ClientUserPropertyHandler) ListAllClientUserProperties(w http.ResponseW
 		ClientUserID: lib.NullOrString(r.URL.Query().Get("client_user_id")),
 		PropertyID:   lib.NullOrString(r.URL.Query().Get("property_id")),
 		Role:         lib.NullOrString(r.URL.Query().Get("role")),
+		IDs:          lib.NullOrStringArray(r.URL.Query()["ids"]),
 	}
 
 	properties, propertiesErr := h.service.ListClientUserProperties(r.Context(), input)

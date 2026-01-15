@@ -102,8 +102,9 @@ func (h *PropertyHandler) CreateProperty(w http.ResponseWriter, r *http.Request)
 
 type ListPropertiesFilterRequest struct {
 	lib.FilterQueryInput
-	Status string `json:"status" validate:"oneof=Property.Status.Active Property.Status.Maintenance Property.Status.Inactive"`
-	Type   string `json:"type"   validate:"oneof=SINGLE MULTI"`
+	Status string   `json:"status" validate:"oneof=Property.Status.Active Property.Status.Maintenance Property.Status.Inactive"`
+	Type   string   `json:"type"   validate:"oneof=SINGLE MULTI"`
+	IDs    []string `json:"ids"    validate:"omitempty,dive,uuid4"                                                              example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of property IDs to filter by" collectionFormat:"multi"`
 }
 
 // GetProperties godoc
@@ -144,6 +145,7 @@ func (h *PropertyHandler) ListProperties(w http.ResponseWriter, r *http.Request)
 		ClientID:    clientUser.ClientID,
 		Status:      lib.NullOrString(r.URL.Query().Get("status")),
 		Type:        lib.NullOrString(r.URL.Query().Get("type")),
+		IDs:         lib.NullOrStringArray(r.URL.Query()["ids"]),
 	}
 
 	properties, propertiesErr := h.service.ListProperties(r.Context(), input)

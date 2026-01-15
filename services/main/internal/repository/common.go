@@ -77,3 +77,12 @@ func ClientFilterScope(tableName string, clientId string) func(db *gorm.DB) *gor
 		return db.Where(fmt.Sprintf("%s.client_id = ?", tableName), clientId)
 	}
 }
+
+func IDsFilterScope(tableName string, ids *[]string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if ids == nil || len(*ids) == 0 {
+			return db
+		}
+		return db.Where(fmt.Sprintf("%s.id IN (?)", tableName), *ids)
+	}
+}

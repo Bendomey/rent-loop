@@ -82,6 +82,7 @@ type ListPropertyBlocksFilter struct {
 	lib.FilterQuery
 	PropertyID string
 	Status     *string
+	IDs        *[]string
 }
 
 func (r *propertyBlockRepository) List(
@@ -91,6 +92,7 @@ func (r *propertyBlockRepository) List(
 	var propertyBlocks []models.PropertyBlock
 
 	db := r.DB.WithContext(ctx).Scopes(
+		IDsFilterScope("property_blocks", filterQuery.IDs),
 		propertyBlockPropertyIDScope(filterQuery.PropertyID),
 		propertyBlockStatusScope(filterQuery.Status),
 		DateRangeScope("property_blocks", filterQuery.DateRange),
@@ -119,6 +121,7 @@ func (r *propertyBlockRepository) Count(ctx context.Context, filterQuery ListPro
 	result := r.DB.WithContext(ctx).
 		Model(&models.PropertyBlock{}).
 		Scopes(
+			IDsFilterScope("property_blocks", filterQuery.IDs),
 			propertyBlockPropertyIDScope(filterQuery.PropertyID),
 			propertyBlockStatusScope(filterQuery.Status),
 			DateRangeScope("property_blocks", filterQuery.DateRange),

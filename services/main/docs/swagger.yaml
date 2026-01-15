@@ -1634,6 +1634,14 @@ paths:
       - in: query
         name: end_date
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - enum:
         - asc
         - desc
@@ -1854,6 +1862,14 @@ paths:
       - in: query
         name: end_date
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - enum:
         - asc
         - desc
@@ -2086,6 +2102,14 @@ paths:
       - in: query
         name: end_date
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - enum:
         - asc
         - desc
@@ -2219,6 +2243,14 @@ paths:
       - in: query
         name: end_date
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - example: e4ad26d4-d7e9-4599-a246-5e88abba6083
         in: query
         name: not_in_property_id
@@ -2832,6 +2864,14 @@ paths:
       - in: query
         name: end_date
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - enum:
         - asc
         - desc
@@ -3086,6 +3126,14 @@ paths:
       - in: query
         name: end_date
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - enum:
         - asc
         - desc
@@ -3349,6 +3397,14 @@ paths:
       - in: query
         name: end_date
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - enum:
         - asc
         - desc
@@ -3786,6 +3842,14 @@ paths:
       - in: query
         name: end_date
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - enum:
         - asc
         - desc
@@ -4195,6 +4259,14 @@ paths:
       - in: query
         name: end_date
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - enum:
         - asc
         - desc
@@ -4351,6 +4423,14 @@ paths:
         in: query
         name: gender
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - enum:
         - ONLINE
         - CASH

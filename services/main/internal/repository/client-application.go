@@ -49,6 +49,7 @@ func (r *clientApplicationRepository) List(
 
 	db := r.db.WithContext(ctx).
 		Scopes(
+			IDsFilterScope("client_applications", filters.IDs),
 			DateRangeScope("client_applications", filterQuery.DateRange),
 			SearchScope("client_applications", filterQuery.Search),
 			StatusFilterScope(filters.Status),
@@ -85,6 +86,7 @@ func (r *clientApplicationRepository) Count(
 		WithContext(ctx).
 		Model(&models.ClientApplication{}).
 		Scopes(
+			IDsFilterScope("client_applications", filters.IDs),
 			DateRangeScope("client_applications", filterQuery.DateRange),
 			SearchScope("client_applications", filterQuery.Search),
 			StatusFilterScope(filters.Status),
@@ -107,6 +109,7 @@ type ListClientApplicationsFilter struct {
 	Status  *string
 	Type    *string
 	SubType *string
+	IDs     *[]string
 }
 
 func (r *clientApplicationRepository) UpdateClientApplication(
