@@ -72,13 +72,13 @@ export function Selector(props: Props) {
 					) ?? []
 					setSelectedOptions([...optionsWithLabels, ...fetchedOptions])
 				})
-				.catch(() => { })
+				.catch(console.log)
 				.finally(() => {
 					setIsFindSelectedOptions(false)
 				})
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [options, props.selectedOptions, props.onSearch])
+	}, [options, props.selectedOptions, props.onSearch, selectedOptions.length])
 
 	// Fetch options when popover opens if onSearch is provided and options is not
 	React.useEffect(() => {
@@ -86,13 +86,13 @@ export function Selector(props: Props) {
 			setIsSearching(true)
 			props.onSearch({})
 				.then(setOptions)
-				.catch(() => { })
+				.catch(console.log)
 				.finally(() => {
 					setIsSearching(false)
 				})
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [isOpened, props.onSearch, options])
+	}, [isOpened, props.onSearch])
 
 	return (
 		<Popover open={isOpened} onOpenChange={setIsOpened}>
@@ -216,7 +216,7 @@ export function Selector(props: Props) {
 						</div>
 					)}
 					{
-						isFindSelectedOptions ? <Spinner className='h-3 w-auto text-foregroun' /> : null
+						isFindSelectedOptions ? <Spinner className='h-3 w-auto text-foreground' /> : null
 					}
 					<ChevronDown className="text-foreground size-3 shrink-0 opacity-50" />
 				</Button>
