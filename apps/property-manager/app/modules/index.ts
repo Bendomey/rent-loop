@@ -42,15 +42,16 @@ export * from './properties/property/assets/units/new'
 
 export * from './properties/property/assets/facilities'
 
-export * from './properties/property/tenants/active'
-export * from './properties/property/tenants/active/tenant'
-export * from './properties/property/tenants/active/tenant/profile'
-export * from './properties/property/tenants/active/tenant/leases'
-export * from './properties/property/tenants/active/tenant/payments'
-export * from './properties/property/tenants/active/tenant/maintenance-requests'
+export * from './properties/property/tenants/all'
+export * from './properties/property/tenants/all/tenant'
+export * from './properties/property/tenants/all/tenant/profile'
+export * from './properties/property/tenants/all/tenant/leases'
+export * from './properties/property/tenants/all/tenant/payments'
+export * from './properties/property/tenants/all/tenant/maintenance-requests'
 
 export * from './properties/property/tenants/applications'
 export * from './properties/property/tenants/applications/new'
+export * from './properties/property/tenants/applications/application'
 
 export * from './properties/property/activities/announcements'
 export * from './properties/property/activities/inspections'

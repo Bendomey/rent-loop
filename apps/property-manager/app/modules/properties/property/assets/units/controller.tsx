@@ -57,11 +57,12 @@ export const PropertyAssetUnitsController = ({
 						},
 					})
 
-					return data?.rows.map((block) => ({
-						label: block.name,
-						value: block.id,
-					})) ?? []
-
+					return (
+						data?.rows.map((block) => ({
+							label: block.name,
+							value: block.id,
+						})) ?? []
+					)
 				},
 				urlParam: 'blocks',
 				defaultValues: [],

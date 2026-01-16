@@ -72,7 +72,7 @@ export function PropertySidebar({
 				items: [
 					{
 						title: 'All Tenants',
-						url: '',
+						url: '/all',
 					},
 					{
 						title: 'Applications',
@@ -107,8 +107,8 @@ export function PropertySidebar({
 				],
 			},
 			{
-				title: 'Transactions',
-				url: '/transactions',
+				title: 'Financials',
+				url: '/financials',
 				icon: DollarSign,
 				items: [
 					{

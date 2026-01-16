@@ -11,7 +11,6 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
-	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
@@ -55,9 +54,21 @@ export function PropertyTenantApplicationsModule() {
 	const columns: ColumnDef<TenantApplication>[] = useMemo(() => {
 		return [
 			{
-				id: 'drag',
+				id: 'id',
 				header: () => null,
-				cell: () => <User />,
+				cell: ({ row }) => {
+					if (row.original.profile_photo_url) {
+						return (
+							<img
+								src={row.original.profile_photo_url}
+								alt="Profile Photo"
+								className="h-8 w-8 rounded-full object-cover"
+							/>
+						)
+					} else {
+						return <User />
+					}
+				},
 			},
 			{
 				accessorKey: 'name',
@@ -65,9 +76,14 @@ export function PropertyTenantApplicationsModule() {
 				cell: ({ row }) => {
 					return (
 						<div className="min-w-32">
-							<span className="truncate text-xs text-zinc-600">
-								{`${row.original.first_name} ${row.original.other_names ? row.original.other_names + ' ' : ''}${row.original.last_name}`}
-							</span>
+							<Link
+								to={`/properties/${clientUserProperty?.property_id}/tenants/applications/${row.original.id}`}
+								aria-label={`View details for application`}
+							>
+								<span className="truncate text-xs text-blue-600 hover:underline">
+									{`${row.original.first_name} ${row.original.other_names ? row.original.other_names + ' ' : ''}${row.original.last_name}`}
+								</span>
+							</Link>
 						</div>
 					)
 				},
@@ -158,7 +174,7 @@ export function PropertyTenantApplicationsModule() {
 								>
 									<DropdownMenuItem>View</DropdownMenuItem>
 								</Link>
-								<DropdownMenuSeparator />
+								{/* <DropdownMenuSeparator /> */}
 							</DropdownMenuContent>
 						</DropdownMenu>
 					)

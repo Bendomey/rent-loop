@@ -142,7 +142,7 @@ export function PropertyTenantsModule() {
 							<CardFooter>
 								<Link
 									className="w-full"
-									to={`/properties/${clientUserProperty?.property_id}/tenants/${tenant.id}`}
+									to={`/properties/${clientUserProperty?.property_id}/tenants/all/${tenant.id}`}
 								>
 									<Button size="sm" variant="outline" className="w-full">
 										View Profile

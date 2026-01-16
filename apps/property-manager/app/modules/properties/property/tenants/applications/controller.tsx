@@ -19,85 +19,93 @@ export const PropertyTenantApplicationsController = ({
 }) => {
 	const { clientUserProperty } = useProperty()
 
-	const filters: Array<Filter> = useMemo(() => [
-		{
-			id: 1,
-			type: 'selector',
-			selectType: 'single',
-			label: 'Status',
-			value: {
-				options: [
-					{ label: 'InProgress', value: 'TenantApplication.Status.InProgress' },
-					{ label: 'Cancelled', value: 'TenantApplication.Status.Cancelled' },
-					{ label: 'Completed', value: 'TenantApplication.Status.Completed' },
-				],
-				urlParam: 'status',
-				defaultValues: [],
-			},
-			Icon: ToggleLeft,
-		},
-		{
-			id: 2,
-			type: 'selector',
-			selectType: 'single',
-			label: 'Desired Unit',
-			value: {
-				urlParam: 'desired_unit',
-				defaultValues: [],
-				onSearch: async ({ }) => {
-					if (!clientUserProperty?.property_id) {
-						return [];
-					}
-
-					const data = await getPropertyUnits({
-						property_id: clientUserProperty.property_id,
-						pagination: {
-							page: PAGINATION_DEFAULTS.PAGE,
-							per: PAGINATION_DEFAULTS.PER_PAGE
+	const filters: Array<Filter> = useMemo(
+		() => [
+			{
+				id: 1,
+				type: 'selector',
+				selectType: 'single',
+				label: 'Status',
+				value: {
+					options: [
+						{
+							label: 'InProgress',
+							value: 'TenantApplication.Status.InProgress',
 						},
-					})
+						{ label: 'Cancelled', value: 'TenantApplication.Status.Cancelled' },
+						{ label: 'Completed', value: 'TenantApplication.Status.Completed' },
+					],
+					urlParam: 'status',
+					defaultValues: [],
+				},
+				Icon: ToggleLeft,
+			},
+			{
+				id: 2,
+				type: 'selector',
+				selectType: 'single',
+				label: 'Desired Unit',
+				value: {
+					urlParam: 'desired_unit',
+					defaultValues: [],
+					onSearch: async ({}) => {
+						if (!clientUserProperty?.property_id) {
+							return []
+						}
 
-					return data?.rows.map((unit) => ({
-						label: unit.name,
-						value: unit.id,
-					})) ?? []
-				}
+						const data = await getPropertyUnits({
+							property_id: clientUserProperty.property_id,
+							pagination: {
+								page: PAGINATION_DEFAULTS.PAGE,
+								per: PAGINATION_DEFAULTS.PER_PAGE,
+							},
+						})
+
+						return (
+							data?.rows.map((unit) => ({
+								label: unit.name,
+								value: unit.id,
+							})) ?? []
+						)
+					},
+				},
+				Icon: ToggleLeft,
 			},
-			Icon: ToggleLeft,
-		},
-		{
-			id: 3,
-			type: 'selector',
-			selectType: 'single',
-			label: 'Gender',
-			value: {
-				options: [
-					{ label: 'Male', value: 'MALE' },
-					{ label: 'Female', value: 'FEMALE' },
-				],
-				urlParam: 'gender',
-				defaultValues: [],
+			{
+				id: 3,
+				type: 'selector',
+				selectType: 'single',
+				label: 'Gender',
+				value: {
+					options: [
+						{ label: 'Male', value: 'MALE' },
+						{ label: 'Female', value: 'FEMALE' },
+					],
+					urlParam: 'gender',
+					defaultValues: [],
+				},
+				Icon: ToggleLeft,
 			},
-			Icon: ToggleLeft,
-		},
-		{
-			id: 4,
-			type: 'selector',
-			selectType: 'single',
-			label: 'Marital Status',
-			value: {
-				options: [
-					{ label: 'Single', value: 'SINGLE' },
-					{ label: 'Married', value: 'MARRIED' },
-					{ label: 'Divorced', value: 'DIVORCED' },
-					{ label: 'Widowed', value: 'WIDOWED' },
-				],
-				urlParam: 'marital_status',
-				defaultValues: [],
+			{
+				id: 4,
+				type: 'selector',
+				selectType: 'single',
+				label: 'Marital Status',
+				value: {
+					options: [
+						{ label: 'Single', value: 'SINGLE' },
+						{ label: 'Married', value: 'MARRIED' },
+						{ label: 'Divorced', value: 'DIVORCED' },
+						{ label: 'Widowed', value: 'WIDOWED' },
+					],
+					urlParam: 'marital_status',
+					defaultValues: [],
+				},
+				Icon: ToggleLeft,
 			},
-			Icon: ToggleLeft,
-		},
-	], [clientUserProperty?.property_id])
+		],
+		[clientUserProperty?.property_id],
+	)
 
 	return (
 		<div className="flex w-full flex-col gap-2">
