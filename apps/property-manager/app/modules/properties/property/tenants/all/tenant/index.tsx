@@ -31,7 +31,7 @@ export function TenantModule() {
 	const { tenantId } = useParams()
 	const { clientUserProperty } = useProperty()
 
-	const baseUrl = `/properties/${clientUserProperty?.property?.id}/tenants/${tenantId}`
+	const baseUrl = `/properties/${clientUserProperty?.property?.id}/tenants/all/${tenantId}`
 	return (
 		<div className="m-5 grid grid-cols-12 gap-4">
 			<div className="col-span-4">
