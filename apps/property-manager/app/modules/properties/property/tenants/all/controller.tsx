@@ -49,7 +49,6 @@ export const PropertyTenantsController = () => {
 				<div className="flex items-center justify-end gap-2">
 					<Link
 						to={`/properties/${clientUserProperty?.property_id}/tenants/applications/new`}
-
 					>
 						<Button
 							variant="default"

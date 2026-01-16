@@ -120,7 +120,7 @@ export function Step0() {
 				className="mx-auto mb-10 space-y-8 md:max-w-2xl"
 			>
 				{/* Header Section */}
-				<div className="space-y-2 border-b pb-6 mt-10">
+				<div className="mt-10 space-y-2 border-b pb-6">
 					<TypographyH2 className="text-2xl font-bold">
 						Add New Tenant
 					</TypographyH2>

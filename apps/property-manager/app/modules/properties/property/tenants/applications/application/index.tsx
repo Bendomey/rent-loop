@@ -1,9 +1,3 @@
-
 export function PropertyTenantApplication() {
-
-    return (
-        <main className="w-full">
-            Single application
-        </main>
-    )
+	return <main className="w-full">Single application</main>
 }

@@ -1,8 +1,8 @@
-import type { Route } from './+types/_auth.properties.$propertyId.tenants.applications.$applicationId._index'
+import type { Route } from './+types/_auth.properties.$propertyId.tenants.all.$tenantId'
 import { propertyContext } from '~/lib/actions/property.context.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { PropertyTenantApplication } from '~/modules'
+import { TenantModule } from '~/modules'
 
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const clientUserProperty = context.get(propertyContext)
@@ -30,4 +30,4 @@ export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	return meta
 }
 
-export default PropertyTenantApplication
+export default TenantModule

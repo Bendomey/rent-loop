@@ -72,7 +72,7 @@ export function PropertySidebar({
 				items: [
 					{
 						title: 'All Tenants',
-						url: '',
+						url: '/all',
 					},
 					{
 						title: 'Applications',
