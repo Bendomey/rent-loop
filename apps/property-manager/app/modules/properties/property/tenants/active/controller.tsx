@@ -7,6 +7,7 @@ import {
 	InputGroupAddon,
 	InputGroupInput,
 } from '~/components/ui/input-group'
+import { useProperty } from '~/providers/property-provider'
 
 const filters: Array<Filter> = [
 	{
@@ -27,6 +28,8 @@ const filters: Array<Filter> = [
 ]
 
 export const PropertyTenantsController = () => {
+	const { clientUserProperty } = useProperty()
+
 	return (
 		<div className="flex w-full flex-col gap-2">
 			<div className="w-full rounded-md border p-4">
@@ -44,7 +47,10 @@ export const PropertyTenantsController = () => {
 					</InputGroup>
 				</div>
 				<div className="flex items-center justify-end gap-2">
-					<Link to="/properties/tenants/new">
+					<Link
+						to={`/properties/${clientUserProperty?.property_id}/tenants/applications/new`}
+
+					>
 						<Button
 							variant="default"
 							size="sm"

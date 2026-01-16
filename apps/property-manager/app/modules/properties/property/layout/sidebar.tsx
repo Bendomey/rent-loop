@@ -107,8 +107,8 @@ export function PropertySidebar({
 				],
 			},
 			{
-				title: 'Transactions',
-				url: '/transactions',
+				title: 'Financials',
+				url: '/financials',
 				icon: DollarSign,
 				items: [
 					{
