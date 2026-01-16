@@ -11,11 +11,12 @@ import (
 // Active means lease is currently ongoing.
 // Terminated means lease was ended before the agreed duration by either party.
 // Completed means lease ran its full duration and ended.
+// Cancelled means lease was never activated after being created.
 
 // Lease represents a lease agreement in the system.
 type Lease struct {
 	BaseModelSoftDelete
-	Status string `gorm:"not null;default:'Lease.Status.Pending';index;"` // Lease.Status.Pending, Lease.Status.Active, Lease.Status.Terminated, Lease.Status.Completed
+	Status string `gorm:"not null;default:'Lease.Status.Pending';index;"` // Lease.Status.Pending, Lease.Status.Active, Lease.Status.Terminated, Lease.Status.Completed, Lease.Status.Cancelled
 
 	UnitId string `gorm:"not null;"`
 	Unit   Unit
@@ -27,7 +28,7 @@ type Lease struct {
 	TenantApplication   TenantApplication
 
 	// financial setup
-	RentFee          int64   `gorm:"not null;"` // we can inherit from unit and then make arrangement for updates!
+	RentFee          int64   `gorm:"not null;"` // we can inherit from tenant application
 	RentFeeCurrency  string  `gorm:"not null;"`
 	PaymentFrequency *string // Hourly, Daily, Monthly, Quarterly, BiAnnually, Annually, OneTime
 
@@ -39,8 +40,14 @@ type Lease struct {
 	StayDurationFrequency string // hours, days, months
 	StayDuration          int64
 
+	KeyHandoverDate      *time.Time // when keys were handed over to tenant
+	UtilityTransfersDate *time.Time // when utilities were transferred to tenant name
+	PropertyInspectionDate *time.Time // a move-in checklist can be created in the process.
+
 	// docs setup
+	LeaseAggreementDocumentMode *string // MANUAL | ONLINE
 	LeaseAgreementDocumentUrl                       string
+	// with the initial lease agreement, because they'd be signed before the lease is created, they might not need the other info below
 	LeaseAgreementDocumentPropertyManagerSignedById *string
 	LeaseAgreementDocumentPropertyManagerSignedBy   *ClientUser
 	LeaseAgreementDocumentPropertyManagerSignedAt   *time.Time

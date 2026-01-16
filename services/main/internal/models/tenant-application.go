@@ -47,6 +47,14 @@ type TenantApplication struct {
 	SecurityDepositPaymentId       *string
 	SecurityDepositPayment         *Payment
 
+	// docs setup
+	LeaseAggreementDocumentMode *string // MANUAL | ONLINE
+	LeaseAgreementDocumentUrl                       *string
+	LeaseAgreementDocumentPropertyManagerSignedById *string
+	LeaseAgreementDocumentPropertyManagerSignedBy   *ClientUser
+	LeaseAgreementDocumentPropertyManagerSignedAt   *time.Time
+	LeaseAgreementDocumentTenantSignedAt            *time.Time
+
 	// Basic details
 	FirstName       string `gorm:"not null;"`
 	OtherNames      *string
