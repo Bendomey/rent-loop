@@ -40,13 +40,13 @@ type Lease struct {
 	StayDurationFrequency string // hours, days, months
 	StayDuration          int64
 
-	KeyHandoverDate      *time.Time // when keys were handed over to tenant
-	UtilityTransfersDate *time.Time // when utilities were transferred to tenant name
+	KeyHandoverDate        *time.Time // when keys were handed over to tenant
+	UtilityTransfersDate   *time.Time // when utilities were transferred to tenant name
 	PropertyInspectionDate *time.Time // a move-in checklist can be created in the process.
 
 	// docs setup
 	LeaseAggreementDocumentMode *string // MANUAL | ONLINE
-	LeaseAgreementDocumentUrl                       string
+	LeaseAgreementDocumentUrl   string
 	// with the initial lease agreement, because they'd be signed before the lease is created, they might not need the other info below
 	LeaseAgreementDocumentPropertyManagerSignedById *string
 	LeaseAgreementDocumentPropertyManagerSignedBy   *ClientUser

@@ -48,7 +48,7 @@ type TenantApplication struct {
 	SecurityDepositPayment         *Payment
 
 	// docs setup
-	LeaseAggreementDocumentMode *string // MANUAL | ONLINE
+	LeaseAggreementDocumentMode                     *string // MANUAL | ONLINE
 	LeaseAgreementDocumentUrl                       *string
 	LeaseAgreementDocumentPropertyManagerSignedById *string
 	LeaseAgreementDocumentPropertyManagerSignedBy   *ClientUser
