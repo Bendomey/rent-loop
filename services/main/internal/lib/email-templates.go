@@ -186,3 +186,29 @@ Best regards,
 The Rentloop team
 `
 )
+
+const (
+	TENANT_APPLICATION_SUBMITTED_SUBJECT = "Tenant Application Submitted Successfully"
+	TENANT_APPLICATION_SUBMITTED_BODY    = `
+Hello {{applicant_name}},
+
+Your tenant application has been successfully submitted and is now under review.
+
+Application Details:
+
+Unit: {{unit_name}}
+
+Application ID: {{application_id}}
+
+Submitted on: {{submission_date}}
+
+Our team will review your application and contact you if additional information is needed. You will be notified once a decision has been made.
+
+Thank you for your interest.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop team
+`
+)

@@ -726,6 +726,15 @@ definitions:
       last_name:
         example: Doe
         type: string
+      lease_agreement_document_mode:
+        enum:
+        - MANUAL
+        - ONLINE
+        example: MANUAL
+        type: string
+      lease_agreement_document_url:
+        example: https://example.com/lease.pdf
+        type: string
       marital_status:
         enum:
         - Single
@@ -794,7 +803,7 @@ definitions:
         example: "2023-01-01T00:00:00Z"
         type: string
       security_deposit_payment_id:
-        example: "123456789"
+        example: 576695af-6e14-4c78-8f92-f4aedb94d07a
         type: string
       security_deposit_payment_method:
         enum:
@@ -1411,6 +1420,9 @@ definitions:
       cancelled_by_id:
         example: user-456
         type: string
+      code:
+        example: 9ucfjd3p
+        type: string
       completed_at:
         example: "2024-06-01T12:00:00Z"
         type: string
@@ -1422,11 +1434,11 @@ definitions:
       created_at:
         example: "2024-06-01T09:00:00Z"
         type: string
+      created_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
       created_by_id:
         example: 72432ce6-5620-4ecf-a862-4bf2140556a1
         type: string
-      createdBy:
-        $ref: '#/definitions/transformations.OutputClientUser'
       current_address:
         example: 123 Main St, Accra
         type: string
@@ -1439,7 +1451,7 @@ definitions:
       desired_unit:
         $ref: '#/definitions/transformations.OutputUnit'
       desired_unit_id:
-        example: unit-789
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
       email:
         example: john.doe@example.com
@@ -1481,13 +1493,30 @@ definitions:
         example: pay-001
         type: string
       initial_deposit_payment_method:
-        example: bank_transfer
+        example: ONLINE
         type: string
       initial_deposit_reference_number:
         example: REF123
         type: string
       last_name:
         example: Doe
+        type: string
+      lease_aggreement_document_mode:
+        example: MANUAL
+        type: string
+      lease_agreement_document_property_manager_signed_at:
+        example: "2024-06-07T12:00:00Z"
+        type: string
+      lease_agreement_document_property_manager_signed_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      lease_agreement_document_property_manager_signed_by_id:
+        example: user-789
+        type: string
+      lease_agreement_document_tenant_signed_at:
+        example: "2024-06-08T12:00:00Z"
+        type: string
+      lease_agreement_document_url:
+        example: https://example.com/lease.pdf
         type: string
       marital_status:
         example: single
@@ -1547,7 +1576,7 @@ definitions:
         example: pay-002
         type: string
       security_deposit_payment_method:
-        example: cash
+        example: ONLINE
         type: string
       security_deposit_reference_number:
         example: SECREF456

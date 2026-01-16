@@ -6015,6 +6015,18 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Doe"
                 },
+                "lease_agreement_document_mode": {
+                    "type": "string",
+                    "enum": [
+                        "MANUAL",
+                        "ONLINE"
+                    ],
+                    "example": "MANUAL"
+                },
+                "lease_agreement_document_url": {
+                    "type": "string",
+                    "example": "https://example.com/lease.pdf"
+                },
                 "marital_status": {
                     "type": "string",
                     "enum": [
@@ -6104,7 +6116,7 @@ const docTemplate = `{
                 },
                 "security_deposit_payment_id": {
                     "type": "string",
-                    "example": "123456789"
+                    "example": "576695af-6e14-4c78-8f92-f4aedb94d07a"
                 },
                 "security_deposit_payment_method": {
                     "type": "string",
@@ -6946,6 +6958,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "user-456"
                 },
+                "code": {
+                    "type": "string",
+                    "example": "9ucfjd3p"
+                },
                 "completed_at": {
                     "type": "string",
                     "example": "2024-06-01T12:00:00Z"
@@ -6957,12 +6973,12 @@ const docTemplate = `{
                     "type": "string",
                     "example": "user-123"
                 },
-                "createdBy": {
-                    "$ref": "#/definitions/transformations.OutputClientUser"
-                },
                 "created_at": {
                     "type": "string",
                     "example": "2024-06-01T09:00:00Z"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
                 },
                 "created_by_id": {
                     "type": "string",
@@ -6985,7 +7001,7 @@ const docTemplate = `{
                 },
                 "desired_unit_id": {
                     "type": "string",
-                    "example": "unit-789"
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
                 },
                 "email": {
                     "type": "string",
@@ -7041,7 +7057,7 @@ const docTemplate = `{
                 },
                 "initial_deposit_payment_method": {
                     "type": "string",
-                    "example": "bank_transfer"
+                    "example": "ONLINE"
                 },
                 "initial_deposit_reference_number": {
                     "type": "string",
@@ -7050,6 +7066,29 @@ const docTemplate = `{
                 "last_name": {
                     "type": "string",
                     "example": "Doe"
+                },
+                "lease_aggreement_document_mode": {
+                    "type": "string",
+                    "example": "MANUAL"
+                },
+                "lease_agreement_document_property_manager_signed_at": {
+                    "type": "string",
+                    "example": "2024-06-07T12:00:00Z"
+                },
+                "lease_agreement_document_property_manager_signed_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "lease_agreement_document_property_manager_signed_by_id": {
+                    "type": "string",
+                    "example": "user-789"
+                },
+                "lease_agreement_document_tenant_signed_at": {
+                    "type": "string",
+                    "example": "2024-06-08T12:00:00Z"
+                },
+                "lease_agreement_document_url": {
+                    "type": "string",
+                    "example": "https://example.com/lease.pdf"
                 },
                 "marital_status": {
                     "type": "string",
@@ -7129,7 +7168,7 @@ const docTemplate = `{
                 },
                 "security_deposit_payment_method": {
                     "type": "string",
-                    "example": "cash"
+                    "example": "ONLINE"
                 },
                 "security_deposit_reference_number": {
                     "type": "string",
