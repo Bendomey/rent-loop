@@ -1,7 +1,5 @@
 import { CheckCircle, Shield } from 'lucide-react'
 import Confetti from 'react-confetti'
-import { Link } from 'react-router'
-import { Button } from '~/components/ui/button'
 import { APP_NAME } from '~/lib/constants'
 
 export function TenantApplySuccessModule() {
@@ -69,12 +67,6 @@ export function TenantApplySuccessModule() {
 						</p>
 					</div>
 
-					{/* login Button */}
-					<Link to="/login">
-						<Button size="lg" className="w-full bg-rose-600 hover:bg-rose-700">
-							Continue to Login
-						</Button>
-					</Link>
 				</div>
 			</div>
 		</>
