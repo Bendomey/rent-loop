@@ -171,7 +171,7 @@ const (
 	TENANT_CANCELLED_BODY    = `
 Hello {{applicant_name}},
 
-We are writing to inform you that your tenant application (Application ID: {{application_id}}) has been cancelled.
+We are writing to inform you that your tenant application (Application Code: {{application_code}}) has been cancelled.
 
 Reason for cancellation:
 {{reason}}
@@ -198,7 +198,7 @@ Application Details:
 
 Unit: {{unit_name}}
 
-Application ID: {{application_id}}
+Application Code: {{application_code}}
 
 Submitted on: {{submission_date}}
 

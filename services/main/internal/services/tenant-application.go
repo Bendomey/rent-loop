@@ -135,7 +135,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 	message := strings.NewReplacer(
 		"{{applicant_name}}", tenantApplication.FirstName,
 		"{{unit_name}}", unit.Name,
-		"{{application_id}}", *tenantApplication.Code,
+		"{{application_code}}", *tenantApplication.Code,
 		"{{submission_date}}", tenantApplication.CreatedAt.Format("2006-01-02 at 03:04 PM"),
 	).Replace(lib.TENANT_APPLICATION_SUBMITTED_BODY)
 
@@ -570,7 +570,7 @@ func (s *tenantApplicationService) CancelTenantApplication(
 
 	message := strings.NewReplacer(
 		"{{applicant_name}}", tenantApplication.FirstName,
-		"{{application_id}}", *tenantApplication.Code,
+		"{{application_code}}", *tenantApplication.Code,
 		"{{reason}}", input.Reason,
 	).Replace(lib.TENANT_CANCELLED_BODY)
 
