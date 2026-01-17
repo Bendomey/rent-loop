@@ -1,20 +1,19 @@
-import { Building, Mail, Phone } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { Link, Outlet, useLocation, useParams } from 'react-router'
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
 	Card,
 	CardContent,
-	CardFooter,
+	CardDescription,
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
-import { Separator } from '~/components/ui/separator'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
-import { TypographyMuted, TypographyP } from '~/components/ui/typography'
+import { Checkbox } from '~/components/ui/checkbox'
+import { Label } from '~/components/ui/label'
+import { Progress } from '~/components/ui/progress'
 import { localizedDayjs } from '~/lib/date'
-import { getNameInitials } from '~/lib/misc'
+import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
 
 const tenant = {
@@ -28,99 +27,104 @@ const tenant = {
 	status: 'Active',
 }
 
-export function PropertyTenantApplication() {
-	const { pathname } = useLocation()
+export function PropertyTenantApplicationContainer() {
 	const { applicationId } = useParams()
 	const { clientUserProperty } = useProperty()
 
 	const baseUrl = `/properties/${clientUserProperty?.property?.id}/tenants/applications/${applicationId}`
 	return (
 		<div className="m-5 grid grid-cols-12 gap-4">
-
 			<div className="col-span-8">
-				<div className='space-y-1'>
-					<h1 className='text-3xl font-bold'>Application Info #123242</h1>
-					<span className='text-sm text-gray-500'>
-						Submitted on{' '}
-						<strong>{localizedDayjs().format('LLLL')}</strong>
+				<div className="space-y-1">
+					<div className="flex items-center space-x-3">
+						<h1 className="text-3xl font-bold">Application Info #123242</h1>
+						<Badge
+							variant="secondary"
+							className="bg-amber-400 px-2 py-1 text-xs text-amber-50"
+						>
+							In Progress
+						</Badge>
+					</div>
+					<span className="text-sm text-gray-500">
+						Submitted on <strong>{localizedDayjs().format('LLLL')}</strong>
 					</span>
 				</div>
-				<Tabs value={pathname}>
-					<TabsContent value={pathname}>
-					</TabsContent>
-				</Tabs>
+				<div className="mt-5">
+					<Outlet />
+				</div>
 			</div>
 			<div className="col-span-4">
-				<div className='flex flex-row items-center justify-end space-x-2 mb-3 w-full'>
-					<Button
-						size="lg"
-						variant={'destructive'}
-					>
-						Cancel
-					</Button>
-					<Button
-						size="lg"
-						className='bg-green-600 hover:bg-green-800'
-					>
-						Approve Application
-					</Button>
+				<div className="mb-3 flex w-full flex-row items-center justify-end space-x-2">
+					<Button variant={'secondary'}>Cancel</Button>
+					<Button>Approve</Button>
 				</div>
-				<Card key={tenant.id} className="shadow-none">
-					<CardHeader className="flex items-start justify-between gap-3">
-						<CardTitle>
-							<Badge
-								variant={tenant.status === 'Active' ? 'secondary' : 'default'}
-								className="px-2 py-1 text-xs"
-							>
-								{tenant.status}
-							</Badge>
+				<Card key={tenant.id} className="mt-10 rounded-md shadow-none">
+					<CardHeader>
+						<CardTitle className="text-2xl font-bold">
+							Complete Application Info
 						</CardTitle>
+						<CardDescription className="text-base">
+							As you fill out the tenant application, your progress will be
+							shown here.
+						</CardDescription>
+						<div className="mt-4 flex items-center gap-3 space-x-3">
+							<span>40%</span>
+							<Progress value={40} />
+						</div>
 					</CardHeader>
 
-					<CardContent className="space-y-3">
-						<div className="flex flex-col items-center gap-3">
-							<Avatar className="h-16 w-16">
-								{tenant.profile ? (
-									<AvatarImage src={tenant.profile} alt={tenant.name} />
-								) : (
-									<AvatarFallback>
-										{getNameInitials(tenant.name)}
-									</AvatarFallback>
-								)}
-							</Avatar>
-							<div>
-								<CardTitle className="text-sm font-semibold">
-									{tenant.name}
-								</CardTitle>
-								<TypographyMuted className="text-xs">
-									Rent from {tenant.since}
-								</TypographyMuted>
-							</div>
-						</div>
-
-						<Separator className="my-5" />
-
-						<div>
-							<div className="flex items-center gap-2 text-sm">
-								<Building size={14} className="text-zinc-500" />
-								<TypographyP className="!mt-0">{tenant.location}</TypographyP>
-							</div>
-
-							<div className="flex items-center gap-2 text-sm">
-								<Phone size={14} className="text-zinc-500" />
-								<TypographyP className="!mt-0">{tenant.phone}</TypographyP>
-							</div>
-
-							<div className="flex items-center gap-2 text-sm">
-								<Mail size={14} className="text-zinc-500" />
-								<TypographyP className="!mt-0">{tenant.email}</TypographyP>
-							</div>
-						</div>
+					<CardContent className="p-0">
+						<MenuItem href={`${baseUrl}`} value={true} label="Select a unit" />
+						<MenuItem
+							href={`${baseUrl}/tenant-details`}
+							value={true}
+							label="Add tenants details"
+						/>
+						<MenuItem
+							href={`${baseUrl}/move-in`}
+							value={false}
+							label="Move In Setup"
+						/>
+						<MenuItem
+							href={`${baseUrl}/financial`}
+							value={false}
+							label="Add financial Setup"
+						/>
+						<MenuItem
+							href={`${baseUrl}/docs`}
+							value={false}
+							label="Add lease docs setup"
+						/>
 					</CardContent>
-
-					<CardFooter></CardFooter>
 				</Card>
 			</div>
 		</div>
+	)
+}
+
+interface MenuItemProps {
+	label: string
+	value: boolean
+	href: string
+}
+function MenuItem({ label, value, href }: MenuItemProps) {
+	const { pathname } = useLocation()
+
+	const isActive = pathname === href
+	return (
+		<Link to={href} className="cursor-pointer">
+			<div
+				className={cn(
+					'flex items-center space-x-3 px-5 py-2 hover:bg-gray-50',
+					{
+						'bg-gray-100 font-medium': isActive,
+					},
+				)}
+			>
+				<Checkbox checked={value} id="terms" />
+				<Label className="text-base font-light">{label}</Label>
+				<ChevronRight className="ml-auto h-5 w-auto text-gray-400" />
+			</div>
+		</Link>
 	)
 }
