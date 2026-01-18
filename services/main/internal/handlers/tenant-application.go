@@ -314,16 +314,11 @@ type UpdateTenantApplicationRequest struct {
 	StayDuration                   *int64     `json:"stay_duration,omitempty"                     validate:"omitempty"                                                                  example:"10"                                   description:"Stay duration"`
 	PaymentFrequency               *string    `json:"payment_frequency,omitempty"                 validate:"omitempty,oneof=Hourly Daily Monthly Quarterly BiAnnually Annually OneTime" example:"Hourly"                               description:"Payment frequency"`
 	InitialDepositFee              *int64     `json:"initial_deposit_fee,omitempty"               validate:"omitempty"                                                                  example:"1000"                                 description:"Initial deposit fee"`
-	InitialDepositPaymentMethod    *string    `json:"initial_deposit_payment_method,omitempty"    validate:"omitempty,oneof=ONLINE CASH EXTERNAL"                                       example:"ONLINE"                               description:"Initial deposit payment method"`
-	InitialDepositReferenceNumber  *string    `json:"initial_deposit_reference_number,omitempty"  validate:"omitempty"                                                                  example:"123456789"                            description:"Initial deposit reference number"`
-	InitialDepositPaidAt           *time.Time `json:"initial_deposit_paid_at,omitempty"           validate:"omitempty"                                                                  example:"2023-01-01T00:00:00Z"                 description:"Initial deposit paid at"`
-	InitialDepositPaymentId        *string    `json:"initial_deposit_payment_id,omitempty"        validate:"omitempty"                                                                  example:"123456789"                            description:"Initial deposit payment ID"`
 	SecurityDepositFee             *int64     `json:"security_deposit_fee,omitempty"              validate:"omitempty"                                                                  example:"1000"                                 description:"Security deposit fee"`
 	SecurityDepositFeeCurrency     *string    `json:"security_deposit_fee_currency,omitempty"     validate:"omitempty"                                                                  example:"GHS"                                  description:"Security deposit fee currency"`
 	SecurityDepositPaymentMethod   *string    `json:"security_deposit_payment_method,omitempty"   validate:"omitempty,oneof=ONLINE CASH EXTERNAL"                                       example:"ONLINE"                               description:"Security deposit payment method"`
 	SecurityDepositReferenceNumber *string    `json:"security_deposit_reference_number,omitempty" validate:"omitempty"                                                                  example:"123456789"                            description:"Security deposit reference number"`
 	SecurityDepositPaidAt          *time.Time `json:"security_deposit_paid_at,omitempty"          validate:"omitempty"                                                                  example:"2023-01-01T00:00:00Z"                 description:"Security deposit paid at"`
-	SecurityDepositPaymentId       *string    `json:"security_deposit_payment_id,omitempty"       validate:"omitempty"                                                                  example:"123456789"                            description:"Security deposit payment ID"`
 	OtherNames                     *string    `json:"other_names,omitempty"                       validate:"omitempty"                                                                  example:"Michael"                              description:"Other names of the applicant"`
 	Email                          *string    `json:"email,omitempty"                             validate:"omitempty,email"                                                            example:"john.doe@example.com"                 description:"Email address of the applicant"`
 	ProfilePhotoUrl                *string    `json:"profile_photo_url,omitempty"                 validate:"omitempty,url"                                                              example:"https://example.com/photo.jpg"        description:"Profile photo URL"`
@@ -333,6 +328,8 @@ type UpdateTenantApplicationRequest struct {
 	PreviousLandlordPhone          *string    `json:"previous_landlord_phone,omitempty"           validate:"omitempty,e164"                                                             example:"+233281234570"                        description:"Previous landlord phone"`
 	PreviousTenancyPeriod          *string    `json:"previous_tenancy_period,omitempty"           validate:"omitempty"                                                                  example:"2020-2022"                            description:"Previous tenancy period"`
 	ProofOfIncomeUrl               *string    `json:"proof_of_income_url,omitempty"               validate:"omitempty,url"                                                              example:"https://example.com/income.pdf"       description:"Proof of income URL"`
+	LeaseAggreementDocumentMode    *string    `json:"lease_agreement_document_mode,omitempty"     validate:"omitempty,oneof=MANUAL ONLINE"                                              example:"MANUAL"                               description:"Lease agreement document mode"`
+	LeaseAgreementDocumentUrl      *string    `json:"lease_agreement_document_url,omitempty"      validate:"omitempty,url"                                                              example:"https://example.com/lease.pdf"        description:"Lease agreement document URL"`
 }
 
 // UpdateTenantApplication godoc
@@ -393,16 +390,11 @@ func (h *TenantApplicationHandler) UpdateTenantApplication(w http.ResponseWriter
 		StayDuration:                   body.StayDuration,
 		PaymentFrequency:               body.PaymentFrequency,
 		InitialDepositFee:              body.InitialDepositFee,
-		InitialDepositPaymentMethod:    body.InitialDepositPaymentMethod,
-		InitialDepositReferenceNumber:  body.InitialDepositReferenceNumber,
-		InitialDepositPaidAt:           body.InitialDepositPaidAt,
-		InitialDepositPaymentId:        body.InitialDepositPaymentId,
 		SecurityDepositFee:             body.SecurityDepositFee,
 		SecurityDepositFeeCurrency:     body.SecurityDepositFeeCurrency,
 		SecurityDepositPaymentMethod:   body.SecurityDepositPaymentMethod,
 		SecurityDepositReferenceNumber: body.SecurityDepositReferenceNumber,
 		SecurityDepositPaidAt:          body.SecurityDepositPaidAt,
-		SecurityDepositPaymentId:       body.SecurityDepositPaymentId,
 		OtherNames:                     body.OtherNames,
 		Email:                          body.Email,
 		ProfilePhotoUrl:                body.ProfilePhotoUrl,
@@ -412,6 +404,8 @@ func (h *TenantApplicationHandler) UpdateTenantApplication(w http.ResponseWriter
 		PreviousLandlordPhone:          body.PreviousLandlordPhone,
 		PreviousTenancyPeriod:          body.PreviousTenancyPeriod,
 		ProofOfIncomeUrl:               body.ProofOfIncomeUrl,
+		LeaseAggreementDocumentMode:    body.LeaseAggreementDocumentMode,
+		LeaseAgreementDocumentUrl:      body.LeaseAgreementDocumentUrl,
 	}
 
 	tenantApplication, updateTenantApplicationErr := h.service.UpdateTenantApplication(r.Context(), input)

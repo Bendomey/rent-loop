@@ -10,6 +10,8 @@ import (
 type OutputTenantApplication struct {
 	ID string `json:"id" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 
+	Code *string `json:"code,omitempty" example:"9ucfjd3p"`
+
 	Status string `json:"status" example:"TenantApplication.Status.InProgress"`
 
 	CompletedAt   *time.Time        `json:"completed_at,omitempty"    example:"2024-06-01T12:00:00Z"`
@@ -20,7 +22,7 @@ type OutputTenantApplication struct {
 	CancelledById *string           `json:"cancelled_by_id,omitempty" example:"user-456"`
 	CancelledBy   *OutputClientUser `json:"cancelled_by,omitempty"`
 
-	DesiredUnitId string     `json:"desired_unit_id" example:"unit-789"`
+	DesiredUnitId string     `json:"desired_unit_id" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 	DesiredUnit   OutputUnit `json:"desired_unit"`
 
 	DesiredMoveInDate     *time.Time `json:"desired_move_in_date,omitempty"    example:"2024-07-01T00:00:00Z"`
@@ -32,7 +34,7 @@ type OutputTenantApplication struct {
 	PaymentFrequency *string `json:"payment_frequency,omitempty" example:"monthly"`
 
 	InitialDepositFee             *int64     `json:"initial_deposit_fee,omitempty"              example:"500"`
-	InitialDepositPaymentMethod   *string    `json:"initial_deposit_payment_method,omitempty"   example:"bank_transfer"`
+	InitialDepositPaymentMethod   *string    `json:"initial_deposit_payment_method,omitempty"   example:"ONLINE"`
 	InitialDepositReferenceNumber *string    `json:"initial_deposit_reference_number,omitempty" example:"REF123"`
 	InitialDepositPaidAt          *time.Time `json:"initial_deposit_paid_at,omitempty"          example:"2024-06-05T10:00:00Z"`
 	InitialDepositPaymentId       *string    `json:"initial_deposit_payment_id,omitempty"       example:"pay-001"`
@@ -40,10 +42,17 @@ type OutputTenantApplication struct {
 	SecurityDepositFee         *int64  `json:"security_deposit_fee,omitempty"          example:"1000"`
 	SecurityDepositFeeCurrency *string `json:"security_deposit_fee_currency,omitempty" example:"USD"`
 
-	SecurityDepositPaymentMethod   *string    `json:"security_deposit_payment_method,omitempty"   example:"cash"`
+	SecurityDepositPaymentMethod   *string    `json:"security_deposit_payment_method,omitempty"   example:"ONLINE"`
 	SecurityDepositReferenceNumber *string    `json:"security_deposit_reference_number,omitempty" example:"SECREF456"`
 	SecurityDepositPaidAt          *time.Time `json:"security_deposit_paid_at,omitempty"          example:"2024-06-06T11:00:00Z"`
 	SecurityDepositPaymentId       *string    `json:"security_deposit_payment_id,omitempty"       example:"pay-002"`
+
+	LeaseAggreementDocumentMode                     *string           `json:"lease_aggreement_document_mode,omitempty"                         example:"MANUAL"`
+	LeaseAgreementDocumentUrl                       *string           `json:"lease_agreement_document_url,omitempty"                           example:"https://example.com/lease.pdf"`
+	LeaseAgreementDocumentPropertyManagerSignedById *string           `json:"lease_agreement_document_property_manager_signed_by_id,omitempty" example:"user-789"`
+	LeaseAgreementDocumentPropertyManagerSignedBy   *OutputClientUser `json:"lease_agreement_document_property_manager_signed_by,omitempty"`
+	LeaseAgreementDocumentPropertyManagerSignedAt   *time.Time        `json:"lease_agreement_document_property_manager_signed_at,omitempty"    example:"2024-06-07T12:00:00Z"`
+	LeaseAgreementDocumentTenantSignedAt            *time.Time        `json:"lease_agreement_document_tenant_signed_at,omitempty"              example:"2024-06-08T12:00:00Z"`
 
 	FirstName       string    `json:"first_name"                  example:"John"`
 	OtherNames      *string   `json:"other_names,omitempty"       example:"Michael"`
@@ -73,8 +82,8 @@ type OutputTenantApplication struct {
 	OccupationAddress string  `json:"occupation_address"            example:"456 Tech Ave, Accra"`
 	ProofOfIncomeUrl  *string `json:"proof_of_income_url,omitempty" example:"https://example.com/income.pdf"`
 
-	CreatedByID *string `json:"created_by_id,omitempty" example:"72432ce6-5620-4ecf-a862-4bf2140556a1"`
-	CreatedBy   *OutputClientUser
+	CreatedById *string           `json:"created_by_id,omitempty" example:"72432ce6-5620-4ecf-a862-4bf2140556a1"`
+	CreatedBy   *OutputClientUser `json:"created_by,omitempty"`
 
 	CreatedAt time.Time `json:"created_at" example:"2024-06-01T09:00:00Z"`
 	UpdatedAt time.Time `json:"updated_at" example:"2024-06-10T09:00:00Z"`
@@ -87,6 +96,7 @@ func DBTenantApplicationToRest(i *models.TenantApplication) any {
 
 	data := map[string]any{
 		"id":                                i.ID.String(),
+		"code":                              i.Code,
 		"status":                            i.Status,
 		"completed_at":                      i.CompletedAt,
 		"completed_by_id":                   i.CompletedById,
@@ -113,6 +123,14 @@ func DBTenantApplicationToRest(i *models.TenantApplication) any {
 		"security_deposit_reference_number": i.SecurityDepositReferenceNumber,
 		"security_deposit_paid_at":          i.SecurityDepositPaidAt,
 		"security_deposit_payment_id":       i.SecurityDepositPaymentId,
+		"lease_aggreement_document_mode":    i.LeaseAggreementDocumentMode,
+		"lease_agreement_document_url":      i.LeaseAgreementDocumentUrl,
+		"lease_agreement_document_property_manager_signed_by_id": i.LeaseAgreementDocumentPropertyManagerSignedById,
+		"lease_agreement_document_property_manager_signed_by": DBClientUserToRest(
+			i.LeaseAgreementDocumentPropertyManagerSignedBy,
+		),
+		"lease_agreement_document_property_manager_signed_at": i.LeaseAgreementDocumentPropertyManagerSignedAt,
+		"lease_agreement_document_tenant_signed_at":           i.LeaseAgreementDocumentTenantSignedAt,
 		"first_name":                        i.FirstName,
 		"other_names":                       i.OtherNames,
 		"last_name":                         i.LastName,
