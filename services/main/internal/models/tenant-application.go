@@ -88,7 +88,7 @@ type TenantApplication struct {
 	OccupationAddress string  `gorm:"not null;"` // or school address
 	ProofOfIncomeUrl  *string // or admission letter url
 
-	Code *string
+	Code *string `gorm:"uniqueIndex"`
 
 	CreatedById *string
 	CreatedBy   *ClientUser

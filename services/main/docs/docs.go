@@ -5463,6 +5463,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "+233281234569"
                 },
+                "profile_photo_url": {
+                    "type": "string",
+                    "example": "https://example.com/photo.jpg"
+                },
                 "relationship_to_emergency_contact": {
                     "type": "string",
                     "example": "Sister"
@@ -5994,10 +5998,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2023-01-01T00:00:00Z"
                 },
-                "initial_deposit_payment_id": {
-                    "type": "string",
-                    "example": "123456789"
-                },
                 "initial_deposit_payment_method": {
                     "type": "string",
                     "enum": [
@@ -6113,10 +6113,6 @@ const docTemplate = `{
                 "security_deposit_paid_at": {
                     "type": "string",
                     "example": "2023-01-01T00:00:00Z"
-                },
-                "security_deposit_payment_id": {
-                    "type": "string",
-                    "example": "576695af-6e14-4c78-8f92-f4aedb94d07a"
                 },
                 "security_deposit_payment_method": {
                     "type": "string",

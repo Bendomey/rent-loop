@@ -45,6 +45,7 @@ type CreateTenantApplicationRequest struct {
 	Occupation                     string    `json:"occupation"                        validate:"required"        example:"Software Engineer"                    description:"Occupation of the applicant"`
 	Employer                       string    `json:"employer"                          validate:"required"        example:"Acme Corp"                            description:"Employer of the applicant"`
 	OccupationAddress              string    `json:"occupation_address"                validate:"required"        example:"456 Tech Ave, Accra"                  description:"Occupation address"`
+	ProfilePhotoUrl                *string   `json:"profile_photo_url,omitempty"       validate:"omitempty,url"   example:"https://example.com/photo.jpg"        description:"Profile photo URL"`
 	CreatedById                    string    `json:"created_by_id"                     validate:"required,uuid"   example:"72432ce6-5620-4ecf-a862-4bf2140556a1" description:"ID of the user who created the tenant application"`
 }
 
@@ -94,6 +95,7 @@ func (h *TenantApplicationHandler) CreateTenantApplication(w http.ResponseWriter
 		Occupation:                     body.Occupation,
 		Employer:                       body.Employer,
 		OccupationAddress:              body.OccupationAddress,
+		ProfilePhotoUrl:                body.ProfilePhotoUrl,
 		CreatedById:                    body.CreatedById,
 	}
 
@@ -314,6 +316,9 @@ type UpdateTenantApplicationRequest struct {
 	StayDuration                   *int64     `json:"stay_duration,omitempty"                     validate:"omitempty"                                                                  example:"10"                                   description:"Stay duration"`
 	PaymentFrequency               *string    `json:"payment_frequency,omitempty"                 validate:"omitempty,oneof=Hourly Daily Monthly Quarterly BiAnnually Annually OneTime" example:"Hourly"                               description:"Payment frequency"`
 	InitialDepositFee              *int64     `json:"initial_deposit_fee,omitempty"               validate:"omitempty"                                                                  example:"1000"                                 description:"Initial deposit fee"`
+	InitialDepositPaymentMethod    *string    `json:"initial_deposit_payment_method,omitempty"    validate:"omitempty,oneof=ONLINE CASH EXTERNAL"                                       example:"ONLINE"                               description:"Initial deposit payment method"`
+	InitialDepositReferenceNumber  *string    `json:"initial_deposit_reference_number,omitempty"  validate:"omitempty"                                                                  example:"123456789"                            description:"Initial deposit reference number"`
+	InitialDepositPaidAt           *time.Time `json:"initial_deposit_paid_at,omitempty"           validate:"omitempty"                                                                  example:"2023-01-01T00:00:00Z"                 description:"Initial deposit paid at"`
 	SecurityDepositFee             *int64     `json:"security_deposit_fee,omitempty"              validate:"omitempty"                                                                  example:"1000"                                 description:"Security deposit fee"`
 	SecurityDepositFeeCurrency     *string    `json:"security_deposit_fee_currency,omitempty"     validate:"omitempty"                                                                  example:"GHS"                                  description:"Security deposit fee currency"`
 	SecurityDepositPaymentMethod   *string    `json:"security_deposit_payment_method,omitempty"   validate:"omitempty,oneof=ONLINE CASH EXTERNAL"                                       example:"ONLINE"                               description:"Security deposit payment method"`

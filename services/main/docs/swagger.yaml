@@ -306,6 +306,9 @@ definitions:
       phone:
         example: "+233281234569"
         type: string
+      profile_photo_url:
+        example: https://example.com/photo.jpg
+        type: string
       relationship_to_emergency_contact:
         example: Sister
         type: string
@@ -710,9 +713,6 @@ definitions:
       initial_deposit_paid_at:
         example: "2023-01-01T00:00:00Z"
         type: string
-      initial_deposit_payment_id:
-        example: "123456789"
-        type: string
       initial_deposit_payment_method:
         enum:
         - ONLINE
@@ -801,9 +801,6 @@ definitions:
         type: string
       security_deposit_paid_at:
         example: "2023-01-01T00:00:00Z"
-        type: string
-      security_deposit_payment_id:
-        example: 576695af-6e14-4c78-8f92-f4aedb94d07a
         type: string
       security_deposit_payment_method:
         enum:
