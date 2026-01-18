@@ -188,7 +188,7 @@ export function Step3() {
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Full Name</FormLabel>
+										<FormLabel>Full Name <span className="text-red-500">*</span></FormLabel>
 										<FormControl>
 											<Input
 												type="text"
@@ -206,7 +206,7 @@ export function Step3() {
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Relationship</FormLabel>
+										<FormLabel>Relationship <span className="text-red-500">*</span></FormLabel>
 										<FormControl>
 											<Input
 												type="text"
@@ -225,7 +225,7 @@ export function Step3() {
 							control={control}
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Phone Number</FormLabel>
+									<FormLabel>Phone Number <span className="text-red-500">*</span></FormLabel>
 									<FormControl>
 										<Input
 											type="tel"

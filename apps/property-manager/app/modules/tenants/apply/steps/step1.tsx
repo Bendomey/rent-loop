@@ -37,7 +37,7 @@ const ValidationSchema = z.object({
 	last_name: z
 		.string({ error: 'Last Name is required' })
 		.min(2, 'Please enter a valid name'),
-	email: z.email('Please enter a valid email address'),
+email: z.string().email('Please enter a valid email address').optional().or(z.literal('')),
 	phone: z
 		.string({ error: 'Phone Number is required' })
 		.min(9, 'Please enter a valid phone number'),
@@ -297,7 +297,7 @@ export function Step1() {
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>
-											Email <span className="text-red-500">*</span>
+											Email
 										</FormLabel>
 										<FormControl>
 											<Input {...field} type="text" />
