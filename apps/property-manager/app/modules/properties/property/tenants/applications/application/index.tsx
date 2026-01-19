@@ -15,21 +15,70 @@ import { Progress } from '~/components/ui/progress'
 import { localizedDayjs } from '~/lib/date'
 import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
+import CancelTenantApplicationModal from '../cancel'
+import { useState } from 'react'
 
-const tenant = {
+const tenant: TenantApplication = {
 	id: 't1',
-	name: 'Gideon Bempong',
-	since: 'Jan 2025',
-	location: 'Osu, Accra',
-	phone: '(233) 277099230',
+	on_boarding_method: 'ADMIN',
+	first_name: 'Gideon Bempong',
+	other_names: null,
+	last_name: 'Bempong',
 	email: 'gideon@example.com',
-	profile: 'https://github.com/shadcn.png',
-	status: 'Active',
+	phone: '(233) 277099230',
+	gender: 'MALE',
+	date_of_birth: '2001-01-01',
+	nationality: 'Ghanaian',
+	marital_status: 'SINGLE',
+	profile_photo_url: null,
+	id_type: 'PASSPORT',
+	id_number: '14564464',
+	id_front_url: null,
+	id_back_url: null,
+	status: 'TenantApplication.Status.InProgress',
+	current_address: 'Osu, Accra',
+	emergency_contact_name: 'John',
+	emergency_contact_phone: '0277099230',
+	relationship_to_emergency_contact: 'Father',
+	employment_type: 'WORKER',
+	occupation: 'Software Developer',
+	employer: 'RENT-LOOP',
+	occupation_address: 'Accra',
+	proof_of_income_url: null,
+	created_by: null,
+	created_by_id: 'admin1',
+	completed_at: null,
+	completed_by_id: null,
+	completed_by: null,
+	cancelled_at: null,
+	cancelled_by_id: null,
+	cancelled_by: null,
+	desired_unit_id: 'unit1',
+	desired_unit: {
+		id: 'unit1',
+		name: 'Unit 103',
+		rent_fee: 5000,
+		rent_fee_currency: 'GHS',
+		area: 2.33,
+		description: 'Great office space',
+		type: 'APARTMENT',
+		features: {},
+		tags: ['office'],
+		images: [],
+		payment_frequency: 'MONTHLY',
+		slug: 'unit-103-u4y6yjjgns',
+	},
+	previous_landlord_name: null,
+	previous_landlord_phone: null,
+	previous_tenancy_period: null,
+	created_at: new Date(),
+	updated_at: new Date(),
 }
 
 export function PropertyTenantApplicationContainer() {
 	const { applicationId } = useParams()
 	const { clientUserProperty } = useProperty()
+	const [openCancelModal, setOpenCancelModal] = useState(false)
 
 	const baseUrl = `/properties/${clientUserProperty?.property?.id}/tenants/applications/${applicationId}`
 	return (
@@ -54,10 +103,17 @@ export function PropertyTenantApplicationContainer() {
 				</div>
 			</div>
 			<div className="col-span-4">
-				<div className="mb-3 flex w-full flex-row items-center justify-end space-x-2">
-					<Button variant={'secondary'}>Cancel</Button>
-					<Button>Approve</Button>
-				</div>
+				{tenant.status === 'TenantApplication.Status.InProgress' ? (
+					<div className="mb-3 flex w-full flex-row items-center justify-end space-x-2">
+						<Button
+							variant={'secondary'}
+							onClick={() => setOpenCancelModal(true)}
+						>
+							Cancel
+						</Button>
+						<Button>Approve</Button>
+					</div>
+				) : null}
 				<Card key={tenant.id} className="mt-10 rounded-md shadow-none">
 					<CardHeader>
 						<CardTitle className="text-2xl font-bold">
@@ -98,6 +154,11 @@ export function PropertyTenantApplicationContainer() {
 					</CardContent>
 				</Card>
 			</div>
+			<CancelTenantApplicationModal
+				opened={openCancelModal}
+				setOpened={setOpenCancelModal}
+				data={tenant}
+			/>
 		</div>
 	)
 }

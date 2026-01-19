@@ -28,7 +28,7 @@ interface Props {
 	data?: TenantApplication
 	opened: boolean
 	setOpened: Dispatch<SetStateAction<boolean>>
-	refetch: VoidFunction
+	refetch?: VoidFunction
 }
 
 const ValidationSchema = z.object({
