@@ -2,6 +2,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { CircleCheck, CircleX, EllipsisVertical, User } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
+import ApproveTenantApplicationModal from './approve'
 import CancelTenantApplicationModal from './cancel'
 import { PropertyTenantApplicationsController } from './controller'
 import { useGetPropertyTenantApplications } from '~/api/tenant-applications'
@@ -23,6 +24,7 @@ import { useProperty } from '~/providers/property-provider'
 export function PropertyTenantApplicationsModule() {
 	const [searchParams] = useSearchParams()
 	const { clientUserProperty } = useProperty()
+	const [openApproveModal, setOpenApproveModal] = useState(false)
 	const [openCancelModal, setOpenCancelModal] = useState(false)
 	const [selectedApplication, setSelectedApplication] =
 		useState<TenantApplication>()
@@ -193,6 +195,16 @@ export function PropertyTenantApplicationsModule() {
 											<CircleX className="h-4 w-4" />
 											<span>Cancel</span>
 										</DropdownMenuItem>
+										<DropdownMenuItem
+											className="flex items-center gap-2 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-600 focus:bg-emerald-50 focus:text-emerald-600"
+											onClick={() => {
+												setSelectedApplication(row.original)
+												setOpenApproveModal(true)
+											}}
+										>
+											<CircleCheck className="h-4 w-4" />
+											<span>Approve</span>
+										</DropdownMenuItem>
 									</>
 								) : null}
 							</DropdownMenuContent>
@@ -243,6 +255,13 @@ export function PropertyTenantApplicationsModule() {
 			<CancelTenantApplicationModal
 				opened={openCancelModal}
 				setOpened={setOpenCancelModal}
+				refetch={refetch}
+				data={selectedApplication}
+			/>
+
+			<ApproveTenantApplicationModal
+				opened={openApproveModal}
+				setOpened={setOpenApproveModal}
 				refetch={refetch}
 				data={selectedApplication}
 			/>
