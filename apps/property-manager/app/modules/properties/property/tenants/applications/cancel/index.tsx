@@ -4,6 +4,7 @@ import { useEffect, type Dispatch, type SetStateAction } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { useCancelTenantApplication } from '~/api/tenant-applications'
 import {
 	AlertDialog,
 	AlertDialogContent,
@@ -69,8 +70,7 @@ function CancelTenantApplicationModal({ opened, setOpened, data }: Props) {
 		}
 	}, [data, reset])
 
-	const isPending = false
-	const mutate = ({ id, reason }: { id: string; reason: string }, {}) => {}
+	const { isPending, mutate } = useCancelTenantApplication()
 
 	const onSubmit = (data: FormSchema) => {
 		if (data) {

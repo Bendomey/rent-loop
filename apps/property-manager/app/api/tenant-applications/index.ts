@@ -132,3 +132,38 @@ export const useInviteTenateToProperty = () =>
 	useMutation({
 		mutationFn: inviteTenantToProperty,
 	})
+
+interface cancelTenantApplicationProps {
+	id: string
+	reason: string
+}
+
+/**
+ * Cancel Tenant Application
+ */
+const cancelTenantApplication = async ({
+	id,
+	reason,
+}: cancelTenantApplicationProps) => {
+	try {
+		const response = await fetchClient<ApiResponse<TenantApplication>>(
+			`/v1/tenant-applications/${id}/cancel`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify({ reason }),
+			},
+		)
+		return response.parsedBody.data
+	} catch (error) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+export const useCancelTenantApplication = () =>
+	useMutation({ mutationFn: cancelTenantApplication })
