@@ -167,3 +167,29 @@ const cancelTenantApplication = async ({
 }
 export const useCancelTenantApplication = () =>
 	useMutation({ mutationFn: cancelTenantApplication })
+
+
+/**
+ * approve tenant application
+ */
+
+const approveTenantApplication = async (id: string) => {
+	try {
+		await fetchClient<boolean>(`/v1/tenant-applications/${id}/approve`, {
+			method: 'PATCH',
+		})
+	} catch (error) {
+		if (error instanceof Error) {
+			throw error
+		}
+
+		// Error from server.
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.message)
+		}
+	}
+}
+
+export const useApproveTenantApplication = () =>
+	useMutation({ mutationFn: approveTenantApplication })
