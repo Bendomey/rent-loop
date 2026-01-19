@@ -17,11 +17,12 @@ import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
 import CancelTenantApplicationModal from '../cancel'
 import { useState } from 'react'
+import ApproveTenantApplicationModal from '../approve'
 
 const tenant: TenantApplication = {
 	id: 't1',
 	on_boarding_method: 'ADMIN',
-	first_name: 'Gideon Bempong',
+	first_name: 'Gideon',
 	other_names: null,
 	last_name: 'Bempong',
 	email: 'gideon@example.com',
@@ -79,6 +80,7 @@ export function PropertyTenantApplicationContainer() {
 	const { applicationId } = useParams()
 	const { clientUserProperty } = useProperty()
 	const [openCancelModal, setOpenCancelModal] = useState(false)
+	const [openApproveModal, setOpenApproveModal] = useState(false)
 
 	const baseUrl = `/properties/${clientUserProperty?.property?.id}/tenants/applications/${applicationId}`
 	return (
@@ -111,7 +113,7 @@ export function PropertyTenantApplicationContainer() {
 						>
 							Cancel
 						</Button>
-						<Button>Approve</Button>
+						<Button onClick={() => setOpenApproveModal(true)}>Approve</Button>
 					</div>
 				) : null}
 				<Card key={tenant.id} className="mt-10 rounded-md shadow-none">
@@ -157,6 +159,11 @@ export function PropertyTenantApplicationContainer() {
 			<CancelTenantApplicationModal
 				opened={openCancelModal}
 				setOpened={setOpenCancelModal}
+				data={tenant}
+			/>
+			<ApproveTenantApplicationModal
+				opened={openApproveModal}
+				setOpened={setOpenApproveModal}
 				data={tenant}
 			/>
 		</div>
