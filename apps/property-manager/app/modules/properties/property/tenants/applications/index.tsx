@@ -1,5 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { CircleCheck, CircleX, EllipsisVertical, User } from 'lucide-react'
+import { CircleCheck, CircleX, Delete, EllipsisVertical, Trash2, User } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import ApproveTenantApplicationModal from './approve'
@@ -20,12 +20,14 @@ import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { useProperty } from '~/providers/property-provider'
+import DeleteTenantApplicationModal from './delete'
 
 export function PropertyTenantApplicationsModule() {
 	const [searchParams] = useSearchParams()
 	const { clientUserProperty } = useProperty()
 	const [openApproveModal, setOpenApproveModal] = useState(false)
 	const [openCancelModal, setOpenCancelModal] = useState(false)
+	const [openDeleteModal, setOpenDeleteModal] = useState(false)
 	const [selectedApplication, setSelectedApplication] =
 		useState<TenantApplication>()
 
@@ -181,10 +183,10 @@ export function PropertyTenantApplicationsModule() {
 								>
 									<DropdownMenuItem>View</DropdownMenuItem>
 								</Link>
+								<DropdownMenuSeparator />
 								{row.original.status ===
 								'TenantApplication.Status.InProgress' ? (
 									<>
-										<DropdownMenuSeparator />
 										<DropdownMenuItem
 											className="flex items-center gap-2 text-rose-600 hover:bg-red-50 hover:text-rose-600 focus:bg-rose-50 focus:text-rose-600"
 											onClick={() => {
@@ -206,7 +208,19 @@ export function PropertyTenantApplicationsModule() {
 											<span>Approve</span>
 										</DropdownMenuItem>
 									</>
-								) : null}
+								) :  null}
+								{row.original.status === 'TenantApplication.Status.Cancelled' ? (
+										<DropdownMenuItem
+											className="flex items-center gap-2 text-rose-600 hover:bg-red-50 hover:text-rose-600 focus:bg-rose-50 focus:text-rose-600"
+											onClick={() => {
+												setSelectedApplication(row.original)
+												setOpenDeleteModal(true)
+											}}
+										>
+											<Trash2 className="h-4 w-4" />
+											<span>Delete</span>
+										</DropdownMenuItem>
+									) : null}
 							</DropdownMenuContent>
 						</DropdownMenu>
 					)
@@ -263,6 +277,12 @@ export function PropertyTenantApplicationsModule() {
 				opened={openApproveModal}
 				setOpened={setOpenApproveModal}
 				refetch={refetch}
+				data={selectedApplication}
+			/>
+
+			<DeleteTenantApplicationModal
+				opened={openDeleteModal}
+				setOpened={setOpenDeleteModal}
 				data={selectedApplication}
 			/>
 		</div>

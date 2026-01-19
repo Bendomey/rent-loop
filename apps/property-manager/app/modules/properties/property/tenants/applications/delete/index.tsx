@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { Dispatch, SetStateAction } from 'react'
 import { toast } from 'sonner'
-import { useDeleteTenantApplication } from '~/api/blocks'
+import { useDeleteTenantApplication } from '~/api/tenant-applications'
 import {
 	AlertDialog,
 	AlertDialogContent,
@@ -80,7 +80,8 @@ export default function DeleteTenantApplicationModal({
 					</AlertDialogCancel>
 
 					<AlertDialogAction
-						disabled={isPending}
+						// ToDo: Change to disabled={isPending} after integrations are done
+						disabled
 						onClick={() => handleSubmit()}
 						className="bg-primary hover:bg-primary/90 text-white"
 					>
