@@ -1,7 +1,8 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { CircleCheck, CircleX, EllipsisVertical, User } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
+import CancelTenantApplicationModal from './cancel'
 import { PropertyTenantApplicationsController } from './controller'
 import { useGetPropertyTenantApplications } from '~/api/tenant-applications'
 import { DataTable } from '~/components/datatable'
@@ -11,6 +12,7 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
+	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
@@ -21,6 +23,9 @@ import { useProperty } from '~/providers/property-provider'
 export function PropertyTenantApplicationsModule() {
 	const [searchParams] = useSearchParams()
 	const { clientUserProperty } = useProperty()
+	const [openCancelModal, setOpenCancelModal] = useState(false)
+	const [selectedApplication, setSelectedApplication] =
+		useState<TenantApplication>()
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -174,7 +179,22 @@ export function PropertyTenantApplicationsModule() {
 								>
 									<DropdownMenuItem>View</DropdownMenuItem>
 								</Link>
-								{/* <DropdownMenuSeparator /> */}
+								{row.original.status ===
+								'TenantApplication.Status.InProgress' ? (
+									<>
+										<DropdownMenuSeparator />
+										<DropdownMenuItem
+											className="flex items-center gap-2 text-rose-600 hover:bg-red-50 hover:text-rose-600 focus:bg-rose-50 focus:text-rose-600"
+											onClick={() => {
+												setSelectedApplication(row.original)
+												setOpenCancelModal(true)
+											}}
+										>
+											<CircleX className="h-4 w-4" />
+											<span>Cancel</span>
+										</DropdownMenuItem>
+									</>
+								) : null}
 							</DropdownMenuContent>
 						</DropdownMenu>
 					)
@@ -219,6 +239,13 @@ export function PropertyTenantApplicationsModule() {
 					}}
 				/>
 			</div>
+
+			<CancelTenantApplicationModal
+				opened={openCancelModal}
+				setOpened={setOpenCancelModal}
+				refetch={refetch}
+				data={selectedApplication}
+			/>
 		</div>
 	)
 }

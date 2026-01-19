@@ -169,7 +169,9 @@ export function Step2() {
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Nationality <span className="text-red-500">*</span></FormLabel>
+										<FormLabel>
+											Nationality <span className="text-red-500">*</span>
+										</FormLabel>
 										<FormControl>
 											<Input
 												type="text"
@@ -187,7 +189,9 @@ export function Step2() {
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>ID Type <span className="text-red-500">*</span></FormLabel>
+										<FormLabel>
+											ID Type <span className="text-red-500">*</span>
+										</FormLabel>
 										<FormControl>
 											<Select
 												onValueChange={field.onChange}
@@ -220,7 +224,9 @@ export function Step2() {
 								control={control}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>ID Number <span className="text-red-500">*</span></FormLabel>
+										<FormLabel>
+											ID Number <span className="text-red-500">*</span>
+										</FormLabel>
 										<FormControl>
 											<Input
 												type="text"

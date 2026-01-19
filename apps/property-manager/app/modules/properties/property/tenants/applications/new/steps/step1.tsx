@@ -40,7 +40,11 @@ const ValidationSchema = z.object({
 	last_name: z
 		.string({ error: 'Last Name is required' })
 		.min(2, 'Please enter a valid name'),
-email: z.string().email('Please enter a valid email address').optional().or(z.literal('')),
+	email: z
+		.string()
+		.email('Please enter a valid email address')
+		.optional()
+		.or(z.literal('')),
 	phone: z
 		.string({ error: 'Phone Number is required' })
 		.min(9, 'Please enter a valid phone number'),
@@ -215,7 +219,9 @@ export function Step1() {
 							control={control}
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>First Name <span className="text-red-500">*</span></FormLabel>
+									<FormLabel>
+										First Name <span className="text-red-500">*</span>
+									</FormLabel>
 									<FormControl>
 										<Input type="text" {...field} />
 									</FormControl>
@@ -241,7 +247,9 @@ export function Step1() {
 							control={control}
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Last Name <span className="text-red-500">*</span></FormLabel>
+									<FormLabel>
+										Last Name <span className="text-red-500">*</span>
+									</FormLabel>
 									<FormControl>
 										<Input type="text" {...field} />
 									</FormControl>
@@ -255,7 +263,9 @@ export function Step1() {
 							control={control}
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Gender <span className="text-red-500">*</span></FormLabel>
+									<FormLabel>
+										Gender <span className="text-red-500">*</span>
+									</FormLabel>
 									<FormControl>
 										<Select value={field.value} onValueChange={field.onChange}>
 											<SelectTrigger className="w-full">
@@ -296,7 +306,9 @@ export function Step1() {
 							control={control}
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Phone <span className="text-red-500">*</span></FormLabel>
+									<FormLabel>
+										Phone <span className="text-red-500">*</span>
+									</FormLabel>
 									<FormControl>
 										<Input {...field} type="text" />
 									</FormControl>
@@ -313,7 +325,9 @@ export function Step1() {
 							control={control}
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Date of birth <span className="text-red-500">*</span></FormLabel>
+									<FormLabel>
+										Date of birth <span className="text-red-500">*</span>
+									</FormLabel>
 									<FormControl>
 										<DatePickerInput
 											value={field.value}
@@ -330,7 +344,9 @@ export function Step1() {
 							control={control}
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Marital Status <span className="text-red-500">*</span></FormLabel>
+									<FormLabel>
+										Marital Status <span className="text-red-500">*</span>
+									</FormLabel>
 									<FormControl>
 										<Select value={field.value} onValueChange={field.onChange}>
 											<SelectTrigger className="w-full">
@@ -356,7 +372,9 @@ export function Step1() {
 						control={control}
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>Address <span className="text-red-500">*</span></FormLabel>
+								<FormLabel>
+									Address <span className="text-red-500">*</span>
+								</FormLabel>
 								<FormControl>
 									<Input
 										type="text"

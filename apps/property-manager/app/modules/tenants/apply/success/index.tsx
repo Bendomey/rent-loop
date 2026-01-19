@@ -66,7 +66,6 @@ export function TenantApplySuccessModule() {
 							Your information is encrypted and secure.
 						</p>
 					</div>
-
 				</div>
 			</div>
 		</>
