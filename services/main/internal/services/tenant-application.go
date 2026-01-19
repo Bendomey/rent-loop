@@ -78,6 +78,7 @@ type CreateTenantApplicationInput struct {
 	Occupation                     string
 	Employer                       string
 	OccupationAddress              string
+	ProfilePhotoUrl                *string
 	CreatedById                    string
 }
 
@@ -117,6 +118,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		Occupation:                     input.Occupation,
 		Employer:                       input.Employer,
 		OccupationAddress:              input.OccupationAddress,
+		ProfilePhotoUrl:                input.ProfilePhotoUrl,
 		CreatedById:                    &input.CreatedById,
 		Status:                         "TenantApplication.Status.InProgress",
 	}
@@ -131,6 +133,32 @@ func (s *tenantApplicationService) CreateTenantApplication(
 			},
 		})
 	}
+
+	message := strings.NewReplacer(
+		"{{applicant_name}}", tenantApplication.FirstName,
+		"{{unit_name}}", unit.Name,
+		"{{application_code}}", *tenantApplication.Code,
+		"{{submission_date}}", tenantApplication.CreatedAt.Format("2006-01-02 at 03:04 PM"),
+	).Replace(lib.TENANT_APPLICATION_SUBMITTED_BODY)
+
+	if input.Email != nil {
+		go pkg.SendEmail(
+			s.appCtx,
+			pkg.SendEmailInput{
+				Recipient: *input.Email,
+				Subject:   lib.TENANT_APPLICATION_SUBMITTED_SUBJECT,
+				TextBody:  message,
+			},
+		)
+	}
+
+	go pkg.SendSMS(
+		s.appCtx,
+		pkg.SendSMSInput{
+			Recipient: input.Phone,
+			Message:   message,
+		},
+	)
 
 	return &tenantApplication, nil
 }
@@ -251,49 +279,54 @@ func (s *tenantApplicationService) GetOneTenantApplication(
 }
 
 type UpdateTenantApplicationInput struct {
-	TenantApplicationID            string
-	DesiredUnitId                  *string
-	RentFee                        *int64
-	RentFeeCurrency                *string
-	FirstName                      *string
-	LastName                       *string
-	Phone                          *string
-	Gender                         *string
-	DateOfBirth                    *time.Time
-	Nationality                    *string
-	MaritalStatus                  *string
-	IDNumber                       *string
-	CurrentAddress                 *string
-	EmergencyContactName           *string
-	EmergencyContactPhone          *string
-	RelationshipToEmergencyContact *string
-	Occupation                     *string
-	Employer                       *string
-	OccupationAddress              *string
-	DesiredMoveInDate              *time.Time
-	StayDurationFrequency          *string
-	StayDuration                   *int64
-	PaymentFrequency               *string
-	InitialDepositFee              *int64
-	InitialDepositPaymentMethod    *string
-	InitialDepositReferenceNumber  *string
-	InitialDepositPaidAt           *time.Time
-	InitialDepositPaymentId        *string
-	SecurityDepositFee             *int64
-	SecurityDepositFeeCurrency     *string
-	SecurityDepositPaymentMethod   *string
-	SecurityDepositReferenceNumber *string
-	SecurityDepositPaidAt          *time.Time
-	SecurityDepositPaymentId       *string
-	OtherNames                     *string
-	Email                          *string
-	ProfilePhotoUrl                *string
-	IDFrontUrl                     *string
-	IDBackUrl                      *string
-	PreviousLandlordName           *string
-	PreviousLandlordPhone          *string
-	PreviousTenancyPeriod          *string
-	ProofOfIncomeUrl               *string
+	TenantApplicationID                             string
+	DesiredUnitId                                   *string
+	RentFee                                         *int64
+	RentFeeCurrency                                 *string
+	FirstName                                       *string
+	LastName                                        *string
+	Phone                                           *string
+	Gender                                          *string
+	DateOfBirth                                     *time.Time
+	Nationality                                     *string
+	MaritalStatus                                   *string
+	IDNumber                                        *string
+	CurrentAddress                                  *string
+	EmergencyContactName                            *string
+	EmergencyContactPhone                           *string
+	RelationshipToEmergencyContact                  *string
+	Occupation                                      *string
+	Employer                                        *string
+	OccupationAddress                               *string
+	DesiredMoveInDate                               *time.Time
+	StayDurationFrequency                           *string
+	StayDuration                                    *int64
+	PaymentFrequency                                *string
+	InitialDepositFee                               *int64
+	InitialDepositPaymentMethod                     *string
+	InitialDepositReferenceNumber                   *string
+	InitialDepositPaidAt                            *time.Time
+	InitialDepositPaymentId                         *string
+	SecurityDepositFee                              *int64
+	SecurityDepositFeeCurrency                      *string
+	SecurityDepositPaymentMethod                    *string
+	SecurityDepositReferenceNumber                  *string
+	SecurityDepositPaidAt                           *time.Time
+	SecurityDepositPaymentId                        *string
+	OtherNames                                      *string
+	Email                                           *string
+	ProfilePhotoUrl                                 *string
+	IDFrontUrl                                      *string
+	IDBackUrl                                       *string
+	PreviousLandlordName                            *string
+	PreviousLandlordPhone                           *string
+	PreviousTenancyPeriod                           *string
+	ProofOfIncomeUrl                                *string
+	LeaseAggreementDocumentMode                     *string
+	LeaseAgreementDocumentUrl                       *string
+	LeaseAgreementDocumentPropertyManagerSignedById *string
+	LeaseAgreementDocumentPropertyManagerSignedAt   *time.Time
+	LeaseAgreementDocumentTenantSignedAt            *time.Time
 }
 
 func (s *tenantApplicationService) UpdateTenantApplication(
@@ -423,6 +456,13 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 
 	tenantApplication.ProofOfIncomeUrl = input.ProofOfIncomeUrl
 
+	tenantApplication.LeaseAggreementDocumentMode = input.LeaseAggreementDocumentMode
+	tenantApplication.LeaseAgreementDocumentUrl = input.LeaseAgreementDocumentUrl
+
+	tenantApplication.LeaseAgreementDocumentPropertyManagerSignedById = input.LeaseAgreementDocumentPropertyManagerSignedById
+	tenantApplication.LeaseAgreementDocumentPropertyManagerSignedAt = input.LeaseAgreementDocumentPropertyManagerSignedAt
+	tenantApplication.LeaseAgreementDocumentTenantSignedAt = input.LeaseAgreementDocumentTenantSignedAt
+
 	updateTenantApplicationErr := s.repo.Update(ctx, *tenantApplication)
 	if updateTenantApplicationErr != nil {
 		return nil, pkg.InternalServerError(updateTenantApplicationErr.Error(), &pkg.RentLoopErrorParams{
@@ -532,7 +572,7 @@ func (s *tenantApplicationService) CancelTenantApplication(
 
 	message := strings.NewReplacer(
 		"{{applicant_name}}", tenantApplication.FirstName,
-		"{{application_id}}", tenantApplication.ID.String(),
+		"{{application_code}}", *tenantApplication.Code,
 		"{{reason}}", input.Reason,
 	).Replace(lib.TENANT_CANCELLED_BODY)
 

@@ -2,6 +2,10 @@ package models
 
 import (
 	"time"
+
+	"github.com/getsentry/raven-go"
+	gonanoid "github.com/matoous/go-nanoid"
+	"gorm.io/gorm"
 )
 
 // TenantApplication represents an application submitted by a prospective tenant for a specific unit.
@@ -84,6 +88,22 @@ type TenantApplication struct {
 	OccupationAddress string  `gorm:"not null;"` // or school address
 	ProofOfIncomeUrl  *string // or admission letter url
 
+	Code *string `gorm:"uniqueIndex"`
+
 	CreatedById *string
 	CreatedBy   *ClientUser
+}
+
+func (t *TenantApplication) BeforeCreate(tx *gorm.DB) error {
+	code, err := gonanoid.Generate("abcdefghijklmnopqrstuvwxyz1234567890", 8)
+	if err != nil {
+		raven.CaptureError(err, map[string]string{
+			"function": "BeforeCreateTenantApplicationHook",
+			"action":   "Generating a random suffix",
+		})
+		return err
+	}
+
+	t.Code = &code
+	return nil
 }

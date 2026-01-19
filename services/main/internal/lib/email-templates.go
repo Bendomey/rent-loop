@@ -171,7 +171,7 @@ const (
 	TENANT_CANCELLED_BODY    = `
 Hello {{applicant_name}},
 
-We are writing to inform you that your tenant application (Application ID: {{application_id}}) has been cancelled.
+We are writing to inform you that your tenant application (Application Code: {{application_code}}) has been cancelled.
 
 Reason for cancellation:
 {{reason}}
@@ -179,6 +179,32 @@ Reason for cancellation:
 If you believe this was done in error or if you would like further clarification, please feel free to contact us for assistance.
 
 Thank you for your interest, and we wish you the best in your housing search.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop team
+`
+)
+
+const (
+	TENANT_APPLICATION_SUBMITTED_SUBJECT = "Tenant Application Submitted Successfully"
+	TENANT_APPLICATION_SUBMITTED_BODY    = `
+Hello {{applicant_name}},
+
+Your tenant application has been successfully submitted and is now under review.
+
+Application Details:
+
+Unit: {{unit_name}}
+
+Application Code: {{application_code}}
+
+Submitted on: {{submission_date}}
+
+Our team will review your application and contact you if additional information is needed. You will be notified once a decision has been made.
+
+Thank you for your interest.
 
 {{SUPPORT_DETAILS_TEMPLATE}}
 

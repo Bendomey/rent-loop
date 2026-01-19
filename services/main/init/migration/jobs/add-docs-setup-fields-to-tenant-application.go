@@ -11,7 +11,6 @@ func AddDocsSetupFieldsToTenantApplication() *gormigrate.Migration {
 		"LeaseAggreementDocumentMode",
 		"LeaseAgreementDocumentUrl",
 		"LeaseAgreementDocumentPropertyManagerSignedById",
-		"LeaseAgreementDocumentPropertyManagerSignedBy",
 		"LeaseAgreementDocumentPropertyManagerSignedAt",
 		"LeaseAgreementDocumentTenantSignedAt",
 	}
