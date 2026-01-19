@@ -193,20 +193,14 @@ const approveTenantApplication = async (id: string) => {
 export const useApproveTenantApplication = () =>
 	useMutation({ mutationFn: approveTenantApplication })
 
-
 /**
  * Delete Tenant Application
  */
-const deleteTenantApplication = async (props: {
-	id: string
-}) => {
+const deleteTenantApplication = async (props: { id: string }) => {
 	try {
-		await fetchClient(
-			`/v1/tenant-applications/${props.id}`,
-			{
-				method: 'DELETE',
-			},
-		)
+		await fetchClient(`/v1/tenant-applications/${props.id}`, {
+			method: 'DELETE',
+		})
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()

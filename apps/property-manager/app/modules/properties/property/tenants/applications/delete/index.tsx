@@ -43,7 +43,9 @@ export default function DeleteTenantApplicationModal({
 				},
 				{
 					onError: () => {
-						toast.error(`Failed to delete ${name} application. Try again later.`)
+						toast.error(
+							`Failed to delete ${name} application. Try again later.`,
+						)
 					},
 					onSuccess: () => {
 						toast.success(`${name} application has been successfully deleted`)
