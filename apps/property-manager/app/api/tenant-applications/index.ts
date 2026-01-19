@@ -168,7 +168,6 @@ const cancelTenantApplication = async ({
 export const useCancelTenantApplication = () =>
 	useMutation({ mutationFn: cancelTenantApplication })
 
-
 /**
  * approve tenant application
  */

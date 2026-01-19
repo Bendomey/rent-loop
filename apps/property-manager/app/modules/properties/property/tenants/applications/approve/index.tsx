@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { Dispatch, SetStateAction } from 'react'
 import { toast } from 'sonner'
+import { useApproveTenantApplication } from '~/api/tenant-applications'
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -29,8 +30,7 @@ function ApproveTenantApplicationModal({ opened, setOpened, data }: Props) {
 			.filter(Boolean)
 			.join(' ') + "'s"
 
-	const isPending = false
-	const mutate = ({}, {}) => {}
+	const { isPending, mutate } = useApproveTenantApplication()
 
 	const handleSubmit = () => {
 		if (data) {
