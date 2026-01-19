@@ -133,9 +133,6 @@ export const useInviteTenateToProperty = () =>
 		mutationFn: inviteTenantToProperty,
 	})
 
-
-
-
 interface cancelTenantApplicationProps {
 	id: string
 	reason: string
@@ -152,7 +149,7 @@ const cancelTenantApplication = async ({
 		const response = await fetchClient<ApiResponse<TenantApplication>>(
 			`/v1/tenant-applications/${id}/cancel`,
 			{
-				method: 'POST',
+				method: 'PATCH',
 				body: JSON.stringify({ reason }),
 			},
 		)
