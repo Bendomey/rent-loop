@@ -24,7 +24,11 @@ import {
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
-import { getPaymentMethodLabel } from '~/lib/payment.utils'
+import {
+	getPaymentMethodLabel,
+	getPaymentStatusLabel,
+} from '~/lib/payment.utils'
+import { formatAmount } from '~/lib/format-amount'
 import { useProperty } from '~/providers/property-provider'
 
 const data = {
@@ -203,7 +207,7 @@ export function TenantPaymentsModule() {
 				header: 'Amount',
 				cell: ({ row }) => (
 					<span className="truncate text-xs font-semibold text-zinc-800">
-						{row.original.currency} {row.original.amount ?? 'N/A'}
+						{formatAmount(row.original.amount) ?? 'N/A'}
 					</span>
 				),
 			},
@@ -241,13 +245,8 @@ export function TenantPaymentsModule() {
 						) : (
 							<CircleX className="fill-red-500 text-white" />
 						)}
-						{getValue<string>() === 'Payment.Status.Pending'
-							? 'Processing'
-							: getValue<string>() === 'Payment.Status.Successful'
-								? 'Paid'
-								: getValue<string>() === 'Payment.Status.Expired'
-									? 'Overdue'
-									: 'Failed'}
+
+						{getPaymentStatusLabel(getValue<Payment['status']>())}
 					</Badge>
 				),
 			},
