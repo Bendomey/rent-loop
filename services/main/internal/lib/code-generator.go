@@ -9,7 +9,7 @@ import (
 )
 
 func GenerateCode(db *gorm.DB, model any) (*string, error) {
-	code, err := gonanoid.Generate("abcdefghijklmnopqrstuvwxyz1234567890", 6)
+	code, err := gonanoid.Generate("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890", 6)
 	if err != nil {
 		return nil, err
 	}
