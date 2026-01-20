@@ -230,7 +230,7 @@ export function PropertyFinancialsRentPaymentsModule() {
 				accessorKey: 'amount',
 				header: 'Amount',
 				cell: ({ row }) => (
-					<span className="truncate text-xs text-zinc-900">
+					<span className="truncate text-xs font-semibold text-zinc-800">
 						{row.original.currency} {row.original.amount ?? 'N/A'}
 					</span>
 				),
