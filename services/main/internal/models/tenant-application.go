@@ -3,8 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/getsentry/raven-go"
-	gonanoid "github.com/matoous/go-nanoid"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"gorm.io/gorm"
 )
 
@@ -95,15 +94,8 @@ type TenantApplication struct {
 }
 
 func (t *TenantApplication) BeforeCreate(tx *gorm.DB) error {
-	code, err := gonanoid.Generate("abcdefghijklmnopqrstuvwxyz1234567890", 8)
-	if err != nil {
-		raven.CaptureError(err, map[string]string{
-			"function": "BeforeCreateTenantApplicationHook",
-			"action":   "Generating a random suffix",
-		})
-		return err
-	}
+	uniqueCode := lib.GenerateCode(tx, &TenantApplication{})
 
-	t.Code = &code
+	t.Code = &uniqueCode
 	return nil
 }
