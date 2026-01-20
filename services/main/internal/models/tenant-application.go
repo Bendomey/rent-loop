@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/getsentry/raven-go"
 	"gorm.io/gorm"
 )
 
@@ -94,8 +95,15 @@ type TenantApplication struct {
 }
 
 func (t *TenantApplication) BeforeCreate(tx *gorm.DB) error {
-	uniqueCode := lib.GenerateCode(tx, &TenantApplication{})
+	uniqueCode, genErr := lib.GenerateCode(tx, &TenantApplication{})
+	if genErr != nil {
+		raven.CaptureError(genErr, map[string]string{
+			"function": "BeforeCreateTenantApplicationHook",
+			"action":   "Generating a unique code",
+		})
+		return genErr
+	}
 
-	t.Code = &uniqueCode
+	t.Code = uniqueCode
 	return nil
 }

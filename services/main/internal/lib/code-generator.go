@@ -4,19 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/getsentry/raven-go"
 	gonanoid "github.com/matoous/go-nanoid"
 	"gorm.io/gorm"
 )
 
-func GenerateCode(db *gorm.DB, model any) string {
+func GenerateCode(db *gorm.DB, model any) (*string, error) {
 	code, err := gonanoid.Generate("abcdefghijklmnopqrstuvwxyz1234567890", 6)
 	if err != nil {
-		raven.CaptureError(err, map[string]string{
-			"function": "BeforeCreateTenantApplicationHook",
-			"action":   "Generating a random suffix",
-		})
-		return ""
+		return nil, err
 	}
 
 	year, month, _ := time.Now().Date()
@@ -28,5 +23,5 @@ func GenerateCode(db *gorm.DB, model any) string {
 		return GenerateCode(db, model)
 	}
 
-	return uniqueCode
+	return &uniqueCode, nil
 }
