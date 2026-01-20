@@ -9,6 +9,8 @@ import {
 } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
+import { RentPaymentSectionCards } from './components/cards'
+import { PropertyFinancialsRentPaymentController } from './controller'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -22,9 +24,12 @@ import {
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
+import { formatAmount } from '~/lib/format-amount'
+import {
+	getPaymentMethodLabel,
+	getPaymentStatusLabel,
+} from '~/lib/payment.utils'
 import { useProperty } from '~/providers/property-provider'
-import { PropertyFinancialsRentPaymentController } from './controller'
-import { RentPaymentSectionCards } from './components/cards'
 
 const data = {
 	rows: [
@@ -160,14 +165,6 @@ const data = {
 	},
 }
 
-const labelMap: Record<string, string> = {
-	CREDIT_CARD: 'Credit Card',
-	BANK_TRANSFER: 'Bank Transfer',
-	CASH: 'Cash',
-	CHECK: 'Cheque',
-	MOMO: 'Momo',
-}
-
 const isPending = false
 const isRefetching = false
 const error = null
@@ -231,7 +228,7 @@ export function PropertyFinancialsRentPaymentsModule() {
 				header: 'Amount',
 				cell: ({ row }) => (
 					<span className="truncate text-xs font-semibold text-zinc-800">
-						{row.original.currency} {row.original.amount ?? 'N/A'}
+						{formatAmount(row.original.amount) ?? 'N/A'}
 					</span>
 				),
 			},
@@ -241,7 +238,7 @@ export function PropertyFinancialsRentPaymentsModule() {
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
 						<span className="truncate text-xs text-zinc-600">
-							{labelMap[getValue<string>()] ?? getValue<string>()}
+							{getPaymentMethodLabel(getValue<Payment['payment_method']>())}
 						</span>
 					</Badge>
 				),
@@ -269,13 +266,7 @@ export function PropertyFinancialsRentPaymentsModule() {
 						) : (
 							<CircleX className="fill-red-500 text-white" />
 						)}
-						{getValue<string>() === 'Payment.Status.Pending'
-							? 'Processing'
-							: getValue<string>() === 'Payment.Status.Successful'
-								? 'Paid'
-								: getValue<string>() === 'Payment.Status.Expired'
-									? 'Overdue'
-									: 'Failed'}
+						{getPaymentStatusLabel(getValue<Payment['status']>())}
 					</Badge>
 				),
 			},
