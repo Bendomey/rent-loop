@@ -1,5 +1,8 @@
 import { ChevronRight } from 'lucide-react'
+import { useState } from 'react'
 import { Link, Outlet, useLocation, useParams } from 'react-router'
+import ApproveTenantApplicationModal from '../approve'
+import CancelTenantApplicationModal from '../cancel'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -15,9 +18,6 @@ import { Progress } from '~/components/ui/progress'
 import { localizedDayjs } from '~/lib/date'
 import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
-import CancelTenantApplicationModal from '../cancel'
-import { useState } from 'react'
-import ApproveTenantApplicationModal from '../approve'
 
 const tenant: TenantApplication = {
 	id: 't1',
