@@ -9,6 +9,8 @@ import {
 } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
+import { PropertyFinancialsRentPaymentController } from './controller'
+import { RentPaymentSectionCards } from './components/cards'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -23,8 +25,6 @@ import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { useProperty } from '~/providers/property-provider'
-import { PropertyFinancialsRentPaymentController } from './controller'
-import { RentPaymentSectionCards } from './components/cards'
 
 const data = {
 	rows: [
