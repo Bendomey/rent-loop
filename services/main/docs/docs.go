@@ -5382,6 +5382,7 @@ const docTemplate = `{
                 "first_name",
                 "gender",
                 "id_number",
+                "id_type",
                 "last_name",
                 "marital_status",
                 "nationality",
@@ -5434,6 +5435,16 @@ const docTemplate = `{
                 "id_number": {
                     "type": "string",
                     "example": "GHA-123456789"
+                },
+                "id_type": {
+                    "type": "string",
+                    "enum": [
+                        "ghana_card",
+                        "national_id",
+                        "passport",
+                        "driver_license"
+                    ],
+                    "example": "ghana_card"
                 },
                 "last_name": {
                     "type": "string",
@@ -5989,6 +6000,16 @@ const docTemplate = `{
                 "id_number": {
                     "type": "string",
                     "example": "GHA-123456789"
+                },
+                "id_type": {
+                    "type": "string",
+                    "enum": [
+                        "ghana_card",
+                        "national_id",
+                        "passport",
+                        "driver_license"
+                    ],
+                    "example": "ghana_card"
                 },
                 "initial_deposit_fee": {
                     "type": "integer",
@@ -7038,6 +7059,10 @@ const docTemplate = `{
                 "id_number": {
                     "type": "string",
                     "example": "ID123456"
+                },
+                "id_type": {
+                    "type": "string",
+                    "example": "ghana_card"
                 },
                 "initial_deposit_fee": {
                     "type": "integer",

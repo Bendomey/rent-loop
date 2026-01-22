@@ -70,6 +70,7 @@ type CreateTenantApplicationInput struct {
 	DateOfBirth                    time.Time
 	Nationality                    string
 	MaritalStatus                  string
+	IDType                         string
 	IDNumber                       string
 	CurrentAddress                 string
 	EmergencyContactName           string
@@ -110,6 +111,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		DateOfBirth:                    input.DateOfBirth,
 		Nationality:                    input.Nationality,
 		MaritalStatus:                  input.MaritalStatus,
+		IDType:                         &input.IDType,
 		IDNumber:                       input.IDNumber,
 		CurrentAddress:                 input.CurrentAddress,
 		EmergencyContactName:           input.EmergencyContactName,
@@ -316,6 +318,7 @@ type UpdateTenantApplicationInput struct {
 	OtherNames                                      *string
 	Email                                           *string
 	ProfilePhotoUrl                                 *string
+	IDType                                          *string
 	IDFrontUrl                                      *string
 	IDBackUrl                                       *string
 	PreviousLandlordName                            *string
@@ -390,6 +393,10 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 
 	if input.MaritalStatus != nil {
 		tenantApplication.MaritalStatus = *input.MaritalStatus
+	}
+
+	if input.IDType != nil {
+		tenantApplication.IDType = input.IDType
 	}
 
 	if input.IDNumber != nil {

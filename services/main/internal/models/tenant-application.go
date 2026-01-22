@@ -70,7 +70,8 @@ type TenantApplication struct {
 	Nationality     string    `gorm:"not null;"`
 	MaritalStatus   string    `gorm:"not null;"` // Single, Married, Divorced, Widowed
 	ProfilePhotoUrl *string
-	IDNumber        string `gorm:"not null;"` // GhanaCard
+	IDType          *string // NationalID, Passport, DriverLicense
+	IDNumber        string  `gorm:"not null;"` // GhanaCard
 	IDFrontUrl      *string
 	IDBackUrl       *string
 

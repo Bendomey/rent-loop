@@ -65,6 +65,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddDocsSetupFieldsToTenantApplication(),
 		jobs.AddCodeTenantApplication(),
 		jobs.SeedCodeTenantApplication(),
+		jobs.AddIDTypeTenantApplication(),
 	})
 	m.Migrate()
 
