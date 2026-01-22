@@ -64,6 +64,7 @@ type OutputTenantApplication struct {
 	Nationality     string    `json:"nationality"                 example:"Ghanaian"`
 	MaritalStatus   string    `json:"marital_status"              example:"single"`
 	ProfilePhotoUrl *string   `json:"profile_photo_url,omitempty" example:"https://example.com/photo.jpg"`
+	IDType          string    `json:"id_type"                     example:"ghana_card"`
 	IDNumber        string    `json:"id_number"                   example:"ID123456"`
 	IDFrontUrl      *string   `json:"id_front_url,omitempty"      example:"https://example.com/id-front.jpg"`
 	IDBackUrl       *string   `json:"id_back_url,omitempty"       example:"https://example.com/id-back.jpg"`
@@ -141,6 +142,7 @@ func DBTenantApplicationToRest(i *models.TenantApplication) any {
 		"nationality":                       i.Nationality,
 		"marital_status":                    i.MaritalStatus,
 		"profile_photo_url":                 i.ProfilePhotoUrl,
+		"id_type":                           i.IDType,
 		"id_number":                         i.IDNumber,
 		"id_front_url":                      i.IDFrontUrl,
 		"id_back_url":                       i.IDBackUrl,

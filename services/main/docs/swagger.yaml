@@ -285,6 +285,9 @@ definitions:
       id_number:
         example: GHA-123456789
         type: string
+      id_type:
+        example: ghana_card
+        type: string
       last_name:
         example: Doe
         type: string
@@ -323,6 +326,7 @@ definitions:
     - first_name
     - gender
     - id_number
+    - id_type
     - last_name
     - marital_status
     - nationality
@@ -706,6 +710,14 @@ definitions:
         type: string
       id_number:
         example: GHA-123456789
+        type: string
+      id_type:
+        enum:
+        - ghana_card
+        - national_id
+        - passport
+        - driver_license
+        example: ghana_card
         type: string
       initial_deposit_fee:
         example: 1000
@@ -1479,6 +1491,9 @@ definitions:
         type: string
       id_number:
         example: ID123456
+        type: string
+      id_type:
+        example: ghana_card
         type: string
       initial_deposit_fee:
         example: 500
