@@ -203,6 +203,7 @@ type UpdateUnitInput struct {
 	PaymentFrequency    *string
 	Features            *map[string]any
 	MaxOccupantsAllowed *int
+	Status              *string
 }
 
 func (s *unitService) UpdateUnit(ctx context.Context, input UpdateUnitInput) (*models.Unit, error) {
@@ -252,6 +253,10 @@ func (s *unitService) UpdateUnit(ctx context.Context, input UpdateUnitInput) (*m
 
 	if input.MaxOccupantsAllowed != nil {
 		unit.MaxOccupantsAllowed = *input.MaxOccupantsAllowed
+	}
+
+	if input.Status != nil {
+		unit.Status = *input.Status
 	}
 
 	if input.Features != nil {
