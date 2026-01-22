@@ -286,6 +286,11 @@ definitions:
         example: GHA-123456789
         type: string
       id_type:
+        enum:
+        - ghana_card
+        - national_id
+        - passport
+        - driver_license
         example: ghana_card
         type: string
       last_name:

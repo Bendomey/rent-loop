@@ -5438,6 +5438,12 @@ const docTemplate = `{
                 },
                 "id_type": {
                     "type": "string",
+                    "enum": [
+                        "ghana_card",
+                        "national_id",
+                        "passport",
+                        "driver_license"
+                    ],
                     "example": "ghana_card"
                 },
                 "last_name": {
