@@ -255,10 +255,6 @@ func (s *unitService) UpdateUnit(ctx context.Context, input UpdateUnitInput) (*m
 		unit.MaxOccupantsAllowed = *input.MaxOccupantsAllowed
 	}
 
-	if input.Status != nil {
-		unit.Status = *input.Status
-	}
-
 	if input.Features != nil {
 		unmarshalledFeatures, err := json.Marshal(input.Features)
 		if err != nil {

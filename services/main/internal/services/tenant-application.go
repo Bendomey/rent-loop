@@ -677,6 +677,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		Nationality:                    tenantApplication.Nationality,
 		MaritalStatus:                  tenantApplication.MaritalStatus,
 		ProfilePhotoUrl:                tenantApplication.ProfilePhotoUrl,
+		IDType:                         *tenantApplication.IDType,
 		IDNumber:                       tenantApplication.IDNumber,
 		IDFrontUrl:                     tenantApplication.IDFrontUrl,
 		IDBackUrl:                      tenantApplication.IDBackUrl,
@@ -727,16 +728,11 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		return getUnitErr
 	}
 
-	if unit.Status == "Unit.Status.Occupied" {
-		transaction.Rollback()
-		return pkg.BadRequestError("UnitIsBookedUp", nil)
-	}
-
 	unit.Status = "Unit.Status.Occupied"
-	_, updateUnitErr := s.unitService.UpdateUnit(transCtx, UpdateUnitInput{
+	updateUnitErr := s.unitService.UpdateUnitStatus(transCtx, UpdateUnitStatusInput{
 		PropertyID: unit.PropertyID,
 		UnitID:     unit.ID.String(),
-		Status:     &unit.Status,
+		Status:     unit.Status,
 	})
 	if updateUnitErr != nil {
 		transaction.Rollback()

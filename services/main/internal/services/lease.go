@@ -2,9 +2,9 @@ package services
 
 import (
 	"context"
-	"encoding/json"
 	"time"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -52,9 +52,10 @@ type CreateLeaseInput struct {
 }
 
 func (s *leaseService) CreateLease(ctx context.Context, input CreateLeaseInput) (*models.Lease, error) {
-	meta := datatypes.JSON{}
+	meta := datatypes.JSON([]byte("{}"))
 	if input.Meta != nil {
-		marshalledMeta, marshallErr := json.Marshal(input.Meta)
+		metaJson, marshallErr := lib.InterfaceToJSON(*input.Meta)
+		// marshalledMeta, marshallErr := json.Marshal(input.Meta)
 		if marshallErr != nil {
 			return nil, pkg.InternalServerError(marshallErr.Error(), &pkg.RentLoopErrorParams{
 				Err: marshallErr,
@@ -64,7 +65,7 @@ func (s *leaseService) CreateLease(ctx context.Context, input CreateLeaseInput) 
 				},
 			})
 		}
-		meta = datatypes.JSON(marshalledMeta)
+		meta = *metaJson
 	}
 
 	lease := models.Lease{
