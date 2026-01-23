@@ -104,6 +104,9 @@ func (s *tenantApplicationService) CreateTenantApplication(
 			},
 		})
 	}
+	if unit.Status != "Unit.Status.Available" {
+		return nil, pkg.BadRequestError("UnitNotAvailable", nil)
+	}
 
 	tenantApplication := models.TenantApplication{
 		DesiredUnitId:                  input.DesiredUnitId,
@@ -640,14 +643,22 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		})
 	}
 
+	if tenantApplication.Status == "TenantApplication.Status.Cancelled" {
+		return pkg.BadRequestError("TenantApplicationAlreadyCancelled", nil)
+	}
+
+	if tenantApplication.Status == "TenantApplication.Status.Completed" {
+		return pkg.BadRequestError("TenantApplicationAlreadyCompleted", nil)
+	}
+
+	unit, getUnitErr := s.unitService.GetUnitByID(ctx, tenantApplication.DesiredUnitId)
+	if getUnitErr != nil {
+		return getUnitErr
+	}
+
 	// update tenant application status
 	transaction := s.appCtx.DB.Begin()
 	transCtx := lib.WithTransaction(ctx, transaction)
-
-	if tenantApplication.Status == "TenantApplication.Status.Completed" {
-		transaction.Rollback()
-		return pkg.BadRequestError("TenantApplicationAlreadyCompleted", nil)
-	}
 
 	tenantApplication.Status = "TenantApplication.Status.Completed"
 	tenantApplication.CompletedById = &input.ClientUserID
@@ -698,6 +709,21 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 	}
 
 	// create lease
+	meta := map[string]any{
+		"initial_deposit_fee":              tenantApplication.InitialDepositFee,
+		"initial_deposit_payment_method":   tenantApplication.InitialDepositPaymentMethod,
+		"initial_deposit_reference_number": tenantApplication.InitialDepositReferenceNumber,
+		"initial_deposit_paid_at":          tenantApplication.InitialDepositPaidAt,
+		"initial_deposit_payment_id":       tenantApplication.InitialDepositPaymentId,
+
+		"security_deposit_fee":          tenantApplication.SecurityDepositFee,
+		"security_deposit_fee_currency": tenantApplication.SecurityDepositFeeCurrency,
+
+		"security_deposit_payment_method":   tenantApplication.SecurityDepositPaymentMethod,
+		"security_deposit_reference_number": tenantApplication.SecurityDepositReferenceNumber,
+		"security_deposit_paid_at":          tenantApplication.SecurityDepositPaidAt,
+		"security_deposit_payment_id":       tenantApplication.SecurityDepositPaymentId,
+	}
 	leaseInput := CreateLeaseInput{
 		Status:                      "Lease.Status.Pending",
 		UnitId:                      tenantApplication.DesiredUnitId,
@@ -706,11 +732,12 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		RentFee:                     tenantApplication.RentFee,
 		RentFeeCurrency:             tenantApplication.RentFeeCurrency,
 		PaymentFrequency:            tenantApplication.PaymentFrequency,
-		MoveInDate:                  tenantApplication.DesiredMoveInDate,
-		StayDurationFrequency:       tenantApplication.StayDurationFrequency,
-		StayDuration:                tenantApplication.StayDuration,
+		Meta:                        meta,
+		MoveInDate:                  *tenantApplication.DesiredMoveInDate,
+		StayDurationFrequency:       *tenantApplication.StayDurationFrequency,
+		StayDuration:                *tenantApplication.StayDuration,
 		LeaseAggreementDocumentMode: tenantApplication.LeaseAggreementDocumentMode,
-		LeaseAgreementDocumentUrl:   tenantApplication.LeaseAgreementDocumentUrl,
+		LeaseAgreementDocumentUrl:   *tenantApplication.LeaseAgreementDocumentUrl,
 		LeaseAgreementDocumentPropertyManagerSignedById: tenantApplication.LeaseAgreementDocumentPropertyManagerSignedById,
 		LeaseAgreementDocumentPropertyManagerSignedAt:   tenantApplication.LeaseAgreementDocumentPropertyManagerSignedAt,
 		LeaseAgreementDocumentTenantSignedAt:            tenantApplication.LeaseAgreementDocumentTenantSignedAt,
@@ -719,13 +746,6 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 	if createLeaseErr != nil {
 		transaction.Rollback()
 		return createLeaseErr
-	}
-
-	// check if unit is booked up else book it
-	unit, getUnitErr := s.unitService.GetUnitByID(transCtx, tenantApplication.DesiredUnitId)
-	if getUnitErr != nil {
-		transaction.Rollback()
-		return getUnitErr
 	}
 
 	unit.Status = "Unit.Status.Occupied"

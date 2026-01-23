@@ -226,7 +226,8 @@ Unit: {{unit_name}}
 
 Application Code: {{application_code}}
 
-Your lease is being prepared. You will be contacted by the property owner once the lease is ready for signing.
+Your lease has been prepared and is currently pending.
+Our team will contact you shortly with next steps, including move-in details and documentation.
 
 If you have any questions in the meantime, feel free to reach out.
 

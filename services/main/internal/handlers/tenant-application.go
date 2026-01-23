@@ -398,6 +398,9 @@ func (h *TenantApplicationHandler) UpdateTenantApplication(w http.ResponseWriter
 		StayDuration:                   body.StayDuration,
 		PaymentFrequency:               body.PaymentFrequency,
 		InitialDepositFee:              body.InitialDepositFee,
+		InitialDepositPaymentMethod:    body.InitialDepositPaymentMethod,
+		InitialDepositReferenceNumber:  body.InitialDepositReferenceNumber,
+		InitialDepositPaidAt:           body.InitialDepositPaidAt,
 		SecurityDepositFee:             body.SecurityDepositFee,
 		SecurityDepositFeeCurrency:     body.SecurityDepositFeeCurrency,
 		SecurityDepositPaymentMethod:   body.SecurityDepositPaymentMethod,
@@ -522,6 +525,7 @@ func (h *TenantApplicationHandler) CancelTenantApplication(w http.ResponseWriter
 //	@Success		204						"Tenant application approved successfully"
 //	@Failure		400						{object}	lib.HTTPError	"Error occurred when approving a tenant application"
 //	@Failure		401						{object}	string			"Invalid or absent authentication token"
+//	@Failure		403						{object}	lib.HTTPError	"Tenant application not approved"
 //	@Failure		404						{object}	lib.HTTPError	"Tenant application not found"
 //	@Failure		422						{object}	lib.HTTPError	"Validation error"
 //	@Failure		500						{object}	string			"An unexpected error occurred"

@@ -4944,6 +4944,12 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
+                    "403": {
+                        "description": "Tenant application not approved",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
                     "404": {
                         "description": "Tenant application not found",
                         "schema": {

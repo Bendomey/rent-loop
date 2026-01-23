@@ -8,7 +8,6 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
-	"gorm.io/datatypes"
 )
 
 type LeaseService interface {
@@ -32,15 +31,15 @@ type CreateLeaseInput struct {
 	RentFee                                               int64
 	RentFeeCurrency                                       string
 	PaymentFrequency                                      *string
-	Meta                                                  *map[string]any
-	MoveInDate                                            *time.Time
-	StayDurationFrequency                                 *string
-	StayDuration                                          *int64
+	Meta                                                  map[string]any
+	MoveInDate                                            time.Time
+	StayDurationFrequency                                 string
+	StayDuration                                          int64
 	KeyHandoverDate                                       *time.Time
 	UtilityTransfersDate                                  *time.Time
 	PropertyInspectionDate                                *time.Time
 	LeaseAggreementDocumentMode                           *string
-	LeaseAgreementDocumentUrl                             *string
+	LeaseAgreementDocumentUrl                             string
 	LeaseAgreementDocumentPropertyManagerSignedById       *string
 	LeaseAgreementDocumentPropertyManagerSignedAt         *time.Time
 	LeaseAgreementDocumentTenantSignedAt                  *time.Time
@@ -52,20 +51,15 @@ type CreateLeaseInput struct {
 }
 
 func (s *leaseService) CreateLease(ctx context.Context, input CreateLeaseInput) (*models.Lease, error) {
-	meta := datatypes.JSON([]byte("{}"))
-	if input.Meta != nil {
-		metaJson, marshallErr := lib.InterfaceToJSON(*input.Meta)
-		// marshalledMeta, marshallErr := json.Marshal(input.Meta)
-		if marshallErr != nil {
-			return nil, pkg.InternalServerError(marshallErr.Error(), &pkg.RentLoopErrorParams{
-				Err: marshallErr,
-				Metadata: map[string]string{
-					"function": "CreateLease",
-					"action":   "marshalling meta",
-				},
-			})
-		}
-		meta = *metaJson
+	metaJson, marshallErr := lib.InterfaceToJSON(input.Meta)
+	if marshallErr != nil {
+		return nil, pkg.InternalServerError(marshallErr.Error(), &pkg.RentLoopErrorParams{
+			Err: marshallErr,
+			Metadata: map[string]string{
+				"function": "CreateLease",
+				"action":   "marshalling meta",
+			},
+		})
 	}
 
 	lease := models.Lease{
@@ -76,7 +70,7 @@ func (s *leaseService) CreateLease(ctx context.Context, input CreateLeaseInput) 
 		RentFee:                     input.RentFee,
 		RentFeeCurrency:             input.RentFeeCurrency,
 		PaymentFrequency:            input.PaymentFrequency,
-		Meta:                        meta,
+		Meta:                        *metaJson,
 		MoveInDate:                  input.MoveInDate,
 		StayDurationFrequency:       input.StayDurationFrequency,
 		StayDuration:                input.StayDuration,
