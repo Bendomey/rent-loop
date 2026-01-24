@@ -4956,6 +4956,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
+                    "409": {
+                        "description": "Tenant application already approved",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
                     "422": {
                         "description": "Validation error",
                         "schema": {

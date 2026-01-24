@@ -38,31 +38,34 @@ type TenantApplicationService interface {
 }
 
 type tenantApplicationService struct {
-	appCtx            pkg.AppContext
-	repo              repository.TenantApplicationRepository
-	unitService       UnitService
-	clientUserService ClientUserService
-	tenantService     TenantService
-	leaseService      LeaseService
+	appCtx               pkg.AppContext
+	repo                 repository.TenantApplicationRepository
+	unitService          UnitService
+	clientUserService    ClientUserService
+	tenantService        TenantService
+	leaseService         LeaseService
+	tenantAccountService TenantAccountService
 }
 
 type TenantApplicationServiceDeps struct {
-	AppCtx            pkg.AppContext
-	Repo              repository.TenantApplicationRepository
-	UnitService       UnitService
-	ClientUserService ClientUserService
-	TenantService     TenantService
-	LeaseService      LeaseService
+	AppCtx               pkg.AppContext
+	Repo                 repository.TenantApplicationRepository
+	UnitService          UnitService
+	ClientUserService    ClientUserService
+	TenantService        TenantService
+	LeaseService         LeaseService
+	TenantAccountService TenantAccountService
 }
 
 func NewTenantApplicationService(deps TenantApplicationServiceDeps) TenantApplicationService {
 	return &tenantApplicationService{
-		appCtx:            deps.AppCtx,
-		repo:              deps.Repo,
-		unitService:       deps.UnitService,
-		clientUserService: deps.ClientUserService,
-		tenantService:     deps.TenantService,
-		leaseService:      deps.LeaseService,
+		appCtx:               deps.AppCtx,
+		repo:                 deps.Repo,
+		unitService:          deps.UnitService,
+		clientUserService:    deps.ClientUserService,
+		tenantService:        deps.TenantService,
+		leaseService:         deps.LeaseService,
+		tenantAccountService: deps.TenantAccountService,
 	}
 }
 
@@ -748,6 +751,17 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		return createLeaseErr
 	}
 
+	// create tenant account
+	tenantAccountInput := CreateTenantAccountInput{
+		TenantId:    tenant.ID.String(),
+		PhoneNumber: tenantApplication.Phone,
+	}
+	tenantAccount, createTenantAccountErr := s.tenantAccountService.CreateTenantAccount(transCtx, tenantAccountInput)
+	if createTenantAccountErr != nil {
+		transaction.Rollback()
+		return createTenantAccountErr
+	}
+
 	unit.Status = "Unit.Status.Occupied"
 	updateUnitErr := s.unitService.UpdateUnitStatus(transCtx, UpdateUnitStatusInput{
 		PropertyID: unit.PropertyID,
@@ -775,6 +789,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		"{{applicant_name}}", tenantApplication.FirstName,
 		"{{unit_name}}", unit.Name,
 		"{{application_code}}", *tenantApplication.Code,
+		"{{phone_number}}", tenantAccount.PhoneNumber,
 	).Replace(lib.TENANT_APPLICATION_APPROVED_BODY)
 
 	if tenantApplication.Email != nil {

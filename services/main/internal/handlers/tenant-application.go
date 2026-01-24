@@ -527,6 +527,7 @@ func (h *TenantApplicationHandler) CancelTenantApplication(w http.ResponseWriter
 //	@Failure		401						{object}	string			"Invalid or absent authentication token"
 //	@Failure		403						{object}	lib.HTTPError	"Tenant application not approved"
 //	@Failure		404						{object}	lib.HTTPError	"Tenant application not found"
+//	@Failure		409						{object}	lib.HTTPError	"Tenant application already approved"
 //	@Failure		422						{object}	lib.HTTPError	"Validation error"
 //	@Failure		500						{object}	string			"An unexpected error occurred"
 //	@Router			/api/v1/tenant-applications/{tenant_application_id}/approve [patch]

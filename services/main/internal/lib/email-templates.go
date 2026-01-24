@@ -229,6 +229,8 @@ Application Code: {{application_code}}
 Your lease has been prepared and is currently pending.
 Our team will contact you shortly with next steps, including move-in details and documentation.
 
+You can access your account anytime using the Rentloop mobile app — simply log in with your phone number: {{phone_number}}.
+
 If you have any questions in the meantime, feel free to reach out.
 
 Congratulations, and welcome aboard!

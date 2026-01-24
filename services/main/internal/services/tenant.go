@@ -2,11 +2,13 @@ package services
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type TenantService interface {
@@ -75,6 +77,12 @@ func (s *tenantService) CreateTenant(ctx context.Context, input CreateTenantInpu
 
 	err := s.repo.Create(ctx, &tenant)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return nil, pkg.ConflictError("TenantPhoneNumberAlreadyInUse", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
 			Metadata: map[string]string{
