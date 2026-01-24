@@ -9,10 +9,12 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/jackc/pgx/v5/pgconn"
+	"gorm.io/gorm"
 )
 
 type TenantService interface {
 	CreateTenant(context context.Context, input CreateTenantInput) (*models.Tenant, error)
+	GetOrCreateTenant(context context.Context, input CreateTenantInput) (*models.Tenant, error)
 }
 
 type tenantService struct {
@@ -90,7 +92,30 @@ func (s *tenantService) CreateTenant(ctx context.Context, input CreateTenantInpu
 				"action":   "creating tenant",
 			},
 		})
+
 	}
 
 	return &tenant, nil
+}
+
+func (s *tenantService) GetOrCreateTenant(ctx context.Context, input CreateTenantInput) (*models.Tenant, error) {
+	getTenant, getTenantErr := s.repo.FindOne(ctx, map[string]any{"phone": input.Phone})
+	if getTenantErr != nil {
+		if errors.Is(getTenantErr, gorm.ErrRecordNotFound) {
+			createTenant, createTenantErr := s.CreateTenant(ctx, input)
+			if createTenantErr != nil {
+				return nil, createTenantErr
+			}
+			return createTenant, nil
+
+		}
+		return nil, pkg.InternalServerError(getTenantErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getTenantErr,
+			Metadata: map[string]string{
+				"function": "GetOrCreateTenant",
+				"action":   "fetching tenant",
+			},
+		})
+	}
+	return getTenant, nil
 }

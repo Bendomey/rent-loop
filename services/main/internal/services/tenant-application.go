@@ -705,7 +705,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		CreatedById:                    input.ClientUserID,
 	}
 
-	tenant, createTenantErr := s.tenantService.CreateTenant(transCtx, tenantInput)
+	tenant, createTenantErr := s.tenantService.GetOrCreateTenant(transCtx, tenantInput)
 	if createTenantErr != nil {
 		transaction.Rollback()
 		return createTenantErr
@@ -756,7 +756,10 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		TenantId:    tenant.ID.String(),
 		PhoneNumber: tenantApplication.Phone,
 	}
-	tenantAccount, createTenantAccountErr := s.tenantAccountService.CreateTenantAccount(transCtx, tenantAccountInput)
+	tenantAccount, createTenantAccountErr := s.tenantAccountService.GetOrCreateTenantAccount(
+		transCtx,
+		tenantAccountInput,
+	)
 	if createTenantAccountErr != nil {
 		transaction.Rollback()
 		return createTenantAccountErr

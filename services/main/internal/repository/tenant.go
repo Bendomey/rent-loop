@@ -10,6 +10,7 @@ import (
 
 type TenantRepository interface {
 	Create(context context.Context, tenant *models.Tenant) error
+	FindOne(context context.Context, query map[string]any) (*models.Tenant, error)
 }
 
 type tenantRepository struct {
@@ -24,4 +25,13 @@ func (r *tenantRepository) Create(ctx context.Context, tenant *models.Tenant) er
 	db := lib.ResolveDB(ctx, r.DB)
 
 	return db.WithContext(ctx).Create(tenant).Error
+}
+
+func (r *tenantRepository) FindOne(ctx context.Context, query map[string]any) (*models.Tenant, error) {
+	var tenant models.Tenant
+	result := r.DB.WithContext(ctx).Where(query).First(&tenant)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &tenant, nil
 }
