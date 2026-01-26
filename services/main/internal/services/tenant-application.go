@@ -34,28 +34,38 @@ type TenantApplicationService interface {
 	) (*models.TenantApplication, error)
 	DeleteTenantApplication(context context.Context, tenantApplicationID string) error
 	CancelTenantApplication(context context.Context, input CancelTenantApplicationInput) error
+	ApproveTenantApplication(context context.Context, input ApproveTenantApplicationInput) error
 }
 
 type tenantApplicationService struct {
-	appCtx            pkg.AppContext
-	repo              repository.TenantApplicationRepository
-	unitService       UnitService
-	clientUserService ClientUserService
+	appCtx               pkg.AppContext
+	repo                 repository.TenantApplicationRepository
+	unitService          UnitService
+	clientUserService    ClientUserService
+	tenantService        TenantService
+	leaseService         LeaseService
+	tenantAccountService TenantAccountService
 }
 
 type TenantApplicationServiceDeps struct {
-	AppCtx            pkg.AppContext
-	Repo              repository.TenantApplicationRepository
-	UnitService       UnitService
-	ClientUserService ClientUserService
+	AppCtx               pkg.AppContext
+	Repo                 repository.TenantApplicationRepository
+	UnitService          UnitService
+	ClientUserService    ClientUserService
+	TenantService        TenantService
+	LeaseService         LeaseService
+	TenantAccountService TenantAccountService
 }
 
 func NewTenantApplicationService(deps TenantApplicationServiceDeps) TenantApplicationService {
 	return &tenantApplicationService{
-		appCtx:            deps.AppCtx,
-		repo:              deps.Repo,
-		unitService:       deps.UnitService,
-		clientUserService: deps.ClientUserService,
+		appCtx:               deps.AppCtx,
+		repo:                 deps.Repo,
+		unitService:          deps.UnitService,
+		clientUserService:    deps.ClientUserService,
+		tenantService:        deps.TenantService,
+		leaseService:         deps.LeaseService,
+		tenantAccountService: deps.TenantAccountService,
 	}
 }
 
@@ -96,6 +106,9 @@ func (s *tenantApplicationService) CreateTenantApplication(
 				"action":   "fetching unit",
 			},
 		})
+	}
+	if unit.Status != "Unit.Status.Available" {
+		return nil, pkg.BadRequestError("UnitNotAvailable", nil)
 	}
 
 	tenantApplication := models.TenantApplication{
@@ -589,6 +602,205 @@ func (s *tenantApplicationService) CancelTenantApplication(
 			pkg.SendEmailInput{
 				Recipient: *tenantApplication.Email,
 				Subject:   lib.TENANT_CANCELLED_SUBJECT,
+				TextBody:  message,
+			},
+		)
+	}
+
+	go pkg.SendSMS(
+		s.appCtx,
+		pkg.SendSMSInput{
+			Recipient: tenantApplication.Phone,
+			Message:   message,
+		},
+	)
+
+	return nil
+}
+
+type ApproveTenantApplicationInput struct {
+	ClientUserID        string
+	TenantApplicationID string
+}
+
+func (s *tenantApplicationService) ApproveTenantApplication(
+	ctx context.Context,
+	input ApproveTenantApplicationInput,
+) error {
+	// fetch tenant application
+	tenantApplication, getTenantApplicationErr := s.repo.GetOneWithQuery(ctx, repository.GetTenantApplicationQuery{
+		TenantApplicationID: input.TenantApplicationID,
+	})
+	if getTenantApplicationErr != nil {
+		if errors.Is(getTenantApplicationErr, gorm.ErrRecordNotFound) {
+			return pkg.NotFoundError("TenantApplicationNotFound", &pkg.RentLoopErrorParams{
+				Err: getTenantApplicationErr,
+			})
+		}
+		return pkg.InternalServerError(getTenantApplicationErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getTenantApplicationErr,
+			Metadata: map[string]string{
+				"function": "CancelTenantApplication",
+				"action":   "fetching tenant application",
+			},
+		})
+	}
+
+	if tenantApplication.Status == "TenantApplication.Status.Cancelled" {
+		return pkg.BadRequestError("TenantApplicationAlreadyCancelled", nil)
+	}
+
+	if tenantApplication.Status == "TenantApplication.Status.Completed" {
+		return pkg.BadRequestError("TenantApplicationAlreadyCompleted", nil)
+	}
+
+	unit, getUnitErr := s.unitService.GetUnitByID(ctx, tenantApplication.DesiredUnitId)
+	if getUnitErr != nil {
+		return getUnitErr
+	}
+
+	// update tenant application status
+	transaction := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, transaction)
+
+	tenantApplication.Status = "TenantApplication.Status.Completed"
+	tenantApplication.CompletedById = &input.ClientUserID
+	now := time.Now()
+	tenantApplication.CompletedAt = &now
+	updateTenantApplicationErr := s.repo.Update(transCtx, *tenantApplication)
+	if updateTenantApplicationErr != nil {
+		transaction.Rollback()
+		return pkg.InternalServerError(updateTenantApplicationErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateTenantApplicationErr,
+			Metadata: map[string]string{
+				"function": "ApproveTenantApplication",
+				"action":   "updating tenant application status",
+			},
+		})
+	}
+
+	// create tenant
+	tenantInput := CreateTenantInput{
+		FirstName:                      tenantApplication.FirstName,
+		OtherNames:                     tenantApplication.OtherNames,
+		LastName:                       tenantApplication.LastName,
+		Email:                          tenantApplication.Email,
+		Phone:                          tenantApplication.Phone,
+		Gender:                         tenantApplication.Gender,
+		DateOfBirth:                    tenantApplication.DateOfBirth,
+		Nationality:                    tenantApplication.Nationality,
+		MaritalStatus:                  tenantApplication.MaritalStatus,
+		ProfilePhotoUrl:                tenantApplication.ProfilePhotoUrl,
+		IDType:                         *tenantApplication.IDType,
+		IDNumber:                       tenantApplication.IDNumber,
+		IDFrontUrl:                     tenantApplication.IDFrontUrl,
+		IDBackUrl:                      tenantApplication.IDBackUrl,
+		EmergencyContactName:           tenantApplication.EmergencyContactName,
+		EmergencyContactPhone:          tenantApplication.EmergencyContactPhone,
+		RelationshipToEmergencyContact: tenantApplication.RelationshipToEmergencyContact,
+		Occupation:                     tenantApplication.Occupation,
+		Employer:                       tenantApplication.Employer,
+		OccupationAddress:              tenantApplication.OccupationAddress,
+		ProofOfIncomeUrl:               tenantApplication.ProofOfIncomeUrl,
+		CreatedById:                    input.ClientUserID,
+	}
+
+	tenant, createTenantErr := s.tenantService.GetOrCreateTenant(transCtx, tenantInput)
+	if createTenantErr != nil {
+		transaction.Rollback()
+		return createTenantErr
+	}
+
+	// create lease
+	meta := map[string]any{
+		"initial_deposit_fee":              tenantApplication.InitialDepositFee,
+		"initial_deposit_payment_method":   tenantApplication.InitialDepositPaymentMethod,
+		"initial_deposit_reference_number": tenantApplication.InitialDepositReferenceNumber,
+		"initial_deposit_paid_at":          tenantApplication.InitialDepositPaidAt,
+		"initial_deposit_payment_id":       tenantApplication.InitialDepositPaymentId,
+
+		"security_deposit_fee":          tenantApplication.SecurityDepositFee,
+		"security_deposit_fee_currency": tenantApplication.SecurityDepositFeeCurrency,
+
+		"security_deposit_payment_method":   tenantApplication.SecurityDepositPaymentMethod,
+		"security_deposit_reference_number": tenantApplication.SecurityDepositReferenceNumber,
+		"security_deposit_paid_at":          tenantApplication.SecurityDepositPaidAt,
+		"security_deposit_payment_id":       tenantApplication.SecurityDepositPaymentId,
+	}
+	leaseInput := CreateLeaseInput{
+		Status:                      "Lease.Status.Pending",
+		UnitId:                      tenantApplication.DesiredUnitId,
+		TenantId:                    tenant.ID.String(),
+		TenantApplicationId:         tenantApplication.ID.String(),
+		RentFee:                     tenantApplication.RentFee,
+		RentFeeCurrency:             tenantApplication.RentFeeCurrency,
+		PaymentFrequency:            tenantApplication.PaymentFrequency,
+		Meta:                        meta,
+		MoveInDate:                  *tenantApplication.DesiredMoveInDate,
+		StayDurationFrequency:       *tenantApplication.StayDurationFrequency,
+		StayDuration:                *tenantApplication.StayDuration,
+		LeaseAggreementDocumentMode: tenantApplication.LeaseAggreementDocumentMode,
+		LeaseAgreementDocumentUrl:   *tenantApplication.LeaseAgreementDocumentUrl,
+		LeaseAgreementDocumentPropertyManagerSignedById: tenantApplication.LeaseAgreementDocumentPropertyManagerSignedById,
+		LeaseAgreementDocumentPropertyManagerSignedAt:   tenantApplication.LeaseAgreementDocumentPropertyManagerSignedAt,
+		LeaseAgreementDocumentTenantSignedAt:            tenantApplication.LeaseAgreementDocumentTenantSignedAt,
+	}
+	_, createLeaseErr := s.leaseService.CreateLease(transCtx, leaseInput)
+	if createLeaseErr != nil {
+		transaction.Rollback()
+		return createLeaseErr
+	}
+
+	// create tenant account
+	tenantAccountInput := CreateTenantAccountInput{
+		TenantId:    tenant.ID.String(),
+		PhoneNumber: tenantApplication.Phone,
+	}
+	tenantAccount, createTenantAccountErr := s.tenantAccountService.GetOrCreateTenantAccount(
+		transCtx,
+		tenantAccountInput,
+	)
+	if createTenantAccountErr != nil {
+		transaction.Rollback()
+		return createTenantAccountErr
+	}
+
+	unit.Status = "Unit.Status.Occupied"
+	updateUnitErr := s.unitService.UpdateUnitStatus(transCtx, UpdateUnitStatusInput{
+		PropertyID: unit.PropertyID,
+		UnitID:     unit.ID.String(),
+		Status:     unit.Status,
+	})
+	if updateUnitErr != nil {
+		transaction.Rollback()
+		return updateUnitErr
+	}
+
+	if commitErr := transaction.Commit().Error; commitErr != nil {
+		transaction.Rollback()
+		return pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: commitErr,
+			Metadata: map[string]string{
+				"function": "ApproveTenantApplication",
+				"action":   "committing transaction",
+			},
+		})
+	}
+
+	// send email
+	message := strings.NewReplacer(
+		"{{applicant_name}}", tenantApplication.FirstName,
+		"{{unit_name}}", unit.Name,
+		"{{application_code}}", *tenantApplication.Code,
+		"{{phone_number}}", tenantAccount.PhoneNumber,
+	).Replace(lib.TENANT_APPLICATION_APPROVED_BODY)
+
+	if tenantApplication.Email != nil {
+		go pkg.SendEmail(
+			s.appCtx,
+			pkg.SendEmailInput{
+				Recipient: *tenantApplication.Email,
+				Subject:   lib.TENANT_APPLICATION_APPROVED_SUBJECT,
 				TextBody:  message,
 			},
 		)

@@ -398,6 +398,9 @@ func (h *TenantApplicationHandler) UpdateTenantApplication(w http.ResponseWriter
 		StayDuration:                   body.StayDuration,
 		PaymentFrequency:               body.PaymentFrequency,
 		InitialDepositFee:              body.InitialDepositFee,
+		InitialDepositPaymentMethod:    body.InitialDepositPaymentMethod,
+		InitialDepositReferenceNumber:  body.InitialDepositReferenceNumber,
+		InitialDepositPaidAt:           body.InitialDepositPaidAt,
 		SecurityDepositFee:             body.SecurityDepositFee,
 		SecurityDepositFeeCurrency:     body.SecurityDepositFeeCurrency,
 		SecurityDepositPaymentMethod:   body.SecurityDepositPaymentMethod,
@@ -504,6 +507,48 @@ func (h *TenantApplicationHandler) CancelTenantApplication(w http.ResponseWriter
 	})
 	if cancelTenantApplicationErr != nil {
 		HandleErrorResponse(w, cancelTenantApplicationErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// ApproveTenantApplication godoc
+//
+//	@Summary		Approve a tenant application
+//	@Description	Approve a tenant application
+//	@Tags			TenantApplication
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			tenant_application_id	path	string	true	"Tenant application ID"
+//	@Success		204						"Tenant application approved successfully"
+//	@Failure		400						{object}	lib.HTTPError	"Error occurred when approving a tenant application"
+//	@Failure		401						{object}	string			"Invalid or absent authentication token"
+//	@Failure		403						{object}	lib.HTTPError	"Tenant application not approved"
+//	@Failure		404						{object}	lib.HTTPError	"Tenant application not found"
+//	@Failure		409						{object}	lib.HTTPError	"Tenant application already approved"
+//	@Failure		422						{object}	lib.HTTPError	"Validation error"
+//	@Failure		500						{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/tenant-applications/{tenant_application_id}/approve [patch]
+func (h *TenantApplicationHandler) ApproveTenantApplication(w http.ResponseWriter, r *http.Request) {
+	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
+	if !currentClientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
+
+	approveTenantApplicationErr := h.service.ApproveTenantApplication(
+		r.Context(),
+		services.ApproveTenantApplicationInput{
+			ClientUserID:        currentClientUser.ID,
+			TenantApplicationID: tenantApplicationID,
+		},
+	)
+	if approveTenantApplicationErr != nil {
+		HandleErrorResponse(w, approveTenantApplicationErr)
 		return
 	}
 

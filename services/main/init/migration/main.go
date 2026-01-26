@@ -30,9 +30,9 @@ func updateMigration(db *gorm.DB) error {
 		&models.LeaseChecklist{},
 		&models.LeaseChecklistItem{},
 		&models.LeasePayment{},
+		&models.TenantAccount{},
 		// &models.MaintenanceRequest{},
 		// &models.Announcement{},
-		// &models.TenantAccount{},
 	)
 	return err
 }

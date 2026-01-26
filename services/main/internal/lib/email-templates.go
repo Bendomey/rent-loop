@@ -212,3 +212,32 @@ Best regards,
 The Rentloop team
 `
 )
+
+const (
+	TENANT_APPLICATION_APPROVED_SUBJECT = "Your Tenant Application Has Been Approved"
+	TENANT_APPLICATION_APPROVED_BODY    = `
+Hello {{applicant_name}},
+
+We’re pleased to inform you that your tenant application has been Approved.
+
+Application Details:
+
+Unit: {{unit_name}}
+
+Application Code: {{application_code}}
+
+Your lease has been prepared and is currently pending.
+Our team will contact you shortly with next steps, including move-in details and documentation.
+
+You can access your account anytime using the Rentloop mobile app — simply log in with your phone number: {{phone_number}}.
+
+If you have any questions in the meantime, feel free to reach out.
+
+Congratulations, and welcome aboard!
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop team
+`
+)

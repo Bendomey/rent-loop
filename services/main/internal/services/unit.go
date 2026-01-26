@@ -203,6 +203,7 @@ type UpdateUnitInput struct {
 	PaymentFrequency    *string
 	Features            *map[string]any
 	MaxOccupantsAllowed *int
+	Status              *string
 }
 
 func (s *unitService) UpdateUnit(ctx context.Context, input UpdateUnitInput) (*models.Unit, error) {
