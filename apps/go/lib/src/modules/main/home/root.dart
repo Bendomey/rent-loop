@@ -23,11 +23,95 @@ class _HomeScreen extends ConsumerState<HomeScreen> {
             leading: CupertinoButton(
               padding: EdgeInsets.zero,
               onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
+              child: Text('Done'),
             ),
-            middle: Text('iOS Modal'),
+            middle: Text(
+              'unit-102-0j88kwrzp9...',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ),
-          child: SafeArea(child: Center(child: Text('Content'))),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              controller: ModalScrollController.of(context),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 20),
+                    Center(
+                      child: Column(
+                        children: [
+                          // currentUserControllerState.driver?.profilePhoto != null &&
+                          //         currentUserControllerState
+                          //             .driver!
+                          //             .profilePhoto!
+                          //             .isNotEmpty
+                          //     ? CircleAvatar(
+                          //         radius: 35,
+                          //         backgroundImage: NetworkImage(
+                          //           currentUserControllerState
+                          //               .driver!
+                          //               .profilePhoto!,
+                          //         ),
+                          //         backgroundColor: Colors.grey.shade400,
+                          //       )
+                          //     :
+                          const Icon(Icons.account_circle_rounded, size: 90),
+                          SizedBox(height: 10),
+                          Text(
+                            "Hi, Benjamin!",
+                            style: Theme.of(
+                              context,
+                            ).textTheme.labelLarge!.copyWith(fontSize: 25),
+                          ),
+                          SizedBox(height: 10),
+                          FilledButton(
+                            onPressed: () {
+                              context.go('/settings/lease-details');
+                            },
+                            child: Text("Manage your Rentloop Lease"),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.grey.shade50,
+                      ),
+                      child: ListView.separated(
+                        physics: NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: 5,
+                        separatorBuilder: (context, index) =>
+                            Divider(height: 0.5),
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            leading: Icon(Icons.apartment),
+                            title: Text("unit-102-0j88kwrzp9"),
+                            subtitle: Text(
+                              "Madina, Accra",
+                              style: Theme.of(context).textTheme.bodySmall!
+                                  .copyWith(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 13,
+                                  ),
+                            ),
+                            trailing: Text("99+"),
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
