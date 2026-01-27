@@ -1424,6 +1424,75 @@ definitions:
         format: date-time
         type: string
     type: object
+  transformations.OutputTenant:
+    properties:
+      date_of_birth:
+        example: "1990-01-01"
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+      emergency_contact_name:
+        example: Mary Doe
+        type: string
+      emergency_contact_phone:
+        example: "+1122334455"
+        type: string
+      employer:
+        example: Tech Ltd.
+        type: string
+      first_name:
+        example: John
+        type: string
+      gender:
+        example: male
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      id_back_url:
+        example: https://example.com/id-back.jpg
+        type: string
+      id_front_url:
+        example: https://example.com/id-front.jpg
+        type: string
+      id_number:
+        example: ID123456
+        type: string
+      id_type:
+        example: ghana_card
+        type: string
+      last_name:
+        example: Doe
+        type: string
+      marital_status:
+        example: single
+        type: string
+      nationality:
+        example: Ghanaian
+        type: string
+      occupation:
+        example: Software Engineer
+        type: string
+      occupation_address:
+        example: 456 Tech Ave, Accra
+        type: string
+      other_names:
+        example: Michael
+        type: string
+      phone:
+        example: "+1234567890"
+        type: string
+      profile_photo_url:
+        example: https://example.com/photo.jpg
+        type: string
+      proof_of_income_url:
+        example: https://example.com/income.pdf
+        type: string
+      relationship_to_emergency_contact:
+        example: sister
+        type: string
+    type: object
   transformations.OutputTenantApplication:
     properties:
       cancelled_at:
@@ -4918,6 +4987,46 @@ paths:
       summary: Sends a tenant invite to a possible tenant
       tags:
       - TenantApplication
+  /api/v1/tenants/phone/{phone}:
+    get:
+      consumes:
+      - application/json
+      description: Get tenant by phone
+      parameters:
+      - description: Phone
+        in: path
+        name: phone
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputTenant'
+            type: object
+        "400":
+          description: Error occurred when fetching a tenant
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Tenant not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Invalid phone number
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Get tenant by phone
+      tags:
+      - Tenants
   /api/v1/units/{unit_id}:
     get:
       consumes:

@@ -15,6 +15,7 @@ import (
 type TenantService interface {
 	CreateTenant(context context.Context, input CreateTenantInput) (*models.Tenant, error)
 	GetOrCreateTenant(context context.Context, input CreateTenantInput) (*models.Tenant, error)
+	GetTenantByPhone(context context.Context, phone string) (*models.Tenant, error)
 }
 
 type tenantService struct {
@@ -96,6 +97,25 @@ func (s *tenantService) CreateTenant(ctx context.Context, input CreateTenantInpu
 	}
 
 	return &tenant, nil
+}
+
+func (s *tenantService) GetTenantByPhone(ctx context.Context, phone string) (*models.Tenant, error) {
+	getTenant, err := s.repo.FindOne(ctx, map[string]any{"phone": phone})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("Tenant not found", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "GetTenantByPhone",
+				"action":   "fetching tenant",
+			},
+		})
+	}
+	return getTenant, nil
 }
 
 func (s *tenantService) GetOrCreateTenant(ctx context.Context, input CreateTenantInput) (*models.Tenant, error) {
