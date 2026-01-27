@@ -5050,6 +5050,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/tenants/phone/{phone}": {
+            "get": {
+                "description": "Get tenant by phone",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tenants"
+                ],
+                "summary": "Get tenant by phone",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Phone",
+                        "name": "phone",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputTenant"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when fetching a tenant",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Tenant not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid phone number",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/units/{unit_id}": {
             "get": {
                 "description": "Fetch unit subset",
@@ -7034,6 +7095,99 @@ const docTemplate = `{
                     "type": "string",
                     "format": "date-time",
                     "example": "2023-01-01T00:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputTenant": {
+            "type": "object",
+            "properties": {
+                "date_of_birth": {
+                    "type": "string",
+                    "example": "1990-01-01"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "emergency_contact_name": {
+                    "type": "string",
+                    "example": "Mary Doe"
+                },
+                "emergency_contact_phone": {
+                    "type": "string",
+                    "example": "+1122334455"
+                },
+                "employer": {
+                    "type": "string",
+                    "example": "Tech Ltd."
+                },
+                "first_name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "gender": {
+                    "type": "string",
+                    "example": "male"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "id_back_url": {
+                    "type": "string",
+                    "example": "https://example.com/id-back.jpg"
+                },
+                "id_front_url": {
+                    "type": "string",
+                    "example": "https://example.com/id-front.jpg"
+                },
+                "id_number": {
+                    "type": "string",
+                    "example": "ID123456"
+                },
+                "id_type": {
+                    "type": "string",
+                    "example": "ghana_card"
+                },
+                "last_name": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "marital_status": {
+                    "type": "string",
+                    "example": "single"
+                },
+                "nationality": {
+                    "type": "string",
+                    "example": "Ghanaian"
+                },
+                "occupation": {
+                    "type": "string",
+                    "example": "Software Engineer"
+                },
+                "occupation_address": {
+                    "type": "string",
+                    "example": "456 Tech Ave, Accra"
+                },
+                "other_names": {
+                    "type": "string",
+                    "example": "Michael"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+1234567890"
+                },
+                "profile_photo_url": {
+                    "type": "string",
+                    "example": "https://example.com/photo.jpg"
+                },
+                "proof_of_income_url": {
+                    "type": "string",
+                    "example": "https://example.com/income.pdf"
+                },
+                "relationship_to_emergency_contact": {
+                    "type": "string",
+                    "example": "sister"
                 }
             }
         },
