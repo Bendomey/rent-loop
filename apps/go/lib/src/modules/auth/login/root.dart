@@ -12,6 +12,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreen extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
+  String? _errorText;
   bool _isLoading = false;
 
   @override
@@ -134,6 +135,7 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                               fontWeight: FontWeight.w400,
                             ),
                             border: InputBorder.none,
+                            errorStyle: const TextStyle(height: 0, fontSize: 0),
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 18,
@@ -143,36 +145,56 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                             FilteringTextInputFormatter.digitsOnly,
                             LengthLimitingTextInputFormatter(9),
                           ],
-                          validator: Validatorless.multiple([
-                            Validatorless.required('Phone number is required'),
-                            Validatorless.min(9, 'Enter a valid 9-digit number'),
-                            Validatorless.max(9, 'Enter a valid 9-digit number'),
-                          ]),
+                          validator: (value) {
+                            final result = Validatorless.multiple([
+                              Validatorless.required('Phone number is required'),
+                              Validatorless.min(9, 'Enter a valid 9-digit number'),
+                              Validatorless.max(9, 'Enter a valid 9-digit number'),
+                            ])(value);
+
+                            if (result != _errorText) {
+                               WidgetsBinding.instance.addPostFrameCallback((_) {
+                                 if (mounted) {
+                                   setState(() => _errorText = result);
+                                 }
+                               });
+                            }
+                            return result;
+                          },
                         ),
                       ),
                     ],
                   ),
+
                 ),
+                if (_errorText != null) ...[
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Text(
+                      _errorText!,
+                      style: TextStyle(
+                        color: Colors.red.shade700,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
                 SizedBox(height: screenHeight * 0.03),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withOpacity(0.08),
+                    color: Theme.of(context).colorScheme.secondary.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 20,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'By continuing, you agree to our Terms and Conditions.',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).primaryColor.withOpacity(0.8),
+                            color: Colors.grey.shade800,
                             height: 1.2,
                           ),
                         ),
