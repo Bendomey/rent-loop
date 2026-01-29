@@ -33,6 +33,8 @@ class _NavigationLoader extends ConsumerState<NavigationLoader> {
   }
 
   Future<void> _initializeAsync() async {
+    // Show splash branding for a moment
+    await Future.delayed(const Duration(seconds: 2));
     await _checkConnectivity();
   }
 
@@ -79,7 +81,7 @@ class _NavigationLoader extends ConsumerState<NavigationLoader> {
       final token = await ref.read(tokenManagerProvider).get();
       if (token == null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          context.go('/auth');
+          context.go('/welcome');
         });
         return;
       }
@@ -105,7 +107,7 @@ class _NavigationLoader extends ConsumerState<NavigationLoader> {
     } catch (e) {
       if (e.toString() == "Exception: UserNotFound") {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          context.go('/auth');
+          context.go('/welcome');
         });
         return;
       }
@@ -163,14 +165,37 @@ class _NavigationLoader extends ConsumerState<NavigationLoader> {
           children: [
             // Add top spacer to push content down slightly
             SizedBox(height: screenHeight * 0.1),
-            Text(
-              '> Myles',
-              style: TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: MediaQuery.textScalerOf(context)
-                    .clamp(minScaleFactor: 0.5, maxScaleFactor: 1.0)
-                    .scale(screenHeight * 0.05),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.home_work_rounded,
+                  size: screenHeight * 0.045,
+                  color: Theme.of(context).primaryColor,
+                ),
+                SizedBox(width: 8),
+                RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: MediaQuery.textScalerOf(context)
+                          .clamp(minScaleFactor: 0.5, maxScaleFactor: 1.0)
+                          .scale(screenHeight * 0.045),
+                      fontFamily: 'Inter',
+                    ),
+                    children: [
+                      TextSpan(
+                        text: 'Rent',
+                        style: TextStyle(color: Colors.black87),
+                      ),
+                      TextSpan(
+                        text: 'Loop',
+                        style: TextStyle(color: Theme.of(context).primaryColor),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: screenHeight * 0.04),
             LoadingAnimationWidget.horizontalRotatingDots(
@@ -198,16 +223,39 @@ class _NavigationLoader extends ConsumerState<NavigationLoader> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            // Position "> Myles" at the same height as loading state
+            // Position logo at the same height as loading state
             SizedBox(height: screenHeight * 0.35),
-            Text(
-              '> Myles',
-              style: TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: MediaQuery.textScalerOf(context)
-                    .clamp(minScaleFactor: 0.5, maxScaleFactor: 1.0)
-                    .scale(screenHeight * 0.05),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.home_work_rounded,
+                  size: screenHeight * 0.045,
+                  color: Theme.of(context).primaryColor,
+                ),
+                SizedBox(width: 8),
+                RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: MediaQuery.textScalerOf(context)
+                          .clamp(minScaleFactor: 0.5, maxScaleFactor: 1.0)
+                          .scale(screenHeight * 0.045),
+                      fontFamily: 'Inter',
+                    ),
+                    children: [
+                      TextSpan(
+                        text: 'Rent',
+                        style: TextStyle(color: Colors.black87),
+                      ),
+                      TextSpan(
+                        text: 'Loop',
+                        style: TextStyle(color: Theme.of(context).primaryColor),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: screenHeight * 0.04),
             Icon(

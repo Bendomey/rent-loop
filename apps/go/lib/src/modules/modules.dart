@@ -1,3 +1,4 @@
+export 'auth/welcome/root.dart';
 export 'auth/login/root.dart';
 export 'auth/verify/root.dart';
 
