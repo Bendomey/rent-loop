@@ -1,0 +1,9 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://rentloopapp.com/sitemap.xml
+
+# Disallow admin/api routes
+Disallow: /api/

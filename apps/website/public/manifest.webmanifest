@@ -1,0 +1,16 @@
+{
+  "name": "RentLoop - Smart renting made simple",
+  "short_name": "RentLoop",
+  "description": "Your all-in-one property management solution designed to simplify renting for landlords and delight tenants.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f43f5e",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}
