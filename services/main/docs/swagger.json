@@ -6055,13 +6055,45 @@
                     "type": "string",
                     "example": "2024-07-01T09:00:00Z"
                 },
+                "lease_agreement_document_mode": {
+                    "type": "string",
+                    "example": "digital"
+                },
+                "lease_agreement_document_property_manager_signed_at": {
+                    "type": "string",
+                    "example": "2024-06-15T12:00:00Z"
+                },
+                "lease_agreement_document_property_manager_signed_by_id": {
+                    "type": "string",
+                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
+                },
+                "lease_agreement_document_tenant_signed_at": {
+                    "type": "string",
+                    "example": "2024-06-16T14:00:00Z"
+                },
+                "lease_agreement_document_url": {
+                    "type": "string",
+                    "example": "https://example.com/lease.pdf"
+                },
                 "move_in_date": {
                     "type": "string",
                     "example": "2024-07-01T00:00:00Z"
                 },
+                "payment_frequency": {
+                    "type": "string",
+                    "example": "monthly"
+                },
                 "property_inspection_date": {
                     "type": "string",
                     "example": "2024-06-30T15:00:00Z"
+                },
+                "stay_duration": {
+                    "type": "integer",
+                    "example": 12
+                },
+                "stay_duration_frequency": {
+                    "type": "string",
+                    "example": "months"
                 },
                 "utility_transfers_date": {
                     "type": "string",

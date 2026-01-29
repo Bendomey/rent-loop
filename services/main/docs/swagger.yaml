@@ -599,11 +599,35 @@ definitions:
       key_handover_date:
         example: "2024-07-01T09:00:00Z"
         type: string
+      lease_agreement_document_mode:
+        example: digital
+        type: string
+      lease_agreement_document_property_manager_signed_at:
+        example: "2024-06-15T12:00:00Z"
+        type: string
+      lease_agreement_document_property_manager_signed_by_id:
+        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
+        type: string
+      lease_agreement_document_tenant_signed_at:
+        example: "2024-06-16T14:00:00Z"
+        type: string
+      lease_agreement_document_url:
+        example: https://example.com/lease.pdf
+        type: string
       move_in_date:
         example: "2024-07-01T00:00:00Z"
         type: string
+      payment_frequency:
+        example: monthly
+        type: string
       property_inspection_date:
         example: "2024-06-30T15:00:00Z"
+        type: string
+      stay_duration:
+        example: 12
+        type: integer
+      stay_duration_frequency:
+        example: months
         type: string
       utility_transfers_date:
         example: "2024-07-02T10:00:00Z"
