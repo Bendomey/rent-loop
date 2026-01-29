@@ -20,7 +20,7 @@ GoRouter buildRoutes() {
     ],
     navigatorKey: navigatorKey,
     restorationScopeId: 'rentloop-router',
-    initialLocation: '/',
+    initialLocation: '/splash',
     routes: [
       GoRoute(
         path: '/splash',
@@ -29,6 +29,11 @@ GoRouter buildRoutes() {
       ),
       GoRoute(
         path: '/auth',
+        name: "WelcomeScreen",
+        builder: (context, state) => const WelcomeScreen(),
+      ),
+      GoRoute(
+        path: '/auth/login',
         name: "LoginScreen",
         builder: (context, state) => const LoginScreen(),
         routes: [
