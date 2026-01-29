@@ -107,7 +107,7 @@ class _NavigationLoader extends ConsumerState<NavigationLoader> {
     } catch (e) {
       if (e.toString() == "Exception: UserNotFound") {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          context.go('/welcome');
+          context.go('/auth');
         });
         return;
       }
