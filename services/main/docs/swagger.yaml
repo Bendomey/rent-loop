@@ -594,6 +594,21 @@ definitions:
         example: Updated Lease Agreement
         type: string
     type: object
+  handlers.UpdateLeaseRequest:
+    properties:
+      key_handover_date:
+        example: "2024-07-01T09:00:00Z"
+        type: string
+      move_in_date:
+        example: "2024-07-01T00:00:00Z"
+        type: string
+      property_inspection_date:
+        example: "2024-06-30T15:00:00Z"
+        type: string
+      utility_transfers_date:
+        example: "2024-07-02T10:00:00Z"
+        type: string
+    type: object
   handlers.UpdatePropertyBlockRequest:
     properties:
       description:
@@ -1023,6 +1038,100 @@ definitions:
         type: string
       updated_at:
         example: "2023-01-01T00:00:00Z"
+        type: string
+    type: object
+  transformations.OutputAdminLease:
+    properties:
+      created_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      key_handover_date:
+        example: "2024-07-01T09:00:00Z"
+        type: string
+      lease_agreement_document_mode:
+        example: digital
+        type: string
+      lease_agreement_document_property_manager_signed_at:
+        example: "2024-06-15T12:00:00Z"
+        type: string
+      lease_agreement_document_property_manager_signed_by_id:
+        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
+        type: string
+      lease_agreement_document_tenant_signed_at:
+        example: "2024-06-16T14:00:00Z"
+        type: string
+      lease_agreement_document_url:
+        example: https://example.com/lease.pdf
+        type: string
+      leaseAgreementDocumentPropertyManagerSignedBy:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      meta:
+        additionalProperties: {}
+        type: object
+      move_in_date:
+        example: "2024-07-01T00:00:00Z"
+        type: string
+      parent_lease_id:
+        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
+        type: string
+      payment_frequency:
+        example: monthly
+        type: string
+      property_inspection_date:
+        example: "2024-06-30T15:00:00Z"
+        type: string
+      rent_fee:
+        example: 1200
+        type: integer
+      rent_fee_currency:
+        example: USD
+        type: string
+      status:
+        example: active
+        type: string
+      stay_duration:
+        example: 12
+        type: integer
+      stay_duration_frequency:
+        example: months
+        type: string
+      tenant:
+        $ref: '#/definitions/transformations.OutputTenant'
+      tenant_application_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      tenant_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      tenantApplication:
+        $ref: '#/definitions/transformations.OutputTenantApplication'
+      termination_agreement_document_property_manager_signed_at:
+        example: "2024-12-01T10:00:00Z"
+        type: string
+      termination_agreement_document_property_manager_signed_by_id:
+        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
+        type: string
+      termination_agreement_document_tenant_signed_at:
+        example: "2024-12-02T11:00:00Z"
+        type: string
+      termination_agreement_document_url:
+        example: https://example.com/termination.pdf
+        type: string
+      terminationAgreementDocumentPropertyManagerSignedBy:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      unit:
+        $ref: '#/definitions/transformations.OutputUnit'
+      unit_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      updated_at:
+        example: "2024-06-10T09:00:00Z"
+        type: string
+      utility_transfers_date:
+        example: "2024-07-02T10:00:00Z"
         type: string
     type: object
   transformations.OutputAdminWithToken:
@@ -3232,6 +3341,58 @@ paths:
       summary: Update an existing document
       tags:
       - Documents
+  /api/v1/leases/{lease_id}:
+    patch:
+      consumes:
+      - application/json
+      description: Update lease
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Update lease request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateLeaseRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lease Updated Successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminLease'
+            type: object
+        "400":
+          description: Error occurred when updating lease
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Lease not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update lease
+      tags:
+      - Lease
   /api/v1/properties:
     get:
       consumes:

@@ -2,16 +2,19 @@ package services
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"gorm.io/gorm"
 )
 
 type LeaseService interface {
 	CreateLease(context context.Context, input CreateLeaseInput) (*models.Lease, error)
+	UpdateLease(context context.Context, input UpdateLeaseInput) (*models.Lease, error)
 }
 
 type leaseService struct {
@@ -98,4 +101,135 @@ func (s *leaseService) CreateLease(ctx context.Context, input CreateLeaseInput) 
 	}
 
 	return &lease, nil
+}
+
+type UpdateLeaseInput struct {
+	LeaseID                                               string
+	Status                                                *string
+	RentFee                                               *int64
+	RentFeeCurrency                                       *string
+	PaymentFrequency                                      *string
+	Meta                                                  *map[string]any
+	MoveInDate                                            *time.Time
+	StayDurationFrequency                                 *string
+	StayDuration                                          *int64
+	KeyHandoverDate                                       *time.Time
+	UtilityTransfersDate                                  *time.Time
+	PropertyInspectionDate                                *time.Time
+	LeaseAggreementDocumentMode                           *string
+	LeaseAgreementDocumentUrl                             *string
+	LeaseAgreementDocumentPropertyManagerSignedById       *string
+	LeaseAgreementDocumentPropertyManagerSignedAt         *time.Time
+	LeaseAgreementDocumentTenantSignedAt                  *time.Time
+	TerminationAgreementDocumentUrl                       *string
+	TerminationAgreementDocumentPropertyManagerSignedAt   *time.Time
+	TerminationAgreementDocumentPropertyManagerSignedByID *string
+	TerminationAgreementDocumentTenantSignedAt            *time.Time
+	ParentLeaseId                                         *string
+}
+
+func (s *leaseService) UpdateLease(ctx context.Context, input UpdateLeaseInput) (*models.Lease, error) {
+	lease, getLeaseErr := s.repo.GetOneWithPopulate(ctx, repository.GetLeaseQuery{
+		ID: input.LeaseID,
+	})
+	if getLeaseErr != nil {
+		if errors.Is(getLeaseErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("LeaseNotFound", &pkg.RentLoopErrorParams{
+				Err: getLeaseErr,
+			})
+		}
+		return nil, pkg.InternalServerError(getLeaseErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getLeaseErr,
+			Metadata: map[string]string{
+				"function": "UpdateLease",
+				"action":   "getting lease",
+			},
+		})
+	}
+
+	if lease.Status != "Lease.Status.Pending" {
+		return nil, pkg.BadRequestError("LeaseIsNotPending", nil)
+	}
+
+	if input.Status != nil {
+		lease.Status = *input.Status
+	}
+
+	if input.RentFee != nil {
+		lease.RentFee = *input.RentFee
+	}
+
+	if input.RentFeeCurrency != nil {
+		lease.RentFeeCurrency = *input.RentFeeCurrency
+	}
+
+	if input.MoveInDate != nil {
+		lease.MoveInDate = *input.MoveInDate
+	}
+
+	if input.StayDurationFrequency != nil {
+		lease.StayDurationFrequency = *input.StayDurationFrequency
+	}
+
+	if input.StayDuration != nil {
+		lease.StayDuration = *input.StayDuration
+	}
+
+	if input.LeaseAgreementDocumentUrl != nil {
+		lease.LeaseAgreementDocumentUrl = *input.LeaseAgreementDocumentUrl
+	}
+
+	if input.Meta != nil {
+		meta, marshallErr := lib.InterfaceToJSON(*input.Meta)
+		if marshallErr != nil {
+			return nil, pkg.InternalServerError(marshallErr.Error(), &pkg.RentLoopErrorParams{
+				Err: marshallErr,
+				Metadata: map[string]string{
+					"function": "UpdateLease",
+					"action":   "marshalling meta",
+				},
+			})
+		}
+
+		lease.Meta = *meta
+	}
+
+	lease.PaymentFrequency = input.PaymentFrequency
+
+	lease.KeyHandoverDate = input.KeyHandoverDate
+
+	lease.UtilityTransfersDate = input.UtilityTransfersDate
+
+	lease.PropertyInspectionDate = input.PropertyInspectionDate
+
+	lease.LeaseAggreementDocumentMode = input.LeaseAggreementDocumentMode
+
+	lease.LeaseAgreementDocumentPropertyManagerSignedById = input.LeaseAgreementDocumentPropertyManagerSignedById
+
+	lease.LeaseAgreementDocumentPropertyManagerSignedAt = input.LeaseAgreementDocumentPropertyManagerSignedAt
+
+	lease.LeaseAgreementDocumentTenantSignedAt = input.LeaseAgreementDocumentTenantSignedAt
+
+	lease.TerminationAgreementDocumentUrl = input.TerminationAgreementDocumentUrl
+
+	lease.TerminationAgreementDocumentPropertyManagerSignedAt = input.TerminationAgreementDocumentPropertyManagerSignedAt
+
+	lease.TerminationAgreementDocumentPropertyManagerSignedByID = input.TerminationAgreementDocumentPropertyManagerSignedByID
+
+	lease.TerminationAgreementDocumentTenantSignedAt = input.TerminationAgreementDocumentTenantSignedAt
+
+	lease.ParentLeaseId = input.ParentLeaseId
+
+	err := s.repo.Update(ctx, lease)
+	if err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "UpdateLease",
+				"action":   "updating lease",
+			},
+		})
+	}
+
+	return lease, nil
 }
