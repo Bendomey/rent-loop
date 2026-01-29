@@ -50,7 +50,7 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen> {
   Future<void> _finishOnboarding() async {
     await Haptics.vibrate(HapticsType.selection);
     if (mounted) {
-      context.go('/auth');
+      context.go('/auth/login');
     }
   }
 

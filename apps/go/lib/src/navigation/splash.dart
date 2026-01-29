@@ -81,7 +81,7 @@ class _NavigationLoader extends ConsumerState<NavigationLoader> {
       final token = await ref.read(tokenManagerProvider).get();
       if (token == null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          context.go('/welcome');
+          context.go('/auth');
         });
         return;
       }

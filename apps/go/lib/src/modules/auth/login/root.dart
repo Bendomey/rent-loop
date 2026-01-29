@@ -33,7 +33,7 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
     if (mounted) {
       setState(() => _isLoading = false);
       final phone = '+233${_phoneController.text}';
-      context.go('/auth/verify/$phone');
+      context.go('/auth/login/verify/$phone');
     }
   }
 
@@ -50,7 +50,7 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
           onPressed: () {
-            context.go('/welcome');
+            context.go('/auth/login');
           },
         ),
       ),

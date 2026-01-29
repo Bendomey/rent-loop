@@ -28,12 +28,12 @@ GoRouter buildRoutes() {
         builder: (context, state) => const NavigationLoader(),
       ),
       GoRoute(
-        path: '/welcome',
+        path: '/auth',
         name: "WelcomeScreen",
         builder: (context, state) => const WelcomeScreen(),
       ),
       GoRoute(
-        path: '/auth',
+        path: '/auth/login',
         name: "LoginScreen",
         builder: (context, state) => const LoginScreen(),
         routes: [
