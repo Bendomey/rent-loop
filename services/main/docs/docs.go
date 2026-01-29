@@ -2351,6 +2351,87 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/leases/{lease_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update lease",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "Update lease",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update lease request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateLeaseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lease Updated Successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdminLease"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating lease",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Lease not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/properties": {
             "get": {
                 "security": [
@@ -5975,6 +6056,59 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.UpdateLeaseRequest": {
+            "type": "object",
+            "properties": {
+                "key_handover_date": {
+                    "type": "string",
+                    "example": "2024-07-01T09:00:00Z"
+                },
+                "lease_agreement_document_mode": {
+                    "type": "string",
+                    "example": "digital"
+                },
+                "lease_agreement_document_property_manager_signed_at": {
+                    "type": "string",
+                    "example": "2024-06-15T12:00:00Z"
+                },
+                "lease_agreement_document_property_manager_signed_by_id": {
+                    "type": "string",
+                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
+                },
+                "lease_agreement_document_tenant_signed_at": {
+                    "type": "string",
+                    "example": "2024-06-16T14:00:00Z"
+                },
+                "lease_agreement_document_url": {
+                    "type": "string",
+                    "example": "https://example.com/lease.pdf"
+                },
+                "move_in_date": {
+                    "type": "string",
+                    "example": "2024-07-01T00:00:00Z"
+                },
+                "payment_frequency": {
+                    "type": "string",
+                    "example": "monthly"
+                },
+                "property_inspection_date": {
+                    "type": "string",
+                    "example": "2024-06-30T15:00:00Z"
+                },
+                "stay_duration": {
+                    "type": "integer",
+                    "example": 12
+                },
+                "stay_duration_frequency": {
+                    "type": "string",
+                    "example": "months"
+                },
+                "utility_transfers_date": {
+                    "type": "string",
+                    "example": "2024-07-02T10:00:00Z"
+                }
+            }
+        },
         "handlers.UpdatePropertyBlockRequest": {
             "type": "object",
             "properties": {
@@ -6550,6 +6684,134 @@ const docTemplate = `{
                 "updated_at": {
                     "type": "string",
                     "example": "2023-01-01T00:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputAdminLease": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "key_handover_date": {
+                    "type": "string",
+                    "example": "2024-07-01T09:00:00Z"
+                },
+                "leaseAgreementDocumentPropertyManagerSignedBy": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "lease_agreement_document_mode": {
+                    "type": "string",
+                    "example": "digital"
+                },
+                "lease_agreement_document_property_manager_signed_at": {
+                    "type": "string",
+                    "example": "2024-06-15T12:00:00Z"
+                },
+                "lease_agreement_document_property_manager_signed_by_id": {
+                    "type": "string",
+                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
+                },
+                "lease_agreement_document_tenant_signed_at": {
+                    "type": "string",
+                    "example": "2024-06-16T14:00:00Z"
+                },
+                "lease_agreement_document_url": {
+                    "type": "string",
+                    "example": "https://example.com/lease.pdf"
+                },
+                "meta": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "move_in_date": {
+                    "type": "string",
+                    "example": "2024-07-01T00:00:00Z"
+                },
+                "parent_lease_id": {
+                    "type": "string",
+                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
+                },
+                "payment_frequency": {
+                    "type": "string",
+                    "example": "monthly"
+                },
+                "property_inspection_date": {
+                    "type": "string",
+                    "example": "2024-06-30T15:00:00Z"
+                },
+                "rent_fee": {
+                    "type": "integer",
+                    "example": 1200
+                },
+                "rent_fee_currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "active"
+                },
+                "stay_duration": {
+                    "type": "integer",
+                    "example": 12
+                },
+                "stay_duration_frequency": {
+                    "type": "string",
+                    "example": "months"
+                },
+                "tenant": {
+                    "$ref": "#/definitions/transformations.OutputTenant"
+                },
+                "tenantApplication": {
+                    "$ref": "#/definitions/transformations.OutputTenantApplication"
+                },
+                "tenant_application_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "tenant_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "terminationAgreementDocumentPropertyManagerSignedBy": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "termination_agreement_document_property_manager_signed_at": {
+                    "type": "string",
+                    "example": "2024-12-01T10:00:00Z"
+                },
+                "termination_agreement_document_property_manager_signed_by_id": {
+                    "type": "string",
+                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
+                },
+                "termination_agreement_document_tenant_signed_at": {
+                    "type": "string",
+                    "example": "2024-12-02T11:00:00Z"
+                },
+                "termination_agreement_document_url": {
+                    "type": "string",
+                    "example": "https://example.com/termination.pdf"
+                },
+                "unit": {
+                    "$ref": "#/definitions/transformations.OutputUnit"
+                },
+                "unit_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-06-10T09:00:00Z"
+                },
+                "utility_transfers_date": {
+                    "type": "string",
+                    "example": "2024-07-02T10:00:00Z"
                 }
             }
         },
