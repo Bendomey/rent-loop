@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { useFetcher } from 'react-router'
 import { toast } from 'sonner'
 import type { CreatePropertyTenantApplicationInput } from '~/api/tenant-applications'
@@ -16,6 +16,7 @@ interface TenantApplicationContextType {
 	onSubmit: (
 		data: Partial<CreatePropertyTenantApplicationInput>,
 	) => Promise<void>
+	unblockNavigation: () => void
 }
 
 export const TenantApplicationContext = createContext<
@@ -32,6 +33,7 @@ export function CreateNewPropertyTenantApplicationProvider({
 	const [formData, setFormData] = useState<
 		Partial<CreatePropertyTenantApplicationInput>
 	>({})
+	const bypassBlockerRef = useRef(false)
 
 	const goBack = () => setStepCount((prev) => (prev > 0 ? prev - 1 : prev))
 	const goNext = () => setStepCount((prev) => prev + 1)
@@ -47,7 +49,16 @@ export function CreateNewPropertyTenantApplicationProvider({
 	const isDirty = Object.keys(formData).length > 0
 	const isSubmitting = createFetcher.state !== 'idle'
 
-	let blocker = useNavigationBlocker(isSubmitting ? false : isDirty)
+	let blocker = useNavigationBlocker(isSubmitting ? false : (isDirty && !bypassBlockerRef.current))
+
+	/**
+	 * Clears the form data and sets a bypass flag to allow the next navigation
+	 * without prompting the user about unsaved changes.
+	 */
+	const unblockNavigation = () => {
+		bypassBlockerRef.current = true
+		setFormData({})
+	}
 
 	const updateFormData = (
 		data: Partial<CreatePropertyTenantApplicationInput>,
@@ -86,6 +97,7 @@ export function CreateNewPropertyTenantApplicationProvider({
 		formData,
 		onSubmit,
 		isSubmitting,
+		unblockNavigation,
 	}
 
 	return (

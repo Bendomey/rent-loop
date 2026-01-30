@@ -1,12 +1,11 @@
-import { AlertCircle, FileText, Globe, UserCircle, Users, Wrench } from 'lucide-react'
+import { AlertCircle} from 'lucide-react'
 import { Link, Outlet, useLoaderData } from 'react-router'
-import { TypographyH3, TypographyH4, TypographyMuted } from '~/components/ui/typography'
+import { TypographyH3, TypographyMuted } from '~/components/ui/typography'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { getPropertyUnitForServer } from '~/api/units/server'
 import { getDomainUrl } from '~/lib/misc'
 import type { Route } from './+types/tenants.apply._index'
 import { APP_NAME } from '~/lib/constants'
-
 
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -33,7 +32,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function TenantApplicationView() {
 	const {
-		isValidUrl,
+		isValidUrl
 	} = useLoaderData<typeof loader>()
 
 	if (!isValidUrl) {
@@ -81,7 +80,7 @@ export default function TenantApplicationView() {
 					reach out with the next steps.
 				</TypographyMuted>
 			</div>
-			<div className="w-full overflow-auto p-5">
+			<div className="w-full overflow-auto">
 					<Outlet />
 				</div>
 		</main>

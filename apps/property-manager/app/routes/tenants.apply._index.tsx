@@ -10,24 +10,25 @@ import { getSocialMetas } from '~/lib/seo'
 import { TenantApplyModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
-	const baseUrl = environmentVariables().API_ADDRESS
-	const url = new URL(request.url)
-	const referredBy = url.searchParams.get('referred_by')
-	const unitId = url.searchParams.get('unit')
 
-	const unit = await getPropertyUnitForServer(
-		{ unit_id: unitId as string },
-		{
-			baseUrl,
-		},
-	)
+	// const baseUrl = environmentVariables().API_ADDRESS
+	// const url = new URL(request.url)
+	// const referredBy = url.searchParams.get('referred_by')
+	// const unitId = url.searchParams.get('unit')
+
+	// const unit = await getPropertyUnitForServer(
+	// 	{ unit_id: unitId as string },
+	// 	{
+	// 		baseUrl,
+	// 	},
+	// )
 
 	return {
 		origin: getDomainUrl(request),
-		referredBy,
-		unitId,
-		unit,
-		isValidUrl: !!(referredBy && unitId),
+		// referredBy,
+		// unitId,
+		// unit,
+		// isValidUrl: !!(referredBy && unitId),
 	}
 }
 

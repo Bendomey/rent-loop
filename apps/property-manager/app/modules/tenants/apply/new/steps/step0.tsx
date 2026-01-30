@@ -3,14 +3,14 @@ import {
 	ArrowRight,
 	ChevronLeft,
 	ChevronRight,
-	Home,
 	Users,
 	Building2,
 	Wallet,
+	ArrowLeft,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useLoaderData } from 'react-router'
+import { Link, useRouteLoaderData } from 'react-router'
 import { z } from 'zod'
 import { useTenantApplicationContext } from '../context'
 import { Button } from '~/components/ui/button'
@@ -21,7 +21,7 @@ import {
 	TypographyH3,
 	TypographyMuted,
 } from '~/components/ui/typography'
-import type { loader } from '~/routes/tenants.apply._index'
+import type { loader } from '~/routes/tenants.apply'
 
 const ValidationSchema = z.object({
 	desired_unit_id: z.string({
@@ -35,7 +35,9 @@ const ValidationSchema = z.object({
 export type FormSchema = z.infer<typeof ValidationSchema>
 
 export function Step0() {
-	const { referredBy, unitId, unit } = useLoaderData<typeof loader>()
+	const parentData = useRouteLoaderData<typeof loader>("routes/tenants.apply")
+	const { referredBy, unitId, unit } = parentData || { referredBy: null, unitId: null, unit: null}
+
 	const [currentImageIndex, setCurrentImageIndex] = useState(0)
 	const images: string[] = unit?.images ?? []
 	const imagesCount = images.length
@@ -248,15 +250,15 @@ export function Step0() {
 
 				{/* Action Buttons */}
 				<div className="flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
-					<Link to={`/`}>
+					<Link to={`/tenants/apply?unit=${unitId}&referred_by=${referredBy}`}>
 						<Button
 							type="button"
 							size="lg"
 							variant="outline"
 							className="w-full md:w-auto"
 						>
-							<Home className="mr-2 h-4 w-4" />
-							Go Home
+							<ArrowLeft className="mr-2 h-4 w-4" />
+						Go Back
 						</Button>
 					</Link>
 					<Button

@@ -5,11 +5,12 @@ import { Link, useFetcher } from 'react-router'
 import { z } from 'zod'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
-import { TypographyH2, TypographyH3, TypographyMuted, TypographySmall } from '~/components/ui/typography'
+import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import { APP_NAME } from '~/lib/constants'
 import { useTenantApplicationContext } from './context'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '~/components/ui/form'
-import { ArrowRight, Home } from 'lucide-react'
+import { AlertCircleIcon, ArrowRight, Home } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert"
 
 const ValidationSchema = z.object({
   phone: z
@@ -21,65 +22,76 @@ type FormSchema = z.infer<typeof ValidationSchema>
 
 export function TenantApplicationPhoneLookUpModule() {
   const { goNext, formData, updateFormData } = useTenantApplicationContext()
-  
+
     const rhfMethods = useForm<FormSchema>({
       resolver: zodResolver(ValidationSchema),
-      defaultValues: {
-        },
+      defaultValues: {},
     })
-  
-    	const { handleSubmit, control, setValue } = rhfMethods
 
-  
+    const { handleSubmit, control, setValue } = rhfMethods
+
+    useEffect(() => {
+        if (formData.phone) {
+          setValue('phone', formData.phone, {
+            shouldDirty: true,
+            shouldValidate: true,
+          })
+        }
+      }, [formData])
+
     const onSubmit = async (data: FormSchema) => {
+      updateFormData({ phone: data.phone })
+      // TODO: implement phone lookup logic (Mutate)
       goNext()
-    }
+    } 
 
   return (
         <Form {...rhfMethods}>
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="mx-auto my-4 space-y-6 md:my-8 md:max-w-2xl"
+            className="mx-auto my-4 space-y-6 md:my-8 md:max-w-2xl flex w-full items-center justify-center px-4"
           >
-
-       
-    <div className="flex w-full items-center justify-center bg-zinc-50 px-4">
-      <div className="w-full max-w-md rounded-xl border bg-white shadow-sm">
+      <div className="w-full max-w-xl rounded-xl border shadow-sm">
 
         {/* Content */}
-        <div className="px-6 py-8 space-y-6">
-          <div className="space-y-2">
+        <div className="px-6 py-8 space-y-8">
+          <div className="space-y-4">
             <TypographyH2 className="text-lg font-semibold">
-              Enter your phone number
+               Let’s get you started
             </TypographyH2>
 
-            <TypographyMuted>
-              We&apos;ll use this to check if you&apos;ve applied before.
-              If we find an existing application, your details will be
-              filled automatically.
-            </TypographyMuted>
+           <Alert className="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
+  <AlertCircleIcon />
+  <AlertTitle>Continue your application</AlertTitle>
+  <AlertDescription>
+    Enter your phone number to get started. If you’ve applied before, we’ll find
+    your details and resume your application. New applicants will be guided
+    through a fresh application.
+  </AlertDescription>
+</Alert>
+
+            
           </div>
 
-            <div className="space-y-2">
              <FormField
-								name="phone"
-								control={control}
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>
-											Phone <span className="text-red-500">*</span>
-										</FormLabel>
-										<FormControl>
-											<Input {...field} type="text" />
-										</FormControl>
-										<FormDescription>
-											We'll send notifications to this number  Use the phone number you&apos;ll be reachable on.
-										</FormDescription>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-            </div>
+						name="phone"
+						control={control}
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>
+									Phone number <span className="text-red-500">*</span>
+								</FormLabel>
+								<FormControl>
+									<Input {...field} type="text" placeholder="201234567" />
+								</FormControl>
+								<FormDescription>
+								We may send a verification code to confirm it’s you. Please use a phone
+              number you can access.
+								</FormDescription>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
 
             <div className="flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
 					<Link to={`/`}>
@@ -90,10 +102,11 @@ export function TenantApplicationPhoneLookUpModule() {
 							className="w-full md:w-auto"
 						>
 							<Home className="mr-2 h-4 w-4" />
-							Go Home
+							Back to home
 						</Button>
 					</Link>
 					<Button
+						type="submit"
 						size="lg"
 						variant="default"
 						className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
@@ -102,14 +115,8 @@ export function TenantApplicationPhoneLookUpModule() {
 					</Button>
 				</div>
 
-            {/* 
-              After submit:
-              - If phone exists → show OTP verification here
-              - If new → proceed to unit selection
-            */}
         </div>
       </div>
-    </div>
        </form>
           </Form>
   )
