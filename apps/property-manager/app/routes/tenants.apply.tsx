@@ -1,12 +1,11 @@
-import { AlertCircle} from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import { Link, Outlet, useLoaderData } from 'react-router'
+import type { Route } from './+types/tenants.apply._index'
+import { getPropertyUnitForServer } from '~/api/units/server'
 import { TypographyH3, TypographyMuted } from '~/components/ui/typography'
 import { environmentVariables } from '~/lib/actions/env.server'
-import { getPropertyUnitForServer } from '~/api/units/server'
-import { getDomainUrl } from '~/lib/misc'
-import type { Route } from './+types/tenants.apply._index'
 import { APP_NAME } from '~/lib/constants'
-
+import { getDomainUrl } from '~/lib/misc'
 
 export async function loader({ request }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
@@ -31,9 +30,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function TenantApplicationView() {
-	const {
-		isValidUrl
-	} = useLoaderData<typeof loader>()
+	const { isValidUrl } = useLoaderData<typeof loader>()
 
 	if (!isValidUrl) {
 		return (
@@ -64,7 +61,7 @@ export default function TenantApplicationView() {
 	}
 
 	return (
-		<main className="h-[calc(100vh+160px)] md:h-[calc(100vh-120px)]">	
+		<main className="h-[calc(100vh+160px)] md:h-[calc(100vh-120px)]">
 			<div className="border-b p-4 md:px-0 md:py-6">
 				<Link to="/login">
 					<TypographyH3 className="text-center capitalize">
@@ -81,8 +78,8 @@ export default function TenantApplicationView() {
 				</TypographyMuted>
 			</div>
 			<div className="w-full overflow-auto">
-					<Outlet />
-				</div>
+				<Outlet />
+			</div>
 		</main>
 	)
 }

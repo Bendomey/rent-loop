@@ -49,7 +49,9 @@ export function CreateNewPropertyTenantApplicationProvider({
 	const isDirty = Object.keys(formData).length > 0
 	const isSubmitting = createFetcher.state !== 'idle'
 
-	let blocker = useNavigationBlocker(isSubmitting ? false : (isDirty && !bypassBlockerRef.current))
+	let blocker = useNavigationBlocker(
+		isSubmitting ? false : isDirty && !bypassBlockerRef.current,
+	)
 
 	/**
 	 * Clears the form data and sets a bypass flag to allow the next navigation

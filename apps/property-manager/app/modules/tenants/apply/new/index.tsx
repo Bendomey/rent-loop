@@ -33,7 +33,6 @@ export function NewTenantApply() {
 }
 
 export function NewTenantApplyModule() {
-	
 	return (
 		<CreateNewPropertyTenantApplicationProvider>
 			<NewTenantApply />
