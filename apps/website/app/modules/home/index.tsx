@@ -1,15 +1,17 @@
-import { useState } from "react";
 import { Dialog, DialogPanel } from "@headlessui/react";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import { APP_NAME } from "~/lib/constants";
-import { Footer } from "~/components/layout/footer";
 
 import {
   Disclosure,
   DisclosureButton,
   DisclosurePanel,
 } from "@headlessui/react";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { MinusSmallIcon, PlusSmallIcon } from "@heroicons/react/24/outline";
+import { useState } from "react";
+import { Link } from "react-router";
+import { ExternalLink } from "~/components/layout/ExternalLink";
+import { Footer } from "~/components/layout/footer";
+import { APP_NAME, PROPERTY_MANAGER_APP_URL } from "~/lib/constants";
 
 const navigation = [
   { name: "Features", href: "#" },
@@ -36,14 +38,16 @@ export function Home() {
                                 className="h-8 w-auto"
                             />
                         </a> */}
-            <div className="flex flex-row items-end">
-              <span className="text-4xl font-extrabold text-rose-700">
-                {APP_NAME.slice(0, 4)}
-              </span>
-              <span className="text-4xl font-extrabold">
-                {APP_NAME.slice(4)}
-              </span>
-            </div>
+            <Link to='/'>
+              <div className="flex flex-row items-end">
+                <span className="text-4xl font-extrabold text-rose-700">
+                  {APP_NAME.slice(0, 4)}
+                </span>
+                <span className="text-4xl font-extrabold">
+                  {APP_NAME.slice(4)}
+                </span>
+              </div>
+            </Link>
           </div>
           <div className="flex lg:hidden">
             <button
@@ -67,9 +71,9 @@ export function Home() {
             ))}
           </div>
           <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-            <a href="#" className="text-sm/6 font-semibold text-gray-900">
+            <ExternalLink href={`${PROPERTY_MANAGER_APP_URL}/login`} className="text-sm/6 font-semibold text-gray-900">
               Log in <span aria-hidden="true">&rarr;</span>
-            </a>
+            </ExternalLink>
           </div>
         </nav>
         <Dialog
@@ -174,12 +178,12 @@ export function Home() {
                 tenancy management.
               </p>
               <div className="mt-10 flex items-center justify-center gap-x-6">
-                <a
-                  href="#"
-                  className="rounded-md bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-rose-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600"
+                <ExternalLink
+                  href={`${PROPERTY_MANAGER_APP_URL}/apply`}
+                  className="rounded-md bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-rose-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600"
                 >
                   Get started Today
-                </a>
+                </ExternalLink>
                 <a href="#" className="text-sm/6 font-semibold text-gray-900">
                   Learn more <span aria-hidden="true">→</span>
                 </a>
@@ -270,7 +274,7 @@ export function Home() {
                   <div className="absolute inset-x-10 top-10 bottom-0 overflow-hidden rounded-t-[12cqw] border-x-[3cqw] border-t-[3cqw] border-gray-700 bg-gray-900 shadow-2xl">
                     <img
                       alt=""
-                      src="https://tailwindcss.com/plus-assets/img/component-images/bento-03-mobile-friendly.png"
+                      src="/images/tenant-app.png"
                       className="size-full object-cover object-top"
                     />
                   </div>
@@ -327,28 +331,20 @@ export function Home() {
               <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(var(--radius-lg)+1px)] max-lg:rounded-b-[calc(2rem+1px)] lg:rounded-r-[calc(2rem+1px)]">
                 <div className="px-8 pt-8 pb-3 sm:px-10 sm:pt-10 sm:pb-0">
                   <p className="mt-2 text-lg font-medium tracking-tight text-gray-950 max-lg:text-center">
-                    Powerful APIs
+                    Managing Maintenance Requests
                   </p>
                   <p className="mt-2 max-w-lg text-sm/6 text-gray-600 max-lg:text-center">
-                    Sit quis amet rutrum tellus ullamcorper ultricies libero
-                    dolor eget sem sodales gravida.
+                    Streamline maintenance requests with our easy-to-use
+                    tracking system that keeps tenants and landlords informed.
                   </p>
                 </div>
-                <div className="relative min-h-120 w-full grow">
-                  <div className="absolute top-10 right-0 bottom-0 left-10 overflow-hidden rounded-tl-xl bg-gray-900 shadow-2xl outline outline-white/10">
-                    <div className="flex bg-gray-900 outline outline-white/5">
-                      <div className="-mb-px flex text-sm/6 font-medium text-gray-400">
-                        <div className="border-r border-b border-r-white/10 border-b-white/20 bg-white/5 px-4 py-2 text-white">
-                          NotificationSetting.jsx
-                        </div>
-                        <div className="border-r border-gray-600/10 px-4 py-2">
-                          App.jsx
-                        </div>
-                      </div>
-                    </div>
-                    <div className="px-6 pt-6 pb-14">
-                      {/* Your code example */}
-                    </div>
+                <div className="@container relative min-h-120 w-full grow max-lg:mx-auto max-lg:max-w-sm">
+                  <div className="absolute inset-x-10 top-10 bottom-0 overflow-hidden rounded-t-[12cqw] border-x-[3cqw] border-t-[3cqw] border-gray-700 bg-gray-900 shadow-2xl">
+                    <img
+                      alt=""
+                      src="/images/maintenance-requests.png"
+                      className="size-full object-cover object-top"
+                    />
                   </div>
                 </div>
               </div>

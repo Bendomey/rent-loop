@@ -3,6 +3,7 @@
 
 yarn.lock
 !apps/property-manager/yarn.lock
+!apps/website/yarn.lock
 node_modules
 
 .idea

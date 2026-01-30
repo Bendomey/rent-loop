@@ -3,6 +3,11 @@ export const APP_NAME = "rentloop";
 export const APP_DOMAIN =
   NODE_ENV === "production" ? "rentloopapp.com" : "localhost";
 
+export const PROPERTY_MANAGER_APP_URL =
+  NODE_ENV === "production"
+    ? "https://rentloop-property-manager-staging.fly.dev" // https://app.rentloopapp.com
+    : "https://rentloop-property-manager-staging.fly.dev";
+
 export const NOT_FOUND_ROUTE = "/not-found";
 export const COMING_SOON_ROUTE = "/coming-soon";
 
