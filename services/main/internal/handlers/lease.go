@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -84,6 +85,46 @@ func (h *LeaseHandler) UpdateLease(w http.ResponseWriter, r *http.Request) {
 	}
 
 	lease, err := h.service.UpdateLease(r.Context(), input)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBAdminLeaseToRest(lease),
+	})
+}
+
+type GetLeaseQuery struct {
+	lib.GetOneQueryInput
+}
+
+// GetLeaseByID godoc
+//
+//	@Summary		Get lease
+//	@Description	Get lease
+//	@Tags			Lease
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			lease_id	path		string											true	"Lease ID"
+//	@Param			q			query		GetLeaseQuery									true	"Leases"
+//	@Success		200			{object}	object{data=transformations.OutputAdminLease}	"Lease"
+//	@Failure		400			{object}	lib.HTTPError									"Error occurred when getting lease"
+//	@Failure		401			{object}	string											"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError									"Lease not found"
+//	@Failure		500			{object}	string											"An unexpected error occurred"
+//	@Router			/api/v1/leases/{lease_id} [get]
+func (h *LeaseHandler) GetLeaseByID(w http.ResponseWriter, r *http.Request) {
+	leaseID := chi.URLParam(r, "lease_id")
+
+	populate := GetPopulateFields(r)
+	query := repository.GetLeaseQuery{
+		ID:       leaseID,
+		Populate: populate,
+	}
+
+	lease, err := h.service.GetByIDWithPopulate(r.Context(), query)
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return

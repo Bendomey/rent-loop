@@ -15,6 +15,7 @@ import (
 type LeaseService interface {
 	CreateLease(context context.Context, input CreateLeaseInput) (*models.Lease, error)
 	UpdateLease(context context.Context, input UpdateLeaseInput) (*models.Lease, error)
+	GetByIDWithPopulate(context context.Context, query repository.GetLeaseQuery) (*models.Lease, error)
 }
 
 type leaseService struct {
@@ -227,6 +228,27 @@ func (s *leaseService) UpdateLease(ctx context.Context, input UpdateLeaseInput) 
 			Metadata: map[string]string{
 				"function": "UpdateLease",
 				"action":   "updating lease",
+			},
+		})
+	}
+
+	return lease, nil
+}
+
+func (s *leaseService) GetByIDWithPopulate(ctx context.Context, query repository.GetLeaseQuery) (*models.Lease, error) {
+	lease, err := s.repo.GetOneWithPopulate(ctx, query)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("LeaseNotFound", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "GetByIDWithPopulate",
+				"action":   "fetching lease",
 			},
 		})
 	}
