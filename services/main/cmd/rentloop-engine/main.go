@@ -30,8 +30,15 @@ func main() {
 		log.Fatal("failed to connect db:", err)
 	}
 
+	redis, err := db.ConnectRedis(cfg)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Fatal("failed to connect redis:", err)
+	}
+
 	appCtx := pkg.AppContext{
 		DB:        database,
+		RDB:       redis,
 		Config:    cfg,
 		Validator: validator.New(),
 	}
