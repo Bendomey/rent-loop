@@ -1,4 +1,21 @@
 definitions:
+  handlers.AuthCodeRequest:
+    properties:
+      channel:
+        enum:
+        - email
+        - sms
+        example: email
+        type: string
+      email:
+        example: email@example.com
+        type: string
+      phone:
+        example: "+233281234569"
+        type: string
+    required:
+    - channel
+    type: object
   handlers.CancelTenantApplicationRequest:
     properties:
       reason:
@@ -934,6 +951,20 @@ definitions:
         - RETAIL
         example: APARTMENT
         type: string
+    type: object
+  handlers.VerifyCodeRequest:
+    properties:
+      code:
+        example: "123456"
+        type: string
+      email:
+        example: email@example.com
+        type: string
+      phone:
+        example: "+233281234569"
+        type: string
+    required:
+    - code
     type: object
   lib.HTTPError:
     properties:
@@ -2101,6 +2132,70 @@ paths:
       summary: Get the currently authenticated admin
       tags:
       - Admins
+  /api/v1/auth/codes:
+    post:
+      consumes:
+      - application/json
+      description: Send verification code
+      parameters:
+      - description: Auth code request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AuthCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Error occurred when sending verification code
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Send verification code
+      tags:
+      - Auth
+  /api/v1/auth/codes/verify:
+    post:
+      consumes:
+      - application/json
+      description: Verify verification code
+      parameters:
+      - description: Verify code request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.VerifyCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Error occurred when verifying verification code
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Verify verification code
+      tags:
+      - Auth
   /api/v1/client-applications:
     get:
       consumes:

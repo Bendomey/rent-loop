@@ -13,6 +13,8 @@ func NewTenantAccountRouter(appCtx pkg.AppContext, handlers handlers.Handlers) f
 		r.Group(func(r chi.Router) {
 			r.Post("/v1/tenant-applications", handlers.TenantApplicationHandler.CreateTenantApplication)
 			r.Get("/v1/tenants/phone/{phone}", handlers.TenantHandler.GetTenantByPhone)
+			r.Post("/v1/auth/codes", handlers.AuthHandler.SendCode)
+			r.Post("/v1/auth/codes/verify", handlers.AuthHandler.VerifyCode)
 		})
 
 		// protected tenant user routes

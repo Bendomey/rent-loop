@@ -382,6 +382,104 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/auth/codes": {
+            "post": {
+                "description": "Send verification code",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Send verification code",
+                "parameters": [
+                    {
+                        "description": "Auth code request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AuthCodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Error occurred when sending verification code",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/codes/verify": {
+            "post": {
+                "description": "Verify verification code",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Verify verification code",
+                "parameters": [
+                    {
+                        "description": "Verify code request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.VerifyCodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Error occurred when verifying verification code",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/client-applications": {
             "get": {
                 "security": [
@@ -5322,6 +5420,30 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handlers.AuthCodeRequest": {
+            "type": "object",
+            "required": [
+                "channel"
+            ],
+            "properties": {
+                "channel": {
+                    "type": "string",
+                    "enum": [
+                        "email",
+                        "sms"
+                    ],
+                    "example": "email"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "email@example.com"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+233281234569"
+                }
+            }
+        },
         "handlers.CancelTenantApplicationRequest": {
             "type": "object",
             "required": [
@@ -6579,6 +6701,26 @@ const docTemplate = `{
                         "RETAIL"
                     ],
                     "example": "APARTMENT"
+                }
+            }
+        },
+        "handlers.VerifyCodeRequest": {
+            "type": "object",
+            "required": [
+                "code"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "123456"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "email@example.com"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+233281234569"
                 }
             }
         },
