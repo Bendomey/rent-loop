@@ -1,10 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { AlertCircleIcon, ArrowRight, Home } from 'lucide-react'
+import { AlertCircleIcon, ArrowLeft, ArrowRight } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link } from 'react-router'
 import { z } from 'zod'
-import { useTenantApplicationContext } from './context'
+import { useTenantApplicationContext } from '../context'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
 import {
@@ -27,8 +26,9 @@ const ValidationSchema = z.object({
 
 type FormSchema = z.infer<typeof ValidationSchema>
 
-export function TenantApplicationPhoneLookUpModule() {
-	const { goNext, formData, updateFormData } = useTenantApplicationContext()
+export function Step1() {
+	const { goNext, goBack, formData, updateFormData } =
+		useTenantApplicationContext()
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
@@ -97,25 +97,23 @@ export function TenantApplicationPhoneLookUpModule() {
 							)}
 						/>
 
-						<div className="flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
-							<Link to={`/`}>
-								<Button
-									type="button"
-									size="lg"
-									variant="outline"
-									className="w-full md:w-auto"
-								>
-									<Home className="mr-2 h-4 w-4" />
-									Back to home
-								</Button>
-							</Link>
+						<div className="mt-10 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
 							<Button
-								type="submit"
+								onClick={goBack}
+								type="button"
+								size="lg"
+								variant="outline"
+								className="w-full md:w-auto"
+							>
+								<ArrowLeft className="mr-2 h-4 w-4" />
+								Go Back
+							</Button>
+							<Button
 								size="lg"
 								variant="default"
 								className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
 							>
-								Continue <ArrowRight className="ml-2 h-4 w-4" />
+								Next <ArrowRight className="ml-2 h-4 w-4" />
 							</Button>
 						</div>
 					</div>

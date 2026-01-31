@@ -1,7 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { ArrowRight, Home } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
+import { Link } from 'react-router'
 import { z } from 'zod'
 import { useTenantApplicationContext } from '../context'
 import { DatePickerInput } from '~/components/date-picker-input'
@@ -80,9 +81,8 @@ const marital_status: Array<{
 
 export type FormSchema = z.infer<typeof ValidationSchema>
 
-export function Step1() {
-	const { goBack, goNext, formData, updateFormData } =
-		useTenantApplicationContext()
+export function Step3() {
+	const { goNext, formData, updateFormData } = useTenantApplicationContext()
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
@@ -439,16 +439,17 @@ export function Step1() {
 				</FieldGroup>
 
 				<div className="mt-10 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
-					<Button
-						onClick={goBack}
-						type="button"
-						size="lg"
-						variant="outline"
-						className="w-full md:w-auto"
-					>
-						<ArrowLeft className="mr-2 h-4 w-4" />
-						Go Back
-					</Button>
+					<Link to={`/`}>
+						<Button
+							type="button"
+							size="lg"
+							variant="outline"
+							className="w-full md:w-auto"
+						>
+							<Home className="mr-2 h-4 w-4" />
+							Go Home
+						</Button>
+					</Link>
 					<Button
 						size="lg"
 						variant="default"

@@ -1,4 +1,5 @@
-import { ArrowLeft, Pencil } from 'lucide-react'
+import { ArrowLeft, Home, Pencil } from 'lucide-react'
+import { Link } from 'react-router'
 import { useTenantApplicationContext } from '../context'
 import { Image } from '~/components/Image'
 import { Button } from '~/components/ui/button'
@@ -21,12 +22,14 @@ const PreviewCard = ({
 	subtitle,
 	children,
 	onEdit,
+	isEditable,
 }: {
 	title: string
 	subtitle?: string
 	children: React.ReactNode
 	stepNumber: number
 	onEdit: () => void
+	isEditable?: boolean
 }) => (
 	<div className="rounded-lg border bg-white p-6">
 		<div className="mb-4 flex items-start justify-between">
@@ -36,22 +39,25 @@ const PreviewCard = ({
 					<p className="text-muted-foreground mt-1 text-sm">{subtitle}</p>
 				)}
 			</div>
-			<Button
-				type="button"
-				size="sm"
-				variant="ghost"
-				onClick={onEdit}
-				className="text-rose-600 hover:text-rose-700"
-			>
-				<Pencil className="h-4 w-4" />
-			</Button>
+
+			{isEditable ? (
+				<Button
+					type="button"
+					size="sm"
+					variant="ghost"
+					onClick={onEdit}
+					className="text-rose-600 hover:text-rose-700"
+				>
+					<Pencil className="h-4 w-4" />
+				</Button>
+			) : null}
 		</div>
 		<div className="space-y-0">{children}</div>
 	</div>
 )
 
-export function Step4() {
-	const { goBack, goToPage, formData, onSubmit, isSubmitting } =
+export function Step6() {
+	const { goBack, goToPage, formData, onSubmit, isSubmitting, isEditable } =
 		useTenantApplicationContext()
 	const isStudent = formData.employment_type === 'STUDENT'
 
@@ -81,6 +87,7 @@ export function Step4() {
 					subtitle="Identification photo"
 					stepNumber={0}
 					onEdit={() => goToPage(0)}
+					isEditable={isEditable}
 				>
 					<div className="py-3">
 						<Image
@@ -98,6 +105,7 @@ export function Step4() {
 				subtitle="Personal details"
 				stepNumber={1}
 				onEdit={() => goToPage(1)}
+				isEditable={isEditable}
 			>
 				<div className="grid grid-cols-2 gap-x-4 gap-y-0">
 					{renderPreviewField('First Name', formData.first_name)}
@@ -123,6 +131,7 @@ export function Step4() {
 				subtitle="Identification details"
 				stepNumber={2}
 				onEdit={() => goToPage(2)}
+				isEditable={isEditable}
 			>
 				<div className="grid grid-cols-2 gap-x-4 gap-y-0">
 					{renderPreviewField('Nationality', formData.nationality)}
@@ -167,6 +176,7 @@ export function Step4() {
 				subtitle={`Emergency contact and ${isStudent ? 'student' : 'employment'} information`}
 				stepNumber={3}
 				onEdit={() => goToPage(3)}
+				isEditable={isEditable}
 			>
 				<div className="space-y-4">
 					<div>
@@ -225,16 +235,30 @@ export function Step4() {
 
 			{/* Action Buttons */}
 			<div className="mt-10 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
-				<Button
-					onClick={goBack}
-					type="button"
-					size="lg"
-					variant="outline"
-					className="w-full md:w-auto"
-				>
-					<ArrowLeft className="mr-2 h-4 w-4" />
-					Go Back
-				</Button>
+				{!isEditable ? (
+					<Link to={`/`}>
+						<Button
+							type="button"
+							size="lg"
+							variant="outline"
+							className="w-full md:w-auto"
+						>
+							<Home className="mr-2 h-4 w-4" />
+							Go Home
+						</Button>
+					</Link>
+				) : (
+					<Button
+						onClick={goBack}
+						type="button"
+						size="lg"
+						variant="outline"
+						className="w-full md:w-auto"
+					>
+						<ArrowLeft className="mr-2 h-4 w-4" />
+						Go Back
+					</Button>
+				)}
 				<Button
 					disabled={isSubmitting}
 					size="lg"

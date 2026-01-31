@@ -55,7 +55,7 @@ const employment_type: Array<{
 
 export type FormSchema = z.infer<typeof ValidationSchema>
 
-export function Step3() {
+export function Step5() {
 	const { goBack, goNext, formData, updateFormData } =
 		useTenantApplicationContext()
 

@@ -58,7 +58,7 @@ const idTypes: Array<{
 
 export type FormSchema = z.infer<typeof ValidationSchema>
 
-export function Step2() {
+export function Step4() {
 	const { goBack, goNext, formData, updateFormData } =
 		useTenantApplicationContext()
 

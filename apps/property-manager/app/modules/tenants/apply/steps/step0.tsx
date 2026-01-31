@@ -1,15 +1,16 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowRight, ArrowLeft } from 'lucide-react'
+import { ArrowRight, Home } from 'lucide-react'
 import { useForm } from 'react-hook-form'
-import { Link, useRouteLoaderData } from 'react-router'
+import { Link } from 'react-router'
+import { useLoaderData } from 'react-router'
 import { z } from 'zod'
-import { UnitPreview } from '../../components/unit-preview'
+import { UnitPreview } from '../components/unit-preview'
 import { useTenantApplicationContext } from '../context'
 import { Button } from '~/components/ui/button'
 import { Form } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
-import type { loader } from '~/routes/tenants.apply'
+import type { loader } from '~/routes/tenants.apply._index'
 
 const ValidationSchema = z.object({
 	desired_unit_id: z.string({
@@ -23,11 +24,7 @@ const ValidationSchema = z.object({
 export type FormSchema = z.infer<typeof ValidationSchema>
 
 export function Step0() {
-	const parentData = useRouteLoaderData<typeof loader>('routes/tenants.apply')
-	const { referredBy, unitId, unit } = parentData || {
-		referredBy: null,
-		unitId: null,
-	}
+	const { referredBy, unitId, unit } = useLoaderData<typeof loader>()
 
 	const { goNext, formData, updateFormData } = useTenantApplicationContext()
 
@@ -72,15 +69,15 @@ export function Step0() {
 
 				{/* Action Buttons */}
 				<div className="flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
-					<Link to={`/tenants/apply?unit=${unitId}&referred_by=${referredBy}`}>
+					<Link to={`/`}>
 						<Button
 							type="button"
 							size="lg"
 							variant="outline"
 							className="w-full md:w-auto"
 						>
-							<ArrowLeft className="mr-2 h-4 w-4" />
-							Go Back
+							<Home className="mr-2 h-4 w-4" />
+							Go Home
 						</Button>
 					</Link>
 					<Button

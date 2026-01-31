@@ -10,7 +10,6 @@ export * from './auth-middleware'
 export * from './apply'
 export * from './apply/success'
 export * from './tenants/apply'
-export * from './tenants/apply/new'
 export * from './tenants/apply/success'
 
 export * from './dashboard'

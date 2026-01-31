@@ -10,13 +10,14 @@ interface TenantApplicationContextType {
 	goToPage: (page: number) => void
 	goBack: () => void
 	goNext: () => void
+	allowEdit: (value: boolean) => void
+	isEditable: boolean
 	updateFormData: (data: Partial<CreatePropertyTenantApplicationInput>) => void
 	formData: Partial<CreatePropertyTenantApplicationInput>
 	isSubmitting: boolean
 	onSubmit: (
 		data: Partial<CreatePropertyTenantApplicationInput>,
 	) => Promise<void>
-	unblockNavigation: () => void
 }
 
 export const TenantApplicationContext = createContext<
@@ -30,6 +31,7 @@ export function CreateNewPropertyTenantApplicationProvider({
 }) {
 	const createFetcher = useFetcher<{ error: string }>()
 	const [stepCount, setStepCount] = useState(0)
+	const [isEditable, setisEditable] = useState(false)
 	const [formData, setFormData] = useState<
 		Partial<CreatePropertyTenantApplicationInput>
 	>({})
@@ -38,6 +40,7 @@ export function CreateNewPropertyTenantApplicationProvider({
 	const goBack = () => setStepCount((prev) => (prev > 0 ? prev - 1 : prev))
 	const goNext = () => setStepCount((prev) => prev + 1)
 	const goToPage = (page: number) => setStepCount(page)
+	const allowEdit = (value: boolean) => setisEditable(value)
 
 	// where there is an error in the action data, show an error toast
 	useEffect(() => {
@@ -52,15 +55,6 @@ export function CreateNewPropertyTenantApplicationProvider({
 	let blocker = useNavigationBlocker(
 		isSubmitting ? false : isDirty && !bypassBlockerRef.current,
 	)
-
-	/**
-	 * Clears the form data and sets a bypass flag to allow the next navigation
-	 * without prompting the user about unsaved changes.
-	 */
-	const unblockNavigation = () => {
-		bypassBlockerRef.current = true
-		setFormData({})
-	}
 
 	const updateFormData = (
 		data: Partial<CreatePropertyTenantApplicationInput>,
@@ -99,7 +93,8 @@ export function CreateNewPropertyTenantApplicationProvider({
 		formData,
 		onSubmit,
 		isSubmitting,
-		unblockNavigation,
+		allowEdit,
+		isEditable,
 	}
 
 	return (
