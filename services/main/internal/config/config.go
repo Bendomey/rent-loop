@@ -13,6 +13,10 @@ type IDatabase struct {
 	SSLMode  string
 }
 
+type IRedisDB struct {
+	Url string
+}
+
 type ISentry struct {
 	DSN         string
 	Environment string
@@ -57,6 +61,7 @@ type Config struct {
 	ResendAPIKey string
 	SupportData  IRentloopSupport
 	Portals      IRentloopPortals
+	RedisDB      IRedisDB
 }
 
 // Load loads config from environment variables
@@ -99,6 +104,9 @@ func Load() Config {
 			AdminPortalURL:           getEnv("ADMIN_PORTAL_URL", "http://localhost:3001"),
 			PropertyManagerPortalURL: getEnv("PROPERTY_MANAGER_PORTAL_URL", "http://localhost:3000"),
 			TenantPortalURL:          getEnv("TENANT_PORTAL_URL", "http://localhost:3002"),
+		},
+		RedisDB: IRedisDB{
+			Url: getEnv("REDIS_URL", "redis://localhost:6379"),
 		},
 	}
 }

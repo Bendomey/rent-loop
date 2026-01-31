@@ -27,3 +27,5 @@ export SUPPORT_PHONE=
 export ADMIN_PORTAL_URL=http://localhost:3001
 export PROPERTY_MANAGER_PORTAL_URL=http://localhost:3000
 export TENANT_PORTAL_URL=http://localhost:3002
+
+export REDIS_URL=redis://localhost:6379
