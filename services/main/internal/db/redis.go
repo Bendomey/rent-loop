@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/config"
@@ -14,16 +13,12 @@ func ConnectRedis(cfg config.Config) (*redis.Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	db, convErr := strconv.Atoi(cfg.RedisDB.DB)
-	if convErr != nil {
-		return nil, convErr
+	opt, optErr := redis.ParseURL(cfg.RedisDB.Url)
+	if optErr != nil {
+		return nil, optErr
 	}
 
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.RedisDB.Address,
-		Password: cfg.RedisDB.Password,
-		DB:       db,
-	})
+	rdb := redis.NewClient(opt)
 
 	pong, err := rdb.Ping(ctx).Result()
 	if err != nil {

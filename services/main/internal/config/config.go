@@ -14,9 +14,7 @@ type IDatabase struct {
 }
 
 type IRedisDB struct {
-	Address  string
-	Password string
-	DB       string
+	Url string
 }
 
 type ISentry struct {
@@ -108,9 +106,7 @@ func Load() Config {
 			TenantPortalURL:          getEnv("TENANT_PORTAL_URL", "http://localhost:3002"),
 		},
 		RedisDB: IRedisDB{
-			Address:  getEnv("REDIS_ADDRESS", "localhost:6379"),
-			Password: getEnv("REDIS_PASSWORD", ""),
-			DB:       getEnv("REDIS_DB", "0"),
+			Url: getEnv("REDIS_URL", "redis://localhost:6379"),
 		},
 	}
 }
