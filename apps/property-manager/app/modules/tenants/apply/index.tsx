@@ -9,11 +9,12 @@ import { Step1 } from './steps/step1'
 import { Step2 } from './steps/step2'
 import { Step3 } from './steps/step3'
 import { Step4 } from './steps/step4'
+import { Step5 } from './steps/step5'
+import { Step6 } from './steps/step6'
 import { TypographyH3, TypographyMuted } from '~/components/ui/typography'
 import { APP_NAME } from '~/lib/constants'
 
-const STEP = 5
-
+const STEP = 6
 export function TenantApply({ isValidUrl }: { isValidUrl: boolean }) {
 	const { stepCount } = useTenantApplicationContext()
 
@@ -73,6 +74,8 @@ export function TenantApply({ isValidUrl }: { isValidUrl: boolean }) {
 					{stepCount === 2 ? <Step2 /> : null}
 					{stepCount === 3 ? <Step3 /> : null}
 					{stepCount === 4 ? <Step4 /> : null}
+					{stepCount === 5 ? <Step5 /> : null}
+					{stepCount === 6 ? <Step6 /> : null}
 				</div>
 			</div>
 		</main>

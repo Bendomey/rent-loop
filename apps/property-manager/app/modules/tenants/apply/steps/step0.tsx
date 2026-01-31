@@ -1,26 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import {
-	ArrowRight,
-	ChevronLeft,
-	ChevronRight,
-	Home,
-	Users,
-	Building2,
-	Wallet,
-} from 'lucide-react'
-import { useState } from 'react'
+import { ArrowRight, Home } from 'lucide-react'
 import { useForm } from 'react-hook-form'
-import { Link, useLoaderData } from 'react-router'
+import { Link } from 'react-router'
+import { useLoaderData } from 'react-router'
 import { z } from 'zod'
+import { UnitPreview } from '../components/unit-preview'
 import { useTenantApplicationContext } from '../context'
 import { Button } from '~/components/ui/button'
 import { Form } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
-import {
-	TypographyH2,
-	TypographyH3,
-	TypographyMuted,
-} from '~/components/ui/typography'
+import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import type { loader } from '~/routes/tenants.apply._index'
 
 const ValidationSchema = z.object({
@@ -36,9 +25,6 @@ export type FormSchema = z.infer<typeof ValidationSchema>
 
 export function Step0() {
 	const { referredBy, unitId, unit } = useLoaderData<typeof loader>()
-	const [currentImageIndex, setCurrentImageIndex] = useState(0)
-	const images: string[] = unit?.images ?? []
-	const imagesCount = images.length
 
 	const { goNext, formData, updateFormData } = useTenantApplicationContext()
 
@@ -60,71 +46,6 @@ export function Step0() {
 		goNext()
 	}
 
-	const nextImage = () => {
-		setCurrentImageIndex((prev) => (prev + 1) % imagesCount)
-	}
-
-	const prevImage = () => {
-		setCurrentImageIndex((prev) => (prev === 0 ? imagesCount - 1 : prev - 1))
-	}
-
-	const unitImages =
-		imagesCount > 0 &&
-		(() => {
-			const activeImage = images[currentImageIndex] ?? images[0]
-			const hasMultipleImages = imagesCount > 1
-
-			return (
-				<div className="space-y-5 rounded-lg border border-blue-100 bg-blue-50 p-5">
-					<div className="relative h-64 w-full overflow-hidden rounded-lg bg-gray-100 md:h-96">
-						<img
-							src={activeImage}
-							alt={`${unit?.name} - Image ${currentImageIndex + 1}`}
-							className="h-full w-full object-cover"
-						/>
-
-						{hasMultipleImages && (
-							<>
-								<Button
-									type="button"
-									aria-label="Previous image"
-									onClick={prevImage}
-									className="absolute top-1/2 left-2 -translate-y-1/2 rounded-full bg-white/80 p-2 hover:bg-white"
-								>
-									<ChevronLeft className="h-6 w-6 text-gray-800" />
-								</Button>
-
-								<Button
-									type="button"
-									aria-label="Next image"
-									onClick={nextImage}
-									className="absolute top-1/2 right-2 -translate-y-1/2 rounded-full bg-white/80 p-2 hover:bg-white"
-								>
-									<ChevronRight className="h-6 w-6 text-gray-800" />
-								</Button>
-
-								<div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1">
-									{images.map((_, idx) => (
-										<button
-											key={idx}
-											type="button"
-											aria-label={`Go to image ${idx + 1}`}
-											onClick={() => setCurrentImageIndex(idx)}
-											className={`h-2 w-2 rounded-full transition-all ${
-												idx === currentImageIndex
-													? 'w-6 bg-white'
-													: 'bg-white/50 hover:bg-white/70'
-											}`}
-										/>
-									))}
-								</div>
-							</>
-						)}
-					</div>
-				</div>
-			)
-		})()
-
 	return (
 		<Form {...rhfMethods}>
 			<form
@@ -144,107 +65,7 @@ export function Step0() {
 					</TypographyMuted>
 				</div>
 
-				{/* Unit Name & Description */}
-				<div className="space-y-5 rounded-lg border border-slate-100 bg-slate-50 p-5">
-					<div className="space-y-3">
-						<h2 className="text-2xl font-bold text-slate-900">{unit?.name}</h2>
-						<p className="text-base leading-relaxed text-slate-700">
-							{unit?.description}
-						</p>
-					</div>
-				</div>
-
-				{/* Key Details Grid */}
-				<div className="grid gap-5 md:grid-cols-2">
-					{/* Rent Information */}
-					<div className="space-y-5 rounded-lg border border-slate-100 bg-slate-50 p-5">
-						<TypographyH3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-							<Wallet className="h-5 w-5 text-rose-600" />
-							Rent Information
-						</TypographyH3>
-						<div className="space-y-3">
-							<div className="flex justify-between">
-								<span className="text-slate-700">Rent Fee:</span>
-								<span className="font-semibold text-slate-900">
-									{unit?.rent_fee_currency} {unit?.rent_fee.toLocaleString()}
-								</span>
-							</div>
-							<div className="flex justify-between">
-								<span className="text-slate-700">Frequency:</span>
-								<span className="font-semibold text-slate-900">
-									{unit?.payment_frequency}
-								</span>
-							</div>
-							{unit?.area && (
-								<div className="flex justify-between">
-									<span className="text-slate-700">Area:</span>
-									<span className="font-semibold text-slate-900">
-										{unit?.area} sq ft
-									</span>
-								</div>
-							)}
-						</div>
-					</div>
-
-					{/* Property Info */}
-					<div className="space-y-5 rounded-lg border border-slate-100 bg-slate-50 p-5">
-						<TypographyH3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-							<Building2 className="h-5 w-5 text-rose-600" />
-							Property Info
-						</TypographyH3>
-						<div className="space-y-3">
-							<div className="flex justify-between">
-								<span className="text-slate-700">Type:</span>
-								<span className="font-semibold text-slate-900">
-									{unit?.type}
-								</span>
-							</div>
-							<div className="flex justify-between">
-								<span className="text-slate-700">Status:</span>
-								<span className="inline-block rounded-full bg-green-200 px-3 py-1 text-sm font-medium text-green-800">
-									Available
-								</span>
-							</div>
-							{unit?.max_occupants_allowed && (
-								<div className="flex justify-between">
-									<span className="text-slate-700">Max Occupants:</span>
-									<span className="flex items-center gap-1 font-semibold text-slate-900">
-										<Users className="h-4 w-4" />
-										{unit?.max_occupants_allowed}
-									</span>
-								</div>
-							)}
-						</div>
-					</div>
-				</div>
-
-				{/* Features Section */}
-				{unit?.features && Object.keys(unit?.features).length > 0 && (
-					<div className="space-y-5 rounded-lg border border-slate-100 bg-slate-50 p-5">
-						<h3 className="text-lg font-semibold text-slate-900">
-							Amenities & Features
-						</h3>
-						<div className="grid gap-3 md:grid-cols-2">
-							{Object.entries(unit.features).map(([key, value]) => (
-								<div
-									key={key}
-									className="flex items-start gap-3 rounded-lg bg-white p-3"
-								>
-									<div className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-slate-800" />
-									<div className="flex-1">
-										<p className="text-sm font-medium text-slate-700 capitalize">
-											{key.replace(/_/g, ' ')}
-										</p>
-										<p className="text-sm text-slate-600">{value}</p>
-									</div>
-								</div>
-							))}
-						</div>
-					</div>
-				)}
-
-				{/* Image Gallery Section */}
-				{unitImages}
+				<UnitPreview unit={unit} />
 
 				{/* Action Buttons */}
 				<div className="flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">

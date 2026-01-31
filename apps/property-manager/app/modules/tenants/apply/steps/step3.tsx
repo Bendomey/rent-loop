@@ -1,14 +1,17 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { ArrowRight, Home } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
+import { Link } from 'react-router'
 import { z } from 'zod'
 import { useTenantApplicationContext } from '../context'
+import { DatePickerInput } from '~/components/date-picker-input'
 import { Button } from '~/components/ui/button'
 import { FieldGroup } from '~/components/ui/field'
 import {
 	Form,
 	FormControl,
+	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -17,124 +20,161 @@ import {
 import { ImageUpload } from '~/components/ui/image-upload'
 import { Input } from '~/components/ui/input'
 import {
-	TypographyH2,
-	TypographyH4,
-	TypographyMuted,
-	TypographySmall,
-} from '~/components/ui/typography'
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '~/components/ui/select'
+import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
-import { cn } from '~/lib/utils'
 
 const ValidationSchema = z.object({
-	emergency_contact_name: z
-		.string({ error: 'Emergency Contact Name is required' })
+	first_name: z
+		.string({ error: 'First Name is required' })
 		.min(2, 'Please enter a valid name'),
-	relationship_to_emergency_contact: z
-		.string({ error: 'Relationship to Emergency Contact is required' })
-		.min(2, 'Please enter a valid relationship'),
-	emergency_contact_phone: z
+	other_names: z.string().optional(),
+	last_name: z
+		.string({ error: 'Last Name is required' })
+		.min(2, 'Please enter a valid name'),
+	email: z
+		.string()
+		.email('Please enter a valid email address')
+		.optional()
+		.or(z.literal('')),
+	phone: z
 		.string({ error: 'Phone Number is required' })
 		.min(9, 'Please enter a valid phone number'),
-	employment_type: z.enum(['STUDENT', 'WORKER'], {
-		error: 'Please select an employment type',
+	profile_photo_url: z.url('Please upload a logo').optional(),
+	date_of_birth: z
+		.date()
+		.refine((date) => {
+			const today = new Date()
+			const age = today.getFullYear() - date.getFullYear()
+			return age >= 14
+		}, 'You must be at least 14 years old')
+		.optional(),
+	current_address: z
+		.string({ error: 'Current Address is required' })
+		.min(5, 'Please enter a valid address'),
+	gender: z.enum(['MALE', 'FEMALE'], { error: 'Please select a gender' }),
+	marital_status: z.enum(['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'], {
+		error: 'Please select a marital status',
 	}),
-	occupation: z.string().optional(),
-	employer: z.string().optional(),
-	occupation_address: z.string().optional(),
-	proof_of_income_url: z.url('Please upload proof of income').optional(),
 })
 
-const employment_type: Array<{
+const gender: Array<{ label: string; value: TenantApplication['gender'] }> = [
+	{ label: 'Male', value: 'MALE' },
+	{ label: 'Female', value: 'FEMALE' },
+]
+
+const marital_status: Array<{
 	label: string
-	value: TenantApplication['employment_type']
+	value: TenantApplication['marital_status']
 }> = [
-	{ label: 'Student', value: 'STUDENT' },
-	{ label: 'Worker', value: 'WORKER' },
+	{ label: 'Single', value: 'SINGLE' },
+	{ label: 'Married', value: 'MARRIED' },
+	{ label: 'Divorced', value: 'DIVORCED' },
+	{ label: 'Widowed', value: 'WIDOWED' },
 ]
 
 export type FormSchema = z.infer<typeof ValidationSchema>
 
 export function Step3() {
-	const { goBack, goNext, formData, updateFormData } =
-		useTenantApplicationContext()
+	const { goNext, formData, updateFormData } = useTenantApplicationContext()
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
-			employment_type: 'STUDENT',
+			marital_status: formData.marital_status || 'SINGLE',
+			gender: formData.gender || 'MALE',
 		},
 	})
 
 	const {
-		upload: uploadProofOfIncome,
-		objectUrl: proofOfIncomeUrl,
-		isLoading: isUploadingProofOfIncome,
-	} = useUploadObject('tenant-applications/proof-of-income')
+		upload,
+		objectUrl: profilePhotoUrl,
+		isLoading: isUploading,
+	} = useUploadObject('tenant-application/profile-pictures')
+
+	const { handleSubmit, control, setValue } = rhfMethods
 
 	useEffect(() => {
-		if (proofOfIncomeUrl) {
-			rhfMethods.setValue('proof_of_income_url', proofOfIncomeUrl, {
+		if (profilePhotoUrl) {
+			rhfMethods.setValue('profile_photo_url', profilePhotoUrl, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [proofOfIncomeUrl])
-
-	const { watch, handleSubmit, formState, control, setValue } = rhfMethods
-
-	const isStudent = watch('employment_type') === 'STUDENT'
+	}, [profilePhotoUrl])
 
 	useEffect(() => {
-		if (formData.emergency_contact_name) {
-			setValue('emergency_contact_name', formData.emergency_contact_name, {
+		if (formData.first_name) {
+			setValue('first_name', formData.first_name, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
 		}
-		if (formData.relationship_to_emergency_contact) {
-			setValue(
-				'relationship_to_emergency_contact',
-				formData.relationship_to_emergency_contact,
-				{
-					shouldDirty: true,
-					shouldValidate: true,
-				},
-			)
-		}
-		if (formData.emergency_contact_phone) {
-			setValue('emergency_contact_phone', formData.emergency_contact_phone, {
+
+		if (formData.last_name) {
+			setValue('last_name', formData.last_name, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
 		}
-		if (formData.employment_type) {
-			setValue('employment_type', formData.employment_type, {
+
+		if (formData.other_names) {
+			setValue('other_names', formData.other_names, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
 		}
-		if (formData.occupation) {
-			setValue('occupation', formData.occupation, {
+
+		if (formData.gender) {
+			setValue('gender', formData.gender, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
 		}
-		if (formData.employer) {
-			setValue('employer', formData.employer, {
+
+		if (formData.marital_status) {
+			setValue('marital_status', formData.marital_status, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
 		}
-		if (formData.occupation_address) {
-			setValue('occupation_address', formData.occupation_address, {
+
+		if (formData.email) {
+			setValue('email', formData.email, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
 		}
-		if (formData.proof_of_income_url) {
-			setValue('proof_of_income_url', formData.proof_of_income_url, {
+
+		if (formData.phone) {
+			setValue('phone', formData.phone, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+
+		if (formData.current_address) {
+			setValue('current_address', formData.current_address, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		if (formData.date_of_birth) {
+			setValue('date_of_birth', new Date(formData.date_of_birth), {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+
+		if (formData.profile_photo_url) {
+			setValue('profile_photo_url', formData.profile_photo_url, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
@@ -144,17 +184,16 @@ export function Step3() {
 
 	const onSubmit = async (data: FormSchema) => {
 		updateFormData({
-			emergency_contact_name: data.emergency_contact_name,
-			relationship_to_emergency_contact: data.relationship_to_emergency_contact,
-			emergency_contact_phone: data.emergency_contact_phone,
-			employment_type: data.employment_type,
-			occupation:
-				data.employment_type === 'STUDENT'
-					? data.employment_type
-					: data.occupation,
-			employer: data.employer,
-			occupation_address: data.occupation_address,
-			proof_of_income_url: data.proof_of_income_url,
+			first_name: data.first_name,
+			other_names: data.other_names,
+			last_name: data.last_name,
+			email: data.email,
+			phone: data.phone,
+			current_address: data.current_address,
+			profile_photo_url: data.profile_photo_url,
+			date_of_birth: data.date_of_birth?.toISOString(),
+			gender: data.gender,
+			marital_status: data.marital_status,
 		})
 		goNext()
 	}
@@ -163,39 +202,146 @@ export function Step3() {
 		<Form {...rhfMethods}>
 			<form
 				onSubmit={handleSubmit(onSubmit)}
-				className="mx-auto my-4 space-y-4 md:my-8 md:max-w-2xl md:space-y-8"
+				className="mx-auto my-4 space-y-4 md:my-8 md:max-w-2xl"
 			>
 				{/* Header Section */}
-				<div className="space-y-2 border-b pb-6">
-					<TypographyH2>
-						Emergency Contact & Background Information
+				<div className="space-y-1 border-b pb-6 md:space-y-3">
+					<TypographyH2 className="text-3xl font-bold">
+						Basic Information
 					</TypographyH2>
-					<TypographyMuted className="text-base">
-						Please provide your emergency contact information and background
-						details.
+					<TypographyMuted className="text-base leading-relaxed">
+						Let's start by collecting your personal information
 					</TypographyMuted>
 				</div>
 
-				<FieldGroup className="space-y-6">
-					{/* Emergency Contact Section */}
-					<div className="space-y-4 rounded-lg border border-slate-100 bg-slate-50 p-5">
-						<div className="space-y-1">
-							<TypographyH4>Emergency Contact</TypographyH4>
-						</div>
-						<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+				<FieldGroup className="space-y-2">
+					{/* Personal Details Grid */}
+					<div className="space-y-5 rounded-lg border border-slate-100 bg-slate-50 p-5">
+						<h3 className="text-lg font-semibold text-slate-900">
+							Personal Details
+						</h3>
+						<div className="grid grid-cols-1 gap-5 md:grid-cols-2">
 							<FormField
-								name="emergency_contact_name"
+								name="first_name"
 								control={control}
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>
-											Full Name <span className="text-red-500">*</span>
+											First Name <span className="text-red-500">*</span>
 										</FormLabel>
 										<FormControl>
-											<Input
-												type="text"
-												placeholder="Enter full name"
-												{...field}
+											<Input type="text" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								name="other_names"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Other Names</FormLabel>
+										<FormControl>
+											<Input type="text" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								name="last_name"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>
+											Last Name <span className="text-red-500">*</span>
+										</FormLabel>
+										<FormControl>
+											<Input type="text" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								name="gender"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>
+											Gender <span className="text-red-500">*</span>
+										</FormLabel>
+										<FormControl>
+											<Select
+												value={field.value}
+												onValueChange={field.onChange}
+											>
+												<SelectTrigger className="w-full">
+													<SelectValue placeholder="Select gender" />
+												</SelectTrigger>
+												<SelectContent>
+													{gender.map((item) => (
+														<SelectItem key={item.value} value={item.value}>
+															{item.label}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								name="email"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Email</FormLabel>
+										<FormControl>
+											<Input {...field} type="text" />
+										</FormControl>
+										<FormDescription>
+											We'll send notifications to this email
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								name="phone"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>
+											Phone <span className="text-red-500">*</span>
+										</FormLabel>
+										<FormControl>
+											<Input {...field} type="text" />
+										</FormControl>
+										<FormDescription>
+											We'll send notifications to this number
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								name="date_of_birth"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>
+											Date of birth <span className="text-red-500">*</span>
+										</FormLabel>
+										<FormControl>
+											<DatePickerInput
+												value={field.value}
+												onChange={field.onChange}
 											/>
 										</FormControl>
 										<FormMessage />
@@ -204,129 +350,55 @@ export function Step3() {
 							/>
 
 							<FormField
-								name="relationship_to_emergency_contact"
+								name="marital_status"
 								control={control}
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>
-											Relationship <span className="text-red-500">*</span>
+											Marital Status <span className="text-red-500">*</span>
 										</FormLabel>
 										<FormControl>
-											<Input
-												type="text"
-												placeholder="e.g., Sibling, Parent, Friend"
-												{...field}
-											/>
+											<Select
+												value={field.value}
+												onValueChange={field.onChange}
+											>
+												<SelectTrigger className="w-full">
+													<SelectValue placeholder="Select marital status" />
+												</SelectTrigger>
+												<SelectContent>
+													{marital_status.map((item) => (
+														<SelectItem key={item.value} value={item.value}>
+															{item.label}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
 								)}
 							/>
 						</div>
-
-						<FormField
-							name="emergency_contact_phone"
-							control={control}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>
-										Phone Number <span className="text-red-500">*</span>
-									</FormLabel>
-									<FormControl>
-										<Input
-											type="tel"
-											placeholder="e.g., +233 54-123-4567"
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
 					</div>
 
-					{/* Employment Section */}
-					<div className="space-y-4 rounded-lg border border-t border-slate-100 bg-slate-50 p-5">
-						<div className="w-full">
-							<TypographyH4>Employment Type</TypographyH4>
-							<TypographyMuted className="mb-3 text-sm">
-								Select your current employment status
-							</TypographyMuted>
-
-							<div className="flex space-x-3 pb-3">
-								{employment_type.map((employment_type) => {
-									const isSelected =
-										watch('employment_type') === employment_type.value
-									return (
-										<Button
-											type="button"
-											onClick={() =>
-												setValue('employment_type', employment_type.value, {
-													shouldDirty: true,
-													shouldValidate: true,
-												})
-											}
-											key={employment_type.value}
-											variant={isSelected ? 'default' : 'outline'}
-											className={cn('w-1/2', {
-												'bg-rose-600 text-white': isSelected,
-											})}
-										>
-											{employment_type.label}
-										</Button>
-									)
-								})}
-							</div>
-							{formState.errors?.employment_type ? (
-								<TypographySmall className="text-destructive mt-3">
-									{formState.errors.employment_type.message}
-								</TypographySmall>
-							) : null}
-						</div>
-
-						<div className="space-y-1 border-t pt-6">
-							<TypographyH4>
-								{isStudent ? 'Student Information' : 'Employment Information'}
-							</TypographyH4>
-						</div>
-						<div
-							className={`grid grid-cols-1 gap-4 ${isStudent ? 'md:grid-cols-1' : 'md:grid-cols-2'}`}
-						>
-							{!isStudent && (
-								<FormField
-									name="occupation"
-									control={control}
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>
-												Occupation <span className="text-red-500">*</span>
-											</FormLabel>
-											<FormControl>
-												<Input
-													type="text"
-													placeholder="e.g., Software Engineer"
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							)}
-
+					{/* Contact & Address Section */}
+					<div className="space-y-5 rounded-lg border border-slate-100 bg-slate-50 p-5">
+						<h3 className="text-lg font-semibold text-slate-900">
+							Contact Information
+						</h3>
+						<div className="space-y-5">
 							<FormField
-								name="employer"
+								name="current_address"
 								control={control}
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>
-											{isStudent ? 'Institution/School' : 'Employer'}{' '}
-											<span className="text-red-500">*</span>
+											Address <span className="text-red-500">*</span>
 										</FormLabel>
 										<FormControl>
 											<Input
 												type="text"
-												placeholder={`e.g., ${isStudent ? 'Institution/School' : 'Company Name'}`}
+												placeholder="e.g., East Legon, Accra"
 												{...field}
 											/>
 										</FormControl>
@@ -335,67 +407,30 @@ export function Step3() {
 								)}
 							/>
 						</div>
-
-						<FormField
-							name="occupation_address"
-							control={control}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>
-										Address <span className="text-red-500">*</span>
-									</FormLabel>
-									<FormControl>
-										<Input
-											type="text"
-											placeholder="e.g., 123 Business St, City, Country"
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
 					</div>
 
-					{/* Proof of Income */}
-					<div className="space-y-4 rounded-lg border border-slate-100 bg-slate-50 p-5">
-						<div className="space-y-1">
-							{isStudent ? (
-								<>
-									<TypographyH4>Proof of Admission</TypographyH4>
-									<TypographyMuted>
-										Upload a document proving your admission (acceptance letter,
-										enrollment verification, etc.)
-									</TypographyMuted>
-								</>
-							) : (
-								<>
-									<h3 className="font-semibold">Proof of Income</h3>
-									<TypographyMuted>
-										Upload a document proving your income (pay stub, tax return,
-										etc.)
-									</TypographyMuted>
-								</>
-							)}
-						</div>
-
+					{/* Profile Picture Section */}
+					<div className="space-y-5 rounded-lg border border-slate-100 bg-slate-50 p-5">
+						<h3 className="text-lg font-semibold text-slate-900">
+							Profile Picture
+						</h3>
 						<ImageUpload
 							hero
 							shape="square"
 							hint="Optional"
 							acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-							error={rhfMethods.formState.errors?.proof_of_income_url?.message}
-							fileCallback={uploadProofOfIncome}
-							isUploading={isUploadingProofOfIncome}
+							error={rhfMethods.formState.errors?.profile_photo_url?.message}
+							fileCallback={upload}
+							isUploading={isUploading}
 							dismissCallback={() => {
-								rhfMethods.setValue('proof_of_income_url', undefined, {
+								rhfMethods.setValue('profile_photo_url', undefined, {
 									shouldDirty: true,
 									shouldValidate: true,
 								})
 							}}
-							imageSrc={safeString(rhfMethods.watch('proof_of_income_url'))}
-							label={`${isStudent ? 'Proof of Admission' : 'Proof of Income'}`}
-							name="proof_of_income"
+							imageSrc={safeString(rhfMethods.watch('profile_photo_url'))}
+							label="Profile Picture"
+							name="image_url"
 							validation={{
 								maxByteSize: 5242880, // 5MB
 							}}
@@ -404,23 +439,23 @@ export function Step3() {
 				</FieldGroup>
 
 				<div className="mt-10 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
-					<Button
-						onClick={goBack}
-						type="button"
-						size="lg"
-						variant="outline"
-						className="w-full md:w-auto"
-					>
-						<ArrowLeft className="mr-2 h-4 w-4" />
-						Go Back
-					</Button>
-
+					<Link to={`/`}>
+						<Button
+							type="button"
+							size="lg"
+							variant="outline"
+							className="w-full md:w-auto"
+						>
+							<Home className="mr-2 h-4 w-4" />
+							Go Home
+						</Button>
+					</Link>
 					<Button
 						size="lg"
 						variant="default"
 						className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
 					>
-						Preview & Submit <ArrowRight className="ml-2 h-4 w-4" />
+						Next <ArrowRight className="ml-2 h-4 w-4" />
 					</Button>
 				</div>
 			</form>

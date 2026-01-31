@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { useFetcher } from 'react-router'
 import { toast } from 'sonner'
 import type { CreatePropertyTenantApplicationInput } from '~/api/tenant-applications'
@@ -10,6 +10,8 @@ interface TenantApplicationContextType {
 	goToPage: (page: number) => void
 	goBack: () => void
 	goNext: () => void
+	allowEdit: (value: boolean) => void
+	isEditable: boolean
 	updateFormData: (data: Partial<CreatePropertyTenantApplicationInput>) => void
 	formData: Partial<CreatePropertyTenantApplicationInput>
 	isSubmitting: boolean
@@ -29,13 +31,16 @@ export function CreateNewPropertyTenantApplicationProvider({
 }) {
 	const createFetcher = useFetcher<{ error: string }>()
 	const [stepCount, setStepCount] = useState(0)
+	const [isEditable, setisEditable] = useState(false)
 	const [formData, setFormData] = useState<
 		Partial<CreatePropertyTenantApplicationInput>
 	>({})
+	const bypassBlockerRef = useRef(false)
 
 	const goBack = () => setStepCount((prev) => (prev > 0 ? prev - 1 : prev))
 	const goNext = () => setStepCount((prev) => prev + 1)
 	const goToPage = (page: number) => setStepCount(page)
+	const allowEdit = (value: boolean) => setisEditable(value)
 
 	// where there is an error in the action data, show an error toast
 	useEffect(() => {
@@ -47,7 +52,9 @@ export function CreateNewPropertyTenantApplicationProvider({
 	const isDirty = Object.keys(formData).length > 0
 	const isSubmitting = createFetcher.state !== 'idle'
 
-	let blocker = useNavigationBlocker(isSubmitting ? false : isDirty)
+	let blocker = useNavigationBlocker(
+		isSubmitting ? false : isDirty && !bypassBlockerRef.current,
+	)
 
 	const updateFormData = (
 		data: Partial<CreatePropertyTenantApplicationInput>,
@@ -86,6 +93,8 @@ export function CreateNewPropertyTenantApplicationProvider({
 		formData,
 		onSubmit,
 		isSubmitting,
+		allowEdit,
+		isEditable,
 	}
 
 	return (

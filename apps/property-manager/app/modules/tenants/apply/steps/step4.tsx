@@ -1,256 +1,325 @@
-import { ArrowLeft, Pencil } from 'lucide-react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
 import { useTenantApplicationContext } from '../context'
-import { Image } from '~/components/Image'
 import { Button } from '~/components/ui/button'
-import { Spinner } from '~/components/ui/spinner'
+import { FieldGroup } from '~/components/ui/field'
 import {
-	TypographyH2,
-	TypographyMuted,
-	TypographyP,
-} from '~/components/ui/typography'
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from '~/components/ui/form'
+import { ImageUpload } from '~/components/ui/image-upload'
+import { Input } from '~/components/ui/input'
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectLabel,
+	SelectTrigger,
+	SelectValue,
+} from '~/components/ui/select'
+import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
+import { useUploadObject } from '~/hooks/use-upload-object'
+import { safeString } from '~/lib/strings'
 
-const renderPreviewField = (label: string, value?: string | null) => (
-	<div className="py-3">
-		<p className="text-sm font-medium text-slate-600">{label}</p>
-		<p className="mt-1 text-sm text-slate-900">{value || '—'}</p>
-	</div>
-)
+const ValidationSchema = z.object({
+	nationality: z
+		.string({ error: 'Nationality is required' })
+		.min(2, 'Please enter a valid nationality'),
+	id_type: z.enum(
+		['DRIVERS_LICENSE', 'PASSPORT', 'NATIONAL_ID', 'STUDENT_ID'],
+		{
+			error: 'Please select an ID type',
+		},
+	),
+	id_number: z
+		.string({ error: 'ID number is required' })
+		.min(2, 'Please enter a valid ID number'),
+	id_front_url: z.url('Please upload the front side of the ID').optional(),
+	id_back_url: z.url('Please upload the back side of the ID').optional(),
+})
 
-const PreviewCard = ({
-	title,
-	subtitle,
-	children,
-	onEdit,
-}: {
-	title: string
-	subtitle?: string
-	children: React.ReactNode
-	stepNumber: number
-	onEdit: () => void
-}) => (
-	<div className="rounded-lg border bg-white p-6">
-		<div className="mb-4 flex items-start justify-between">
-			<div>
-				<h3 className="text-foreground font-semibold">{title}</h3>
-				{subtitle && (
-					<p className="text-muted-foreground mt-1 text-sm">{subtitle}</p>
-				)}
-			</div>
-			<Button
-				type="button"
-				size="sm"
-				variant="ghost"
-				onClick={onEdit}
-				className="text-rose-600 hover:text-rose-700"
-			>
-				<Pencil className="h-4 w-4" />
-			</Button>
-		</div>
-		<div className="space-y-0">{children}</div>
-	</div>
-)
+const idTypes: Array<{
+	label: string
+	value: 'DRIVERS_LICENSE' | 'PASSPORT' | 'NATIONAL_ID' | 'STUDENT_ID'
+}> = [
+	{ label: 'National ID', value: 'NATIONAL_ID' },
+	{ label: 'Passport', value: 'PASSPORT' },
+	{ label: "Driver's License", value: 'DRIVERS_LICENSE' },
+	{ label: 'Student ID', value: 'STUDENT_ID' },
+]
+
+export type FormSchema = z.infer<typeof ValidationSchema>
 
 export function Step4() {
-	const { goBack, goToPage, formData, onSubmit, isSubmitting } =
+	const { goBack, goNext, formData, updateFormData } =
 		useTenantApplicationContext()
-	const isStudent = formData.employment_type === 'STUDENT'
+
+	const rhfMethods = useForm<FormSchema>({
+		resolver: zodResolver(ValidationSchema),
+		defaultValues: {
+			id_type: formData.id_type || 'NATIONAL_ID',
+		},
+	})
+
+	const {
+		upload: uploadFront,
+		objectUrl: frontUrl,
+		isLoading: isUploadingFront,
+	} = useUploadObject('tenant-applications/id-fronts')
+	const {
+		upload: uploadBack,
+		objectUrl: backUrl,
+		isLoading: isUploadingBack,
+	} = useUploadObject('tenant-applications/id-backs')
+
+	useEffect(() => {
+		if (frontUrl) {
+			rhfMethods.setValue('id_front_url', frontUrl, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		if (backUrl) {
+			rhfMethods.setValue('id_back_url', backUrl, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [frontUrl, backUrl])
+
+	const { handleSubmit, control, setValue } = rhfMethods
+
+	useEffect(() => {
+		if (formData.nationality) {
+			setValue('nationality', formData.nationality, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		if (formData.id_type) {
+			setValue('id_type', formData.id_type as any, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		if (formData.id_number) {
+			setValue('id_number', formData.id_number, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		if (formData.id_front_url) {
+			setValue('id_front_url', formData.id_front_url, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		if (formData.id_back_url) {
+			setValue('id_back_url', formData.id_back_url, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [formData])
+
+	const onSubmit = async (data: FormSchema) => {
+		updateFormData({
+			nationality: data.nationality,
+			id_type: data.id_type,
+			id_number: data.id_number,
+			id_front_url: data.id_front_url,
+			id_back_url: data.id_back_url,
+		})
+		goNext()
+	}
 
 	return (
-		<form
-			onSubmit={async (e) => {
-				e.preventDefault()
-				await onSubmit(formData)
-			}}
-			className="mx-auto my-4 space-y-4 md:my-8 md:max-w-2xl md:space-y-8"
-		>
-			{/* Header Section */}
-			<div className="space-y-2 border-b pb-6">
-				<TypographyH2 className="text-2xl font-bold">
-					Review Application
-				</TypographyH2>
-				<TypographyMuted className="text-base">
-					Review all information below. Click Edit to make changes before
-					submitting.
-				</TypographyMuted>
-			</div>
-
-			{/* Profile Photo */}
-			{formData.profile_photo_url && (
-				<PreviewCard
-					title="Profile Photo"
-					subtitle="Identification photo"
-					stepNumber={0}
-					onEdit={() => goToPage(0)}
-				>
-					<div className="py-3">
-						<Image
-							src={formData.profile_photo_url}
-							alt="Profile"
-							className="max-h-48 rounded-md object-cover"
-						/>
-					</div>
-				</PreviewCard>
-			)}
-
-			{/* Basic Information */}
-			<PreviewCard
-				title="Basic Information"
-				subtitle="Personal details"
-				stepNumber={1}
-				onEdit={() => goToPage(1)}
+		<Form {...rhfMethods}>
+			<form
+				onSubmit={handleSubmit(onSubmit)}
+				className="mx-auto my-8 space-y-8 md:max-w-2xl"
 			>
-				<div className="grid grid-cols-2 gap-x-4 gap-y-0">
-					{renderPreviewField('First Name', formData.first_name)}
-					{renderPreviewField('Last Name', formData.last_name)}
-					{formData.other_names &&
-						renderPreviewField('Other Names', formData.other_names)}
-					{renderPreviewField('Gender', formData.gender)}
-					{renderPreviewField('Marital Status', formData.marital_status)}
-					{renderPreviewField('Phone', formData.phone)}
-					{renderPreviewField('Email', formData.email)}
-					{formData.date_of_birth &&
-						renderPreviewField(
-							'Date of Birth',
-							new Date(formData.date_of_birth).toLocaleDateString(),
-						)}
-					{renderPreviewField('Address', formData.current_address)}
+				{/* Header Section */}
+				<div className="space-y-2 border-b pb-6">
+					<TypographyH2 className="text-2xl font-bold">
+						Identity Verification
+					</TypographyH2>
+					<TypographyMuted className="text-base">
+						Please provide your identification details and document images for
+						verification.
+					</TypographyMuted>
 				</div>
-			</PreviewCard>
 
-			{/* Identity Verification */}
-			<PreviewCard
-				title="Identity Verification"
-				subtitle="Identification details"
-				stepNumber={2}
-				onEdit={() => goToPage(2)}
-			>
-				<div className="grid grid-cols-2 gap-x-4 gap-y-0">
-					{renderPreviewField('Nationality', formData.nationality)}
-					{renderPreviewField('ID Type', formData.id_type)}
-					<div className="col-span-2">
-						{renderPreviewField('ID Number', formData.id_number)}
-					</div>
-					{formData.id_front_url && (
-						<div className="py-3">
-							<TypographyP className="text-sm font-medium text-slate-600">
-								ID Front
-							</TypographyP>
-							<div className="mt-2">
-								<Image
-									src={formData.id_front_url}
-									alt="ID Front"
-									className="max-h-40 rounded-md object-cover"
-								/>
-							</div>
-						</div>
-					)}
-					{formData.id_back_url && (
-						<div className="py-3">
-							<TypographyP className="text-sm font-medium text-slate-600">
-								ID Back
-							</TypographyP>
-							<div className="mt-2">
-								<Image
-									src={formData.id_back_url}
-									alt="ID Back"
-									className="max-h-40 rounded-md object-cover"
-								/>
-							</div>
-						</div>
-					)}
-				</div>
-			</PreviewCard>
-
-			{/* Emergency Contact & Employment */}
-			<PreviewCard
-				title={`${isStudent ? 'Emergency Contact & Student Information' : 'Emergency Contact & Employment Information'}`}
-				subtitle={`Emergency contact and ${isStudent ? 'student' : 'employment'} information`}
-				stepNumber={3}
-				onEdit={() => goToPage(3)}
-			>
-				<div className="space-y-4">
-					<div>
-						<TypographyP className="text-foreground mb-3 font-semibold">
-							Emergency Contact
-						</TypographyP>
-						<div className="grid grid-cols-2 gap-x-4 gap-y-0">
-							{renderPreviewField('Full Name', formData.emergency_contact_name)}
-							{renderPreviewField(
-								'Relationship',
-								formData.relationship_to_emergency_contact,
-							)}
-							<div className="col-span-2">
-								{renderPreviewField(
-									'Phone Number',
-									formData.emergency_contact_phone,
+				<FieldGroup className="space-y-4">
+					{/* Nationality and ID Type */}
+					<div className="rounded-lg border border-slate-100 bg-slate-50 p-5">
+						<h3 className="mb-5 text-lg font-semibold text-slate-900">
+							Identification Details
+						</h3>
+						<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+							<FormField
+								name="nationality"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>
+											Nationality <span className="text-red-500">*</span>
+										</FormLabel>
+										<FormControl>
+											<Input
+												type="text"
+												placeholder="e.g., Ghanaian"
+												{...field}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
 								)}
-							</div>
+							/>
+
+							<FormField
+								name="id_type"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>ID Type</FormLabel>
+										<FormControl>
+											<Select
+												onValueChange={field.onChange}
+												value={field.value || ''}
+											>
+												<SelectTrigger className="w-full">
+													<SelectValue placeholder="Select ID type" />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectGroup>
+														<SelectLabel>Document Type</SelectLabel>
+														{idTypes.map((type) => (
+															<SelectItem key={type.value} value={type.value}>
+																{type.label}
+															</SelectItem>
+														))}
+													</SelectGroup>
+												</SelectContent>
+											</Select>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
+
+						<div className="mt-8">
+							<FormField
+								name="id_number"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>
+											ID Number <span className="text-red-500">*</span>
+										</FormLabel>
+										<FormControl>
+											<Input
+												type="text"
+												placeholder="Enter your ID number"
+												{...field}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 						</div>
 					</div>
 
-					<div className="border-t pt-4">
-						<TypographyP className="text-foreground mb-3 font-semibold">
-							{isStudent ? 'Student Information' : 'Employment Information'}
-						</TypographyP>
-						<div className="grid grid-cols-2 gap-x-4 gap-y-0">
-							{isStudent
-								? null
-								: renderPreviewField('Occupation', formData.occupation)}
-							{renderPreviewField(
-								isStudent ? 'Institution/School' : 'Employer',
-								formData.employer,
-							)}
-							<div className="col-span-2">
-								{renderPreviewField('Address', formData.occupation_address)}
-							</div>
+					{/* ID Document Images */}
+					<div className="space-y-4 rounded-lg border border-slate-100 bg-slate-50 p-5">
+						<div className="space-y-1">
+							<h3 className="font-semibold">ID Document Images</h3>
+							<TypographyMuted>
+								Upload clear photos of both sides of your ID
+							</TypographyMuted>
+						</div>
+
+						<div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+							<ImageUpload
+								hero
+								shape="square"
+								hint="Optional"
+								acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
+								error={rhfMethods.formState.errors?.id_front_url?.message}
+								fileCallback={uploadFront}
+								isUploading={isUploadingFront}
+								dismissCallback={() => {
+									rhfMethods.setValue('id_front_url', undefined, {
+										shouldDirty: true,
+										shouldValidate: true,
+									})
+								}}
+								imageSrc={safeString(rhfMethods.watch('id_front_url'))}
+								label="Front of ID"
+								name="id_front"
+								validation={{
+									maxByteSize: 5242880, // 5MB
+								}}
+							/>
+
+							<ImageUpload
+								hero
+								shape="square"
+								hint="Optional"
+								acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
+								error={rhfMethods.formState.errors?.id_back_url?.message}
+								fileCallback={uploadBack}
+								isUploading={isUploadingBack}
+								dismissCallback={() => {
+									rhfMethods.setValue('id_back_url', undefined, {
+										shouldDirty: true,
+										shouldValidate: true,
+									})
+								}}
+								imageSrc={safeString(rhfMethods.watch('id_back_url'))}
+								label="Back of ID"
+								name="id_back"
+								validation={{
+									maxByteSize: 5242880, // 5MB
+								}}
+							/>
 						</div>
 					</div>
+				</FieldGroup>
 
-					{formData.proof_of_income_url && (
-						<div className="border-t pt-4">
-							<TypographyP className="mb-3 text-sm font-medium text-slate-600">
-								Proof of {isStudent ? 'Admission' : 'Income'}
-							</TypographyP>
-							<div className="mt-2">
-								<Image
-									src={formData.proof_of_income_url}
-									alt={`Proof of ${isStudent ? 'Admission' : 'Income'}`}
-									className="max-h-40 rounded-md object-cover"
-								/>
-							</div>
-						</div>
-					)}
+				<div className="mt-10 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
+					<Button
+						onClick={goBack}
+						type="button"
+						size="lg"
+						variant="outline"
+						className="w-full md:w-auto"
+					>
+						<ArrowLeft className="mr-2 h-4 w-4" />
+						Go Back
+					</Button>
+
+					<Button
+						size="lg"
+						variant="default"
+						className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
+					>
+						Next <ArrowRight className="ml-2 h-4 w-4" />
+					</Button>
 				</div>
-			</PreviewCard>
-
-			{/* Action Buttons */}
-			<div className="mt-10 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
-				<Button
-					onClick={goBack}
-					type="button"
-					size="lg"
-					variant="outline"
-					className="w-full md:w-auto"
-				>
-					<ArrowLeft className="mr-2 h-4 w-4" />
-					Go Back
-				</Button>
-				<Button
-					disabled={isSubmitting}
-					size="lg"
-					variant="default"
-					className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
-				>
-					{isSubmitting ? (
-						<>
-							<Spinner className="mr-2 h-4 w-4" />
-							Submitting...
-						</>
-					) : (
-						'Submit Application'
-					)}
-				</Button>
-			</div>
-		</form>
+			</form>
+		</Form>
 	)
 }
