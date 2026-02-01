@@ -65,9 +65,9 @@ func (h *AuthHandler) SendCode(w http.ResponseWriter, r *http.Request) {
 }
 
 type VerifyCodeRequest struct {
-	Code  string  `json:"code"  validate:"required,len=6"                            example:"123456"            description:"Verification code"`
-	Email *string `json:"email" validate:"required_if=Channel email,omitempty,email" example:"email@example.com" description:"Email address"`
-	Phone *string `json:"phone" validate:"required_if=Channel sms,omitempty,e164"    example:"+233281234569"     description:"Phone number"`
+	Code  string  `json:"code"  validate:"required,len=6"  example:"123456"            description:"Verification code"`
+	Email *string `json:"email" validate:"omitempty,email" example:"email@example.com" description:"Email address"`
+	Phone *string `json:"phone" validate:"omitempty,e164"  example:"+233281234569"     description:"Phone number"`
 }
 
 // VerifyCode godoc

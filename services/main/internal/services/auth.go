@@ -108,6 +108,10 @@ type VerifyCodeInput struct {
 }
 
 func (s *authService) VerifyCode(ctx context.Context, input VerifyCodeInput) error {
+	if input.Email == nil && input.Phone == nil {
+		return pkg.BadRequestError("EnterEmailOrPhone", nil)
+	}
+
 	identifier := ""
 	if input.Email != nil {
 		identifier = *input.Email
