@@ -9,6 +9,7 @@ import (
 
 type Invoice struct {
 	BaseModelSoftDelete
+	Code string `gorm:"not null;uniqueIndex;"` // unique invoice code
 
 	// Who is paying the invoice
 	PayerType string `gorm:"not null;"` // 'TENANT' | 'PROPERTY_OWNER'
