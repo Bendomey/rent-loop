@@ -241,3 +241,24 @@ Best regards,
 The Rentloop team
 `
 )
+
+const (
+	AUTH_VERIFICATION_CODE_SUBJECT = "Your Rentloop Verification Code"
+	AUTH_VERIFICATION_CODE_BODY    = `Hello,
+
+Your verification code is:
+
+{{verification_code}}
+
+This code is valid for the next {{expiry_duration}}. Please enter it in the Rentloop app to verify your identity.
+
+If you did not request this code, you can safely ignore this message.
+
+For your security, never share this code with anyone. Our team will never ask for it.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop team
+`
+)
