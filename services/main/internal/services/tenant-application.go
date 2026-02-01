@@ -451,18 +451,8 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 	tenantApplication.PaymentFrequency = input.PaymentFrequency
 
 	tenantApplication.InitialDepositFee = input.InitialDepositFee
-	tenantApplication.InitialDepositPaymentMethod = input.InitialDepositPaymentMethod
-	tenantApplication.InitialDepositReferenceNumber = input.InitialDepositReferenceNumber
-	tenantApplication.InitialDepositPaidAt = input.InitialDepositPaidAt
-	tenantApplication.InitialDepositPaymentId = input.InitialDepositPaymentId
 
 	tenantApplication.SecurityDepositFee = input.SecurityDepositFee
-	tenantApplication.SecurityDepositFeeCurrency = input.SecurityDepositFeeCurrency
-
-	tenantApplication.SecurityDepositPaymentMethod = input.SecurityDepositPaymentMethod
-	tenantApplication.SecurityDepositReferenceNumber = input.SecurityDepositReferenceNumber
-	tenantApplication.SecurityDepositPaidAt = input.SecurityDepositPaidAt
-	tenantApplication.SecurityDepositPaymentId = input.SecurityDepositPaymentId
 
 	tenantApplication.OtherNames = input.OtherNames
 	tenantApplication.Email = input.Email
@@ -713,19 +703,11 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 
 	// create lease
 	meta := map[string]any{
-		"initial_deposit_fee":              tenantApplication.InitialDepositFee,
-		"initial_deposit_payment_method":   tenantApplication.InitialDepositPaymentMethod,
-		"initial_deposit_reference_number": tenantApplication.InitialDepositReferenceNumber,
-		"initial_deposit_paid_at":          tenantApplication.InitialDepositPaidAt,
-		"initial_deposit_payment_id":       tenantApplication.InitialDepositPaymentId,
+		"initial_deposit_fee":          tenantApplication.InitialDepositFee,
+		"initial_deposit_fee_currency": tenantApplication.InitialDepositFeeCurrency,
 
 		"security_deposit_fee":          tenantApplication.SecurityDepositFee,
 		"security_deposit_fee_currency": tenantApplication.SecurityDepositFeeCurrency,
-
-		"security_deposit_payment_method":   tenantApplication.SecurityDepositPaymentMethod,
-		"security_deposit_reference_number": tenantApplication.SecurityDepositReferenceNumber,
-		"security_deposit_paid_at":          tenantApplication.SecurityDepositPaidAt,
-		"security_deposit_payment_id":       tenantApplication.SecurityDepositPaymentId,
 	}
 	leaseInput := CreateLeaseInput{
 		Status:                      "Lease.Status.Pending",

@@ -35,21 +35,11 @@ type TenantApplication struct {
 	RentFeeCurrency  string  `gorm:"not null;"`
 	PaymentFrequency *string // Hourly, Daily, Monthly, Quarterly, BiAnnually, Annually, OneTime
 
-	InitialDepositFee             *int64
-	InitialDepositPaymentMethod   *string // ONLINE | CASH | EXTERNAL
-	InitialDepositReferenceNumber *string
-	InitialDepositPaidAt          *time.Time
-	InitialDepositPaymentId       *string
-	InitialDepositPayment         *Payment
+	InitialDepositFee         *int64
+	InitialDepositFeeCurrency string `gorm:"not null;default:'GHS'"`
 
 	SecurityDepositFee         *int64 // if it's null or 0 then it's not opted in!
-	SecurityDepositFeeCurrency *string
-
-	SecurityDepositPaymentMethod   *string // ONLINE | CASH | EXTERNAL
-	SecurityDepositReferenceNumber *string
-	SecurityDepositPaidAt          *time.Time
-	SecurityDepositPaymentId       *string
-	SecurityDepositPayment         *Payment
+	SecurityDepositFeeCurrency string `gorm:"not null;default:'GHS'"`
 
 	// docs setup
 	LeaseAggreementDocumentMode                     *string // MANUAL | ONLINE
