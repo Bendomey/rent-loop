@@ -1,6 +1,6 @@
-import { useParams } from 'react-router'
-import { useProperty } from '~/providers/property-provider'
-import { DatePickerInput } from '~/components/date-picker-input'
+// import { useParams } from 'react-router'
+import { RentSetup } from './rent-setup'
+import { SecurityDeposit } from './security-deposit'
 import { Button } from '~/components/ui/button'
 import {
 	Card,
@@ -10,13 +10,11 @@ import {
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '~/components/ui/form'
-import { Input } from '~/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select'
+// import { useProperty } from '~/providers/property-provider'
 
 export function PropertyTenantApplicationFinancial() {
-	const { applicationId } = useParams()
-	const { clientUserProperty } = useProperty()
+	// const { applicationId } = useParams()
+	// const { clientUserProperty } = useProperty()
 
 	return (
 		<Card className="shadow-none">
@@ -28,8 +26,8 @@ export function PropertyTenantApplicationFinancial() {
 			</CardHeader>
 
 			<CardContent className="space-y-3">
-				{/* rent collection setup */}
-				{/* security deposit */}
+				<RentSetup />
+				<SecurityDeposit />
 
 			</CardContent>
 			<CardFooter className="flex justify-end">
