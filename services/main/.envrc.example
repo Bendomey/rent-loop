@@ -29,3 +29,6 @@ export PROPERTY_MANAGER_PORTAL_URL=http://localhost:3000
 export TENANT_PORTAL_URL=http://localhost:3002
 
 export REDIS_URL=redis://localhost:6379
+
+export FINCORE_CLIENT_ID=
+export FINCORE_CLIENT_SECRET=
