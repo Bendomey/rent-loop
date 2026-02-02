@@ -2,8 +2,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { AlertCircleIcon, ArrowLeft, ArrowRight } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
 import { z } from 'zod'
 import { useTenantApplicationContext } from '../context'
+import { useGetOtpCode } from '~/api/auth'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
 import {
@@ -16,6 +18,7 @@ import {
 	FormMessage,
 } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
+import { Spinner } from '~/components/ui/spinner'
 import { TypographyH2 } from '~/components/ui/typography'
 
 const ValidationSchema = z.object({
@@ -46,10 +49,28 @@ export function Step1() {
 		}
 	}, [formData])
 
+	const { mutate, isPending } = useGetOtpCode()
+
 	const onSubmit = async (data: FormSchema) => {
 		updateFormData({ phone: data.phone })
-		// TODO: implement phone lookup logic (Mutate)
-		goNext()
+
+		if (data) {
+			mutate(
+				{
+					channel: 'sms',
+					phone: `+233${data.phone.slice(-9)}`,
+				},
+				{
+					onError: () => {
+						toast.error(`Failed to send phone. Try again later.`)
+					},
+					onSuccess: () => {
+						toast.success(`OTP has been sent to your phone`)
+						goNext()
+					},
+				},
+			)
+		}
 	}
 
 	return (
@@ -99,6 +120,7 @@ export function Step1() {
 
 						<div className="mt-10 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
 							<Button
+								disabled={isPending}
 								onClick={goBack}
 								type="button"
 								size="lg"
@@ -109,11 +131,13 @@ export function Step1() {
 								Go Back
 							</Button>
 							<Button
+								disabled={isPending}
 								size="lg"
 								variant="default"
 								className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
 							>
-								Next <ArrowRight className="ml-2 h-4 w-4" />
+								{isPending ? <Spinner /> : null} Next{' '}
+								<ArrowRight className="ml-2 h-4 w-4" />
 							</Button>
 						</div>
 					</div>

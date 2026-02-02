@@ -1,81 +1,23 @@
 import { REGEXP_ONLY_DIGITS } from 'input-otp'
-import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { useTenantApplicationContext } from '../context'
+import { useVerifyOtpCode } from '~/api/auth'
+import { useGetTenantByPhone } from '~/api/tenants'
 import { Button } from '~/components/ui/button'
 import {
 	InputOTP,
 	InputOTPGroup,
 	InputOTPSlot,
 } from '~/components/ui/input-otp'
+import { Spinner } from '~/components/ui/spinner'
 import {
 	TypographyH2,
 	TypographyMuted,
 	TypographySmall,
 } from '~/components/ui/typography'
 
-const tenantApplicationData: TenantApplication = {
-	id: 'ta_001',
-	on_boarding_method: 'SELF',
-
-	first_name: 'Kwame',
-	other_names: 'Nana',
-	last_name: 'Mensah',
-	email: 'kwame.mensah@example.com',
-	phone: '+233501234567',
-	gender: 'MALE',
-	date_of_birth: '1994-06-15',
-	nationality: 'Ghanaian',
-	marital_status: 'SINGLE',
-
-	profile_photo_url: null,
-
-	id_type: 'NATIONAL_ID',
-	id_number: 'GHA-123456789',
-	id_front_url: null,
-	id_back_url: null,
-
-	status: 'TenantApplication.Status.InProgress',
-
-	current_address: 'East Legon, Accra',
-	emergency_contact_name: 'Ama Mensah',
-	emergency_contact_phone: '+233241112223',
-	relationship_to_emergency_contact: 'Sister',
-
-	employment_type: 'WORKER',
-	occupation: 'Software Developer',
-	employer: 'Tech Solutions Ltd',
-	occupation_address: 'Airport, Accra',
-	proof_of_income_url: null,
-
-	created_by: null,
-	created_by_id: 'user_001',
-
-	completed_at: null,
-	completed_by_id: null,
-	completed_by: null,
-
-	cancelled_at: null,
-	cancelled_by_id: null,
-	cancelled_by: null,
-
-	desired_unit_id: 'unit_123',
-	desired_unit: {
-		id: 'unit_123',
-		name: '2 Bedroom Apartment',
-		// add other required Unit fields here
-	} as PropertyUnit,
-
-	previous_landlord_name: 'Mr. Boateng',
-	previous_landlord_phone: '+233209998887',
-	previous_tenancy_period: 'Jan 2021 - Dec 2023',
-
-	created_at: new Date('2024-01-10T10:00:00Z'),
-	updated_at: new Date('2024-01-15T14:30:00Z'),
-}
-
-const isSubmitting = false
-const error = null
 
 export function Step2() {
 	const [otp, setOtp] = useState('')
@@ -85,9 +27,7 @@ export function Step2() {
 	const { goBack, goNext, goToPage, formData, updateFormData, allowEdit } =
 		useTenantApplicationContext()
 
-	// const rhfMethods = useForm<FormSchema>({
-	// 	resolver: zodResolver(ValidationSchema),
-	// })
+	const isOtpComplete = otp.length === 4
 
 	useEffect(() => {
 		let t: NodeJS.Timeout | null = null
@@ -103,70 +43,81 @@ export function Step2() {
 	}, [resendCountdown])
 
 	const resend = () => {
-		if (!canResend) return
-		setCanResend(false)
+		if (!canResend) setCanResend(false)
 		setResendCountdown(30)
 	}
 
 	useEffect(() => {
-		if (otp.length === 4) {
-			void onSubmit()
+		if (isOtpComplete) {
+			void verifyAndLookUpTenant()
 		}
-	}, [otp])
+	}, [isOtpComplete])
 
-	const verify = () => {
-		//    ToDO: verify OTP logic (Mutate to backend)
+	const { mutate, isPending } = useVerifyOtpCode()
+
+	const verifyAndLookUpTenant = async () => {
+		if (!isOtpComplete) {
+			toast.error(`Please enter a 4-digit OTP code.`)
+		}
+
+		mutate(
+			{
+				code: otp,
+				phone: formData.phone ? `+233${formData.phone.slice(-9)}` : undefined,
+			},
+			{
+				onError: () => {
+					toast.error(`Failed to verify OTP. Try again later.`)
+				},
+				onSuccess: async () => {
+					toast.success(`OTP has been verified`)
+					await tenantLookUpByPhoneAndFormUpdate()
+				},
+			},
+		)
 	}
 
-	const phoneLookUp = () => {
-		//    ToDO: Phone lookup logic to get user data
-		if (otp !== '1234') {
-			return null
-		} else {
-			return tenantApplicationData
-		}
-	}
+	const tenantQuery = useGetTenantByPhone(formData.phone, { enabled: false })
 
-	const onSubmit = async () => {
-		verify()
-		const lookUpData = phoneLookUp()
-		if (!lookUpData) {
+	const tenantLookUpByPhoneAndFormUpdate = async () => {
+		const { data: tenant } = await tenantQuery.refetch()
+		if (!tenant) {
 			allowEdit(true)
 			goNext()
 		} else {
 			updateFormData({
 				// step3 data
-				first_name: lookUpData.first_name,
-				other_names: lookUpData.other_names,
-				last_name: lookUpData.last_name,
-				email: lookUpData.email,
-				phone: lookUpData.phone,
-				current_address: lookUpData.current_address,
-				profile_photo_url: lookUpData.profile_photo_url,
-				date_of_birth: lookUpData.date_of_birth?.toString(),
-				gender: lookUpData.gender,
-				marital_status: lookUpData.marital_status,
+				first_name: tenant.first_name,
+				other_names: tenant.other_names,
+				last_name: tenant.last_name,
+				email: tenant.email,
+				phone: tenant.phone,
+				current_address: tenant.current_address,
+				profile_photo_url: tenant.profile_photo_url,
+				date_of_birth: tenant.date_of_birth?.toString(),
+				gender: tenant.gender,
+				marital_status: tenant.marital_status,
 
 				// step4 data
-				nationality: lookUpData.nationality,
-				id_type: lookUpData.id_type,
-				id_number: lookUpData.id_number,
-				id_front_url: lookUpData.id_front_url,
-				id_back_url: lookUpData.id_back_url,
+				nationality: tenant.nationality,
+				id_type: tenant.id_type,
+				id_number: tenant.id_number,
+				id_front_url: tenant.id_front_url,
+				id_back_url: tenant.id_back_url,
 
 				// step5 data
-				emergency_contact_name: lookUpData.emergency_contact_name,
+				emergency_contact_name: tenant.emergency_contact_name,
 				relationship_to_emergency_contact:
-					lookUpData.relationship_to_emergency_contact,
-				emergency_contact_phone: lookUpData.emergency_contact_phone,
-				employment_type: lookUpData.employment_type,
+					tenant.relationship_to_emergency_contact,
+				emergency_contact_phone: tenant.emergency_contact_phone,
+				employment_type: tenant.employment_type,
 				occupation:
-					lookUpData.employment_type === 'STUDENT'
-						? lookUpData.employment_type
-						: lookUpData.occupation,
-				employer: lookUpData.employer,
-				occupation_address: lookUpData.occupation_address,
-				proof_of_income_url: lookUpData.proof_of_income_url,
+					tenant.employment_type === 'STUDENT'
+						? tenant.employment_type
+						: tenant.occupation,
+				employer: tenant.employer,
+				occupation_address: tenant.occupation_address,
+				proof_of_income_url: tenant.proof_of_income_url,
 			})
 			goToPage(6)
 		}
@@ -204,11 +155,6 @@ export function Step2() {
 						</InputOTPGroup>
 					</InputOTP>
 				</div>
-				{error && (
-					<TypographySmall className="text-destructive mt-4 text-center">
-						{error}
-					</TypographySmall>
-				)}
 
 				{/* Resend */}
 				<div className="mt-6 flex justify-center">
@@ -226,6 +172,7 @@ export function Step2() {
 
 				<div className="mt-10 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
 					<Button
+						disabled={isPending}
 						onClick={goBack}
 						type="button"
 						size="lg"
@@ -239,11 +186,11 @@ export function Step2() {
 					<Button
 						size="lg"
 						variant="default"
-						onClick={onSubmit}
-						disabled={otp.length < 4 || isSubmitting}
+						onClick={verifyAndLookUpTenant}
+						disabled={!isOtpComplete || isPending}
 						className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
 					>
-						{isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+						{isPending ? <Spinner /> : null}
 						Verify code
 						<ArrowRight className="ml-2 h-4 w-4" />
 					</Button>
