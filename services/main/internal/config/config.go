@@ -60,19 +60,19 @@ type IAccountingAPI struct {
 // These are loaded from environment variables since they differ per environment.
 type IChartOfAccounts struct {
 	// Asset Accounts
-	CashBankAccountID        string
-	AccountsReceivableID     string
+	CashBankAccountID    string
+	AccountsReceivableID string
 
 	// Liability Accounts
-	SecurityDepositsHeldID   string
+	SecurityDepositsHeldID string
 
 	// Income Accounts
-	RentalIncomeID           string
+	RentalIncomeID             string
 	MaintenanceReimbursementID string
-	SubscriptionRevenueID    string
+	SubscriptionRevenueID      string
 
 	// Expense Accounts
-	MaintenanceExpenseID     string
+	MaintenanceExpenseID        string
 	PropertyManagementExpenseID string
 }
 
