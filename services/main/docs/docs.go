@@ -2551,11 +2551,6 @@ const docTemplate = `{
                     {
                         "type": "array",
                         "items": {
-                            "enum": [
-                                "PROPERTY_OWNER",
-                                "RENTLOOP",
-                                "SYSTEM"
-                            ],
                             "type": "string"
                         },
                         "collectionFormat": "csv",
@@ -6671,7 +6666,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "0241234567"
                 },
-                "isDefault": {
+                "is_default": {
                     "type": "boolean",
                     "example": true
                 },

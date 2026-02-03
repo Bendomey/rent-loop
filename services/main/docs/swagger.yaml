@@ -674,7 +674,7 @@ definitions:
       identifier:
         example: "0241234567"
         type: string
-      isDefault:
+      is_default:
         example: true
         type: boolean
       metadata:
@@ -3586,10 +3586,6 @@ paths:
       - collectionFormat: csv
         in: query
         items:
-          enum:
-          - PROPERTY_OWNER
-          - RENTLOOP
-          - SYSTEM
           type: string
         name: owner_types
         type: array

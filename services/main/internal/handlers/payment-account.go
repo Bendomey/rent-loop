@@ -220,7 +220,7 @@ type UpdatePaymentAccountRequest struct {
 	Provider   *string         `json:"provider"   validate:"omitempty"                       example:"MTN"        description:"Payment provider"`
 	Identifier *string         `json:"identifier" validate:"omitempty"                       example:"0241234567" description:"Account identifier"`
 	Metadata   *map[string]any `json:"metadata"                                                                   description:"Additional metadata"`
-	IsDefault  *bool           `json:"is_default"  validate:"omitempty"                       example:"true"       description:"Whether this is the default account"`
+	IsDefault  *bool           `json:"is_default" validate:"omitempty"                       example:"true"       description:"Whether this is the default account"`
 	Status     *string         `json:"status"     validate:"omitempty,oneof=ACTIVE DISABLED" example:"ACTIVE"     description:"Account status"`
 }
 
