@@ -17,17 +17,19 @@ import {
 	TypographyMuted,
 	TypographySmall,
 } from '~/components/ui/typography'
-
+import { ERROR_MESSAGES, getErrorMessage } from '~/lib/error-messages'
+import { formatPhoneWithCountryCode } from '~/lib/misc'
 
 export function Step2() {
 	const [otp, setOtp] = useState('')
+	const [otpError, setOtpError] = useState('')
 	const [canResend, setCanResend] = useState(true)
 	const [resendCountdown, setResendCountdown] = useState(0)
 
 	const { goBack, goNext, goToPage, formData, updateFormData, allowEdit } =
 		useTenantApplicationContext()
 
-	const isOtpComplete = otp.length === 4
+	const isOtpComplete = otp.length === 6
 
 	useEffect(() => {
 		let t: NodeJS.Timeout | null = null
@@ -51,37 +53,48 @@ export function Step2() {
 		if (isOtpComplete) {
 			void verifyAndLookUpTenant()
 		}
+		setOtpError('')
 	}, [isOtpComplete])
 
 	const { mutate, isPending } = useVerifyOtpCode()
 
 	const verifyAndLookUpTenant = async () => {
 		if (!isOtpComplete) {
-			toast.error(`Please enter a 4-digit OTP code.`)
+			toast.error(`Please enter a 6-digit OTP code.`)
 		}
 
 		mutate(
 			{
 				code: otp,
-				phone: formData.phone ? `+233${formData.phone.slice(-9)}` : undefined,
+				phone: formatPhoneWithCountryCode(formData.phone, '+233', 9),
 			},
 			{
-				onError: () => {
-					toast.error(`Failed to verify OTP. Try again later.`)
+				onError: (e: unknown) => {
+					if (e instanceof Error) {
+						const error = getErrorMessage(
+							e.message,
+							`Failed to verify OTP. Try again later.`,
+						)
+						toast.error(error)
+						setOtpError(error)
+					}
 				},
 				onSuccess: async () => {
-					toast.success(`OTP has been verified`)
 					await tenantLookUpByPhoneAndFormUpdate()
+					toast.success(`OTP has been verified`)
 				},
 			},
 		)
 	}
 
-	const tenantQuery = useGetTenantByPhone(formData.phone, { enabled: false })
+	const tenantQuery = useGetTenantByPhone(
+		formatPhoneWithCountryCode(formData.phone, '+233', 9),
+		{ enabled: false },
+	)
 
 	const tenantLookUpByPhoneAndFormUpdate = async () => {
-		const { data: tenant } = await tenantQuery.refetch()
-		if (!tenant) {
+		const { data: tenant, error } = await tenantQuery.refetch()
+		if (!tenant || error?.message === ERROR_MESSAGES.TENANT_NOT_FOUND) {
 			allowEdit(true)
 			goNext()
 		} else {
@@ -125,14 +138,14 @@ export function Step2() {
 
 	return (
 		<div className="mx-auto flex w-full items-center justify-center md:max-w-2xl">
-			<div className="w-full max-w-lg rounded-2xl border bg-white p-6 shadow-sm md:p-8">
+			<div className="w-full max-w-xl rounded-2xl border bg-white p-12 shadow-sm md:p-8">
 				{/* Header */}
 				<div className="space-y-2 text-center">
 					<TypographyH2 className="text-lg font-semibold">
 						Verify your phone number
 					</TypographyH2>
 					<TypographyMuted className="leading-relaxed">
-						Enter the 4-digit code sent to{' '}
+						Enter the 6-digit code sent to{' '}
 						<span className="font-medium text-zinc-900">
 							{formData?.phone || 'your phone'}
 						</span>
@@ -142,18 +155,27 @@ export function Step2() {
 				{/* OTP Input */}
 				<div className="mt-8 flex justify-center">
 					<InputOTP
-						maxLength={4}
+						maxLength={6}
 						pattern={REGEXP_ONLY_DIGITS}
 						value={otp}
 						onChange={(v: any) => setOtp(v)}
 					>
 						<InputOTPGroup className="*:data-[slot=input-otp-slot]:h-14 *:data-[slot=input-otp-slot]:w-18 *:data-[slot=input-otp-slot]:text-xl">
-							<InputOTPSlot index={0} />
-							<InputOTPSlot index={1} />
-							<InputOTPSlot index={2} />
-							<InputOTPSlot index={3} />
+							<InputOTPSlot index={0} aria-invalid={!!otpError} />
+							<InputOTPSlot index={1} aria-invalid={!!otpError} />
+							<InputOTPSlot index={2} aria-invalid={!!otpError} />
+							<InputOTPSlot index={3} aria-invalid={!!otpError} />
+							<InputOTPSlot index={4} aria-invalid={!!otpError} />
+							<InputOTPSlot index={5} aria-invalid={!!otpError} />
 						</InputOTPGroup>
 					</InputOTP>
+				</div>
+				<div className="mt-4 text-center">
+					{otpError && (
+						<TypographySmall className="text-destructive">
+							{otpError}
+						</TypographySmall>
+					)}
 				</div>
 
 				{/* Resend */}

@@ -3,6 +3,7 @@ export function getErrorMessage(key: string, defaultMessage?: string) {
 		'email already in use':
 			'The email address is already associated with another account.',
 		PasswordIncorrect: 'The current password you entered is incorrect.',
+		CodeIncorrect: 'The code you entered is incorrect.',
 	}
 
 	return (
@@ -11,3 +12,7 @@ export function getErrorMessage(key: string, defaultMessage?: string) {
 		'An unexpected error occurred. Please try again later.'
 	)
 }
+
+export const ERROR_MESSAGES = {
+	TENANT_NOT_FOUND: 'Tenant not found',
+} as const

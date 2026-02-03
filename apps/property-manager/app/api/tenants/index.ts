@@ -6,7 +6,9 @@ import { fetchClient } from '~/lib/transport'
  * Get Tenant by Phone
  */
 type GetTenantByPhoneOptions = Omit<
-  UseQueryOptions<unknown, Error, Tenant, readonly unknown[]>,'queryKey' | 'queryFn'>
+	UseQueryOptions<unknown, Error, Tenant, readonly unknown[]>,
+	'queryKey' | 'queryFn'
+>
 
 const getTenantByPhone = async (phone?: string) => {
 	try {
@@ -28,10 +30,13 @@ const getTenantByPhone = async (phone?: string) => {
 		}
 	}
 }
-export const useGetTenantByPhone = (phone?: string,options?: GetTenantByPhoneOptions,) =>
+export const useGetTenantByPhone = (
+	phone?: string,
+	options?: GetTenantByPhoneOptions,
+) =>
 	useQuery({
 		queryKey: [QUERY_KEYS.PROPERTY_TENANTS, phone],
 		queryFn: () => getTenantByPhone(phone),
-		 enabled: !!phone && (options?.enabled ?? true),
-    ...options,
+		enabled: !!phone && (options?.enabled ?? true),
+		...options,
 	})

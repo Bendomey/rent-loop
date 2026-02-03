@@ -20,6 +20,7 @@ import {
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
 import { TypographyH2 } from '~/components/ui/typography'
+import { formatPhoneWithCountryCode } from '~/lib/misc'
 
 const ValidationSchema = z.object({
 	phone: z
@@ -58,7 +59,7 @@ export function Step1() {
 			mutate(
 				{
 					channel: 'sms',
-					phone: `+233${data.phone.slice(-9)}`,
+					phone: formatPhoneWithCountryCode(data.phone, '+233', 9),
 				},
 				{
 					onError: () => {
