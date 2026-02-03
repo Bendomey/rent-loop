@@ -16,6 +16,8 @@ type LeaseService interface {
 	CreateLease(context context.Context, input CreateLeaseInput) (*models.Lease, error)
 	UpdateLease(context context.Context, input UpdateLeaseInput) (*models.Lease, error)
 	GetByIDWithPopulate(context context.Context, query repository.GetLeaseQuery) (*models.Lease, error)
+	ListLeases(context context.Context, filters repository.ListLeasesFilter) ([]models.Lease, error)
+	CountLeases(context context.Context, filters repository.ListLeasesFilter) (int64, error)
 }
 
 type leaseService struct {
@@ -254,4 +256,34 @@ func (s *leaseService) GetByIDWithPopulate(ctx context.Context, query repository
 	}
 
 	return lease, nil
+}
+
+func (s *leaseService) ListLeases(ctx context.Context, filters repository.ListLeasesFilter) ([]models.Lease, error) {
+	leases, err := s.repo.List(ctx, filters)
+	if err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "List",
+				"action":   "listing leases",
+			},
+		})
+	}
+
+	return *leases, nil
+}
+
+func (s *leaseService) CountLeases(ctx context.Context, filters repository.ListLeasesFilter) (int64, error) {
+	count, err := s.repo.Count(ctx, filters)
+	if err != nil {
+		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CountLeases",
+				"action":   "counting leases",
+			},
+		})
+	}
+
+	return count, nil
 }

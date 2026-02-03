@@ -4261,6 +4261,147 @@ paths:
       summary: Unlink property from client users
       tags:
       - ClientUserProperties
+  /api/v1/properties/{property_id}/leases:
+    get:
+      consumes:
+      - application/json
+      description: List leases by property
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - MANUAL
+        - ONLINE
+        example: MANUAL
+        in: query
+        name: lease_agreement_document_mode
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - example: b4d0243c-6581-4104-8185-d83a45ebe41b
+        in: query
+        name: parent_lease_id
+        type: string
+      - enum:
+        - Hourly
+        - Daily
+        - Monthly
+        - Quarterly
+        - BiAnnually
+        - Annually
+        - OneTime
+        example: Hourly
+        in: query
+        name: payment_frequency
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - Lease.Status.Pending
+        - Lease.Status.Active
+        - Lease.Status.Terminated
+        - Lease.Status.Completed
+        - Lease.Status.Cancelled
+        example: Lease.Status.Pending
+        in: query
+        name: status
+        type: string
+      - enum:
+        - Hours
+        - Days
+        - Months
+        example: Hours
+        in: query
+        name: stay_duration_frequency
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: unit_ids
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputAdminLease'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: An error occurred while filtering leases
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Absent or invalid authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List leases by property
+      tags:
+      - Lease
   /api/v1/properties/{property_id}/units:
     get:
       consumes:
@@ -5314,6 +5455,147 @@ paths:
       summary: Sends a tenant invite to a possible tenant
       tags:
       - TenantApplication
+  /api/v1/tenants/{tenant_id}/leases:
+    get:
+      consumes:
+      - application/json
+      description: List leases by tenant
+      parameters:
+      - description: Tenant ID
+        in: path
+        name: tenant_id
+        required: true
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - MANUAL
+        - ONLINE
+        example: MANUAL
+        in: query
+        name: lease_agreement_document_mode
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - example: b4d0243c-6581-4104-8185-d83a45ebe41b
+        in: query
+        name: parent_lease_id
+        type: string
+      - enum:
+        - Hourly
+        - Daily
+        - Monthly
+        - Quarterly
+        - BiAnnually
+        - Annually
+        - OneTime
+        example: Hourly
+        in: query
+        name: payment_frequency
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - Lease.Status.Pending
+        - Lease.Status.Active
+        - Lease.Status.Terminated
+        - Lease.Status.Completed
+        - Lease.Status.Cancelled
+        example: Lease.Status.Pending
+        in: query
+        name: status
+        type: string
+      - enum:
+        - Hours
+        - Days
+        - Months
+        example: Hours
+        in: query
+        name: stay_duration_frequency
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: unit_ids
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputAdminLease'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: An error occurred while filtering leases
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Absent or invalid authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List leases by tenant
+      tags:
+      - Lease
   /api/v1/tenants/phone/{phone}:
     get:
       consumes:
