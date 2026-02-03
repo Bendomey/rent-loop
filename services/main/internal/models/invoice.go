@@ -43,7 +43,7 @@ type Invoice struct {
 	Taxes       int64  `gorm:"not null;default:0"`
 	SubTotal    int64  `gorm:"not null;"`                // TotalAmount - Taxes
 	Currency    string `gorm:"not null;default:'GHS'"`   // e.g., 'GHS'
-	status      string `gorm:"not null;default:'DRAFT'"` // 'DRAFT' | 'ISSUED' | 'PARTIALLY_PAID' | 'PAID' | 'VOID'
+	Status      string `gorm:"not null;default:'DRAFT'"` // 'DRAFT' | 'ISSUED' | 'PARTIALLY_PAID' | 'PAID' | 'VOID'
 
 	DueDate *time.Time // when payment is due
 
@@ -52,6 +52,8 @@ type Invoice struct {
 	VoidedAt *time.Time
 
 	AllowedPaymentRails pq.StringArray `gorm:"type:text[];not null;"` // ['MOMO', 'BANK', 'OFFLINE', 'CARD']. Based on the payment accounts for the payee type, filter and fetch for UI
+
+	LineItems []InvoiceLineItem
 }
 
 type InvoiceLineItem struct {

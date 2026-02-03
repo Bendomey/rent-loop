@@ -22,6 +22,7 @@ type Services struct {
 	TenantAccountService      TenantAccountService
 	PaymentAccountService     PaymentAccountService
 	AccountingService         AccountingService
+	InvoiceService            InvoiceService
 }
 
 type INewServicesParams struct {
@@ -92,6 +93,8 @@ func NewServices(params INewServicesParams) Services {
 
 	accountingService := NewAccountingService(params.AppCtx, params.Clients.AccountingAPI)
 
+	invoiceService := NewInvoiceService(params.AppCtx, params.Repository.InvoiceRepository)
+
 	return Services{
 		AuthService:               authService,
 		AdminService:              adminService,
@@ -108,5 +111,6 @@ func NewServices(params INewServicesParams) Services {
 		TenantAccountService:      tenantAccountService,
 		PaymentAccountService:     paymentAccountService,
 		AccountingService:         accountingService,
+		InvoiceService:            invoiceService,
 	}
 }
