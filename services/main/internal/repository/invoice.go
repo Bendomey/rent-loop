@@ -58,7 +58,7 @@ func (r *invoiceRepository) GetByID(ctx context.Context, query GetInvoiceQuery) 
 		}
 	}
 
-	result := db.Preload("LineItems").First(&invoice)
+	result := db.First(&invoice)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -115,7 +115,7 @@ func (r *invoiceRepository) List(ctx context.Context, filterQuery ListInvoicesFi
 		}
 	}
 
-	result := db.Preload("LineItems").Find(&invoices)
+	result := db.Find(&invoices)
 	if result.Error != nil {
 		return nil, result.Error
 	}

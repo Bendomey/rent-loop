@@ -112,6 +112,7 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 
 	invoice := models.Invoice{
 		Code:                        code,
+		Status:                      input.Status,
 		PayerType:                   input.PayerType,
 		PayerClientID:               input.PayerClientID,
 		PayerPropertyID:             input.PayerPropertyID,
@@ -238,7 +239,7 @@ func (s *invoiceService) GetByID(ctx context.Context, query repository.GetInvoic
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
 			Metadata: map[string]string{
-				"function": "GetByIDWithPopulate",
+				"function": "GetByID",
 				"action":   "getting invoice",
 			},
 		})
