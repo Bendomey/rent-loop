@@ -167,6 +167,20 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 						Delete("/", handlers.PaymentAccountHandler.DeletePaymentAccount)
 				})
 			})
+
+			r.Route("/v1/invoices", func(r chi.Router) {
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Post("/", handlers.InvoiceHandler.CreateInvoice)
+				r.Get("/", handlers.InvoiceHandler.ListInvoices)
+				r.Route("/{invoice_id}", func(r chi.Router) {
+					r.Get("/", handlers.InvoiceHandler.GetInvoiceByID)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Patch("/", handlers.InvoiceHandler.UpdateInvoice)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Post("/line-items", handlers.InvoiceHandler.AddLineItem)
+					r.Get("/line-items", handlers.InvoiceHandler.GetLineItems)
+				})
+			})
 		})
 	}
 }

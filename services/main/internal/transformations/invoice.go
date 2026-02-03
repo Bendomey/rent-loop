@@ -88,9 +88,9 @@ func DBInvoiceToRest(i *models.Invoice) any {
 		"paid_at":                        i.PaidAt,
 		"voided_at":                      i.VoidedAt,
 		"allowed_payment_rails":          []string(i.AllowedPaymentRails),
-		"line_items":                      DBInvoiceLineItemsToRest(i.LineItems),
-		"created_at":                      i.CreatedAt,
-		"updated_at":                      i.UpdatedAt,
+		"line_items":                     DBInvoiceLineItemsToRest(i.LineItems),
+		"created_at":                     i.CreatedAt,
+		"updated_at":                     i.UpdatedAt,
 	}
 
 	return data
@@ -110,14 +110,14 @@ func DBInvoiceLineItemsToRest(items []models.InvoiceLineItem) []any {
 }
 
 type OutputInvoiceLineItem struct {
-	ID          string `json:"id"           example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	InvoiceID   string `json:"invoice_id"   example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	Label       string `json:"label"        example:"January Rent"`
-	Category    string `json:"category"     example:"RENT"`
-	Quantity    int64  `json:"quantity"     example:"1"`
-	UnitAmount  int64  `json:"unit_amount"  example:"100000"`
-	TotalAmount int64  `json:"total_amount" example:"100000"`
-	Currency    string `json:"currency"     example:"GHS"`
+	ID          string `json:"id"                 example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	InvoiceID   string `json:"invoice_id"         example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	Label       string `json:"label"              example:"January Rent"`
+	Category    string `json:"category"           example:"RENT"`
+	Quantity    int64  `json:"quantity"           example:"1"`
+	UnitAmount  int64  `json:"unit_amount"        example:"100000"`
+	TotalAmount int64  `json:"total_amount"       example:"100000"`
+	Currency    string `json:"currency"           example:"GHS"`
 	Metadata    any    `json:"metadata,omitempty"`
 
 	CreatedAt time.Time `json:"created_at" example:"2024-06-01T09:00:00Z"`

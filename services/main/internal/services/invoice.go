@@ -247,7 +247,10 @@ func (s *invoiceService) GetByID(ctx context.Context, query repository.GetInvoic
 	return invoice, nil
 }
 
-func (s *invoiceService) ListInvoices(ctx context.Context, filterQuery repository.ListInvoicesFilter) (*[]models.Invoice, int64, error) {
+func (s *invoiceService) ListInvoices(
+	ctx context.Context,
+	filterQuery repository.ListInvoicesFilter,
+) (*[]models.Invoice, int64, error) {
 	invoices, err := s.repo.List(ctx, filterQuery)
 	if err != nil {
 		return nil, 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{

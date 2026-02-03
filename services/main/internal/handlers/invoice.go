@@ -23,33 +23,33 @@ func NewInvoiceHandler(appCtx pkg.AppContext, service services.InvoiceService) I
 }
 
 type CreateLineItemRequest struct {
-	Label       string          `json:"label"        validate:"required"                                                                            example:"January Rent"  description:"Label for the line item"`
-	Category    string          `json:"category"     validate:"required,oneof=RENT SECURITY_DEPOSIT INITIAL_DEPOSIT MAINTENANCE_FEE SAAS_FEE EXPENSE" example:"RENT"          description:"Category of line item"`
-	Quantity    int64           `json:"quantity"     validate:"required,min=1"                                                                       example:"1"             description:"Quantity"`
-	UnitAmount  int64           `json:"unit_amount"  validate:"required,min=0"                                                                        example:"100000"        description:"Unit amount in smallest currency unit"`
-	TotalAmount int64           `json:"total_amount" validate:"required,min=0"                                                                        example:"100000"        description:"Total amount in smallest currency unit"`
-	Currency    string          `json:"currency"     validate:"required"                                                                              example:"GHS"           description:"Currency code"`
-	Metadata    *map[string]any `json:"metadata,omitempty"                                                                                            description:"Additional metadata"`
+	Label       string          `json:"label"              validate:"required"                                                                              example:"January Rent" description:"Label for the line item"`
+	Category    string          `json:"category"           validate:"required,oneof=RENT SECURITY_DEPOSIT INITIAL_DEPOSIT MAINTENANCE_FEE SAAS_FEE EXPENSE" example:"RENT"         description:"Category of line item"`
+	Quantity    int64           `json:"quantity"           validate:"required,min=1"                                                                        example:"1"            description:"Quantity"`
+	UnitAmount  int64           `json:"unit_amount"        validate:"required,min=0"                                                                        example:"100000"       description:"Unit amount in smallest currency unit"`
+	TotalAmount int64           `json:"total_amount"       validate:"required,min=0"                                                                        example:"100000"       description:"Total amount in smallest currency unit"`
+	Currency    string          `json:"currency"           validate:"required"                                                                              example:"GHS"          description:"Currency code"`
+	Metadata    *map[string]any `json:"metadata,omitempty"                                                                                                                         description:"Additional metadata"`
 }
 
 type CreateInvoiceRequest struct {
-	PayerType                   string                  `json:"payer_type"                     validate:"required,oneof=TENANT PROPERTY_OWNER"                                                  example:"TENANT"              description:"Who is paying the invoice"`
-	PayerClientID               *string                 `json:"payer_client_id,omitempty"      example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"                                                    description:"Client ID of the payer"`
-	PayerPropertyID             *string                 `json:"payer_property_id,omitempty"    example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"                                                    description:"Property ID of the payer"`
-	PayerTenantID               *string                 `json:"payer_tenant_id,omitempty"      example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"                                                    description:"Tenant ID of the payer"`
-	PayeeType                   string                  `json:"payee_type"                     validate:"required,oneof=PROPERTY_OWNER RENTLOOP"                                                example:"PROPERTY_OWNER"      description:"Who is receiving the payment"`
-	PayeeClientID               *string                 `json:"payee_client_id,omitempty"      example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"                                                    description:"Client ID of the payee"`
-	ContextType                 string                  `json:"context_type"                   validate:"required,oneof=TENANT_APPLICATION LEASE_RENT MAINTENANCE SAAS_FEE GENERAL_EXPENSE"     example:"LEASE_RENT"          description:"Context of the invoice"`
-	ContextTenantApplicationID  *string                 `json:"context_tenant_application_id,omitempty"  example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"                                          description:"Tenant application ID"`
-	ContextLeaseID              *string                 `json:"context_lease_id,omitempty"               example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"                                          description:"Lease ID"`
-	ContextMaintenanceRequestID *string                 `json:"context_maintenance_request_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"                                          description:"Maintenance request ID"`
-	TotalAmount                 int64                   `json:"total_amount"                   validate:"required,min=0"                                                                         example:"100000"              description:"Total amount in smallest currency unit"`
-	Taxes                       int64                   `json:"taxes"                          validate:"min=0"                                                                                  example:"0"                   description:"Taxes in smallest currency unit"`
-	SubTotal                    int64                   `json:"sub_total"                      validate:"required,min=0"                                                                         example:"100000"              description:"Subtotal in smallest currency unit"`
-	Currency                    string                  `json:"currency"                       validate:"required"                                                                               example:"GHS"                 description:"Currency code"`
-	DueDate                     *time.Time              `json:"due_date,omitempty"             example:"2024-07-01T00:00:00Z"                                                                    description:"Due date"`
-	AllowedPaymentRails         []string                `json:"allowed_payment_rails"          validate:"required,dive,oneof=MOMO BANK OFFLINE CARD"                                            example:"MOMO,BANK"           description:"Allowed payment rails"`
-	LineItems                   []CreateLineItemRequest `json:"line_items,omitempty"           validate:"omitempty,dive"                                                                         description:"Initial line items for the invoice"`
+	PayerType                   string                  `json:"payer_type"                               validate:"required,oneof=TENANT PROPERTY_OWNER"                                              example:"TENANT"                               description:"Who is paying the invoice"`
+	PayerClientID               *string                 `json:"payer_client_id,omitempty"                                                                                                             example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b" description:"Client ID of the payer"`
+	PayerPropertyID             *string                 `json:"payer_property_id,omitempty"                                                                                                           example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b" description:"Property ID of the payer"`
+	PayerTenantID               *string                 `json:"payer_tenant_id,omitempty"                                                                                                             example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b" description:"Tenant ID of the payer"`
+	PayeeType                   string                  `json:"payee_type"                               validate:"required,oneof=PROPERTY_OWNER RENTLOOP"                                            example:"PROPERTY_OWNER"                       description:"Who is receiving the payment"`
+	PayeeClientID               *string                 `json:"payee_client_id,omitempty"                                                                                                             example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b" description:"Client ID of the payee"`
+	ContextType                 string                  `json:"context_type"                             validate:"required,oneof=TENANT_APPLICATION LEASE_RENT MAINTENANCE SAAS_FEE GENERAL_EXPENSE" example:"LEASE_RENT"                           description:"Context of the invoice"`
+	ContextTenantApplicationID  *string                 `json:"context_tenant_application_id,omitempty"                                                                                               example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b" description:"Tenant application ID"`
+	ContextLeaseID              *string                 `json:"context_lease_id,omitempty"                                                                                                            example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b" description:"Lease ID"`
+	ContextMaintenanceRequestID *string                 `json:"context_maintenance_request_id,omitempty"                                                                                              example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b" description:"Maintenance request ID"`
+	TotalAmount                 int64                   `json:"total_amount"                             validate:"required,min=0"                                                                    example:"100000"                               description:"Total amount in smallest currency unit"`
+	Taxes                       int64                   `json:"taxes"                                    validate:"min=0"                                                                             example:"0"                                    description:"Taxes in smallest currency unit"`
+	SubTotal                    int64                   `json:"sub_total"                                validate:"required,min=0"                                                                    example:"100000"                               description:"Subtotal in smallest currency unit"`
+	Currency                    string                  `json:"currency"                                 validate:"required"                                                                          example:"GHS"                                  description:"Currency code"`
+	DueDate                     *time.Time              `json:"due_date,omitempty"                                                                                                                    example:"2024-07-01T00:00:00Z"                 description:"Due date"`
+	AllowedPaymentRails         []string                `json:"allowed_payment_rails"                    validate:"required,dive,oneof=MOMO BANK OFFLINE CARD"                                        example:"MOMO,BANK"                            description:"Allowed payment rails"`
+	LineItems                   []CreateLineItemRequest `json:"line_items,omitempty"                     validate:"omitempty,dive"                                                                                                                   description:"Initial line items for the invoice"`
 }
 
 // CreateInvoice godoc
@@ -60,12 +60,12 @@ type CreateInvoiceRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			body	body		CreateInvoiceRequest							true	"Create invoice request body"
-//	@Success		201		{object}	object{data=transformations.OutputInvoice}		"Invoice Created Successfully"
-//	@Failure		400		{object}	lib.HTTPError									"Error occurred when creating invoice"
-//	@Failure		401		{object}	string											"Invalid or absent authentication token"
-//	@Failure		422		{object}	lib.HTTPError									"Validation error"
-//	@Failure		500		{object}	string											"An unexpected error occurred"
+//	@Param			body	body		CreateInvoiceRequest						true	"Create invoice request body"
+//	@Success		201		{object}	object{data=transformations.OutputInvoice}	"Invoice Created Successfully"
+//	@Failure		400		{object}	lib.HTTPError								"Error occurred when creating invoice"
+//	@Failure		401		{object}	string										"Invalid or absent authentication token"
+//	@Failure		422		{object}	lib.HTTPError								"Validation error"
+//	@Failure		500		{object}	string										"An unexpected error occurred"
 //	@Router			/api/v1/invoices [post]
 func (h *InvoiceHandler) CreateInvoice(w http.ResponseWriter, r *http.Request) {
 	var body CreateInvoiceRequest
@@ -127,15 +127,15 @@ func (h *InvoiceHandler) CreateInvoice(w http.ResponseWriter, r *http.Request) {
 }
 
 type UpdateInvoiceRequest struct {
-	Status              *string    `json:"status,omitempty"               validate:"omitempty,oneof=DRAFT ISSUED PARTIALLY_PAID PAID VOID"    example:"ISSUED"              description:"Invoice status"`
-	TotalAmount         *int64     `json:"total_amount,omitempty"         validate:"omitempty,min=0"                                          example:"100000"              description:"Total amount in smallest currency unit"`
-	Taxes               *int64     `json:"taxes,omitempty"                validate:"omitempty,min=0"                                          example:"0"                   description:"Taxes in smallest currency unit"`
-	SubTotal            *int64     `json:"sub_total,omitempty"            validate:"omitempty,min=0"                                          example:"100000"              description:"Subtotal in smallest currency unit"`
-	DueDate             *time.Time `json:"due_date,omitempty"             example:"2024-07-01T00:00:00Z"                                      description:"Due date"`
-	IssuedAt            *time.Time `json:"issued_at,omitempty"            example:"2024-06-15T00:00:00Z"                                      description:"Issued date"`
-	PaidAt              *time.Time `json:"paid_at,omitempty"              example:"2024-06-20T00:00:00Z"                                      description:"Paid date"`
-	VoidedAt            *time.Time `json:"voided_at,omitempty"            example:"2024-06-25T00:00:00Z"                                      description:"Voided date"`
-	AllowedPaymentRails *[]string  `json:"allowed_payment_rails,omitempty" validate:"omitempty,dive,oneof=MOMO BANK OFFLINE CARD"             example:"MOMO,BANK"           description:"Allowed payment rails"`
+	Status              *string    `json:"status,omitempty"                validate:"omitempty,oneof=DRAFT ISSUED PARTIALLY_PAID PAID VOID" example:"ISSUED"               description:"Invoice status"`
+	TotalAmount         *int64     `json:"total_amount,omitempty"          validate:"omitempty,min=0"                                       example:"100000"               description:"Total amount in smallest currency unit"`
+	Taxes               *int64     `json:"taxes,omitempty"                 validate:"omitempty,min=0"                                       example:"0"                    description:"Taxes in smallest currency unit"`
+	SubTotal            *int64     `json:"sub_total,omitempty"             validate:"omitempty,min=0"                                       example:"100000"               description:"Subtotal in smallest currency unit"`
+	DueDate             *time.Time `json:"due_date,omitempty"                                                                               example:"2024-07-01T00:00:00Z" description:"Due date"`
+	IssuedAt            *time.Time `json:"issued_at,omitempty"                                                                              example:"2024-06-15T00:00:00Z" description:"Issued date"`
+	PaidAt              *time.Time `json:"paid_at,omitempty"                                                                                example:"2024-06-20T00:00:00Z" description:"Paid date"`
+	VoidedAt            *time.Time `json:"voided_at,omitempty"                                                                              example:"2024-06-25T00:00:00Z" description:"Voided date"`
+	AllowedPaymentRails *[]string  `json:"allowed_payment_rails,omitempty" validate:"omitempty,dive,oneof=MOMO BANK OFFLINE CARD"           example:"MOMO,BANK"            description:"Allowed payment rails"`
 }
 
 // UpdateInvoice godoc
@@ -146,14 +146,14 @@ type UpdateInvoiceRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			invoice_id	path		string											true	"Invoice ID"
-//	@Param			body		body		UpdateInvoiceRequest							true	"Update invoice request body"
-//	@Success		200			{object}	object{data=transformations.OutputInvoice}		"Invoice Updated Successfully"
-//	@Failure		400			{object}	lib.HTTPError									"Error occurred when updating invoice"
-//	@Failure		401			{object}	string											"Invalid or absent authentication token"
-//	@Failure		404			{object}	lib.HTTPError									"Invoice not found"
-//	@Failure		422			{object}	lib.HTTPError									"Validation error"
-//	@Failure		500			{object}	string											"An unexpected error occurred"
+//	@Param			invoice_id	path		string										true	"Invoice ID"
+//	@Param			body		body		UpdateInvoiceRequest						true	"Update invoice request body"
+//	@Success		200			{object}	object{data=transformations.OutputInvoice}	"Invoice Updated Successfully"
+//	@Failure		400			{object}	lib.HTTPError								"Error occurred when updating invoice"
+//	@Failure		401			{object}	string										"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError								"Invoice not found"
+//	@Failure		422			{object}	lib.HTTPError								"Validation error"
+//	@Failure		500			{object}	string										"An unexpected error occurred"
 //	@Router			/api/v1/invoices/{invoice_id} [patch]
 func (h *InvoiceHandler) UpdateInvoice(w http.ResponseWriter, r *http.Request) {
 	var body UpdateInvoiceRequest
@@ -205,13 +205,13 @@ type GetInvoiceQuery struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			invoice_id	path		string											true	"Invoice ID"
-//	@Param			q			query		GetInvoiceQuery									true	"Query parameters"
-//	@Success		200			{object}	object{data=transformations.OutputInvoice}		"Invoice"
-//	@Failure		400			{object}	lib.HTTPError									"Error occurred when getting invoice"
-//	@Failure		401			{object}	string											"Invalid or absent authentication token"
-//	@Failure		404			{object}	lib.HTTPError									"Invoice not found"
-//	@Failure		500			{object}	string											"An unexpected error occurred"
+//	@Param			invoice_id	path		string										true	"Invoice ID"
+//	@Param			q			query		GetInvoiceQuery								true	"Query parameters"
+//	@Success		200			{object}	object{data=transformations.OutputInvoice}	"Invoice"
+//	@Failure		400			{object}	lib.HTTPError								"Error occurred when getting invoice"
+//	@Failure		401			{object}	string										"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError								"Invoice not found"
+//	@Failure		500			{object}	string										"An unexpected error occurred"
 //	@Router			/api/v1/invoices/{invoice_id} [get]
 func (h *InvoiceHandler) GetInvoiceByID(w http.ResponseWriter, r *http.Request) {
 	invoiceID := chi.URLParam(r, "invoice_id")
@@ -252,11 +252,11 @@ type ListInvoicesQuery struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			q	query		ListInvoicesQuery								true	"Query parameters"
+//	@Param			q	query		ListInvoicesQuery																					true	"Query parameters"
 //	@Success		200	{object}	object{data=object{rows=[]transformations.OutputInvoice,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Invoices"
-//	@Failure		400	{object}	lib.HTTPError									"Error occurred when listing invoices"
-//	@Failure		401	{object}	string											"Invalid or absent authentication token"
-//	@Failure		500	{object}	string											"An unexpected error occurred"
+//	@Failure		400	{object}	lib.HTTPError																						"Error occurred when listing invoices"
+//	@Failure		401	{object}	string																								"Invalid or absent authentication token"
+//	@Failure		500	{object}	string																								"An unexpected error occurred"
 //	@Router			/api/v1/invoices [get]
 func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
@@ -296,13 +296,13 @@ func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 }
 
 type AddLineItemRequest struct {
-	Label       string          `json:"label"        validate:"required"      example:"January Rent"    description:"Label for the line item"`
-	Category    string          `json:"category"     validate:"required,oneof=RENT SECURITY_DEPOSIT INITIAL_DEPOSIT MAINTENANCE_FEE SAAS_FEE EXPENSE"  example:"RENT"  description:"Category of line item"`
-	Quantity    int64           `json:"quantity"     validate:"required,min=1" example:"1"               description:"Quantity"`
-	UnitAmount  int64           `json:"unit_amount"  validate:"required,min=0" example:"100000"          description:"Unit amount in smallest currency unit"`
-	TotalAmount int64           `json:"total_amount" validate:"required,min=0" example:"100000"          description:"Total amount in smallest currency unit"`
-	Currency    string          `json:"currency"     validate:"required"       example:"GHS"             description:"Currency code"`
-	Metadata    *map[string]any `json:"metadata,omitempty"                     description:"Additional metadata"`
+	Label       string          `json:"label"              validate:"required"                                                                              example:"January Rent" description:"Label for the line item"`
+	Category    string          `json:"category"           validate:"required,oneof=RENT SECURITY_DEPOSIT INITIAL_DEPOSIT MAINTENANCE_FEE SAAS_FEE EXPENSE" example:"RENT"         description:"Category of line item"`
+	Quantity    int64           `json:"quantity"           validate:"required,min=1"                                                                        example:"1"            description:"Quantity"`
+	UnitAmount  int64           `json:"unit_amount"        validate:"required,min=0"                                                                        example:"100000"       description:"Unit amount in smallest currency unit"`
+	TotalAmount int64           `json:"total_amount"       validate:"required,min=0"                                                                        example:"100000"       description:"Total amount in smallest currency unit"`
+	Currency    string          `json:"currency"           validate:"required"                                                                              example:"GHS"          description:"Currency code"`
+	Metadata    *map[string]any `json:"metadata,omitempty"                                                                                                                         description:"Additional metadata"`
 }
 
 // AddLineItem godoc
@@ -314,7 +314,7 @@ type AddLineItemRequest struct {
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Param			invoice_id	path		string												true	"Invoice ID"
-//	@Param			body		body		AddLineItemRequest								true	"Add line item request body"
+//	@Param			body		body		AddLineItemRequest									true	"Add line item request body"
 //	@Success		201			{object}	object{data=transformations.OutputInvoiceLineItem}	"Line Item Added Successfully"
 //	@Failure		400			{object}	lib.HTTPError										"Error occurred when adding line item"
 //	@Failure		401			{object}	string												"Invalid or absent authentication token"
