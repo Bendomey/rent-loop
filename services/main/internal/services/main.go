@@ -18,6 +18,7 @@ type Services struct {
 	TenantService             TenantService
 	LeaseService              LeaseService
 	TenantAccountService      TenantAccountService
+	PaymentAccountService     PaymentAccountService
 }
 
 func NewServices(appCtx pkg.AppContext, repository repository.Repository) Services {
@@ -68,6 +69,8 @@ func NewServices(appCtx pkg.AppContext, repository repository.Repository) Servic
 
 	tenantAccountService := NewTenantAccountService(appCtx, repository.TenantAccountRepository)
 
+	paymentAccountService := NewPaymentAccountService(appCtx, repository.PaymentAccountRepository)
+
 	tenantApplicationService := NewTenantApplicationService(TenantApplicationServiceDeps{
 		AppCtx:               appCtx,
 		Repo:                 repository.TenantApplicationRepository,
@@ -91,5 +94,6 @@ func NewServices(appCtx pkg.AppContext, repository repository.Repository) Servic
 		TenantService:             tenantService,
 		LeaseService:              leaseService,
 		TenantAccountService:      tenantAccountService,
+		PaymentAccountService:     paymentAccountService,
 	}
 }

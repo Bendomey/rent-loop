@@ -154,6 +154,19 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Patch("/{lease_id}", handlers.LeaseHandler.UpdateLease)
 			})
+
+			r.Route("/v1/payment-accounts", func(r chi.Router) {
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Post("/", handlers.PaymentAccountHandler.CreatePaymentAccount)
+				r.Get("/", handlers.PaymentAccountHandler.ListPaymentAccounts)
+				r.Route("/{payment_account_id}", func(r chi.Router) {
+					r.Get("/", handlers.PaymentAccountHandler.GetPaymentAccountById)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Patch("/", handlers.PaymentAccountHandler.UpdatePaymentAccount)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Delete("/", handlers.PaymentAccountHandler.DeletePaymentAccount)
+				})
+			})
 		})
 	}
 }
