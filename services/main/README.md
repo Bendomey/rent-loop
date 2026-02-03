@@ -28,6 +28,8 @@ Rentloop Engine is a modular property rental management service designed to prov
      ```sh
      export GO_ENV=development
      export PORT=5003
+     
+     # Database
      export DB_HOST=localhost
      export DB_PORT=5432
      export DB_USER=your_db_user
@@ -35,19 +37,54 @@ Rentloop Engine is a modular property rental management service designed to prov
      export DB_NAME=rentloop_dev
      export DB_SSLMODE=disable
      export DB_DEFAULT_DBNAME=postgres
+     
+     # Redis
+     export REDIS_URL=redis://localhost:6379
+     
+     # Sentry
      export SENTRY_DSN=
      export SENTRY_ENVIRONMENT=development
+     
+     # Super Admin (for initial setup)
      export SUPER_ADMIN_NAME="Super Admin"
      export SUPER_ADMIN_EMAIL=admin@example.com
      export SUPER_ADMIN_PASSWORD=password
+     
+     # Token Secrets (JWT signing)
+     export ADMIN_SECRET=superduperadminsecret
+     export CLIENT_USER_SECRET=superduperclientusersecret
+     export TENANT_USER_SECRET=superdupertenantusersecret
+     
+     # Wittyflow SMS
      export WITTYFLOW_APP_ID=fake-app-id
-      export WITTYFLOW_APP_SECRET=fake-app-secret
+     export WITTYFLOW_APP_SECRET=fake-app-secret
+     
+     # Resend Email
      export RESEND_API_KEY=fake-api-key
-      export SUPPORT_EMAIL=support@rentloop.com
-      export SUPPORT_PHONE=0201080802
-      export ADMIN_PORTAL_URL=http://localhost:3001
-      export PROPERTY_MANAGER_PORTAL_URL=http://localhost:3000
-      export TENANT_PORTAL_URL=http://localhost:3002
+     
+     # Support Info
+     export SUPPORT_EMAIL=support@rentloop.com
+     export SUPPORT_PHONE=0201080802
+     
+     # Portal URLs
+     export ADMIN_PORTAL_URL=http://localhost:3001
+     export PROPERTY_MANAGER_PORTAL_URL=http://localhost:3000
+     export TENANT_PORTAL_URL=http://localhost:3002
+     
+     # Fincore Accounting API
+     export FINCORE_API_BASE_URL=http://localhost:8081/api/v1
+     export FINCORE_CLIENT_ID=
+     export FINCORE_CLIENT_SECRET=
+     
+     # Fincore Chart of Accounts IDs
+     export FINCORE_ACCOUNT_CASH_BANK=
+     export FINCORE_ACCOUNT_RECEIVABLE=
+     export FINCORE_ACCOUNT_SECURITY_DEPOSITS=
+     export FINCORE_ACCOUNT_RENTAL_INCOME=
+     export FINCORE_ACCOUNT_MAINTENANCE_REIMBURSEMENT=
+     export FINCORE_ACCOUNT_SUBSCRIPTION_REVENUE=
+     export FINCORE_ACCOUNT_MAINTENANCE_EXPENSE=
+     export FINCORE_ACCOUNT_PROPERTY_MGMT_EXPENSE=
      ```
 4. **Install Go dependencies:**
    ```sh
