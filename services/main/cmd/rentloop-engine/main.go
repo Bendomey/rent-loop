@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/clients"
 	"github.com/Bendomey/rent-loop/services/main/internal/config"
 	"github.com/Bendomey/rent-loop/services/main/internal/db"
 	"github.com/Bendomey/rent-loop/services/main/internal/handlers"
@@ -44,7 +45,12 @@ func main() {
 	}
 
 	repository := repository.NewRepository(database)
-	services := services.NewServices(appCtx, repository)
+	clients := clients.NewClients(cfg)
+	services := services.NewServices(services.INewServicesParams{
+		AppCtx:     appCtx,
+		Repository: repository,
+		Clients:    clients,
+	})
 	handlers := handlers.NewHandlers(appCtx, services)
 
 	r := router.New(appCtx, handlers)

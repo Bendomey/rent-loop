@@ -50,18 +50,50 @@ type IRentloopPortals struct {
 	TenantPortalURL          string
 }
 
+type IAccountingAPI struct {
+	BaseURL      string
+	ClientID     string
+	ClientSecret string
+}
+
+// IChartOfAccounts holds the fincore account IDs for each account type.
+// These are loaded from environment variables since they differ per environment.
+type IChartOfAccounts struct {
+	// Asset Accounts
+	CashBankAccountID    string
+	AccountsReceivableID string
+
+	// Liability Accounts
+	SecurityDepositsHeldID string
+
+	// Income Accounts
+	RentalIncomeID             string
+	MaintenanceReimbursementID string
+	SubscriptionRevenueID      string
+
+	// Expense Accounts
+	MaintenanceExpenseID        string
+	PropertyManagementExpenseID string
+}
+
+type IClients struct {
+	AccountingAPI IAccountingAPI
+}
+
 type Config struct {
-	Port         string
-	Database     IDatabase
-	Env          string // development, staging, production
-	Sentry       ISentry
-	DefaultData  IDefaultData
-	TokenSecrets ITokenGenerationSecret
-	Wittyflow    IWittyflow
-	ResendAPIKey string
-	SupportData  IRentloopSupport
-	Portals      IRentloopPortals
-	RedisDB      IRedisDB
+	Port            string
+	Database        IDatabase
+	Env             string // development, staging, production
+	Sentry          ISentry
+	DefaultData     IDefaultData
+	TokenSecrets    ITokenGenerationSecret
+	Wittyflow       IWittyflow
+	ResendAPIKey    string
+	SupportData     IRentloopSupport
+	Portals         IRentloopPortals
+	RedisDB         IRedisDB
+	Clients         IClients
+	ChartOfAccounts IChartOfAccounts
 }
 
 // Load loads config from environment variables
@@ -107,6 +139,30 @@ func Load() Config {
 		},
 		RedisDB: IRedisDB{
 			Url: getEnv("REDIS_URL", "redis://localhost:6379"),
+		},
+		Clients: IClients{
+			AccountingAPI: IAccountingAPI{
+				BaseURL:      getEnv("FINCORE_API_BASE_URL", "http://localhost:8081/api/v1"),
+				ClientID:     getEnv("FINCORE_CLIENT_ID", ""),
+				ClientSecret: getEnv("FINCORE_CLIENT_SECRET", ""),
+			},
+		},
+		ChartOfAccounts: IChartOfAccounts{
+			// Asset Accounts
+			CashBankAccountID:    getEnv("FINCORE_ACCOUNT_CASH_BANK", ""),
+			AccountsReceivableID: getEnv("FINCORE_ACCOUNT_RECEIVABLE", ""),
+
+			// Liability Accounts
+			SecurityDepositsHeldID: getEnv("FINCORE_ACCOUNT_SECURITY_DEPOSITS", ""),
+
+			// Income Accounts
+			RentalIncomeID:             getEnv("FINCORE_ACCOUNT_RENTAL_INCOME", ""),
+			MaintenanceReimbursementID: getEnv("FINCORE_ACCOUNT_MAINTENANCE_REIMBURSEMENT", ""),
+			SubscriptionRevenueID:      getEnv("FINCORE_ACCOUNT_SUBSCRIPTION_REVENUE", ""),
+
+			// Expense Accounts
+			MaintenanceExpenseID:        getEnv("FINCORE_ACCOUNT_MAINTENANCE_EXPENSE", ""),
+			PropertyManagementExpenseID: getEnv("FINCORE_ACCOUNT_PROPERTY_MGMT_EXPENSE", ""),
 		},
 	}
 }
