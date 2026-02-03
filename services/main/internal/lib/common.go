@@ -35,6 +35,15 @@ func NullOrString(input string) *string {
 	return &input
 }
 
+func NullOrBool(input string) *bool {
+	if input == "" {
+		return nil
+	}
+
+	conv := input == "true" || input == "1"
+	return &conv
+}
+
 func NullOrStringArray(input []string) *[]string {
 	if len(input) == 0 {
 		return nil
