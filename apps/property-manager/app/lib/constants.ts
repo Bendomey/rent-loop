@@ -18,6 +18,7 @@ export const QUERY_KEYS = {
 	PROPERTY_BLOCKS: 'property-blocks',
 	PROPERTY_UNITS: 'property-units',
 	PROPERTY_TENANT_APPLICATIONS: 'property-tenant-applications',
+	PROPERTY_TENANTS: 'property-tenants',
 	CLIENT_USERS: 'client-users',
 	CLIENT_USER_PROPERTIES: 'client-user-properties',
 } as const

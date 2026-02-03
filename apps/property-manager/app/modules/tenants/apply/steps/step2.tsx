@@ -1,93 +1,35 @@
 import { REGEXP_ONLY_DIGITS } from 'input-otp'
-import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { useTenantApplicationContext } from '../context'
+import { useVerifyOtpCode } from '~/api/auth'
+import { useGetTenantByPhone } from '~/api/tenants'
 import { Button } from '~/components/ui/button'
 import {
 	InputOTP,
 	InputOTPGroup,
 	InputOTPSlot,
 } from '~/components/ui/input-otp'
+import { Spinner } from '~/components/ui/spinner'
 import {
 	TypographyH2,
 	TypographyMuted,
 	TypographySmall,
 } from '~/components/ui/typography'
-
-const tenantApplicationData: TenantApplication = {
-	id: 'ta_001',
-	on_boarding_method: 'SELF',
-
-	first_name: 'Kwame',
-	other_names: 'Nana',
-	last_name: 'Mensah',
-	email: 'kwame.mensah@example.com',
-	phone: '+233501234567',
-	gender: 'MALE',
-	date_of_birth: '1994-06-15',
-	nationality: 'Ghanaian',
-	marital_status: 'SINGLE',
-
-	profile_photo_url: null,
-
-	id_type: 'NATIONAL_ID',
-	id_number: 'GHA-123456789',
-	id_front_url: null,
-	id_back_url: null,
-
-	status: 'TenantApplication.Status.InProgress',
-
-	current_address: 'East Legon, Accra',
-	emergency_contact_name: 'Ama Mensah',
-	emergency_contact_phone: '+233241112223',
-	relationship_to_emergency_contact: 'Sister',
-
-	employment_type: 'WORKER',
-	occupation: 'Software Developer',
-	employer: 'Tech Solutions Ltd',
-	occupation_address: 'Airport, Accra',
-	proof_of_income_url: null,
-
-	created_by: null,
-	created_by_id: 'user_001',
-
-	completed_at: null,
-	completed_by_id: null,
-	completed_by: null,
-
-	cancelled_at: null,
-	cancelled_by_id: null,
-	cancelled_by: null,
-
-	desired_unit_id: 'unit_123',
-	desired_unit: {
-		id: 'unit_123',
-		name: '2 Bedroom Apartment',
-		// add other required Unit fields here
-	} as PropertyUnit,
-
-	previous_landlord_name: 'Mr. Boateng',
-	previous_landlord_phone: '+233209998887',
-	previous_tenancy_period: 'Jan 2021 - Dec 2023',
-
-	created_at: new Date('2024-01-10T10:00:00Z'),
-	updated_at: new Date('2024-01-15T14:30:00Z'),
-}
-
-const isSubmitting = false
-const error = null
+import { ERROR_MESSAGES, getErrorMessage } from '~/lib/error-messages'
+import { formatPhoneWithCountryCode } from '~/lib/misc'
 
 export function Step2() {
 	const [otp, setOtp] = useState('')
+	const [otpError, setOtpError] = useState('')
 	const [canResend, setCanResend] = useState(true)
 	const [resendCountdown, setResendCountdown] = useState(0)
 
 	const { goBack, goNext, goToPage, formData, updateFormData, allowEdit } =
 		useTenantApplicationContext()
 
-	// const rhfMethods = useForm<FormSchema>({
-	// 	resolver: zodResolver(ValidationSchema),
-	// })
+	const isOtpComplete = otp.length === 6
 
 	useEffect(() => {
 		let t: NodeJS.Timeout | null = null
@@ -103,70 +45,92 @@ export function Step2() {
 	}, [resendCountdown])
 
 	const resend = () => {
-		if (!canResend) return
-		setCanResend(false)
+		if (!canResend) setCanResend(false)
 		setResendCountdown(30)
 	}
 
 	useEffect(() => {
-		if (otp.length === 4) {
-			void onSubmit()
+		if (isOtpComplete) {
+			void verifyAndLookUpTenant()
 		}
-	}, [otp])
+		setOtpError('')
+	}, [isOtpComplete])
 
-	const verify = () => {
-		//    ToDO: verify OTP logic (Mutate to backend)
+	const { mutate, isPending } = useVerifyOtpCode()
+
+	const verifyAndLookUpTenant = async () => {
+		if (!isOtpComplete) {
+			toast.error(`Please enter a 6-digit OTP code.`)
+		}
+
+		mutate(
+			{
+				code: otp,
+				phone: formatPhoneWithCountryCode(formData.phone, '+233', 9),
+			},
+			{
+				onError: (e: unknown) => {
+					if (e instanceof Error) {
+						const error = getErrorMessage(
+							e.message,
+							`Failed to verify OTP. Try again later.`,
+						)
+						toast.error(error)
+						setOtpError(error)
+					}
+				},
+				onSuccess: async () => {
+					await tenantLookUpByPhoneAndFormUpdate()
+					toast.success(`OTP has been verified`)
+				},
+			},
+		)
 	}
 
-	const phoneLookUp = () => {
-		//    ToDO: Phone lookup logic to get user data
-		if (otp !== '1234') {
-			return null
-		} else {
-			return tenantApplicationData
-		}
-	}
+	const tenantQuery = useGetTenantByPhone(
+		formatPhoneWithCountryCode(formData.phone, '+233', 9),
+		{ enabled: false },
+	)
 
-	const onSubmit = async () => {
-		verify()
-		const lookUpData = phoneLookUp()
-		if (!lookUpData) {
+	const tenantLookUpByPhoneAndFormUpdate = async () => {
+		const { data: tenant, error } = await tenantQuery.refetch()
+		if (!tenant || error?.message === ERROR_MESSAGES.TENANT_NOT_FOUND) {
 			allowEdit(true)
 			goNext()
 		} else {
 			updateFormData({
 				// step3 data
-				first_name: lookUpData.first_name,
-				other_names: lookUpData.other_names,
-				last_name: lookUpData.last_name,
-				email: lookUpData.email,
-				phone: lookUpData.phone,
-				current_address: lookUpData.current_address,
-				profile_photo_url: lookUpData.profile_photo_url,
-				date_of_birth: lookUpData.date_of_birth?.toString(),
-				gender: lookUpData.gender,
-				marital_status: lookUpData.marital_status,
+				first_name: tenant.first_name,
+				other_names: tenant.other_names,
+				last_name: tenant.last_name,
+				email: tenant.email,
+				phone: tenant.phone,
+				current_address: tenant.current_address,
+				profile_photo_url: tenant.profile_photo_url,
+				date_of_birth: tenant.date_of_birth?.toString(),
+				gender: tenant.gender,
+				marital_status: tenant.marital_status,
 
 				// step4 data
-				nationality: lookUpData.nationality,
-				id_type: lookUpData.id_type,
-				id_number: lookUpData.id_number,
-				id_front_url: lookUpData.id_front_url,
-				id_back_url: lookUpData.id_back_url,
+				nationality: tenant.nationality,
+				id_type: tenant.id_type,
+				id_number: tenant.id_number,
+				id_front_url: tenant.id_front_url,
+				id_back_url: tenant.id_back_url,
 
 				// step5 data
-				emergency_contact_name: lookUpData.emergency_contact_name,
+				emergency_contact_name: tenant.emergency_contact_name,
 				relationship_to_emergency_contact:
-					lookUpData.relationship_to_emergency_contact,
-				emergency_contact_phone: lookUpData.emergency_contact_phone,
-				employment_type: lookUpData.employment_type,
+					tenant.relationship_to_emergency_contact,
+				emergency_contact_phone: tenant.emergency_contact_phone,
+				employment_type: tenant.employment_type,
 				occupation:
-					lookUpData.employment_type === 'STUDENT'
-						? lookUpData.employment_type
-						: lookUpData.occupation,
-				employer: lookUpData.employer,
-				occupation_address: lookUpData.occupation_address,
-				proof_of_income_url: lookUpData.proof_of_income_url,
+					tenant.employment_type === 'STUDENT'
+						? tenant.employment_type
+						: tenant.occupation,
+				employer: tenant.employer,
+				occupation_address: tenant.occupation_address,
+				proof_of_income_url: tenant.proof_of_income_url,
 			})
 			goToPage(6)
 		}
@@ -174,14 +138,14 @@ export function Step2() {
 
 	return (
 		<div className="mx-auto flex w-full items-center justify-center md:max-w-2xl">
-			<div className="w-full max-w-lg rounded-2xl border bg-white p-6 shadow-sm md:p-8">
+			<div className="w-full max-w-xl rounded-2xl border bg-white p-12 shadow-sm md:p-8">
 				{/* Header */}
 				<div className="space-y-2 text-center">
 					<TypographyH2 className="text-lg font-semibold">
 						Verify your phone number
 					</TypographyH2>
 					<TypographyMuted className="leading-relaxed">
-						Enter the 4-digit code sent to{' '}
+						Enter the 6-digit code sent to{' '}
 						<span className="font-medium text-zinc-900">
 							{formData?.phone || 'your phone'}
 						</span>
@@ -191,24 +155,28 @@ export function Step2() {
 				{/* OTP Input */}
 				<div className="mt-8 flex justify-center">
 					<InputOTP
-						maxLength={4}
+						maxLength={6}
 						pattern={REGEXP_ONLY_DIGITS}
 						value={otp}
 						onChange={(v: any) => setOtp(v)}
 					>
 						<InputOTPGroup className="*:data-[slot=input-otp-slot]:h-14 *:data-[slot=input-otp-slot]:w-18 *:data-[slot=input-otp-slot]:text-xl">
-							<InputOTPSlot index={0} />
-							<InputOTPSlot index={1} />
-							<InputOTPSlot index={2} />
-							<InputOTPSlot index={3} />
+							<InputOTPSlot index={0} aria-invalid={!!otpError} />
+							<InputOTPSlot index={1} aria-invalid={!!otpError} />
+							<InputOTPSlot index={2} aria-invalid={!!otpError} />
+							<InputOTPSlot index={3} aria-invalid={!!otpError} />
+							<InputOTPSlot index={4} aria-invalid={!!otpError} />
+							<InputOTPSlot index={5} aria-invalid={!!otpError} />
 						</InputOTPGroup>
 					</InputOTP>
 				</div>
-				{error && (
-					<TypographySmall className="text-destructive mt-4 text-center">
-						{error}
-					</TypographySmall>
-				)}
+				<div className="mt-4 text-center">
+					{otpError && (
+						<TypographySmall className="text-destructive">
+							{otpError}
+						</TypographySmall>
+					)}
+				</div>
 
 				{/* Resend */}
 				<div className="mt-6 flex justify-center">
@@ -226,6 +194,7 @@ export function Step2() {
 
 				<div className="mt-10 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
 					<Button
+						disabled={isPending}
 						onClick={goBack}
 						type="button"
 						size="lg"
@@ -239,11 +208,11 @@ export function Step2() {
 					<Button
 						size="lg"
 						variant="default"
-						onClick={onSubmit}
-						disabled={otp.length < 4 || isSubmitting}
+						onClick={verifyAndLookUpTenant}
+						disabled={!isOtpComplete || isPending}
 						className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
 					>
-						{isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+						{isPending ? <Spinner /> : null}
 						Verify code
 						<ArrowRight className="ml-2 h-4 w-4" />
 					</Button>
