@@ -1,19 +1,11 @@
 import {
 	useMutation,
-	useQuery,
-	type UseQueryOptions,
 } from '@tanstack/react-query'
-import { QUERY_KEYS } from '~/lib/constants'
 import { fetchClient } from '~/lib/transport'
 
 /**
  * Get Tenant by Phone
  */
-type GetTenantByPhoneOptions = Omit<
-	UseQueryOptions<unknown, Error, Tenant, readonly unknown[]>,
-	'queryKey' | 'queryFn'
->
-
 const getTenantByPhone = async (phone?: string) => {
 	try {
 		const response = await fetchClient<ApiResponse<Tenant>>(
@@ -35,15 +27,5 @@ const getTenantByPhone = async (phone?: string) => {
 	}
 }
 export const useGetTenantByPhone = () =>
-	//   useMutation({mutationFn: getTenantByPhone })
 	useMutation({ mutationFn: (phone?: string) => getTenantByPhone(phone) })
-// export const useGetTenantByPhone = (
-// 	phone?: string,
-// 	options?: GetTenantByPhoneOptions,
-// ) =>
-// 	useQuery({
-// 		queryKey: [QUERY_KEYS.PROPERTY_TENANTS, phone],
-// 		queryFn: () => getTenantByPhone(phone),
-// 		enabled: !!phone && (options?.enabled ?? true),
-// 		...options,
-// 	})
+
