@@ -257,6 +257,8 @@ func (s *paymentAccountService) UpdatePaymentAccount(
 				},
 			})
 		}
+
+		paymentAccount.IsDefault = *input.IsDefault
 	}
 
 	if updateErr := s.repo.Update(transCtx, paymentAccount); updateErr != nil {

@@ -88,7 +88,7 @@ func (h *PaymentAccountHandler) CreatePaymentAccount(w http.ResponseWriter, r *h
 
 type ListPaymentAccountsFilterRequest struct {
 	lib.FilterQueryInput
-	OwnerTypes []string `json:"owner_types" validate:"omitempty,oneof=PROPERTY_OWNER RENTLOOP SYSTEM"`
+	OwnerTypes []string `json:"owner_types" validate:"omitempty,dive,oneof=PROPERTY_OWNER RENTLOOP SYSTEM"`
 	Rail       *string  `json:"rail"        validate:"omitempty,oneof=MOMO BANK_TRANSFER CARD OFFLINE"`
 	Provider   *string  `json:"provider"    validate:"omitempty,oneof=MTN VODAFONE AIRTELTIGO PAYSTACK BANK_API"`
 	IsDefault  *bool    `json:"is_default"  validate:"omitempty"`
@@ -220,7 +220,7 @@ type UpdatePaymentAccountRequest struct {
 	Provider   *string         `json:"provider"   validate:"omitempty"                       example:"MTN"        description:"Payment provider"`
 	Identifier *string         `json:"identifier" validate:"omitempty"                       example:"0241234567" description:"Account identifier"`
 	Metadata   *map[string]any `json:"metadata"                                                                   description:"Additional metadata"`
-	IsDefault  *bool           `json:"isDefault"  validate:"omitempty"                       example:"true"       description:"Whether this is the default account"`
+	IsDefault  *bool           `json:"is_default"  validate:"omitempty"                       example:"true"       description:"Whether this is the default account"`
 	Status     *string         `json:"status"     validate:"omitempty,oneof=ACTIVE DISABLED" example:"ACTIVE"     description:"Account status"`
 }
 
