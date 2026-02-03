@@ -9,12 +9,13 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 )
 
-// AccountingService provides business logic for accounting operations
+// AccountingService provides business logic for accounting operations.
+// This service uses ACCRUAL ACCOUNTING where revenue is recognized when earned
+// (invoice issued), not when cash is received.
 type AccountingService interface {
-	// Lease Payment Accounting
-	RecordLeasePaymentReceived(ctx context.Context, input RecordLeasePaymentInput) (*accounting.JournalEntry, error)
-
-	// Invoice Accounting
+	// Invoice Accounting (Accrual-Basis)
+	// Step 1: RecordInvoiceCreated - Revenue recognized when invoice is issued
+	// Step 2: RecordInvoicePayment - Receivable cleared when payment is received
 	RecordInvoiceCreated(ctx context.Context, input RecordInvoiceInput) (*accounting.JournalEntry, error)
 	RecordInvoicePayment(ctx context.Context, input RecordInvoicePaymentInput) (*accounting.JournalEntry, error)
 
@@ -49,15 +50,6 @@ func NewAccountingService(appCtx pkg.AppContext, client accounting.Client) Accou
 // ============================================================================
 // Input Types
 // ============================================================================
-
-type RecordLeasePaymentInput struct {
-	LeaseID        string
-	LeasePaymentID string
-	Amount         int64 // Amount in smallest currency unit (pesewas/cents)
-	PaymentDate    time.Time
-	TenantName     string
-	UnitName       string
-}
 
 type RecordInvoiceInput struct {
 	InvoiceID   string
@@ -95,64 +87,17 @@ type RecordSecurityDepositRefundInput struct {
 }
 
 // ============================================================================
-// Lease Payment Accounting
+// Invoice Accounting (Accrual-Basis)
 // ============================================================================
 
-func (s *accountingService) RecordLeasePaymentReceived(
-	ctx context.Context,
-	input RecordLeasePaymentInput,
-) (*accounting.JournalEntry, error) {
-	// Create journal entry for rent payment:
-	// Debit: Cash (Asset increases)
-	// Credit: Rent Income (Revenue increases)
-
-	accounts := s.appCtx.Config.ChartOfAccounts
-	transactionDate := input.PaymentDate.Format(time.RFC3339)
-	reference := fmt.Sprintf("RENT-PMT-%s", input.LeasePaymentID)
-
-	entry, err := s.client.CreateJournalEntry(ctx, accounting.CreateJournalEntryRequest{
-		Status:          string(accounting.JournalEntryStatusPosted),
-		Reference:       reference,
-		TransactionDate: &transactionDate,
-		Metadata: map[string]any{
-			"lease_id":         input.LeaseID,
-			"lease_payment_id": input.LeasePaymentID,
-			"tenant_name":      input.TenantName,
-			"unit_name":        input.UnitName,
-			"type":             "LEASE_PAYMENT",
-		},
-		Lines: []accounting.CreateJournalEntryLineRequest{
-			{
-				AccountID: accounts.CashBankAccountID,
-				Debit:     input.Amount,
-				Credit:    0,
-				Notes:     strPtr(fmt.Sprintf("Cash received for rent - %s", input.UnitName)),
-			},
-			{
-				AccountID: accounts.RentalIncomeID,
-				Debit:     0,
-				Credit:    input.Amount,
-				Notes:     strPtr(fmt.Sprintf("Rent income from %s", input.TenantName)),
-			},
-		},
-	})
-	if err != nil {
-		return nil, pkg.InternalServerError("Failed to record lease payment in accounting", &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function":       "RecordLeasePaymentReceived",
-				"leasePaymentId": input.LeasePaymentID,
-			},
-		})
-	}
-
-	return entry, nil
-}
-
-// ============================================================================
-// Invoice Accounting
-// ============================================================================
-
+// RecordInvoiceCreated records revenue recognition when an invoice is issued.
+// This is Step 1 of accrual accounting for rental payments.
+//
+// Journal Entry:
+//   - Debit: Accounts Receivable (Asset increases - tenant owes money)
+//   - Credit: Rental Income (Revenue recognized when earned, not when received)
+//
+// When payment is received, call RecordInvoicePayment to clear the receivable.
 func (s *accountingService) RecordInvoiceCreated(
 	ctx context.Context,
 	input RecordInvoiceInput,
@@ -203,13 +148,21 @@ func (s *accountingService) RecordInvoiceCreated(
 	return entry, nil
 }
 
+// RecordInvoicePayment records cash receipt for a previously invoiced amount.
+// This is Step 2 of accrual accounting - called when payment is received.
+//
+// NOTE: Revenue was already recognized in RecordInvoiceCreated.
+// This entry only moves the balance from receivable to cash.
+//
+// Journal Entry:
+//   - Debit: Cash/Bank (Asset increases - money received)
+//   - Credit: Accounts Receivable (Asset decreases - debt cleared)
 func (s *accountingService) RecordInvoicePayment(
 	ctx context.Context,
 	input RecordInvoicePaymentInput,
 ) (*accounting.JournalEntry, error) {
-	// Create journal entry for invoice payment:
-	// Debit: Cash (Asset increases)
-	// Credit: Accounts Receivable (Asset decreases)
+	// Accrual Step 2: Clear receivable when cash is received
+	// (Revenue was already recognized when invoice was created)
 
 	accounts := s.appCtx.Config.ChartOfAccounts
 	transactionDate := input.PaymentDate.Format(time.RFC3339)
