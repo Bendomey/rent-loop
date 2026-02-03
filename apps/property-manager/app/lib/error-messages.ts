@@ -12,7 +12,3 @@ export function getErrorMessage(key: string, defaultMessage?: string) {
 		'An unexpected error occurred. Please try again later.'
 	)
 }
-
-export const ERROR_MESSAGES = {
-	TENANT_NOT_FOUND: 'Tenant not found',
-} as const

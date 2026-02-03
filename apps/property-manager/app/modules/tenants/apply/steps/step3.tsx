@@ -188,7 +188,6 @@ export function Step3() {
 			other_names: data.other_names,
 			last_name: data.last_name,
 			email: data.email,
-			phone: data.phone,
 			current_address: data.current_address,
 			profile_photo_url: data.profile_photo_url,
 			date_of_birth: data.date_of_birth?.toISOString(),
@@ -314,6 +313,7 @@ export function Step3() {
 							<FormField
 								name="phone"
 								control={control}
+								disabled
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>

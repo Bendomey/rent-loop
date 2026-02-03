@@ -71,7 +71,7 @@ export default function AuthDashboard({ matches }: Route.ComponentProps) {
 		<SidebarProvider>
 			<AppSidebar />
 			<SidebarInset>
-				<div className='mx-5 mt-4'>
+				<div className="mx-5 mt-4">
 					<ClientChecklist />
 				</div>
 				<header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
