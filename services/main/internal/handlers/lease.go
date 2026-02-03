@@ -134,3 +134,144 @@ func (h *LeaseHandler) GetLeaseByID(w http.ResponseWriter, r *http.Request) {
 		"data": transformations.DBAdminLeaseToRest(lease),
 	})
 }
+
+type ListLeasesQuery struct {
+	lib.FilterQueryInput
+	Status                     *string   `json:"status,omitempty"                        validate:"omitempty,oneof=Lease.Status.Pending Lease.Status.Active Lease.Status.Terminated Lease.Status.Completed Lease.Status.Cancelled" example:"Lease.Status.Pending"                 description:"Lease status"`
+	ParentLeaseId              *string   `json:"parent_lease_id,omitempty"               validate:"omitempty,uuid"                                                                                                                 example:"b4d0243c-6581-4104-8185-d83a45ebe41b" description:"Parent lease ID"`
+	PaymentFrequency           *string   `json:"payment_frequency,omitempty"             validate:"omitempty,oneof=Hourly Daily Monthly Quarterly BiAnnually Annually OneTime"                                                     example:"Hourly"                               description:"Frequency of rent payments"`
+	StayDurationFrequency      *string   `json:"stay_duration_frequency,omitempty"       validate:"omitempty,oneof=Hours Days Months"                                                                                              example:"Hours"                                description:"Unit of stay duration (e.g., months, years)"`
+	LeaseAgreementDocumentMode *string   `json:"lease_agreement_document_mode,omitempty" validate:"omitempty,oneof=MANUAL ONLINE"                                                                                                  example:"MANUAL"                               description:"Mode of lease agreement document (e.g., digital, paper)"`
+	UnitIds                    *[]string `json:"unit_ids,omitempty"                      validate:"omitempty,dive,uuid4"                                                                                                           example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of unit IDs to filter by"                           collectionFormat:"multi"`
+	IDs                        *[]string `json:"ids,omitempty"                           validate:"omitempty,dive,uuid4"                                                                                                           example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of lease IDs to filter by"                          collectionFormat:"multi"`
+}
+
+// ListLeasesByTenant godoc
+//
+//	@Summary		List leases by tenant
+//	@Description	List leases by tenant
+//	@Tags			Lease
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			tenant_id	path		string			true	"Tenant ID"
+//	@Param			q			query		ListLeasesQuery	true	"Leases"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.OutputAdminLease,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400			{object}	lib.HTTPError	"An error occurred while filtering leases"
+//	@Failure		401			{object}	string			"Absent or invalid authentication token"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/tenants/{tenant_id}/leases [get]
+func (h *LeaseHandler) ListLeasesByTenant(w http.ResponseWriter, r *http.Request) {
+	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
+	if filterQueryErr != nil {
+		HandleErrorResponse(w, filterQueryErr)
+		return
+	}
+
+	isFilterQueryPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filterQuery, w)
+	if !isFilterQueryPassedValidation {
+		return
+	}
+
+	tenantID := chi.URLParam(r, "tenant_id")
+
+	input := repository.ListLeasesFilter{
+		FilterQuery:                *filterQuery,
+		TenantID:                   &tenantID,
+		Status:                     lib.NullOrString(r.URL.Query().Get("status")),
+		ParentLeaseID:              lib.NullOrString(r.URL.Query().Get("parent_lease_id")),
+		PaymentFrequency:           lib.NullOrString(r.URL.Query().Get("payment_frequency")),
+		StayDurationFrequency:      lib.NullOrString(r.URL.Query().Get("stay_duration_frequency")),
+		LeaseAgreementDocumentMode: lib.NullOrString(r.URL.Query().Get("lease_agreement_document_mode")),
+		UnitIds:                    lib.NullOrStringArray(r.URL.Query()["unit_ids"]),
+		IDs:                        lib.NullOrStringArray(r.URL.Query()["ids"]),
+	}
+
+	leases, leasesErr := h.service.ListLeases(r.Context(), input)
+	if leasesErr != nil {
+		HandleErrorResponse(w, leasesErr)
+		return
+	}
+
+	leasesCount, leasesCountErr := h.service.CountLeases(r.Context(), input)
+	if leasesCountErr != nil {
+		HandleErrorResponse(w, leasesCountErr)
+		return
+	}
+
+	leasesTransformed := make([]any, 0)
+	for _, lease := range leases {
+		leasesTransformed = append(
+			leasesTransformed,
+			transformations.DBAdminLeaseToRest(&lease),
+		)
+	}
+
+	json.NewEncoder(w).
+		Encode(lib.ReturnListResponse(filterQuery, leasesTransformed, leasesCount))
+}
+
+// ListLeasesByProperty godoc
+//
+//	@Summary		List leases by property
+//	@Description	List leases by property
+//	@Tags			Lease
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string			true	"Property ID"
+//	@Param			q			query		ListLeasesQuery	true	"Leases"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.OutputAdminLease,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400			{object}	lib.HTTPError	"An error occurred while filtering leases"
+//	@Failure		401			{object}	string			"Absent or invalid authentication token"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/properties/{property_id}/leases [get]
+func (h *LeaseHandler) ListLeasesByProperty(w http.ResponseWriter, r *http.Request) {
+	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
+	if filterQueryErr != nil {
+		HandleErrorResponse(w, filterQueryErr)
+		return
+	}
+
+	isFilterQueryPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filterQuery, w)
+	if !isFilterQueryPassedValidation {
+		return
+	}
+
+	propertyID := chi.URLParam(r, "property_id")
+
+	input := repository.ListLeasesFilter{
+		FilterQuery:                *filterQuery,
+		PropertyID:                 &propertyID,
+		Status:                     lib.NullOrString(r.URL.Query().Get("status")),
+		ParentLeaseID:              lib.NullOrString(r.URL.Query().Get("parent_lease_id")),
+		PaymentFrequency:           lib.NullOrString(r.URL.Query().Get("payment_frequency")),
+		StayDurationFrequency:      lib.NullOrString(r.URL.Query().Get("stay_duration_frequency")),
+		LeaseAgreementDocumentMode: lib.NullOrString(r.URL.Query().Get("lease_agreement_document_mode")),
+		UnitIds:                    lib.NullOrStringArray(r.URL.Query()["unit_ids"]),
+		IDs:                        lib.NullOrStringArray(r.URL.Query()["ids"]),
+	}
+
+	leases, leasesErr := h.service.ListLeases(r.Context(), input)
+	if leasesErr != nil {
+		HandleErrorResponse(w, leasesErr)
+		return
+	}
+
+	leasesCount, leasesCountErr := h.service.CountLeases(r.Context(), input)
+	if leasesCountErr != nil {
+		HandleErrorResponse(w, leasesCountErr)
+		return
+	}
+
+	leasesTransformed := make([]any, 0)
+	for _, lease := range leases {
+		leasesTransformed = append(
+			leasesTransformed,
+			transformations.DBAdminLeaseToRest(&lease),
+		)
+	}
+
+	json.NewEncoder(w).
+		Encode(lib.ReturnListResponse(filterQuery, leasesTransformed, leasesCount))
+}
