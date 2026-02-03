@@ -3,6 +3,7 @@ import pkgJson from '../../package.json'
 import type { Route } from './+types/_auth._dashboard'
 import { getClientUserPropertiesForServer } from '~/api/client-user-properties/server'
 import { AppSidebar } from '~/components/app-sidebar'
+import { ClientChecklist } from '~/components/client-checklist'
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -70,6 +71,9 @@ export default function AuthDashboard({ matches }: Route.ComponentProps) {
 		<SidebarProvider>
 			<AppSidebar />
 			<SidebarInset>
+				<div className='mx-5 mt-4'>
+					<ClientChecklist />
+				</div>
 				<header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
 					<div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
 						<SidebarTrigger className="-ml-1" />
