@@ -163,6 +163,42 @@ definitions:
     - size
     - title
     type: object
+  handlers.CreatePaymentAccountRequest:
+    properties:
+      identifier:
+        example: "0241234567"
+        type: string
+      is_default:
+        example: false
+        type: boolean
+      metadata:
+        additionalProperties: {}
+        type: object
+      provider:
+        enum:
+        - MTN
+        - VODAFONE
+        - AIRTELTIGO
+        example: MTN
+        type: string
+      rail:
+        enum:
+        - MOMO
+        - BANK_TRANSFER
+        - CARD
+        - OFFLINE
+        example: MOMO
+        type: string
+      status:
+        enum:
+        - ACTIVE
+        - DISABLED
+        example: ACTIVE
+        type: string
+    required:
+    - rail
+    - status
+    type: object
   handlers.CreatePropertyBlockRequest:
     properties:
       description:
@@ -648,6 +684,27 @@ definitions:
         type: string
       utility_transfers_date:
         example: "2024-07-02T10:00:00Z"
+        type: string
+    type: object
+  handlers.UpdatePaymentAccountRequest:
+    properties:
+      identifier:
+        example: "0241234567"
+        type: string
+      isDefault:
+        example: true
+        type: boolean
+      metadata:
+        additionalProperties: {}
+        type: object
+      provider:
+        example: MTN
+        type: string
+      status:
+        enum:
+        - ACTIVE
+        - DISABLED
+        example: ACTIVE
         type: string
     type: object
   handlers.UpdatePropertyBlockRequest:
@@ -1469,6 +1526,47 @@ definitions:
         $ref: '#/definitions/transformations.OutputClientUser'
       updated_by_id:
         example: c290f1ee-6c54-4b01-90e6-d701748f0852
+        type: string
+    type: object
+  transformations.OutputPaymentAccount:
+    properties:
+      client:
+        $ref: '#/definitions/transformations.OutputClient'
+      client_id:
+        example: b50874ee-1a70-436e-ba24-572078895982
+        type: string
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        format: date-time
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        format: uuid
+        type: string
+      identifier:
+        example: "0241234567"
+        type: string
+      is_default:
+        example: false
+        type: boolean
+      metadata:
+        additionalProperties: {}
+        type: object
+      owner_type:
+        example: PROPERTY_OWNER
+        type: string
+      provider:
+        example: MTN
+        type: string
+      rail:
+        example: MOMO
+        type: string
+      status:
+        example: ACTIVE
+        type: string
+      updated_at:
+        example: "2023-01-01T00:00:00Z"
+        format: date-time
         type: string
     type: object
   transformations.OutputProperty:
@@ -3559,6 +3657,287 @@ paths:
       summary: Update lease
       tags:
       - Lease
+  /api/v1/payment-accounts:
+    get:
+      consumes:
+      - application/json
+      description: Get all payment accounts for the current client
+      parameters:
+      - in: query
+        name: end_date
+        type: string
+      - in: query
+        name: is_default
+        type: boolean
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          enum:
+          - PROPERTY_OWNER
+          - RENTLOOP
+          - SYSTEM
+          type: string
+        name: owner_types
+        type: array
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - enum:
+        - MTN
+        - VODAFONE
+        - AIRTELTIGO
+        - PAYSTACK
+        - BANK_API
+        in: query
+        name: provider
+        type: string
+      - in: query
+        name: query
+        type: string
+      - enum:
+        - MOMO
+        - BANK_TRANSFER
+        - CARD
+        - OFFLINE
+        in: query
+        name: rail
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - ACTIVE
+        - DISABLED
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputPaymentAccount'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get all payment accounts
+      tags:
+      - Payment Accounts
+    post:
+      consumes:
+      - application/json
+      description: Create a new payment account for a client
+      parameters:
+      - description: Create Payment Account Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreatePaymentAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Payment account created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputPaymentAccount'
+            type: object
+        "400":
+          description: Error occurred when creating a payment account
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Creates a new payment account
+      tags:
+      - Payment Accounts
+  /api/v1/payment-accounts/{payment_account_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a payment account
+      parameters:
+      - description: Payment Account ID
+        in: path
+        name: payment_account_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Payment account deleted successfully
+        "400":
+          description: Error occurred when deleting a payment account
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete a payment account
+      tags:
+      - Payment Accounts
+    get:
+      consumes:
+      - application/json
+      description: Get payment account by ID
+      parameters:
+      - description: Payment Account ID
+        in: path
+        name: payment_account_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputPaymentAccount'
+            type: object
+        "400":
+          description: Error occurred when fetching a payment account
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Payment account not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get payment account by ID
+      tags:
+      - Payment Accounts
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing payment account
+      parameters:
+      - description: Payment Account ID
+        format: uuid4
+        in: path
+        name: payment_account_id
+        required: true
+        type: string
+      - description: Payment account details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdatePaymentAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment account updated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputPaymentAccount'
+            type: object
+        "400":
+          description: Error occurred when updating a payment account
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Payment account not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update an existing payment account
+      tags:
+      - Payment Accounts
   /api/v1/properties:
     get:
       consumes:
