@@ -268,9 +268,10 @@ func (c *Client) doRequest(
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 
-	// Set Basic Auth with client_id and client_secret (fincore-engine auth)
+	// Set fincore-engine auth headers
 	if c.config.ClientID != "" && c.config.ClientSecret != "" {
-		req.SetBasicAuth(c.config.ClientID, c.config.ClientSecret)
+		req.Header.Set("X-FinCore-Client-Id", c.config.ClientID)
+		req.Header.Set("X-FinCore-Client-Secret", c.config.ClientSecret)
 	}
 
 	logrus.WithFields(logrus.Fields{
