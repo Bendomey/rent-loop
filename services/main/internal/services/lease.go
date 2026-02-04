@@ -3,12 +3,14 @@ package services
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -18,6 +20,7 @@ type LeaseService interface {
 	GetByIDWithPopulate(context context.Context, query repository.GetLeaseQuery) (*models.Lease, error)
 	ListLeases(context context.Context, filters repository.ListLeasesFilter) ([]models.Lease, error)
 	CountLeases(context context.Context, filters repository.ListLeasesFilter) (int64, error)
+	ActivateLease(context context.Context, leaseID string) error
 }
 
 type leaseService struct {
@@ -286,4 +289,77 @@ func (s *leaseService) CountLeases(ctx context.Context, filters repository.ListL
 	}
 
 	return count, nil
+}
+
+func (s *leaseService) ActivateLease(ctx context.Context, leaseID string) error {
+	lease, getLeaseErr := s.repo.GetOneWithPopulate(
+		ctx,
+		repository.GetLeaseQuery{ID: leaseID, Populate: &[]string{"Unit", "Tenant"}},
+	)
+	if getLeaseErr != nil {
+		if errors.Is(getLeaseErr, gorm.ErrRecordNotFound) {
+			return pkg.NotFoundError("LeaseNotFound", &pkg.RentLoopErrorParams{
+				Err: getLeaseErr,
+			})
+		}
+		return pkg.InternalServerError(getLeaseErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getLeaseErr,
+			Metadata: map[string]string{
+				"function": "ActivateLease",
+				"action":   "getting lease",
+			},
+		})
+	}
+
+	if lease.Status == "Lease.Status.Active" {
+		return pkg.BadRequestError("LeaseIsAlreadyActive", nil)
+	}
+
+	if lease.Status != "Lease.Status.Pending" {
+		return pkg.BadRequestError("LeaseIsNotPending", nil)
+	}
+
+	lease.Status = "Lease.Status.Active"
+
+	err := s.repo.Update(ctx, lease)
+	if err != nil {
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ActivateLease",
+				"action":   "updating lease",
+			},
+		})
+	}
+
+	startDate := lease.MoveInDate.Format("January 2, 2006")
+
+	message := strings.NewReplacer(
+		"{{tenant_name}}", lease.Tenant.FirstName,
+		"{{unit_name}}", lease.Unit.Name,
+		"{{move_in_date}}", startDate,
+	).Replace(lib.LEASE_ACTIVATED_BODY)
+
+	logrus.Infoln("Sending email to tenant", message)
+
+	if lease.Tenant.Email != nil {
+		go pkg.SendEmail(
+			s.appCtx,
+			pkg.SendEmailInput{
+				Recipient: *lease.Tenant.Email,
+				Subject:   lib.LEASE_ACTIVATED_SUBJECT,
+				TextBody:  message,
+			},
+		)
+	}
+
+	go pkg.SendSMS(
+		s.appCtx,
+		pkg.SendSMSInput{
+			Recipient: lease.Tenant.Phone,
+			Message:   message,
+		},
+	)
+
+	return nil
 }

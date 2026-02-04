@@ -11,7 +11,7 @@ type OutputAdminLease struct {
 	ID                  string `json:"id"                          example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 	Status              string `json:"status"                      example:"active"`
 	UnitId              string `json:"unit_id"                     example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	Unit                OutputUnit
+	Unit                AdminOutputUnit
 	TenantId            string `json:"tenant_id"                   example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 	Tenant              OutputTenant
 	TenantApplicationId string `json:"tenant_application_id"       example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
@@ -58,9 +58,9 @@ func DBAdminLeaseToRest(i *models.Lease) any {
 		"id":                            i.ID,
 		"status":                        i.Status,
 		"unit_id":                       i.UnitId,
-		"unit":                          DBUnitToRest(&i.Unit),
+		"unit":                          DBAdminUnitToRest(&i.Unit),
 		"tenant_id":                     i.TenantId,
-		"tenant":                        DBTenantToRest(&i.Tenant),
+		"tenant":                        DBAdminTenantToRest(&i.Tenant),
 		"tenant_application_id":         i.TenantApplicationId,
 		"tenant_application":            DBTenantApplicationToRest(&i.TenantApplication),
 		"rent_fee":                      i.RentFee,

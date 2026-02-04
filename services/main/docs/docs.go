@@ -2603,6 +2603,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/leases/{lease_id}/status:active": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Activate lease",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "Activate lease",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Lease Activated Successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when activating lease",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Lease not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/properties": {
             "get": {
                 "security": [
@@ -7434,7 +7492,7 @@ const docTemplate = `{
                     "example": "https://example.com/termination.pdf"
                 },
                 "unit": {
-                    "$ref": "#/definitions/transformations.OutputUnit"
+                    "$ref": "#/definitions/transformations.AdminOutputUnit"
                 },
                 "unit_id": {
                     "type": "string",

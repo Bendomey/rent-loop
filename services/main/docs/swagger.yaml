@@ -1178,7 +1178,7 @@ definitions:
       terminationAgreementDocumentPropertyManagerSignedBy:
         $ref: '#/definitions/transformations.OutputClientUser'
       unit:
-        $ref: '#/definitions/transformations.OutputUnit'
+        $ref: '#/definitions/transformations.AdminOutputUnit'
       unit_id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
@@ -3557,6 +3557,43 @@ paths:
       security:
       - BearerAuth: []
       summary: Update lease
+      tags:
+      - Lease
+  /api/v1/leases/{lease_id}/status:active:
+    patch:
+      consumes:
+      - application/json
+      description: Activate lease
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Lease Activated Successfully
+        "400":
+          description: Error occurred when activating lease
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Lease not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Activate lease
       tags:
       - Lease
   /api/v1/properties:
