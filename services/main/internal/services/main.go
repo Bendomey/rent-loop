@@ -32,6 +32,9 @@ type INewServicesParams struct {
 }
 
 func NewServices(params INewServicesParams) Services {
+	accountingService := NewAccountingService(params.AppCtx, params.Clients.AccountingAPI)
+	invoiceService := NewInvoiceService(params.AppCtx, params.Repository.InvoiceRepository, accountingService)
+
 	authService := NewAuthService(params.AppCtx)
 	adminService := NewAdminService(params.AppCtx, params.Repository.AdminRepository)
 	clientApplicationService := NewClientApplicationService(
@@ -91,15 +94,15 @@ func NewServices(params INewServicesParams) Services {
 		TenantAccountService: tenantAccountService,
 	})
 
-	accountingService := NewAccountingService(params.AppCtx, params.Clients.AccountingAPI)
-
-	invoiceService := NewInvoiceService(params.AppCtx, params.Repository.InvoiceRepository)
-
 	return Services{
+		AccountingService: accountingService,
+		InvoiceService:    invoiceService,
+
 		AuthService:               authService,
 		AdminService:              adminService,
 		ClientApplicationService:  clientApplicationService,
 		ClientUserService:         clientUserService,
+		PaymentAccountService:     paymentAccountService,
 		PropertyService:           propertyService,
 		DocumentService:           documentService,
 		UnitService:               unitService,
@@ -109,8 +112,5 @@ func NewServices(params INewServicesParams) Services {
 		TenantService:             tenantService,
 		LeaseService:              leaseService,
 		TenantAccountService:      tenantAccountService,
-		PaymentAccountService:     paymentAccountService,
-		AccountingService:         accountingService,
-		InvoiceService:            invoiceService,
 	}
 }

@@ -74,6 +74,40 @@ func (h *InvoiceHandler) UpdateInvoice(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// VoidInvoice godoc
+//
+//	@Summary		Void invoice
+//	@Description	Void an existing invoice
+//	@Tags			Invoice
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			invoice_id	path		string										true	"Invoice ID"
+//	@Success		200			{object}	object{data=transformations.OutputInvoice}	"Invoice Voided Successfully"
+//	@Failure		400			{object}	lib.HTTPError								"Error occurred when voiding invoice"
+//	@Failure		401			{object}	string										"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError								"Invoice not found"
+//	@Failure		422			{object}	lib.HTTPError								"Validation error"
+//	@Failure		500			{object}	string										"An unexpected error occurred"
+//	@Router			/api/v1/invoices/{invoice_id}/void [patch]
+func (h *InvoiceHandler) VoidInvoice(w http.ResponseWriter, r *http.Request) {
+	invoiceID := chi.URLParam(r, "invoice_id")
+
+	input := services.VoidInvoiceInput{
+		InvoiceID: invoiceID,
+	}
+
+	invoice, err := h.service.VoidInvoice(r.Context(), input)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBInvoiceToRest(invoice),
+	})
+}
+
 type GetInvoiceQuery struct {
 	lib.GetOneQueryInput
 }
