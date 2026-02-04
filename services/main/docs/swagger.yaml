@@ -6198,7 +6198,7 @@ paths:
       summary: Cancel a tenant application
       tags:
       - TenantApplication
-  /api/v1/tenant-applications/{tenant_application_id}/generate-invoice:
+  /api/v1/tenant-applications/{tenant_application_id}/generate:invoice:
     post:
       consumes:
       - application/json

@@ -6287,7 +6287,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/tenant-applications/{tenant_application_id}/generate-invoice": {
+        "/api/v1/tenant-applications/{tenant_application_id}/generate:invoice": {
             "post": {
                 "security": [
                     {
