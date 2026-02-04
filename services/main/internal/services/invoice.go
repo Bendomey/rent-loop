@@ -578,7 +578,7 @@ func buildTenantApplicationJournalEntry(
 	// Always debit Accounts Receivable for the total amount
 	lines = append(lines, accounting.CreateJournalEntryLineRequest{
 		AccountID: accounts.AccountsReceivableID,
-		Debit:     invoice.TotalAmount,
+		Debit:     invoice.SubTotal,
 		Credit:    0,
 		Notes: lib.StringPointer(
 			fmt.Sprintf("Accounts receivable for tenant application invoice %s", invoice.Code),
@@ -623,7 +623,7 @@ func buildLeaseRentJournalEntry(
 	// Always debit Accounts Receivable for the total amount
 	lines = append(lines, accounting.CreateJournalEntryLineRequest{
 		AccountID: accounts.AccountsReceivableID,
-		Debit:     invoice.TotalAmount,
+		Debit:     invoice.SubTotal,
 		Credit:    0,
 		Notes:     lib.StringPointer(fmt.Sprintf("Accounts receivable for lease rent invoice %s", invoice.Code)),
 	})

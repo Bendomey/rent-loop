@@ -92,6 +92,7 @@ func NewServices(params INewServicesParams) Services {
 		TenantService:        tenantService,
 		LeaseService:         leaseService,
 		TenantAccountService: tenantAccountService,
+		InvoiceService:       invoiceService,
 	})
 
 	return Services{

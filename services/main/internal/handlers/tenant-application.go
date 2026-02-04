@@ -575,7 +575,7 @@ type GenerateInvoiceRequest struct {
 //	@Failure		404						{object}	lib.HTTPError								"Tenant application not found"
 //	@Failure		422						{object}	lib.HTTPError								"Validation error"
 //	@Failure		500						{object}	string										"An unexpected error occurred"
-//	@Router			/api/v1/tenant-applications/{tenant_application_id}/generate-invoice [post]
+//	@Router			/api/v1/tenant-applications/{tenant_application_id}/generate:invoice [post]
 func (h *TenantApplicationHandler) GenerateInvoice(w http.ResponseWriter, r *http.Request) {
 	_, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentClientUserOk {
