@@ -115,7 +115,9 @@ export function Step6() {
 					{renderPreviewField('Gender', formData.gender)}
 					{renderPreviewField('Marital Status', formData.marital_status)}
 					{renderPreviewField('Phone', formData.phone)}
-					{renderPreviewField('Email', formData.email)}
+					<div className="order-last col-span-2 md:order-none md:col-span-1">
+						{renderPreviewField('Email', formData.email)}
+					</div>
 					{formData.date_of_birth &&
 						renderPreviewField(
 							'Date of Birth',

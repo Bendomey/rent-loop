@@ -17,7 +17,7 @@ import {
 	TypographyMuted,
 	TypographySmall,
 } from '~/components/ui/typography'
-import { ERROR_MESSAGES, getErrorMessage } from '~/lib/error-messages'
+import { getErrorMessage } from '~/lib/error-messages'
 import { formatPhoneWithCountryCode } from '~/lib/misc'
 
 export function Step2() {
@@ -87,54 +87,62 @@ export function Step2() {
 		)
 	}
 
-	const tenantQuery = useGetTenantByPhone(
-		formatPhoneWithCountryCode(formData.phone, '+233', 9),
-		{ enabled: false },
-	)
+	const { mutate: getTenantMutate, isPending: isTenantLookupPending } =
+		useGetTenantByPhone()
 
 	const tenantLookUpByPhoneAndFormUpdate = async () => {
-		const { data: tenant, error } = await tenantQuery.refetch()
-		if (!tenant || error?.message === ERROR_MESSAGES.TENANT_NOT_FOUND) {
-			allowEdit(true)
-			goNext()
-		} else {
-			updateFormData({
-				// step3 data
-				first_name: tenant.first_name,
-				other_names: tenant.other_names,
-				last_name: tenant.last_name,
-				email: tenant.email,
-				phone: tenant.phone,
-				current_address: tenant.current_address,
-				profile_photo_url: tenant.profile_photo_url,
-				date_of_birth: tenant.date_of_birth?.toString(),
-				gender: tenant.gender,
-				marital_status: tenant.marital_status,
+		const phone = formatPhoneWithCountryCode(formData.phone, '+233', 9)
+		getTenantMutate(phone, {
+			onError: () => {
+				allowEdit(true)
+				goNext()
+			},
+			onSuccess: (tenant) => {
+				if (!tenant) {
+					allowEdit(true)
+					goNext()
+					return
+				}
+				updateFormData({
+					// step3 data
+					first_name: tenant.first_name,
+					other_names: tenant.other_names,
+					last_name: tenant.last_name,
+					email: tenant.email,
+					phone: tenant.phone,
+					current_address: tenant.current_address,
+					profile_photo_url: tenant.profile_photo_url,
+					date_of_birth: tenant.date_of_birth?.toString(),
+					gender: tenant.gender,
+					marital_status: tenant.marital_status,
 
-				// step4 data
-				nationality: tenant.nationality,
-				id_type: tenant.id_type,
-				id_number: tenant.id_number,
-				id_front_url: tenant.id_front_url,
-				id_back_url: tenant.id_back_url,
+					// step4 data
+					nationality: tenant.nationality,
+					id_type: tenant.id_type,
+					id_number: tenant.id_number,
+					id_front_url: tenant.id_front_url,
+					id_back_url: tenant.id_back_url,
 
-				// step5 data
-				emergency_contact_name: tenant.emergency_contact_name,
-				relationship_to_emergency_contact:
-					tenant.relationship_to_emergency_contact,
-				emergency_contact_phone: tenant.emergency_contact_phone,
-				employment_type: tenant.employment_type,
-				occupation:
-					tenant.employment_type === 'STUDENT'
-						? tenant.employment_type
-						: tenant.occupation,
-				employer: tenant.employer,
-				occupation_address: tenant.occupation_address,
-				proof_of_income_url: tenant.proof_of_income_url,
-			})
-			goToPage(6)
-		}
+					// step5 data
+					emergency_contact_name: tenant.emergency_contact_name,
+					relationship_to_emergency_contact:
+						tenant.relationship_to_emergency_contact,
+					emergency_contact_phone: tenant.emergency_contact_phone,
+					employment_type: tenant.employment_type,
+					occupation:
+						tenant.employment_type === 'STUDENT'
+							? tenant.employment_type
+							: tenant.occupation,
+					employer: tenant.employer,
+					occupation_address: tenant.occupation_address,
+					proof_of_income_url: tenant.proof_of_income_url,
+				})
+				goToPage(6)
+			},
+		})
 	}
+
+	const isLoading = isPending || isTenantLookupPending
 
 	return (
 		<div className="mx-auto flex w-full items-center justify-center md:max-w-2xl">
@@ -160,7 +168,7 @@ export function Step2() {
 						value={otp}
 						onChange={(v: any) => setOtp(v)}
 					>
-						<InputOTPGroup className="*:data-[slot=input-otp-slot]:h-14 *:data-[slot=input-otp-slot]:w-18 *:data-[slot=input-otp-slot]:text-xl">
+						<InputOTPGroup className="*:data-[slot=input-otp-slot]:h-12 *:data-[slot=input-otp-slot]:w-12 *:data-[slot=input-otp-slot]:text-lg sm:*:data-[slot=input-otp-slot]:h-14 sm:*:data-[slot=input-otp-slot]:w-16 sm:*:data-[slot=input-otp-slot]:text-xl">
 							<InputOTPSlot index={0} aria-invalid={!!otpError} />
 							<InputOTPSlot index={1} aria-invalid={!!otpError} />
 							<InputOTPSlot index={2} aria-invalid={!!otpError} />
@@ -194,7 +202,7 @@ export function Step2() {
 
 				<div className="mt-10 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
 					<Button
-						disabled={isPending}
+						disabled={isLoading}
 						onClick={goBack}
 						type="button"
 						size="lg"
@@ -209,10 +217,10 @@ export function Step2() {
 						size="lg"
 						variant="default"
 						onClick={verifyAndLookUpTenant}
-						disabled={!isOtpComplete || isPending}
+						disabled={!isOtpComplete || isLoading}
 						className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
 					>
-						{isPending ? <Spinner /> : null}
+						{isLoading ? <Spinner /> : null}
 						Verify code
 						<ArrowRight className="ml-2 h-4 w-4" />
 					</Button>
