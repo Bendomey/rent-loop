@@ -10,7 +10,6 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -339,8 +338,6 @@ func (s *leaseService) ActivateLease(ctx context.Context, leaseID string) error 
 		"{{unit_name}}", lease.Unit.Name,
 		"{{move_in_date}}", startDate,
 	).Replace(lib.LEASE_ACTIVATED_BODY)
-
-	logrus.Infoln("Sending email to tenant", message)
 
 	if lease.Tenant.Email != nil {
 		go pkg.SendEmail(
