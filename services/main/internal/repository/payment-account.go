@@ -68,6 +68,7 @@ type ListPaymentAccountsFilter struct {
 	Status     *string
 	Provider   *string
 	IsDefault  *bool
+	IDs        *[]string
 }
 
 func (r *paymentAccountRepository) List(
@@ -77,6 +78,7 @@ func (r *paymentAccountRepository) List(
 	var paymentAccounts []models.PaymentAccount
 
 	db := r.DB.WithContext(ctx).Scopes(
+		IDsFilterScope("invoices", filterQuery.IDs),
 		paymentAccountClientFilterScope(filterQuery.ClientID),
 		paymentAccountOwnerTypesScope(filterQuery.OwnerTypes),
 		paymentAccountRailScope(filterQuery.Rail),
@@ -111,6 +113,7 @@ func (r *paymentAccountRepository) Count(
 	result := r.DB.WithContext(ctx).
 		Model(&models.PaymentAccount{}).
 		Scopes(
+			IDsFilterScope("invoices", filterQuery.IDs),
 			paymentAccountClientFilterScope(filterQuery.ClientID),
 			paymentAccountOwnerTypesScope(filterQuery.OwnerTypes),
 			paymentAccountRailScope(filterQuery.Rail),

@@ -146,6 +146,8 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Patch("/{tenant_application_id}/cancel", handlers.TenantApplicationHandler.CancelTenantApplication)
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Post("/{tenant_application_id}/generate:invoice", handlers.TenantApplicationHandler.GenerateInvoice)
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Patch("/{tenant_application_id}/approve", handlers.TenantApplicationHandler.ApproveTenantApplication)
 			})
 
@@ -169,13 +171,13 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			})
 
 			r.Route("/v1/invoices", func(r chi.Router) {
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Post("/", handlers.InvoiceHandler.CreateInvoice)
 				r.Get("/", handlers.InvoiceHandler.ListInvoices)
 				r.Route("/{invoice_id}", func(r chi.Router) {
 					r.Get("/", handlers.InvoiceHandler.GetInvoiceByID)
 					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 						Patch("/", handlers.InvoiceHandler.UpdateInvoice)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Patch("/void", handlers.InvoiceHandler.VoidInvoice)
 					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 						Post("/line-items", handlers.InvoiceHandler.AddLineItem)
 					r.Get("/line-items", handlers.InvoiceHandler.GetLineItems)

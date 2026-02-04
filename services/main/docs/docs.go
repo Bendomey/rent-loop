@@ -2449,6 +2449,550 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/invoices": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List invoices with optional filters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "List invoices",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "name": "active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "context_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payee_client_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payee_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payer_client_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payer_tenant_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payer_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoices",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputInvoice"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when listing invoices",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/invoices/{invoice_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get invoice by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Get invoice",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoice",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputInvoice"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when getting invoice",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Invoice not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update an existing invoice",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Update invoice",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update invoice request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateInvoiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoice Updated Successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputInvoice"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating invoice",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Invoice not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/invoices/{invoice_id}/line-items": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all line items for an invoice",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Get line items for an invoice",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Line Items",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/transformations.OutputInvoiceLineItem"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when getting line items",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Add a line item to an existing invoice",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Add line item to invoice",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Add line item request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AddLineItemRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Line Item Added Successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputInvoiceLineItem"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when adding line item",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Invoice not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/invoices/{invoice_id}/void": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Void an existing invoice",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Void invoice",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoice Voided Successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputInvoice"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when voiding invoice",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Invoice not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/leases/{lease_id}": {
             "get": {
                 "security": [
@@ -2625,6 +3169,18 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
                         "in": "query"
                     },
                     {
@@ -5731,6 +6287,86 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/tenant-applications/{tenant_application_id}/generate-invoice": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Generate an invoice for a tenant application (security deposit and/or initial deposit)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TenantApplication"
+                ],
+                "summary": "Generate an invoice for a tenant application",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tenant application ID",
+                        "name": "tenant_application_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Generate Invoice Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.GenerateInvoiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Invoice generated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputInvoice"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when generating invoice",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Tenant application not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/tenants/phone/{phone}": {
             "get": {
                 "description": "Get tenant by phone",
@@ -5849,6 +6485,58 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handlers.AddLineItemRequest": {
+            "type": "object",
+            "required": [
+                "category",
+                "currency",
+                "label",
+                "quantity",
+                "total_amount",
+                "unit_amount"
+            ],
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "RENT",
+                        "SECURITY_DEPOSIT",
+                        "INITIAL_DEPOSIT",
+                        "MAINTENANCE_FEE",
+                        "SAAS_FEE",
+                        "EXPENSE"
+                    ],
+                    "example": "RENT"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
+                "label": {
+                    "type": "string",
+                    "example": "January Rent"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "quantity": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 1
+                },
+                "total_amount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 100000
+                },
+                "unit_amount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 100000
+                }
+            }
+        },
         "handlers.AuthCodeRequest": {
             "type": "object",
             "required": [
@@ -6481,6 +7169,15 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.GenerateInvoiceRequest": {
+            "type": "object",
+            "properties": {
+                "due_date": {
+                    "type": "string",
+                    "example": "2024-07-01T00:00:00Z"
+                }
+            }
+        },
         "handlers.LinkClientUserToPropertiesRequest": {
             "type": "object",
             "required": [
@@ -6725,6 +7422,32 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "example": "Updated Lease Agreement"
+                }
+            }
+        },
+        "handlers.UpdateInvoiceRequest": {
+            "type": "object",
+            "properties": {
+                "allowed_payment_rails": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "MOMO",
+                        "BANK"
+                    ]
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "DRAFT",
+                        "ISSUED",
+                        "PARTIALLY_PAID",
+                        "PAID",
+                        "VOID"
+                    ],
+                    "example": "ISSUED"
                 }
             }
         },
@@ -7919,6 +8642,184 @@ const docTemplate = `{
                 "updated_by_id": {
                     "type": "string",
                     "example": "c290f1ee-6c54-4b01-90e6-d701748f0852"
+                }
+            }
+        },
+        "transformations.OutputInvoice": {
+            "type": "object",
+            "properties": {
+                "allowed_payment_rails": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "MOMO",
+                        "BANK"
+                    ]
+                },
+                "code": {
+                    "type": "string",
+                    "example": "INV-2024-0001"
+                },
+                "context_lease": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "context_lease_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "context_maintenance_request_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "context_tenant_application": {
+                    "$ref": "#/definitions/transformations.OutputTenantApplication"
+                },
+                "context_tenant_application_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "context_type": {
+                    "type": "string",
+                    "example": "LEASE_RENT"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
+                "due_date": {
+                    "type": "string",
+                    "example": "2024-07-01T00:00:00Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "issued_at": {
+                    "type": "string",
+                    "example": "2024-06-15T00:00:00Z"
+                },
+                "line_items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/transformations.OutputInvoiceLineItem"
+                    }
+                },
+                "paid_at": {
+                    "type": "string",
+                    "example": "2024-06-20T00:00:00Z"
+                },
+                "payee_client": {
+                    "$ref": "#/definitions/transformations.OutputClient"
+                },
+                "payee_client_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "payee_type": {
+                    "type": "string",
+                    "example": "PROPERTY_OWNER"
+                },
+                "payer_client": {
+                    "$ref": "#/definitions/transformations.OutputClient"
+                },
+                "payer_client_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "payer_property": {
+                    "$ref": "#/definitions/transformations.OutputProperty"
+                },
+                "payer_property_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "payer_tenant": {
+                    "$ref": "#/definitions/transformations.OutputTenant"
+                },
+                "payer_tenant_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "payer_type": {
+                    "type": "string",
+                    "example": "TENANT"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "DRAFT"
+                },
+                "sub_total": {
+                    "type": "integer",
+                    "example": 100000
+                },
+                "taxes": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "total_amount": {
+                    "type": "integer",
+                    "example": 100000
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-06-10T09:00:00Z"
+                },
+                "voided_at": {
+                    "type": "string",
+                    "example": "2024-06-25T00:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputInvoiceLineItem": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "RENT"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "invoice_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "label": {
+                    "type": "string",
+                    "example": "January Rent"
+                },
+                "metadata": {},
+                "quantity": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "total_amount": {
+                    "type": "integer",
+                    "example": 100000
+                },
+                "unit_amount": {
+                    "type": "integer",
+                    "example": 100000
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-06-10T09:00:00Z"
                 }
             }
         },

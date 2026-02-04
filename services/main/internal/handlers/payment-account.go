@@ -93,6 +93,7 @@ type ListPaymentAccountsFilterRequest struct {
 	Provider   *string  `json:"provider"    validate:"omitempty,oneof=MTN VODAFONE AIRTELTIGO PAYSTACK BANK_API"`
 	IsDefault  *bool    `json:"is_default"  validate:"omitempty"`
 	Status     *string  `json:"status"      validate:"omitempty,oneof=ACTIVE DISABLED"`
+	IDs        []string `json:"ids"         validate:"omitempty,dive,uuid4"                                      example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of property block IDs to filter by" collectionFormat:"multi"`
 }
 
 // ListPaymentAccounts godoc
@@ -136,6 +137,7 @@ func (h *PaymentAccountHandler) ListPaymentAccounts(w http.ResponseWriter, r *ht
 		Provider:    lib.NullOrString(r.URL.Query().Get("provider")),
 		IsDefault:   lib.NullOrBool(r.URL.Query().Get("is_default")),
 		Status:      lib.NullOrString(r.URL.Query().Get("status")),
+		IDs:         lib.NullOrStringArray(r.URL.Query()["ids"]),
 	}
 
 	paymentAccounts, paymentAccountsErr := h.service.ListPaymentAccounts(r.Context(), input)

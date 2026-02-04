@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
@@ -88,6 +87,7 @@ type ListInvoicesFilter struct {
 	ContextType   *string
 	Status        *string
 	IDs           *[]string
+	Active        *bool
 }
 
 func (r *invoiceRepository) List(ctx context.Context, filterQuery ListInvoicesFilter) (*[]models.Invoice, error) {
@@ -95,15 +95,16 @@ func (r *invoiceRepository) List(ctx context.Context, filterQuery ListInvoicesFi
 
 	db := r.DB.WithContext(ctx).Scopes(
 		IDsFilterScope("invoices", filterQuery.IDs),
-		invoicePayerTypeScope("invoices", filterQuery.PayerType),
-		invoicePayerClientIDScope("invoices", filterQuery.PayerClientID),
-		invoicePayerTenantIDScope("invoices", filterQuery.PayerTenantID),
-		invoicePayeeTypeScope("invoices", filterQuery.PayeeType),
-		invoicePayeeClientIDScope("invoices", filterQuery.PayeeClientID),
-		invoiceContextTypeScope("invoices", filterQuery.ContextType),
-		invoiceStatusScope("invoices", filterQuery.Status),
+		invoicePayerTypeScope(filterQuery.PayerType),
+		invoicePayerClientIDScope(filterQuery.PayerClientID),
+		invoicePayerTenantIDScope(filterQuery.PayerTenantID),
+		invoicePayeeTypeScope(filterQuery.PayeeType),
+		invoicePayeeClientIDScope(filterQuery.PayeeClientID),
+		invoiceContextTypeScope(filterQuery.ContextType),
+		invoiceStatusScope(filterQuery.Status),
 		DateRangeScope("invoices", filterQuery.DateRange),
 		SearchScope("invoices", filterQuery.Search),
+		invoiceActiveScope(filterQuery.Active),
 
 		PaginationScope(filterQuery.Page, filterQuery.PageSize),
 		OrderScope("invoices", filterQuery.OrderBy, filterQuery.Order),
@@ -130,13 +131,15 @@ func (r *invoiceRepository) Count(ctx context.Context, filterQuery ListInvoicesF
 		Model(&models.Invoice{}).
 		Scopes(
 			IDsFilterScope("invoices", filterQuery.IDs),
-			invoicePayerTypeScope("invoices", filterQuery.PayerType),
-			invoicePayerClientIDScope("invoices", filterQuery.PayerClientID),
-			invoicePayerTenantIDScope("invoices", filterQuery.PayerTenantID),
-			invoicePayeeTypeScope("invoices", filterQuery.PayeeType),
-			invoicePayeeClientIDScope("invoices", filterQuery.PayeeClientID),
-			invoiceContextTypeScope("invoices", filterQuery.ContextType),
-			invoiceStatusScope("invoices", filterQuery.Status),
+			invoicePayerTypeScope(filterQuery.PayerType),
+			invoicePayerClientIDScope(filterQuery.PayerClientID),
+			invoicePayerTenantIDScope(filterQuery.PayerTenantID),
+			invoicePayeeTypeScope(filterQuery.PayeeType),
+			invoicePayeeClientIDScope(filterQuery.PayeeClientID),
+			invoiceContextTypeScope(filterQuery.ContextType),
+			invoiceStatusScope(filterQuery.Status),
+			invoiceActiveScope(filterQuery.Active),
+
 			DateRangeScope("invoices", filterQuery.DateRange),
 			SearchScope("invoices", filterQuery.Search),
 		).Count(&count)
@@ -149,66 +152,82 @@ func (r *invoiceRepository) Count(ctx context.Context, filterQuery ListInvoicesF
 }
 
 // Invoice filter scopes
-func invoicePayerTypeScope(tableName string, payerType *string) func(db *gorm.DB) *gorm.DB {
+func invoicePayerTypeScope(payerType *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if payerType == nil {
 			return db
 		}
-		return db.Where(fmt.Sprintf("%s.payer_type = ?", tableName), *payerType)
+		return db.Where("invoices.payer_type = ?", *payerType)
 	}
 }
 
-func invoicePayerClientIDScope(tableName string, payerClientID *string) func(db *gorm.DB) *gorm.DB {
+func invoicePayerClientIDScope(payerClientID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if payerClientID == nil {
 			return db
 		}
-		return db.Where(fmt.Sprintf("%s.payer_client_id = ?", tableName), *payerClientID)
+		return db.Where("invoices.payer_client_id = ?", *payerClientID)
 	}
 }
 
-func invoicePayerTenantIDScope(tableName string, payerTenantID *string) func(db *gorm.DB) *gorm.DB {
+func invoicePayerTenantIDScope(payerTenantID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if payerTenantID == nil {
 			return db
 		}
-		return db.Where(fmt.Sprintf("%s.payer_tenant_id = ?", tableName), *payerTenantID)
+		return db.Where("invoices.payer_tenant_id = ?", *payerTenantID)
 	}
 }
 
-func invoicePayeeTypeScope(tableName string, payeeType *string) func(db *gorm.DB) *gorm.DB {
+func invoicePayeeTypeScope(payeeType *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if payeeType == nil {
 			return db
 		}
-		return db.Where(fmt.Sprintf("%s.payee_type = ?", tableName), *payeeType)
+		return db.Where("invoices.payee_type = ?", *payeeType)
 	}
 }
 
-func invoicePayeeClientIDScope(tableName string, payeeClientID *string) func(db *gorm.DB) *gorm.DB {
+func invoicePayeeClientIDScope(payeeClientID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if payeeClientID == nil {
 			return db
 		}
-		return db.Where(fmt.Sprintf("%s.payee_client_id = ?", tableName), *payeeClientID)
+		return db.Where("invoices.payee_client_id = ?", *payeeClientID)
 	}
 }
 
-func invoiceContextTypeScope(tableName string, contextType *string) func(db *gorm.DB) *gorm.DB {
+func invoiceContextTypeScope(contextType *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if contextType == nil {
 			return db
 		}
-		return db.Where(fmt.Sprintf("%s.context_type = ?", tableName), *contextType)
+		return db.Where("invoices.context_type = ?", *contextType)
 	}
 }
 
-func invoiceStatusScope(tableName string, status *string) func(db *gorm.DB) *gorm.DB {
+func invoiceStatusScope(status *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if status == nil {
 			return db
 		}
-		return db.Where(fmt.Sprintf("%s.status = ?", tableName), *status)
+		return db.Where("invoices.status = ?", *status)
+	}
+}
+
+func invoiceActiveScope(active *bool) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if active == nil {
+			return db
+		}
+
+		// fetch invoices that are active (not VOID)
+		if *active {
+			return db.Where("invoices.status != ?", "VOID")
+		}
+
+		// fetch invoices that are VOID
+		return db.Where("invoices.status = ?", "VOID")
 	}
 }
 

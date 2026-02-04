@@ -1,4 +1,45 @@
 definitions:
+  handlers.AddLineItemRequest:
+    properties:
+      category:
+        enum:
+        - RENT
+        - SECURITY_DEPOSIT
+        - INITIAL_DEPOSIT
+        - MAINTENANCE_FEE
+        - SAAS_FEE
+        - EXPENSE
+        example: RENT
+        type: string
+      currency:
+        example: GHS
+        type: string
+      label:
+        example: January Rent
+        type: string
+      metadata:
+        additionalProperties: {}
+        type: object
+      quantity:
+        example: 1
+        minimum: 1
+        type: integer
+      total_amount:
+        example: 100000
+        minimum: 0
+        type: integer
+      unit_amount:
+        example: 100000
+        minimum: 0
+        type: integer
+    required:
+    - category
+    - currency
+    - label
+    - quantity
+    - total_amount
+    - unit_amount
+    type: object
   handlers.AuthCodeRequest:
     properties:
       channel:
@@ -474,6 +515,12 @@ definitions:
     required:
     - reason
     type: object
+  handlers.GenerateInvoiceRequest:
+    properties:
+      due_date:
+        example: "2024-07-01T00:00:00Z"
+        type: string
+    type: object
   handlers.LinkClientUserToPropertiesRequest:
     properties:
       property_ids:
@@ -645,6 +692,25 @@ definitions:
         type: array
       title:
         example: Updated Lease Agreement
+        type: string
+    type: object
+  handlers.UpdateInvoiceRequest:
+    properties:
+      allowed_payment_rails:
+        example:
+        - MOMO
+        - BANK
+        items:
+          type: string
+        type: array
+      status:
+        enum:
+        - DRAFT
+        - ISSUED
+        - PARTIALLY_PAID
+        - PAID
+        - VOID
+        example: ISSUED
         type: string
     type: object
   handlers.UpdateLeaseRequest:
@@ -1526,6 +1592,136 @@ definitions:
         $ref: '#/definitions/transformations.OutputClientUser'
       updated_by_id:
         example: c290f1ee-6c54-4b01-90e6-d701748f0852
+        type: string
+    type: object
+  transformations.OutputInvoice:
+    properties:
+      allowed_payment_rails:
+        example:
+        - MOMO
+        - BANK
+        items:
+          type: string
+        type: array
+      code:
+        example: INV-2024-0001
+        type: string
+      context_lease:
+        additionalProperties: {}
+        type: object
+      context_lease_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      context_maintenance_request_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      context_tenant_application:
+        $ref: '#/definitions/transformations.OutputTenantApplication'
+      context_tenant_application_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      context_type:
+        example: LEASE_RENT
+        type: string
+      created_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      currency:
+        example: GHS
+        type: string
+      due_date:
+        example: "2024-07-01T00:00:00Z"
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      issued_at:
+        example: "2024-06-15T00:00:00Z"
+        type: string
+      line_items:
+        items:
+          $ref: '#/definitions/transformations.OutputInvoiceLineItem'
+        type: array
+      paid_at:
+        example: "2024-06-20T00:00:00Z"
+        type: string
+      payee_client:
+        $ref: '#/definitions/transformations.OutputClient'
+      payee_client_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      payee_type:
+        example: PROPERTY_OWNER
+        type: string
+      payer_client:
+        $ref: '#/definitions/transformations.OutputClient'
+      payer_client_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      payer_property:
+        $ref: '#/definitions/transformations.OutputProperty'
+      payer_property_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      payer_tenant:
+        $ref: '#/definitions/transformations.OutputTenant'
+      payer_tenant_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      payer_type:
+        example: TENANT
+        type: string
+      status:
+        example: DRAFT
+        type: string
+      sub_total:
+        example: 100000
+        type: integer
+      taxes:
+        example: 0
+        type: integer
+      total_amount:
+        example: 100000
+        type: integer
+      updated_at:
+        example: "2024-06-10T09:00:00Z"
+        type: string
+      voided_at:
+        example: "2024-06-25T00:00:00Z"
+        type: string
+    type: object
+  transformations.OutputInvoiceLineItem:
+    properties:
+      category:
+        example: RENT
+        type: string
+      created_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      currency:
+        example: GHS
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      invoice_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      label:
+        example: January Rent
+        type: string
+      metadata: {}
+      quantity:
+        example: 1
+        type: integer
+      total_amount:
+        example: 100000
+        type: integer
+      unit_amount:
+        example: 100000
+        type: integer
+      updated_at:
+        example: "2024-06-10T09:00:00Z"
         type: string
     type: object
   transformations.OutputPaymentAccount:
@@ -3558,6 +3754,353 @@ paths:
       summary: Update an existing document
       tags:
       - Documents
+  /api/v1/invoices:
+    get:
+      consumes:
+      - application/json
+      description: List invoices with optional filters
+      parameters:
+      - in: query
+        name: active
+        type: boolean
+      - in: query
+        name: context_type
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - in: query
+        name: payee_client_id
+        type: string
+      - in: query
+        name: payee_type
+        type: string
+      - in: query
+        name: payer_client_id
+        type: string
+      - in: query
+        name: payer_tenant_id
+        type: string
+      - in: query
+        name: payer_type
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invoices
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputInvoice'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Error occurred when listing invoices
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List invoices
+      tags:
+      - Invoice
+  /api/v1/invoices/{invoice_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get invoice by ID
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invoice
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputInvoice'
+            type: object
+        "400":
+          description: Error occurred when getting invoice
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Invoice not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get invoice
+      tags:
+      - Invoice
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing invoice
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      - description: Update invoice request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateInvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invoice Updated Successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputInvoice'
+            type: object
+        "400":
+          description: Error occurred when updating invoice
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Invoice not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update invoice
+      tags:
+      - Invoice
+  /api/v1/invoices/{invoice_id}/line-items:
+    get:
+      consumes:
+      - application/json
+      description: Get all line items for an invoice
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Line Items
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/transformations.OutputInvoiceLineItem'
+                type: array
+            type: object
+        "400":
+          description: Error occurred when getting line items
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get line items for an invoice
+      tags:
+      - Invoice
+    post:
+      consumes:
+      - application/json
+      description: Add a line item to an existing invoice
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      - description: Add line item request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AddLineItemRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Line Item Added Successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputInvoiceLineItem'
+            type: object
+        "400":
+          description: Error occurred when adding line item
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Invoice not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Add line item to invoice
+      tags:
+      - Invoice
+  /api/v1/invoices/{invoice_id}/void:
+    patch:
+      consumes:
+      - application/json
+      description: Void an existing invoice
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invoice Voided Successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputInvoice'
+            type: object
+        "400":
+          description: Error occurred when voiding invoice
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Invoice not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Void invoice
+      tags:
+      - Invoice
   /api/v1/leases/{lease_id}:
     get:
       consumes:
@@ -3666,6 +4209,14 @@ paths:
       - in: query
         name: end_date
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - in: query
         name: is_default
         type: boolean
@@ -5645,6 +6196,58 @@ paths:
       security:
       - BearerAuth: []
       summary: Cancel a tenant application
+      tags:
+      - TenantApplication
+  /api/v1/tenant-applications/{tenant_application_id}/generate-invoice:
+    post:
+      consumes:
+      - application/json
+      description: Generate an invoice for a tenant application (security deposit
+        and/or initial deposit)
+      parameters:
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      - description: Generate Invoice Request Body
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.GenerateInvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Invoice generated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputInvoice'
+            type: object
+        "400":
+          description: Error occurred when generating invoice
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Generate an invoice for a tenant application
       tags:
       - TenantApplication
   /api/v1/tenant-applications/invite:

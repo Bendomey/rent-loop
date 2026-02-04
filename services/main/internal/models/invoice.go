@@ -12,7 +12,7 @@ type Invoice struct {
 	Code string `gorm:"not null;uniqueIndex;"` // unique invoice code
 
 	// Who is paying the invoice
-	PayerType string `gorm:"not null;"` // 'TENANT' | 'PROPERTY_OWNER'
+	PayerType string `gorm:"not null;"` //  'TENANT_APPLICATION' | 'TENANT' | 'PROPERTY_OWNER'
 
 	PayerClientID *string
 	PayerClient   *Client
@@ -51,7 +51,8 @@ type Invoice struct {
 	PaidAt   *time.Time
 	VoidedAt *time.Time
 
-	AllowedPaymentRails pq.StringArray `gorm:"type:text[];not null;"` // ['MOMO', 'BANK', 'OFFLINE', 'CARD']. Based on the payment accounts for the payee type, filter and fetch for UI
+	// for now let's default to what we support
+	AllowedPaymentRails pq.StringArray `gorm:"type:text[];not null;default:'{MOMO,OFFLINE}'"` // ['MOMO', 'BANK_TRANSFER', 'OFFLINE', 'CARD']. Based on the payment accounts for the payee type, filter and fetch for UI
 
 	LineItems []InvoiceLineItem
 }

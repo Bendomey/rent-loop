@@ -554,3 +554,64 @@ func (h *TenantApplicationHandler) ApproveTenantApplication(w http.ResponseWrite
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+type GenerateInvoiceRequest struct {
+	DueDate *time.Time `json:"due_date,omitempty" validate:"omitempty" example:"2024-07-01T00:00:00Z" description:"Due date for the invoice"`
+}
+
+// GenerateInvoice godoc
+//
+//	@Summary		Generate an invoice for a tenant application
+//	@Description	Generate an invoice for a tenant application (security deposit and/or initial deposit)
+//	@Tags			TenantApplication
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			tenant_application_id	path		string										true	"Tenant application ID"
+//	@Param			body					body		GenerateInvoiceRequest						false	"Generate Invoice Request Body"
+//	@Success		201						{object}	object{data=transformations.OutputInvoice}	"Invoice generated successfully"
+//	@Failure		400						{object}	lib.HTTPError								"Error occurred when generating invoice"
+//	@Failure		401						{object}	string										"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError								"Tenant application not found"
+//	@Failure		422						{object}	lib.HTTPError								"Validation error"
+//	@Failure		500						{object}	string										"An unexpected error occurred"
+//	@Router			/api/v1/tenant-applications/{tenant_application_id}/generate-invoice [post]
+func (h *TenantApplicationHandler) GenerateInvoice(w http.ResponseWriter, r *http.Request) {
+	_, currentClientUserOk := lib.ClientUserFromContext(r.Context())
+	if !currentClientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body GenerateInvoiceRequest
+	decodeErr := json.NewDecoder(r.Body).Decode(&body)
+	if decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
+
+	invoice, generateInvoiceErr := h.service.GenerateInvoice(
+		r.Context(),
+		services.GenerateInvoiceInput{
+			TenantApplicationID: tenantApplicationID,
+			DueDate:             body.DueDate,
+		},
+	)
+
+	if generateInvoiceErr != nil {
+		HandleErrorResponse(w, generateInvoiceErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBInvoiceToRest(invoice),
+	})
+}

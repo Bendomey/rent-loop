@@ -34,6 +34,7 @@ type TenantApplicationService interface {
 	) (*models.TenantApplication, error)
 	DeleteTenantApplication(context context.Context, tenantApplicationID string) error
 	CancelTenantApplication(context context.Context, input CancelTenantApplicationInput) error
+	GenerateInvoice(context context.Context, input GenerateInvoiceInput) (*models.Invoice, error)
 	ApproveTenantApplication(context context.Context, input ApproveTenantApplicationInput) error
 }
 
@@ -45,6 +46,7 @@ type tenantApplicationService struct {
 	tenantService        TenantService
 	leaseService         LeaseService
 	tenantAccountService TenantAccountService
+	invoiceService       InvoiceService
 }
 
 type TenantApplicationServiceDeps struct {
@@ -55,6 +57,7 @@ type TenantApplicationServiceDeps struct {
 	TenantService        TenantService
 	LeaseService         LeaseService
 	TenantAccountService TenantAccountService
+	InvoiceService       InvoiceService
 }
 
 func NewTenantApplicationService(deps TenantApplicationServiceDeps) TenantApplicationService {
@@ -66,6 +69,7 @@ func NewTenantApplicationService(deps TenantApplicationServiceDeps) TenantApplic
 		tenantService:        deps.TenantService,
 		leaseService:         deps.LeaseService,
 		tenantAccountService: deps.TenantAccountService,
+		invoiceService:       deps.InvoiceService,
 	}
 }
 
@@ -797,4 +801,120 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 	)
 
 	return nil
+}
+
+type GenerateInvoiceInput struct {
+	TenantApplicationID string
+	DueDate             *time.Time
+}
+
+func (s *tenantApplicationService) GenerateInvoice(
+	ctx context.Context,
+	input GenerateInvoiceInput,
+) (*models.Invoice, error) {
+	// Fetch tenant application with unit and property details
+	populate := []string{"DesiredUnit", "DesiredUnit.Property"}
+	tenantApplication, getTenantApplicationErr := s.repo.GetOneWithQuery(ctx, repository.GetTenantApplicationQuery{
+		TenantApplicationID: input.TenantApplicationID,
+		Populate:            &populate,
+	})
+	if getTenantApplicationErr != nil {
+		if errors.Is(getTenantApplicationErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("TenantApplicationNotFound", &pkg.RentLoopErrorParams{
+				Err: getTenantApplicationErr,
+			})
+		}
+		return nil, pkg.InternalServerError(getTenantApplicationErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getTenantApplicationErr,
+			Metadata: map[string]string{
+				"function": "GenerateInvoice",
+				"action":   "fetching tenant application",
+			},
+		})
+	}
+
+	// Validate that at least one of security deposit or initial deposit is set
+	hasSecurityDeposit := tenantApplication.SecurityDepositFee != nil && *tenantApplication.SecurityDepositFee > 0
+	hasInitialDeposit := tenantApplication.InitialDepositFee != nil && *tenantApplication.InitialDepositFee > 0
+
+	if !hasSecurityDeposit && !hasInitialDeposit {
+		return nil, pkg.BadRequestError("NoDepositFeesConfigured", &pkg.RentLoopErrorParams{
+			Metadata: map[string]string{
+				"function": "GenerateInvoice",
+				"message":  "At least one of security deposit or initial deposit must be configured",
+			},
+		})
+	}
+
+	// Build line items
+	var lineItems []LineItemInput
+	var totalAmount int64 = 0
+	tenantApplicationID := tenantApplication.ID.String()
+
+	// Add initial deposit line item if configured
+	if hasInitialDeposit {
+		initialDepositAmount := *tenantApplication.InitialDepositFee
+		lineItems = append(lineItems, LineItemInput{
+			Label:       "Initial Deposit",
+			Category:    "INITIAL_DEPOSIT",
+			Quantity:    1,
+			UnitAmount:  initialDepositAmount,
+			TotalAmount: initialDepositAmount,
+			Currency:    tenantApplication.InitialDepositFeeCurrency,
+			Metadata: &map[string]any{
+				"tenant_application_id": tenantApplicationID,
+				"unit_id":               tenantApplication.DesiredUnitId,
+				"unit_name":             tenantApplication.DesiredUnit.Name,
+			},
+		})
+
+		totalAmount += initialDepositAmount
+	}
+
+	// Add security deposit line item if configured
+	if hasSecurityDeposit {
+		securityDepositAmount := *tenantApplication.SecurityDepositFee
+		lineItems = append(lineItems, LineItemInput{
+			Label:       "Security Deposit",
+			Category:    "SECURITY_DEPOSIT",
+			Quantity:    1,
+			UnitAmount:  securityDepositAmount,
+			TotalAmount: securityDepositAmount,
+			Currency:    tenantApplication.SecurityDepositFeeCurrency,
+			Metadata: &map[string]any{
+				"tenant_application_id": tenantApplicationID,
+				"unit_id":               tenantApplication.DesiredUnitId,
+				"unit_name":             tenantApplication.DesiredUnit.Name,
+			},
+		})
+		totalAmount += securityDepositAmount
+	}
+
+	// Create the invoice
+	invoice, createErr := s.invoiceService.CreateInvoice(ctx, CreateInvoiceInput{
+		PayerType:                  "TENANT_APPLICATION",
+		PayeeType:                  "PROPERTY_OWNER",
+		PayeeClientID:              &tenantApplication.DesiredUnit.Property.ClientID,
+		ContextType:                "TENANT_APPLICATION",
+		ContextTenantApplicationID: &tenantApplicationID,
+		TotalAmount:                totalAmount,
+		Taxes:                      0,
+		SubTotal:                   totalAmount,
+		Currency:                   tenantApplication.RentFeeCurrency,
+		Status:                     "ISSUED",
+		DueDate:                    input.DueDate,
+		LineItems:                  lineItems,
+	})
+
+	if createErr != nil {
+		return nil, pkg.InternalServerError("Failed to create invoice", &pkg.RentLoopErrorParams{
+			Err: createErr,
+			Metadata: map[string]string{
+				"function":            "GenerateInvoice",
+				"tenantApplicationId": input.TenantApplicationID,
+			},
+		})
+	}
+
+	return invoice, nil
 }
