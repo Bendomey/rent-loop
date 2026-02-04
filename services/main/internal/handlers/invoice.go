@@ -157,7 +157,8 @@ type ListInvoicesQuery struct {
 	PayeeClientID *string  `json:"payee_client_id" query:"payee_client_id"`
 	ContextType   *string  `json:"context_type"    query:"context_type"`
 	Status        *string  `json:"status"          query:"status"`
-	IDs           []string `json:"ids"                                     validate:"omitempty,dive,uuid4" example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of property block IDs to filter by" collectionFormat:"multi"`
+	Active        *bool    `json:"active"          query:"active"          description:"Filter invoices by active status. true for active invoices, false for VOID invoices"`
+	IDs           []string `json:"ids"                                     description:"List of property block IDs to filter by"                                             validate:"omitempty,dive,uuid4" example:"a8098c1a-f86e-11da-bd1a-00112444be1e" collectionFormat:"multi"`
 }
 
 // ListInvoices godoc
@@ -196,6 +197,7 @@ func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 		ContextType:   lib.NullOrString(r.URL.Query().Get("context_type")),
 		Status:        lib.NullOrString(r.URL.Query().Get("status")),
 		IDs:           lib.NullOrStringArray(r.URL.Query()["ids"]),
+		Active:        lib.NullOrBool(r.URL.Query().Get("active")),
 	}
 
 	invoices, count, err := h.service.ListInvoices(r.Context(), input)

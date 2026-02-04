@@ -87,6 +87,7 @@ type ListInvoicesFilter struct {
 	ContextType   *string
 	Status        *string
 	IDs           *[]string
+	Active        *bool
 }
 
 func (r *invoiceRepository) List(ctx context.Context, filterQuery ListInvoicesFilter) (*[]models.Invoice, error) {
@@ -103,6 +104,7 @@ func (r *invoiceRepository) List(ctx context.Context, filterQuery ListInvoicesFi
 		invoiceStatusScope(filterQuery.Status),
 		DateRangeScope("invoices", filterQuery.DateRange),
 		SearchScope("invoices", filterQuery.Search),
+		invoiceActiveScope(filterQuery.Active),
 
 		PaginationScope(filterQuery.Page, filterQuery.PageSize),
 		OrderScope("invoices", filterQuery.OrderBy, filterQuery.Order),
@@ -136,6 +138,8 @@ func (r *invoiceRepository) Count(ctx context.Context, filterQuery ListInvoicesF
 			invoicePayeeClientIDScope(filterQuery.PayeeClientID),
 			invoiceContextTypeScope(filterQuery.ContextType),
 			invoiceStatusScope(filterQuery.Status),
+			invoiceActiveScope(filterQuery.Active),
+
 			DateRangeScope("invoices", filterQuery.DateRange),
 			SearchScope("invoices", filterQuery.Search),
 		).Count(&count)
@@ -208,6 +212,22 @@ func invoiceStatusScope(status *string) func(db *gorm.DB) *gorm.DB {
 			return db
 		}
 		return db.Where("invoices.status = ?", *status)
+	}
+}
+
+func invoiceActiveScope(active *bool) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if active == nil {
+			return db
+		}
+
+		// fetch invoices that are active (not VOID)
+		if *active {
+			return db.Where("invoices.status != ?", "VOID")
+		}
+
+		// fetch invoices that are VOID
+		return db.Where("invoices.status = ?", "VOID")
 	}
 }
 

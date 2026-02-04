@@ -3761,6 +3761,9 @@ paths:
       description: List invoices with optional filters
       parameters:
       - in: query
+        name: active
+        type: boolean
+      - in: query
         name: context_type
         type: string
       - in: query

@@ -2469,6 +2469,11 @@ const docTemplate = `{
                 "summary": "List invoices",
                 "parameters": [
                     {
+                        "type": "boolean",
+                        "name": "active",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "name": "context_type",
                         "in": "query"
