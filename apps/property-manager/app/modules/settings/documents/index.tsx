@@ -251,7 +251,6 @@ export function DocumentsModule() {
 							disabled={isDeleting}
 							onClick={(e) => {
 								e.preventDefault()
-								//  e.stopPropagation()
 								if (!activeId || isDeleting) return
 								deleteDocument(activeId, {
 									onError: () => {
