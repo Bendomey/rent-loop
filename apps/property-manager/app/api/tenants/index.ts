@@ -1,6 +1,4 @@
-import {
-	useMutation,
-} from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { fetchClient } from '~/lib/transport'
 
 /**
@@ -28,4 +26,3 @@ const getTenantByPhone = async (phone?: string) => {
 }
 export const useGetTenantByPhone = () =>
 	useMutation({ mutationFn: (phone?: string) => getTenantByPhone(phone) })
-

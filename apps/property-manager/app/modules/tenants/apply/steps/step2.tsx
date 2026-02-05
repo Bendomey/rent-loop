@@ -17,36 +17,46 @@ import {
 	TypographyMuted,
 	TypographySmall,
 } from '~/components/ui/typography'
+import { useSendOtp } from '~/hooks/use-send-otp'
 import { getErrorMessage } from '~/lib/error-messages'
 import { formatPhoneWithCountryCode } from '~/lib/misc'
+
+const RESEND_ATTEMPTS_TIME = [30, 60, 80, 150] as const
 
 export function Step2() {
 	const [otp, setOtp] = useState('')
 	const [otpError, setOtpError] = useState('')
-	const [canResend, setCanResend] = useState(true)
 	const [resendCountdown, setResendCountdown] = useState(0)
+	const [resendAttempts, setResendAttempts] = useState(0)
 
 	const { goBack, goNext, goToPage, formData, updateFormData, allowEdit } =
 		useTenantApplicationContext()
+	const { sendOtp, isSendingOtp } = useSendOtp()
 
 	const isOtpComplete = otp.length === 6
 
-	useEffect(() => {
-		let t: NodeJS.Timeout | null = null
-		if (resendCountdown > 0) {
-			t = setTimeout(() => setResendCountdown((s) => s - 1), 1000)
-		} else if (resendCountdown === 0) {
-			setCanResend(true)
-		}
+	const canResend = resendCountdown === 0
 
-		return () => {
-			if (t) clearTimeout(t)
-		}
+	useEffect(() => {
+		if (resendCountdown <= 0) return
+
+		const t = setTimeout(() => {
+			setResendCountdown((s) => s - 1)
+		}, 1000)
+
+		return () => clearTimeout(t)
 	}, [resendCountdown])
 
 	const resend = () => {
-		if (!canResend) setCanResend(false)
-		setResendCountdown(30)
+		if (!canResend) return
+
+		const nextResend =
+			RESEND_ATTEMPTS_TIME[resendAttempts] ??
+			RESEND_ATTEMPTS_TIME[RESEND_ATTEMPTS_TIME.length - 1]! * 2
+
+		setResendAttempts((a) => a + 1)
+		setResendCountdown(nextResend)
+		sendOtp(formData.phone)
 	}
 
 	useEffect(() => {
@@ -190,12 +200,13 @@ export function Step2() {
 				<div className="mt-6 flex justify-center">
 					<Button
 						type="button"
-						disabled={!canResend}
+						disabled={!canResend || isSendingOtp}
 						variant="ghost"
 						size="sm"
 						className="text-rose-600 hover:bg-transparent hover:underline disabled:opacity-50"
 						onClick={resend}
 					>
+						{isSendingOtp ? <Spinner /> : null}
 						{canResend ? 'Resend code' : `Resend in ${resendCountdown}s`}
 					</Button>
 				</div>

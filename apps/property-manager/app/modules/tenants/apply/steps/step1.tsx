@@ -2,10 +2,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { AlertCircleIcon, ArrowLeft, ArrowRight } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { toast } from 'sonner'
 import { z } from 'zod'
 import { useTenantApplicationContext } from '../context'
-import { useGetOtpCode } from '~/api/auth'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
 import {
@@ -20,7 +18,7 @@ import {
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
 import { TypographyH2 } from '~/components/ui/typography'
-import { formatPhoneWithCountryCode } from '~/lib/misc'
+import { useSendOtp } from '~/hooks/use-send-otp'
 
 const ValidationSchema = z.object({
 	phone: z
@@ -33,6 +31,10 @@ type FormSchema = z.infer<typeof ValidationSchema>
 export function Step1() {
 	const { goNext, goBack, formData, updateFormData } =
 		useTenantApplicationContext()
+
+	const { sendOtp, isSendingOtp } = useSendOtp({
+		onSuccess: goNext,
+	})
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
@@ -50,28 +52,10 @@ export function Step1() {
 		}
 	}, [formData])
 
-	const { mutate, isPending } = useGetOtpCode()
 
 	const onSubmit = async (data: FormSchema) => {
 		updateFormData({ phone: data.phone })
-
-		if (data) {
-			mutate(
-				{
-					channel: 'sms',
-					phone: formatPhoneWithCountryCode(data.phone, '+233', 9),
-				},
-				{
-					onError: () => {
-						toast.error(`Failed to send phone. Try again later.`)
-					},
-					onSuccess: () => {
-						toast.success(`OTP has been sent to your phone`)
-						goNext()
-					},
-				},
-			)
-		}
+		sendOtp(data.phone)
 	}
 
 	return (
@@ -121,7 +105,7 @@ export function Step1() {
 
 						<div className="mt-10 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
 							<Button
-								disabled={isPending}
+								disabled={isSendingOtp}
 								onClick={goBack}
 								type="button"
 								size="lg"
@@ -132,12 +116,12 @@ export function Step1() {
 								Go Back
 							</Button>
 							<Button
-								disabled={isPending}
+								disabled={isSendingOtp}
 								size="lg"
 								variant="default"
 								className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
 							>
-								{isPending ? <Spinner /> : null} Next{' '}
+								{isSendingOtp ? <Spinner /> : null} Next{' '}
 								<ArrowRight className="ml-2 h-4 w-4" />
 							</Button>
 						</div>
