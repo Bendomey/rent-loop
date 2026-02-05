@@ -11,7 +11,7 @@ type OutputAdminLease struct {
 	ID                  string `json:"id"                          example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 	Status              string `json:"status"                      example:"active"`
 	UnitId              string `json:"unit_id"                     example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	Unit                OutputUnit
+	Unit                AdminOutputUnit
 	TenantId            string `json:"tenant_id"                   example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 	Tenant              OutputTenant
 	TenantApplicationId string `json:"tenant_application_id"       example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
@@ -43,6 +43,11 @@ type OutputAdminLease struct {
 	TerminationAgreementDocumentPropertyManagerSignedBy   *OutputClientUser
 	TerminationAgreementDocumentTenantSignedAt            *time.Time `json:"termination_agreement_document_tenant_signed_at,omitempty"              example:"2024-12-02T11:00:00Z"`
 
+	ActivatedAt  *time.Time `json:"activated_at,omitempty"  example:"2024-06-01T09:00:00Z"`
+	CancelledAt  *time.Time `json:"cancelled_at,omitempty"  example:"2024-06-01T09:00:00Z"`
+	CompletedAt  *time.Time `json:"completed_at,omitempty"  example:"2024-06-01T09:00:00Z"`
+	TerminatedAt *time.Time `json:"terminated_at,omitempty" example:"2024-06-01T09:00:00Z"`
+
 	ParentLeaseId *string `json:"parent_lease_id,omitempty" example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"`
 
 	CreatedAt time.Time `json:"created_at" example:"2024-06-01T09:00:00Z"`
@@ -58,9 +63,9 @@ func DBAdminLeaseToRest(i *models.Lease) any {
 		"id":                            i.ID,
 		"status":                        i.Status,
 		"unit_id":                       i.UnitId,
-		"unit":                          DBUnitToRest(&i.Unit),
+		"unit":                          DBAdminUnitToRest(&i.Unit),
 		"tenant_id":                     i.TenantId,
-		"tenant":                        DBTenantToRest(&i.Tenant),
+		"tenant":                        DBAdminTenantToRest(&i.Tenant),
 		"tenant_application_id":         i.TenantApplicationId,
 		"tenant_application":            DBTenantApplicationToRest(&i.TenantApplication),
 		"rent_fee":                      i.RentFee,
@@ -82,6 +87,10 @@ func DBAdminLeaseToRest(i *models.Lease) any {
 		"termination_agreement_document_property_manager_signed_at":    i.TerminationAgreementDocumentPropertyManagerSignedAt,
 		"termination_agreement_document_property_manager_signed_by_id": i.TerminationAgreementDocumentPropertyManagerSignedByID,
 		"termination_agreement_document_tenant_signed_at":              i.TerminationAgreementDocumentTenantSignedAt,
+		"activated_at":    i.ActivatedAt,
+		"cancelled_at":    i.CancelledAt,
+		"completed_at":    i.CompletedAt,
+		"terminated_at":   i.TerminatedAt,
 		"parent_lease_id": i.ParentLeaseId,
 		"created_at":      i.CreatedAt,
 		"updated_at":      i.UpdatedAt,

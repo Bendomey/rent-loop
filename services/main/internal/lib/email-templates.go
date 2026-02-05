@@ -262,3 +262,38 @@ Best regards,
 The Rentloop team
 `
 )
+
+const (
+	LEASE_ACTIVATED_SUBJECT = "Your Rentloop Lease Is Now Active"
+	LEASE_ACTIVATED_BODY    = `Hi {{tenant_name}},
+
+Great news — your lease for {{unit_name}} has been successfully activated.
+
+You can move in on: {{move_in_date}}
+
+You can now proceed with move-in arrangements and any next steps outlined in your agreement.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Welcome aboard,
+The Rentloop Team
+`
+)
+
+const (
+	LEASE_CANCELLED_SUBJECT = "Your Rentloop Lease Was Cancelled"
+	LEASE_CANCELLED_BODY    = `Hi {{tenant_name}},
+
+Thank you for your interest in leasing {{unit_name}} on Rentloop.
+
+Unfortunately, your lease could not be completed at this time.  
+Reason: {{cancellation_reason}}
+
+You’re welcome to review the details above and apply again when ready.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Thank you for your understanding,
+The Rentloop Team
+`
+)

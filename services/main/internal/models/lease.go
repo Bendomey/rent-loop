@@ -59,6 +59,11 @@ type Lease struct {
 	TerminationAgreementDocumentPropertyManagerSignedBy   *ClientUser
 	TerminationAgreementDocumentTenantSignedAt            *time.Time
 
+	ActivatedAt  *time.Time
+	CancelledAt  *time.Time
+	CompletedAt  *time.Time
+	TerminatedAt *time.Time
+
 	// for lease renewals and extensions
 	ParentLeaseId *string `gorm:"index;"`
 	ParentLease   *Lease

@@ -275,3 +275,30 @@ func (h *LeaseHandler) ListLeasesByProperty(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).
 		Encode(lib.ReturnListResponse(filterQuery, leasesTransformed, leasesCount))
 }
+
+// ActivateLease godoc
+//
+//	@Summary		Activate lease
+//	@Description	Activate lease
+//	@Tags			Lease
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			lease_id	path		string			true	"Lease ID"
+//	@Success		204			{object}	nil				"Lease Activated Successfully"
+//	@Failure		400			{object}	lib.HTTPError	"Error occurred when activating lease"
+//	@Failure		401			{object}	string			"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError	"Lease not found"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/leases/{lease_id}/status:active [patch]
+func (h *LeaseHandler) ActivateLease(w http.ResponseWriter, r *http.Request) {
+	leaseID := chi.URLParam(r, "lease_id")
+
+	err := h.service.ActivateLease(r.Context(), leaseID)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
