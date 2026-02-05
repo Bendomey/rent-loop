@@ -319,6 +319,8 @@ func (s *leaseService) ActivateLease(ctx context.Context, leaseID string) error 
 	}
 
 	lease.Status = "Lease.Status.Active"
+	now := time.Now()
+	lease.ActivatedAt = &now
 
 	err := s.repo.Update(ctx, lease)
 	if err != nil {

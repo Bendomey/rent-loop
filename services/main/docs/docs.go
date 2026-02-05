@@ -7383,6 +7383,18 @@ const docTemplate = `{
         "transformations.OutputAdminLease": {
             "type": "object",
             "properties": {
+                "activated_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "cancelled_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "completed_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
                 "created_at": {
                     "type": "string",
                     "example": "2024-06-01T09:00:00Z"
@@ -7471,6 +7483,10 @@ const docTemplate = `{
                 "tenant_id": {
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "terminated_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
                 },
                 "terminationAgreementDocumentPropertyManagerSignedBy": {
                     "$ref": "#/definitions/transformations.OutputClientUser"

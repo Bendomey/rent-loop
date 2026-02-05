@@ -1097,6 +1097,15 @@ definitions:
     type: object
   transformations.OutputAdminLease:
     properties:
+      activated_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      cancelled_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      completed_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
       created_at:
         example: "2024-06-01T09:00:00Z"
         type: string
@@ -1163,6 +1172,9 @@ definitions:
         type: string
       tenantApplication:
         $ref: '#/definitions/transformations.OutputTenantApplication'
+      terminated_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
       termination_agreement_document_property_manager_signed_at:
         example: "2024-12-01T10:00:00Z"
         type: string
