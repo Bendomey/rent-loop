@@ -21,8 +21,6 @@ import { useSendOtp } from '~/hooks/use-send-otp'
 import { getErrorMessage } from '~/lib/error-messages'
 import { formatPhoneWithCountryCode } from '~/lib/misc'
 
-const RESEND_ATTEMPTS_TIME = [30, 60, 80, 150] as const
-
 export function Step2() {
 	const [otp, setOtp] = useState('')
 	const [otpError, setOtpError] = useState('')
@@ -50,9 +48,7 @@ export function Step2() {
 	const resend = () => {
 		if (!canResend) return
 
-		const nextResend =
-			RESEND_ATTEMPTS_TIME[resendAttempts] ??
-			RESEND_ATTEMPTS_TIME[RESEND_ATTEMPTS_TIME.length - 1]! * 2
+		const nextResend = Math.min(30 * 2 ** resendAttempts, 300)
 
 		setResendAttempts((a) => a + 1)
 		setResendCountdown(nextResend)

@@ -52,7 +52,6 @@ export function Step1() {
 		}
 	}, [formData])
 
-
 	const onSubmit = async (data: FormSchema) => {
 		updateFormData({ phone: data.phone })
 		sendOtp(data.phone)
