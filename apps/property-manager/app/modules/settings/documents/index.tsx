@@ -149,31 +149,33 @@ export function DocumentsModule() {
 			{
 				id: 'actions',
 				cell: ({ row }) => (
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="ghost"
-									className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-									size="icon"
-								>
-									<EllipsisVertical />
-									<span className="sr-only">Open menu</span>
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end" className="w-32">
-								<Link to={`/settings/documents/${row.original.id}`}>
-									<DropdownMenuItem>Edit</DropdownMenuItem>
-								</Link>
-								<DropdownMenuSeparator />
-									<DropdownMenuItem variant="destructive"
-    onClick={() => {
-      setActiveId(row.original.id)
-      setOpenDeleteDialog(true)
-    }}>
-										Delete
-									</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="ghost"
+								className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+								size="icon"
+							>
+								<EllipsisVertical />
+								<span className="sr-only">Open menu</span>
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end" className="w-32">
+							<Link to={`/settings/documents/${row.original.id}`}>
+								<DropdownMenuItem>Edit</DropdownMenuItem>
+							</Link>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem
+								variant="destructive"
+								onClick={() => {
+									setActiveId(row.original.id)
+									setOpenDeleteDialog(true)
+								}}
+							>
+								Delete
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				),
 			},
 		]
@@ -235,50 +237,43 @@ export function DocumentsModule() {
 				/>
 			</div>
 
-			<AlertDialog
-						open={openDeleteDialog}
-						onOpenChange={setOpenDeleteDialog}
-					>
-						<AlertDialogContent className="sm:max-w-[425px]">
-							<AlertDialogHeader>
-								<AlertDialogTitle>Are you sure?</AlertDialogTitle>
-								<AlertDialogDescription>
-									This will delete this document.
-								</AlertDialogDescription>
-							</AlertDialogHeader>
-							<AlertDialogFooter className="mt-5">
-								<AlertDialogCancel disabled={isDeleting}>
-									Cancel
-								</AlertDialogCancel>
-								<AlertDialogAction
-									disabled={isDeleting}
-									onClick={(e) => {
-										e.preventDefault()
-										//  e.stopPropagation()
-										 if (!activeId || isDeleting) return
-										deleteDocument(activeId, {
-											onError: () => {
-												toast.error(
-													'Failed to delete document. Try again later.',
-												)
-											},
-											onSuccess: () => {
-												void queryClient.invalidateQueries({
-													queryKey: [QUERY_KEYS.DOCUMENTS],
-												})
-												setOpenDeleteDialog(false)
-												setActiveId(null)
-											},
+			<AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+				<AlertDialogContent className="sm:max-w-[425px]">
+					<AlertDialogHeader>
+						<AlertDialogTitle>Are you sure?</AlertDialogTitle>
+						<AlertDialogDescription>
+							This will delete this document.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter className="mt-5">
+						<AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							disabled={isDeleting}
+							onClick={(e) => {
+								e.preventDefault()
+								//  e.stopPropagation()
+								if (!activeId || isDeleting) return
+								deleteDocument(activeId, {
+									onError: () => {
+										toast.error('Failed to delete document. Try again later.')
+									},
+									onSuccess: () => {
+										void queryClient.invalidateQueries({
+											queryKey: [QUERY_KEYS.DOCUMENTS],
 										})
-									}}
-									className="bg-destructive hover:bg-destructive/90 text-white"
-								>
-									{isDeleting ? <Spinner /> : null}
-									Delete
-								</AlertDialogAction>
-							</AlertDialogFooter>
-						</AlertDialogContent>
-					</AlertDialog>
+										setOpenDeleteDialog(false)
+										setActiveId(null)
+									},
+								})
+							}}
+							className="bg-destructive hover:bg-destructive/90 text-white"
+						>
+							{isDeleting ? <Spinner /> : null}
+							Delete
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</main>
 	)
 }
