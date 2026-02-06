@@ -21,6 +21,9 @@ func NewTenantAccountRouter(appCtx pkg.AppContext, handlers handlers.Handlers) f
 		r.Group(func(r chi.Router) {
 			r.Use(middlewares.InjectTenantAuthMiddleware(appCtx))
 			r.Use(middlewares.CheckForTenantAuthPresenceMiddleware)
+
+			// payments
+			r.Post("/v1/payments/offline", handlers.PaymentHandler.CreateOfflinePayment)
 		})
 	}
 }

@@ -13,11 +13,12 @@ type Payment struct {
 	InvoiceID *string
 	Invoice   *Invoice
 
-	PaymentAccountID string `gorm:"not null;"`
-	PaymentAccount   PaymentAccount
+	// TODO: When we start supporting online payments, we'll reconsider stuff.
+	// PaymentAccountID string `gorm:"not null;"`
+	// PaymentAccount   PaymentAccount
 
 	Rail     string  `gorm:"not null;"` // MOMO | BANK_TRANSFER | CARD | OFFLINE
-	Provider *string // MTN | VODAFONE | AIRTELTIGO | PAYSTACK | BANK_API
+	Provider *string // MTN | VODAFONE | AIRTELTIGO | PAYSTACK | BANK_API | CASH
 
 	Amount   int64  `gorm:"not null;"`
 	Currency string `gorm:"not null;default:'GHS'"` // e.g., 'GHS'

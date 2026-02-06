@@ -20,6 +20,7 @@ type Handlers struct {
 	LeaseHandler              LeaseHandler
 	PaymentAccountHandler     PaymentAccountHandler
 	InvoiceHandler            InvoiceHandler
+	PaymentHandler            PaymentHandler
 }
 
 func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
@@ -37,6 +38,7 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 	leaseHandler := NewLeaseHandler(appCtx, services.LeaseService)
 	paymentAccountHandler := NewPaymentAccountHandler(appCtx, services.PaymentAccountService)
 	invoiceHandler := NewInvoiceHandler(appCtx, services.InvoiceService)
+	paymentHandler := NewPaymentHandler(appCtx, services.PaymentService)
 
 	return Handlers{
 		AuthHandler:               authHandler,
@@ -53,5 +55,6 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 		LeaseHandler:              leaseHandler,
 		PaymentAccountHandler:     paymentAccountHandler,
 		InvoiceHandler:            invoiceHandler,
+		PaymentHandler:            paymentHandler,
 	}
 }
