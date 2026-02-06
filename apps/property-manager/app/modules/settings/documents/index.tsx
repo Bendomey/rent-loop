@@ -125,17 +125,6 @@ export function DocumentsModule() {
 				enableHiding: false,
 			},
 			{
-				accessorKey: 'created_at',
-				header: 'Created On',
-				cell: ({ getValue }) => (
-					<div className="min-w-32">
-						<span className="truncate text-xs text-zinc-600">
-							{localizedDayjs(getValue<Date>()).format('DD/MM/YYYY hh:mm a')}
-						</span>
-					</div>
-				),
-			},
-			{
 				accessorKey: 'updated_at',
 				header: 'Last Updated',
 				cell: ({ getValue }) => (
