@@ -179,7 +179,7 @@ export function DocumentsModule() {
 				),
 			},
 		]
-	}, [deleteDocument, isDeleting, openDeleteDialog, queryClient])
+	}, [])
 
 	return (
 		<main className="flex flex-col gap-2 sm:gap-4">

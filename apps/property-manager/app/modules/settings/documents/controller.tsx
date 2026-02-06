@@ -128,7 +128,7 @@ export function AddDocumentButton({
 
 					if (property) {
 						void navigate(
-							`/properties/${property.slug}/settings/documents/${data.id}`,
+							`/properties/${property.id}/settings/documents/${data.id}`,
 						)
 						return
 					}

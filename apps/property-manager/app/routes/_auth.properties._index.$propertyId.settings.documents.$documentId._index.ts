@@ -1,5 +1,5 @@
 import { redirect } from 'react-router'
-import type { Route } from './+types/_auth.properties.$propertyId.settings.documents.$documentId._index'
+import type { Route } from './+types/_auth.properties._index.$propertyId.settings.documents.$documentId._index'
 import { getDocument } from '~/api/documents'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
