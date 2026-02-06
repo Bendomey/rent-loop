@@ -1,5 +1,5 @@
-import { useGetOtpCode } from '~/api/auth'
 import { toast } from 'sonner'
+import { useGetOtpCode } from '~/api/auth'
 import { formatPhoneWithCountryCode } from '~/lib/misc'
 
 type UseSendOtpOptions = {

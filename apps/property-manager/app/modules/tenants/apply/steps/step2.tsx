@@ -24,8 +24,8 @@ import { formatPhoneWithCountryCode } from '~/lib/misc'
 export function Step2() {
 	const [otp, setOtp] = useState('')
 	const [otpError, setOtpError] = useState('')
-	const [resendCountdown, setResendCountdown] = useState(0)
-	const [resendAttempts, setResendAttempts] = useState(0)
+	const [resendCountdown, setResendCountdown] = useState(30)
+	const [resendAttempts, setResendAttempts] = useState(1)
 
 	const { goBack, goNext, goToPage, formData, updateFormData, allowEdit } =
 		useTenantApplicationContext()
@@ -161,7 +161,8 @@ export function Step2() {
 					<TypographyMuted className="leading-relaxed">
 						Enter the 6-digit code sent to{' '}
 						<span className="font-medium text-zinc-900">
-							{formData?.phone || 'your phone'}
+							{formatPhoneWithCountryCode(formData.phone, '+233', 9) ||
+								'your phone'}
 						</span>
 					</TypographyMuted>
 				</div>
