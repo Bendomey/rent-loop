@@ -16,6 +16,7 @@ export async function action({ request }: Route.ActionArgs) {
 	}
 
 	const form = await request.formData()
+			const property_id = form.get('property_id') as string
 
 	const pdfFile = form.get('file')
 
@@ -46,6 +47,7 @@ export async function action({ request }: Route.ActionArgs) {
 				content: JSON.stringify(lexicalState),
 				size: charCount,
 				tags: [],
+								property_id: property_id,
 			},
 			{
 				baseUrl,

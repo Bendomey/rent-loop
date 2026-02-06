@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import {
 	AlertCircleIcon,
@@ -7,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useLoaderData, useSearchParams } from 'react-router'
+import { toast } from 'sonner'
 import { PropertyDocumentsController } from './controller'
 import { useDeleteDocument, useGetDocuments } from '~/api/documents'
 import { DataTable } from '~/components/datatable'
@@ -20,7 +22,6 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
-	AlertDialogTrigger,
 } from '~/components/ui/alert-dialog'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Badge } from '~/components/ui/badge'
@@ -32,6 +33,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
+import { Spinner } from '~/components/ui/spinner'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS, QUERY_KEYS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
@@ -40,21 +42,17 @@ import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth._dashboard.settings.documents'
-import { toast } from 'sonner'
-import { useQueryClient } from '@tanstack/react-query'
-import { Spinner } from '~/components/ui/spinner'
 
 export function PropertyDocumentsSettingsModule() {
 	const { documentTemplates, error: documentError } =
 		useLoaderData<typeof loader>()
 	const [searchParams] = useSearchParams()
 	const { clientUserProperty } = useProperty()
-		const queryClient = useQueryClient()
+	const queryClient = useQueryClient()
 
-		const { mutate: deleteDocument, isPending: isDeleting } = useDeleteDocument()
-		const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
-		const [activeId, setActiveId] = useState<string | null>(null)
-	
+	const { mutate: deleteDocument, isPending: isDeleting } = useDeleteDocument()
+	const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
+	const [activeId, setActiveId] = useState<string | null>(null)
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -62,7 +60,7 @@ export function PropertyDocumentsSettingsModule() {
 	const per = searchParams.get('pageSize')
 		? Number(searchParams.get('pageSize'))
 		: PAGINATION_DEFAULTS.PER_PAGE
-	
+
 	const property_id = clientUserProperty?.property?.id
 
 	const { data, isPending, isRefetching, error, refetch } = useGetDocuments({
@@ -101,7 +99,9 @@ export function PropertyDocumentsSettingsModule() {
 				header: 'Name',
 				cell: ({ row }) => (
 					<div className="flex min-w-32 flex-col items-start gap-1">
-						<Link to={`/properties/${property_id}/settings/documents/${row.original.id}`}>
+						<Link
+							to={`/properties/${property_id}/settings/documents/${row.original.id}`}
+						>
 							<span className="truncate text-xs text-blue-600 hover:underline">
 								{row.original.title}
 							</span>
@@ -158,32 +158,35 @@ export function PropertyDocumentsSettingsModule() {
 			{
 				id: 'actions',
 				cell: ({ row }) => (
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="ghost"
-									className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-									size="icon"
-								>
-									<EllipsisVertical />
-									<span className="sr-only">Open menu</span>
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end" className="w-32">
-								<Link
-									to={`/properties/${property_id}/settings/documents/${row.original.id}`}
-								>
-									<DropdownMenuItem>Edit</DropdownMenuItem>
-								</Link>
-								<DropdownMenuSeparator />
-									<DropdownMenuItem variant="destructive" onClick={() => {
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="ghost"
+								className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+								size="icon"
+							>
+								<EllipsisVertical />
+								<span className="sr-only">Open menu</span>
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end" className="w-32">
+							<Link
+								to={`/properties/${property_id}/settings/documents/${row.original.id}`}
+							>
+								<DropdownMenuItem>Edit</DropdownMenuItem>
+							</Link>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem
+								variant="destructive"
+								onClick={() => {
 									setActiveId(row.original.id)
 									setOpenDeleteDialog(true)
-								}}>
-										Delete
-									</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
+								}}
+							>
+								Delete
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				),
 			},
 		]

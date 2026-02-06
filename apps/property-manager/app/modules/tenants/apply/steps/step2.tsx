@@ -161,7 +161,8 @@ export function Step2() {
 					<TypographyMuted className="leading-relaxed">
 						Enter the 6-digit code sent to{' '}
 						<span className="font-medium text-zinc-900">
-							{formatPhoneWithCountryCode(formData.phone, '+233', 9) || 'your phone'}
+							{formatPhoneWithCountryCode(formData.phone, '+233', 9) ||
+								'your phone'}
 						</span>
 					</TypographyMuted>
 				</div>
