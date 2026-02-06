@@ -4333,7 +4333,6 @@ paths:
         - MTN
         - VODAFONE
         - AIRTELTIGO
-        - PAYSTACK
         - BANK_API
         in: query
         name: provider

@@ -58,6 +58,14 @@ func (s *paymentService) CreateOfflinePayment(
 	ctx context.Context,
 	input CreateOfflinePaymentInput,
 ) (*models.Payment, error) {
+	if input.Amount <= 0 {
+		return nil, pkg.BadRequestError("payment amount must be greater than zero", &pkg.RentLoopErrorParams{
+			Metadata: map[string]string{
+				"amount": fmt.Sprintf("%d", input.Amount),
+			},
+		})
+	}
+
 	// make sure payment account exists/and is active/and its an offline rail.
 	paymentAccount, paymentAccountErr := s.paymentAccountService.GetPaymentAccount(
 		ctx,
@@ -151,6 +159,7 @@ func (s *paymentService) CreateOfflinePayment(
 		Amount:    input.Amount,
 		Currency:  invoice.Currency,
 		Reference: input.Reference,
+		Status:    "PENDING",
 	}
 
 	initialMetadata := map[string]any{
@@ -175,13 +184,24 @@ func (s *paymentService) CreateOfflinePayment(
 
 	metadataJSON, metadataJSONErr := lib.InterfaceToJSON(initialMetadata)
 	if metadataJSONErr != nil {
-		return nil, metadataJSONErr
+		return nil, pkg.InternalServerError(metadataJSONErr.Error(), &pkg.RentLoopErrorParams{
+			Metadata: map[string]string{
+				"invoice_id": input.InvoiceID,
+				"cause":      "failed to marshal payment metadata",
+			},
+		})
 	}
 	payment.Metadata = metadataJSON
 
 	err := s.repo.CreatePayment(ctx, &payment)
 	if err != nil {
-		return nil, err
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Metadata: map[string]string{
+				"function":   "CreateOfflinePayment",
+				"action":     "creating offline payment record",
+				"invoice_id": input.InvoiceID,
+			},
+		})
 	}
 
 	return &payment, nil

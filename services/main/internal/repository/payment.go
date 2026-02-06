@@ -42,7 +42,7 @@ func (r *paymentRepository) GetByIDWithQuery(
 ) (*models.Payment, error) {
 	var payment models.Payment
 
-	db := r.DB.WithContext(ctx).Where("id = ?", query.PaymentID)
+	db := lib.ResolveDB(ctx, r.DB).Where("id = ?", query.PaymentID)
 
 	if query.Populate != nil {
 		for _, field := range *query.Populate {
@@ -76,7 +76,7 @@ type ListPaymentsFilter struct {
 func (r *paymentRepository) List(ctx context.Context, filterQuery ListPaymentsFilter) (*[]models.Payment, error) {
 	var payments []models.Payment
 
-	db := r.DB.WithContext(ctx).Scopes(
+	db := lib.ResolveDB(ctx, r.DB).Scopes(
 		IDsFilterScope("payments", filterQuery.IDs),
 		paymentInvoiceIDFilterScope(filterQuery.InvoiceID),
 		paymentStatusesFilterScope(filterQuery.Statuses),
@@ -106,7 +106,7 @@ func (r *paymentRepository) List(ctx context.Context, filterQuery ListPaymentsFi
 func (r *paymentRepository) Count(ctx context.Context, filterQuery ListPaymentsFilter) (int64, error) {
 	var count int64
 
-	result := r.DB.WithContext(ctx).
+	result := lib.ResolveDB(ctx, r.DB).
 		Model(&models.Payment{}).
 		Scopes(
 			IDsFilterScope("payments", filterQuery.IDs),
@@ -168,7 +168,7 @@ func (r *paymentRepository) SumAmountByInvoice(
 ) (int64, error) {
 	var total int64
 
-	result := r.DB.WithContext(ctx).
+	result := lib.ResolveDB(ctx, r.DB).
 		Model(&models.Payment{}).
 		Select("COALESCE(SUM(amount), 0)").
 		Where("invoice_id = ?", invoiceID).

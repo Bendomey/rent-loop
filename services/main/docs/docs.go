@@ -3237,7 +3237,6 @@ const docTemplate = `{
                             "MTN",
                             "VODAFONE",
                             "AIRTELTIGO",
-                            "PAYSTACK",
                             "BANK_API"
                         ],
                         "type": "string",
