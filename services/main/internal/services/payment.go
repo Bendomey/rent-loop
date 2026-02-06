@@ -59,10 +59,13 @@ func (s *paymentService) CreateOfflinePayment(
 	input CreateOfflinePaymentInput,
 ) (*models.Payment, error) {
 	// make sure payment account exists/and is active/and its an offline rail.
-	paymentAccount, paymentAccountErr := s.paymentAccountService.GetPaymentAccount(ctx, repository.GetPaymentAccountQuery{
-		ID:       input.PaymentAccountID,
-		Populate: nil,
-	})
+	paymentAccount, paymentAccountErr := s.paymentAccountService.GetPaymentAccount(
+		ctx,
+		repository.GetPaymentAccountQuery{
+			ID:       input.PaymentAccountID,
+			Populate: nil,
+		},
+	)
 	if paymentAccountErr != nil {
 		return nil, paymentAccountErr
 	}
@@ -77,12 +80,15 @@ func (s *paymentService) CreateOfflinePayment(
 	}
 
 	if paymentAccount.Rail != "OFFLINE" {
-		return nil, pkg.BadRequestError("payment account rail must be OFFLINE for offline payments", &pkg.RentLoopErrorParams{
-			Metadata: map[string]string{
-				"payment_account_id": input.PaymentAccountID,
-				"rail":               paymentAccount.Rail,
+		return nil, pkg.BadRequestError(
+			"payment account rail must be OFFLINE for offline payments",
+			&pkg.RentLoopErrorParams{
+				Metadata: map[string]string{
+					"payment_account_id": input.PaymentAccountID,
+					"rail":               paymentAccount.Rail,
+				},
 			},
-		})
+		)
 	}
 
 	// make sure invoice
@@ -181,7 +187,11 @@ func (s *paymentService) CreateOfflinePayment(
 	return &payment, nil
 }
 
-func getRemainingInvoiceBalance(ctx context.Context, repo repository.PaymentRepository, invoice models.Invoice) (int64, error) {
+func getRemainingInvoiceBalance(
+	ctx context.Context,
+	repo repository.PaymentRepository,
+	invoice models.Invoice,
+) (int64, error) {
 	totalPaid, err := repo.SumAmountByInvoice(ctx, invoice.ID.String(), []string{"SUCCESSFUL", "PENDING"})
 	if err != nil {
 		return 0, err

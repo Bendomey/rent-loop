@@ -59,7 +59,6 @@ func (r *paymentRepository) GetByIDWithQuery(
 }
 
 func (r *paymentRepository) Update(ctx context.Context, payment *models.Payment) error {
-
 	db := lib.ResolveDB(ctx, r.DB)
 	return db.Save(payment).Error
 }
@@ -162,7 +161,11 @@ func paymentProviderFilterScope(provider *string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func (r *paymentRepository) SumAmountByInvoice(ctx context.Context, invoiceID string, statuses []string) (int64, error) {
+func (r *paymentRepository) SumAmountByInvoice(
+	ctx context.Context,
+	invoiceID string,
+	statuses []string,
+) (int64, error) {
 	var total int64
 
 	result := r.DB.WithContext(ctx).

@@ -20,12 +20,12 @@ func NewPaymentHandler(appCtx pkg.AppContext, service services.PaymentService) P
 }
 
 type CreateOfflinePaymentRequest struct {
-	PaymentAccountID string          `json:"payment_account_id" validate:"required,uuid4"                       example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b" description:"ID of the payment account used"`
-	InvoiceID        string          `json:"invoice_id"         validate:"required,uuid4"                       example:"b50874ee-1a70-436e-ba24-572078895982" description:"ID of the invoice being paid"`
-	Provider         string          `json:"provider"           validate:"required,oneof=MTN VODAFONE AIRTELTIGO PAYSTACK BANK_API CASH" example:"CASH"                                description:"Offline payment provider/method"`
-	Amount           int64           `json:"amount"             validate:"required,gt=0"                        example:"100000"                              description:"Payment amount in smallest currency unit"`
-	Reference        *string         `json:"reference,omitempty"                                                  example:"RCP-2024-001"                        description:"Optional reference number for the payment"`
-	Metadata         *map[string]any `json:"metadata,omitempty"                                                                                                 description:"Additional metadata for the payment"`
+	PaymentAccountID string          `json:"payment_account_id"  validate:"required,uuid4"                                                example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b" description:"ID of the payment account used"`
+	InvoiceID        string          `json:"invoice_id"          validate:"required,uuid4"                                                example:"b50874ee-1a70-436e-ba24-572078895982" description:"ID of the invoice being paid"`
+	Provider         string          `json:"provider"            validate:"required,oneof=MTN VODAFONE AIRTELTIGO PAYSTACK BANK_API CASH" example:"CASH"                                 description:"Offline payment provider/method"`
+	Amount           int64           `json:"amount"              validate:"required,gt=0"                                                 example:"100000"                               description:"Payment amount in smallest currency unit"`
+	Reference        *string         `json:"reference,omitempty"                                                                          example:"RCP-2024-001"                         description:"Optional reference number for the payment"`
+	Metadata         *map[string]any `json:"metadata,omitempty"                                                                                                                          description:"Additional metadata for the payment"`
 }
 
 // CreateOfflinePayment godoc
