@@ -11,13 +11,13 @@ export async function action({ request }: Route.ActionArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const authToken = authSession.get('authToken')
-	
+
 	if (!authToken) {
 		return redirect('/login')
 	}
 
 	const form = await request.formData()
-		const property_id = form.get('property_id') as string
+	const property_id = form.get('property_id') as string
 
 	const pdfFile = form.get('file')
 
