@@ -17,7 +17,7 @@ export async function action({ request }: Route.ActionArgs) {
 	}
 
 	const form = await request.formData()
-	const property_id = form.get('property_id') as string
+	const property_id = form.get('property_id') as string | undefined
 
 	const pdfFile = form.get('file')
 
