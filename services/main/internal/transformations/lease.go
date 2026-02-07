@@ -9,7 +9,7 @@ import (
 
 type OutputAdminLease struct {
 	ID                  string `json:"id"                          example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	Status              string `json:"status"                      example:"active"`
+	Status              string `json:"status"                      example:"Lease.Status.Pending"`
 	UnitId              string `json:"unit_id"                     example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 	Unit                AdminOutputUnit
 	TenantId            string `json:"tenant_id"                   example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
@@ -18,18 +18,18 @@ type OutputAdminLease struct {
 	TenantApplication   OutputTenantApplication
 	RentFee             int64          `json:"rent_fee"                    example:"1200"`
 	RentFeeCurrency     string         `json:"rent_fee_currency"           example:"USD"`
-	PaymentFrequency    *string        `json:"payment_frequency,omitempty" example:"monthly"`
+	PaymentFrequency    *string        `json:"payment_frequency,omitempty" example:"Monthly"`
 	Meta                map[string]any `json:"meta"`
 
 	MoveInDate            time.Time `json:"move_in_date"            example:"2024-07-01T00:00:00Z"`
-	StayDurationFrequency string    `json:"stay_duration_frequency" example:"months"`
+	StayDurationFrequency string    `json:"stay_duration_frequency" example:"Months"`
 	StayDuration          int64     `json:"stay_duration"           example:"12"`
 
 	KeyHandoverDate        *time.Time `json:"key_handover_date"        example:"2024-07-01T09:00:00Z"`
 	UtilityTransfersDate   *time.Time `json:"utility_transfers_date"   example:"2024-07-02T10:00:00Z"`
 	PropertyInspectionDate *time.Time `json:"property_inspection_date" example:"2024-06-30T15:00:00Z"`
 
-	LeaseAggreementDocumentMode *string `json:"lease_agreement_document_mode,omitempty" example:"digital"`
+	LeaseAggreementDocumentMode *string `json:"lease_agreement_document_mode,omitempty" example:"MANUAL"`
 	LeaseAgreementDocumentUrl   string  `json:"lease_agreement_document_url,omitempty"  example:"https://example.com/lease.pdf"`
 
 	LeaseAgreementDocumentPropertyManagerSignedById *string `json:"lease_agreement_document_property_manager_signed_by_id,omitempty" example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"`

@@ -617,7 +617,10 @@ definitions:
         example: "2024-07-01T09:00:00Z"
         type: string
       lease_agreement_document_mode:
-        example: digital
+        enum:
+        - MANUAL
+        - ONLINE
+        example: MANUAL
         type: string
       lease_agreement_document_property_manager_signed_at:
         example: "2024-06-15T12:00:00Z"
@@ -635,16 +638,29 @@ definitions:
         example: "2024-07-01T00:00:00Z"
         type: string
       payment_frequency:
-        example: monthly
+        enum:
+        - Hourly
+        - Daily
+        - Monthly
+        - Quarterly
+        - BiAnnually
+        - Annually
+        - OneTime
+        example: Monthly
         type: string
       property_inspection_date:
         example: "2024-06-30T15:00:00Z"
         type: string
       stay_duration:
         example: 12
+        minimum: 0
         type: integer
       stay_duration_frequency:
-        example: months
+        enum:
+        - Hours
+        - Days
+        - Months
+        example: Hours
         type: string
       utility_transfers_date:
         example: "2024-07-02T10:00:00Z"
@@ -1116,7 +1132,7 @@ definitions:
         example: "2024-07-01T09:00:00Z"
         type: string
       lease_agreement_document_mode:
-        example: digital
+        example: MANUAL
         type: string
       lease_agreement_document_property_manager_signed_at:
         example: "2024-06-15T12:00:00Z"
@@ -1142,7 +1158,7 @@ definitions:
         example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
         type: string
       payment_frequency:
-        example: monthly
+        example: Monthly
         type: string
       property_inspection_date:
         example: "2024-06-30T15:00:00Z"
@@ -1154,13 +1170,13 @@ definitions:
         example: USD
         type: string
       status:
-        example: active
+        example: Lease.Status.Pending
         type: string
       stay_duration:
         example: 12
         type: integer
       stay_duration_frequency:
-        example: months
+        example: Months
         type: string
       tenant:
         $ref: '#/definitions/transformations.OutputTenant'
