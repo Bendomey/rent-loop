@@ -67,3 +67,23 @@ export const convertToSlug = (value: string): string => {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
 };
+
+
+
+type CountryCode = `+${number}`
+
+export const formatPhoneWithCountryCode = (
+	phone?: string,
+	countryCode: CountryCode = '+233',
+	nationalLength = 9,
+) => {
+	if (!phone) return undefined
+
+	const digits = phone.replace(/\D/g, '') // strip spaces, dashes, etc.
+
+	if (digits.length < nationalLength) return undefined
+
+	const nationalNumber = digits.slice(-nationalLength)
+
+	return `${countryCode}${nationalNumber}`
+}
