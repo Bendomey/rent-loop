@@ -1,5 +1,5 @@
 import { redirect } from 'react-router'
-import type { Route } from './+types/apply._index'
+import type { Route } from './+types/tenants.apply._index'
 import { createTenantApplication } from '~/api/tenant-applications'
 import { getPropertyUnitForServer } from '~/api/units/server'
 import { environmentVariables } from '~/lib/actions/env.server'

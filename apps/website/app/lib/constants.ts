@@ -11,6 +11,8 @@ export const PROPERTY_MANAGER_APP_URL =
 export const NOT_FOUND_ROUTE = "/not-found";
 export const COMING_SOON_ROUTE = "/coming-soon";
 
+export const USER_CIPHER = 'rentloop-website'
+
 export const QUERY_KEYS = {} as const;
 
 export const PermissionState = {

@@ -1,4 +1,4 @@
-import type { Route } from './+types/apply.success._index'
+import type { Route } from './+types/tenants.success._index'
 import { APP_NAME } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
