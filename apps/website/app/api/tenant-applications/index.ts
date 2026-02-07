@@ -1,7 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { QUERY_KEYS } from '~/lib/constants'
-import { getQueryParams } from '~/lib/get-param'
-import { fetchClient, fetchServer } from '~/lib/transport'
+import { fetchServer } from '~/lib/transport'
 
 
 export interface CreatePropertyTenantApplicationInput {
