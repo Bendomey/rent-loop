@@ -6738,7 +6738,11 @@ const docTemplate = `{
                 },
                 "lease_agreement_document_mode": {
                     "type": "string",
-                    "example": "digital"
+                    "enum": [
+                        "MANUAL",
+                        "ONLINE"
+                    ],
+                    "example": "MANUAL"
                 },
                 "lease_agreement_document_property_manager_signed_at": {
                     "type": "string",
@@ -6762,7 +6766,16 @@ const docTemplate = `{
                 },
                 "payment_frequency": {
                     "type": "string",
-                    "example": "monthly"
+                    "enum": [
+                        "Hourly",
+                        "Daily",
+                        "Monthly",
+                        "Quarterly",
+                        "BiAnnually",
+                        "Annually",
+                        "OneTime"
+                    ],
+                    "example": "Monthly"
                 },
                 "property_inspection_date": {
                     "type": "string",
@@ -6770,11 +6783,17 @@ const docTemplate = `{
                 },
                 "stay_duration": {
                     "type": "integer",
+                    "minimum": 0,
                     "example": 12
                 },
                 "stay_duration_frequency": {
                     "type": "string",
-                    "example": "months"
+                    "enum": [
+                        "Hours",
+                        "Days",
+                        "Months"
+                    ],
+                    "example": "Hours"
                 },
                 "utility_transfers_date": {
                     "type": "string",
@@ -7412,7 +7431,7 @@ const docTemplate = `{
                 },
                 "lease_agreement_document_mode": {
                     "type": "string",
-                    "example": "digital"
+                    "example": "MANUAL"
                 },
                 "lease_agreement_document_property_manager_signed_at": {
                     "type": "string",
@@ -7444,7 +7463,7 @@ const docTemplate = `{
                 },
                 "payment_frequency": {
                     "type": "string",
-                    "example": "monthly"
+                    "example": "Monthly"
                 },
                 "property_inspection_date": {
                     "type": "string",
@@ -7460,7 +7479,7 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string",
-                    "example": "active"
+                    "example": "Lease.Status.Pending"
                 },
                 "stay_duration": {
                     "type": "integer",
@@ -7468,7 +7487,7 @@ const docTemplate = `{
                 },
                 "stay_duration_frequency": {
                     "type": "string",
-                    "example": "months"
+                    "example": "Months"
                 },
                 "tenant": {
                     "$ref": "#/definitions/transformations.OutputTenant"
