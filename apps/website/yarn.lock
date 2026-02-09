@@ -80,7 +80,7 @@
     "@smithy/util-utf8" "^2.0.0"
     tslib "^2.6.2"
 
-"@aws-sdk/client-s3@^3.985.0":
+"@aws-sdk/client-s3@3.985.0":
   version "3.985.0"
   resolved "https://registry.yarnpkg.com/@aws-sdk/client-s3/-/client-s3-3.985.0.tgz#e5ebe2f341c3d4225677cbfd173a8b04a07342ea"
   integrity sha512-S9TqjzzZEEIKBnC7yFpvqM7CG9ALpY5qhQ5BnDBJtdG20NoGpjKLGUUfD2wmZItuhbrcM4Z8c6m6Fg0XYIOVvw==

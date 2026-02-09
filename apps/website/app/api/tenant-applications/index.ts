@@ -1,6 +1,5 @@
 import { fetchServer } from '~/lib/transport'
 
-
 export interface CreatePropertyTenantApplicationInput {
 	property_id: string
 	desired_unit_id: string

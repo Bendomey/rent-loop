@@ -1,4 +1,3 @@
 interface ClientUser {
 	id: string
 }
-

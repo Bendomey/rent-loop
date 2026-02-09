@@ -1,40 +1,40 @@
-export const NODE_ENV = process.env.NODE_ENV;
-export const APP_NAME = "rentloop";
+export const NODE_ENV = process.env.NODE_ENV
+export const APP_NAME = 'rentloop'
 export const APP_DOMAIN =
-  NODE_ENV === "production" ? "rentloopapp.com" : "localhost";
+	NODE_ENV === 'production' ? 'rentloopapp.com' : 'localhost'
 
 export const PROPERTY_MANAGER_APP_URL =
-  NODE_ENV === "production"
-    ? "https://rentloop-property-manager-staging.fly.dev" // https://app.rentloopapp.com
-    : "https://rentloop-property-manager-staging.fly.dev";
+	NODE_ENV === 'production'
+		? 'https://rentloop-property-manager-staging.fly.dev' // https://app.rentloopapp.com
+		: 'https://rentloop-property-manager-staging.fly.dev'
 
-export const NOT_FOUND_ROUTE = "/not-found";
-export const COMING_SOON_ROUTE = "/coming-soon";
+export const NOT_FOUND_ROUTE = '/not-found'
+export const COMING_SOON_ROUTE = '/coming-soon'
 
 export const USER_CIPHER = 'rentloop-website'
 
-export const QUERY_KEYS = {} as const;
+export const QUERY_KEYS = {} as const
 
 export const PermissionState = {
-  AUTHORIZED: "AUTHORIZED",
-  PENDING: "PENDING",
-  UNAUTHORIZED: "UNAUTHORIZED",
-} as const;
+	AUTHORIZED: 'AUTHORIZED',
+	PENDING: 'PENDING',
+	UNAUTHORIZED: 'UNAUTHORIZED',
+} as const
 
 export const PAGINATION_DEFAULTS = {
-  PAGE: 1,
-  PER_PAGE: 50,
-} as const;
+	PAGE: 1,
+	PER_PAGE: 50,
+} as const
 
 export const API_STATUS = {
-  IDLE: "idle",
-  PENDING: "pending",
-  SUCCESS: "success",
-  ERROR: "error",
-} as const;
-export type APIStatusType = (typeof API_STATUS)[keyof typeof API_STATUS];
+	IDLE: 'idle',
+	PENDING: 'pending',
+	SUCCESS: 'success',
+	ERROR: 'error',
+} as const
+export type APIStatusType = (typeof API_STATUS)[keyof typeof API_STATUS]
 
 // base64 1px png's generated from https://png-pixel.com/
 const placeholderColor =
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8+/79fwAJaAPMsmQeyQAAAABJRU5ErkJggg=="; // grey-10 as 1px png in base64
-export const blurDataURL = `data:image/png;base64,${placeholderColor}`;
+	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8+/79fwAJaAPMsmQeyQAAAABJRU5ErkJggg==' // grey-10 as 1px png in base64
+export const blurDataURL = `data:image/png;base64,${placeholderColor}`
