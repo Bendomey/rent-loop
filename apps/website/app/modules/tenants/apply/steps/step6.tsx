@@ -85,8 +85,8 @@ export function Step6() {
 				<PreviewCard
 					title="Profile Photo"
 					subtitle="Identification photo"
-					stepNumber={0}
-					onEdit={() => goToPage(0)}
+					stepNumber={3}
+					onEdit={() => goToPage(3)}
 					isEditable={isEditable}
 				>
 					<div className="py-3">
@@ -103,8 +103,8 @@ export function Step6() {
 			<PreviewCard
 				title="Basic Information"
 				subtitle="Personal details"
-				stepNumber={1}
-				onEdit={() => goToPage(1)}
+				stepNumber={3}
+				onEdit={() => goToPage(3)}
 				isEditable={isEditable}
 			>
 				<div className="grid grid-cols-2 gap-x-4 gap-y-0">
@@ -131,8 +131,8 @@ export function Step6() {
 			<PreviewCard
 				title="Identity Verification"
 				subtitle="Identification details"
-				stepNumber={2}
-				onEdit={() => goToPage(2)}
+				stepNumber={4}
+				onEdit={() => goToPage(4)}
 				isEditable={isEditable}
 			>
 				<div className="grid grid-cols-2 gap-x-4 gap-y-0">
@@ -176,8 +176,8 @@ export function Step6() {
 			<PreviewCard
 				title={`${isStudent ? 'Emergency Contact & Student Information' : 'Emergency Contact & Employment Information'}`}
 				subtitle={`Emergency contact and ${isStudent ? 'student' : 'employment'} information`}
-				stepNumber={3}
-				onEdit={() => goToPage(3)}
+				stepNumber={5}
+				onEdit={() => goToPage(5)}
 				isEditable={isEditable}
 			>
 				<div className="space-y-4">

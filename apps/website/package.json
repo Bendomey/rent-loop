@@ -13,6 +13,7 @@
     "format": "prettier --write \"**/*.+(js|jsx|json|yml|yaml|css|less|scss|ts|tsx|md|gql|graphql|mdx|vue)\""
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "3.985.0",
     "@casoon/tailwindcss-glass": "0.9.7",
     "@epic-web/config": "1.21.3",
     "@headlessui/react": "2.2.9",
