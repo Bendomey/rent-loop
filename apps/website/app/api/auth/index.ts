@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { fetchClient, fetchServer } from '~/lib/transport'
+import { fetchClient } from '~/lib/transport'
 
 // OTP
 

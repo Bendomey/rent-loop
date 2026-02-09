@@ -9,9 +9,14 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "react-router";
 import type { Route } from "./+types/root";
 import { TopbarLoader } from "./components/top-bar-loader";
+import { getAuthSession } from "./lib/actions/auth.session.server";
+import { environmentVariables } from "./lib/actions/env.server";
+import { Providers } from './providers'
+
 
 dayjs.locale('en-gb')
 dayjs.extend(localizedFormat)
@@ -32,6 +37,19 @@ export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/favicon.ico" },
   { rel: "apple-touch-icon", href: "/favicon.ico" },
 ];
+
+export async function loader({ request }: Route.LoaderArgs) {
+	const env = environmentVariables()
+	const authSession = await getAuthSession(request.headers.get('Cookie'))
+
+	return {
+		ENV: {
+			API_ADDRESS: env.API_ADDRESS,
+			AUTH_TOKEN: authSession.get('authToken'),
+			GOOGLE_MAPS_API_KEY: env.GOOGLE_MAPS_API_KEY,
+		},
+	}
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -69,7 +87,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  	const { ENV } = useLoaderData<typeof loader>()
+
+	if (typeof window !== 'undefined') {
+		window.ENV = ENV
+	}
+  return (
+    <Providers>
+      <Outlet />
+    </Providers>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
