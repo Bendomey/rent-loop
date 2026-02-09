@@ -31,7 +31,5 @@ interface PropertyUnit {
 
 interface FetchPropertyUnitFilter {
 	block_ids?: Array<string>
-	payment_frequency?: string
-	status?: string
 	ids?: Array<string>
 }

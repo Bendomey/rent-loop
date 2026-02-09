@@ -2,8 +2,6 @@ declare global {
   interface Window {
     ENV: {
       API_ADDRESS: string;
-      AUTH_TOKEN?: string;
-      GOOGLE_MAPS_API_KEY: string;
     };
     Tawk_API: {
       toggle: () => void;
@@ -82,14 +80,6 @@ export function fetchClient<T>(
 
     try {
       let userToken: string | undefined;
-
-      if (config?.authToken) {
-        userToken = config.authToken;
-      } else if (window.ENV.AUTH_TOKEN) {
-        try {
-          userToken = window.ENV.AUTH_TOKEN;
-        } catch {}
-      }
 
       if (!config?.isUnAuthorizedRequest && userToken && userToken.length) {
         headers.append("Authorization", `Bearer ${userToken}`);

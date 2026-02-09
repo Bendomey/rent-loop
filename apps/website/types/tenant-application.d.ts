@@ -51,10 +51,3 @@ interface TenantApplication {
 	updated_at: Date
 }
 
-interface FetchTenantApplicationFilter {
-	status?: string
-	gender?: string
-	marital_status?: string
-	property_id?: string
-	ids?: Array<string>
-}

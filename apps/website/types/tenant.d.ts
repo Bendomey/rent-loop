@@ -47,11 +47,3 @@ interface Tenant {
 	created_at: Date
 	updated_at: Date
 }
-
-interface FetchTenantFilter {
-	status?: string
-	gender?: string
-	marital_status?: string
-	property_id?: string
-	ids?: Array<string>
-}
