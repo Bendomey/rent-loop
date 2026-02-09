@@ -37,7 +37,7 @@ export const links: Route.LinksFunction = () => [
   { rel: "apple-touch-icon", href: "/favicon.ico" },
 ];
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader() {
 	const env = environmentVariables()
 
 	return {
