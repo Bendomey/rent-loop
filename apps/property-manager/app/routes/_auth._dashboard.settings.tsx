@@ -1,4 +1,4 @@
-import { FileText, Globe, UserCircle, Users, Wrench } from 'lucide-react'
+import { FileText, Globe, UserCircle, Users, Wallet, Wrench } from 'lucide-react'
 import { Outlet } from 'react-router'
 import type { Route } from './+types/_auth._dashboard.settings'
 import { NavMain } from '~/components/nav-main'
@@ -28,6 +28,11 @@ export default function SettingsDashboard({}: Route.ComponentProps) {
 			title: 'Members',
 			url: '/members',
 			icon: Users,
+		},
+		{
+			title: 'Payment Accounts',
+			url: '/payment-accounts',
+			icon: Wallet,
 		},
 		{
 			title: 'Billing',
