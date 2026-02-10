@@ -1,14 +1,16 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import dayjs from 'dayjs'
 import {
 	CircleCheck,
+	CircleX,
+	Edit,
 	EllipsisVertical,
-	FileText,
-	Loader,
+	Eye,
+	Plus,
 	RotateCw,
+	Trash2,
 } from 'lucide-react'
 import { useMemo } from 'react'
-import { BillingsController } from './controller'
+import { PaymentAccountsController } from './controller'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -16,29 +18,149 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
+	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
-import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
+import {
+	getPaymentAccountTypeLabel,
+	getPaymentAccountStatusLabel,
+} from '~/lib/payment-account.utils'
+import { paymentIcons } from '~/lib/payment-account.utils'
+import { cn } from '~/lib/utils'
+
+const PaymentAccountData: PaymentAccount[] = [
+	{
+		id: 'pa_001',
+		amount: 2500,
+		currency: 'GHS',
+		status: 'PaymentAccount.Status.Active',
+		rail: 'MOMO',
+		identifier: '0241234567',
+		is_default: true,
+		created_at: new Date(),
+		updated_at: new Date(),
+	},
+	{
+		id: 'pa_002',
+		amount: 1200,
+		currency: 'GHS',
+		status: 'PaymentAccount.Status.Active',
+		rail: 'BANK_TRANSFER',
+		identifier: 'GTB-0123456789',
+		is_default: false,
+		created_at: new Date(),
+		updated_at: new Date(),
+	},
+	{
+		id: 'pa_003',
+		amount: 800,
+		currency: 'USD',
+		status: 'PaymentAccount.Status.Inactive',
+		rail: 'CARD',
+		identifier: '**** **** **** 4242',
+		is_default: false,
+		created_at: new Date(),
+		updated_at: new Date(),
+	},
+	{
+		id: 'pa_004',
+		amount: 450,
+		currency: 'GHS',
+		status: 'PaymentAccount.Status.Active',
+		rail: 'OFFLINE',
+		identifier: 'Cash Office - Accra',
+		is_default: false,
+		created_at: new Date(),
+		updated_at: new Date(),
+	},
+	{
+		id: 'pa_005',
+		amount: 3200,
+		currency: 'EUR',
+		status: 'PaymentAccount.Status.Inactive',
+		rail: 'CARD',
+		identifier: '**** **** **** 1881',
+		is_default: false,
+		created_at: new Date(),
+		updated_at: new Date(),
+	},
+	{
+		id: 'pa_006',
+		amount: 1500,
+		currency: 'GHS',
+		status: 'PaymentAccount.Status.Active',
+		rail: 'MOMO',
+		identifier: '0559876543',
+		is_default: false,
+		created_at: new Date(),
+		updated_at: new Date(),
+	},
+]
+
+const isLoading = false
+const refetch = () => {}
 
 export function PaymentAccountsModule() {
-	const columns: ColumnDef<BillingInvoice>[] = useMemo(() => {
+	const columns: ColumnDef<PaymentAccount>[] = useMemo(() => {
 		return [
 			{
 				id: 'drag',
 				header: () => null,
-				cell: () => <FileText className="size-5 text-zinc-500" />,
+				accessorKey: 'rail',
+				cell: ({ getValue }) => {
+					const value = getValue<PaymentAccount['rail']>()
+					const Icon = paymentIcons[value]
+
+					return Icon ? <Icon className="size-5 text-zinc-500" /> : null
+				},
 			},
 			{
-				accessorKey: 'created_at',
-				header: 'Invoice',
+				accessorKey: 'identifier',
+				header: 'Account Number',
 				cell: ({ getValue }) => {
 					return (
 						<div className="min-w-32">
 							<span className="truncate text-xs text-zinc-600">
-								{dayjs(getValue<Date>()).format('MMMM, YYYY')}
+								{getValue<string>()}
 							</span>
 						</div>
+					)
+				},
+			},
+			{
+				accessorKey: 'rail',
+				header: 'Account Type',
+				cell: ({ getValue }) => (
+					<span className="truncate text-xs text-zinc-600">
+						{getPaymentAccountTypeLabel(getValue<PaymentAccount['rail']>())}
+					</span>
+				),
+			},
+			{
+				accessorKey: 'is_default',
+				header: 'Is Default',
+				cell: ({ getValue }) => {
+					const isDefault = getValue<boolean>()
+
+					return (
+						<Badge
+							variant="outline"
+							className={
+								isDefault
+									? 'border-emerald-600 bg-emerald-50 text-emerald-600'
+									: 'border-zinc-300 bg-zinc-50 text-zinc-500'
+							}
+						>
+							{isDefault ? (
+								<>
+									{' '}
+									<CircleCheck className="mr-1 h-3.5 w-3.5" /> Yes
+								</>
+							) : (
+								'No'
+							)}
+						</Badge>
 					)
 				},
 			},
@@ -47,43 +169,14 @@ export function PaymentAccountsModule() {
 				header: 'Status',
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
-						{getValue<BillingInvoice['status']>() ===
-						'BillingInvoice.Status.Paid' ? (
+						{getValue<PaymentAccount['status']>() ===
+						'PaymentAccount.Status.Active' ? (
 							<CircleCheck className="fill-green-600 text-white" />
 						) : (
-							<Loader className="text-yellow-600" />
+							<CircleX className="fill-red-500 text-white" />
 						)}
-						{getValue<BillingInvoice['status']>() ===
-						'BillingInvoice.Status.Pending'
-							? 'Pending'
-							: 'Paid'}
+						{getPaymentAccountStatusLabel(getValue<PaymentAccount['status']>())}
 					</Badge>
-				),
-			},
-			{
-				accessorKey: 'property',
-				header: 'Property',
-				cell: ({ getValue }) => {
-					return (
-						<div className="flex min-w-32 flex-col items-start gap-1">
-							<span className="truncate text-xs text-zinc-600">
-								{getValue<Property>().name}
-							</span>
-							<span className="truncate text-xs text-zinc-600">
-								{getValue<Property>().address}
-							</span>
-						</div>
-					)
-				},
-			},
-
-			{
-				accessorKey: 'amount',
-				header: 'Amount',
-				cell: ({ getValue }) => (
-					<span className="truncate text-xs text-zinc-600">
-						{formatAmount(convertPesewasToCedis(getValue<number>()))}
-					</span>
 				),
 			},
 			{
@@ -100,9 +193,23 @@ export function PaymentAccountsModule() {
 								<span className="sr-only">Open menu</span>
 							</Button>
 						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end" className="w-32">
-							<DropdownMenuItem>Pay</DropdownMenuItem>
-							<DropdownMenuItem>Download</DropdownMenuItem>
+						<DropdownMenuContent align="end" className="w-36">
+							<DropdownMenuItem>
+								<Eye className="h-4 w-4" /> View
+							</DropdownMenuItem>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem>
+								<Edit className="h-4 w-4" /> Edit
+							</DropdownMenuItem>
+							<DropdownMenuItem className="flex items-center gap-2 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-600 focus:bg-emerald-50 focus:text-emerald-600">
+								<CircleCheck className="h-4 w-4" />
+								<span>Make Default</span>
+							</DropdownMenuItem>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem className="flex items-center gap-2 text-rose-600 hover:bg-red-50 hover:text-rose-600 focus:bg-rose-50 focus:text-rose-600">
+								<Trash2 className="h-4 w-4" />
+								<span>Delete</span>
+							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
 				),
@@ -114,129 +221,37 @@ export function PaymentAccountsModule() {
 		<main className="space-y-4">
 			<div className="flex flex-row items-center justify-between">
 				<div>
-					<TypographyH4>Manage Billing</TypographyH4>
+					<TypographyH4>Manage Payment Accounts</TypographyH4>
 					<TypographyMuted>
-						Billing invoices will be automatically generated every month.
+						Manage your payment accounts and billing information.
 					</TypographyMuted>
 				</div>
-				<div>
-					<Button variant="outline" size="sm">
-						<RotateCw className="size-4" />
+				<div className="flex items-center justify-end gap-2">
+					<Button
+						variant="default"
+						size="sm"
+						className="bg-rose-600 text-white hover:bg-rose-700"
+					>
+						<Plus className="size-4" />
+						Add Payment Account
+					</Button>
+					<Button
+						onClick={() => refetch()}
+						disabled={isLoading}
+						variant="outline"
+						size="sm"
+					>
+						<RotateCw className={cn('size-4', { 'animate-spin': isLoading })} />
 						Refresh
 					</Button>
 				</div>
 			</div>
-			<BillingsController />
+			<PaymentAccountsController />
 			<div className="h-full w-full">
 				<DataTable
 					columns={columns}
 					dataResponse={{
-						rows: [
-							{
-								id: '1',
-								created_at: new Date(),
-								status: 'BillingInvoice.Status.Pending',
-								amount: 1500,
-								client_id: 'client_1',
-								client: {
-									id: 'client_1',
-									address: '789 Pine St, Tema',
-									city: 'Tema',
-									country: 'Ghana',
-									client_application_id: 'app_1',
-									client_application: null,
-									registration_number: null,
-									description: null,
-									website_url: null,
-									support_email: null,
-									support_phone: null,
-									latitude: 5.6695,
-									longitude: -0.0169,
-									name: 'John Doe',
-									region: 'Greater Accra',
-									type: 'INDIVIDUAL',
-									sub_type: 'LANDLORD',
-									created_at: new Date(),
-									updated_at: new Date(),
-								},
-								currency: 'GHS',
-								due_date: null,
-								paid_at: null,
-								updated_at: new Date(),
-								property_id: 'property_1',
-								property: {
-									slug: 'sunset-apartments',
-									id: 'property_1',
-									name: 'Sunset Apartments',
-									description: 'Modern apartments with sea view.',
-									address: '123 Main St, Accra',
-									gps_address: 'GH-123-4567',
-									city: 'Accra',
-									state: 'Greater Accra',
-									region: 'Greater Accra',
-									country: 'Ghana',
-									zip_code: '00123',
-									image: ['https://i.pravatar.cc/150?u=sunset-apartments'],
-									type: 'SINGLE',
-									tags: [],
-									status: 'Property.Status.Active',
-									created_at: new Date(),
-									updated_at: new Date(),
-								},
-							},
-							{
-								id: '2',
-								created_at: dayjs().subtract(2, 'month').toDate(),
-								status: 'BillingInvoice.Status.Paid',
-								amount: 2500,
-								client_id: 'client_2',
-								client: {
-									id: 'client_1',
-									address: '789 Pine St, Tema',
-									city: 'Tema',
-									country: 'Ghana',
-									client_application_id: 'app_1',
-									client_application: null,
-									registration_number: null,
-									description: null,
-									website_url: null,
-									support_email: null,
-									support_phone: null,
-									latitude: 5.6695,
-									longitude: -0.0169,
-									name: 'John Doe',
-									region: 'Greater Accra',
-									type: 'INDIVIDUAL',
-									sub_type: 'LANDLORD',
-									created_at: new Date(),
-									updated_at: new Date(),
-								},
-								currency: 'GHS',
-								due_date: null,
-								paid_at: null,
-								updated_at: new Date(),
-								property_id: 'property_2',
-								property: {
-									slug: 'client-2',
-									id: 'property_2',
-									name: 'Greenfield Villas',
-									address: '456 Oak St, Kumasi',
-									gps_address: 'GKH-456-7890',
-									description: 'A beautiful villa with a garden.',
-									city: 'Kumasi',
-									state: 'Ashanti',
-									zip_code: '00233',
-									type: 'SINGLE',
-									image: ['https://i.pravatar.cc/150?u=greenfield-villas'],
-									region: 'Ashanti',
-									country: 'Ghana',
-									tags: ['villa', 'furnished'],
-									status: 'Property.Status.Active',
-									created_at: new Date(),
-									updated_at: new Date(),
-								},
-							},
-						],
+						rows: PaymentAccountData ?? [],
 						total: 150,
 						page: 1,
 						page_size: 50,
@@ -246,11 +261,11 @@ export function PaymentAccountsModule() {
 						has_next_page: true,
 					}}
 					empty={{
-						message: 'No billing invoices found',
+						message: 'No payment accounts found',
 						description:
 							"Try adjusting your search or filter to find what you're looking for.",
 						button: {
-							label: 'Add Invoice',
+							label: 'Add Payment Account',
 							onClick: () => {
 								// Handle button click
 							},

@@ -1,0 +1,11 @@
+interface PaymentAccount {
+	id: string
+	amount: number
+	currency: string
+	status: 'PaymentAccount.Status.Active' | 'PaymentAccount.Status.Inactive'
+	rail: 'MOMO' | 'BANK_TRANSFER' | 'CARD' | 'OFFLINE'
+	identifier: string
+	is_default: boolean
+	created_at: Date
+	updated_at: Date
+}

@@ -9,8 +9,8 @@ const filters: Array<Filter> = [
 		label: 'Status',
 		value: {
 			options: [
-				{ label: 'Pending', value: 'Billing.Status.Pending' },
-				{ label: 'Paid', value: 'Billing.Status.Paid' },
+				{ label: 'Active', value: 'PaymentAccount.Status.Active' },
+				{ label: 'Inactive', value: 'PaymentAccount.Status.Inactive' },
 			],
 			urlParam: 'status',
 			defaultValues: [],
@@ -21,20 +21,22 @@ const filters: Array<Filter> = [
 		id: 2,
 		type: 'selector',
 		selectType: 'multi',
-		label: 'Property',
+		label: 'Account Type',
 		value: {
 			options: [
-				{ label: 'Sunset Apartments', value: 'property_1' },
-				{ label: 'Greenfield Villas', value: 'property_2' },
+				{ label: 'Momo', value: 'MOMO' },
+				{ label: 'Bank Transfer', value: 'BANK_TRANSFER' },
+				{ label: 'Credit Card', value: 'CARD' },
+				{ label: 'Cash', value: 'OFFLINE' },
 			],
-			urlParam: 'property',
+			urlParam: 'rail',
 			defaultValues: [],
 		},
 		Icon: Home,
 	},
 ]
 
-export const BillingsController = () => {
+export const PaymentAccountsController = () => {
 	return (
 		<div className="flex w-full flex-col gap-2">
 			<div className="w-full rounded-md border p-4">
