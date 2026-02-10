@@ -8,9 +8,9 @@ import (
 )
 
 type OutputPayment struct {
-	ID        string         `json:"id"                   example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b" format:"uuid" description:"Unique identifier for the payment"`
-	InvoiceID *string        `json:"invoice_id,omitempty" example:"b50874ee-1a70-436e-ba24-572078895982"               description:"The ID of the invoice"`
-	Invoice   *OutputInvoice `json:"invoice,omitempty"`
+	ID        string        `json:"id"                   example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b" format:"uuid" description:"Unique identifier for the payment"`
+	InvoiceID string        `json:"invoice_id" example:"b50874ee-1a70-436e-ba24-572078895982"               description:"The ID of the invoice"`
+	Invoice   OutputInvoice `json:"invoice,omitempty"`
 
 	Rail     string  `json:"rail"               example:"OFFLINE" description:"Payment rail (MOMO, BANK_TRANSFER, CARD, OFFLINE)"`
 	Provider *string `json:"provider,omitempty" example:"CASH"    description:"Payment provider"`
