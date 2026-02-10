@@ -36,6 +36,6 @@ jobs:
     
         - name: 🚀 Deploy Staging
           run:
-            flyctl deploy --config fly.staging.toml --remote-only 
+            flyctl deploy --config fly.toml --remote-only 
               --build-arg COMMIT_SHA=${{ github.sha }} 
               --build-arg NODE_ENV=staging
