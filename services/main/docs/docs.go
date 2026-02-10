@@ -6330,12 +6330,12 @@ const docTemplate = `{
                 "id_type": {
                     "type": "string",
                     "enum": [
-                        "ghana_card",
-                        "national_id",
-                        "passport",
-                        "driver_license"
+                        "GHANA_CARD",
+                        "NATIONAL_ID",
+                        "PASSPORT",
+                        "DRIVER_LICENSE"
                     ],
-                    "example": "ghana_card"
+                    "example": "GHANA_CARD"
                 },
                 "last_name": {
                     "type": "string",
@@ -6967,12 +6967,12 @@ const docTemplate = `{
                 "id_type": {
                     "type": "string",
                     "enum": [
-                        "ghana_card",
-                        "national_id",
-                        "passport",
-                        "driver_license"
+                        "GHANA_CARD",
+                        "NATIONAL_ID",
+                        "PASSPORT",
+                        "DRIVER_LICENSE"
                     ],
-                    "example": "ghana_card"
+                    "example": "GHANA_CARD"
                 },
                 "initial_deposit_fee": {
                     "type": "integer",
@@ -8282,7 +8282,7 @@ const docTemplate = `{
                 },
                 "id_type": {
                     "type": "string",
-                    "example": "ghana_card"
+                    "example": "GHANA_CARD"
                 },
                 "initial_deposit_fee": {
                     "type": "integer",
