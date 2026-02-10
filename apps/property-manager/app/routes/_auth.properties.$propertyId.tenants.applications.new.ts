@@ -15,6 +15,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	return {
 		origin: getDomainUrl(request),
 		clientUserProperty,
+		rentLoopWebsiteUrl: environmentVariables().RENTLOOP_WEBSITE_URL,
 	}
 }
 

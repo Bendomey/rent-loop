@@ -1,0 +1,40 @@
+name: Website CI
+
+on:
+  push:
+    paths:
+      - 'apps/website/**'
+    branches:
+      - main
+      - prod
+  pull_request:
+    paths:
+      - 'apps/website/**'
+
+jobs:
+  code-checks:
+      name: ⬣ ESLint & ʦ TypeScript
+      runs-on: ubuntu-latest
+      
+      steps:
+        - name: ⬇️ Checkout repo
+          uses: actions/checkout@v4
+  
+        - name: ⎔ Setup node
+          uses: actions/setup-node@v4
+          with:
+            node-version: 20
+            cache: 'yarn'
+            cache-dependency-path: 'apps/website/yarn.lock'
+  
+        - name: 📥 Download deps
+          run: yarn install --frozen-lockfile
+          working-directory: apps/website
+          
+        - name: 🔬 Lint
+          run: yarn lint:ci
+          working-directory: apps/website
+
+        - name: 🔎 Type check
+          run: yarn types:check
+          working-directory: apps/website

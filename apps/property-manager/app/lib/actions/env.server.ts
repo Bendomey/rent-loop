@@ -9,6 +9,7 @@ const environmentSchema = z.object({
 		.enum(['development', 'production', 'test', 'staging'])
 		.default('development'),
 	API_ADDRESS: z.string().min(1).default('http://localhost:5000/api'),
+	RENTLOOP_WEBSITE_URL: z.string().min(1).default('http://localhost:3000'),
 	SENTRY_DSN: z.string().min(1).default('fake_dsn_for_dev'),
 	GOOGLE_MAPS_API_KEY: z.string().min(1).default('fake-api-key'),
 	CF_ACCOUNT_ID: z.string().min(1),

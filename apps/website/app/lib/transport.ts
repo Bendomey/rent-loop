@@ -1,16 +1,14 @@
 declare global {
-  interface Window {
-    ENV: {
-      API_ADDRESS: string;
-      AUTH_TOKEN?: string;
-      GOOGLE_MAPS_API_KEY: string;
-    };
-    Tawk_API: {
-      toggle: () => void;
-      minimize: () => void;
-      maximize: () => void;
-    };
-  }
+	interface Window {
+		ENV: {
+			API_ADDRESS: string
+		}
+		Tawk_API: {
+			toggle: () => void
+			minimize: () => void
+			maximize: () => void
+		}
+	}
 }
 /**
  * Fetch wrapper to treat 4xx - 5xx status codes as errors.
@@ -19,47 +17,47 @@ declare global {
  * @returns {Promise} - Returns promise.
  */
 export function transport(
-  input: RequestInfo,
-  init?: RequestInit,
+	input: RequestInfo,
+	init?: RequestInit,
 ): Promise<Response> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const response = await fetch(input, init);
-      if (!response.ok) {
-        reject(response);
-      }
-      resolve(response);
-    } catch (error: unknown) {
-      reject(error);
-    }
-  });
+	return new Promise(async (resolve, reject) => {
+		try {
+			const response = await fetch(input, init)
+			if (!response.ok) {
+				reject(response)
+			}
+			resolve(response)
+		} catch (error: unknown) {
+			reject(error)
+		}
+	})
 }
 
 interface FetchClientConfig extends RequestInit {
-  /**
-   * If not set, defaults to the api address {API_ADDRESS}.
-   */
-  baseUrl?: string;
-  /**
-   * If not set, defaults to client cookie.
-   */
-  authToken?: string;
-  /**
-   * Most of our requests will be made with a token.
-   * So to make sure we don't set this everytime(ux reasons), I'm rather
-   * checking for unauthorized requests.
-   *
-   * @example - If request is an unauthorized request, we don't append the Authorization header.
-   * fetchClient('path-here', {isUnAuthorized:true})
-   *
-   * @example If request needs authorization, we append the Authorization header here.
-   * fetchClient('path-here')
-   */
-  isUnAuthorizedRequest?: boolean;
+	/**
+	 * If not set, defaults to the api address {API_ADDRESS}.
+	 */
+	baseUrl?: string
+	/**
+	 * If not set, defaults to client cookie.
+	 */
+	authToken?: string
+	/**
+	 * Most of our requests will be made with a token.
+	 * So to make sure we don't set this everytime(ux reasons), I'm rather
+	 * checking for unauthorized requests.
+	 *
+	 * @example - If request is an unauthorized request, we don't append the Authorization header.
+	 * fetchClient('path-here', {isUnAuthorized:true})
+	 *
+	 * @example If request needs authorization, we append the Authorization header here.
+	 * fetchClient('path-here')
+	 */
+	isUnAuthorizedRequest?: boolean
 }
 
 interface HttpResponse<T> extends Response {
-  parsedBody: T;
+	parsedBody: T
 }
 
 /**
@@ -68,119 +66,111 @@ interface HttpResponse<T> extends Response {
  * @returns {Promise} - Returns promise.
  */
 export function fetchClient<T>(
-  path: string,
-  config?: FetchClientConfig,
+	path: string,
+	config?: FetchClientConfig,
 ): Promise<HttpResponse<T>> {
-  return new Promise(async (resolve, reject) => {
-    const baseUrl = config?.baseUrl ?? window.ENV.API_ADDRESS; // Defaults to api address.
+	return new Promise(async (resolve, reject) => {
+		const baseUrl = config?.baseUrl ?? window.ENV.API_ADDRESS // Defaults to api address.
 
-    const headers = new Headers({
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...config?.headers,
-    });
+		const headers = new Headers({
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...config?.headers,
+		})
 
-    try {
-      let userToken: string | undefined;
+		try {
+			let userToken: string | undefined
 
-      if (config?.authToken) {
-        userToken = config.authToken;
-      } else if (window.ENV.AUTH_TOKEN) {
-        try {
-          userToken = window.ENV.AUTH_TOKEN;
-        } catch {}
-      }
+			if (!config?.isUnAuthorizedRequest && userToken && userToken.length) {
+				headers.append('Authorization', `Bearer ${userToken}`)
+			}
 
-      if (!config?.isUnAuthorizedRequest && userToken && userToken.length) {
-        headers.append("Authorization", `Bearer ${userToken}`);
-      }
+			const response = await transport(`${baseUrl}${path}`, {
+				...config,
+				headers,
+			})
 
-      const response = await transport(`${baseUrl}${path}`, {
-        ...config,
-        headers,
-      });
+			if (response.status === 204) {
+				const res: HttpResponse<T> = {
+					...response,
+					parsedBody: {} as T,
+				}
+				return resolve(res)
+			}
 
-      if (response.status === 204) {
-        const res: HttpResponse<T> = {
-          ...response,
-          parsedBody: {} as T,
-        };
-        return resolve(res);
-      }
+			const contentType = response.headers.get('Content-Type')
 
-      const contentType = response.headers.get("Content-Type");
+			let parsedBody
+			if (contentType?.includes('json')) {
+				parsedBody = await response.json()
+			} else {
+				parsedBody = await response.text()
+			}
 
-      let parsedBody;
-      if (contentType?.includes("json")) {
-        parsedBody = await response.json();
-      } else {
-        parsedBody = await response.text();
-      }
+			const res: HttpResponse<T> = {
+				...response,
+				parsedBody,
+			}
 
-      const res: HttpResponse<T> = {
-        ...response,
-        parsedBody,
-      };
-
-      resolve(res);
-    } catch (error: unknown) {
-      reject(error);
-    }
-  });
+			resolve(res)
+		} catch (error: unknown) {
+			reject(error)
+		}
+	})
 }
 
 export function fetchServer<T>(
-  path: string,
-  config?: FetchClientConfig,
+	path: string,
+	config?: FetchClientConfig,
 ): Promise<HttpResponse<T>> {
-  return new Promise(async (resolve, reject) => {
-    const headers = new Headers({
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...config?.headers,
-    });
+	return new Promise(async (resolve, reject) => {
+		const headers = new Headers({
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...config?.headers,
+		})
 
-    try {
-      let userToken: string | undefined;
+		try {
+			let userToken: string | undefined
 
-      if (config?.authToken) {
-        userToken = config.authToken;
-      }
+			if (config?.authToken) {
+				userToken = config.authToken
+			}
 
-      if (!config?.isUnAuthorizedRequest && userToken && userToken.length) {
-        headers.append("Authorization", `Bearer ${userToken}`);
-      }
+			if (!config?.isUnAuthorizedRequest && userToken && userToken.length) {
+				headers.append('Authorization', `Bearer ${userToken}`)
+			}
 
-      const response = await transport(path, {
-        ...config,
-        headers,
-      });
+			const response = await transport(path, {
+				...config,
+				headers,
+			})
 
-      if (response.status === 204) {
-        const res: HttpResponse<T> = {
-          ...response,
-          parsedBody: {} as T,
-        };
-        return resolve(res);
-      }
+			if (response.status === 204) {
+				const res: HttpResponse<T> = {
+					...response,
+					parsedBody: {} as T,
+				}
+				return resolve(res)
+			}
 
-      const contentType = response.headers.get("Content-Type");
+			const contentType = response.headers.get('Content-Type')
 
-      let parsedBody;
-      if (contentType?.includes("json")) {
-        parsedBody = await response.json();
-      } else {
-        parsedBody = await response.text();
-      }
+			let parsedBody
+			if (contentType?.includes('json')) {
+				parsedBody = await response.json()
+			} else {
+				parsedBody = await response.text()
+			}
 
-      const res: HttpResponse<T> = {
-        ...response,
-        parsedBody,
-      };
+			const res: HttpResponse<T> = {
+				...response,
+				parsedBody,
+			}
 
-      resolve(res);
-    } catch (error: unknown) {
-      reject(error);
-    }
-  });
+			resolve(res)
+		} catch (error: unknown) {
+			reject(error)
+		}
+	})
 }
