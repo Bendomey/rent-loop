@@ -2,7 +2,9 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
@@ -12,6 +14,7 @@ import (
 
 type PaymentService interface {
 	CreateOfflinePayment(context context.Context, input CreateOfflinePaymentInput) (*models.Payment, error)
+	VerifyOfflinePayment(context context.Context, input VerifyOfflinePaymentInput) (*models.Payment, error)
 	// GetPayment(context context.Context, query repository.GetPaymentQuery) (*models.Payment, error)
 	// ListPayments(
 	// 	context context.Context,
@@ -155,7 +158,7 @@ func (s *paymentService) CreateOfflinePayment(
 	}
 
 	payment := models.Payment{
-		InvoiceID: &input.InvoiceID,
+		InvoiceID: input.InvoiceID,
 		Rail:      "OFFLINE",
 		Provider:  &input.Provider,
 		Amount:    input.Amount,
@@ -207,6 +210,187 @@ func (s *paymentService) CreateOfflinePayment(
 	}
 
 	return &payment, nil
+}
+
+type VerifyOfflinePaymentInput struct {
+	VerifiedByID string
+	PaymentID    string
+	IsSuccessful bool
+	Metadata     *map[string]any
+}
+
+func (s *paymentService) VerifyOfflinePayment(
+	ctx context.Context,
+	input VerifyOfflinePaymentInput,
+) (*models.Payment, error) {
+	// Get payment
+	populate := []string{"Invoice"}
+	payment, paymentErr := s.repo.GetByIDWithQuery(ctx, repository.GetPaymentQuery{
+		PaymentID: input.PaymentID,
+		Populate:  &populate,
+	})
+	if paymentErr != nil {
+		return nil, pkg.NotFoundError("PaymentNotFound", &pkg.RentLoopErrorParams{
+			Err: paymentErr,
+			Metadata: map[string]string{
+				"payment_id": input.PaymentID,
+			},
+		})
+	}
+
+	// Validate payment is OFFLINE rail
+	if payment.Rail != "OFFLINE" {
+		return nil, pkg.BadRequestError("can only verify offline payments", &pkg.RentLoopErrorParams{
+			Metadata: map[string]string{
+				"payment_id": input.PaymentID,
+				"rail":       payment.Rail,
+			},
+		})
+	}
+
+	// Validate payment is in PENDING status
+	if payment.Status != "PENDING" {
+		return nil, pkg.BadRequestError("payment is not in pending status", &pkg.RentLoopErrorParams{
+			Metadata: map[string]string{
+				"payment_id": input.PaymentID,
+				"status":     payment.Status,
+			},
+		})
+	}
+
+	transaction := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, transaction)
+
+	now := time.Now()
+
+	// Update payment metadata with verification response
+	existingMetadata := map[string]any{}
+	if payment.Metadata != nil {
+		if err := json.Unmarshal(*payment.Metadata, &existingMetadata); err != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError("failed to parse payment metadata", &pkg.RentLoopErrorParams{
+				Err: err,
+				Metadata: map[string]string{
+					"payment_id": input.PaymentID,
+				},
+			})
+		}
+	}
+
+	// Add verification response to metadata
+	verifyResponse := map[string]any{
+		"verified_by_id": input.VerifiedByID,
+		"verified_at":    now.Format(time.RFC3339),
+		"is_successful":  input.IsSuccessful,
+	}
+	if input.Metadata != nil {
+		for k, v := range *input.Metadata {
+			verifyResponse[k] = v
+		}
+	}
+	existingMetadata["offline_verify_response"] = verifyResponse
+
+	metadataJSON, metadataJSONErr := lib.InterfaceToJSON(existingMetadata)
+	if metadataJSONErr != nil {
+		transaction.Rollback()
+		return nil, pkg.InternalServerError("failed to marshal payment metadata", &pkg.RentLoopErrorParams{
+			Err: metadataJSONErr,
+			Metadata: map[string]string{
+				"payment_id": input.PaymentID,
+			},
+		})
+	}
+	payment.Metadata = metadataJSON
+
+	if input.IsSuccessful {
+		// Update payment to SUCCESSFUL
+		payment.Status = "SUCCESSFUL"
+		payment.SuccessfulAt = &now
+
+		updatePaymentErr := s.repo.Update(transCtx, payment)
+		if updatePaymentErr != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError("failed to update payment", &pkg.RentLoopErrorParams{
+				Err: updatePaymentErr,
+				Metadata: map[string]string{
+					"payment_id": input.PaymentID,
+					"action":     "updating payment to SUCCESSFUL",
+				},
+			})
+		}
+
+		// Calculate remaining balance after this payment
+		remainingBalance, remainingBalanceErr := getRemainingInvoiceBalance(transCtx, s.repo, payment.Invoice)
+		if remainingBalanceErr != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError("failed to calculate remaining balance", &pkg.RentLoopErrorParams{
+				Err: remainingBalanceErr,
+				Metadata: map[string]string{
+					"payment_id": input.PaymentID,
+					"invoice_id": payment.Invoice.ID.String(),
+				},
+			})
+		}
+
+		// Update invoice status based on remaining balance
+		var newInvoiceStatus string
+		var paidAt *time.Time
+
+		if remainingBalance <= 0 {
+			// Full payment - mark as PAID
+			newInvoiceStatus = "PAID"
+			paidAt = &now
+		} else {
+			// Partial payment - mark as PARTIALLY_PAID
+			newInvoiceStatus = "PARTIALLY_PAID"
+		}
+
+		_, updateInvoiceErr := s.invoiceService.UpdateInvoice(transCtx, UpdateInvoiceInput{
+			InvoiceID: payment.Invoice.ID.String(),
+			Status:    &newInvoiceStatus,
+			PaidAt:    paidAt,
+		})
+		if updateInvoiceErr != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError("failed to update invoice status", &pkg.RentLoopErrorParams{
+				Err: updateInvoiceErr,
+				Metadata: map[string]string{
+					"payment_id": input.PaymentID,
+					"invoice_id": payment.Invoice.ID.String(),
+					"new_status": newInvoiceStatus,
+				},
+			})
+		}
+	} else {
+		// Update payment to FAILED
+		payment.Status = "FAILED"
+		payment.FailedAt = &now
+
+		updatePaymentErr := s.repo.Update(transCtx, payment)
+		if updatePaymentErr != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError("failed to update payment", &pkg.RentLoopErrorParams{
+				Err: updatePaymentErr,
+				Metadata: map[string]string{
+					"payment_id": input.PaymentID,
+					"action":     "updating payment to FAILED",
+				},
+			})
+		}
+	}
+
+	if commitErr := transaction.Commit().Error; commitErr != nil {
+		transaction.Rollback()
+		return nil, pkg.InternalServerError("failed to commit transaction", &pkg.RentLoopErrorParams{
+			Err: commitErr,
+			Metadata: map[string]string{
+				"payment_id": input.PaymentID,
+				"function":   "VerifyOfflinePayment",
+			},
+		})
+	}
+
+	return payment, nil
 }
 
 func getRemainingInvoiceBalance(

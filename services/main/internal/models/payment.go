@@ -10,8 +10,8 @@ import (
 type Payment struct {
 	BaseModelSoftDelete
 
-	InvoiceID *string
-	Invoice   *Invoice
+	InvoiceID string
+	Invoice   Invoice
 
 	Rail     string  `gorm:"not null;"` // MOMO | BANK_TRANSFER | CARD | OFFLINE
 	Provider *string // MTN | VODAFONE | AIRTELTIGO | PAYSTACK | BANK_API | CASH

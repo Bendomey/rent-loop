@@ -651,7 +651,7 @@ type PayInvoiceRequest struct {
 //	@Failure		500						{object}	string			"An unexpected error occurred"
 //	@Router			/api/v1/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay [post]
 func (h *TenantApplicationHandler) PayInvoice(w http.ResponseWriter, r *http.Request) {
-	_, currentClientUserOk := lib.ClientUserFromContext(r.Context())
+	clientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentClientUserOk {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -681,7 +681,7 @@ func (h *TenantApplicationHandler) PayInvoice(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	_, err := h.paymentService.CreateOfflinePayment(r.Context(), services.CreateOfflinePaymentInput{
+	payment, err := h.paymentService.CreateOfflinePayment(r.Context(), services.CreateOfflinePaymentInput{
 		PaymentAccountID: body.PaymentAccountID,
 		InvoiceID:        invoiceID,
 		Provider:         body.Provider,
@@ -691,6 +691,18 @@ func (h *TenantApplicationHandler) PayInvoice(w http.ResponseWriter, r *http.Req
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)
+		return
+	}
+
+	// verify offline payment
+	_, verifyPaymentErr := h.paymentService.VerifyOfflinePayment(r.Context(), services.VerifyOfflinePaymentInput{
+		PaymentID:    payment.ID.String(),
+		VerifiedByID: clientUser.ID,
+		IsSuccessful: true,
+		Metadata:     body.Metadata,
+	})
+	if verifyPaymentErr != nil {
+		HandleErrorResponse(w, verifyPaymentErr)
 		return
 	}
 

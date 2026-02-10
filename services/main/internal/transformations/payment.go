@@ -38,7 +38,7 @@ func DBPaymentToRest(p *models.Payment) interface{} {
 	data := map[string]interface{}{
 		"id":            p.ID.String(),
 		"invoice_id":    p.InvoiceID,
-		"invoice":       DBInvoiceToRest(p.Invoice),
+		"invoice":       DBInvoiceToRest(&p.Invoice),
 		"rail":          p.Rail,
 		"provider":      p.Provider,
 		"amount":        p.Amount,
