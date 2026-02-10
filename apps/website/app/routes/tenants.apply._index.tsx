@@ -117,7 +117,7 @@ export async function action({ request }: Route.ActionArgs) {
 			throw new Error('Tenant application creation returned no data')
 		}
 
-		return redirect(`/tenants/success`)
+		return redirect(`/tenants/apply/success`)
 	} catch {
 		return { error: 'Failed to submit tenant application' }
 	}
