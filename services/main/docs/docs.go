@@ -8137,7 +8137,7 @@ const docTemplate = `{
                 },
                 "id_type": {
                     "type": "string",
-                    "example": "ghana_card"
+                    "example": "GHANA_CARD"
                 },
                 "last_name": {
                     "type": "string",

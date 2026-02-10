@@ -1652,7 +1652,7 @@ definitions:
         example: ID123456
         type: string
       id_type:
-        example: ghana_card
+        example: GHANA_CARD
         type: string
       last_name:
         example: Doe
