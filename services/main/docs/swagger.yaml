@@ -1908,6 +1908,9 @@ definitions:
       slug:
         example: unit-101-abcde1876drkjy
         type: string
+      status:
+        example: Unit.Status.Available
+        type: string
       tags:
         example:
         - apartment

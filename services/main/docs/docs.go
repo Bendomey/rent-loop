@@ -8482,6 +8482,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "unit-101-abcde1876drkjy"
                 },
+                "status": {
+                    "type": "string",
+                    "example": "Unit.Status.Available"
+                },
                 "tags": {
                     "type": "array",
                     "items": {
