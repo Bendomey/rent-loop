@@ -10,13 +10,15 @@ import (
 
 type InvoiceRepository interface {
 	Create(context context.Context, invoice *models.Invoice) error
-	GetByID(context context.Context, query GetInvoiceQuery) (*models.Invoice, error)
+	GetByQuery(context context.Context, query GetInvoiceQuery) (*models.Invoice, error)
 	Update(context context.Context, invoice *models.Invoice) error
 	List(context context.Context, filterQuery ListInvoicesFilter) (*[]models.Invoice, error)
 	Count(context context.Context, filterQuery ListInvoicesFilter) (int64, error)
 	Delete(context context.Context, invoiceID string) error
 	CreateLineItem(context context.Context, lineItem *models.InvoiceLineItem) error
+	GetLineItem(context context.Context, lineItemID string) (*models.InvoiceLineItem, error)
 	GetLineItems(context context.Context, invoiceID string) ([]models.InvoiceLineItem, error)
+	DeleteLineItem(context context.Context, lineItemID string) error
 }
 
 type invoiceRepository struct {
@@ -34,22 +36,13 @@ func (r *invoiceRepository) Create(ctx context.Context, invoice *models.Invoice)
 }
 
 type GetInvoiceQuery struct {
-	ID       string
-	Code     string
+	Query    map[string]any
 	Populate *[]string
 }
 
-func (r *invoiceRepository) GetByID(ctx context.Context, query GetInvoiceQuery) (*models.Invoice, error) {
+func (r *invoiceRepository) GetByQuery(ctx context.Context, query GetInvoiceQuery) (*models.Invoice, error) {
 	var invoice models.Invoice
-	db := r.DB.WithContext(ctx)
-
-	if query.ID != "" {
-		db = db.Where("id = ?", query.ID)
-	}
-
-	if query.Code != "" {
-		db = db.Where("code = ?", query.Code)
-	}
+	db := lib.ResolveDB(ctx, r.DB).Where(query.Query)
 
 	if query.Populate != nil {
 		for _, field := range *query.Populate {
@@ -237,6 +230,17 @@ func (r *invoiceRepository) CreateLineItem(ctx context.Context, lineItem *models
 	return db.WithContext(ctx).Create(lineItem).Error
 }
 
+func (r *invoiceRepository) GetLineItem(ctx context.Context, lineItemID string) (*models.InvoiceLineItem, error) {
+	var lineItem models.InvoiceLineItem
+
+	result := r.DB.WithContext(ctx).Where("id = ?", lineItemID).First(&lineItem)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &lineItem, nil
+}
+
 func (r *invoiceRepository) GetLineItems(ctx context.Context, invoiceID string) ([]models.InvoiceLineItem, error) {
 	var lineItems []models.InvoiceLineItem
 
@@ -246,4 +250,10 @@ func (r *invoiceRepository) GetLineItems(ctx context.Context, invoiceID string) 
 	}
 
 	return lineItems, nil
+}
+
+func (r *invoiceRepository) DeleteLineItem(ctx context.Context, lineItemID string) error {
+	db := lib.ResolveDB(ctx, r.DB)
+
+	return db.WithContext(ctx).Delete(&models.InvoiceLineItem{}, "id = ?", lineItemID).Error
 }

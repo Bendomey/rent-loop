@@ -34,6 +34,11 @@ type TenantApplicationService interface {
 	) (*models.TenantApplication, error)
 	DeleteTenantApplication(context context.Context, tenantApplicationID string) error
 	CancelTenantApplication(context context.Context, input CancelTenantApplicationInput) error
+	GetInvoiceForTenantApplication(
+		context context.Context,
+		tenantApplicationID string,
+		invoiceID string,
+	) (*models.Invoice, error)
 	GenerateInvoice(context context.Context, input GenerateInvoiceInput) (*models.Invoice, error)
 	ApproveTenantApplication(context context.Context, input ApproveTenantApplicationInput) error
 }
@@ -801,6 +806,26 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 	)
 
 	return nil
+}
+
+func (s *tenantApplicationService) GetInvoiceForTenantApplication(
+	ctx context.Context,
+	tenantApplicationID string,
+	invoiceID string,
+) (*models.Invoice, error) {
+	invoice, err := s.invoiceService.GetByQuery(ctx, repository.GetInvoiceQuery{
+		Query: map[string]any{
+			"id":                            invoiceID,
+			"context_type":                  "TENANT_APPLICATION",
+			"context_tenant_application_id": tenantApplicationID,
+		},
+		Populate: nil,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return invoice, nil
 }
 
 type GenerateInvoiceInput struct {

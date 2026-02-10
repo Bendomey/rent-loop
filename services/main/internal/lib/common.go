@@ -67,6 +67,26 @@ func StringPointer(s string) *string {
 	return &s
 }
 
+func StringSliceToString(slice []string) string {
+	result := ""
+	for i, str := range slice {
+		result += str
+		if i < len(slice)-1 {
+			result += ", "
+		}
+	}
+	return result
+}
+
+func StringInSlice(target string, list []string) bool {
+	for _, str := range list {
+		if str == target {
+			return true
+		}
+	}
+	return false
+}
+
 // Usage
 // var input Input
 

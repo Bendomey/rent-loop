@@ -22,9 +22,10 @@ type InvoiceService interface {
 	CreateInvoice(context context.Context, input CreateInvoiceInput) (*models.Invoice, error)
 	VoidInvoice(context context.Context, input VoidInvoiceInput) (*models.Invoice, error)
 	UpdateInvoice(context context.Context, input UpdateInvoiceInput) (*models.Invoice, error)
-	GetByID(context context.Context, query repository.GetInvoiceQuery) (*models.Invoice, error)
+	GetByQuery(context context.Context, query repository.GetInvoiceQuery) (*models.Invoice, error)
 	ListInvoices(context context.Context, filterQuery repository.ListInvoicesFilter) (*[]models.Invoice, int64, error)
 	AddLineItem(context context.Context, input AddLineItemInput) (*models.InvoiceLineItem, error)
+	RemoveLineItem(context context.Context, input RemoveLineItemInput) error
 	GetLineItems(context context.Context, invoiceID string) ([]models.InvoiceLineItem, error)
 }
 
@@ -225,8 +226,10 @@ type UpdateInvoiceInput struct {
 }
 
 func (s *invoiceService) UpdateInvoice(ctx context.Context, input UpdateInvoiceInput) (*models.Invoice, error) {
-	invoice, getErr := s.repo.GetByID(ctx, repository.GetInvoiceQuery{
-		ID: input.InvoiceID,
+	invoice, getErr := s.repo.GetByQuery(ctx, repository.GetInvoiceQuery{
+		Query: map[string]any{
+			"id": input.InvoiceID,
+		},
 	})
 	if getErr != nil {
 		if errors.Is(getErr, gorm.ErrRecordNotFound) {
@@ -293,14 +296,35 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, input UpdateInvoiceI
 	return invoice, nil
 }
 
+func (s *invoiceService) GetByQuery(ctx context.Context, query repository.GetInvoiceQuery) (*models.Invoice, error) {
+	invoice, err := s.repo.GetByQuery(ctx, query)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("InvoiceNotFound", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "GetByQuery",
+				"action":   "getting invoice by query",
+			},
+		})
+	}
+	return invoice, nil
+}
+
 type VoidInvoiceInput struct {
 	InvoiceID string
 }
 
 func (s *invoiceService) VoidInvoice(ctx context.Context, input VoidInvoiceInput) (*models.Invoice, error) {
 	populate := []string{"LineItems"}
-	invoice, getErr := s.repo.GetByID(ctx, repository.GetInvoiceQuery{
-		ID:       input.InvoiceID,
+	invoice, getErr := s.repo.GetByQuery(ctx, repository.GetInvoiceQuery{
+		Query: map[string]any{
+			"id": input.InvoiceID,
+		},
 		Populate: &populate,
 	})
 
@@ -424,26 +448,6 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, input VoidInvoiceInput
 	return invoice, nil
 }
 
-func (s *invoiceService) GetByID(ctx context.Context, query repository.GetInvoiceQuery) (*models.Invoice, error) {
-	invoice, err := s.repo.GetByID(ctx, query)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, pkg.NotFoundError("InvoiceNotFound", &pkg.RentLoopErrorParams{
-				Err: err,
-			})
-		}
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "GetByID",
-				"action":   "getting invoice",
-			},
-		})
-	}
-
-	return invoice, nil
-}
-
 func (s *invoiceService) ListInvoices(
 	ctx context.Context,
 	filterQuery repository.ListInvoicesFilter,
@@ -486,8 +490,10 @@ type AddLineItemInput struct {
 
 func (s *invoiceService) AddLineItem(ctx context.Context, input AddLineItemInput) (*models.InvoiceLineItem, error) {
 	// Verify invoice exists
-	_, getErr := s.repo.GetByID(ctx, repository.GetInvoiceQuery{
-		ID: input.InvoiceID,
+	invoice, getErr := s.repo.GetByQuery(ctx, repository.GetInvoiceQuery{
+		Query: map[string]any{
+			"id": input.InvoiceID,
+		},
 	})
 	if getErr != nil {
 		if errors.Is(getErr, gorm.ErrRecordNotFound) {
@@ -500,6 +506,29 @@ func (s *invoiceService) AddLineItem(ctx context.Context, input AddLineItemInput
 			Metadata: map[string]string{
 				"function": "AddLineItem",
 				"action":   "getting invoice",
+			},
+		})
+	}
+
+	// Only allow adding line items to DRAFT invoices
+	if invoice.Status != "DRAFT" {
+		return nil, pkg.BadRequestError("Can only add line items to draft invoices", &pkg.RentLoopErrorParams{
+			Metadata: map[string]string{
+				"function":       "AddLineItem",
+				"action":         "checking invoice status",
+				"current_status": invoice.Status,
+			},
+		})
+	}
+
+	// Validate currency matches invoice currency
+	if input.Currency != invoice.Currency {
+		return nil, pkg.BadRequestError("Line item currency must match invoice currency", &pkg.RentLoopErrorParams{
+			Metadata: map[string]string{
+				"function":         "AddLineItem",
+				"action":           "validating currency",
+				"invoice_currency": invoice.Currency,
+				"input_currency":   input.Currency,
 			},
 		})
 	}
@@ -530,8 +559,12 @@ func (s *invoiceService) AddLineItem(ctx context.Context, input AddLineItemInput
 		Metadata:    metaJson,
 	}
 
-	createErr := s.repo.CreateLineItem(ctx, &lineItem)
+	transaction := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, transaction)
+
+	createErr := s.repo.CreateLineItem(transCtx, &lineItem)
 	if createErr != nil {
+		transaction.Rollback()
 		return nil, pkg.BadRequestError(createErr.Error(), &pkg.RentLoopErrorParams{
 			Err: createErr,
 			Metadata: map[string]string{
@@ -541,7 +574,145 @@ func (s *invoiceService) AddLineItem(ctx context.Context, input AddLineItemInput
 		})
 	}
 
+	// Update invoice totals
+	invoice.SubTotal += input.TotalAmount
+	invoice.TotalAmount = invoice.SubTotal + invoice.Taxes
+
+	updateErr := s.repo.Update(transCtx, invoice)
+	if updateErr != nil {
+		transaction.Rollback()
+		return nil, pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateErr,
+			Metadata: map[string]string{
+				"function": "AddLineItem",
+				"action":   "updating invoice totals",
+			},
+		})
+	}
+
+	if commitErr := transaction.Commit().Error; commitErr != nil {
+		transaction.Rollback()
+		return nil, pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: commitErr,
+			Metadata: map[string]string{
+				"function": "AddLineItem",
+				"action":   "committing transaction",
+			},
+		})
+	}
+
 	return &lineItem, nil
+}
+
+type RemoveLineItemInput struct {
+	InvoiceID  string
+	LineItemID string
+}
+
+func (s *invoiceService) RemoveLineItem(ctx context.Context, input RemoveLineItemInput) error {
+	// Get invoice to validate status
+	invoice, getErr := s.repo.GetByQuery(ctx, repository.GetInvoiceQuery{
+		Query: map[string]any{
+			"id": input.InvoiceID,
+		},
+	})
+	if getErr != nil {
+		if errors.Is(getErr, gorm.ErrRecordNotFound) {
+			return pkg.NotFoundError("InvoiceNotFound", &pkg.RentLoopErrorParams{
+				Err: getErr,
+			})
+		}
+		return pkg.InternalServerError(getErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getErr,
+			Metadata: map[string]string{
+				"function": "RemoveLineItem",
+				"action":   "getting invoice",
+			},
+		})
+	}
+
+	// Only allow removing line items from DRAFT invoices
+	if invoice.Status != "DRAFT" {
+		return pkg.BadRequestError("Can only remove line items from draft invoices", &pkg.RentLoopErrorParams{
+			Metadata: map[string]string{
+				"function":       "RemoveLineItem",
+				"action":         "checking invoice status",
+				"current_status": invoice.Status,
+			},
+		})
+	}
+
+	// Get line item to verify it belongs to the invoice and get its amount
+	lineItem, lineItemErr := s.repo.GetLineItem(ctx, input.LineItemID)
+	if lineItemErr != nil {
+		if errors.Is(lineItemErr, gorm.ErrRecordNotFound) {
+			return pkg.NotFoundError("LineItemNotFound", &pkg.RentLoopErrorParams{
+				Err: lineItemErr,
+			})
+		}
+		return pkg.InternalServerError(lineItemErr.Error(), &pkg.RentLoopErrorParams{
+			Err: lineItemErr,
+			Metadata: map[string]string{
+				"function": "RemoveLineItem",
+				"action":   "getting line item",
+			},
+		})
+	}
+
+	// Verify line item belongs to the invoice
+	if lineItem.InvoiceID == nil || *lineItem.InvoiceID != input.InvoiceID {
+		return pkg.BadRequestError("Line item does not belong to this invoice", &pkg.RentLoopErrorParams{
+			Metadata: map[string]string{
+				"function": "RemoveLineItem",
+				"action":   "verifying line item ownership",
+			},
+		})
+	}
+
+	transaction := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, transaction)
+
+	// Delete line item
+	deleteErr := s.repo.DeleteLineItem(transCtx, input.LineItemID)
+	if deleteErr != nil {
+		transaction.Rollback()
+		return pkg.InternalServerError(deleteErr.Error(), &pkg.RentLoopErrorParams{
+			Err: deleteErr,
+			Metadata: map[string]string{
+				"function": "RemoveLineItem",
+				"action":   "deleting line item",
+			},
+		})
+	}
+
+	// Update invoice totals
+	invoice.SubTotal -= lineItem.TotalAmount
+	invoice.TotalAmount = invoice.SubTotal + invoice.Taxes
+
+	updateErr := s.repo.Update(transCtx, invoice)
+	if updateErr != nil {
+		transaction.Rollback()
+		return pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateErr,
+			Metadata: map[string]string{
+				"function": "RemoveLineItem",
+				"action":   "updating invoice totals",
+			},
+		})
+	}
+
+	if commitErr := transaction.Commit().Error; commitErr != nil {
+		transaction.Rollback()
+		return pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: commitErr,
+			Metadata: map[string]string{
+				"function": "RemoveLineItem",
+				"action":   "committing transaction",
+			},
+		})
+	}
+
+	return nil
 }
 
 func (s *invoiceService) GetLineItems(ctx context.Context, invoiceID string) ([]models.InvoiceLineItem, error) {

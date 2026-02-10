@@ -204,6 +204,39 @@ definitions:
     - size
     - title
     type: object
+  handlers.CreateOfflinePaymentRequest:
+    properties:
+      amount:
+        example: 100000
+        type: integer
+      invoice_id:
+        example: b50874ee-1a70-436e-ba24-572078895982
+        type: string
+      metadata:
+        additionalProperties: {}
+        type: object
+      payment_account_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      provider:
+        enum:
+        - MTN
+        - VODAFONE
+        - AIRTELTIGO
+        - PAYSTACK
+        - BANK_API
+        - CASH
+        example: CASH
+        type: string
+      reference:
+        example: RCP-2024-001
+        type: string
+    required:
+    - amount
+    - invoice_id
+    - payment_account_id
+    - provider
+    type: object
   handlers.CreatePaymentAccountRequest:
     properties:
       identifier:
@@ -1722,6 +1755,53 @@ definitions:
         type: integer
       updated_at:
         example: "2024-06-10T09:00:00Z"
+        type: string
+    type: object
+  transformations.OutputPayment:
+    properties:
+      amount:
+        example: 100000
+        type: integer
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        format: date-time
+        type: string
+      currency:
+        example: GHS
+        type: string
+      failed_at:
+        example: "2024-06-20T10:00:00Z"
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        format: uuid
+        type: string
+      invoice:
+        $ref: '#/definitions/transformations.OutputInvoice'
+      invoice_id:
+        example: b50874ee-1a70-436e-ba24-572078895982
+        type: string
+      metadata:
+        additionalProperties: {}
+        type: object
+      provider:
+        example: CASH
+        type: string
+      rail:
+        example: OFFLINE
+        type: string
+      reference:
+        example: TXN123456
+        type: string
+      status:
+        example: PENDING
+        type: string
+      successful_at:
+        example: "2024-06-20T10:00:00Z"
+        type: string
+      updated_at:
+        example: "2023-01-01T00:00:00Z"
+        format: date-time
         type: string
     type: object
   transformations.OutputPaymentAccount:
@@ -4253,7 +4333,6 @@ paths:
         - MTN
         - VODAFONE
         - AIRTELTIGO
-        - PAYSTACK
         - BANK_API
         in: query
         name: provider
@@ -4485,6 +4564,50 @@ paths:
       summary: Update an existing payment account
       tags:
       - Payment Accounts
+  /api/v1/payments/offline:
+    post:
+      consumes:
+      - application/json
+      description: Record an offline payment for an invoice. The payment will be created
+        in PENDING status and requires verification by a property manager.
+      parameters:
+      - description: Create Offline Payment Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateOfflinePaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Payment created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputPayment'
+            type: object
+        "400":
+          description: Error occurred when creating payment
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create an offline payment
+      tags:
+      - Payments
   /api/v1/properties:
     get:
       consumes:

@@ -90,10 +90,10 @@ type ListPaymentAccountsFilterRequest struct {
 	lib.FilterQueryInput
 	OwnerTypes []string `json:"owner_types" validate:"omitempty,dive,oneof=PROPERTY_OWNER RENTLOOP SYSTEM"`
 	Rail       *string  `json:"rail"        validate:"omitempty,oneof=MOMO BANK_TRANSFER CARD OFFLINE"`
-	Provider   *string  `json:"provider"    validate:"omitempty,oneof=MTN VODAFONE AIRTELTIGO PAYSTACK BANK_API"`
+	Provider   *string  `json:"provider"    validate:"omitempty,oneof=MTN VODAFONE AIRTELTIGO BANK_API"`
 	IsDefault  *bool    `json:"is_default"  validate:"omitempty"`
 	Status     *string  `json:"status"      validate:"omitempty,oneof=ACTIVE DISABLED"`
-	IDs        []string `json:"ids"         validate:"omitempty,dive,uuid4"                                      example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of property block IDs to filter by" collectionFormat:"multi"`
+	IDs        []string `json:"ids"         validate:"omitempty,dive,uuid4"                                example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of property block IDs to filter by" collectionFormat:"multi"`
 }
 
 // ListPaymentAccounts godoc

@@ -3237,7 +3237,6 @@ const docTemplate = `{
                             "MTN",
                             "VODAFONE",
                             "AIRTELTIGO",
-                            "PAYSTACK",
                             "BANK_API"
                         ],
                         "type": "string",
@@ -3575,6 +3574,74 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Payment account not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/payments/offline": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Record an offline payment for an invoice. The payment will be created in PENDING status and requires verification by a property manager.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Create an offline payment",
+                "parameters": [
+                    {
+                        "description": "Create Offline Payment Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateOfflinePaymentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Payment created successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputPayment"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when creating payment",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -6763,6 +6830,49 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.CreateOfflinePaymentRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "invoice_id",
+                "payment_account_id",
+                "provider"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "integer",
+                    "example": 100000
+                },
+                "invoice_id": {
+                    "type": "string",
+                    "example": "b50874ee-1a70-436e-ba24-572078895982"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "payment_account_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "provider": {
+                    "type": "string",
+                    "enum": [
+                        "MTN",
+                        "VODAFONE",
+                        "AIRTELTIGO",
+                        "PAYSTACK",
+                        "BANK_API",
+                        "CASH"
+                    ],
+                    "example": "CASH"
+                },
+                "reference": {
+                    "type": "string",
+                    "example": "RCP-2024-001"
+                }
+            }
+        },
         "handlers.CreatePaymentAccountRequest": {
             "type": "object",
             "required": [
@@ -8820,6 +8930,69 @@ const docTemplate = `{
                 "updated_at": {
                     "type": "string",
                     "example": "2024-06-10T09:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputPayment": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer",
+                    "example": 100000
+                },
+                "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
+                "failed_at": {
+                    "type": "string",
+                    "example": "2024-06-20T10:00:00Z"
+                },
+                "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "invoice": {
+                    "$ref": "#/definitions/transformations.OutputInvoice"
+                },
+                "invoice_id": {
+                    "type": "string",
+                    "example": "b50874ee-1a70-436e-ba24-572078895982"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "provider": {
+                    "type": "string",
+                    "example": "CASH"
+                },
+                "rail": {
+                    "type": "string",
+                    "example": "OFFLINE"
+                },
+                "reference": {
+                    "type": "string",
+                    "example": "TXN123456"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "PENDING"
+                },
+                "successful_at": {
+                    "type": "string",
+                    "example": "2024-06-20T10:00:00Z"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2023-01-01T00:00:00Z"
                 }
             }
         },
