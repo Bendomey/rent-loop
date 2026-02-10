@@ -23,18 +23,18 @@ func NewLeaseHandler(appCtx pkg.AppContext, service services.LeaseService) Lease
 }
 
 type UpdateLeaseRequest struct {
-	PaymentFrequency                                *string    `json:"payment_frequency,omitempty"                                      example:"monthly"                              description:"Frequency of rent payments"`
-	MoveInDate                                      *time.Time `json:"move_in_date,omitempty"                                           example:"2024-07-01T00:00:00Z"                 description:"Tenant move-in date (RFC3339 format)"`
-	StayDurationFrequency                           *string    `json:"stay_duration_frequency,omitempty"                                example:"months"                               description:"Unit of stay duration (e.g., months, years)"`
-	StayDuration                                    *int64     `json:"stay_duration,omitempty"                                          example:"12"                                   description:"Length of stay in specified frequency"`
-	KeyHandoverDate                                 *time.Time `json:"key_handover_date,omitempty"                                      example:"2024-07-01T09:00:00Z"                 description:"Date and time for key handover (RFC3339 format)"`
-	UtilityTransfersDate                            *time.Time `json:"utility_transfers_date,omitempty"                                 example:"2024-07-02T10:00:00Z"                 description:"Date for utility transfers (RFC3339 format)"`
-	PropertyInspectionDate                          *time.Time `json:"property_inspection_date,omitempty"                               example:"2024-06-30T15:00:00Z"                 description:"Date for property inspection (RFC3339 format)"`
-	LeaseAggreementDocumentMode                     *string    `json:"lease_agreement_document_mode,omitempty"                          example:"digital"                              description:"Mode of lease agreement document (e.g., digital, paper)"`
-	LeaseAgreementDocumentUrl                       *string    `json:"lease_agreement_document_url,omitempty"                           example:"https://example.com/lease.pdf"        description:"URL to the lease agreement document"`
-	LeaseAgreementDocumentPropertyManagerSignedById *string    `json:"lease_agreement_document_property_manager_signed_by_id,omitempty" example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456" description:"ID of property manager who signed the lease agreement"`
-	LeaseAgreementDocumentPropertyManagerSignedAt   *time.Time `json:"lease_agreement_document_property_manager_signed_at,omitempty"    example:"2024-06-15T12:00:00Z"                 description:"Timestamp when property manager signed the lease agreement"`
-	LeaseAgreementDocumentTenantSignedAt            *time.Time `json:"lease_agreement_document_tenant_signed_at,omitempty"              example:"2024-06-16T14:00:00Z"                 description:"Timestamp when tenant signed the lease agreement"`
+	PaymentFrequency                                *string    `json:"payment_frequency,omitempty"                                      validate:"omitempty,oneof=Hourly Daily Monthly Quarterly BiAnnually Annually OneTime" example:"Monthly"                              description:"Frequency of rent payments"`
+	MoveInDate                                      *time.Time `json:"move_in_date,omitempty"                                           validate:"omitempty"                                                                  example:"2024-07-01T00:00:00Z"                 description:"Tenant move-in date (RFC3339 format)"`
+	StayDurationFrequency                           *string    `json:"stay_duration_frequency,omitempty"                                validate:"omitempty,oneof=Hours Days Months"                                          example:"Hours"                                description:"Unit of stay duration (e.g., months, years)"`
+	StayDuration                                    *int64     `json:"stay_duration,omitempty"                                          validate:"omitempty,gte=0"                                                            example:"12"                                   description:"Length of stay in specified frequency"`
+	KeyHandoverDate                                 *time.Time `json:"key_handover_date,omitempty"                                      validate:"omitempty"                                                                  example:"2024-07-01T09:00:00Z"                 description:"Date and time for key handover (RFC3339 format)"`
+	UtilityTransfersDate                            *time.Time `json:"utility_transfers_date,omitempty"                                 validate:"omitempty"                                                                  example:"2024-07-02T10:00:00Z"                 description:"Date for utility transfers (RFC3339 format)"`
+	PropertyInspectionDate                          *time.Time `json:"property_inspection_date,omitempty"                               validate:"omitempty"                                                                  example:"2024-06-30T15:00:00Z"                 description:"Date for property inspection (RFC3339 format)"`
+	LeaseAggreementDocumentMode                     *string    `json:"lease_agreement_document_mode,omitempty"                          validate:"omitempty,oneof=MANUAL ONLINE"                                              example:"MANUAL"                               description:"Mode of lease agreement document (e.g., digital, paper)"`
+	LeaseAgreementDocumentUrl                       *string    `json:"lease_agreement_document_url,omitempty"                           validate:"omitempty,url"                                                              example:"https://example.com/lease.pdf"        description:"URL to the lease agreement document"`
+	LeaseAgreementDocumentPropertyManagerSignedById *string    `json:"lease_agreement_document_property_manager_signed_by_id,omitempty" validate:"omitempty,uuid4"                                                            example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456" description:"ID of property manager who signed the lease agreement"`
+	LeaseAgreementDocumentPropertyManagerSignedAt   *time.Time `json:"lease_agreement_document_property_manager_signed_at,omitempty"    validate:"omitempty"                                                                  example:"2024-06-15T12:00:00Z"                 description:"Timestamp when property manager signed the lease agreement"`
+	LeaseAgreementDocumentTenantSignedAt            *time.Time `json:"lease_agreement_document_tenant_signed_at,omitempty"              validate:"omitempty"                                                                  example:"2024-06-16T14:00:00Z"                 description:"Timestamp when tenant signed the lease agreement"`
 }
 
 // UpdateLease godoc
@@ -133,4 +133,172 @@ func (h *LeaseHandler) GetLeaseByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": transformations.DBAdminLeaseToRest(lease),
 	})
+}
+
+type ListLeasesQuery struct {
+	lib.FilterQueryInput
+	Status                     *string   `json:"status,omitempty"                        validate:"omitempty,oneof=Lease.Status.Pending Lease.Status.Active Lease.Status.Terminated Lease.Status.Completed Lease.Status.Cancelled" example:"Lease.Status.Pending"                 description:"Lease status"`
+	ParentLeaseId              *string   `json:"parent_lease_id,omitempty"               validate:"omitempty,uuid"                                                                                                                 example:"b4d0243c-6581-4104-8185-d83a45ebe41b" description:"Parent lease ID"`
+	PaymentFrequency           *string   `json:"payment_frequency,omitempty"             validate:"omitempty,oneof=Hourly Daily Monthly Quarterly BiAnnually Annually OneTime"                                                     example:"Hourly"                               description:"Frequency of rent payments"`
+	StayDurationFrequency      *string   `json:"stay_duration_frequency,omitempty"       validate:"omitempty,oneof=Hours Days Months"                                                                                              example:"Hours"                                description:"Unit of stay duration (e.g., months, years)"`
+	LeaseAgreementDocumentMode *string   `json:"lease_agreement_document_mode,omitempty" validate:"omitempty,oneof=MANUAL ONLINE"                                                                                                  example:"MANUAL"                               description:"Mode of lease agreement document (e.g., digital, paper)"`
+	UnitIds                    *[]string `json:"unit_ids,omitempty"                      validate:"omitempty,dive,uuid4"                                                                                                           example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of unit IDs to filter by"                           collectionFormat:"multi"`
+	IDs                        *[]string `json:"ids,omitempty"                           validate:"omitempty,dive,uuid4"                                                                                                           example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of lease IDs to filter by"                          collectionFormat:"multi"`
+}
+
+// ListLeasesByTenant godoc
+//
+//	@Summary		List leases by tenant
+//	@Description	List leases by tenant
+//	@Tags			Lease
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			tenant_id	path		string			true	"Tenant ID"
+//	@Param			q			query		ListLeasesQuery	true	"Leases"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.OutputAdminLease,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400			{object}	lib.HTTPError	"An error occurred while filtering leases"
+//	@Failure		401			{object}	string			"Absent or invalid authentication token"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/tenants/{tenant_id}/leases [get]
+func (h *LeaseHandler) ListLeasesByTenant(w http.ResponseWriter, r *http.Request) {
+	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
+	if filterQueryErr != nil {
+		HandleErrorResponse(w, filterQueryErr)
+		return
+	}
+
+	isFilterQueryPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filterQuery, w)
+	if !isFilterQueryPassedValidation {
+		return
+	}
+
+	tenantID := chi.URLParam(r, "tenant_id")
+
+	input := repository.ListLeasesFilter{
+		FilterQuery:                *filterQuery,
+		TenantID:                   &tenantID,
+		Status:                     lib.NullOrString(r.URL.Query().Get("status")),
+		ParentLeaseID:              lib.NullOrString(r.URL.Query().Get("parent_lease_id")),
+		PaymentFrequency:           lib.NullOrString(r.URL.Query().Get("payment_frequency")),
+		StayDurationFrequency:      lib.NullOrString(r.URL.Query().Get("stay_duration_frequency")),
+		LeaseAgreementDocumentMode: lib.NullOrString(r.URL.Query().Get("lease_agreement_document_mode")),
+		UnitIds:                    lib.NullOrStringArray(r.URL.Query()["unit_ids"]),
+		IDs:                        lib.NullOrStringArray(r.URL.Query()["ids"]),
+	}
+
+	leases, leasesErr := h.service.ListLeases(r.Context(), input)
+	if leasesErr != nil {
+		HandleErrorResponse(w, leasesErr)
+		return
+	}
+
+	leasesCount, leasesCountErr := h.service.CountLeases(r.Context(), input)
+	if leasesCountErr != nil {
+		HandleErrorResponse(w, leasesCountErr)
+		return
+	}
+
+	leasesTransformed := make([]any, 0)
+	for _, lease := range leases {
+		leasesTransformed = append(
+			leasesTransformed,
+			transformations.DBAdminLeaseToRest(&lease),
+		)
+	}
+
+	json.NewEncoder(w).
+		Encode(lib.ReturnListResponse(filterQuery, leasesTransformed, leasesCount))
+}
+
+// ListLeasesByProperty godoc
+//
+//	@Summary		List leases by property
+//	@Description	List leases by property
+//	@Tags			Lease
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string			true	"Property ID"
+//	@Param			q			query		ListLeasesQuery	true	"Leases"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.OutputAdminLease,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400			{object}	lib.HTTPError	"An error occurred while filtering leases"
+//	@Failure		401			{object}	string			"Absent or invalid authentication token"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/properties/{property_id}/leases [get]
+func (h *LeaseHandler) ListLeasesByProperty(w http.ResponseWriter, r *http.Request) {
+	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
+	if filterQueryErr != nil {
+		HandleErrorResponse(w, filterQueryErr)
+		return
+	}
+
+	isFilterQueryPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filterQuery, w)
+	if !isFilterQueryPassedValidation {
+		return
+	}
+
+	propertyID := chi.URLParam(r, "property_id")
+
+	input := repository.ListLeasesFilter{
+		FilterQuery:                *filterQuery,
+		PropertyID:                 &propertyID,
+		Status:                     lib.NullOrString(r.URL.Query().Get("status")),
+		ParentLeaseID:              lib.NullOrString(r.URL.Query().Get("parent_lease_id")),
+		PaymentFrequency:           lib.NullOrString(r.URL.Query().Get("payment_frequency")),
+		StayDurationFrequency:      lib.NullOrString(r.URL.Query().Get("stay_duration_frequency")),
+		LeaseAgreementDocumentMode: lib.NullOrString(r.URL.Query().Get("lease_agreement_document_mode")),
+		UnitIds:                    lib.NullOrStringArray(r.URL.Query()["unit_ids"]),
+		IDs:                        lib.NullOrStringArray(r.URL.Query()["ids"]),
+	}
+
+	leases, leasesErr := h.service.ListLeases(r.Context(), input)
+	if leasesErr != nil {
+		HandleErrorResponse(w, leasesErr)
+		return
+	}
+
+	leasesCount, leasesCountErr := h.service.CountLeases(r.Context(), input)
+	if leasesCountErr != nil {
+		HandleErrorResponse(w, leasesCountErr)
+		return
+	}
+
+	leasesTransformed := make([]any, 0)
+	for _, lease := range leases {
+		leasesTransformed = append(
+			leasesTransformed,
+			transformations.DBAdminLeaseToRest(&lease),
+		)
+	}
+
+	json.NewEncoder(w).
+		Encode(lib.ReturnListResponse(filterQuery, leasesTransformed, leasesCount))
+}
+
+// ActivateLease godoc
+//
+//	@Summary		Activate lease
+//	@Description	Activate lease
+//	@Tags			Lease
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			lease_id	path		string			true	"Lease ID"
+//	@Success		204			{object}	nil				"Lease Activated Successfully"
+//	@Failure		400			{object}	lib.HTTPError	"Error occurred when activating lease"
+//	@Failure		401			{object}	string			"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError	"Lease not found"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/leases/{lease_id}/status:active [patch]
+func (h *LeaseHandler) ActivateLease(w http.ResponseWriter, r *http.Request) {
+	leaseID := chi.URLParam(r, "lease_id")
+
+	err := h.service.ActivateLease(r.Context(), leaseID)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

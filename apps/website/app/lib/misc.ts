@@ -1,69 +1,87 @@
-import { APP_DOMAIN } from "./constants";
+import { APP_DOMAIN } from './constants'
 
 export function removeTrailingSlash(s: string) {
-  return s.endsWith("/") ? s.slice(0, -1) : s;
+	return s.endsWith('/') ? s.slice(0, -1) : s
 }
 
 function getOrigin(requestInfo?: { origin?: string; path: string }) {
-  return requestInfo?.origin ?? `https://${APP_DOMAIN}`;
+	return requestInfo?.origin ?? `https://${APP_DOMAIN}`
 }
 
 function getUrl(requestInfo?: { origin: string; path: string }) {
-  return removeTrailingSlash(
-    `${getOrigin(requestInfo)}${requestInfo?.path ?? ""}`,
-  );
+	return removeTrailingSlash(
+		`${getOrigin(requestInfo)}${requestInfo?.path ?? ''}`,
+	)
 }
 
 export function typedBoolean<T>(
-  value: T,
-): value is Exclude<T, "" | 0 | false | null | undefined> {
-  return Boolean(value);
+	value: T,
+): value is Exclude<T, '' | 0 | false | null | undefined> {
+	return Boolean(value)
 }
 
 export function getDisplayUrl(requestInfo?: { origin: string; path: string }) {
-  return getUrl(requestInfo).replace(/^https?:\/\//, "");
+	return getUrl(requestInfo).replace(/^https?:\/\//, '')
 }
 
 /**
  * @returns domain URL (without a ending slash, like: https://${APP_DOMAIN})
  */
 export function getDomainUrl(request: Request) {
-  const host =
-    request.headers.get("X-Forwarded-Host") ?? request.headers.get("host");
-  if (!host) {
-    throw new Error("Could not determine domain URL.");
-  }
-  const protocol = host.includes("localhost") ? "http" : "https";
-  return `${protocol}://${host}`;
+	const host =
+		request.headers.get('X-Forwarded-Host') ?? request.headers.get('host')
+	if (!host) {
+		throw new Error('Could not determine domain URL.')
+	}
+	const protocol = host.includes('localhost') ? 'http' : 'https'
+	return `${protocol}://${host}`
 }
 
 export const getNameInitials = (name: string) =>
-  name
-    .split(" ")
-    .map((n) => n[0])
-    .join("");
+	name
+		.split(' ')
+		.map((n) => n[0])
+		.join('')
 
 export const isALink = (url: string) => {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
-};
+	try {
+		new URL(url)
+		return true
+	} catch {
+		return false
+	}
+}
 
 export function isEqual<T>(a: T, b: T): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
+	return JSON.stringify(a) === JSON.stringify(b)
 }
 
 /**
  * Converts a string into a slug by replacing spaces with hyphens and removing special characters.
  */
 export const convertToSlug = (value: string): string => {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-};
+	return value
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9\s-]/g, '')
+		.replace(/\s+/g, '-')
+		.replace(/-+/g, '-')
+}
+
+type CountryCode = `+${number}`
+
+export const formatPhoneWithCountryCode = (
+	phone?: string,
+	countryCode: CountryCode = '+233',
+	nationalLength = 9,
+) => {
+	if (!phone) return undefined
+
+	const digits = phone.replace(/\D/g, '') // strip spaces, dashes, etc.
+
+	if (digits.length < nationalLength) return undefined
+
+	const nationalNumber = digits.slice(-nationalLength)
+
+	return `${countryCode}${nationalNumber}`
+}

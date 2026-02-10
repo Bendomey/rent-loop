@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
@@ -16,6 +17,9 @@ type LeaseService interface {
 	CreateLease(context context.Context, input CreateLeaseInput) (*models.Lease, error)
 	UpdateLease(context context.Context, input UpdateLeaseInput) (*models.Lease, error)
 	GetByIDWithPopulate(context context.Context, query repository.GetLeaseQuery) (*models.Lease, error)
+	ListLeases(context context.Context, filters repository.ListLeasesFilter) ([]models.Lease, error)
+	CountLeases(context context.Context, filters repository.ListLeasesFilter) (int64, error)
+	ActivateLease(context context.Context, leaseID string) error
 }
 
 type leaseService struct {
@@ -254,4 +258,107 @@ func (s *leaseService) GetByIDWithPopulate(ctx context.Context, query repository
 	}
 
 	return lease, nil
+}
+
+func (s *leaseService) ListLeases(ctx context.Context, filters repository.ListLeasesFilter) ([]models.Lease, error) {
+	leases, err := s.repo.List(ctx, filters)
+	if err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "List",
+				"action":   "listing leases",
+			},
+		})
+	}
+
+	return *leases, nil
+}
+
+func (s *leaseService) CountLeases(ctx context.Context, filters repository.ListLeasesFilter) (int64, error) {
+	count, err := s.repo.Count(ctx, filters)
+	if err != nil {
+		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CountLeases",
+				"action":   "counting leases",
+			},
+		})
+	}
+
+	return count, nil
+}
+
+func (s *leaseService) ActivateLease(ctx context.Context, leaseID string) error {
+	lease, getLeaseErr := s.repo.GetOneWithPopulate(
+		ctx,
+		repository.GetLeaseQuery{ID: leaseID, Populate: &[]string{"Unit", "Tenant"}},
+	)
+	if getLeaseErr != nil {
+		if errors.Is(getLeaseErr, gorm.ErrRecordNotFound) {
+			return pkg.NotFoundError("LeaseNotFound", &pkg.RentLoopErrorParams{
+				Err: getLeaseErr,
+			})
+		}
+		return pkg.InternalServerError(getLeaseErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getLeaseErr,
+			Metadata: map[string]string{
+				"function": "ActivateLease",
+				"action":   "getting lease",
+			},
+		})
+	}
+
+	if lease.Status == "Lease.Status.Active" {
+		return pkg.BadRequestError("LeaseIsAlreadyActive", nil)
+	}
+
+	if lease.Status != "Lease.Status.Pending" {
+		return pkg.BadRequestError("LeaseIsNotPending", nil)
+	}
+
+	lease.Status = "Lease.Status.Active"
+	now := time.Now()
+	lease.ActivatedAt = &now
+
+	err := s.repo.Update(ctx, lease)
+	if err != nil {
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ActivateLease",
+				"action":   "updating lease",
+			},
+		})
+	}
+
+	startDate := lease.MoveInDate.Format("January 2, 2006")
+
+	message := strings.NewReplacer(
+		"{{tenant_name}}", lease.Tenant.FirstName,
+		"{{unit_name}}", lease.Unit.Name,
+		"{{move_in_date}}", startDate,
+	).Replace(lib.LEASE_ACTIVATED_BODY)
+
+	if lease.Tenant.Email != nil {
+		go pkg.SendEmail(
+			s.appCtx,
+			pkg.SendEmailInput{
+				Recipient: *lease.Tenant.Email,
+				Subject:   lib.LEASE_ACTIVATED_SUBJECT,
+				TextBody:  message,
+			},
+		)
+	}
+
+	go pkg.SendSMS(
+		s.appCtx,
+		pkg.SendSMSInput{
+			Recipient: lease.Tenant.Phone,
+			Message:   message,
+		},
+	)
+
+	return nil
 }

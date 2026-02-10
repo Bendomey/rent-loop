@@ -22,7 +22,6 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
-	AlertDialogTrigger,
 } from '~/components/ui/alert-dialog'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Badge } from '~/components/ui/badge'
@@ -50,6 +49,7 @@ export function DocumentsModule() {
 	const queryClient = useQueryClient()
 	const { mutate: deleteDocument, isPending: isDeleting } = useDeleteDocument()
 	const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
+	const [activeId, setActiveId] = useState<string | null>(null)
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -125,17 +125,6 @@ export function DocumentsModule() {
 				enableHiding: false,
 			},
 			{
-				accessorKey: 'created_at',
-				header: 'Created On',
-				cell: ({ getValue }) => (
-					<div className="min-w-32">
-						<span className="truncate text-xs text-zinc-600">
-							{localizedDayjs(getValue<Date>()).format('DD/MM/YYYY hh:mm a')}
-						</span>
-					</div>
-				),
-			},
-			{
 				accessorKey: 'updated_at',
 				header: 'Last Updated',
 				cell: ({ getValue }) => (
@@ -149,74 +138,37 @@ export function DocumentsModule() {
 			{
 				id: 'actions',
 				cell: ({ row }) => (
-					<AlertDialog
-						open={openDeleteDialog}
-						onOpenChange={setOpenDeleteDialog}
-					>
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="ghost"
-									className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-									size="icon"
-								>
-									<EllipsisVertical />
-									<span className="sr-only">Open menu</span>
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end" className="w-32">
-								<Link to={`/settings/documents/${row.original.id}`}>
-									<DropdownMenuItem>Edit</DropdownMenuItem>
-								</Link>
-								<DropdownMenuSeparator />
-								<AlertDialogTrigger asChild>
-									<DropdownMenuItem variant="destructive">
-										Delete
-									</DropdownMenuItem>
-								</AlertDialogTrigger>
-							</DropdownMenuContent>
-						</DropdownMenu>
-						<AlertDialogContent className="sm:max-w-[425px]">
-							<AlertDialogHeader>
-								<AlertDialogTitle>Are you sure?</AlertDialogTitle>
-								<AlertDialogDescription>
-									This will delete this document.
-								</AlertDialogDescription>
-							</AlertDialogHeader>
-							<AlertDialogFooter className="mt-5">
-								<AlertDialogCancel disabled={isDeleting}>
-									Cancel
-								</AlertDialogCancel>
-								<AlertDialogAction
-									disabled={isDeleting}
-									onClick={(e) => {
-										e.preventDefault()
-										deleteDocument(row.original.id, {
-											onError: () => {
-												toast.error(
-													'Failed to delete document. Try again later.',
-												)
-											},
-											onSuccess: () => {
-												void queryClient.invalidateQueries({
-													queryKey: [QUERY_KEYS.DOCUMENTS],
-												})
-												setOpenDeleteDialog(false)
-											},
-										})
-									}}
-									className="bg-destructive hover:bg-destructive/90 text-white"
-								>
-									{isDeleting ? <Spinner /> : null}
-									Delete
-								</AlertDialogAction>
-							</AlertDialogFooter>
-						</AlertDialogContent>
-					</AlertDialog>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="ghost"
+								className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+								size="icon"
+							>
+								<EllipsisVertical />
+								<span className="sr-only">Open menu</span>
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end" className="w-32">
+							<Link to={`/settings/documents/${row.original.id}`}>
+								<DropdownMenuItem>Edit</DropdownMenuItem>
+							</Link>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem
+								variant="destructive"
+								onClick={() => {
+									setActiveId(row.original.id)
+									setOpenDeleteDialog(true)
+								}}
+							>
+								Delete
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				),
 			},
 		]
-	}, [deleteDocument, isDeleting, openDeleteDialog, queryClient])
+	}, [])
 
 	return (
 		<main className="flex flex-col gap-2 sm:gap-4">
@@ -273,6 +225,43 @@ export function DocumentsModule() {
 					}}
 				/>
 			</div>
+
+			<AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+				<AlertDialogContent className="sm:max-w-[425px]">
+					<AlertDialogHeader>
+						<AlertDialogTitle>Are you sure?</AlertDialogTitle>
+						<AlertDialogDescription>
+							This will delete this document.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter className="mt-5">
+						<AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							disabled={isDeleting}
+							onClick={(e) => {
+								e.preventDefault()
+								if (!activeId || isDeleting) return
+								deleteDocument(activeId, {
+									onError: () => {
+										toast.error('Failed to delete document. Try again later.')
+									},
+									onSuccess: () => {
+										void queryClient.invalidateQueries({
+											queryKey: [QUERY_KEYS.DOCUMENTS],
+										})
+										setOpenDeleteDialog(false)
+										setActiveId(null)
+									},
+								})
+							}}
+							className="bg-destructive hover:bg-destructive/90 text-white"
+						>
+							{isDeleting ? <Spinner /> : null}
+							Delete
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</main>
 	)
 }

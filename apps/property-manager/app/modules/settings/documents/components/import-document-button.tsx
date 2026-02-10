@@ -22,6 +22,7 @@ import {
 import { Spinner } from '~/components/ui/spinner'
 import { TypographyMuted } from '~/components/ui/typography'
 import { API_STATUS, type APIStatusType } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
 
 interface Props {
 	property?: Property
@@ -118,6 +119,7 @@ export function ImportDocumentButton({ property }: Props) {
 			setConvertingStatus(API_STATUS.PENDING)
 			const formData = new FormData()
 			formData.append('file', file)
+			formData.append('property_id', safeString(property?.id))
 
 			await conversionfetcher.submit(formData, {
 				action:

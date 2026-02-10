@@ -1,0 +1,41 @@
+name: Deploy Website Staging
+
+on:
+  push:
+    paths:
+      - 'apps/website/**'
+    branches:
+      - main
+  workflow_run:
+    workflows: ["Website CI"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  deploy:
+      name: ⚙️ Build And Deploy Staging
+      runs-on: ubuntu-latest
+      if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }}
+      concurrency: deploy-group
+
+      env:
+        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      defaults:
+        run:
+          working-directory: apps/website
+      
+      steps:
+        - name: ⬇️ Checkout repo
+          uses: actions/checkout@v4
+  
+        - name: 🎈 Setup Fly
+          uses: superfly/flyctl-actions/setup-flyctl@master
+    
+        - name: 🚀 Deploy Staging
+          run:
+            flyctl deploy --config fly.toml --remote-only 
+              --build-arg COMMIT_SHA=${{ github.sha }} 
+              --build-arg NODE_ENV=staging

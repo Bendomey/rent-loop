@@ -70,6 +70,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddCodeTenantApplication(),
 		jobs.SeedCodeTenantApplication(),
 		jobs.AddIDTypeTenantApplication(),
+		jobs.AddStatusTimestampsLease(),
 		jobs.SeedSystemOfflinePaymentAccount(),
 	})
 	m.Migrate()

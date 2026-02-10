@@ -3,6 +3,7 @@ export function getErrorMessage(key: string, defaultMessage?: string) {
 		'email already in use':
 			'The email address is already associated with another account.',
 		PasswordIncorrect: 'The current password you entered is incorrect.',
+		CodeIncorrect: 'The code you entered is incorrect.',
 	}
 
 	return (

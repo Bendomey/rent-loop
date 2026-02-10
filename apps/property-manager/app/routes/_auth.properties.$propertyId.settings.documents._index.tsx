@@ -1,5 +1,5 @@
 import { data } from 'react-router'
-import type { Route } from './+types/_auth.properties.$propertyId.settings.documents'
+import type { Route } from './+types/_auth.properties.$propertyId.settings.documents._index'
 import {
 	getAuthSession,
 	saveAuthSession,

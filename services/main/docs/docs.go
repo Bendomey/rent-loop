@@ -2921,6 +2921,71 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/invoices/{invoice_id}/line-items/{line_item_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove a line item from an existing draft invoice",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Remove line item from invoice",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Line Item ID",
+                        "name": "line_item_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Line Item Removed Successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when removing line item",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Invoice or line item not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/invoices/{invoice_id}/void": {
             "patch": {
                 "security": [
@@ -3134,6 +3199,64 @@ const docTemplate = `{
                     },
                     "422": {
                         "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/leases/{lease_id}/status:active": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Activate lease",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "Activate lease",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Lease Activated Successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when activating lease",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Lease not found",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -4963,6 +5086,216 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/properties/{property_id}/leases": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List leases by property",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "List leases by property",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "MANUAL",
+                            "ONLINE"
+                        ],
+                        "type": "string",
+                        "example": "MANUAL",
+                        "name": "lease_agreement_document_mode",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "b4d0243c-6581-4104-8185-d83a45ebe41b",
+                        "name": "parent_lease_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Hourly",
+                            "Daily",
+                            "Monthly",
+                            "Quarterly",
+                            "BiAnnually",
+                            "Annually",
+                            "OneTime"
+                        ],
+                        "type": "string",
+                        "example": "Hourly",
+                        "name": "payment_frequency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Lease.Status.Pending",
+                            "Lease.Status.Active",
+                            "Lease.Status.Terminated",
+                            "Lease.Status.Completed",
+                            "Lease.Status.Cancelled"
+                        ],
+                        "type": "string",
+                        "example": "Lease.Status.Pending",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Hours",
+                            "Days",
+                            "Months"
+                        ],
+                        "type": "string",
+                        "example": "Hours",
+                        "name": "stay_duration_frequency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "unit_ids",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputAdminLease"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "An error occurred while filtering leases",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Absent or invalid authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/properties/{property_id}/units": {
             "get": {
                 "security": [
@@ -6354,7 +6687,78 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/tenant-applications/{tenant_application_id}/generate:invoice": {
+        "/api/v1/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Pay an invoice for a tenant application (security deposit and/or initial deposit)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TenantApplication"
+                ],
+                "summary": "Pay an invoice for a tenant application",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tenant application ID",
+                        "name": "tenant_application_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Invoice paid successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when paying invoice",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Tenant application or invoice not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tenant-applications/{tenant_application_id}/invoice:generate": {
             "post": {
                 "security": [
                     {
@@ -6484,6 +6888,216 @@ const docTemplate = `{
                         "description": "Invalid phone number",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tenants/{tenant_id}/leases": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List leases by tenant",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "List leases by tenant",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tenant ID",
+                        "name": "tenant_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "MANUAL",
+                            "ONLINE"
+                        ],
+                        "type": "string",
+                        "example": "MANUAL",
+                        "name": "lease_agreement_document_mode",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "b4d0243c-6581-4104-8185-d83a45ebe41b",
+                        "name": "parent_lease_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Hourly",
+                            "Daily",
+                            "Monthly",
+                            "Quarterly",
+                            "BiAnnually",
+                            "Annually",
+                            "OneTime"
+                        ],
+                        "type": "string",
+                        "example": "Hourly",
+                        "name": "payment_frequency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Lease.Status.Pending",
+                            "Lease.Status.Active",
+                            "Lease.Status.Terminated",
+                            "Lease.Status.Completed",
+                            "Lease.Status.Cancelled"
+                        ],
+                        "type": "string",
+                        "example": "Lease.Status.Pending",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Hours",
+                            "Days",
+                            "Months"
+                        ],
+                        "type": "string",
+                        "example": "Hours",
+                        "name": "stay_duration_frequency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "unit_ids",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputAdminLease"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "An error occurred while filtering leases",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Absent or invalid authentication token",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "500": {
@@ -7570,7 +8184,11 @@ const docTemplate = `{
                 },
                 "lease_agreement_document_mode": {
                     "type": "string",
-                    "example": "digital"
+                    "enum": [
+                        "MANUAL",
+                        "ONLINE"
+                    ],
+                    "example": "MANUAL"
                 },
                 "lease_agreement_document_property_manager_signed_at": {
                     "type": "string",
@@ -7594,7 +8212,16 @@ const docTemplate = `{
                 },
                 "payment_frequency": {
                     "type": "string",
-                    "example": "monthly"
+                    "enum": [
+                        "Hourly",
+                        "Daily",
+                        "Monthly",
+                        "Quarterly",
+                        "BiAnnually",
+                        "Annually",
+                        "OneTime"
+                    ],
+                    "example": "Monthly"
                 },
                 "property_inspection_date": {
                     "type": "string",
@@ -7602,11 +8229,17 @@ const docTemplate = `{
                 },
                 "stay_duration": {
                     "type": "integer",
+                    "minimum": 0,
                     "example": 12
                 },
                 "stay_duration_frequency": {
                     "type": "string",
-                    "example": "months"
+                    "enum": [
+                        "Hours",
+                        "Days",
+                        "Months"
+                    ],
+                    "example": "Hours"
                 },
                 "utility_transfers_date": {
                     "type": "string",
@@ -8244,6 +8877,18 @@ const docTemplate = `{
         "transformations.OutputAdminLease": {
             "type": "object",
             "properties": {
+                "activated_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "cancelled_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "completed_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
                 "created_at": {
                     "type": "string",
                     "example": "2024-06-01T09:00:00Z"
@@ -8261,7 +8906,7 @@ const docTemplate = `{
                 },
                 "lease_agreement_document_mode": {
                     "type": "string",
-                    "example": "digital"
+                    "example": "MANUAL"
                 },
                 "lease_agreement_document_property_manager_signed_at": {
                     "type": "string",
@@ -8293,7 +8938,7 @@ const docTemplate = `{
                 },
                 "payment_frequency": {
                     "type": "string",
-                    "example": "monthly"
+                    "example": "Monthly"
                 },
                 "property_inspection_date": {
                     "type": "string",
@@ -8309,7 +8954,7 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string",
-                    "example": "active"
+                    "example": "Lease.Status.Pending"
                 },
                 "stay_duration": {
                     "type": "integer",
@@ -8317,7 +8962,7 @@ const docTemplate = `{
                 },
                 "stay_duration_frequency": {
                     "type": "string",
-                    "example": "months"
+                    "example": "Months"
                 },
                 "tenant": {
                     "$ref": "#/definitions/transformations.OutputTenant"
@@ -8332,6 +8977,10 @@ const docTemplate = `{
                 "tenant_id": {
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "terminated_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
                 },
                 "terminationAgreementDocumentPropertyManagerSignedBy": {
                     "$ref": "#/definitions/transformations.OutputClientUser"
@@ -8353,7 +9002,7 @@ const docTemplate = `{
                     "example": "https://example.com/termination.pdf"
                 },
                 "unit": {
-                    "$ref": "#/definitions/transformations.OutputUnit"
+                    "$ref": "#/definitions/transformations.AdminOutputUnit"
                 },
                 "unit_id": {
                     "type": "string",

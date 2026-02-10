@@ -1,0 +1,3 @@
+interface ClientUser {
+	id: string
+}

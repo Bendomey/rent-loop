@@ -65,6 +65,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				r.Get("/slug/{slug}", handlers.PropertyHandler.GetPropertyBySlug)
 
 				r.Route("/{property_id}", func(r chi.Router) {
+					r.Get("/leases", handlers.LeaseHandler.ListLeasesByProperty)
 					r.Get("/", handlers.PropertyHandler.GetPropertyById)
 					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 						Patch("/", handlers.PropertyHandler.UpdateProperty)
@@ -153,10 +154,14 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					Patch("/{tenant_application_id}/approve", handlers.TenantApplicationHandler.ApproveTenantApplication)
 			})
 
-			r.Route("/v1/leases", func(r chi.Router) {
-				r.Get("/{lease_id}", handlers.LeaseHandler.GetLeaseByID)
+			r.Get("/v1/tenants/{tenant_id}/leases", handlers.LeaseHandler.ListLeasesByTenant)
+
+			r.Route("/v1/leases/{lease_id}", func(r chi.Router) {
+				r.Get("/", handlers.LeaseHandler.GetLeaseByID)
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Patch("/{lease_id}", handlers.LeaseHandler.UpdateLease)
+					Patch("/", handlers.LeaseHandler.UpdateLease)
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Patch("/status:active", handlers.LeaseHandler.ActivateLease)
 			})
 
 			r.Route("/v1/payment-accounts", func(r chi.Router) {
