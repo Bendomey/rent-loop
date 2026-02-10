@@ -34,7 +34,7 @@ const ValidationSchema = z.object({
 		.string({ error: 'Nationality is required' })
 		.min(2, 'Please enter a valid nationality'),
 	id_type: z.enum(
-		['DRIVERS_LICENSE', 'PASSPORT', 'NATIONAL_ID', 'STUDENT_ID'],
+		['DRIVERS_LICENSE', 'PASSPORT', 'NATIONAL_ID', 'GHANA_CARD'],
 		{
 			error: 'Please select an ID type',
 		},
@@ -48,12 +48,12 @@ const ValidationSchema = z.object({
 
 const idTypes: Array<{
 	label: string
-	value: 'DRIVERS_LICENSE' | 'PASSPORT' | 'NATIONAL_ID' | 'STUDENT_ID'
+	value: 'DRIVERS_LICENSE' | 'PASSPORT' | 'NATIONAL_ID' | 'GHANA_CARD'
 }> = [
 	{ label: 'National ID', value: 'NATIONAL_ID' },
 	{ label: 'Passport', value: 'PASSPORT' },
 	{ label: "Driver's License", value: 'DRIVERS_LICENSE' },
-	{ label: 'Student ID', value: 'STUDENT_ID' },
+	{ label: 'Ghana Card', value: 'GHANA_CARD' },
 ]
 
 export type FormSchema = z.infer<typeof ValidationSchema>
