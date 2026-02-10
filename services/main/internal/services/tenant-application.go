@@ -822,18 +822,7 @@ func (s *tenantApplicationService) GetInvoiceForTenantApplication(
 		Populate: nil,
 	})
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, pkg.NotFoundError("InvoiceNotFound", &pkg.RentLoopErrorParams{
-				Err: err,
-			})
-		}
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "GetInvoiceForTenantApplication",
-				"action":   "fetching invoice for tenant application",
-			},
-		})
+		return nil, err
 	}
 
 	return invoice, nil

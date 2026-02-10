@@ -42,7 +42,7 @@ type GetInvoiceQuery struct {
 
 func (r *invoiceRepository) GetByQuery(ctx context.Context, query GetInvoiceQuery) (*models.Invoice, error) {
 	var invoice models.Invoice
-	db := r.DB.WithContext(ctx).Where(query.Query)
+	db := lib.ResolveDB(ctx, r.DB).Where(query.Query)
 
 	if query.Populate != nil {
 		for _, field := range *query.Populate {

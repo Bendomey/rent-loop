@@ -664,6 +664,11 @@ func (h *TenantApplicationHandler) PayInvoice(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
 	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
 	invoiceID := chi.URLParam(r, "invoice_id")
 

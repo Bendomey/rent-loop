@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"gorm.io/gorm"
 )
 
 type PaymentService interface {
@@ -135,7 +137,11 @@ func (s *paymentService) CreateOfflinePayment(
 		})
 	}
 
-	remainingBalance, remainingBalanceErr := getRemainingInvoiceBalance(ctx, s.repo, *invoice)
+	remainingBalance, remainingBalanceErr := getRemainingInvoiceBalance(ctx, GetRemainingInvoiceBalanceInput{
+		repo:     s.repo,
+		invoice:  *invoice,
+		statuses: []string{"SUCCESSFUL", "PENDING"},
+	})
 	if remainingBalanceErr != nil {
 		return nil, pkg.InternalServerError(remainingBalanceErr.Error(), &pkg.RentLoopErrorParams{
 			Metadata: map[string]string{
@@ -230,6 +236,16 @@ func (s *paymentService) VerifyOfflinePayment(
 		Populate:  &populate,
 	})
 	if paymentErr != nil {
+		if !errors.Is(paymentErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.InternalServerError(paymentErr.Error(), &pkg.RentLoopErrorParams{
+				Err: paymentErr,
+				Metadata: map[string]string{
+					"function": "VerifyOfflinePayment",
+					"action":   "get payment by id",
+				},
+			})
+		}
+
 		return nil, pkg.NotFoundError("PaymentNotFound", &pkg.RentLoopErrorParams{
 			Err: paymentErr,
 			Metadata: map[string]string{
@@ -320,7 +336,11 @@ func (s *paymentService) VerifyOfflinePayment(
 		}
 
 		// Calculate remaining balance after this payment
-		remainingBalance, remainingBalanceErr := getRemainingInvoiceBalance(transCtx, s.repo, payment.Invoice)
+		remainingBalance, remainingBalanceErr := getRemainingInvoiceBalance(transCtx, GetRemainingInvoiceBalanceInput{
+			repo:     s.repo,
+			invoice:  payment.Invoice,
+			statuses: []string{"SUCCESSFUL"},
+		})
 		if remainingBalanceErr != nil {
 			transaction.Rollback()
 			return nil, pkg.InternalServerError("failed to calculate remaining balance", &pkg.RentLoopErrorParams{
@@ -393,15 +413,20 @@ func (s *paymentService) VerifyOfflinePayment(
 	return payment, nil
 }
 
+type GetRemainingInvoiceBalanceInput struct {
+	repo     repository.PaymentRepository
+	invoice  models.Invoice
+	statuses []string
+}
+
 func getRemainingInvoiceBalance(
 	ctx context.Context,
-	repo repository.PaymentRepository,
-	invoice models.Invoice,
+	input GetRemainingInvoiceBalanceInput,
 ) (int64, error) {
-	totalPaid, err := repo.SumAmountByInvoice(ctx, invoice.ID.String(), []string{"SUCCESSFUL", "PENDING"})
+	totalPaid, err := input.repo.SumAmountByInvoice(ctx, input.invoice.ID.String(), input.statuses)
 	if err != nil {
 		return 0, err
 	}
 
-	return invoice.TotalAmount - totalPaid, nil
+	return input.invoice.TotalAmount - totalPaid, nil
 }
