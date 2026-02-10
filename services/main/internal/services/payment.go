@@ -103,8 +103,10 @@ func (s *paymentService) CreateOfflinePayment(
 	// - exists/is not fully paid.
 	//- make sure the rail exists in the invoice accepted rails.
 	// - make sure the amount is not more than the invoice balance.
-	invoice, invoiceErr := s.invoiceService.GetByID(ctx, repository.GetInvoiceQuery{
-		ID:       input.InvoiceID,
+	invoice, invoiceErr := s.invoiceService.GetByQuery(ctx, repository.GetInvoiceQuery{
+		Query: map[string]any{
+			"id": input.InvoiceID,
+		},
 		Populate: nil,
 	})
 	if invoiceErr != nil {

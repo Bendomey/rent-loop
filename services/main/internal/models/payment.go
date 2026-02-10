@@ -13,10 +13,6 @@ type Payment struct {
 	InvoiceID *string
 	Invoice   *Invoice
 
-	// TODO: When we start supporting online payments, we'll reconsider stuff.
-	// PaymentAccountID string `gorm:"not null;"`
-	// PaymentAccount   PaymentAccount
-
 	Rail     string  `gorm:"not null;"` // MOMO | BANK_TRANSFER | CARD | OFFLINE
 	Provider *string // MTN | VODAFONE | AIRTELTIGO | PAYSTACK | BANK_API | CASH
 

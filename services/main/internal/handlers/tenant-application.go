@@ -14,15 +14,24 @@ import (
 )
 
 type TenantApplicationHandler struct {
-	appCtx  pkg.AppContext
-	service services.TenantApplicationService
+	appCtx         pkg.AppContext
+	service        services.TenantApplicationService
+	paymentService services.PaymentService
+	invoiceService services.InvoiceService
 }
 
 func NewTenantApplicationHandler(
 	appCtx pkg.AppContext,
 	service services.TenantApplicationService,
+	paymentService services.PaymentService,
+	invoiceService services.InvoiceService,
 ) TenantApplicationHandler {
-	return TenantApplicationHandler{appCtx: appCtx, service: service}
+	return TenantApplicationHandler{
+		appCtx:         appCtx,
+		service:        service,
+		paymentService: paymentService,
+		invoiceService: invoiceService,
+	}
 }
 
 // TenantApplication.Status.InProgress, TenantApplication.Status.Cancelled, TenantApplication.Status.Completed
@@ -575,7 +584,7 @@ type GenerateInvoiceRequest struct {
 //	@Failure		404						{object}	lib.HTTPError								"Tenant application not found"
 //	@Failure		422						{object}	lib.HTTPError								"Validation error"
 //	@Failure		500						{object}	string										"An unexpected error occurred"
-//	@Router			/api/v1/tenant-applications/{tenant_application_id}/generate:invoice [post]
+//	@Router			/api/v1/tenant-applications/{tenant_application_id}/invoice:generate [post]
 func (h *TenantApplicationHandler) GenerateInvoice(w http.ResponseWriter, r *http.Request) {
 	_, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentClientUserOk {
@@ -614,4 +623,76 @@ func (h *TenantApplicationHandler) GenerateInvoice(w http.ResponseWriter, r *htt
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": transformations.DBInvoiceToRest(invoice),
 	})
+}
+
+type PayInvoiceRequest struct {
+	PaymentAccountID string          `json:"payment_account_id"  validate:"required,uuid4"                                                example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b" description:"ID of the payment account used"`
+	Amount           int64           `json:"amount"              validate:"required"                                                      example:"1000"                                 description:"Amount to pay for the invoice"`
+	Provider         string          `json:"provider"            validate:"required,oneof=MTN VODAFONE AIRTELTIGO PAYSTACK BANK_API CASH" example:"CASH"                                 description:"Offline payment provider/method"`
+	Reference        *string         `json:"reference,omitempty"                                                                          example:"RCP-2024-001"                         description:"Optional reference number for the payment"`
+	Metadata         *map[string]any `json:"metadata,omitempty"                                                                                                                          description:"Additional metadata for the payment"`
+}
+
+// PayInvoice godoc
+//
+//	@Summary		Pay an invoice for a tenant application
+//	@Description	Pay an invoice for a tenant application (security deposit and/or initial deposit)
+//	@Tags			TenantApplication
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			tenant_application_id	path	string	true	"Tenant application ID"
+//	@Param			invoice_id				path	string	true	"Invoice ID"
+//	@Success		204						"Invoice paid successfully"
+//	@Failure		400						{object}	lib.HTTPError	"Error occurred when paying invoice"
+//	@Failure		401						{object}	string			"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError	"Tenant application or invoice not found"
+//	@Failure		422						{object}	lib.HTTPError	"Validation error"
+//	@Failure		500						{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay [post]
+func (h *TenantApplicationHandler) PayInvoice(w http.ResponseWriter, r *http.Request) {
+	_, currentClientUserOk := lib.ClientUserFromContext(r.Context())
+	if !currentClientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body PayInvoiceRequest
+
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
+	invoiceID := chi.URLParam(r, "invoice_id")
+
+	query := repository.GetInvoiceQuery{
+		Query: map[string]any{
+			"id":                            invoiceID,
+			"context_type":                  "TENANT_APPLICATION",
+			"context_tenant_application_id": tenantApplicationID,
+		},
+	}
+
+	_, getInvoiceErr := h.invoiceService.GetByQuery(r.Context(), query)
+	if getInvoiceErr != nil {
+		HandleErrorResponse(w, getInvoiceErr)
+		return
+	}
+
+	_, err := h.paymentService.CreateOfflinePayment(r.Context(), services.CreateOfflinePaymentInput{
+		PaymentAccountID: body.PaymentAccountID,
+		InvoiceID:        invoiceID,
+		Provider:         body.Provider,
+		Amount:           body.Amount,
+		Reference:        body.Reference,
+		Metadata:         body.Metadata,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

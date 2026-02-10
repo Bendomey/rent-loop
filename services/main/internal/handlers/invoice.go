@@ -133,11 +133,11 @@ func (h *InvoiceHandler) GetInvoiceByID(w http.ResponseWriter, r *http.Request) 
 
 	populate := GetPopulateFields(r)
 	query := repository.GetInvoiceQuery{
-		ID:       invoiceID,
+		Query:    map[string]any{"id": invoiceID},
 		Populate: populate,
 	}
 
-	invoice, err := h.service.GetByID(r.Context(), query)
+	invoice, err := h.service.GetByQuery(r.Context(), query)
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return
@@ -309,4 +309,38 @@ func (h *InvoiceHandler) GetLineItems(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": data,
 	})
+}
+
+// RemoveLineItem godoc
+//
+//	@Summary		Remove line item from invoice
+//	@Description	Remove a line item from an existing draft invoice
+//	@Tags			Invoice
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			invoice_id		path	string	true	"Invoice ID"
+//	@Param			line_item_id	path	string	true	"Line Item ID"
+//	@Success		204				"Line Item Removed Successfully"
+//	@Failure		400				{object}	lib.HTTPError	"Error occurred when removing line item"
+//	@Failure		401				{object}	string			"Invalid or absent authentication token"
+//	@Failure		404				{object}	lib.HTTPError	"Invoice or line item not found"
+//	@Failure		500				{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/invoices/{invoice_id}/line-items/{line_item_id} [delete]
+func (h *InvoiceHandler) RemoveLineItem(w http.ResponseWriter, r *http.Request) {
+	invoiceID := chi.URLParam(r, "invoice_id")
+	lineItemID := chi.URLParam(r, "line_item_id")
+
+	input := services.RemoveLineItemInput{
+		InvoiceID:  invoiceID,
+		LineItemID: lineItemID,
+	}
+
+	err := h.service.RemoveLineItem(r.Context(), input)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
