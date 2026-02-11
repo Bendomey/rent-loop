@@ -21,10 +21,8 @@ interface PropertyUnit {
 	max_occupants_allowed: Nullable<number>
 	type: 'APARTMENT' | 'HOUSE' | 'STUDIO' | 'OFFICE' | 'RETAIL'
 	status:
-		| 'Unit.Status.Draft'
 		| 'Unit.Status.Available'
-		| 'Unit.Status.Occupied'
-		| 'Unit.Status.Maintenance'
+		| 'Unit.Status.Unavailable'
 	created_at: Date
 	updated_at: Date
 }

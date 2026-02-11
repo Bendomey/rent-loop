@@ -11,6 +11,7 @@ import { Form } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import type { loader } from '~/routes/tenants.apply._index'
+import { getPropertyUnitStatusLabel } from '~/lib/properties.utils'
 
 const ValidationSchema = z.object({
 	desired_unit_id: z.string({
@@ -25,6 +26,7 @@ export type FormSchema = z.infer<typeof ValidationSchema>
 
 export function Step0() {
 	const { referredBy, unitId, unit } = useLoaderData<typeof loader>()
+	const isUnitOccupied = getPropertyUnitStatusLabel(unit?.status) === 'Occupied'
 
 	const { goNext, formData, updateFormData } = useTenantApplicationContext()
 
@@ -81,12 +83,16 @@ export function Step0() {
 						</Button>
 					</Link>
 					<Button
-						size="lg"
-						variant="default"
-						className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
+					disabled={isUnitOccupied}
+					size="lg"
+					variant="default"
+					className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
 					>
-						Next <ArrowRight className="ml-2 h-4 w-4" />
-					</Button>
+					{!isUnitOccupied ?
+						<>Next <ArrowRight className="ml-2 h-4 w-4" /></> :
+						<span>Unit Unavailable</span>
+					}</Button>
+
 				</div>
 			</form>
 		</Form>
