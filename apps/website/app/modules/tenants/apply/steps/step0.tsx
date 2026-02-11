@@ -88,12 +88,12 @@ export function Step0() {
 						variant="default"
 						className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
 					>
-						{!isUnitOccupied ? (
+						{isUnitOccupied ? (
+						    <span>Unit Unavailable</span>
+						) : (
 							<>
 								Next <ArrowRight className="ml-2 h-4 w-4" />
 							</>
-						) : (
-							<span>Unit Unavailable</span>
 						)}
 					</Button>
 				</div>
