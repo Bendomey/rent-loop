@@ -37,9 +37,13 @@ export function UnitSelect({
 		search,
 	})
 
-	const selectOptions: Array<{ value: string; label: string }> = useMemo(() => {
+	const selectOptions: Array<{ value: string; label: string; isOccupied?: boolean }> = useMemo(() => {
 		if (data && data.rows) {
-			return data.rows.map((item) => ({ value: item.id, label: item.name }))
+			return data.rows.map((item) => ({ 
+				value: item.id, 
+				label: item.status === 'Unit.Status.Occupied' ? `${item.name} (Occupied)` : item.name,
+				isOccupied: item.status === 'Unit.Status.Occupied'
+			}))
 		}
 
 		if (isPending) {
@@ -78,6 +82,7 @@ export function UnitSelect({
 				<SelectContent>
 					{selectOptions.map((opt) => (
 						<SelectItem
+							disabled={opt.isOccupied}
 							key={opt.value}
 							value={opt.value}
 							className="data-[state=checked]:bg-rose-50 data-[state=checked]:ring-1 data-[state=checked]:ring-rose-600 data-[state=checked]:ring-offset-2"
