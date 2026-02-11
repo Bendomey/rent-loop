@@ -1,4 +1,3 @@
-
 export function getPropertyUnitStatusLabel(
 	propertyStatus?: PropertyUnit['status'],
 ) {

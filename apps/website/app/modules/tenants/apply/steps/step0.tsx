@@ -10,8 +10,8 @@ import { Button } from '~/components/ui/button'
 import { Form } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
-import type { loader } from '~/routes/tenants.apply._index'
 import { getPropertyUnitStatusLabel } from '~/lib/properties.utils'
+import type { loader } from '~/routes/tenants.apply._index'
 
 const ValidationSchema = z.object({
 	desired_unit_id: z.string({
@@ -83,16 +83,19 @@ export function Step0() {
 						</Button>
 					</Link>
 					<Button
-					disabled={isUnitOccupied}
-					size="lg"
-					variant="default"
-					className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
+						disabled={isUnitOccupied}
+						size="lg"
+						variant="default"
+						className="w-full bg-rose-600 hover:bg-rose-700 md:w-auto"
 					>
-					{!isUnitOccupied ?
-						<>Next <ArrowRight className="ml-2 h-4 w-4" /></> :
-						<span>Unit Unavailable</span>
-					}</Button>
-
+						{!isUnitOccupied ? (
+							<>
+								Next <ArrowRight className="ml-2 h-4 w-4" />
+							</>
+						) : (
+							<span>Unit Unavailable</span>
+						)}
+					</Button>
 				</div>
 			</form>
 		</Form>
