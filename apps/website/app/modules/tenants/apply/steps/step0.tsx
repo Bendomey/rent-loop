@@ -26,7 +26,7 @@ export type FormSchema = z.infer<typeof ValidationSchema>
 
 export function Step0() {
 	const { referredBy, unitId, unit } = useLoaderData<typeof loader>()
-	const isUnitOccupied = getPropertyUnitStatusLabel(unit?.status) === 'Occupied'
+	const isUnitOccupied = getPropertyUnitStatusLabel(unit?.status) === 'Unavailable'
 
 	const { goNext, formData, updateFormData } = useTenantApplicationContext()
 

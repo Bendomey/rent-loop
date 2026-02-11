@@ -5,7 +5,7 @@ export function getPropertyUnitStatusLabel(
 		case 'Unit.Status.Available':
 			return 'Available'
 		case 'Unit.Status.Unavailable':
-			return 'Occupied'
+			return 'Unavailable'
 		default:
 			return 'Unknown'
 	}
