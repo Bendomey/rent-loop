@@ -7,6 +7,7 @@ import {
 	SelectValue,
 } from '../ui/select'
 import { useGetPropertyUnits } from '~/api/units'
+import { getPropertyUnitStatusLabel } from '~/lib/properties.utils'
 
 interface UnitSelectProps
 	extends FetchMultipleDataInputParams<FetchClientUserFilter> {
@@ -41,7 +42,7 @@ export function UnitSelect({
 		if (data && data.rows) {
 			return data.rows.map((item) => ({ 
 				value: item.id, 
-				label: item.status === 'Unit.Status.Available' ? `${item.name} (Available)` : item.name,
+				label: item.status === 'Unit.Status.Available' ? item.name : `${item.name} (${getPropertyUnitStatusLabel(item.status)})`,
 				isAvailable: item.status === 'Unit.Status.Available'
 			}))
 		}
