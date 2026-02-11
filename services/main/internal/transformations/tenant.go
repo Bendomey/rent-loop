@@ -19,7 +19,7 @@ type OutputTenant struct {
 	Nationality     string    `json:"nationality"                 example:"Ghanaian"`
 	MaritalStatus   string    `json:"marital_status"              example:"single"`
 	ProfilePhotoUrl *string   `json:"profile_photo_url,omitempty" example:"https://example.com/photo.jpg"`
-	IDType          string    `json:"id_type"                     example:"ghana_card"`
+	IDType          string    `json:"id_type"                     example:"GHANA_CARD"`
 	IDNumber        string    `json:"id_number"                   example:"ID123456"`
 	IDFrontUrl      *string   `json:"id_front_url,omitempty"      example:"https://example.com/id-front.jpg"`
 	IDBackUrl       *string   `json:"id_back_url,omitempty"       example:"https://example.com/id-back.jpg"`
