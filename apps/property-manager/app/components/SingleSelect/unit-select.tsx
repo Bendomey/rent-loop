@@ -7,6 +7,7 @@ import {
 	SelectValue,
 } from '../ui/select'
 import { useGetPropertyUnits } from '~/api/units'
+import { getPropertyUnitStatusLabel } from '~/lib/properties.utils'
 
 interface UnitSelectProps
 	extends FetchMultipleDataInputParams<FetchClientUserFilter> {
@@ -37,9 +38,13 @@ export function UnitSelect({
 		search,
 	})
 
-	const selectOptions: Array<{ value: string; label: string }> = useMemo(() => {
+	const selectOptions: Array<{ value: string; label: string; isAvailable?: boolean }> = useMemo(() => {
 		if (data && data.rows) {
-			return data.rows.map((item) => ({ value: item.id, label: item.name }))
+			return data.rows.map((item) => ({ 
+				value: item.id, 
+				label: item.status === 'Unit.Status.Available' ? item.name : `${item.name} (${getPropertyUnitStatusLabel(item.status)})`,
+				isAvailable: item.status === 'Unit.Status.Available'
+			}))
 		}
 
 		if (isPending) {
@@ -78,6 +83,7 @@ export function UnitSelect({
 				<SelectContent>
 					{selectOptions.map((opt) => (
 						<SelectItem
+							disabled={!opt.isAvailable}
 							key={opt.value}
 							value={opt.value}
 							className="data-[state=checked]:bg-rose-50 data-[state=checked]:ring-1 data-[state=checked]:ring-rose-600 data-[state=checked]:ring-offset-2"

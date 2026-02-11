@@ -12,7 +12,7 @@ interface Tenant {
 	marital_status: 'SINGLE' | 'MARRIED' | 'DIVORCED' | 'WIDOWED'
 	profile_photo_url: Nullable<string>
 	id_type: Nullable<
-		'DRIVERS_LICENSE' | 'PASSPORT' | 'NATIONAL_ID' | 'STUDENT_ID'
+		'DRIVERS_LICENSE' | 'PASSPORT' | 'NATIONAL_ID' | 'GHANA_CARD'
 	>
 	id_number: string
 	id_front_url: Nullable<string>
