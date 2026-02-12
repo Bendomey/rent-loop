@@ -9,3 +9,8 @@ interface PaymentAccount {
 	created_at: Date
 	updated_at: Date
 }
+
+interface FetchPaymentAccountFilter {
+	rail?: string
+	status?: string
+}

@@ -21,6 +21,7 @@ export const QUERY_KEYS = {
 	PROPERTY_TENANTS: 'property-tenants',
 	CLIENT_USERS: 'client-users',
 	CLIENT_USER_PROPERTIES: 'client-user-properties',
+	PAYMENT_ACCOUNTS: 'payment-accounts',
 } as const
 
 export const PermissionState = {

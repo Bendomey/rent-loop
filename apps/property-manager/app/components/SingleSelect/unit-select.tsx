@@ -38,12 +38,19 @@ export function UnitSelect({
 		search,
 	})
 
-	const selectOptions: Array<{ value: string; label: string; isAvailable?: boolean }> = useMemo(() => {
+	const selectOptions: Array<{
+		value: string
+		label: string
+		isAvailable?: boolean
+	}> = useMemo(() => {
 		if (data && data.rows) {
-			return data.rows.map((item) => ({ 
-				value: item.id, 
-				label: item.status === 'Unit.Status.Available' ? item.name : `${item.name} (${getPropertyUnitStatusLabel(item.status)})`,
-				isAvailable: item.status === 'Unit.Status.Available'
+			return data.rows.map((item) => ({
+				value: item.id,
+				label:
+					item.status === 'Unit.Status.Available'
+						? item.name
+						: `${item.name} (${getPropertyUnitStatusLabel(item.status)})`,
+				isAvailable: item.status === 'Unit.Status.Available',
 			}))
 		}
 

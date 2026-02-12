@@ -5,12 +5,13 @@ import {
 	Edit,
 	EllipsisVertical,
 	Eye,
-	Plus,
 	RotateCw,
 	Trash2,
 } from 'lucide-react'
 import { useMemo } from 'react'
+import { useSearchParams } from 'react-router'
 import { PaymentAccountsController } from './controller'
+import { useGetPaymentAccounts } from '~/api/payment-accounts'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -22,6 +23,7 @@ import {
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
+import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import {
 	getPaymentAccountTypeLabel,
 	getPaymentAccountStatusLabel,
@@ -29,79 +31,32 @@ import {
 import { paymentIcons } from '~/lib/payment-account.utils'
 import { cn } from '~/lib/utils'
 
-const PaymentAccountData: PaymentAccount[] = [
-	{
-		id: 'pa_001',
-		amount: 2500,
-		currency: 'GHS',
-		status: 'PaymentAccount.Status.Active',
-		rail: 'MOMO',
-		identifier: '0241234567',
-		is_default: true,
-		created_at: new Date(),
-		updated_at: new Date(),
-	},
-	{
-		id: 'pa_002',
-		amount: 1200,
-		currency: 'GHS',
-		status: 'PaymentAccount.Status.Active',
-		rail: 'BANK_TRANSFER',
-		identifier: 'GTB-0123456789',
-		is_default: false,
-		created_at: new Date(),
-		updated_at: new Date(),
-	},
-	{
-		id: 'pa_003',
-		amount: 800,
-		currency: 'USD',
-		status: 'PaymentAccount.Status.Inactive',
-		rail: 'CARD',
-		identifier: '**** **** **** 4242',
-		is_default: false,
-		created_at: new Date(),
-		updated_at: new Date(),
-	},
-	{
-		id: 'pa_004',
-		amount: 450,
-		currency: 'GHS',
-		status: 'PaymentAccount.Status.Active',
-		rail: 'OFFLINE',
-		identifier: 'Cash Office - Accra',
-		is_default: false,
-		created_at: new Date(),
-		updated_at: new Date(),
-	},
-	{
-		id: 'pa_005',
-		amount: 3200,
-		currency: 'EUR',
-		status: 'PaymentAccount.Status.Inactive',
-		rail: 'CARD',
-		identifier: '**** **** **** 1881',
-		is_default: false,
-		created_at: new Date(),
-		updated_at: new Date(),
-	},
-	{
-		id: 'pa_006',
-		amount: 1500,
-		currency: 'GHS',
-		status: 'PaymentAccount.Status.Active',
-		rail: 'MOMO',
-		identifier: '0559876543',
-		is_default: false,
-		created_at: new Date(),
-		updated_at: new Date(),
-	},
-]
-
-const isLoading = false
-const refetch = () => {}
-
 export function PaymentAccountsModule() {
+	const [searchParams] = useSearchParams()
+
+	const page = searchParams.get('page')
+		? Number(searchParams.get('page'))
+		: PAGINATION_DEFAULTS.PAGE
+	const per = searchParams.get('pageSize')
+		? Number(searchParams.get('pageSize'))
+		: PAGINATION_DEFAULTS.PER_PAGE
+	const rail = searchParams.get('rail') ?? undefined
+	const status = searchParams.get('status') ?? undefined
+
+	const { data, isPending, isRefetching, error, refetch } =
+		useGetPaymentAccounts({
+			filters: { rail: rail, status: status },
+			pagination: { page, per },
+			populate: [],
+			sorter: { sort: 'desc', sort_by: 'created_at' },
+			search: {
+				query: searchParams.get('query') ?? undefined,
+				fields: [],
+			},
+		})
+
+	const isLoading = isPending || isRefetching
+
 	const columns: ColumnDef<PaymentAccount>[] = useMemo(() => {
 		return [
 			{
@@ -227,14 +182,14 @@ export function PaymentAccountsModule() {
 					</TypographyMuted>
 				</div>
 				<div className="flex items-center justify-end gap-2">
-					<Button
+					{/* <Button
 						variant="default"
 						size="sm"
 						className="bg-rose-600 text-white hover:bg-rose-700"
 					>
 						<Plus className="size-4" />
 						Add Payment Account
-					</Button>
+					</Button> */}
 					<Button
 						onClick={() => refetch()}
 						disabled={isLoading}
@@ -250,26 +205,29 @@ export function PaymentAccountsModule() {
 			<div className="h-full w-full">
 				<DataTable
 					columns={columns}
+					isLoading={isLoading}
+					refetch={refetch}
+					error={error ? 'Failed to load members.' : undefined}
 					dataResponse={{
-						rows: PaymentAccountData ?? [],
-						total: 150,
-						page: 1,
-						page_size: 50,
-						order: 'desc',
-						order_by: 'created_at',
-						has_prev_page: false,
-						has_next_page: true,
+						rows: data?.rows ?? [],
+						total: data?.meta?.total ?? 0,
+						page,
+						page_size: per,
+						order: data?.meta?.order ?? 'desc',
+						order_by: data?.meta?.order_by ?? 'created_at',
+						has_prev_page: data?.meta?.has_prev_page ?? false,
+						has_next_page: data?.meta?.has_next_page ?? false,
 					}}
 					empty={{
 						message: 'No payment accounts found',
 						description:
 							"Try adjusting your search or filter to find what you're looking for.",
-						button: {
-							label: 'Add Payment Account',
-							onClick: () => {
-								// Handle button click
-							},
-						},
+						// button: {
+						// 	label: 'Add Payment Account',
+						// 	onClick: () => {
+						// 		Handle button click
+						// 	},
+						// },
 					}}
 				/>
 			</div>
