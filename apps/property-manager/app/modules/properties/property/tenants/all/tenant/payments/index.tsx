@@ -24,11 +24,11 @@ import {
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
+import { formatAmount } from '~/lib/format-amount'
 import {
 	getPaymentMethodLabel,
 	getPaymentStatusLabel,
 } from '~/lib/payment.utils'
-import { formatAmount } from '~/lib/format-amount'
 import { useProperty } from '~/providers/property-provider'
 
 const data = {

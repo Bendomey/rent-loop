@@ -6,7 +6,6 @@ import { fetchClient, fetchServer } from '~/lib/transport'
 /**
  * GET all properties based on a query.
  */
-
 const getProperties = async (
 	props: FetchMultipleDataInputParams<FetchPropertyFilter>,
 ) => {
@@ -36,6 +35,33 @@ export const useGetProperties = (
 		queryKey: [QUERY_KEYS.PROPERTIES, query],
 		queryFn: () => getProperties(query),
 	})
+
+export const getPropertiesForServer = async (
+	props: FetchMultipleDataInputParams<FetchPropertyFilter>,
+	apiConfig: ApiConfigForServerConfig,
+) => {
+	try {
+		const params = getQueryParams<FetchPropertyFilter>(props)
+		const response = await fetchServer<ApiResponse<FetchMultipleDataResponse<Property>>>(
+			`${apiConfig?.baseUrl}/v1/properties?${params.toString()}`,
+			{
+				method: 'GET',
+				...apiConfig
+			},
+		)
+
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
 
 /**
  * Get property
