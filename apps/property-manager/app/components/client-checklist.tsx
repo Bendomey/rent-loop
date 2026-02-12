@@ -30,7 +30,7 @@ export function ClientChecklist({ propertiesCount, paymentAccountsCount }: Props
 		isPaymentAccountsComplete,
 	]
 
-	if (!steps.every(Boolean)) {
+	if (steps.every(Boolean)) {
 		return null
 	}
 
