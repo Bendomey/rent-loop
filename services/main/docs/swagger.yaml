@@ -57,6 +57,12 @@ definitions:
     required:
     - channel
     type: object
+  handlers.CancelLeaseRequest:
+    properties:
+      cancellation_reason:
+        example: Lease was cancelled due to a tenant's request.
+        type: string
+    type: object
   handlers.CancelTenantApplicationRequest:
     properties:
       reason:
@@ -4388,6 +4394,53 @@ paths:
       security:
       - BearerAuth: []
       summary: Activate lease
+      tags:
+      - Lease
+  /api/v1/leases/{lease_id}/status:cancelled:
+    patch:
+      consumes:
+      - application/json
+      description: Cancel lease
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Cancel lease request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CancelLeaseRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Lease Cancelled Successfully
+        "400":
+          description: Error occurred when cancelling lease
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Lease not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Cancel lease
       tags:
       - Lease
   /api/v1/payment-accounts:

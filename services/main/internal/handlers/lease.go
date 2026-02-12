@@ -302,3 +302,46 @@ func (h *LeaseHandler) ActivateLease(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+type CancelLeaseRequest struct {
+	CancellationReason string `json:"cancellation_reason" example:"Lease was cancelled due to a tenant's request."`
+}
+
+// CancelLease godoc
+//
+//	@Summary		Cancel lease
+//	@Description	Cancel lease
+//	@Tags			Lease
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			lease_id	path		string				true	"Lease ID"
+//	@Param			body		body		CancelLeaseRequest	true	"Cancel lease request body"
+//	@Success		204			{object}	nil					"Lease Cancelled Successfully"
+//	@Failure		400			{object}	lib.HTTPError		"Error occurred when cancelling lease"
+//	@Failure		401			{object}	string				"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError		"Lease not found"
+//	@Failure		422			{object}	lib.HTTPError		"Validation error"
+//	@Failure		500			{object}	string				"An unexpected error occurred"
+//	@Router			/api/v1/leases/{lease_id}/status:cancelled [patch]
+func (h *LeaseHandler) CancelLease(w http.ResponseWriter, r *http.Request) {
+	var body CancelLeaseRequest
+
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	leaseID := chi.URLParam(r, "lease_id")
+
+	err := h.service.CancelLease(r.Context(), services.CancelLeaseInput{
+		LeaseID:            leaseID,
+		CancellationReason: body.CancellationReason,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

@@ -162,6 +162,8 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					Patch("/", handlers.LeaseHandler.UpdateLease)
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Patch("/status:active", handlers.LeaseHandler.ActivateLease)
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Patch("/status:cancelled", handlers.LeaseHandler.CancelLease)
 			})
 
 			r.Route("/v1/payment-accounts", func(r chi.Router) {
