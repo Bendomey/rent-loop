@@ -11,8 +11,7 @@ export const getPropertyUnitsForServer = async (
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
-		const params =
-			getQueryParams<FetchPropertyUnitFilter>(props)
+		const params = getQueryParams<FetchPropertyUnitFilter>(props)
 		const response = await fetchServer<
 			ApiResponse<FetchMultipleDataResponse<PropertyUnit>>
 		>(
