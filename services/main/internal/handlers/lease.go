@@ -292,9 +292,19 @@ func (h *LeaseHandler) ListLeasesByProperty(w http.ResponseWriter, r *http.Reque
 //	@Failure		500			{object}	string			"An unexpected error occurred"
 //	@Router			/api/v1/leases/{lease_id}/status:active [patch]
 func (h *LeaseHandler) ActivateLease(w http.ResponseWriter, r *http.Request) {
+	clientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
+	if !clientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	leaseID := chi.URLParam(r, "lease_id")
 
-	err := h.service.ActivateLease(r.Context(), leaseID)
+	input := services.ActivateLeaseInput{
+		LeaseID:      leaseID,
+		ClientUserId: clientUser.ID,
+	}
+	err := h.service.ActivateLease(r.Context(), input)
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return
@@ -325,6 +335,12 @@ type CancelLeaseRequest struct {
 //	@Failure		500			{object}	string				"An unexpected error occurred"
 //	@Router			/api/v1/leases/{lease_id}/status:cancelled [patch]
 func (h *LeaseHandler) CancelLease(w http.ResponseWriter, r *http.Request) {
+	clientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
+	if !clientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	var body CancelLeaseRequest
 
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
@@ -337,6 +353,7 @@ func (h *LeaseHandler) CancelLease(w http.ResponseWriter, r *http.Request) {
 	err := h.service.CancelLease(r.Context(), services.CancelLeaseInput{
 		LeaseID:            leaseID,
 		CancellationReason: body.CancellationReason,
+		ClientUserId:       clientUser.ID,
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)

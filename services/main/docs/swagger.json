@@ -8951,17 +8951,38 @@
         "transformations.OutputAdminLease": {
             "type": "object",
             "properties": {
+                "activatedBy": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
                 "activated_at": {
                     "type": "string",
                     "example": "2024-06-01T09:00:00Z"
+                },
+                "activated_by_id": {
+                    "type": "string",
+                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
+                },
+                "cancelledBy": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
                 },
                 "cancelled_at": {
                     "type": "string",
                     "example": "2024-06-01T09:00:00Z"
                 },
+                "cancelled_by_id": {
+                    "type": "string",
+                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
+                },
+                "completedBy": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
                 "completed_at": {
                     "type": "string",
                     "example": "2024-06-01T09:00:00Z"
+                },
+                "completed_by_id": {
+                    "type": "string",
+                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
                 },
                 "created_at": {
                     "type": "string",
@@ -9052,9 +9073,16 @@
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
                 },
+                "terminatedBy": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
                 "terminated_at": {
                     "type": "string",
                     "example": "2024-06-01T09:00:00Z"
+                },
+                "terminated_by_id": {
+                    "type": "string",
+                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
                 },
                 "terminationAgreementDocumentPropertyManagerSignedBy": {
                     "$ref": "#/definitions/transformations.OutputClientUser"
