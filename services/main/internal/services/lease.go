@@ -20,6 +20,7 @@ type LeaseService interface {
 	ListLeases(context context.Context, filters repository.ListLeasesFilter) ([]models.Lease, error)
 	CountLeases(context context.Context, filters repository.ListLeasesFilter) (int64, error)
 	ActivateLease(context context.Context, leaseID string) error
+	CancelLease(context context.Context, input CancelLeaseInput) error
 }
 
 type leaseService struct {
@@ -347,6 +348,82 @@ func (s *leaseService) ActivateLease(ctx context.Context, leaseID string) error 
 			pkg.SendEmailInput{
 				Recipient: *lease.Tenant.Email,
 				Subject:   lib.LEASE_ACTIVATED_SUBJECT,
+				TextBody:  message,
+			},
+		)
+	}
+
+	go pkg.SendSMS(
+		s.appCtx,
+		pkg.SendSMSInput{
+			Recipient: lease.Tenant.Phone,
+			Message:   message,
+		},
+	)
+
+	return nil
+}
+
+type CancelLeaseInput struct {
+	LeaseID            string
+	CancellationReason string
+}
+
+func (s *leaseService) CancelLease(ctx context.Context, input CancelLeaseInput) error {
+	lease, getLeaseErr := s.repo.GetOneWithPopulate(
+		ctx,
+		repository.GetLeaseQuery{ID: input.LeaseID, Populate: &[]string{"Unit", "Tenant"}},
+	)
+	if getLeaseErr != nil {
+		if errors.Is(getLeaseErr, gorm.ErrRecordNotFound) {
+			return pkg.NotFoundError("LeaseNotFound", &pkg.RentLoopErrorParams{
+				Err: getLeaseErr,
+			})
+		}
+		return pkg.InternalServerError(getLeaseErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getLeaseErr,
+			Metadata: map[string]string{
+				"function": "CancelLease",
+				"action":   "getting lease",
+			},
+		})
+	}
+
+	if lease.Status == "Lease.Status.Cancelled" {
+		return pkg.BadRequestError("LeaseIsAlreadyCancelled", nil)
+	}
+
+	if lease.Status != "Lease.Status.Pending" {
+		return pkg.BadRequestError("LeaseIsNotPending", nil)
+	}
+
+	lease.Status = "Lease.Status.Cancelled"
+	now := time.Now()
+	lease.ActivatedAt = &now
+
+	err := s.repo.Update(ctx, lease)
+	if err != nil {
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CancelLease",
+				"action":   "updating lease",
+			},
+		})
+	}
+
+	message := strings.NewReplacer(
+		"{{tenant_name}}", lease.Tenant.FirstName,
+		"{{unit_name}}", lease.Unit.Name,
+		"{{cancellation_reason}}", input.CancellationReason,
+	).Replace(lib.LEASE_CANCELLED_BODY)
+
+	if lease.Tenant.Email != nil {
+		go pkg.SendEmail(
+			s.appCtx,
+			pkg.SendEmailInput{
+				Recipient: *lease.Tenant.Email,
+				Subject:   lib.LEASE_CANCELLED_SUBJECT,
 				TextBody:  message,
 			},
 		)

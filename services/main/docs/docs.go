@@ -3270,6 +3270,79 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/leases/{lease_id}/status:cancelled": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancel lease",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "Cancel lease",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Cancel lease request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CancelLeaseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Lease Cancelled Successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when cancelling lease",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Lease not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/payment-accounts": {
             "get": {
                 "security": [
@@ -7239,6 +7312,15 @@ const docTemplate = `{
                 "phone": {
                     "type": "string",
                     "example": "+233281234569"
+                }
+            }
+        },
+        "handlers.CancelLeaseRequest": {
+            "type": "object",
+            "properties": {
+                "cancellation_reason": {
+                    "type": "string",
+                    "example": "Lease was cancelled due to a tenant's request."
                 }
             }
         },
