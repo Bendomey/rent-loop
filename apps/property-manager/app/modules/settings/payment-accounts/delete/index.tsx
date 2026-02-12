@@ -40,11 +40,11 @@ export default function DeletePaymentAccountModal({
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>
-						{data ? `Delete ${data.identifier}` : 'Delete this Payment Account'}
+						{data ? `Delete payment account (${data.identifier})` : 'Delete this Payment Account'}
 					</AlertDialogTitle>
 
 					<AlertDialogDescription>
-						Are you sure you want to delete {data?.identifier ?? 'this payment account'}?
+						Are you sure you want to delete {data?.identifier ?? 'this payment account'} from your payment accounts?
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 
