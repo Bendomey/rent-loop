@@ -10,7 +10,7 @@ import (
 type OutputTenantApplication struct {
 	ID string `json:"id" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 
-	Code *string `json:"code,omitempty" example:"9ucfjd3p"`
+	Code string `json:"code" example:"9ucfjd3p"`
 
 	Status string `json:"status" example:"TenantApplication.Status.InProgress"`
 
@@ -83,7 +83,7 @@ type OutputTenantApplication struct {
 	OccupationAddress string  `json:"occupation_address"            example:"456 Tech Ave, Accra"`
 	ProofOfIncomeUrl  *string `json:"proof_of_income_url,omitempty" example:"https://example.com/income.pdf"`
 
-	CreatedById *string           `json:"created_by_id,omitempty" example:"72432ce6-5620-4ecf-a862-4bf2140556a1"`
+	CreatedById string            `json:"created_by_id,omitempty" example:"72432ce6-5620-4ecf-a862-4bf2140556a1"`
 	CreatedBy   *OutputClientUser `json:"created_by,omitempty"`
 
 	CreatedAt time.Time `json:"created_at" example:"2024-06-01T09:00:00Z"`
@@ -96,36 +96,29 @@ func DBTenantApplicationToRest(i *models.TenantApplication) any {
 	}
 
 	data := map[string]any{
-		"id":                                i.ID.String(),
-		"code":                              i.Code,
-		"status":                            i.Status,
-		"completed_at":                      i.CompletedAt,
-		"completed_by_id":                   i.CompletedById,
-		"completed_by":                      DBClientUserToRest(i.CompletedBy),
-		"cancelled_at":                      i.CancelledAt,
-		"cancelled_by_id":                   i.CancelledById,
-		"cancelled_by":                      DBClientUserToRest(i.CancelledBy),
-		"desired_unit_id":                   i.DesiredUnitId,
-		"desired_unit":                      DBUnitToRest(&i.DesiredUnit),
-		"desired_move_in_date":              i.DesiredMoveInDate,
-		"stay_duration_frequency":           i.StayDurationFrequency,
-		"stay_duration":                     i.StayDuration,
-		"rent_fee":                          i.RentFee,
-		"rent_fee_currency":                 i.RentFeeCurrency,
-		"payment_frequency":                 i.PaymentFrequency,
-		"initial_deposit_fee":               i.InitialDepositFee,
-		"initial_deposit_payment_method":    i.InitialDepositPaymentMethod,
-		"initial_deposit_reference_number":  i.InitialDepositReferenceNumber,
-		"initial_deposit_paid_at":           i.InitialDepositPaidAt,
-		"initial_deposit_payment_id":        i.InitialDepositPaymentId,
-		"security_deposit_fee":              i.SecurityDepositFee,
-		"security_deposit_fee_currency":     i.SecurityDepositFeeCurrency,
-		"security_deposit_payment_method":   i.SecurityDepositPaymentMethod,
-		"security_deposit_reference_number": i.SecurityDepositReferenceNumber,
-		"security_deposit_paid_at":          i.SecurityDepositPaidAt,
-		"security_deposit_payment_id":       i.SecurityDepositPaymentId,
-		"lease_aggreement_document_mode":    i.LeaseAggreementDocumentMode,
-		"lease_agreement_document_url":      i.LeaseAgreementDocumentUrl,
+		"id":                             i.ID.String(),
+		"code":                           i.Code,
+		"status":                         i.Status,
+		"completed_at":                   i.CompletedAt,
+		"completed_by_id":                i.CompletedById,
+		"completed_by":                   DBClientUserToRest(i.CompletedBy),
+		"cancelled_at":                   i.CancelledAt,
+		"cancelled_by_id":                i.CancelledById,
+		"cancelled_by":                   DBClientUserToRest(i.CancelledBy),
+		"desired_unit_id":                i.DesiredUnitId,
+		"desired_unit":                   DBUnitToRest(&i.DesiredUnit),
+		"desired_move_in_date":           i.DesiredMoveInDate,
+		"stay_duration_frequency":        i.StayDurationFrequency,
+		"stay_duration":                  i.StayDuration,
+		"rent_fee":                       i.RentFee,
+		"rent_fee_currency":              i.RentFeeCurrency,
+		"payment_frequency":              i.PaymentFrequency,
+		"initial_deposit_fee":            i.InitialDepositFee,
+		"initial_deposit_fee_currency":   i.InitialDepositFeeCurrency,
+		"security_deposit_fee":           i.SecurityDepositFee,
+		"security_deposit_fee_currency":  i.SecurityDepositFeeCurrency,
+		"lease_aggreement_document_mode": i.LeaseAggreementDocumentMode,
+		"lease_agreement_document_url":   i.LeaseAgreementDocumentUrl,
 		"lease_agreement_document_property_manager_signed_by_id": i.LeaseAgreementDocumentPropertyManagerSignedById,
 		"lease_agreement_document_property_manager_signed_by": DBClientUserToRest(
 			i.LeaseAgreementDocumentPropertyManagerSignedBy,
@@ -158,7 +151,7 @@ func DBTenantApplicationToRest(i *models.TenantApplication) any {
 		"occupation_address":                i.OccupationAddress,
 		"proof_of_income_url":               i.ProofOfIncomeUrl,
 		"created_by_id":                     i.CreatedById,
-		"created_by":                        DBClientUserToRest(i.CreatedBy),
+		"created_by":                        DBClientUserToRest(&i.CreatedBy),
 		"created_at":                        i.CreatedAt,
 		"updated_at":                        i.UpdatedAt,
 	}

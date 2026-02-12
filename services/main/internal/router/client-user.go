@@ -147,6 +147,10 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Patch("/{tenant_application_id}/cancel", handlers.TenantApplicationHandler.CancelTenantApplication)
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Post("/{tenant_application_id}/invoice:generate", handlers.TenantApplicationHandler.GenerateInvoice)
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Post("/{tenant_application_id}/invoice/{invoice_id}/pay", handlers.TenantApplicationHandler.PayInvoice)
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Patch("/{tenant_application_id}/approve", handlers.TenantApplicationHandler.ApproveTenantApplication)
 			})
 
@@ -158,6 +162,35 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					Patch("/", handlers.LeaseHandler.UpdateLease)
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Patch("/status:active", handlers.LeaseHandler.ActivateLease)
+			})
+
+			r.Route("/v1/payment-accounts", func(r chi.Router) {
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Post("/", handlers.PaymentAccountHandler.CreatePaymentAccount)
+				r.Get("/", handlers.PaymentAccountHandler.ListPaymentAccounts)
+				r.Route("/{payment_account_id}", func(r chi.Router) {
+					r.Get("/", handlers.PaymentAccountHandler.GetPaymentAccountById)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Patch("/", handlers.PaymentAccountHandler.UpdatePaymentAccount)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Delete("/", handlers.PaymentAccountHandler.DeletePaymentAccount)
+				})
+			})
+
+			r.Route("/v1/invoices", func(r chi.Router) {
+				r.Get("/", handlers.InvoiceHandler.ListInvoices)
+				r.Route("/{invoice_id}", func(r chi.Router) {
+					r.Get("/", handlers.InvoiceHandler.GetInvoiceByID)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Patch("/", handlers.InvoiceHandler.UpdateInvoice)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Patch("/void", handlers.InvoiceHandler.VoidInvoice)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Post("/line-items", handlers.InvoiceHandler.AddLineItem)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Delete("/line-items/{line_item_id}", handlers.InvoiceHandler.RemoveLineItem)
+					r.Get("/line-items", handlers.InvoiceHandler.GetLineItems)
+				})
 			})
 		})
 	}

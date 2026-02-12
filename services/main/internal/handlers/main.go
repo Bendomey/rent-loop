@@ -6,6 +6,7 @@ import (
 )
 
 type Handlers struct {
+	AuthHandler               AuthHandler
 	AdminHandler              AdminHandler
 	ClientApplicationHandler  ClientApplicationHandler
 	ClientUserHandler         ClientUserHandler
@@ -17,10 +18,13 @@ type Handlers struct {
 	TenantApplicationHandler  TenantApplicationHandler
 	TenantHandler             TenantHandler
 	LeaseHandler              LeaseHandler
-	AuthHandler               AuthHandler
+	PaymentAccountHandler     PaymentAccountHandler
+	InvoiceHandler            InvoiceHandler
+	PaymentHandler            PaymentHandler
 }
 
 func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
+	authHandler := NewAuthHandler(appCtx, services.AuthService)
 	adminHandler := NewAdminHandler(appCtx, services.AdminService)
 	clientApplicationHandler := NewClientApplicationHandler(appCtx, services.ClientApplicationService)
 	clientUserHandler := NewClientUserHandler(appCtx, services.ClientUserService)
@@ -29,12 +33,21 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 	documentHandler := NewDocumentHandler(appCtx, services.DocumentService)
 	propertyBlockHandler := NewPropertyBlockHandler(appCtx, services.PropertyBlockService)
 	unitHandler := NewUnitHandler(appCtx, services.UnitService)
-	tenantApplicationHandler := NewTenantApplicationHandler(appCtx, services.TenantApplicationService)
+	invoiceHandler := NewInvoiceHandler(appCtx, services.InvoiceService)
+	paymentHandler := NewPaymentHandler(appCtx, services.PaymentService)
+
+	tenantApplicationHandler := NewTenantApplicationHandler(
+		appCtx,
+		services.TenantApplicationService,
+		services.PaymentService,
+		services.InvoiceService,
+	)
 	tenantHandler := NewTenantHandler(appCtx, services.TenantService)
 	leaseHandler := NewLeaseHandler(appCtx, services.LeaseService)
-	authHandler := NewAuthHandler(appCtx, services.AuthService)
+	paymentAccountHandler := NewPaymentAccountHandler(appCtx, services.PaymentAccountService)
 
 	return Handlers{
+		AuthHandler:               authHandler,
 		ClientApplicationHandler:  clientApplicationHandler,
 		AdminHandler:              adminHandler,
 		ClientUserHandler:         clientUserHandler,
@@ -46,6 +59,8 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 		TenantApplicationHandler:  tenantApplicationHandler,
 		TenantHandler:             tenantHandler,
 		LeaseHandler:              leaseHandler,
-		AuthHandler:               authHandler,
+		PaymentAccountHandler:     paymentAccountHandler,
+		InvoiceHandler:            invoiceHandler,
+		PaymentHandler:            paymentHandler,
 	}
 }

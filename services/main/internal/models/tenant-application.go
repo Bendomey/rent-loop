@@ -12,6 +12,7 @@ import (
 // BasicInfoCompleted -> DocsSigned -> Paid -> MoveInScheduled -> Completed
 type TenantApplication struct {
 	BaseModelSoftDelete
+	Code   string `gorm:"uniqueIndex"`
 	Status string `gorm:"not null;default:'TenantApplication.Status.InProgress'"` // TenantApplication.Status.InProgress, TenantApplication.Status.Cancelled, TenantApplication.Status.Completed
 
 	CompletedAt   *time.Time
@@ -35,21 +36,11 @@ type TenantApplication struct {
 	RentFeeCurrency  string  `gorm:"not null;"`
 	PaymentFrequency *string // Hourly, Daily, Monthly, Quarterly, BiAnnually, Annually, OneTime
 
-	InitialDepositFee             *int64
-	InitialDepositPaymentMethod   *string // ONLINE | CASH | EXTERNAL
-	InitialDepositReferenceNumber *string
-	InitialDepositPaidAt          *time.Time
-	InitialDepositPaymentId       *string
-	InitialDepositPayment         *Payment
+	InitialDepositFee         *int64
+	InitialDepositFeeCurrency string `gorm:"not null;default:'GHS'"`
 
 	SecurityDepositFee         *int64 // if it's null or 0 then it's not opted in!
-	SecurityDepositFeeCurrency *string
-
-	SecurityDepositPaymentMethod   *string // ONLINE | CASH | EXTERNAL
-	SecurityDepositReferenceNumber *string
-	SecurityDepositPaidAt          *time.Time
-	SecurityDepositPaymentId       *string
-	SecurityDepositPayment         *Payment
+	SecurityDepositFeeCurrency string `gorm:"not null;default:'GHS'"`
 
 	// docs setup
 	LeaseAggreementDocumentMode                     *string // MANUAL | ONLINE
@@ -70,8 +61,8 @@ type TenantApplication struct {
 	Nationality     string    `gorm:"not null;"`
 	MaritalStatus   string    `gorm:"not null;"` // Single, Married, Divorced, Widowed
 	ProfilePhotoUrl *string
-	IDType          *string // NationalID, Passport, DriverLicense
-	IDNumber        string  `gorm:"not null;"` // GhanaCard
+	IDType          string // NationalID, Passport, DriverLicense
+	IDNumber        string `gorm:"not null;"` // GhanaCard
 	IDFrontUrl      *string
 	IDBackUrl       *string
 
@@ -89,10 +80,8 @@ type TenantApplication struct {
 	OccupationAddress string  `gorm:"not null;"` // or school address
 	ProofOfIncomeUrl  *string // or admission letter url
 
-	Code *string `gorm:"uniqueIndex"`
-
-	CreatedById *string
-	CreatedBy   *ClientUser
+	CreatedById string
+	CreatedBy   ClientUser
 }
 
 func (t *TenantApplication) BeforeCreate(tx *gorm.DB) error {
@@ -105,6 +94,6 @@ func (t *TenantApplication) BeforeCreate(tx *gorm.DB) error {
 		return genErr
 	}
 
-	t.Code = uniqueCode
+	t.Code = *uniqueCode
 	return nil
 }

@@ -18,12 +18,12 @@ func updateMigration(db *gorm.DB) error {
 		&models.ClientApplication{},
 		&models.Client{},
 		&models.ClientUser{},
+		&models.PaymentAccount{},
 		&models.Property{},
 		&models.ClientUserProperty{},
 		&models.Document{},
 		&models.PropertyBlock{},
 		&models.Unit{},
-		&models.Payment{},
 		&models.Tenant{},
 		&models.TenantApplication{},
 		&models.Lease{},
@@ -31,7 +31,11 @@ func updateMigration(db *gorm.DB) error {
 		&models.LeaseChecklistItem{},
 		&models.LeasePayment{},
 		&models.TenantAccount{},
+		&models.Invoice{},
+		&models.InvoiceLineItem{},
+		&models.Payment{},
 		// &models.MaintenanceRequest{},
+		// &models.MaintenanceRequestActivityLog{},
 		// &models.Announcement{},
 	)
 	return err
@@ -59,14 +63,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 
 	m = gormigrate.New(db, gormigrate.DefaultOptions, []*gormigrate.Migration{
 		jobs.SeedSuperAdmin(),
-		jobs.AddClientContactInfo(),
-		jobs.AddCreatedByTenantApplication(),
-		jobs.AddMoveInUpdatesToLease(),
-		jobs.AddDocsSetupFieldsToTenantApplication(),
-		jobs.AddCodeTenantApplication(),
-		jobs.SeedCodeTenantApplication(),
-		jobs.AddIDTypeTenantApplication(),
-		jobs.AddStatusTimestampsLease(),
+		jobs.SeedSystemOfflinePaymentAccount(),
 	})
 	m.Migrate()
 

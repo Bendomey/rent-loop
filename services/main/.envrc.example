@@ -29,3 +29,25 @@ export PROPERTY_MANAGER_PORTAL_URL=http://localhost:3000
 export TENANT_PORTAL_URL=http://localhost:3002
 
 export REDIS_URL=redis://localhost:6379
+
+# Fincore Accounting Engine
+export FINCORE_API_BASE_URL=http://localhost:8081/api/v1
+export FINCORE_CLIENT_ID=
+export FINCORE_CLIENT_SECRET=
+
+# Fincore Chart of Accounts (UUIDs from your fincore instance)
+# Asset Accounts
+export FINCORE_ACCOUNT_CASH_BANK=
+export FINCORE_ACCOUNT_RECEIVABLE=
+
+# Liability Accounts
+export FINCORE_ACCOUNT_SECURITY_DEPOSITS=
+
+# Income Accounts
+export FINCORE_ACCOUNT_RENTAL_INCOME=
+export FINCORE_ACCOUNT_MAINTENANCE_REIMBURSEMENT=
+export FINCORE_ACCOUNT_SUBSCRIPTION_REVENUE=
+
+# Expense Accounts
+export FINCORE_ACCOUNT_MAINTENANCE_EXPENSE=
+export FINCORE_ACCOUNT_PROPERTY_MGMT_EXPENSE=

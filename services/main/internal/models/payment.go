@@ -9,18 +9,21 @@ import (
 // Payment represents a payment made via our payment gateway.
 type Payment struct {
 	BaseModelSoftDelete
-	Amount int64 `gorm:"not null;"`
 
-	Reference        string  `gorm:"not null"`
-	AccessCode       *string // we clear the data once it's used
-	AuthorizationUrl *string // we clear the data once it's used
+	InvoiceID string
+	Invoice   Invoice
 
-	Email string `json:"email"` // either use system email or user email
+	Rail     string  `gorm:"not null;"` // MOMO | BANK_TRANSFER | CARD | OFFLINE
+	Provider *string // MTN | VODAFONE | AIRTELTIGO | PAYSTACK | BANK_API | CASH
 
-	Status       string `gorm:"not null;default:PENDING;index"` // PENDING,SUCCESSFUL,FAILED,EXPIRED.
+	Amount   int64  `gorm:"not null;"`
+	Currency string `gorm:"not null;default:'GHS'"` // e.g., 'GHS'
+
+	Reference *string // unique reference from payment processor. null for offline(cash) payments
+
+	Status       string `gorm:"not null;default:PENDING;index"` // PENDING,SUCCESSFUL,FAILED.
 	SuccessfulAt *time.Time
 	FailedAt     *time.Time
-	ExpiredAt    *time.Time
 
-	Metadata *datatypes.JSON `gorm:"type:jsonb"` // to store any additional data. eg {leasePaymentId: "", tenantApplicationId: "", tenantApplicationPaymentType: "SecurityDeposit"}
+	Metadata *datatypes.JSON `gorm:"type:jsonb"` // to store any additional data. eg payment processor response
 }

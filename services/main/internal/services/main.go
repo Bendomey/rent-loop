@@ -1,11 +1,13 @@
 package services
 
 import (
+	"github.com/Bendomey/rent-loop/services/main/internal/clients"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 )
 
 type Services struct {
+	AuthService               AuthService
 	AdminService              AdminService
 	ClientApplicationService  ClientApplicationService
 	ClientUserService         ClientUserService
@@ -18,39 +20,52 @@ type Services struct {
 	TenantService             TenantService
 	LeaseService              LeaseService
 	TenantAccountService      TenantAccountService
-	AuthService               AuthService
+	PaymentAccountService     PaymentAccountService
+	AccountingService         AccountingService
+	InvoiceService            InvoiceService
+	PaymentService            PaymentService
 }
 
-func NewServices(appCtx pkg.AppContext, repository repository.Repository) Services {
-	adminService := NewAdminService(appCtx, repository.AdminRepository)
+type INewServicesParams struct {
+	AppCtx     pkg.AppContext
+	Repository repository.Repository
+	Clients    clients.Clients
+}
+
+func NewServices(params INewServicesParams) Services {
+	accountingService := NewAccountingService(params.AppCtx, params.Clients.AccountingAPI)
+	invoiceService := NewInvoiceService(params.AppCtx, params.Repository.InvoiceRepository, accountingService)
+
+	authService := NewAuthService(params.AppCtx)
+	adminService := NewAdminService(params.AppCtx, params.Repository.AdminRepository)
 	clientApplicationService := NewClientApplicationService(
-		appCtx,
-		repository.ClientApplicationRepository,
+		params.AppCtx,
+		params.Repository.ClientApplicationRepository,
 	)
 
 	clientUserService := NewClientUserService(
-		appCtx,
-		repository.ClientUserRepository,
-		repository.ClientRepository,
+		params.AppCtx,
+		params.Repository.ClientUserRepository,
+		params.Repository.ClientRepository,
 	)
 
 	clientUserPropertyService := NewClientUserPropertyService(
-		appCtx,
-		repository.ClientUserPropertyRepository,
+		params.AppCtx,
+		params.Repository.ClientUserPropertyRepository,
 	)
 
-	propertyBlockService := NewPropertyBlockService(appCtx, repository.PropertyBlockRepository)
+	propertyBlockService := NewPropertyBlockService(params.AppCtx, params.Repository.PropertyBlockRepository)
 
 	unitService := NewUnitService(UnitServiceDependencies{
-		AppCtx:               appCtx,
-		Repo:                 repository.UnitRepository,
+		AppCtx:               params.AppCtx,
+		Repo:                 params.Repository.UnitRepository,
 		PropertyBlockService: propertyBlockService,
 	})
 
 	propertyService := NewPropertyService(
 		PropertyServiceDependencies{
-			AppCtx:                    appCtx,
-			Repo:                      repository.PropertyRepository,
+			AppCtx:                    params.AppCtx,
+			Repo:                      params.Repository.PropertyRepository,
 			ClientUserService:         clientUserService,
 			ClientUserPropertyService: clientUserPropertyService,
 			UnitService:               unitService,
@@ -59,32 +74,43 @@ func NewServices(appCtx pkg.AppContext, repository repository.Repository) Servic
 	)
 
 	documentService := NewDocumentService(
-		appCtx,
-		repository.DocumentRepository,
+		params.AppCtx,
+		params.Repository.DocumentRepository,
 	)
 
-	tenantService := NewTenantService(appCtx, repository.TenantRepository)
+	tenantService := NewTenantService(params.AppCtx, params.Repository.TenantRepository)
 
-	leaseService := NewLeaseService(appCtx, repository.LeaseRepository)
+	leaseService := NewLeaseService(params.AppCtx, params.Repository.LeaseRepository)
 
-	tenantAccountService := NewTenantAccountService(appCtx, repository.TenantAccountRepository)
+	tenantAccountService := NewTenantAccountService(params.AppCtx, params.Repository.TenantAccountRepository)
 
+	paymentAccountService := NewPaymentAccountService(params.AppCtx, params.Repository.PaymentAccountRepository)
 	tenantApplicationService := NewTenantApplicationService(TenantApplicationServiceDeps{
-		AppCtx:               appCtx,
-		Repo:                 repository.TenantApplicationRepository,
+		AppCtx:               params.AppCtx,
+		Repo:                 params.Repository.TenantApplicationRepository,
 		UnitService:          unitService,
 		ClientUserService:    clientUserService,
 		TenantService:        tenantService,
 		LeaseService:         leaseService,
 		TenantAccountService: tenantAccountService,
+		InvoiceService:       invoiceService,
+	})
+	paymentService := NewPaymentService(PaymentServiceDeps{
+		AppCtx:                params.AppCtx,
+		Repo:                  params.Repository.PaymentRepository,
+		PaymentAccountService: paymentAccountService,
+		InvoiceService:        invoiceService,
 	})
 
-	authService := NewAuthService(appCtx)
-
 	return Services{
+		AccountingService: accountingService,
+		InvoiceService:    invoiceService,
+
+		AuthService:               authService,
 		AdminService:              adminService,
 		ClientApplicationService:  clientApplicationService,
 		ClientUserService:         clientUserService,
+		PaymentAccountService:     paymentAccountService,
 		PropertyService:           propertyService,
 		DocumentService:           documentService,
 		UnitService:               unitService,
@@ -94,6 +120,6 @@ func NewServices(appCtx pkg.AppContext, repository repository.Repository) Servic
 		TenantService:             tenantService,
 		LeaseService:              leaseService,
 		TenantAccountService:      tenantAccountService,
-		AuthService:               authService,
+		PaymentService:            paymentService,
 	}
 }
