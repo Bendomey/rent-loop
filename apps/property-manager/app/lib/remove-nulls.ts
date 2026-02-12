@@ -2,7 +2,10 @@
  * @module RemoveNulls
  */
 
-export type ObjectT = Record<string, string | undefined | null | number>
+export type ObjectT = Record<
+	string,
+	string | undefined | null | number | string[]
+>
 
 /**
  * Remove all falsy keys(null/undefined).

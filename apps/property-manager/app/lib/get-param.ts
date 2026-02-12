@@ -4,11 +4,8 @@ export const getQueryParams = <FilterT>(
 	props: FetchMultipleDataInputParams<FilterT>,
 ) => {
 	const filters: ObjectT = props.filters ?? {}
-	const query = cleanParams(filters)
 
-	const updatedFilter: Record<string, Nullable<string>> = { ...query }
-
-	return cleanParams({
+	const baseParams = cleanParams({
 		page_size: props.pagination ? props.pagination.per : undefined,
 		page: props.pagination ? props.pagination.page : undefined,
 		query: props.search?.query,
@@ -17,6 +14,21 @@ export const getQueryParams = <FilterT>(
 			: undefined,
 		...(props.sorter ?? {}),
 		populate: props.populate ? props.populate.join(',') : undefined,
-		...updatedFilter,
 	})
+
+	const params = new URLSearchParams(baseParams)
+
+	for (const [key, value] of Object.entries(filters)) {
+		if (value === null || value === undefined) continue
+
+		if (Array.isArray(value)) {
+			for (const item of value) {
+				params.append(key, item)
+			}
+		} else {
+			params.set(key, String(value))
+		}
+	}
+
+	return params
 }

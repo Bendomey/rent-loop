@@ -11,8 +11,7 @@ const getProperties = async (
 	props: FetchMultipleDataInputParams<FetchPropertyFilter>,
 ) => {
 	try {
-		const removeAllNullableValues = getQueryParams<FetchPropertyFilter>(props)
-		const params = new URLSearchParams(removeAllNullableValues)
+		const params = getQueryParams<FetchPropertyFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<Property>>
 		>(`/v1/properties?${params.toString()}`)
@@ -166,9 +165,8 @@ export const getClientUserProperties = async (
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
-		const removeAllNullableValues =
+		const params =
 			getQueryParams<FetchClientUserPropertyFilter>(props)
-		const params = new URLSearchParams(removeAllNullableValues)
 		const response = await fetchServer<
 			ApiResponse<FetchMultipleDataResponse<ClientUserProperty>>
 		>(`${apiConfig.baseUrl}/v1/properties/me?${params.toString()}`, {
@@ -193,9 +191,8 @@ const getClientUserPropertiesForClient = async (
 	props: FetchMultipleDataInputParams<FetchClientUserPropertyFilter>,
 ) => {
 	try {
-		const removeAllNullableValues =
+		const params =
 			getQueryParams<FetchClientUserPropertyFilter>(props)
-		const params = new URLSearchParams(removeAllNullableValues)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<ClientUserProperty>>
 		>(`/v1/properties/me?${params.toString()}`, {
