@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"slices"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
@@ -79,7 +80,7 @@ func (r *paymentAccountRepository) List(
 
 	db := r.DB.WithContext(ctx).Scopes(
 		IDsFilterScope("invoices", filterQuery.IDs),
-		paymentAccountClientFilterScope(filterQuery.ClientID),
+		paymentAccountClientFilterScope(filterQuery.ClientID, filterQuery.OwnerTypes),
 		paymentAccountOwnerTypesScope(filterQuery.OwnerTypes),
 		paymentAccountRailScope(filterQuery.Rail),
 		paymentAccountStatusScope(filterQuery.Status),
@@ -114,7 +115,7 @@ func (r *paymentAccountRepository) Count(
 		Model(&models.PaymentAccount{}).
 		Scopes(
 			IDsFilterScope("invoices", filterQuery.IDs),
-			paymentAccountClientFilterScope(filterQuery.ClientID),
+			paymentAccountClientFilterScope(filterQuery.ClientID, filterQuery.OwnerTypes),
 			paymentAccountOwnerTypesScope(filterQuery.OwnerTypes),
 			paymentAccountRailScope(filterQuery.Rail),
 			paymentAccountStatusScope(filterQuery.Status),
@@ -130,11 +131,16 @@ func (r *paymentAccountRepository) Count(
 	return count, nil
 }
 
-func paymentAccountClientFilterScope(clientID *string) func(db *gorm.DB) *gorm.DB {
+func paymentAccountClientFilterScope(clientID *string, ownerTypes *[]string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if clientID == nil {
 			return db
 		}
+
+		if ownerTypes != nil && slices.Contains(*ownerTypes, "SYSTEM") {
+			return db.Where("(payment_accounts.client_id = ? OR payment_accounts.client_id IS NULL)", *clientID)
+		}
+
 		return db.Where("payment_accounts.client_id = ?", *clientID)
 	}
 }
