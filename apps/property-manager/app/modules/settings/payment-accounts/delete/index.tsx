@@ -29,27 +29,9 @@ export default function DeletePaymentAccountModal({
 }: Props) {
 	const queryClient = useQueryClient()
 
-
 	const handleSubmit = () => {
 		if (data) {
-			// mutate(
-			// 	{
-			// 		payment_account_id: data.id,
-			// 	},
-			// 	{
-			// 		onError: () => {
-			// 			toast.error(`Failed to delete payment account ${data.identifier}. Try again later.`)
-			// 		},
-			// 		onSuccess: () => {
-			// 			toast.success(`Payment Account ${data.identifier} has been successfully deleted`)
-
-			// 			void queryClient.invalidateQueries({
-			// 				queryKey: [QUERY_KEYS.PAYMENT_ACCOUNTS],
-			// 			})
-			// 			setOpened(false)
-			// 		},
-			// 	},
-			// )
+			
 		}
 	}
 
