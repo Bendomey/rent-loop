@@ -19,8 +19,8 @@ type MaintenanceRequest struct {
 	LeaseID *string
 	Lease   *Lease
 
-	CreateByTenantID *string
-	CreatedByTenant  *Tenant
+	CreatedByTenantID *string
+	CreatedByTenant   *Tenant
 
 	CreatedByClientUserID *string
 	CreatedByClientUser   *ClientUser
