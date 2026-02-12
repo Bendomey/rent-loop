@@ -12,6 +12,7 @@ import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { PaymentAccountsController } from './controller'
 import DeletePaymentAccountModal from './delete'
+import SetPaymentAccountAsDefaultModal from './set-default'
 import { useGetPaymentAccounts } from '~/api/payment-accounts'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
@@ -37,6 +38,10 @@ export function PaymentAccountsModule() {
 		useState<PaymentAccount>()
 	const [openDeletePaymentAccountModal, setOpenDeletePaymentAccountModal] =
 		useState(false)
+	const [
+		openSetDefaultPaymentAccountModal,
+		setOpenSetDefaultPaymentAccountModal,
+	] = useState(false)
 	const [searchParams] = useSearchParams()
 
 	const page = searchParams.get('page')
@@ -81,7 +86,7 @@ export function PaymentAccountsModule() {
 					return (
 						<div className="min-w-32">
 							<span className="truncate text-xs text-zinc-600">
-								{getValue<string>()}
+								{getValue<string>() ?? 'N/A'}
 							</span>
 						</div>
 					)
@@ -128,8 +133,7 @@ export function PaymentAccountsModule() {
 				header: 'Status',
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
-						{getValue<PaymentAccount['status']>() ===
-						'PaymentAccount.Status.Active' ? (
+						{getValue<PaymentAccount['status']>() === 'ACTIVE' ? (
 							<CircleCheck className="fill-green-600 text-white" />
 						) : (
 							<CircleX className="fill-red-500 text-white" />
@@ -156,13 +160,21 @@ export function PaymentAccountsModule() {
 							<DropdownMenuItem>
 								<Eye className="h-4 w-4" /> View
 							</DropdownMenuItem>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem className="flex items-center gap-2 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-600 focus:bg-emerald-50 focus:text-emerald-600">
-								<CircleCheck className="h-4 w-4" />
-								<span>Make Default</span>
-							</DropdownMenuItem>
 							{row.original.owner_type === 'PROPERTY_OWNER' ? (
 								<>
+								<DropdownMenuSeparator />
+							{!row.original.is_default ? (
+								<DropdownMenuItem
+									className="flex items-center gap-2 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-600 focus:bg-emerald-50 focus:text-emerald-600"
+									onClick={() => {
+										setSelectedPaymentAccount(row.original)
+										setOpenSetDefaultPaymentAccountModal(true)
+									}}
+								>
+									<CircleCheck className="h-4 w-4" />
+									<span>Make Default</span>
+								</DropdownMenuItem>
+							) : null}
 									<DropdownMenuItem>
 										<Edit className="h-4 w-4" /> Edit
 									</DropdownMenuItem>
@@ -221,7 +233,7 @@ export function PaymentAccountsModule() {
 					columns={columns}
 					isLoading={isLoading}
 					refetch={refetch}
-					error={error ? 'Failed to load members.' : undefined}
+					error={error ? 'Failed to load payment accounts.' : undefined}
 					dataResponse={{
 						rows: data?.rows ?? [],
 						total: data?.meta?.total ?? 0,
@@ -245,6 +257,11 @@ export function PaymentAccountsModule() {
 					}}
 				/>
 			</div>
+			<SetPaymentAccountAsDefaultModal
+				opened={openSetDefaultPaymentAccountModal}
+				setOpened={setOpenSetDefaultPaymentAccountModal}
+				data={selectedPaymentAccount}
+			/>
 			<DeletePaymentAccountModal
 				opened={openDeletePaymentAccountModal}
 				setOpened={setOpenDeletePaymentAccountModal}

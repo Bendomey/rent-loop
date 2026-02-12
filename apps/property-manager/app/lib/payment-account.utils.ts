@@ -5,9 +5,9 @@ export function getPaymentAccountStatusLabel(
 	propertyStatus: PaymentAccount['status'],
 ) {
 	switch (propertyStatus) {
-		case 'PaymentAccount.Status.Active':
+		case 'ACTIVE':
 			return 'Active'
-		case 'PaymentAccount.Status.Inactive':
+		case 'INACTIVE':
 			return 'Inactive'
 		default:
 			return 'Unknown'
