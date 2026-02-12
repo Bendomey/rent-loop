@@ -9,7 +9,7 @@ import {
 	Trash2,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { PaymentAccountsController } from './controller'
 import DeletePaymentAccountModal from './delete'
 import SetPaymentAccountAsDefaultModal from './set-default'
@@ -34,6 +34,8 @@ import { paymentIcons } from '~/lib/payment-account.utils'
 import { cn } from '~/lib/utils'
 
 export function PaymentAccountsModule() {
+	const navigate = useNavigate()
+
 	const [selectedPaymentAccount, setSelectedPaymentAccount] =
 		useState<PaymentAccount>()
 	const [openDeletePaymentAccountModal, setOpenDeletePaymentAccountModal] =
@@ -162,20 +164,26 @@ export function PaymentAccountsModule() {
 							</DropdownMenuItem>
 							{row.original.owner_type === 'PROPERTY_OWNER' ? (
 								<>
-								<DropdownMenuSeparator />
-							{!row.original.is_default ? (
-								<DropdownMenuItem
-									className="flex items-center gap-2 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-600 focus:bg-emerald-50 focus:text-emerald-600"
-									onClick={() => {
-										setSelectedPaymentAccount(row.original)
-										setOpenSetDefaultPaymentAccountModal(true)
-									}}
-								>
-									<CircleCheck className="h-4 w-4" />
-									<span>Make Default</span>
-								</DropdownMenuItem>
-							) : null}
-									<DropdownMenuItem>
+									<DropdownMenuSeparator />
+									{!row.original.is_default ? (
+										<DropdownMenuItem
+											className="flex items-center gap-2 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-600 focus:bg-emerald-50 focus:text-emerald-600"
+											onClick={() => {
+												setSelectedPaymentAccount(row.original)
+												setOpenSetDefaultPaymentAccountModal(true)
+											}}
+										>
+											<CircleCheck className="h-4 w-4" />
+											<span>Make Default</span>
+										</DropdownMenuItem>
+									) : null}
+									<DropdownMenuItem
+										onClick={() =>
+											navigate(
+												`/settings/payment-accounts/${row.original.id}/edit`,
+											)
+										}
+									>
 										<Edit className="h-4 w-4" /> Edit
 									</DropdownMenuItem>
 									<DropdownMenuSeparator />
