@@ -8,7 +8,7 @@ import {
 	RotateCw,
 	Trash2,
 } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { PaymentAccountsController } from './controller'
 import { useGetPaymentAccounts } from '~/api/payment-accounts'
@@ -30,8 +30,13 @@ import {
 } from '~/lib/payment-account.utils'
 import { paymentIcons } from '~/lib/payment-account.utils'
 import { cn } from '~/lib/utils'
+import DeletePaymentAccountModal from './delete'
 
 export function PaymentAccountsModule() {
+	const [selectedPaymentAccount, setSelectedPaymentAccount] =
+			useState<PaymentAccount>()
+		const [openDeletePaymentAccountModal, setOpenDeletePaymentAccountModal] =
+			useState(false)
 	const [searchParams] = useSearchParams()
 
 	const page = searchParams.get('page')
@@ -131,7 +136,7 @@ export function PaymentAccountsModule() {
 			},
 			{
 				id: 'actions',
-				cell: () => (
+				cell: ({row}) => (
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Button
@@ -156,7 +161,11 @@ export function PaymentAccountsModule() {
 								<span>Make Default</span>
 							</DropdownMenuItem>
 							<DropdownMenuSeparator />
-							<DropdownMenuItem className="flex items-center gap-2 text-rose-600 hover:bg-red-50 hover:text-rose-600 focus:bg-rose-50 focus:text-rose-600">
+							<DropdownMenuItem className="flex items-center gap-2 text-rose-600 hover:bg-red-50 hover:text-rose-600 focus:bg-rose-50 focus:text-rose-600"
+							onClick={() => {
+								setSelectedPaymentAccount(row.original)
+								setOpenDeletePaymentAccountModal(true)
+								}}>
 								<Trash2 className="h-4 w-4" />
 								<span>Delete</span>
 							</DropdownMenuItem>
@@ -226,6 +235,11 @@ export function PaymentAccountsModule() {
 					}}
 				/>
 			</div>
+			<DeletePaymentAccountModal
+							opened={openDeletePaymentAccountModal}
+							setOpened={setOpenDeletePaymentAccountModal}
+							data={selectedPaymentAccount}
+						/>
 		</main>
 	)
 }
