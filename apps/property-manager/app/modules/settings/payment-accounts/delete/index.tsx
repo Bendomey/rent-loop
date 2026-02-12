@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { Dispatch, SetStateAction } from 'react'
 import { toast } from 'sonner'
+import { useDeletePaymentAccount } from '~/api/payment-accounts'
 import {
 	AlertDialog,
 	AlertDialogContent,
@@ -20,8 +21,6 @@ interface Props {
 	setOpened: Dispatch<SetStateAction<boolean>>
 }
 
-const isPending = false
-
 export default function DeletePaymentAccountModal({
 	data,
 	opened,
@@ -29,9 +28,32 @@ export default function DeletePaymentAccountModal({
 }: Props) {
 	const queryClient = useQueryClient()
 
+	const { mutate, isPending } = useDeletePaymentAccount()
+
 	const handleSubmit = () => {
 		if (data) {
-			
+			mutate(
+				{
+					payment_account_id: data.id,
+				},
+				{
+					onError: () => {
+						toast.error(
+							`Failed to delete payment account ${data.identifier}. Try again later.`,
+						)
+					},
+					onSuccess: () => {
+						toast.success(
+							`Payment Account ${data.identifier} has been successfully deleted`,
+						)
+
+						void queryClient.invalidateQueries({
+							queryKey: [QUERY_KEYS.PAYMENT_ACCOUNTS],
+						})
+						setOpened(false)
+					},
+				},
+			)
 		}
 	}
 
@@ -40,11 +62,15 @@ export default function DeletePaymentAccountModal({
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>
-						{data ? `Delete payment account (${data.identifier})` : 'Delete this Payment Account'}
+						{data
+							? `Delete Payment Account (${data.identifier})`
+							: 'Delete this Payment Account'}
 					</AlertDialogTitle>
 
 					<AlertDialogDescription>
-						Are you sure you want to delete {data?.identifier ?? 'this payment account'} from your payment accounts?
+						Are you sure you want to delete{' '}
+						{data?.identifier ?? 'this payment account'} from your payment
+						accounts?
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 

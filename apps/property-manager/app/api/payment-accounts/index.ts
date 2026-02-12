@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '~/lib/constants'
 import { getQueryParams } from '~/lib/get-param'
 import { fetchClient } from '~/lib/transport'
@@ -11,8 +11,7 @@ const getPaymentAccounts = async (
 	props: FetchMultipleDataInputParams<FetchPaymentAccountFilter>,
 ) => {
 	try {
-		const params =
-			getQueryParams<FetchPaymentAccountFilter>(props)
+		const params = getQueryParams<FetchPaymentAccountFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<PaymentAccount>>
 		>(`/v1/payment-accounts?${params.toString()}`)
@@ -35,4 +34,29 @@ export const useGetPaymentAccounts = (
 	useQuery({
 		queryKey: [QUERY_KEYS.PAYMENT_ACCOUNTS, query],
 		queryFn: () => getPaymentAccounts(query),
+	})
+
+/**
+ * Delete payment account
+ */
+const deletePaymentAccount = async (props: { payment_account_id: string }) => {
+	try {
+		await fetchClient(`/v1/payment-accounts/${props.payment_account_id}`, {
+			method: 'DELETE',
+		})
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useDeletePaymentAccount = () =>
+	useMutation({
+		mutationFn: deletePaymentAccount,
 	})

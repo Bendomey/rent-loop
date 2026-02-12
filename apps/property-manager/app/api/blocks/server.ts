@@ -12,8 +12,7 @@ export const getPropertyBlocksForServer = async (
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
-		const params =
-			getQueryParams<FetchPropertyBlockFilter>(props)
+		const params = getQueryParams<FetchPropertyBlockFilter>(props)
 		const response = await fetchServer<
 			ApiResponse<FetchMultipleDataResponse<PropertyBlock>>
 		>(

@@ -165,8 +165,7 @@ export const getClientUserProperties = async (
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
-		const params =
-			getQueryParams<FetchClientUserPropertyFilter>(props)
+		const params = getQueryParams<FetchClientUserPropertyFilter>(props)
 		const response = await fetchServer<
 			ApiResponse<FetchMultipleDataResponse<ClientUserProperty>>
 		>(`${apiConfig.baseUrl}/v1/properties/me?${params.toString()}`, {
@@ -191,8 +190,7 @@ const getClientUserPropertiesForClient = async (
 	props: FetchMultipleDataInputParams<FetchClientUserPropertyFilter>,
 ) => {
 	try {
-		const params =
-			getQueryParams<FetchClientUserPropertyFilter>(props)
+		const params = getQueryParams<FetchClientUserPropertyFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<ClientUserProperty>>
 		>(`/v1/properties/me?${params.toString()}`, {

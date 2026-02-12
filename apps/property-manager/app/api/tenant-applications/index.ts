@@ -11,8 +11,7 @@ const getPropertyTenantApplications = async (
 	props: FetchMultipleDataInputParams<FetchTenantApplicationFilter>,
 ) => {
 	try {
-		const params =
-			getQueryParams<FetchTenantApplicationFilter>(props)
+		const params = getQueryParams<FetchTenantApplicationFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<TenantApplication>>
 		>(`/v1/tenant-applications?${params.toString()}`)

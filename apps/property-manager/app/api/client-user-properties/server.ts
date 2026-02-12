@@ -9,8 +9,7 @@ export const getClientUserPropertiesForServer = async (
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
-		const params =
-			getQueryParams<FetchClientUserPropertyFilter>(props)
+		const params = getQueryParams<FetchClientUserPropertyFilter>(props)
 		const response = await fetchServer<
 			ApiResponse<FetchMultipleDataResponse<ClientUserProperty>>
 		>(`${apiConfig.baseUrl}/v1/client-user-properties?${params.toString()}`, {
