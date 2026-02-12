@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { Dispatch, SetStateAction } from 'react'
 import { toast } from 'sonner'
+import { useUpdatePaymentAccount } from '~/api/payment-accounts'
 import {
 	AlertDialog,
 	AlertDialogContent,
@@ -20,18 +21,39 @@ interface Props {
 	setOpened: Dispatch<SetStateAction<boolean>>
 }
 
-const isPending = false
-
 export default function SetPaymentAccountAsDefaultModal({
 	data,
 	opened,
 	setOpened,
 }: Props) {
 	const queryClient = useQueryClient()
+	const { mutate, isPending } = useUpdatePaymentAccount()
 
 	const handleSubmit = () => {
 		if (data) {
-			
+			mutate(
+				{
+					id: data.id,
+					is_default: true,
+				},
+				{
+					onError: () => {
+						toast.error(
+							`Failed to set payment account ${data.identifier} as default. Try again later.`,
+						)
+					},
+					onSuccess: () => {
+						toast.success(
+							`Payment Account ${data.identifier} has been successfully set as default`,
+						)
+
+						void queryClient.invalidateQueries({
+							queryKey: [QUERY_KEYS.PAYMENT_ACCOUNTS],
+						})
+						setOpened(false)
+					},
+				},
+			)
 		}
 	}
 
@@ -40,12 +62,15 @@ export default function SetPaymentAccountAsDefaultModal({
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>
-						{data ? `Set payment account (${data.identifier}) as default` : 'Set this Payment Account as Default'}
+						{data?.identifier
+							? `Set (${data.identifier}) as default payment account`
+							: 'Set this Payment Account as Default'}
 					</AlertDialogTitle>
 
 					<AlertDialogDescription>
-						Are you sure you want to set {data?.identifier ?? 'this payment account'} as the default payment account?
-						This will be used as the default for all future transactions.
+						{data?.identifier
+							? `This will make ${data.identifier} your default payment account for future transactions.`
+							: 'This will make this your default payment account for future transactions.'}
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 
@@ -62,7 +87,7 @@ export default function SetPaymentAccountAsDefaultModal({
 						onClick={() => handleSubmit()}
 						className="bg-primary hover:bg-primary/90 text-white"
 					>
-						{isPending ? <Spinner /> : null} Yes, Make Default
+						{isPending ? <Spinner /> : null} Yes, Set as Default
 					</AlertDialogAction>
 				</AlertDialogFooter>
 			</AlertDialogContent>

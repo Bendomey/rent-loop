@@ -36,6 +36,39 @@ export const useGetPaymentAccounts = (
 		queryFn: () => getPaymentAccounts(query),
 	})
 
+interface UpdatePaymentAccountProps {
+	id: string
+	identifier?: string
+	is_default?: boolean
+	provider?: PaymentAccount['provider']
+	status?: PaymentAccount['status']
+}
+
+/**
+ * Update payment account
+ */
+
+const updatePaymentAccount = async (props: UpdatePaymentAccountProps) => {
+	try {
+		await fetchClient<PaymentAccount>(`/v1/payment-accounts/${props.id}`, {
+			method: 'PATCH',
+			body: JSON.stringify(props),
+		})
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useUpdatePaymentAccount = () =>
+	useMutation({ mutationFn: updatePaymentAccount })
+
 /**
  * Delete payment account
  */
