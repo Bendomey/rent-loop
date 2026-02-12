@@ -160,7 +160,9 @@ export function PaymentAccountsModule() {
 							<DropdownMenuItem>
 								<Eye className="h-4 w-4" /> View
 							</DropdownMenuItem>
-							<DropdownMenuSeparator />
+							{row.original.owner_type === 'PROPERTY_OWNER' ? (
+								<>
+								<DropdownMenuSeparator />
 							{!row.original.is_default ? (
 								<DropdownMenuItem
 									className="flex items-center gap-2 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-600 focus:bg-emerald-50 focus:text-emerald-600"
@@ -173,8 +175,6 @@ export function PaymentAccountsModule() {
 									<span>Make Default</span>
 								</DropdownMenuItem>
 							) : null}
-							{row.original.owner_type === 'PROPERTY_OWNER' ? (
-								<>
 									<DropdownMenuItem>
 										<Edit className="h-4 w-4" /> Edit
 									</DropdownMenuItem>
