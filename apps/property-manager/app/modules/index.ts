@@ -22,6 +22,7 @@ export * from './changelog'
 
 export * from './settings/general'
 export * from './settings/payment-accounts'
+export * from './settings/payment-accounts/edit'
 export * from './settings/billing'
 export * from './settings/documents'
 export * from './settings/documents/document'
