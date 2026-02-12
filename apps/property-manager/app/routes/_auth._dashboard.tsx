@@ -2,6 +2,8 @@ import { Link, Outlet, redirect } from 'react-router'
 import pkgJson from '../../package.json'
 import type { Route } from './+types/_auth._dashboard'
 import { getClientUserPropertiesForServer } from '~/api/client-user-properties/server'
+import { getPaymentAccountsForServer } from '~/api/payment-accounts'
+import { getPropertiesForServer } from '~/api/properties'
 import { AppSidebar } from '~/components/app-sidebar'
 import { ClientChecklist } from '~/components/client-checklist'
 import {
@@ -33,6 +35,11 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	const authData = context.get(userContext)
 	if (!authData) return
 
+	const apiConfig = {
+		authToken,
+		baseUrl,
+	};
+
 	// only admins and owners can access the main dashboard.
 	if (authData.clientUser.role === 'STAFF') {
 		const clientUserProperties = await getClientUserPropertiesForServer(
@@ -43,10 +50,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 				search: {},
 				sorter: {},
 			},
-			{
-				authToken,
-				baseUrl,
-			},
+			apiConfig
 		)
 
 		const clientUserProperty = clientUserProperties?.rows?.at(0)
@@ -57,9 +61,32 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 		return redirect('/properties/no-assigned')
 	}
+
+	const [properties, paymentAccounts] = await Promise.all([
+		getPropertiesForServer(
+			{
+				pagination: { page: 1, per: 1 },
+			},
+			apiConfig
+		),
+		getPaymentAccountsForServer(
+			{
+				filters: {
+					owner_types: ['PROPERTY_OWNER', 'SYSTEM'],
+				},
+				pagination: { page: 1, per: 1 },
+			},
+			apiConfig
+		),
+	])
+
+	return {
+		propertiesCount: properties?.meta?.total || 0,
+		paymentAccountsCount: paymentAccounts?.meta?.total || 0,
+	}
 }
 
-export default function AuthDashboard({ matches }: Route.ComponentProps) {
+export default function AuthDashboard({ matches, loaderData }: Route.ComponentProps) {
 	const breadcrumbs = matches
 		.filter((m) => m?.handle)
 		.map((m) => {
@@ -71,9 +98,7 @@ export default function AuthDashboard({ matches }: Route.ComponentProps) {
 		<SidebarProvider>
 			<AppSidebar />
 			<SidebarInset>
-				<div className="mx-5 mt-4">
-					<ClientChecklist />
-				</div>
+				<ClientChecklist paymentAccountsCount={loaderData?.paymentAccountsCount ?? 0} propertiesCount={loaderData?.propertiesCount ?? 0} />
 				<header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
 					<div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
 						<SidebarTrigger className="-ml-1" />
