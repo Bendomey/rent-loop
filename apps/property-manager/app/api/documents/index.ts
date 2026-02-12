@@ -7,8 +7,7 @@ const getDocuments = async (
 	props: FetchMultipleDataInputParams<FetchRentloopDocumentFilter>,
 ) => {
 	try {
-		const params =
-			getQueryParams<FetchRentloopDocumentFilter>(props)
+		const params = getQueryParams<FetchRentloopDocumentFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<RentloopDocument>>
 		>(`/v1/documents?${params.toString()}`)

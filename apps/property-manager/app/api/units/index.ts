@@ -13,8 +13,7 @@ export const getPropertyUnits = async (
 	},
 ) => {
 	try {
-		const params =
-			getQueryParams<FetchPropertyUnitFilter>(props)
+		const params = getQueryParams<FetchPropertyUnitFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<PropertyUnit>>
 		>(`/v1/properties/${props.property_id}/units?${params.toString()}`)

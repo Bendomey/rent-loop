@@ -12,8 +12,7 @@ export const getPropertyBlocks = async (
 	},
 ) => {
 	try {
-		const params =
-			getQueryParams<FetchPropertyBlockFilter>(props)
+		const params = getQueryParams<FetchPropertyBlockFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<PropertyBlock>>
 		>(`/v1/properties/${props.property_id}/blocks?${params.toString()}`)

@@ -11,6 +11,7 @@ import {
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { PaymentAccountsController } from './controller'
+import DeletePaymentAccountModal from './delete'
 import { useGetPaymentAccounts } from '~/api/payment-accounts'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
@@ -30,13 +31,12 @@ import {
 } from '~/lib/payment-account.utils'
 import { paymentIcons } from '~/lib/payment-account.utils'
 import { cn } from '~/lib/utils'
-import DeletePaymentAccountModal from './delete'
 
 export function PaymentAccountsModule() {
 	const [selectedPaymentAccount, setSelectedPaymentAccount] =
-			useState<PaymentAccount>()
-		const [openDeletePaymentAccountModal, setOpenDeletePaymentAccountModal] =
-			useState(false)
+		useState<PaymentAccount>()
+	const [openDeletePaymentAccountModal, setOpenDeletePaymentAccountModal] =
+		useState(false)
 	const [searchParams] = useSearchParams()
 
 	const page = searchParams.get('page')
@@ -50,7 +50,11 @@ export function PaymentAccountsModule() {
 
 	const { data, isPending, isRefetching, error, refetch } =
 		useGetPaymentAccounts({
-			filters: { rail: rail, status: status, owner_types: ['PROPERTY_OWNER', 'SYSTEM'] },
+			filters: {
+				rail: rail,
+				status: status,
+				owner_types: ['PROPERTY_OWNER', 'SYSTEM'],
+			},
 			pagination: { page, per },
 			sorter: { sort: 'desc', sort_by: 'created_at' },
 		})
@@ -125,7 +129,7 @@ export function PaymentAccountsModule() {
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
 						{getValue<PaymentAccount['status']>() ===
-							'PaymentAccount.Status.Active' ? (
+						'PaymentAccount.Status.Active' ? (
 							<CircleCheck className="fill-green-600 text-white" />
 						) : (
 							<CircleX className="fill-red-500 text-white" />
@@ -136,7 +140,7 @@ export function PaymentAccountsModule() {
 			},
 			{
 				id: 'actions',
-				cell: ({row}) => (
+				cell: ({ row }) => (
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Button
@@ -153,22 +157,28 @@ export function PaymentAccountsModule() {
 								<Eye className="h-4 w-4" /> View
 							</DropdownMenuItem>
 							<DropdownMenuSeparator />
-							<DropdownMenuItem>
-								<Edit className="h-4 w-4" /> Edit
-							</DropdownMenuItem>
 							<DropdownMenuItem className="flex items-center gap-2 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-600 focus:bg-emerald-50 focus:text-emerald-600">
 								<CircleCheck className="h-4 w-4" />
 								<span>Make Default</span>
 							</DropdownMenuItem>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem className="flex items-center gap-2 text-rose-600 hover:bg-red-50 hover:text-rose-600 focus:bg-rose-50 focus:text-rose-600"
-							onClick={() => {
-								setSelectedPaymentAccount(row.original)
-								setOpenDeletePaymentAccountModal(true)
-								}}>
-								<Trash2 className="h-4 w-4" />
-								<span>Delete</span>
-							</DropdownMenuItem>
+							{row.original.owner_type === 'PROPERTY_OWNER' ? (
+								<>
+									<DropdownMenuItem>
+										<Edit className="h-4 w-4" /> Edit
+									</DropdownMenuItem>
+									<DropdownMenuSeparator />
+									<DropdownMenuItem
+										className="flex items-center gap-2 text-rose-600 hover:bg-red-50 hover:text-rose-600 focus:bg-rose-50 focus:text-rose-600"
+										onClick={() => {
+											setSelectedPaymentAccount(row.original)
+											setOpenDeletePaymentAccountModal(true)
+										}}
+									>
+										<Trash2 className="h-4 w-4" />
+										<span>Delete</span>
+									</DropdownMenuItem>
+								</>
+							) : null}
 						</DropdownMenuContent>
 					</DropdownMenu>
 				),
@@ -236,10 +246,10 @@ export function PaymentAccountsModule() {
 				/>
 			</div>
 			<DeletePaymentAccountModal
-							opened={openDeletePaymentAccountModal}
-							setOpened={setOpenDeletePaymentAccountModal}
-							data={selectedPaymentAccount}
-						/>
+				opened={openDeletePaymentAccountModal}
+				setOpened={setOpenDeletePaymentAccountModal}
+				data={selectedPaymentAccount}
+			/>
 		</main>
 	)
 }
