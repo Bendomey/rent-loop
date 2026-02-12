@@ -1278,12 +1278,27 @@ definitions:
       activated_at:
         example: "2024-06-01T09:00:00Z"
         type: string
+      activated_by_id:
+        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
+        type: string
+      activatedBy:
+        $ref: '#/definitions/transformations.OutputClientUser'
       cancelled_at:
         example: "2024-06-01T09:00:00Z"
         type: string
+      cancelled_by_id:
+        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
+        type: string
+      cancelledBy:
+        $ref: '#/definitions/transformations.OutputClientUser'
       completed_at:
         example: "2024-06-01T09:00:00Z"
         type: string
+      completed_by_id:
+        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
+        type: string
+      completedBy:
+        $ref: '#/definitions/transformations.OutputClientUser'
       created_at:
         example: "2024-06-01T09:00:00Z"
         type: string
@@ -1353,6 +1368,11 @@ definitions:
       terminated_at:
         example: "2024-06-01T09:00:00Z"
         type: string
+      terminated_by_id:
+        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
+        type: string
+      terminatedBy:
+        $ref: '#/definitions/transformations.OutputClientUser'
       termination_agreement_document_property_manager_signed_at:
         example: "2024-12-01T10:00:00Z"
         type: string

@@ -19,7 +19,7 @@ type LeaseService interface {
 	GetByIDWithPopulate(context context.Context, query repository.GetLeaseQuery) (*models.Lease, error)
 	ListLeases(context context.Context, filters repository.ListLeasesFilter) ([]models.Lease, error)
 	CountLeases(context context.Context, filters repository.ListLeasesFilter) (int64, error)
-	ActivateLease(context context.Context, leaseID string) error
+	ActivateLease(context context.Context, input ActivateLeaseInput) error
 	CancelLease(context context.Context, input CancelLeaseInput) error
 }
 
@@ -291,10 +291,15 @@ func (s *leaseService) CountLeases(ctx context.Context, filters repository.ListL
 	return count, nil
 }
 
-func (s *leaseService) ActivateLease(ctx context.Context, leaseID string) error {
+type ActivateLeaseInput struct {
+	LeaseID      string
+	ClientUserId string
+}
+
+func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInput) error {
 	lease, getLeaseErr := s.repo.GetOneWithPopulate(
 		ctx,
-		repository.GetLeaseQuery{ID: leaseID, Populate: &[]string{"Unit", "Tenant"}},
+		repository.GetLeaseQuery{ID: input.LeaseID, Populate: &[]string{"Unit", "Tenant"}},
 	)
 	if getLeaseErr != nil {
 		if errors.Is(getLeaseErr, gorm.ErrRecordNotFound) {
@@ -322,6 +327,7 @@ func (s *leaseService) ActivateLease(ctx context.Context, leaseID string) error 
 	lease.Status = "Lease.Status.Active"
 	now := time.Now()
 	lease.ActivatedAt = &now
+	lease.ActivatedById = &input.ClientUserId
 
 	err := s.repo.Update(ctx, lease)
 	if err != nil {
@@ -367,6 +373,7 @@ func (s *leaseService) ActivateLease(ctx context.Context, leaseID string) error 
 type CancelLeaseInput struct {
 	LeaseID            string
 	CancellationReason string
+	ClientUserId       string
 }
 
 func (s *leaseService) CancelLease(ctx context.Context, input CancelLeaseInput) error {
@@ -400,6 +407,7 @@ func (s *leaseService) CancelLease(ctx context.Context, input CancelLeaseInput) 
 	lease.Status = "Lease.Status.Cancelled"
 	now := time.Now()
 	lease.CancelledAt = &now
+	lease.CancelledById = &input.ClientUserId
 
 	err := s.repo.Update(ctx, lease)
 	if err != nil {
