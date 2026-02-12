@@ -414,11 +414,11 @@ definitions:
         type: string
       id_type:
         enum:
-        - ghana_card
-        - national_id
-        - passport
-        - driver_license
-        example: ghana_card
+        - GHANA_CARD
+        - NATIONAL_ID
+        - PASSPORT
+        - DRIVER_LICENSE
+        example: GHANA_CARD
         type: string
       last_name:
         example: Doe
@@ -946,11 +946,11 @@ definitions:
         type: string
       id_type:
         enum:
-        - ghana_card
-        - national_id
-        - passport
-        - driver_license
-        example: ghana_card
+        - GHANA_CARD
+        - NATIONAL_ID
+        - PASSPORT
+        - DRIVER_LICENSE
+        example: GHANA_CARD
         type: string
       initial_deposit_fee:
         example: 1000
@@ -2026,7 +2026,7 @@ definitions:
         example: ID123456
         type: string
       id_type:
-        example: ghana_card
+        example: GHANA_CARD
         type: string
       last_name:
         example: Doe
@@ -2133,7 +2133,7 @@ definitions:
         example: ID123456
         type: string
       id_type:
-        example: ghana_card
+        example: GHANA_CARD
         type: string
       initial_deposit_fee:
         example: 500
@@ -2281,6 +2281,9 @@ definitions:
         type: string
       slug:
         example: unit-101-abcde1876drkjy
+        type: string
+      status:
+        example: Unit.Status.Available
         type: string
       tags:
         example:

@@ -77,11 +77,19 @@ type OutputUnit struct {
 	RentFeeCurrency  string         `json:"rent_fee_currency" example:"USD"                                                description:"Currency for the rent fee"`
 	PaymentFrequency string         `json:"payment_frequency" example:"MONTHLY"                                            description:"Payment frequency (e.g., WEEKLY, DAILY, MONTHLY, Quarterly, BiAnnually, Annually)"`
 	Features         map[string]any `json:"features"                                                                       description:"Additional metadata in JSON format"`
+	Status           string         `json:"status"            example:"Unit.Status.Available"                              description:"Current status of the unit (e.g., Unit.Status.Available Unit.Status.Unavailable)"`
 }
 
 func DBUnitToRest(i *models.Unit) any {
 	if i == nil || i.ID == uuid.Nil {
 		return nil
+	}
+
+	var status string
+	if i.Status == "Unit.Status.Available" {
+		status = "Unit.Status.Available"
+	} else {
+		status = "Unit.Status.Unavailable"
 	}
 
 	data := map[string]any{
@@ -97,6 +105,7 @@ func DBUnitToRest(i *models.Unit) any {
 		"rent_fee_currency": i.RentFeeCurrency,
 		"payment_frequency": i.PaymentFrequency,
 		"features":          i.Features,
+		"status":            status,
 	}
 	return data
 }

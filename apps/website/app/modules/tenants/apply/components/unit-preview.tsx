@@ -8,6 +8,10 @@ import {
 import { useState } from 'react'
 import { Button } from '~/components/ui/button'
 import { TypographyH3 } from '~/components/ui/typography'
+import {
+	getPropertyUnitStatusColor,
+	getPropertyUnitStatusLabel,
+} from '~/lib/properties.utils'
 
 export function UnitPreview({ unit }: { unit?: PropertyUnit }) {
 	const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -145,8 +149,10 @@ export function UnitPreview({ unit }: { unit?: PropertyUnit }) {
 						</div>
 						<div className="flex items-center justify-between rounded-lg bg-white p-3">
 							<span className="text-slate-600">Status:</span>
-							<span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">
-								Available
+							<span
+								className={`inline-flex items-center rounded-full ${getPropertyUnitStatusColor(unit?.status)} px-3 py-1 text-xs font-medium`}
+							>
+								{getPropertyUnitStatusLabel(unit?.status)}
 							</span>
 						</div>
 						{unit?.max_occupants_allowed && (
