@@ -133,7 +133,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		DateOfBirth:                    input.DateOfBirth,
 		Nationality:                    input.Nationality,
 		MaritalStatus:                  input.MaritalStatus,
-		IDType:                         &input.IDType,
+		IDType:                         input.IDType,
 		IDNumber:                       input.IDNumber,
 		CurrentAddress:                 input.CurrentAddress,
 		EmergencyContactName:           input.EmergencyContactName,
@@ -143,7 +143,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		Employer:                       input.Employer,
 		OccupationAddress:              input.OccupationAddress,
 		ProfilePhotoUrl:                input.ProfilePhotoUrl,
-		CreatedById:                    &input.CreatedById,
+		CreatedById:                    input.CreatedById,
 		Status:                         "TenantApplication.Status.InProgress",
 	}
 
@@ -161,7 +161,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 	message := strings.NewReplacer(
 		"{{applicant_name}}", tenantApplication.FirstName,
 		"{{unit_name}}", unit.Name,
-		"{{application_code}}", *tenantApplication.Code,
+		"{{application_code}}", tenantApplication.Code,
 		"{{submission_date}}", tenantApplication.CreatedAt.Format("2006-01-02 at 03:04 PM"),
 	).Replace(lib.TENANT_APPLICATION_SUBMITTED_BODY)
 
@@ -418,7 +418,7 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 	}
 
 	if input.IDType != nil {
-		tenantApplication.IDType = input.IDType
+		tenantApplication.IDType = *input.IDType
 	}
 
 	if input.IDNumber != nil {
@@ -591,7 +591,7 @@ func (s *tenantApplicationService) CancelTenantApplication(
 
 	message := strings.NewReplacer(
 		"{{applicant_name}}", tenantApplication.FirstName,
-		"{{application_code}}", *tenantApplication.Code,
+		"{{application_code}}", tenantApplication.Code,
 		"{{reason}}", input.Reason,
 	).Replace(lib.TENANT_CANCELLED_BODY)
 
@@ -690,7 +690,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		Nationality:                    tenantApplication.Nationality,
 		MaritalStatus:                  tenantApplication.MaritalStatus,
 		ProfilePhotoUrl:                tenantApplication.ProfilePhotoUrl,
-		IDType:                         *tenantApplication.IDType,
+		IDType:                         tenantApplication.IDType,
 		IDNumber:                       tenantApplication.IDNumber,
 		IDFrontUrl:                     tenantApplication.IDFrontUrl,
 		IDBackUrl:                      tenantApplication.IDBackUrl,
@@ -782,7 +782,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 	message := strings.NewReplacer(
 		"{{applicant_name}}", tenantApplication.FirstName,
 		"{{unit_name}}", unit.Name,
-		"{{application_code}}", *tenantApplication.Code,
+		"{{application_code}}", tenantApplication.Code,
 		"{{phone_number}}", tenantAccount.PhoneNumber,
 	).Replace(lib.TENANT_APPLICATION_APPROVED_BODY)
 

@@ -12,6 +12,7 @@ import (
 // BasicInfoCompleted -> DocsSigned -> Paid -> MoveInScheduled -> Completed
 type TenantApplication struct {
 	BaseModelSoftDelete
+	Code   string `gorm:"uniqueIndex"`
 	Status string `gorm:"not null;default:'TenantApplication.Status.InProgress'"` // TenantApplication.Status.InProgress, TenantApplication.Status.Cancelled, TenantApplication.Status.Completed
 
 	CompletedAt   *time.Time
@@ -60,8 +61,8 @@ type TenantApplication struct {
 	Nationality     string    `gorm:"not null;"`
 	MaritalStatus   string    `gorm:"not null;"` // Single, Married, Divorced, Widowed
 	ProfilePhotoUrl *string
-	IDType          *string // NationalID, Passport, DriverLicense
-	IDNumber        string  `gorm:"not null;"` // GhanaCard
+	IDType          string // NationalID, Passport, DriverLicense
+	IDNumber        string `gorm:"not null;"` // GhanaCard
 	IDFrontUrl      *string
 	IDBackUrl       *string
 
@@ -79,10 +80,8 @@ type TenantApplication struct {
 	OccupationAddress string  `gorm:"not null;"` // or school address
 	ProofOfIncomeUrl  *string // or admission letter url
 
-	Code *string `gorm:"uniqueIndex"`
-
-	CreatedById *string
-	CreatedBy   *ClientUser
+	CreatedById string
+	CreatedBy   ClientUser
 }
 
 func (t *TenantApplication) BeforeCreate(tx *gorm.DB) error {
@@ -95,6 +94,6 @@ func (t *TenantApplication) BeforeCreate(tx *gorm.DB) error {
 		return genErr
 	}
 
-	t.Code = uniqueCode
+	t.Code = *uniqueCode
 	return nil
 }

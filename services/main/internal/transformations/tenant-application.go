@@ -10,7 +10,7 @@ import (
 type OutputTenantApplication struct {
 	ID string `json:"id" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 
-	Code *string `json:"code,omitempty" example:"9ucfjd3p"`
+	Code string `json:"code" example:"9ucfjd3p"`
 
 	Status string `json:"status" example:"TenantApplication.Status.InProgress"`
 
@@ -83,7 +83,7 @@ type OutputTenantApplication struct {
 	OccupationAddress string  `json:"occupation_address"            example:"456 Tech Ave, Accra"`
 	ProofOfIncomeUrl  *string `json:"proof_of_income_url,omitempty" example:"https://example.com/income.pdf"`
 
-	CreatedById *string           `json:"created_by_id,omitempty" example:"72432ce6-5620-4ecf-a862-4bf2140556a1"`
+	CreatedById string            `json:"created_by_id,omitempty" example:"72432ce6-5620-4ecf-a862-4bf2140556a1"`
 	CreatedBy   *OutputClientUser `json:"created_by,omitempty"`
 
 	CreatedAt time.Time `json:"created_at" example:"2024-06-01T09:00:00Z"`
@@ -151,7 +151,7 @@ func DBTenantApplicationToRest(i *models.TenantApplication) any {
 		"occupation_address":                i.OccupationAddress,
 		"proof_of_income_url":               i.ProofOfIncomeUrl,
 		"created_by_id":                     i.CreatedById,
-		"created_by":                        DBClientUserToRest(i.CreatedBy),
+		"created_by":                        DBClientUserToRest(&i.CreatedBy),
 		"created_at":                        i.CreatedAt,
 		"updated_at":                        i.UpdatedAt,
 	}

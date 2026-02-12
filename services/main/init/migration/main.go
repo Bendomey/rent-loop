@@ -63,14 +63,6 @@ func ServiceAutoMigration(db *gorm.DB) error {
 
 	m = gormigrate.New(db, gormigrate.DefaultOptions, []*gormigrate.Migration{
 		jobs.SeedSuperAdmin(),
-		jobs.AddClientContactInfo(),
-		jobs.AddCreatedByTenantApplication(),
-		jobs.AddMoveInUpdatesToLease(),
-		jobs.AddDocsSetupFieldsToTenantApplication(),
-		jobs.AddCodeTenantApplication(),
-		jobs.SeedCodeTenantApplication(),
-		jobs.AddIDTypeTenantApplication(),
-		jobs.AddStatusTimestampsLease(),
 		jobs.SeedSystemOfflinePaymentAccount(),
 	})
 	m.Migrate()
