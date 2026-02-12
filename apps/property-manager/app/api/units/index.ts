@@ -13,9 +13,8 @@ export const getPropertyUnits = async (
 	},
 ) => {
 	try {
-		const removeAllNullableValues =
+		const params =
 			getQueryParams<FetchPropertyUnitFilter>(props)
-		const params = new URLSearchParams(removeAllNullableValues)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<PropertyUnit>>
 		>(`/v1/properties/${props.property_id}/units?${params.toString()}`)
