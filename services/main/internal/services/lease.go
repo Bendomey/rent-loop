@@ -399,7 +399,7 @@ func (s *leaseService) CancelLease(ctx context.Context, input CancelLeaseInput) 
 
 	lease.Status = "Lease.Status.Cancelled"
 	now := time.Now()
-	lease.ActivatedAt = &now
+	lease.CancelledAt = &now
 
 	err := s.repo.Update(ctx, lease)
 	if err != nil {
