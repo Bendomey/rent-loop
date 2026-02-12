@@ -10,9 +10,8 @@ const getClientUserProperties = async (
 	props: FetchMultipleDataInputParams<FetchClientUserPropertyFilter>,
 ) => {
 	try {
-		const removeAllNullableValues =
+		const params =
 			getQueryParams<FetchClientUserPropertyFilter>(props)
-		const params = new URLSearchParams(removeAllNullableValues)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<ClientUserProperty>>
 		>(`/v1/client-user-properties?${params.toString()}`)

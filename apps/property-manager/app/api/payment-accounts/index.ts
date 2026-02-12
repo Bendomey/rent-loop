@@ -11,9 +11,8 @@ const getPaymentAccounts = async (
 	props: FetchMultipleDataInputParams<FetchPaymentAccountFilter>,
 ) => {
 	try {
-		const removeAllNullableValues =
+		const params =
 			getQueryParams<FetchPaymentAccountFilter>(props)
-		const params = new URLSearchParams(removeAllNullableValues)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<PaymentAccount>>
 		>(`/v1/payment-accounts?${params.toString()}`)

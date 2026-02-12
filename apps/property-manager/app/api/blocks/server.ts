@@ -12,9 +12,8 @@ export const getPropertyBlocksForServer = async (
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
-		const removeAllNullableValues =
+		const params =
 			getQueryParams<FetchPropertyBlockFilter>(props)
-		const params = new URLSearchParams(removeAllNullableValues)
 		const response = await fetchServer<
 			ApiResponse<FetchMultipleDataResponse<PropertyBlock>>
 		>(

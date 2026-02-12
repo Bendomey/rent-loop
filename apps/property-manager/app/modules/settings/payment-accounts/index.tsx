@@ -45,14 +45,9 @@ export function PaymentAccountsModule() {
 
 	const { data, isPending, isRefetching, error, refetch } =
 		useGetPaymentAccounts({
-			filters: { rail: rail, status: status },
+			filters: { rail: rail, status: status, owner_types: ['PROPERTY_OWNER', 'SYSTEM'] },
 			pagination: { page, per },
-			populate: [],
 			sorter: { sort: 'desc', sort_by: 'created_at' },
-			search: {
-				query: searchParams.get('query') ?? undefined,
-				fields: [],
-			},
 		})
 
 	const isLoading = isPending || isRefetching
@@ -125,7 +120,7 @@ export function PaymentAccountsModule() {
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
 						{getValue<PaymentAccount['status']>() ===
-						'PaymentAccount.Status.Active' ? (
+							'PaymentAccount.Status.Active' ? (
 							<CircleCheck className="fill-green-600 text-white" />
 						) : (
 							<CircleX className="fill-red-500 text-white" />
