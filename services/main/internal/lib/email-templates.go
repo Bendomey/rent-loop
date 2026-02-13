@@ -154,7 +154,7 @@ Hi,
 You’ve been invited to apply for a tenancy on Rentloop.
 
 To get started, please complete your tenant application using the secure link below:
-{{property_manager_portal_url}}/tenants/apply?unit={{unit_id}}&refered_by={{admin_id}}
+{{website_url}}/tenants/apply?unit={{unit_id}}&refered_by={{admin_id}}
 
 The application helps the property owner review your details and proceed with the tenancy process.
 This link is intended for you only. If you weren’t expecting this email, you can safely ignore it.

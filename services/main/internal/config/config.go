@@ -48,6 +48,7 @@ type IRentloopPortals struct {
 	AdminPortalURL           string
 	PropertyManagerPortalURL string
 	TenantPortalURL          string
+	WebsiteURL               string
 }
 
 type IAccountingAPI struct {
@@ -136,6 +137,7 @@ func Load() Config {
 			AdminPortalURL:           getEnv("ADMIN_PORTAL_URL", "http://localhost:3001"),
 			PropertyManagerPortalURL: getEnv("PROPERTY_MANAGER_PORTAL_URL", "http://localhost:3000"),
 			TenantPortalURL:          getEnv("TENANT_PORTAL_URL", "http://localhost:3002"),
+			WebsiteURL:               getEnv("WEBSITE_URL", "http://localhost:3003"),
 		},
 		RedisDB: IRedisDB{
 			Url: getEnv("REDIS_URL", "redis://localhost:6379"),

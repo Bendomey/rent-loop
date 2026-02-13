@@ -24,6 +24,7 @@ func ApplyGlobalVariableTemplate(appCtx AppContext, template string) string {
 	result = strings.ReplaceAll(result, "{{SUPPORT_DETAILS_TEMPLATE}}", lib.SUPPORT_DETAILS_TEMPLATE)
 	result = strings.ReplaceAll(result, "{{support_email}}", supportEmail)
 	result = strings.ReplaceAll(result, "{{support_phone}}", normalizedPhone)
+	result = strings.ReplaceAll(result, "{{website_url}}", appCtx.Config.Portals.WebsiteURL)
 	result = strings.ReplaceAll(result, "{{admin_portal_url}}", appCtx.Config.Portals.AdminPortalURL)
 	result = strings.ReplaceAll(
 		result,

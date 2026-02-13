@@ -211,7 +211,6 @@ func (s *tenantApplicationService) InviteTenant(ctx context.Context, input Invit
 	}
 
 	r := strings.NewReplacer(
-		"{{property_manager_portal_url}}", s.appCtx.Config.Portals.PropertyManagerPortalURL,
 		"{{unit_id}}", input.UnitId,
 		"{{admin_id}}", input.AdminId,
 		"{{admin_email}}", admin.Email,
