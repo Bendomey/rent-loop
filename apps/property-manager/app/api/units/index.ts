@@ -116,3 +116,35 @@ export const useDeletePropertyUnit = () =>
 	useMutation({
 		mutationFn: deletePropertyUnit,
 	})
+
+/**
+ * Update property unit
+ */
+interface UpdatePropertyUnitProps {
+	id: string
+	data: Partial<CreatePropertyUnitInput>
+}
+
+const updatePropertyUnit = async (props: UpdatePropertyUnitProps) => {
+	try {
+		await fetchClient<PropertyUnit>(
+			`/v1/properties/${props.data.property_id}/units/${props.id}`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify(props.data),
+			},
+		)
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useUpdatePropertyUnit = () =>
+	useMutation({ mutationFn: updatePropertyUnit })
