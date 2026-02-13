@@ -1,4 +1,4 @@
-import { PropertyAssetUnitReviewsModule } from '~/modules/properties/property/assets/units/unit/reviews'
+import { PropertyAssetUnitReviewsModule } from '~/modules'
 
 export const handle = {
 	breadcrumb: 'Reviews',
