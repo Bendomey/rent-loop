@@ -8,7 +8,7 @@ import {
 	Trash,
 } from 'lucide-react'
 import { useState } from 'react'
-import { Link, Outlet, useLoaderData, useLocation, useNavigate } from 'react-router'
+import { Link, Outlet, useLocation, useNavigate, useRouteLoaderData } from 'react-router'
 import DeletePropertyUnitModal from '../delete'
 import { Image } from '~/components/Image'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
@@ -68,11 +68,13 @@ const paymentFrequencyLabels: Record<
 	ANNUALLY: 'Annually',
 }
 
+
 export function PropertyAssetUnitModule() {
-	const { unit } = useLoaderData<typeof loader>()
+	const loaderData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>('routes/_auth.properties.$propertyId.assets.units.$unitId')
 	const { pathname } = useLocation()
 	const navigate = useNavigate()
 	const [openDeleteModal, setOpenDeleteModal] = useState(false)
+	const unit = loaderData?.unit
 
 	if (!unit) {
 		return (
