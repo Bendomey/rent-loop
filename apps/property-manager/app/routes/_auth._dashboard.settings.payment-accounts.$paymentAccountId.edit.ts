@@ -11,21 +11,21 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const authToken = authSession.get('authToken')
 	const payment_account_id = params.paymentAccountId
-	
+
 	try {
-	const paymentAccount = await getPaymentAccountForServer(
-		{ payment_account_id: payment_account_id },
-		{
-			authToken,
-			baseUrl,
-		},
-	)
+		const paymentAccount = await getPaymentAccountForServer(
+			{ payment_account_id: payment_account_id },
+			{
+				authToken,
+				baseUrl,
+			},
+		)
 		return {
 			origin: getDomainUrl(request),
 			paymentAccount: paymentAccount,
 		}
 	} catch {
-		 throw new Error("Failed to load payment account");
+		throw new Error('Failed to load payment account')
 	}
 }
 

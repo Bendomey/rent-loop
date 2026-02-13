@@ -1,11 +1,12 @@
 import dayjs from 'dayjs'
 import {
 	CircleCheck,
+	Eye,
 	House,
-	MapPin,
 	MoreHorizontalIcon,
 	Pencil,
 	Trash,
+	Users,
 	Wrench,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -36,10 +37,12 @@ import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
 import { useProperty } from '~/providers/property-provider'
+import { useNavigate } from 'react-router'
 
 export function PropertyAssetUnitsModule() {
 	const { clientUserProperty } = useProperty()
 	const [searchParams] = useSearchParams()
+	const navigate = useNavigate()
 
 	const [selectedPropertyUnit, setSelectedPropertyUnit] =
 		useState<PropertyUnit>()
@@ -71,7 +74,6 @@ export function PropertyAssetUnitsModule() {
 			},
 		},
 	)
-
 	const isLoading = isPending || isRefetching
 
 	return (
@@ -92,6 +94,11 @@ export function PropertyAssetUnitsModule() {
 						<Card
 							key={data.id}
 							className="gap-2 overflow-hidden pt-0 pb-3 shadow-none"
+							onClick={() =>
+								void navigate(
+									`/properties/${data.property_id}/assets/units/${data.id}`,
+								)
+							}
 						>
 							<div className="h-44 w-full overflow-hidden">
 								<Image
@@ -129,9 +136,9 @@ export function PropertyAssetUnitsModule() {
 
 							<CardContent className="space-y-2 pb-2">
 								<div className="flex items-center gap-2">
-									<MapPin className="text-zinc-500" size={16} />
+									<Users className="text-zinc-500" size={16} />
 									<TypographyMuted className="truncate">
-										{data.max_occupants_allowed}
+										Max occupants: {data.max_occupants_allowed}
 									</TypographyMuted>
 								</div>
 								<div className="flex items-center gap-2">
@@ -166,6 +173,12 @@ export function PropertyAssetUnitsModule() {
 									variant="ghost"
 									size="icon-sm"
 									className="flex w-fit flex-col gap-1 px-3 py-6 text-xs text-zinc-500"
+									onClick={(e) => {
+										e.stopPropagation()
+										void navigate(
+											`/properties/${data.property_id}/assets/units/${data.id}/maintenance-requests`,
+										)
+									}}
 								>
 									<Wrench />
 									Maintenance
@@ -184,13 +197,32 @@ export function PropertyAssetUnitsModule() {
 										</DropdownMenuTrigger>
 										<DropdownMenuContent align="end" className="w-52">
 											<DropdownMenuGroup>
-												<DropdownMenuItem onClick={() => {}}>
+												<DropdownMenuItem
+													onClick={(e) => {
+														e.stopPropagation()
+														void navigate(
+															`/properties/${data.property_id}/assets/units/${data.id}`,
+														)
+													}}
+												>
+													<Eye />
+													View
+												</DropdownMenuItem>
+												<DropdownMenuItem
+													onClick={(e) => {
+														e.stopPropagation()
+														void navigate(
+															`/properties/${data.property_id}/assets/units/${data.id}/edit`,
+														)
+													}}
+												>
 													<Pencil />
 													Edit
 												</DropdownMenuItem>
 												<DropdownMenuItem
 													variant="destructive"
-													onClick={() => {
+													onClick={(e) => {
+														e.stopPropagation()
 														setSelectedPropertyUnit(data)
 														setOpenDeletePropertyUnitModal(true)
 													}}

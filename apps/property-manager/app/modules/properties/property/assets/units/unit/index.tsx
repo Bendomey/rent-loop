@@ -8,7 +8,13 @@ import {
 	Trash,
 } from 'lucide-react'
 import { useState } from 'react'
-import { Link, Outlet, useLoaderData, useLocation, useNavigate } from 'react-router'
+import {
+	Link,
+	Outlet,
+	useLoaderData,
+	useLocation,
+	useNavigate,
+} from 'react-router'
 import DeletePropertyUnitModal from '../delete'
 import { Image } from '~/components/Image'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
@@ -89,7 +95,7 @@ export function PropertyAssetUnitModule() {
 		<div className="m-5 grid grid-cols-12 gap-6">
 			{/* Sidebar */}
 			<div className="col-span-12 lg:col-span-4">
-				<Card className="overflow-hidden shadow-none pt-0">
+				<Card className="overflow-hidden pt-0 shadow-none">
 					<div className="h-full w-full overflow-hidden">
 						<Image
 							className="h-full w-full object-cover"
@@ -137,7 +143,7 @@ export function PropertyAssetUnitModule() {
 
 						<Separator />
 
-						<div className='space-y-1'>
+						<div className="space-y-1">
 							<TypographyMuted className="text-xs">Rent Fee</TypographyMuted>
 							<p className="text-2xl font-semibold">
 								{formatAmount(unit.rent_fee)}
@@ -196,9 +202,7 @@ export function PropertyAssetUnitModule() {
 				setOpened={(open) => {
 					setOpenDeleteModal(open)
 					if (!open) {
-						void navigate(
-							`/properties/${unit.property_id}/assets/units`,
-						)
+						void navigate(`/properties/${unit.property_id}/assets/units`)
 					}
 				}}
 				data={unit}
