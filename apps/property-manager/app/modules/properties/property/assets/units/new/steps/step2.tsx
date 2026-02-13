@@ -17,13 +17,6 @@ import {
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '~/components/ui/select'
-import {
 	TypographyH2,
 	TypographyMuted,
 	TypographySmall,
@@ -70,7 +63,7 @@ export function Step2() {
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
-			rent_fee_currency: formData?.rent_fee_currency ?? 'GHS',
+			rent_fee_currency: 'GHS',
 			payment_frequency: formData?.payment_frequency ?? 'MONTHLY',
 		},
 	})
@@ -162,7 +155,7 @@ export function Step2() {
 					control={control}
 					render={({ field }) => (
 						<FormItem className="col-span-4">
-							<FormLabel>Rent Fee</FormLabel>
+							<FormLabel>Max Occupants Allowed</FormLabel>
 							<FormControl>
 								<Input
 									type="number"
@@ -184,19 +177,13 @@ export function Step2() {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>Currency</FormLabel>
-								<Select onValueChange={field.onChange} value={field.value}>
-									<FormControl className="w-full">
-										<SelectTrigger>
-											<SelectValue placeholder="Select" />
-										</SelectTrigger>
-									</FormControl>
-
-									<SelectContent>
-										<SelectItem value="GHS">GHS</SelectItem>
-										<SelectItem value="USD">USD</SelectItem>
-										<SelectItem value="EUR">EUR</SelectItem>
-									</SelectContent>
-								</Select>
+								<Input
+									disabled
+									type="text"
+									placeholder="GHS"
+									{...field}
+									value={field.value}
+								/>
 								<FormMessage />
 							</FormItem>
 						)}

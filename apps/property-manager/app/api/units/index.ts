@@ -149,7 +149,6 @@ const updatePropertyUnit = async (props: UpdatePropertyUnitProps) => {
 export const useUpdatePropertyUnit = () =>
 	useMutation({ mutationFn: updatePropertyUnit })
 
-
 /**
  * Make property unit available
  */
@@ -158,7 +157,9 @@ interface UpdatePropertyUnitStatusProps {
 	unitId: string
 }
 
-const makePropertyUnitAvailable = async (props: UpdatePropertyUnitStatusProps) => {
+const makePropertyUnitAvailable = async (
+	props: UpdatePropertyUnitStatusProps,
+) => {
 	try {
 		await fetchClient<PropertyUnit>(
 			`/v1/properties/${props.propertyId}/units/${props.unitId}/status:available`,
@@ -180,7 +181,6 @@ const makePropertyUnitAvailable = async (props: UpdatePropertyUnitStatusProps) =
 
 export const useMakePropertyUnitAvailable = () =>
 	useMutation({ mutationFn: makePropertyUnitAvailable })
-
 
 /**
  * Make property unit draft
@@ -209,12 +209,12 @@ const makePropertyUnitDraft = async (props: UpdatePropertyUnitStatusProps) => {
 export const useMakePropertyUnitDraft = () =>
 	useMutation({ mutationFn: makePropertyUnitDraft })
 
-
-
 /**
  * Make property unit maintenance
  */
-const makePropertyUnitMaintenance = async (props: UpdatePropertyUnitStatusProps) => {
+const makePropertyUnitMaintenance = async (
+	props: UpdatePropertyUnitStatusProps,
+) => {
 	try {
 		await fetchClient<PropertyUnit>(
 			`/v1/properties/${props.propertyId}/units/${props.unitId}/status:maintenance`,

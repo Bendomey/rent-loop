@@ -29,17 +29,9 @@ const ValidationSchema = z.object({
 	type: z.enum(['APARTMENT', 'HOUSE', 'STUDIO', 'OFFICE', 'RETAIL'], {
 		error: 'Please select a type',
 	}),
-	status: z.enum(
-		[
-			'Unit.Status.Draft',
-			'Unit.Status.Available',
-			'Unit.Status.Occupied',
-			'Unit.Status.Maintenance',
-		],
-		{
-			error: 'Please select a status',
-		},
-	),
+	status: z.enum(['Unit.Status.Draft', 'Unit.Status.Maintenance'], {
+		error: 'Please select a status',
+	}),
 	property_block_id: z
 		.string()
 		.optional()
@@ -81,11 +73,10 @@ const models = [
 		icon: Store,
 	},
 ]
+type EditableUnitStatus = 'Unit.Status.Draft' | 'Unit.Status.Maintenance'
 
-const status: Array<{ label: string; value: PropertyUnit['status'] }> = [
+const status: Array<{ label: string; value: EditableUnitStatus }> = [
 	{ label: 'Draft', value: 'Unit.Status.Draft' },
-	{ label: 'Available', value: 'Unit.Status.Available' },
-	{ label: 'Occupied', value: 'Unit.Status.Occupied' },
 	{ label: 'Maintenance', value: 'Unit.Status.Maintenance' },
 ]
 
@@ -109,7 +100,11 @@ export function Step0() {
 				shouldValidate: true,
 			})
 		}
-		if (formData.status) {
+		if (
+			formData.status &&
+			(formData.status === 'Unit.Status.Draft' ||
+				formData.status === 'Unit.Status.Maintenance')
+		) {
 			setValue('status', formData.status, {
 				shouldDirty: true,
 				shouldValidate: true,

@@ -60,14 +60,11 @@ export function FeatureInput() {
 
 			<div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
 				{entries.map(([key, value]) => (
-					<div
-						key={key}
-						className="group relative rounded-lg border p-3"
-					>
+					<div key={key} className="group relative rounded-lg border p-3">
 						<button
 							type="button"
 							onClick={() => removeFeature(key)}
-							className="absolute top-2 right-2 rounded-sm p-0.5 opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100"
+							className="absolute top-2 right-2 rounded-sm p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-500"
 						>
 							<X className="size-3.5" />
 						</button>

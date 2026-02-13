@@ -46,9 +46,7 @@ export const getPropertyUnitForServer = async (
 		const params = getQueryParams<FetchPropertyUnitFilter>({
 			populate: props.populate,
 		})
-		const response = await fetchServer<
-			ApiResponse<PropertyUnit>
-		>(
+		const response = await fetchServer<ApiResponse<PropertyUnit>>(
 			`${apiConfig.baseUrl}/v1/properties/${props.property_id}/units/${props.unit_id}?${params.toString()}`,
 			{
 				...apiConfig,

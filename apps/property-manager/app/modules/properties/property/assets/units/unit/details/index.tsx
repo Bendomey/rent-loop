@@ -1,12 +1,7 @@
 import dayjs from 'dayjs'
 import { Calendar } from 'lucide-react'
 import { useUnitContext } from '../context'
-import {
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-} from '~/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { TypographyMuted, TypographyP } from '~/components/ui/typography'
 import { toFirstUpperCase } from '~/lib/strings'
 
@@ -103,14 +98,13 @@ export function PropertyAssetUnitDetailsModule() {
 								{unit.rent_fee_currency ?? 'GHS'}
 							</TypographyP>
 						</div>
-						{unit.features && Object.entries(unit.features).map(([key, val], idx) => (
-							<div key={idx}>
-								<TypographyMuted className="text-xs">{key}</TypographyMuted>
-								<TypographyP className="!mt-0 text-sm">
-									{val}
-								</TypographyP>
-							</div>
-						))}
+						{unit.features &&
+							Object.entries(unit.features).map(([key, val], idx) => (
+								<div key={idx}>
+									<TypographyMuted className="text-xs">{key}</TypographyMuted>
+									<TypographyP className="!mt-0 text-sm">{val}</TypographyP>
+								</div>
+							))}
 					</div>
 				</CardContent>
 			</Card>

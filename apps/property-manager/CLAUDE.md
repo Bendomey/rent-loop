@@ -12,7 +12,8 @@ yarn format       # Prettier
 
 ## Architecture
 
-**Stack:** React Router v7, React 19, TypeScript, TanStack Query v5, Tailwind CSS v4, Shadcn/Radix UI, Lexical editor
+**Stack:** React Router v7, React 19, TypeScript, TanStack Query v5, Tailwind
+CSS v4, Shadcn/Radix UI, Lexical editor
 
 ```
 app/
@@ -33,53 +34,62 @@ app/
 - `_auth.*` prefix for authenticated routes
 - `$paramName` for dynamic segments, `_index` for default child route
 - Breadcrumbs: `export const handle = { breadcrumb: 'Label' }`
-- Route loaders fetch data server-side using `getAuthSession` + `environmentVariables().API_ADDRESS`
+- Route loaders fetch data server-side using `getAuthSession` +
+  `environmentVariables().API_ADDRESS`
 
 ## Data Access
 
-- **In modules:** `useLoaderData<typeof loader>()` with typed loader import from the route file
-- **Property context:** `useProperty()` hook from `~/providers/property-provider`
+- **In modules:** `useLoaderData<typeof loader>()` with typed loader import from
+  the route file
+- **Property context:** `useProperty()` hook from
+  `~/providers/property-provider`
 - **Client-side queries:** TanStack Query hooks in `app/api/<resource>/index.ts`
 - **Server-side fetching:** Functions in `app/api/<resource>/server.ts`
 - **Populating relations:** Pass `populate: ['Property', 'PropertyBlock']` etc.
 
 ## Component Naming
 
-- Module components: named export with `Module` suffix (e.g., `PropertyAssetUnitModule`)
+- Module components: named export with `Module` suffix (e.g.,
+  `PropertyAssetUnitModule`)
 - Controller components: named export with `Controller` suffix
 - Route default exports point to the module component
 
 ## UI Patterns
 
 ### Layout
-- **Detail pages:** 12-col grid — sidebar `col-span-12 lg:col-span-4` + main `col-span-12 lg:col-span-8`
+
+- **Detail pages:** 12-col grid — sidebar `col-span-12 lg:col-span-4` + main
+  `col-span-12 lg:col-span-8`
 - **Dashboard pages:** `max-w-7xl mx-auto px-4 py-8`
 - **List pages:** `mx-6 my-6 flex flex-col gap-4 sm:gap-6`
 
 ### Cards
+
 - Always use `className="shadow-none"` on Card components
 - Status badges use `variant="outline"` with colored backgrounds
 
 ### Unit Status Badge Colors
+
 - Available: `bg-teal-500 text-white`
 - Maintenance: `bg-yellow-500 text-white`
 - Occupied: `bg-rose-500 text-white`
 - Draft: `bg-zinc-400 text-white`
 
 ### Permission Guards
+
 - `PropertyPermissionGuard` from `~/components/permissions/permission-guard`
 - Wrap UI elements with `roles={['MANAGER']}` for role-based visibility
 
 ## Key Utilities
 
-| Function | Import | Purpose |
-|---|---|---|
-| `formatAmount()` | `~/lib/format-amount` | Formats as "GH₵ X,XXX.XX" |
-| `toFirstUpperCase()` | `~/lib/strings` | Capitalize first letter |
-| `safeString()` | `~/lib/strings` | Handle nullable strings |
-| `cn()` | `~/lib/utils` | Tailwind class merging (clsx + twMerge) |
-| `getPropertyUnitStatusLabel()` | `~/lib/properties.utils` | Unit status enum to label |
-| `getPropertyStatusLabel()` | `~/lib/properties.utils` | Property status enum to label |
+| Function                       | Import                   | Purpose                                 |
+| ------------------------------ | ------------------------ | --------------------------------------- |
+| `formatAmount()`               | `~/lib/format-amount`    | Formats as "GH₵ X,XXX.XX"               |
+| `toFirstUpperCase()`           | `~/lib/strings`          | Capitalize first letter                 |
+| `safeString()`                 | `~/lib/strings`          | Handle nullable strings                 |
+| `cn()`                         | `~/lib/utils`            | Tailwind class merging (clsx + twMerge) |
+| `getPropertyUnitStatusLabel()` | `~/lib/properties.utils` | Unit status enum to label               |
+| `getPropertyStatusLabel()`     | `~/lib/properties.utils` | Property status enum to label           |
 
 Dates: `dayjs(date).format('MMM D, YYYY')`
 

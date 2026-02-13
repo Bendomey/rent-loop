@@ -42,13 +42,12 @@ export const getPropertiesForServer = async (
 ) => {
 	try {
 		const params = getQueryParams<FetchPropertyFilter>(props)
-		const response = await fetchServer<ApiResponse<FetchMultipleDataResponse<Property>>>(
-			`${apiConfig?.baseUrl}/v1/properties?${params.toString()}`,
-			{
-				method: 'GET',
-				...apiConfig
-			},
-		)
+		const response = await fetchServer<
+			ApiResponse<FetchMultipleDataResponse<Property>>
+		>(`${apiConfig?.baseUrl}/v1/properties?${params.toString()}`, {
+			method: 'GET',
+			...apiConfig,
+		})
 
 		return response.parsedBody.data
 	} catch (error: unknown) {
