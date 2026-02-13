@@ -93,7 +93,7 @@ export function PropertyAssetUnitsModule() {
 					gridElement={({ data }: { data: PropertyUnit }) => (
 						<Card
 							key={data.id}
-							className="gap-2 overflow-hidden pt-0 pb-3 shadow-none"
+							 className="group gap-2 overflow-hidden pt-0 pb-3 shadow-none cursor-pointer transition hover:bg-muted/40 hover:shadow-sm hover:-translate-y-[1px] focus-visible:ring-2 focus-visible:ring-primary/30"
 							onClick={() =>
 								void navigate(
 									`/properties/${data.property_id}/assets/units/${data.id}`,
