@@ -39,6 +39,12 @@ export * from './properties/property/assets/blocks/edit'
 
 export * from './properties/property/assets/units'
 export * from './properties/property/assets/units/new'
+export * from './properties/property/assets/units/unit'
+export * from './properties/property/assets/units/unit/details'
+export * from './properties/property/assets/units/unit/leases'
+export * from './properties/property/assets/units/unit/maintenance-requests'
+export * from './properties/property/assets/units/unit/reviews'
+export * from './properties/property/assets/units/edit'
 
 export * from './properties/property/assets/facilities'
 
@@ -63,7 +69,7 @@ export * from './properties/property/activities/inspections'
 export * from './properties/property/activities/maintenance-requests'
 export * from './properties/property/activities/polls'
 
-export * from './properties/property/financials/rent-payments'
+export * from './properties/property/financials/payments'
 
 export * from './properties/property/settings/members'
 export * from './properties/property/settings/general'

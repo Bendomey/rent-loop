@@ -1,4 +1,4 @@
-import { PropertyAssetUnitMaintenanceRequestsModule } from '~/modules/properties/property/assets/units/unit/maintenance-requests'
+import { PropertyAssetUnitMaintenanceRequestsModule } from '~/modules'
 
 export const handle = {
 	breadcrumb: 'Maintenance Requests',

@@ -1,3 +1,3 @@
-import { PropertyAssetUnitModule } from '~/modules/properties/property/assets/units/unit'
+import { PropertyAssetUnitModule } from '~/modules'
 
 export default PropertyAssetUnitModule

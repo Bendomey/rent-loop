@@ -190,7 +190,7 @@ export function TenantPaymentsModule() {
 					return (
 						<div className="">
 							<Link
-								to={`/properties/${clientUserProperty?.property_id}/financials/rent-payments/${row.original.id}`}
+								to={`/properties/${clientUserProperty?.property_id}/financials/payments/${row.original.id}`}
 								aria-label={`View details for application`}
 							>
 								<span className="truncate text-xs text-blue-600 hover:underline">
@@ -280,7 +280,7 @@ export function TenantPaymentsModule() {
 
 							<DropdownMenuContent align="end" className="32">
 								<Link
-									to={`/properties/${clientUserProperty?.property?.id}/financials/rent-payments/${row.original.id}`}
+									to={`/properties/${clientUserProperty?.property?.id}/financials/payments/${row.original.id}`}
 								>
 									<DropdownMenuItem>View</DropdownMenuItem>
 								</Link>
@@ -298,7 +298,7 @@ export function TenantPaymentsModule() {
 			<div className="space-y-1">
 				<TypographyH4>Tenant Payments</TypographyH4>
 				<TypographyMuted>
-					Monitor tenant rent payments, track statuses, and manage overdue
+					Monitor tenant payments, track statuses, and manage overdue
 					balances efficiently.
 				</TypographyMuted>
 			</div>
@@ -312,7 +312,7 @@ export function TenantPaymentsModule() {
 						columns={columns}
 						isLoading={isLoading}
 						refetch={refetch}
-						error={error ? 'Failed to load rent payments.' : undefined}
+						error={error ? 'Failed to load payments.' : undefined}
 						dataResponse={{
 							rows: data?.rows ?? [],
 							total: data?.meta?.total ?? 0,
@@ -325,7 +325,7 @@ export function TenantPaymentsModule() {
 							has_next_page: data?.meta?.has_next_page ?? false,
 						}}
 						empty={{
-							message: 'No rent payments found',
+							message: 'No payments found',
 							description:
 								"Try adjusting your search to find what you're looking for.",
 						}}
