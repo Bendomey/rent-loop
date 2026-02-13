@@ -5,12 +5,13 @@ import {
     Briefcase,
     Building2,
     Home,
+    Info,
     LayoutGrid,
     Store,
 } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useLoaderData, useNavigate } from 'react-router'
+import { Link, useNavigate, useRouteLoaderData } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useUpdatePropertyUnit } from '~/api/units'
@@ -48,7 +49,7 @@ import { QUERY_KEYS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
-import type { loader } from '~/routes/_auth.properties.$propertyId.assets.units.$unitId.edit'
+import type { loader } from '~/routes/_auth.properties.$propertyId.assets.units.$unitId'
 
 const ValidationSchema = z.object({
     name: z
@@ -127,13 +128,16 @@ const paymentFrequencies: Array<{
     ]
 
 export function EditPropertyAssetUnitModule() {
-    const { unit } = useLoaderData<typeof loader>()
+	const loaderData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>('routes/_auth.properties.$propertyId.assets.units.$unitId')
+    const unit = loaderData?.unit
     const { clientUserProperty } = useProperty()
     const navigate = useNavigate()
     const queryClient = useQueryClient()
     const { mutate, isPending } = useUpdatePropertyUnit()
 
     const property_id = safeString(clientUserProperty?.property?.id)
+
+    const isEditable = unit?.status === 'Unit.Status.Draft' || unit?.status === 'Unit.Status.Maintenance'
 
     const rhfMethods = useForm<FormSchema>({
         resolver: zodResolver(ValidationSchema),
@@ -249,278 +253,296 @@ export function EditPropertyAssetUnitModule() {
                     </TypographyMuted>
                 </div>
 
-                <hr />
-
-                {/* Type */}
-                <div>
-                    <div className="mb-3 space-y-1">
-                        <Label>Unit Type</Label>
-                        <TypographyMuted>
-                            What kind of space is this unit?
-                        </TypographyMuted>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        {unitTypes.map((model) => {
-                            const isSelected = watch('type') === model.type
-                            return (
-                                <button
-                                    key={model.type}
-                                    type="button"
-                                    className={cn(
-                                        'flex items-center gap-4 rounded-lg border p-4 text-left transition-colors hover:bg-zinc-50',
-                                        isSelected && 'border-rose-600 bg-rose-50/50',
-                                    )}
-                                    onClick={() =>
-                                        setValue('type', model.type, {
-                                            shouldDirty: true,
-                                            shouldValidate: true,
-                                        })
-                                    }
-                                >
-                                    <div
-                                        className={cn(
-                                            'flex size-10 shrink-0 items-center justify-center rounded-lg bg-zinc-100',
-                                            isSelected && 'bg-rose-100',
-                                        )}
-                                    >
-                                        <model.icon
-                                            className={cn(
-                                                'size-5 text-zinc-600',
-                                                isSelected && 'text-rose-600',
-                                            )}
-                                        />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-medium">{model.name}</p>
-                                        <p className="text-muted-foreground text-sm">
-                                            {model.description}
-                                        </p>
-                                    </div>
-                                </button>
-                            )
-                        })}
-                    </div>
-                    {formState.errors?.type && (
-                        <TypographySmall className="text-destructive mt-2">
-                            {formState.errors.type.message}
-                        </TypographySmall>
-                    )}
-                </div>
-
-                <hr />
-
-                {/* Basic Information */}
-                <div className="space-y-2">
-                        <TypographyH2>Basic Information</TypographyH2>
-                        <TypographyMuted>
-                            Set the basic information of your unit
-                        </TypographyMuted>
-                    </div>
-                <FieldGroup>
-                    <FormField
-                        name="name"
-                        control={rhfMethods.control}
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Name</FormLabel>
-                                <FormControl>
-                                    <Input type="text" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <ImageUpload
-                        hero
-                        shape="square"
-                        hint="Optional"
-                        acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-                        error={formState.errors?.image_url?.message}
-                        fileCallback={upload}
-                        isUploading={isUploading}
-                        dismissCallback={() => {
-                            setValue('image_url', '', {
-                                shouldDirty: true,
-                                shouldValidate: true,
-                            })
-                        }}
-                        imageSrc={safeString(watch('image_url') ?? '')}
-                        label="Unit Image"
-                        name="image_url"
-                        validation={{ maxByteSize: 5242880 }}
-                    />
-
-                    <FormField
-                        name="description"
-                        control={rhfMethods.control}
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Unit Details</FormLabel>
-                                <FormControl>
-                                    <Textarea
-                                        placeholder="Briefly describe your property unit (e.g., size, features, or highlights)..."
-                                        rows={5}
-                                        {...field}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                                <FormDescription>Optional</FormDescription>
-                            </FormItem>
-                        )}
-                    />
-
-                    <FeatureInput />
-                </FieldGroup>
-
-                {/* Unit Specs */}
-                <div className="space-y-8">
-                    <FormField
-                        name="area"
-                        control={rhfMethods.control}
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Area (sq m)</FormLabel>
-                                <FormControl>
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        placeholder="e.g., 250.50"
-                                        {...field}
-                                        value={field.value ?? ''}
-                                        onChange={(e) =>
-                                            field.onChange(
-                                                e.target.value === ''
-                                                    ? undefined
-                                                    : e.target.valueAsNumber,
-                                            )
-                                        }
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                                <FormDescription>Optional</FormDescription>
-                            </FormItem>
-                        )}
-                    />
-                </div>
-
-                <hr />
-
-                {/* Rental Information */}
-                <div className="space-y-8">
-                    <div className="space-y-2">
-                        <TypographyH2>Rental Information</TypographyH2>
-                        <TypographyMuted>
-                            Set the rent details for this unit
-                        </TypographyMuted>
-                    </div>
-
-                    <FormField
-                        name="max_occupants_allowed"
-                        control={rhfMethods.control}
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Max Occupants Allowed</FormLabel>
-                                <FormControl>
-                                    <Input
-                                        type="number"
-                                        placeholder="e.g., 4"
-                                        min={1}
-                                        {...field}
-                                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                                <FormDescription>
-                                    The maximum number of people that can live in this unit at
-                                    the same time.
-                                </FormDescription>
-                            </FormItem>
-                        )}
-                    />
-
-                    <div className="grid grid-cols-5 gap-4">
-                        <FormField
-                            name="rent_fee_currency"
-                            control={rhfMethods.control}
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Currency</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                        <FormControl className="w-full">
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="GHS">GHS</SelectItem>
-                                            <SelectItem value="USD">USD</SelectItem>
-                                            <SelectItem value="EUR">EUR</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField
-                            name="rent_fee"
-                            control={rhfMethods.control}
-                            render={({ field }) => (
-                                <FormItem className="col-span-4">
-                                    <FormLabel>Rent Fee</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            type="number"
-                                            step="0.01"
-                                            placeholder="e.g., 5000.00"
-                                            min={0}
-                                            {...field}
-                                            onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-
-                    <div>
-                        <Label>Payment Frequency</Label>
-                        <div className="mt-3 flex flex-wrap gap-3">
-                            {paymentFrequencies.map((item) => {
-                                const isSelected =
-                                    watch('payment_frequency') === item.value
-                                return (
-                                    <Button
-                                        key={item.value}
-                                        type="button"
-                                        variant={isSelected ? 'default' : 'outline'}
-                                        className={cn({
-                                            'bg-rose-600 text-white': isSelected,
-                                        })}
-                                        onClick={() =>
-                                            setValue('payment_frequency', item.value, {
-                                                shouldDirty: true,
-                                                shouldValidate: true,
-                                            })
-                                        }
-                                    >
-                                        {item.label}
-                                    </Button>
-                                )
-                            })}
+                {!isEditable && (
+                    <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                        <Info className="mt-0.5 size-5 shrink-0 text-blue-500" />
+                        <div>
+                            <p className="text-sm font-medium text-blue-700">
+                                Editing is disabled
+                            </p>
+                            <p className="text-sm text-blue-600">
+                                This unit must be in <strong>Draft</strong> or <strong>Maintenance</strong> status to edit. You can change the status from the unit detail page.
+                            </p>
                         </div>
-                        <FormDescription className="mt-2">
-                            How often rent is paid
-                        </FormDescription>
-                        {formState.errors?.payment_frequency && (
-                            <TypographySmall className="text-destructive mt-2">
-                                {formState.errors.payment_frequency.message}
-                            </TypographySmall>
-                        )}
                     </div>
-                </div>
+                )}
+
+                {isEditable && (
+                    <>
+                        <hr />
+
+                        {/* Type */}
+                        <div>
+                            <div className="mb-3 space-y-1">
+                                <Label>Unit Type</Label>
+                                <TypographyMuted>
+                                    What kind of space is this unit?
+                                </TypographyMuted>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                {unitTypes.map((model) => {
+                                    const isSelected = watch('type') === model.type
+                                    return (
+                                        <button
+                                            key={model.type}
+                                            type="button"
+                                            className={cn(
+                                                'flex items-center gap-4 rounded-lg border p-4 text-left transition-colors hover:bg-zinc-50',
+                                                isSelected && 'border-rose-600 bg-rose-50/50',
+                                            )}
+                                            onClick={() =>
+                                                setValue('type', model.type, {
+                                                    shouldDirty: true,
+                                                    shouldValidate: true,
+                                                })
+                                            }
+                                        >
+                                            <div
+                                                className={cn(
+                                                    'flex size-10 shrink-0 items-center justify-center rounded-lg bg-zinc-100',
+                                                    isSelected && 'bg-rose-100',
+                                                )}
+                                            >
+                                                <model.icon
+                                                    className={cn(
+                                                        'size-5 text-zinc-600',
+                                                        isSelected && 'text-rose-600',
+                                                    )}
+                                                />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-medium">{model.name}</p>
+                                                <p className="text-muted-foreground text-sm">
+                                                    {model.description}
+                                                </p>
+                                            </div>
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                            {formState.errors?.type && (
+                                <TypographySmall className="text-destructive mt-2">
+                                    {formState.errors.type.message}
+                                </TypographySmall>
+                            )}
+                        </div>
+
+                        <hr />
+
+                        {/* Basic Information */}
+                        <div className="space-y-2">
+                            <TypographyH2>Basic Information</TypographyH2>
+                            <TypographyMuted>
+                                Set the basic information of your unit
+                            </TypographyMuted>
+                        </div>
+                        <FieldGroup>
+                            <FormField
+                                name="name"
+                                control={rhfMethods.control}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Name</FormLabel>
+                                        <FormControl>
+                                            <Input type="text" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <ImageUpload
+                                hero
+                                shape="square"
+                                hint="Optional"
+                                acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
+                                error={formState.errors?.image_url?.message}
+                                fileCallback={upload}
+                                isUploading={isUploading}
+                                dismissCallback={() => {
+                                    setValue('image_url', '', {
+                                        shouldDirty: true,
+                                        shouldValidate: true,
+                                    })
+                                }}
+                                imageSrc={safeString(watch('image_url') ?? '')}
+                                label="Unit Image"
+                                name="image_url"
+                                validation={{ maxByteSize: 5242880 }}
+                            />
+
+                            <FormField
+                                name="description"
+                                control={rhfMethods.control}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Unit Details</FormLabel>
+                                        <FormControl>
+                                            <Textarea
+                                                placeholder="Briefly describe your property unit (e.g., size, features, or highlights)..."
+                                                rows={5}
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                        <FormDescription>Optional</FormDescription>
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FeatureInput />
+                        </FieldGroup>
+
+                        {/* Unit Specs */}
+                        <div className="space-y-8">
+                            <FormField
+                                name="area"
+                                control={rhfMethods.control}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Area (sq m)</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                placeholder="e.g., 250.50"
+                                                {...field}
+                                                value={field.value ?? ''}
+                                                onChange={(e) =>
+                                                    field.onChange(
+                                                        e.target.value === ''
+                                                            ? undefined
+                                                            : e.target.valueAsNumber,
+                                                    )
+                                                }
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                        <FormDescription>Optional</FormDescription>
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <hr />
+
+                        {/* Rental Information */}
+                        <div className="space-y-8">
+                            <div className="space-y-2">
+                                <TypographyH2>Rental Information</TypographyH2>
+                                <TypographyMuted>
+                                    Set the rent details for this unit
+                                </TypographyMuted>
+                            </div>
+
+                            <FormField
+                                name="max_occupants_allowed"
+                                control={rhfMethods.control}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Max Occupants Allowed</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                placeholder="e.g., 4"
+                                                min={1}
+                                                {...field}
+                                                onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                        <FormDescription>
+                                            The maximum number of people that can live in this unit at
+                                            the same time.
+                                        </FormDescription>
+                                    </FormItem>
+                                )}
+                            />
+
+                            <div className="grid grid-cols-5 gap-4">
+                                <FormField
+                                    name="rent_fee_currency"
+                                    control={rhfMethods.control}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Currency</FormLabel>
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <FormControl className="w-full">
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="GHS">GHS</SelectItem>
+                                                    <SelectItem value="USD">USD</SelectItem>
+                                                    <SelectItem value="EUR">EUR</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    name="rent_fee"
+                                    control={rhfMethods.control}
+                                    render={({ field }) => (
+                                        <FormItem className="col-span-4">
+                                            <FormLabel>Rent Fee</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    type="number"
+                                                    step="0.01"
+                                                    placeholder="e.g., 5000.00"
+                                                    min={0}
+                                                    {...field}
+                                                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <div>
+                                <Label>Payment Frequency</Label>
+                                <div className="mt-3 flex flex-wrap gap-3">
+                                    {paymentFrequencies.map((item) => {
+                                        const isSelected =
+                                            watch('payment_frequency') === item.value
+                                        return (
+                                            <Button
+                                                key={item.value}
+                                                type="button"
+                                                variant={isSelected ? 'default' : 'outline'}
+                                                className={cn({
+                                                    'bg-rose-600 text-white': isSelected,
+                                                })}
+                                                onClick={() =>
+                                                    setValue('payment_frequency', item.value, {
+                                                        shouldDirty: true,
+                                                        shouldValidate: true,
+                                                    })
+                                                }
+                                            >
+                                                {item.label}
+                                            </Button>
+                                        )
+                                    })}
+                                </div>
+                                <FormDescription className="mt-2">
+                                    How often rent is paid
+                                </FormDescription>
+                                {formState.errors?.payment_frequency && (
+                                    <TypographySmall className="text-destructive mt-2">
+                                        {formState.errors.payment_frequency.message}
+                                    </TypographySmall>
+                                )}
+                            </div>
+                        </div>
+                    </>
+                )}
 
                 <hr />
 
@@ -535,17 +557,19 @@ export function EditPropertyAssetUnitModule() {
                             variant="ghost"
                             disabled={isPending}
                         >
-                            <ArrowLeft /> Cancel
+                            <ArrowLeft /> {isEditable ? 'Cancel' : 'Go Back'}
                         </Button>
                     </Link>
-                    <Button
-                        disabled={isPending || !formState.isDirty}
-                        size="lg"
-                        variant="default"
-                        className="bg-rose-600 hover:bg-rose-700"
-                    >
-                        {isPending && <Spinner />} Update
-                    </Button>
+                    {isEditable && (
+                        <Button
+                            disabled={isPending || !formState.isDirty}
+                            size="lg"
+                            variant="default"
+                            className="bg-rose-600 hover:bg-rose-700"
+                        >
+                            {isPending && <Spinner />} Update
+                        </Button>
+                    )}
                 </div>
             </form>
         </Form>
