@@ -127,6 +127,7 @@ export function PropertyAssetUnitModule() {
 	const property_id = safeString(clientUserProperty?.property?.id)
 	const isOccupied = unit.status === 'Unit.Status.Occupied'
 	const isEditable = unit.status === 'Unit.Status.Draft' || unit.status === 'Unit.Status.Maintenance'
+	const isMultiProperty = clientUserProperty?.property?.type === 'MULTI'
 
 	const handleStatusChange = (newStatus: PropertyUnit['status']) => {
 		const statusProps = { propertyId: property_id, unitId: unit.id }
@@ -281,7 +282,7 @@ export function PropertyAssetUnitModule() {
 									</TooltipContent>
 								</Tooltip>
 							)}
-							{isEditable ? (
+							{isMultiProperty && (isEditable ? (
 								<Button
 									variant="destructive"
 									size="sm"
@@ -306,7 +307,7 @@ export function PropertyAssetUnitModule() {
 											: 'Switch this unit to Draft or Maintenance to delete it.'}
 									</TooltipContent>
 								</Tooltip>
-							)}
+							))}
 						</PropertyPermissionGuard>
 					</CardFooter>
 				</Card>
