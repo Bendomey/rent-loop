@@ -1,14 +1,5 @@
 import dayjs from 'dayjs'
-import {
-	CircleCheck,
-	Eye,
-	House,
-	MoreHorizontalIcon,
-	Pencil,
-	Trash,
-	Users,
-	Wrench,
-} from 'lucide-react'
+import { CircleCheck, Eye, Users } from 'lucide-react'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { PropertyAssetUnitsController } from './controller'
@@ -26,13 +17,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuGroup,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
@@ -93,12 +77,7 @@ export function PropertyAssetUnitsModule() {
 					gridElement={({ data }: { data: PropertyUnit }) => (
 						<Card
 							key={data.id}
-							 className="group gap-2 overflow-hidden pt-0 pb-3 shadow-none cursor-pointer transition hover:bg-muted/40 hover:shadow-sm hover:-translate-y-[1px] focus-visible:ring-2 focus-visible:ring-primary/30"
-							onClick={() =>
-								void navigate(
-									`/properties/${data.property_id}/assets/units/${data.id}`,
-								)
-							}
+							className="gap-2 overflow-hidden pt-0 pb-3 shadow-none"
 						>
 							<div className="h-44 w-full overflow-hidden">
 								<Image
@@ -150,90 +129,18 @@ export function PropertyAssetUnitsModule() {
 							<CardFooter className="flex justify-around border-t-[1px] pt-3">
 								<Button
 									type="button"
-									variant="ghost"
+									variant="outline"
 									size="icon-sm"
-									className="flex w-fit flex-col gap-1 px-3 py-6 text-xs text-zinc-500"
-								>
-									<House />
-									Tenants
-								</Button>
-
-								{/* <Button
-								type="button"
-								variant="ghost"
-								size="icon-sm"
-								className="flex w-fit flex-col gap-1 px-3 py-6 text-xs text-zinc-500"
-							>
-								<BadgeCent />
-								Accounting
-							</Button> */}
-
-								<Button
-									type="button"
-									variant="ghost"
-									size="icon-sm"
-									className="flex w-fit flex-col gap-1 px-3 py-6 text-xs text-zinc-500"
-									onClick={(e) => {
-										e.stopPropagation()
+									className="flex w-full flex-row gap-2 py-5 text-xs text-zinc-500"
+									onClick={() => {
 										void navigate(
-											`/properties/${data.property_id}/assets/units/${data.id}/maintenance-requests`,
+											`/properties/${data.property_id}/assets/units/${data.id}`,
 										)
 									}}
 								>
-									<Wrench />
-									Maintenance
+									<Eye />
+									View
 								</Button>
-
-								<div className="flex items-center">
-									<DropdownMenu>
-										<DropdownMenuTrigger asChild>
-											<Button
-												variant="outline"
-												size="icon"
-												aria-label="More Options"
-											>
-												<MoreHorizontalIcon />
-											</Button>
-										</DropdownMenuTrigger>
-										<DropdownMenuContent align="end" className="w-52">
-											<DropdownMenuGroup>
-												<DropdownMenuItem
-													onClick={(e) => {
-														e.stopPropagation()
-														void navigate(
-															`/properties/${data.property_id}/assets/units/${data.id}`,
-														)
-													}}
-												>
-													<Eye />
-													View
-												</DropdownMenuItem>
-												<DropdownMenuItem
-													onClick={(e) => {
-														e.stopPropagation()
-														void navigate(
-															`/properties/${data.property_id}/assets/units/${data.id}/edit`,
-														)
-													}}
-												>
-													<Pencil />
-													Edit
-												</DropdownMenuItem>
-												<DropdownMenuItem
-													variant="destructive"
-													onClick={(e) => {
-														e.stopPropagation()
-														setSelectedPropertyUnit(data)
-														setOpenDeletePropertyUnitModal(true)
-													}}
-												>
-													<Trash />
-													Delete
-												</DropdownMenuItem>
-											</DropdownMenuGroup>
-										</DropdownMenuContent>
-									</DropdownMenu>
-								</div>
 							</CardFooter>
 						</Card>
 					)}

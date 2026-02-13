@@ -10,7 +10,14 @@ import {
 	Trash,
 } from 'lucide-react'
 import { useState } from 'react'
-import { Link, Outlet, useLocation, useNavigate, useRevalidator, useRouteLoaderData } from 'react-router'
+import {
+	Link,
+	Outlet,
+	useLocation,
+	useNavigate,
+	useRevalidator,
+	useRouteLoaderData,
+} from 'react-router'
 import { toast } from 'sonner'
 import DeletePropertyUnitModal from '../delete'
 import {
@@ -95,22 +102,40 @@ const selectableStatuses: Array<{
 	label: string
 	description: string
 }> = [
-	{ value: 'Unit.Status.Draft', label: 'Draft', description: 'Not visible to tenants' },
-	{ value: 'Unit.Status.Available', label: 'Available', description: 'Ready for tenant applications' },
-	{ value: 'Unit.Status.Maintenance', label: 'Maintenance', description: 'Temporarily unavailable' },
+	{
+		value: 'Unit.Status.Draft',
+		label: 'Draft',
+		description: 'Not visible to tenants',
+	},
+	{
+		value: 'Unit.Status.Available',
+		label: 'Available',
+		description: 'Ready for tenant applications',
+	},
+	{
+		value: 'Unit.Status.Maintenance',
+		label: 'Maintenance',
+		description: 'Temporarily unavailable',
+	},
 ]
 
 export function PropertyAssetUnitModule() {
-	const loaderData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>('routes/_auth.properties.$propertyId.assets.units.$unitId')
+	const loaderData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>(
+		'routes/_auth.properties.$propertyId.assets.units.$unitId',
+	)
 	const { pathname } = useLocation()
 	const navigate = useNavigate()
 	const queryClient = useQueryClient()
 	const revalidator = useRevalidator()
 	const { clientUserProperty } = useProperty()
-	const { mutate: makeDraft, isPending: isDrafting } = useMakePropertyUnitDraft()
-	const { mutate: makeAvailable, isPending: isMakingAvailable } = useMakePropertyUnitAvailable()
-	const { mutate: makeMaintenance, isPending: isMakingMaintenance } = useMakePropertyUnitMaintenance()
-	const isUpdatingStatus = isDrafting || isMakingAvailable || isMakingMaintenance
+	const { mutate: makeDraft, isPending: isDrafting } =
+		useMakePropertyUnitDraft()
+	const { mutate: makeAvailable, isPending: isMakingAvailable } =
+		useMakePropertyUnitAvailable()
+	const { mutate: makeMaintenance, isPending: isMakingMaintenance } =
+		useMakePropertyUnitMaintenance()
+	const isUpdatingStatus =
+		isDrafting || isMakingAvailable || isMakingMaintenance
 	const [openDeleteModal, setOpenDeleteModal] = useState(false)
 	const unit = loaderData?.unit
 
@@ -126,7 +151,9 @@ export function PropertyAssetUnitModule() {
 	const baseUrl = `/properties/${unit.property_id}/assets/units/${unit.id}`
 	const property_id = safeString(clientUserProperty?.property?.id)
 	const isOccupied = unit.status === 'Unit.Status.Occupied'
-	const isEditable = unit.status === 'Unit.Status.Draft' || unit.status === 'Unit.Status.Maintenance'
+	const isEditable =
+		unit.status === 'Unit.Status.Draft' ||
+		unit.status === 'Unit.Status.Maintenance'
 
 	const handleStatusChange = (newStatus: PropertyUnit['status']) => {
 		const statusProps = { propertyId: property_id, unitId: unit.id }
@@ -220,11 +247,16 @@ export function PropertyAssetUnitModule() {
 											>
 												<Badge
 													variant="outline"
-													className={cn('mt-1 size-2 shrink-0 rounded-full p-0', getStatusBadgeClass(option.value))}
+													className={cn(
+														'mt-1 size-2 shrink-0 rounded-full p-0',
+														getStatusBadgeClass(option.value),
+													)}
 												/>
 												<div>
 													<p className="text-sm font-medium">{option.label}</p>
-													<p className="text-muted-foreground text-xs">{option.description}</p>
+													<p className="text-muted-foreground text-xs">
+														{option.description}
+													</p>
 												</div>
 											</DropdownMenuItem>
 										))}
@@ -268,7 +300,12 @@ export function PropertyAssetUnitModule() {
 								<Tooltip>
 									<TooltipTrigger asChild>
 										<span tabIndex={0} className="cursor-not-allowed">
-											<Button variant="outline" size="sm" disabled className="pointer-events-none">
+											<Button
+												variant="outline"
+												size="sm"
+												disabled
+												className="pointer-events-none"
+											>
 												<Pencil className="mr-1 size-4" />
 												Edit
 											</Button>
@@ -294,7 +331,12 @@ export function PropertyAssetUnitModule() {
 								<Tooltip>
 									<TooltipTrigger asChild>
 										<span tabIndex={0} className="cursor-not-allowed">
-											<Button variant="destructive" size="sm" disabled className="pointer-events-none">
+											<Button
+												variant="destructive"
+												size="sm"
+												disabled
+												className="pointer-events-none"
+											>
 												<Trash className="mr-1 size-4" />
 												Delete
 											</Button>
@@ -310,7 +352,6 @@ export function PropertyAssetUnitModule() {
 						</PropertyPermissionGuard>
 					</CardFooter>
 				</Card>
-
 			</div>
 
 			{/* Main Content with Tabs */}

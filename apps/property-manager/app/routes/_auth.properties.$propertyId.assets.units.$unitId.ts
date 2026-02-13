@@ -32,7 +32,8 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 }
 
 export const handle = {
-	breadcrumb: (data: Awaited<ReturnType<typeof loader>>) => data?.unit?.name ?? "Unit"
+	breadcrumb: (data: Awaited<ReturnType<typeof loader>>) =>
+		data?.unit?.name ?? 'Unit',
 }
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
