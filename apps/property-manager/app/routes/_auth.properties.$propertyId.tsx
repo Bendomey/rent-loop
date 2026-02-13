@@ -24,9 +24,7 @@ import { PropertyProvider } from '~/providers/property-provider'
 
 export const middleware = [propertyMiddleware]
 
-export const handle = {
-	breadcrumb: 'Property',
-}
+
 
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const clientUserProperty = context.get(propertyContext)
@@ -37,17 +35,18 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	}
 }
 
+export const handle = {
+	breadcrumb: (data:  Awaited<ReturnType<typeof loader>>) => data?.clientUserProperty?.property?.name ?? 'Property',
+}
+
 export default function PropertyDashboard({ matches }: Route.ComponentProps) {
 	const loaderData = useLoaderData<typeof loader>()
 
 	const breadcrumbs = matches
 		.filter((m) => m?.handle)
 		.map((m) => {
-			const breadcrumb = (m?.handle as { breadcrumb: string }).breadcrumb
-			const name =
-				breadcrumb === 'Property'
-					? loaderData?.clientUserProperty?.property?.name
-					: breadcrumb
+			const breadcrumb = (m?.handle as { breadcrumb: (data: unknown) => string | string }).breadcrumb
+			const name = typeof breadcrumb === 'string' ? breadcrumb : breadcrumb(m?.loaderData)
 			return { name, pathname: m?.pathname, id: m?.id }
 		})
 

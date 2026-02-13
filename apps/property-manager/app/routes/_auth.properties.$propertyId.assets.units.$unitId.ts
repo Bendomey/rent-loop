@@ -5,11 +5,6 @@ import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { PropertyAssetUnitModule } from '~/modules/properties/property/assets/units/unit'
-
-export const handle = {
-	breadcrumb: 'View Unit',
-}
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const clientUserProperty = context.get(propertyContext)
@@ -36,6 +31,10 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	}
 }
 
+export const handle = {
+	breadcrumb: (data: Awaited<ReturnType<typeof loader>>) => data?.unit?.name ?? "Unit"
+}
+
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
 		title: `${loaderData?.unit?.name} | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
@@ -48,5 +47,3 @@ export function meta({ loaderData, location, params }: Route.MetaArgs) {
 
 	return meta
 }
-
-export default PropertyAssetUnitModule
