@@ -328,6 +328,11 @@ export function PropertyAssetUnitModule() {
 								Maintenance Requests
 							</TabsTrigger>
 						</Link>
+						<Link to={`${baseUrl}/reviews`}>
+							<TabsTrigger value={`${baseUrl}/reviews`}>
+								Tenant Reviews
+							</TabsTrigger>
+						</Link>
 					</TabsList>
 					<TabsContent value={pathname}>
 						<Outlet context={{ unit }} />
