@@ -20,6 +20,7 @@ import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
 
 const tenant: TenantApplication = {
+	code: 'HAGSH12121',
 	id: 't1',
 	on_boarding_method: 'ADMIN',
 	first_name: 'Gideon',
