@@ -58,7 +58,7 @@ export function DocumentsModule() {
 		? Number(searchParams.get('pageSize'))
 		: PAGINATION_DEFAULTS.PER_PAGE
 	const { data, isPending, isRefetching, error, refetch } = useGetDocuments({
-		filters: {},
+		filters: {only_global_documents: true},
 		pagination: { page, per },
 		populate: ['CreatedBy'],
 		sorter: { sort: 'desc', sort_by: 'created_at' },

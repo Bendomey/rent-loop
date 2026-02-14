@@ -86,11 +86,13 @@ func (r *documentRepository) Delete(ctx context.Context, documentID string) erro
 }
 
 type ListDocumentsFilter struct {
-	Tags         *[]string
-	PropertyID   *string
-	PropertySlug *string
-	ClientID     string
-	IDs          *[]string
+	Tags                   *[]string
+	PropertyID             *string
+	PropertySlug           *string
+	OnlyGlobalDocuments    *bool
+	IncludeGlobalDocuments *bool
+	ClientID               string
+	IDs                    *[]string
 }
 
 func (r *documentRepository) List(
@@ -106,8 +108,9 @@ func (r *documentRepository) List(
 			DateRangeScope("documents", filterQuery.DateRange),
 			SearchScope("documents", filterQuery.Search),
 			ClientIDFilterScope(filters.ClientID),
-			PropertyIDFilterScope(filters.PropertyID),
+			PropertyFilterScope(filters.PropertyID, filters.IncludeGlobalDocuments),
 			PropertySlugFilterScope(filters.PropertySlug),
+			OnlyGlobalDocumentsFilterScope(filters.OnlyGlobalDocuments),
 			TagsFilterScope(filters.Tags),
 
 			PaginationScope(filterQuery.Page, filterQuery.PageSize),
@@ -144,8 +147,9 @@ func (r *documentRepository) Count(
 			DateRangeScope("documents", filterQuery.DateRange),
 			SearchScope("documents", filterQuery.Search),
 			ClientIDFilterScope(filters.ClientID),
-			PropertyIDFilterScope(filters.PropertyID),
+			PropertyFilterScope(filters.PropertyID, filters.IncludeGlobalDocuments),
 			PropertySlugFilterScope(filters.PropertySlug),
+			OnlyGlobalDocumentsFilterScope(filters.OnlyGlobalDocuments),
 			TagsFilterScope(filters.Tags),
 		).
 		Count(&count)
@@ -157,13 +161,27 @@ func (r *documentRepository) Count(
 	return count, nil
 }
 
-func PropertyIDFilterScope(propertyID *string) func(db *gorm.DB) *gorm.DB {
+func PropertyFilterScope(propertyID *string, includeGlobal *bool) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if propertyID == nil {
 			return db
 		}
 
+		if includeGlobal != nil && *includeGlobal {
+			return db.Where("documents.property_id = ? OR documents.property_id IS NULL", *propertyID)
+		}
+
 		return db.Where("documents.property_id = ?", *propertyID)
+	}
+}
+
+func OnlyGlobalDocumentsFilterScope(onlyGlobalDocuments *bool) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if onlyGlobalDocuments == nil || !*onlyGlobalDocuments {
+			return db
+		}
+
+		return db.Where("documents.property_id IS NULL")
 	}
 }
 

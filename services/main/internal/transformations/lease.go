@@ -30,7 +30,7 @@ type OutputAdminLease struct {
 	PropertyInspectionDate *time.Time `json:"property_inspection_date" example:"2024-06-30T15:00:00Z"`
 
 	LeaseAggreementDocumentMode *string `json:"lease_agreement_document_mode,omitempty" example:"MANUAL"`
-	LeaseAgreementDocumentUrl   string  `json:"lease_agreement_document_url"  example:"https://example.com/lease.pdf"`
+	LeaseAgreementDocumentUrl   string  `json:"lease_agreement_document_url"            example:"https://example.com/lease.pdf"`
 
 	LeaseAgreementDocumentPropertyManagerSignedById *string `json:"lease_agreement_document_property_manager_signed_by_id,omitempty" example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"`
 	LeaseAgreementDocumentPropertyManagerSignedBy   *OutputClientUser

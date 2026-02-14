@@ -1,67 +1,84 @@
-import { useParams } from 'react-router'
-import { DocumentUpload } from '~/components/ui/document-upload'
-import { ImageUpload } from '~/components/ui/image-upload'
-import { ImageUploadBulk } from '~/components/ui/image-upload-bulk'
+import { FileText, Plus } from 'lucide-react'
+import { useState } from 'react'
+import { AddDocumentModal } from './add-document-modal'
+import { AttachedDocumentView } from './attached-document-view'
+import type { AttachedDocument } from './types'
+import { Button } from '~/components/ui/button'
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '~/components/ui/card'
 import { useProperty } from '~/providers/property-provider'
 
+// TODO: replace with real lease data from API
+// const mockAttachedDoc: AttachedDocument | null = null
+const mockAttachedDoc: AttachedDocument = {
+	mode: 'online',
+	title: 'Standard Lease Agreement',
+	documentId: 'doc1',
+	// propertyManagerSignedAt: new Date('2024-01-15T10:30:00Z'),
+	propertyManagerSignedAt: null,
+	propertyManagerSignedBy: null,
+	// propertyManagerSignedBy: { name: 'Alice Johnson' },
+	// tenantSignedAt: new Date('2024-01-15T10:30:00Z'),
+	tenantSignedAt: null,
+}
+
 export function PropertyTenantApplicationDocs() {
-	const { applicationId } = useParams()
 	const { clientUserProperty } = useProperty()
+	const [open, setOpen] = useState(false)
+
+	const property_id = clientUserProperty?.property?.id
+	const attachedDoc = mockAttachedDoc
 
 	return (
-		<div>
-			<p>Docs detail</p>
+		<Card className="shadow-none">
+			<CardHeader>
+				<CardTitle>Docs Setup</CardTitle>
+				<CardDescription>
+					Setup documentation details for the lease agreement.
+				</CardDescription>
+			</CardHeader>
 
+			<CardContent>
+				{attachedDoc ? (
+					<AttachedDocumentView
+						doc={attachedDoc}
+						onChangeDocument={() => setOpen(true)}
+						onClearDocument={() => {
+							// TODO: call API to remove attached document
+						}}
+					/>
+				) : (
+					<div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12">
+						<FileText className="size-10 text-zinc-400" />
+						<p className="mt-3 text-sm font-medium text-zinc-700">
+							No document attached
+						</p>
+						<p className="mt-1 text-xs text-zinc-500">
+							Upload or select a document to attach to this application.
+						</p>
+						<Button
+							variant="outline"
+							className="mt-4"
+							onClick={() => setOpen(true)}
+						>
+							<Plus className="size-4" />
+							Add Document
+						</Button>
+					</div>
+				)}
+			</CardContent>
 
-			<ImageUpload
-				shape="circle"
-				hint="Optional"
-				acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-				// error={rhfMethods.formState.errors?.logo_url?.message}
-				// fileCallback={upload}
-				// isUploading={isUploading}
-				dismissCallback={() => {
-					// rhfMethods.setValue('logo_url', undefined, {
-					// 	shouldDirty: true,
-					// 	shouldValidate: true,
-					// })
-				}}
-				// imageSrc={safeString(rhfMethods.watch('logo_url'))}
-				label="Logo"
-				name="logo"
-				validation={{
-					maxByteSize: 2048000, // 2MB
-				}}
+			<AddDocumentModal
+				open={open}
+				onOpenChange={setOpen}
+				propertyId={property_id}
+				attachedDoc={attachedDoc}
 			/>
-
-			<DocumentUpload
-				acceptedFileTypes={['application/pdf']}
-				label="Supporting Document"
-				hint="Upload a PDF document (max 5MB)"
-				name="supporting_document"
-				maxByteSize={5242880}
-				// fileCallback={async (file) => { /* handle upload */ }}
-				// dismissCallback={() => { /* handle dismiss */ }}
-				// documentName={existingDocName}
-				// isUploading={isUploading}
-				// error={rhfMethods.formState.errors?.document?.message}
-			/>
-
-			<ImageUploadBulk
-				acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-				label="Additional Photos"
-				hint="Upload up to 10 images (max 2MB each)"
-				name="additional_photos"
-				maxImages={10}
-				validation={{
-					maxByteSize: 2048000, // 2MB
-				}}
-				// fileCallback={async (file, img) => { /* handle upload */ }}
-				// onRemove={(image) => { /* handle removal */ }}
-				// imageSources={existingImages}
-				// uploadingIds={uploadingImageIds}
-				// error={rhfMethods.formState.errors?.photos?.message}
-			/>
-		</div>
+		</Card>
 	)
 }

@@ -230,10 +230,12 @@ func (h *DocumentHandler) GetDocumentById(w http.ResponseWriter, r *http.Request
 
 type ListDocumentsFilterRequest struct {
 	lib.FilterQueryInput
-	PropertyID   *string   `json:"property_id"   validate:"omitempty,uuid4"      example:"550e8400-e29b-41d4-a716-446655440000"`
-	PropertySlug *string   `json:"property_slug" validate:"omitempty"            example:"downtown-apartment-101"`
-	Tags         *[]string `json:"tags"          validate:"omitempty,dive"       example:"LEASE_AGREEMENT,INSPECTION_REPORT"`
-	IDs          []string  `json:"ids"           validate:"omitempty,dive,uuid4" example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of document IDs to filter by" collectionFormat:"multi"`
+	PropertyID             *string   `json:"property_id"              validate:"omitempty,uuid4"      example:"550e8400-e29b-41d4-a716-446655440000"`
+	PropertySlug           *string   `json:"property_slug"            validate:"omitempty"            example:"downtown-apartment-101"`
+	OnlyGlobalDocuments    *bool     `json:"only_global_documents"    validate:"omitempty"            example:"true"                                 description:"Filter for documents without a property"`
+	IncludeGlobalDocuments *bool     `json:"include_global_documents" validate:"omitempty"            example:"true"                                 description:"Include global documents along with property-specific documents"`
+	Tags                   *[]string `json:"tags"                     validate:"omitempty,dive"       example:"LEASE_AGREEMENT,INSPECTION_REPORT"`
+	IDs                    []string  `json:"ids"                      validate:"omitempty,dive,uuid4" example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of document IDs to filter by"                               collectionFormat:"multi"`
 }
 
 // GetDocuments godoc
@@ -259,10 +261,12 @@ func (h *DocumentHandler) ListDocuments(w http.ResponseWriter, r *http.Request) 
 	}
 
 	filters := ListDocumentsFilterRequest{
-		PropertyID:   lib.NullOrString(r.URL.Query().Get("property_id")),
-		PropertySlug: lib.NullOrString(r.URL.Query().Get("property_slug")),
-		Tags:         lib.NullOrStringArray(r.URL.Query()["tags"]),
-		IDs:          r.URL.Query()["ids"],
+		PropertyID:             lib.NullOrString(r.URL.Query().Get("property_id")),
+		PropertySlug:           lib.NullOrString(r.URL.Query().Get("property_slug")),
+		OnlyGlobalDocuments:    lib.NullOrBool(r.URL.Query().Get("only_global_documents")),
+		IncludeGlobalDocuments: lib.NullOrBool(r.URL.Query().Get("include_global_documents")),
+		Tags:                   lib.NullOrStringArray(r.URL.Query()["tags"]),
+		IDs:                    r.URL.Query()["ids"],
 	}
 
 	isFiltersPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filters, w)
@@ -282,11 +286,13 @@ func (h *DocumentHandler) ListDocuments(w http.ResponseWriter, r *http.Request) 
 	}
 
 	input := repository.ListDocumentsFilter{
-		PropertyID:   filters.PropertyID,
-		PropertySlug: filters.PropertySlug,
-		ClientID:     currentUser.ClientID,
-		Tags:         filters.Tags,
-		IDs:          lib.NullOrStringArray(filters.IDs),
+		PropertyID:             filters.PropertyID,
+		PropertySlug:           filters.PropertySlug,
+		OnlyGlobalDocuments:    filters.OnlyGlobalDocuments,
+		IncludeGlobalDocuments: filters.IncludeGlobalDocuments,
+		ClientID:               currentUser.ClientID,
+		Tags:                   filters.Tags,
+		IDs:                    lib.NullOrStringArray(filters.IDs),
 	}
 
 	documents, documentsErr := h.service.List(r.Context(), *filterQuery, input)

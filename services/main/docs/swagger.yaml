@@ -3646,6 +3646,14 @@ paths:
           type: string
         name: ids
         type: array
+      - example: true
+        in: query
+        name: include_global_documents
+        type: boolean
+      - example: true
+        in: query
+        name: only_global_documents
+        type: boolean
       - enum:
         - asc
         - desc
