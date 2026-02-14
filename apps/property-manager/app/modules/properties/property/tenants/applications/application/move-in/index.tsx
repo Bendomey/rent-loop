@@ -35,7 +35,8 @@ export function PropertyTenantApplicationMoveIn() {
 					Setup move-in details for the tenant.
 				</CardDescription>
 			</CardHeader>
-
+			
+			{/* let the default for the frequency be the unit's default frequency */}
 			<CardContent className="space-y-3">
 				<Form {...rhfMethods}>
 					<form>
