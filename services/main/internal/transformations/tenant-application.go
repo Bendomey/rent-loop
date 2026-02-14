@@ -22,8 +22,8 @@ type OutputTenantApplication struct {
 	CancelledById *string           `json:"cancelled_by_id,omitempty" example:"user-456"`
 	CancelledBy   *OutputClientUser `json:"cancelled_by,omitempty"`
 
-	DesiredUnitId string     `json:"desired_unit_id" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	DesiredUnit   OutputUnit `json:"desired_unit"`
+	DesiredUnitId string          `json:"desired_unit_id" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	DesiredUnit   AdminOutputUnit `json:"desired_unit"`
 
 	DesiredMoveInDate     *time.Time `json:"desired_move_in_date,omitempty"    example:"2024-07-01T00:00:00Z"`
 	StayDurationFrequency *string    `json:"stay_duration_frequency,omitempty" example:"monthly"`
@@ -98,7 +98,7 @@ func DBTenantApplicationToRest(i *models.TenantApplication) any {
 		"cancelled_by_id":                i.CancelledById,
 		"cancelled_by":                   DBClientUserToRest(i.CancelledBy),
 		"desired_unit_id":                i.DesiredUnitId,
-		"desired_unit":                   DBUnitToRest(&i.DesiredUnit),
+		"desired_unit":                   DBAdminUnitToRest(&i.DesiredUnit),
 		"desired_move_in_date":           i.DesiredMoveInDate,
 		"stay_duration_frequency":        i.StayDurationFrequency,
 		"stay_duration":                  i.StayDuration,

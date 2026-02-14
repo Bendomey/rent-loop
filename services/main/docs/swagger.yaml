@@ -2124,7 +2124,7 @@ definitions:
         example: "2024-07-01T00:00:00Z"
         type: string
       desired_unit:
-        $ref: '#/definitions/transformations.OutputUnit'
+        $ref: '#/definitions/transformations.AdminOutputUnit'
       desired_unit_id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
@@ -2164,17 +2164,8 @@ definitions:
       initial_deposit_fee:
         example: 500
         type: integer
-      initial_deposit_paid_at:
-        example: "2024-06-05T10:00:00Z"
-        type: string
-      initial_deposit_payment_id:
-        example: pay-001
-        type: string
-      initial_deposit_payment_method:
-        example: ONLINE
-        type: string
-      initial_deposit_reference_number:
-        example: REF123
+      initial_deposit_fee_currency:
+        example: GHS
         type: string
       last_name:
         example: Doe
@@ -2246,18 +2237,6 @@ definitions:
         type: integer
       security_deposit_fee_currency:
         example: USD
-        type: string
-      security_deposit_paid_at:
-        example: "2024-06-06T11:00:00Z"
-        type: string
-      security_deposit_payment_id:
-        example: pay-002
-        type: string
-      security_deposit_payment_method:
-        example: ONLINE
-        type: string
-      security_deposit_reference_number:
-        example: SECREF456
         type: string
       status:
         example: TenantApplication.Status.InProgress

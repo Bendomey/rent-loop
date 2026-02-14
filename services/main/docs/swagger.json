@@ -10119,7 +10119,7 @@
                     "example": "2024-07-01T00:00:00Z"
                 },
                 "desired_unit": {
-                    "$ref": "#/definitions/transformations.OutputUnit"
+                    "$ref": "#/definitions/transformations.AdminOutputUnit"
                 },
                 "desired_unit_id": {
                     "type": "string",
@@ -10173,21 +10173,9 @@
                     "type": "integer",
                     "example": 500
                 },
-                "initial_deposit_paid_at": {
+                "initial_deposit_fee_currency": {
                     "type": "string",
-                    "example": "2024-06-05T10:00:00Z"
-                },
-                "initial_deposit_payment_id": {
-                    "type": "string",
-                    "example": "pay-001"
-                },
-                "initial_deposit_payment_method": {
-                    "type": "string",
-                    "example": "ONLINE"
-                },
-                "initial_deposit_reference_number": {
-                    "type": "string",
-                    "example": "REF123"
+                    "example": "GHS"
                 },
                 "last_name": {
                     "type": "string",
@@ -10283,22 +10271,6 @@
                 "security_deposit_fee_currency": {
                     "type": "string",
                     "example": "USD"
-                },
-                "security_deposit_paid_at": {
-                    "type": "string",
-                    "example": "2024-06-06T11:00:00Z"
-                },
-                "security_deposit_payment_id": {
-                    "type": "string",
-                    "example": "pay-002"
-                },
-                "security_deposit_payment_method": {
-                    "type": "string",
-                    "example": "ONLINE"
-                },
-                "security_deposit_reference_number": {
-                    "type": "string",
-                    "example": "SECREF456"
                 },
                 "status": {
                     "type": "string",
