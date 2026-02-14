@@ -2078,6 +2078,18 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "boolean",
+                        "example": true,
+                        "name": "include_global_documents",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "example": true,
+                        "name": "only_global_documents",
+                        "in": "query"
+                    },
+                    {
                         "enum": [
                             "asc",
                             "desc"

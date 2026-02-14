@@ -23,4 +23,6 @@ interface FetchRentloopDocumentFilter {
 	property_slug?: string
 	tags?: Array<string>
 	ids?: Array<string>
+	only_global_documents?: boolean
+	include_global_documents?: boolean
 }

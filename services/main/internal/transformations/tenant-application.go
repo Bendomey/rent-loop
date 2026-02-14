@@ -33,19 +33,11 @@ type OutputTenantApplication struct {
 	RentFeeCurrency  string  `json:"rent_fee_currency"           example:"USD"`
 	PaymentFrequency *string `json:"payment_frequency,omitempty" example:"monthly"`
 
-	InitialDepositFee             *int64     `json:"initial_deposit_fee,omitempty"              example:"500"`
-	InitialDepositPaymentMethod   *string    `json:"initial_deposit_payment_method,omitempty"   example:"ONLINE"`
-	InitialDepositReferenceNumber *string    `json:"initial_deposit_reference_number,omitempty" example:"REF123"`
-	InitialDepositPaidAt          *time.Time `json:"initial_deposit_paid_at,omitempty"          example:"2024-06-05T10:00:00Z"`
-	InitialDepositPaymentId       *string    `json:"initial_deposit_payment_id,omitempty"       example:"pay-001"`
+	InitialDepositFee         *int64  `json:"initial_deposit_fee,omitempty"              example:"500"`
+	InitialDepositFeeCurrency *string `json:"initial_deposit_fee_currency,omitempty"       example:"GHS"`
 
 	SecurityDepositFee         *int64  `json:"security_deposit_fee,omitempty"          example:"1000"`
 	SecurityDepositFeeCurrency *string `json:"security_deposit_fee_currency,omitempty" example:"USD"`
-
-	SecurityDepositPaymentMethod   *string    `json:"security_deposit_payment_method,omitempty"   example:"ONLINE"`
-	SecurityDepositReferenceNumber *string    `json:"security_deposit_reference_number,omitempty" example:"SECREF456"`
-	SecurityDepositPaidAt          *time.Time `json:"security_deposit_paid_at,omitempty"          example:"2024-06-06T11:00:00Z"`
-	SecurityDepositPaymentId       *string    `json:"security_deposit_payment_id,omitempty"       example:"pay-002"`
 
 	LeaseAggreementDocumentMode                     *string           `json:"lease_aggreement_document_mode,omitempty"                         example:"MANUAL"`
 	LeaseAgreementDocumentUrl                       *string           `json:"lease_agreement_document_url,omitempty"                           example:"https://example.com/lease.pdf"`
