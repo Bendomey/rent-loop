@@ -5250,16 +5250,16 @@
                     },
                     {
                         "enum": [
-                            "Hourly",
-                            "Daily",
-                            "Monthly",
-                            "Quarterly",
-                            "BiAnnually",
-                            "Annually",
-                            "OneTime"
+                            "HOURLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY",
+                            "ONETIME"
                         ],
                         "type": "string",
-                        "example": "Hourly",
+                        "example": "HOURLY",
                         "name": "payment_frequency",
                         "in": "query"
                     },
@@ -5307,12 +5307,12 @@
                     },
                     {
                         "enum": [
-                            "Hours",
-                            "Days",
-                            "Months"
+                            "HOURS",
+                            "DAYS",
+                            "MONTHS"
                         ],
                         "type": "string",
-                        "example": "Hours",
+                        "example": "HOURS",
                         "name": "stay_duration_frequency",
                         "in": "query"
                     },
@@ -6081,8 +6081,8 @@
                     },
                     {
                         "enum": [
-                            "Male",
-                            "Female"
+                            "MALE",
+                            "FEMALE"
                         ],
                         "type": "string",
                         "name": "gender",
@@ -6112,10 +6112,10 @@
                     },
                     {
                         "enum": [
-                            "Single",
-                            "Married",
-                            "Divorced",
-                            "Widowed"
+                            "SINGLE",
+                            "MARRIED",
+                            "DIVORCED",
+                            "WIDOWED"
                         ],
                         "type": "string",
                         "name": "marital_status",
@@ -6149,13 +6149,13 @@
                     },
                     {
                         "enum": [
-                            "Hourly",
-                            "Daily",
-                            "Monthly",
-                            "Quarterly",
-                            "BiAnnually",
-                            "Annually",
-                            "OneTime"
+                            "HOURLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY",
+                            "ONETIME"
                         ],
                         "type": "string",
                         "name": "payment_frequency",
@@ -6231,9 +6231,9 @@
                     },
                     {
                         "enum": [
-                            "Hours",
-                            "Days",
-                            "Months"
+                            "HOURS",
+                            "DAYS",
+                            "MONTHS"
                         ],
                         "type": "string",
                         "name": "stay_duration_frequency",
@@ -7063,16 +7063,16 @@
                     },
                     {
                         "enum": [
-                            "Hourly",
-                            "Daily",
-                            "Monthly",
-                            "Quarterly",
-                            "BiAnnually",
-                            "Annually",
-                            "OneTime"
+                            "HOURLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY",
+                            "ONETIME"
                         ],
                         "type": "string",
-                        "example": "Hourly",
+                        "example": "HOURLY",
                         "name": "payment_frequency",
                         "in": "query"
                     },
@@ -7120,12 +7120,12 @@
                     },
                     {
                         "enum": [
-                            "Hours",
-                            "Days",
-                            "Months"
+                            "HOURS",
+                            "DAYS",
+                            "MONTHS"
                         ],
                         "type": "string",
-                        "example": "Hours",
+                        "example": "HOURS",
                         "name": "stay_duration_frequency",
                         "in": "query"
                     },
@@ -7304,10 +7304,10 @@
                 "channel": {
                     "type": "string",
                     "enum": [
-                        "email",
-                        "sms"
+                        "EMAIL",
+                        "SMS"
                     ],
-                    "example": "email"
+                    "example": "EMAIL"
                 },
                 "email": {
                     "type": "string",
@@ -7818,7 +7818,11 @@
                 },
                 "gender": {
                     "type": "string",
-                    "example": "Male"
+                    "enum": [
+                        "MALE",
+                        "FEMALE"
+                    ],
+                    "example": "MALE"
                 },
                 "id_number": {
                     "type": "string",
@@ -7840,7 +7844,13 @@
                 },
                 "marital_status": {
                     "type": "string",
-                    "example": "Single"
+                    "enum": [
+                        "SINGLE",
+                        "MARRIED",
+                        "DIVORCED",
+                        "WIDOWED"
+                    ],
+                    "example": "SINGLE"
                 },
                 "nationality": {
                     "type": "string",
@@ -8299,15 +8309,15 @@
                 "payment_frequency": {
                     "type": "string",
                     "enum": [
-                        "Hourly",
-                        "Daily",
-                        "Monthly",
-                        "Quarterly",
-                        "BiAnnually",
-                        "Annually",
-                        "OneTime"
+                        "HOURLY",
+                        "DAILY",
+                        "MONTHLY",
+                        "QUARTERLY",
+                        "BIANNUALLY",
+                        "ANNUALLY",
+                        "ONETIME"
                     ],
-                    "example": "Monthly"
+                    "example": "MONTHLY"
                 },
                 "property_inspection_date": {
                     "type": "string",
@@ -8321,11 +8331,11 @@
                 "stay_duration_frequency": {
                     "type": "string",
                     "enum": [
-                        "Hours",
-                        "Days",
-                        "Months"
+                        "HOURS",
+                        "DAYS",
+                        "MONTHS"
                     ],
-                    "example": "Hours"
+                    "example": "HOURS"
                 },
                 "utility_transfers_date": {
                     "type": "string",
@@ -8508,10 +8518,10 @@
                 "gender": {
                     "type": "string",
                     "enum": [
-                        "Male",
-                        "Female"
+                        "MALE",
+                        "FEMALE"
                     ],
-                    "example": "Male"
+                    "example": "MALE"
                 },
                 "id_back_url": {
                     "type": "string",
@@ -8575,12 +8585,12 @@
                 "marital_status": {
                     "type": "string",
                     "enum": [
-                        "Single",
-                        "Married",
-                        "Divorced",
-                        "Widowed"
+                        "SINGLE",
+                        "MARRIED",
+                        "DIVORCED",
+                        "WIDOWED"
                     ],
-                    "example": "Single"
+                    "example": "SINGLE"
                 },
                 "nationality": {
                     "type": "string",
@@ -8601,15 +8611,15 @@
                 "payment_frequency": {
                     "type": "string",
                     "enum": [
-                        "Hourly",
-                        "Daily",
-                        "Monthly",
-                        "Quarterly",
-                        "BiAnnually",
-                        "Annually",
-                        "OneTime"
+                        "HOURLY",
+                        "DAILY",
+                        "MONTHLY",
+                        "QUARTERLY",
+                        "BIANNUALLY",
+                        "ANNUALLY",
+                        "ONETIME"
                     ],
-                    "example": "Hourly"
+                    "example": "HOURLY"
                 },
                 "phone": {
                     "type": "string",
@@ -8679,11 +8689,11 @@
                 "stay_duration_frequency": {
                     "type": "string",
                     "enum": [
-                        "Hours",
-                        "Days",
-                        "Months"
+                        "HOURS",
+                        "DAYS",
+                        "MONTHS"
                     ],
-                    "example": "Hours"
+                    "example": "HOURS"
                 }
             }
         },

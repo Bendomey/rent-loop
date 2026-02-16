@@ -19,9 +19,9 @@ func NewAuthHandler(appCtx pkg.AppContext, service services.AuthService) AuthHan
 }
 
 type AuthCodeRequest struct {
-	Channel string  `json:"channel" validate:"required,oneof=email sms"                  example:"email"             description:"Channel to send verification code"`
-	Email   *string `json:"email"   validate:"required_if=Channel email,omitempty,email" example:"email@example.com" description:"Email address"`
-	Phone   *string `json:"phone"   validate:"required_if=Channel sms,omitempty,e164"    example:"+233281234569"     description:"Phone number"`
+	Channel string  `json:"channel" validate:"required,oneof=EMAIL SMS"                  example:"EMAIL"             description:"Channel to send verification code"`
+	Email   *string `json:"email"   validate:"required_if=Channel EMAIL,omitempty,email" example:"email@example.com" description:"Email address"`
+	Phone   *string `json:"phone"   validate:"required_if=Channel SMS,omitempty,e164"    example:"+233281234569"     description:"Phone number"`
 }
 
 // SendCode godoc
