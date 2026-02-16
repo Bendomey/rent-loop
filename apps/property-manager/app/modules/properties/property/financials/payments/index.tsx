@@ -318,8 +318,8 @@ export function PropertyFinancialsPaymentsModule() {
 			<div className="space-y-1">
 				<TypographyH4>Manage Payments</TypographyH4>
 				<TypographyMuted>
-					Monitor tenant payments, track statuses, and manage overdue
-					balances efficiently.
+					Monitor tenant payments, track statuses, and manage overdue balances
+					efficiently.
 				</TypographyMuted>
 			</div>
 

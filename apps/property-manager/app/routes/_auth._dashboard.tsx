@@ -38,7 +38,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	const apiConfig = {
 		authToken,
 		baseUrl,
-	};
+	}
 
 	// only admins and owners can access the main dashboard.
 	if (authData.clientUser.role === 'STAFF') {
@@ -50,7 +50,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 				search: {},
 				sorter: {},
 			},
-			apiConfig
+			apiConfig,
 		)
 
 		const clientUserProperty = clientUserProperties?.rows?.at(0)
@@ -67,7 +67,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 			{
 				pagination: { page: 1, per: 1 },
 			},
-			apiConfig
+			apiConfig,
 		),
 		getPaymentAccountsForServer(
 			{
@@ -76,7 +76,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 				},
 				pagination: { page: 1, per: 1 },
 			},
-			apiConfig
+			apiConfig,
 		),
 	])
 
@@ -86,7 +86,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	}
 }
 
-export default function AuthDashboard({ matches, loaderData }: Route.ComponentProps) {
+export default function AuthDashboard({
+	matches,
+	loaderData,
+}: Route.ComponentProps) {
 	const breadcrumbs = matches
 		.filter((m) => m?.handle)
 		.map((m) => {
@@ -98,7 +101,10 @@ export default function AuthDashboard({ matches, loaderData }: Route.ComponentPr
 		<SidebarProvider>
 			<AppSidebar />
 			<SidebarInset>
-				<ClientChecklist paymentAccountsCount={loaderData?.paymentAccountsCount ?? 0} propertiesCount={loaderData?.propertiesCount ?? 0} />
+				<ClientChecklist
+					paymentAccountsCount={loaderData?.paymentAccountsCount ?? 0}
+					propertiesCount={loaderData?.propertiesCount ?? 0}
+				/>
 				<header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
 					<div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
 						<SidebarTrigger className="-ml-1" />

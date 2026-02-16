@@ -10,9 +10,22 @@ import {
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '~/components/ui/form'
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select'
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '~/components/ui/select'
 // import { useProperty } from '~/providers/property-provider'
 
 export function PropertyTenantApplicationMoveIn() {
@@ -31,11 +44,9 @@ export function PropertyTenantApplicationMoveIn() {
 		<Card className="shadow-none">
 			<CardHeader>
 				<CardTitle>Move In Setup</CardTitle>
-				<CardDescription>
-					Setup move-in details for the tenant.
-				</CardDescription>
+				<CardDescription>Setup move-in details for the tenant.</CardDescription>
 			</CardHeader>
-			
+
 			{/* let the default for the frequency be the unit's default frequency */}
 			<CardContent className="space-y-3">
 				<Form {...rhfMethods}>
@@ -47,9 +58,7 @@ export function PropertyTenantApplicationMoveIn() {
 									control={control}
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>
-												Desired Move In Date
-											</FormLabel>
+											<FormLabel>Desired Move In Date</FormLabel>
 											<FormControl>
 												<DatePickerInput
 													value={field.value}
@@ -67,9 +76,7 @@ export function PropertyTenantApplicationMoveIn() {
 									control={control}
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>
-												Stay Duration Frequency
-											</FormLabel>
+											<FormLabel>Stay Duration Frequency</FormLabel>
 											<FormControl>
 												<Select
 													value={field.value}
@@ -96,9 +103,7 @@ export function PropertyTenantApplicationMoveIn() {
 									control={control}
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>
-												Stay Duration Number
-											</FormLabel>
+											<FormLabel>Stay Duration Number</FormLabel>
 											<FormControl>
 												<Input type="number" {...field} />
 											</FormControl>

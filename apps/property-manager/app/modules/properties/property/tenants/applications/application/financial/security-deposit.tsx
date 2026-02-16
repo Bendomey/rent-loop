@@ -38,9 +38,7 @@ export function SecurityDeposit({
 						min={0}
 						step={0.01}
 						value={amount}
-						onChange={(e) =>
-							onAmountChange(parseFloat(e.target.value) || 0)
-						}
+						onChange={(e) => onAmountChange(parseFloat(e.target.value) || 0)}
 					/>
 				</div>
 			)}

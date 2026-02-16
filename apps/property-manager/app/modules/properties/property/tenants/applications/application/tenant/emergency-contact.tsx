@@ -24,9 +24,9 @@ import { Label } from '~/components/ui/label'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 
-const employment_type: Array<{
+const employer_type: Array<{
 	label: string
-	value: TenantApplication['employment_type']
+	value: TenantApplication['employer_type']
 }> = [
 	{ label: 'Student', value: 'STUDENT' },
 	{ label: 'Worker', value: 'WORKER' },
@@ -42,7 +42,7 @@ const ValidationSchema = z.object({
 	emergency_contact_phone: z
 		.string({ error: 'Phone Number is required' })
 		.min(9, 'Please enter a valid phone number'),
-	employment_type: z.enum(['STUDENT', 'WORKER'], {
+	employer_type: z.enum(['STUDENT', 'WORKER'], {
 		error: 'Please select an employment type',
 	}),
 	occupation: z.string().optional(),
@@ -57,12 +57,12 @@ export function PropertyTenantApplicationEmergencyContact() {
 		defaultValues: {
 			// 	marital_status: formData.marital_status || 'SINGLE',
 			// 	gender: formData.gender || 'MALE',
-			employment_type: 'STUDENT',
+			employer_type: 'STUDENT',
 		},
 	})
 	const { control, watch, setValue } = rhfMethods
 
-	const isStudent = watch('employment_type') === 'STUDENT'
+	const isStudent = watch('employer_type') === 'STUDENT'
 
 	return (
 		<Card className="shadow-none">
@@ -144,25 +144,25 @@ export function PropertyTenantApplicationEmergencyContact() {
 							</div>
 							<div className="col-span-2">
 								<div className="flex space-x-3">
-									{employment_type.map((employment_type) => {
+									{employer_type.map((employer_type) => {
 										const isSelected =
-											watch('employment_type') === employment_type.value
+											watch('employer_type') === employer_type.value
 										return (
 											<Button
 												type="button"
 												onClick={() =>
-													setValue('employment_type', employment_type.value, {
+													setValue('employer_type', employer_type.value, {
 														shouldDirty: true,
 														shouldValidate: true,
 													})
 												}
-												key={employment_type.value}
+												key={employer_type.value}
 												variant={isSelected ? 'default' : 'outline'}
 												className={cn('w-1/2', {
 													'bg-rose-600 text-white': isSelected,
 												})}
 											>
-												{employment_type.label}
+												{employer_type.label}
 											</Button>
 										)
 									})}
