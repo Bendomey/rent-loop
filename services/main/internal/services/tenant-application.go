@@ -97,6 +97,7 @@ type CreateTenantApplicationInput struct {
 	RelationshipToEmergencyContact string
 	Occupation                     string
 	Employer                       string
+	EmployerType                   string
 	OccupationAddress              string
 	ProfilePhotoUrl                *string
 	CreatedById                    string
@@ -141,6 +142,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		RelationshipToEmergencyContact: input.RelationshipToEmergencyContact,
 		Occupation:                     input.Occupation,
 		Employer:                       input.Employer,
+		EmployerType:                   &input.EmployerType,
 		OccupationAddress:              input.OccupationAddress,
 		ProfilePhotoUrl:                input.ProfilePhotoUrl,
 		CreatedById:                    input.CreatedById,
@@ -320,6 +322,7 @@ type UpdateTenantApplicationInput struct {
 	RelationshipToEmergencyContact                  *string
 	Occupation                                      *string
 	Employer                                        *string
+	EmployerType                                    *string
 	OccupationAddress                               *string
 	DesiredMoveInDate                               *time.Time
 	StayDurationFrequency                           *string
@@ -446,6 +449,10 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 
 	if input.Employer != nil {
 		tenantApplication.Employer = *input.Employer
+	}
+
+	if input.EmployerType != nil {
+		tenantApplication.EmployerType = input.EmployerType
 	}
 
 	if input.OccupationAddress != nil {

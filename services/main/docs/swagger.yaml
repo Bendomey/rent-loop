@@ -409,6 +409,12 @@ definitions:
       employer:
         example: Acme Corp
         type: string
+      employer_type:
+        enum:
+        - WORKER
+        - STUDENT
+        example: WORKER
+        type: string
       first_name:
         example: John
         type: string
@@ -469,6 +475,7 @@ definitions:
     - emergency_contact_name
     - emergency_contact_phone
     - employer
+    - employer_type
     - first_name
     - gender
     - id_number
@@ -939,6 +946,12 @@ definitions:
         type: string
       employer:
         example: Acme Corp
+        type: string
+      employer_type:
+        enum:
+        - WORKER
+        - STUDENT
+        example: WORKER
         type: string
       first_name:
         example: John
@@ -2146,7 +2159,10 @@ definitions:
         example: "+1122334455"
         type: string
       employer:
-        example: Tech Ltd.
+        example: UPSA
+        type: string
+      employer_type:
+        example: WORKER
         type: string
       first_name:
         example: John
@@ -2202,7 +2218,7 @@ definitions:
         example: Ghanaian
         type: string
       occupation:
-        example: Software Engineer
+        example: STUDENT
         type: string
       occupation_address:
         example: 456 Tech Ave, Accra
