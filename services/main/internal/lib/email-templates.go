@@ -4,8 +4,7 @@ const SUPPORT_DETAILS_TEMPLATE = `If you have any questions, feel free to contac
 
 const (
 	CLIENT_APPLICATION_SUBMITTED_SUBJECT = "Your Rentloop Application Received"
-	CLIENT_APPLICATION_SUBMITTED_BODY    = `
-Hi {{owner_name}},
+	CLIENT_APPLICATION_SUBMITTED_BODY    = `Hi {{owner_name}},
 
 Thank you for submitting your property owner application on Rentloop!  
 We've received your details and our team is currently reviewing your submission.
@@ -40,8 +39,7 @@ The Rentloop Team
 
 const (
 	CLIENT_APPLICATION_ACCEPTED_SUBJECT = "Your Rentloop Application Accepted"
-	CLIENT_APPLICATION_ACCEPTED_BODY    = `
-Hi {{owner_name}},
+	CLIENT_APPLICATION_ACCEPTED_BODY    = `Hi {{owner_name}},
 
 Great news! Your property owner application has been approved.  
 Welcome to Rentloop — we're excited to have you on board.
@@ -64,8 +62,7 @@ The Rentloop Team
 
 const (
 	CLIENT_USER_ADDED_SUBJECT = "Welcome to Rentloop"
-	CLIENT_USER_ADDED_BODY    = `
-Hey {{name}},
+	CLIENT_USER_ADDED_BODY    = `Hey {{name}},
 
 You have been invited to join {{client_name}}. Login with the details below.
 
@@ -85,8 +82,7 @@ The Rentloop Team
 
 const (
 	CLIENT_USER_PASSWORD_RESET_SUBJECT = "Reset Your Rentloop Password"
-	CLIENT_USER_PASSWORD_RESET_BODY    = `
-Hey {{name}},
+	CLIENT_USER_PASSWORD_RESET_BODY    = `Hey {{name}},
 
 We received a request to reset your password.
 Click the link below to set a new password:
@@ -104,8 +100,7 @@ The Rentloop Team
 
 const (
 	CLIENT_USER_ACTIVATED_SUBJECT = "Client User Activated"
-	CLIENT_USER_ACTIVATED_BODY    = `
-Hey {{name}},
+	CLIENT_USER_ACTIVATED_BODY    = `Hey {{name}},
 
 Your account has been activated. You can now log back in.
 
@@ -118,8 +113,7 @@ The rentloop Team
 
 const (
 	CLIENT_USER_DEACTIVATED_SUBJECT = "Client User Deactivated"
-	CLIENT_USER_DEACTIVATED_BODY    = `
-Hey {{name}},
+	CLIENT_USER_DEACTIVATED_BODY    = `Hey {{name}},
 
 Your account has been deactivated. Reach out to your admin.
 
@@ -134,8 +128,7 @@ The rentloop Team
 
 const (
 	CLIENT_USER_PASSWORD_UPDATED_SUBJECT = "Your Rentloop Password Updated"
-	CLIENT_USER_PASSWORD_UPDATED_BODY    = `
-Hey {{name}},
+	CLIENT_USER_PASSWORD_UPDATED_BODY    = `Hey {{name}},
 
 Your password has been changed successfully. if you didn't change this, reach out to support.
 
@@ -148,13 +141,12 @@ The rentloop Team
 
 const (
 	TENANT_INVITED_SUBJECT = "Complete your tenant application on Rentloop"
-	TENANT_INVITED_BODY    = `
-Hi,
+	TENANT_INVITED_BODY    = `Hi,
 
 You’ve been invited to apply for a tenancy on Rentloop.
 
 To get started, please complete your tenant application using the secure link below:
-{{property_manager_portal_url}}/tenants/apply?unit={{unit_id}}&refered_by={{admin_id}}
+{{website_url}}/tenants/apply?unit={{unit_id}}&referred_by={{admin_id}}
 
 The application helps the property owner review your details and proceed with the tenancy process.
 This link is intended for you only. If you weren’t expecting this email, you can safely ignore it.
@@ -168,8 +160,7 @@ The Rentloop team
 
 const (
 	TENANT_CANCELLED_SUBJECT = "Your tenant application has been cancelled"
-	TENANT_CANCELLED_BODY    = `
-Hello {{applicant_name}},
+	TENANT_CANCELLED_BODY    = `Hello {{applicant_name}},
 
 We are writing to inform you that your tenant application (Application Code: {{application_code}}) has been cancelled.
 
@@ -189,8 +180,7 @@ The Rentloop team
 
 const (
 	TENANT_APPLICATION_SUBMITTED_SUBJECT = "Tenant Application Submitted Successfully"
-	TENANT_APPLICATION_SUBMITTED_BODY    = `
-Hello {{applicant_name}},
+	TENANT_APPLICATION_SUBMITTED_BODY    = `Hello {{applicant_name}},
 
 Your tenant application has been successfully submitted and is now under review.
 
@@ -215,8 +205,7 @@ The Rentloop team
 
 const (
 	TENANT_APPLICATION_APPROVED_SUBJECT = "Your Tenant Application Has Been Approved"
-	TENANT_APPLICATION_APPROVED_BODY    = `
-Hello {{applicant_name}},
+	TENANT_APPLICATION_APPROVED_BODY    = `Hello {{applicant_name}},
 
 We’re pleased to inform you that your tenant application has been Approved.
 

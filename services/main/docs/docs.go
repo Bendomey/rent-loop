@@ -2078,6 +2078,18 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "boolean",
+                        "example": true,
+                        "name": "include_global_documents",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "example": true,
+                        "name": "only_global_documents",
+                        "in": "query"
+                    },
+                    {
                         "enum": [
                             "asc",
                             "desc"
@@ -5246,16 +5258,16 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Hourly",
-                            "Daily",
-                            "Monthly",
-                            "Quarterly",
-                            "BiAnnually",
-                            "Annually",
-                            "OneTime"
+                            "HOURLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY",
+                            "ONETIME"
                         ],
                         "type": "string",
-                        "example": "Hourly",
+                        "example": "HOURLY",
                         "name": "payment_frequency",
                         "in": "query"
                     },
@@ -5303,12 +5315,12 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Hours",
-                            "Days",
-                            "Months"
+                            "HOURS",
+                            "DAYS",
+                            "MONTHS"
                         ],
                         "type": "string",
-                        "example": "Hours",
+                        "example": "HOURS",
                         "name": "stay_duration_frequency",
                         "in": "query"
                     },
@@ -6077,8 +6089,8 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Male",
-                            "Female"
+                            "MALE",
+                            "FEMALE"
                         ],
                         "type": "string",
                         "name": "gender",
@@ -6108,10 +6120,10 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Single",
-                            "Married",
-                            "Divorced",
-                            "Widowed"
+                            "SINGLE",
+                            "MARRIED",
+                            "DIVORCED",
+                            "WIDOWED"
                         ],
                         "type": "string",
                         "name": "marital_status",
@@ -6145,13 +6157,13 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Hourly",
-                            "Daily",
-                            "Monthly",
-                            "Quarterly",
-                            "BiAnnually",
-                            "Annually",
-                            "OneTime"
+                            "HOURLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY",
+                            "ONETIME"
                         ],
                         "type": "string",
                         "name": "payment_frequency",
@@ -6227,9 +6239,9 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Hours",
-                            "Days",
-                            "Months"
+                            "HOURS",
+                            "DAYS",
+                            "MONTHS"
                         ],
                         "type": "string",
                         "name": "stay_duration_frequency",
@@ -7059,16 +7071,16 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Hourly",
-                            "Daily",
-                            "Monthly",
-                            "Quarterly",
-                            "BiAnnually",
-                            "Annually",
-                            "OneTime"
+                            "HOURLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY",
+                            "ONETIME"
                         ],
                         "type": "string",
-                        "example": "Hourly",
+                        "example": "HOURLY",
                         "name": "payment_frequency",
                         "in": "query"
                     },
@@ -7116,12 +7128,12 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Hours",
-                            "Days",
-                            "Months"
+                            "HOURS",
+                            "DAYS",
+                            "MONTHS"
                         ],
                         "type": "string",
-                        "example": "Hours",
+                        "example": "HOURS",
                         "name": "stay_duration_frequency",
                         "in": "query"
                     },
@@ -7300,10 +7312,10 @@ const docTemplate = `{
                 "channel": {
                     "type": "string",
                     "enum": [
-                        "email",
-                        "sms"
+                        "EMAIL",
+                        "SMS"
                     ],
-                    "example": "email"
+                    "example": "EMAIL"
                 },
                 "email": {
                     "type": "string",
@@ -7763,6 +7775,7 @@ const docTemplate = `{
                 "emergency_contact_name",
                 "emergency_contact_phone",
                 "employer",
+                "employer_type",
                 "first_name",
                 "gender",
                 "id_number",
@@ -7808,13 +7821,25 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Acme Corp"
                 },
+                "employer_type": {
+                    "type": "string",
+                    "enum": [
+                        "WORKER",
+                        "STUDENT"
+                    ],
+                    "example": "WORKER"
+                },
                 "first_name": {
                     "type": "string",
                     "example": "John"
                 },
                 "gender": {
                     "type": "string",
-                    "example": "Male"
+                    "enum": [
+                        "MALE",
+                        "FEMALE"
+                    ],
+                    "example": "MALE"
                 },
                 "id_number": {
                     "type": "string",
@@ -7836,7 +7861,13 @@ const docTemplate = `{
                 },
                 "marital_status": {
                     "type": "string",
-                    "example": "Single"
+                    "enum": [
+                        "SINGLE",
+                        "MARRIED",
+                        "DIVORCED",
+                        "WIDOWED"
+                    ],
+                    "example": "SINGLE"
                 },
                 "nationality": {
                     "type": "string",
@@ -8295,15 +8326,15 @@ const docTemplate = `{
                 "payment_frequency": {
                     "type": "string",
                     "enum": [
-                        "Hourly",
-                        "Daily",
-                        "Monthly",
-                        "Quarterly",
-                        "BiAnnually",
-                        "Annually",
-                        "OneTime"
+                        "HOURLY",
+                        "DAILY",
+                        "MONTHLY",
+                        "QUARTERLY",
+                        "BIANNUALLY",
+                        "ANNUALLY",
+                        "ONETIME"
                     ],
-                    "example": "Monthly"
+                    "example": "MONTHLY"
                 },
                 "property_inspection_date": {
                     "type": "string",
@@ -8317,11 +8348,11 @@ const docTemplate = `{
                 "stay_duration_frequency": {
                     "type": "string",
                     "enum": [
-                        "Hours",
-                        "Days",
-                        "Months"
+                        "HOURS",
+                        "DAYS",
+                        "MONTHS"
                     ],
-                    "example": "Hours"
+                    "example": "HOURS"
                 },
                 "utility_transfers_date": {
                     "type": "string",
@@ -8497,6 +8528,14 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Acme Corp"
                 },
+                "employer_type": {
+                    "type": "string",
+                    "enum": [
+                        "WORKER",
+                        "STUDENT"
+                    ],
+                    "example": "WORKER"
+                },
                 "first_name": {
                     "type": "string",
                     "example": "John"
@@ -8504,10 +8543,10 @@ const docTemplate = `{
                 "gender": {
                     "type": "string",
                     "enum": [
-                        "Male",
-                        "Female"
+                        "MALE",
+                        "FEMALE"
                     ],
-                    "example": "Male"
+                    "example": "MALE"
                 },
                 "id_back_url": {
                     "type": "string",
@@ -8571,12 +8610,12 @@ const docTemplate = `{
                 "marital_status": {
                     "type": "string",
                     "enum": [
-                        "Single",
-                        "Married",
-                        "Divorced",
-                        "Widowed"
+                        "SINGLE",
+                        "MARRIED",
+                        "DIVORCED",
+                        "WIDOWED"
                     ],
-                    "example": "Single"
+                    "example": "SINGLE"
                 },
                 "nationality": {
                     "type": "string",
@@ -8597,15 +8636,15 @@ const docTemplate = `{
                 "payment_frequency": {
                     "type": "string",
                     "enum": [
-                        "Hourly",
-                        "Daily",
-                        "Monthly",
-                        "Quarterly",
-                        "BiAnnually",
-                        "Annually",
-                        "OneTime"
+                        "HOURLY",
+                        "DAILY",
+                        "MONTHLY",
+                        "QUARTERLY",
+                        "BIANNUALLY",
+                        "ANNUALLY",
+                        "ONETIME"
                     ],
-                    "example": "Hourly"
+                    "example": "HOURLY"
                 },
                 "phone": {
                     "type": "string",
@@ -8675,11 +8714,11 @@ const docTemplate = `{
                 "stay_duration_frequency": {
                     "type": "string",
                     "enum": [
-                        "Hours",
-                        "Days",
-                        "Months"
+                        "HOURS",
+                        "DAYS",
+                        "MONTHS"
                     ],
-                    "example": "Hours"
+                    "example": "HOURS"
                 }
             }
         },
@@ -10115,7 +10154,7 @@ const docTemplate = `{
                     "example": "2024-07-01T00:00:00Z"
                 },
                 "desired_unit": {
-                    "$ref": "#/definitions/transformations.OutputUnit"
+                    "$ref": "#/definitions/transformations.AdminOutputUnit"
                 },
                 "desired_unit_id": {
                     "type": "string",
@@ -10135,7 +10174,11 @@ const docTemplate = `{
                 },
                 "employer": {
                     "type": "string",
-                    "example": "Tech Ltd."
+                    "example": "UPSA"
+                },
+                "employer_type": {
+                    "type": "string",
+                    "example": "WORKER"
                 },
                 "first_name": {
                     "type": "string",
@@ -10169,21 +10212,9 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 500
                 },
-                "initial_deposit_paid_at": {
+                "initial_deposit_fee_currency": {
                     "type": "string",
-                    "example": "2024-06-05T10:00:00Z"
-                },
-                "initial_deposit_payment_id": {
-                    "type": "string",
-                    "example": "pay-001"
-                },
-                "initial_deposit_payment_method": {
-                    "type": "string",
-                    "example": "ONLINE"
-                },
-                "initial_deposit_reference_number": {
-                    "type": "string",
-                    "example": "REF123"
+                    "example": "GHS"
                 },
                 "last_name": {
                     "type": "string",
@@ -10222,7 +10253,7 @@ const docTemplate = `{
                 },
                 "occupation": {
                     "type": "string",
-                    "example": "Software Engineer"
+                    "example": "STUDENT"
                 },
                 "occupation_address": {
                     "type": "string",
@@ -10279,22 +10310,6 @@ const docTemplate = `{
                 "security_deposit_fee_currency": {
                     "type": "string",
                     "example": "USD"
-                },
-                "security_deposit_paid_at": {
-                    "type": "string",
-                    "example": "2024-06-06T11:00:00Z"
-                },
-                "security_deposit_payment_id": {
-                    "type": "string",
-                    "example": "pay-002"
-                },
-                "security_deposit_payment_method": {
-                    "type": "string",
-                    "example": "ONLINE"
-                },
-                "security_deposit_reference_number": {
-                    "type": "string",
-                    "example": "SECREF456"
                 },
                 "status": {
                     "type": "string",

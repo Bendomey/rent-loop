@@ -66,7 +66,7 @@ export interface CreatePropertyTenantApplicationInput {
 	relationship_to_emergency_contact: string
 
 	// Occupation_Details
-	employment_type: TenantApplication['employment_type']
+	employer_type: TenantApplication['employer_type']
 	occupation: string
 	employer: string
 	occupation_address: string

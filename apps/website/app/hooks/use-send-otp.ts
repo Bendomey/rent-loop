@@ -19,7 +19,7 @@ export const useSendOtp = (options?: UseSendOtpOptions) => {
 		}
 
 		mutate(
-			{ channel: 'sms', phone: formattedPhone },
+			{ channel: 'SMS', phone: formattedPhone },
 			{
 				onSuccess: () => {
 					toast.success(`OTP has been sent to your phone`)

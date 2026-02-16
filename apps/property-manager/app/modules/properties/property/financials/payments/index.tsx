@@ -170,7 +170,7 @@ const isRefetching = false
 const error = null
 const refetch = () => {}
 
-export function PropertyFinancialsRentPaymentsModule() {
+export function PropertyFinancialsPaymentsModule() {
 	const [searchParams] = useSearchParams()
 	const { clientUserProperty } = useProperty()
 
@@ -211,7 +211,7 @@ export function PropertyFinancialsRentPaymentsModule() {
 					return (
 						<div className="">
 							<Link
-								to={`/properties/${clientUserProperty?.property_id}/financials/rent-payments/${row.original.id}`}
+								to={`/properties/${clientUserProperty?.property_id}/financials/payments/${row.original.id}`}
 								aria-label={`View details for application`}
 							>
 								<span className="truncate text-xs text-blue-600 hover:underline">
@@ -300,7 +300,7 @@ export function PropertyFinancialsRentPaymentsModule() {
 
 							<DropdownMenuContent align="end" className="32">
 								<Link
-									to={`/properties/${clientUserProperty?.property?.id}/financials/rent-payments/${row.original.id}`}
+									to={`/properties/${clientUserProperty?.property?.id}/financials/payments/${row.original.id}`}
 								>
 									<DropdownMenuItem>View</DropdownMenuItem>
 								</Link>
@@ -316,10 +316,10 @@ export function PropertyFinancialsRentPaymentsModule() {
 	return (
 		<div className="mx-6 my-6 flex flex-col gap-4 sm:gap-6">
 			<div className="space-y-1">
-				<TypographyH4>Manage Rent Payments</TypographyH4>
+				<TypographyH4>Manage Payments</TypographyH4>
 				<TypographyMuted>
-					Monitor tenant rent payments, track statuses, and manage overdue
-					balances efficiently.
+					Monitor tenant payments, track statuses, and manage overdue balances
+					efficiently.
 				</TypographyMuted>
 			</div>
 
@@ -338,7 +338,7 @@ export function PropertyFinancialsRentPaymentsModule() {
 						columns={columns}
 						isLoading={isLoading}
 						refetch={refetch}
-						error={error ? 'Failed to load rent payments.' : undefined}
+						error={error ? 'Failed to load payments.' : undefined}
 						dataResponse={{
 							rows: data?.rows ?? [],
 							total: data?.meta?.total ?? 0,
@@ -351,7 +351,7 @@ export function PropertyFinancialsRentPaymentsModule() {
 							has_next_page: data?.meta?.has_next_page ?? false,
 						}}
 						empty={{
-							message: 'No rent payments found',
+							message: 'No payments found',
 							description:
 								"Try adjusting your search to find what you're looking for.",
 						}}

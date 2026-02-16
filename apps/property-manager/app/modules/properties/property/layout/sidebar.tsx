@@ -112,8 +112,8 @@ export function PropertySidebar({
 				icon: DollarSign,
 				items: [
 					{
-						title: 'Rent Payments',
-						url: '/rent-payments',
+						title: 'Payments',
+						url: '/payments',
 					},
 					{
 						title: 'Expenses',

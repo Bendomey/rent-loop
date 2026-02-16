@@ -154,6 +154,7 @@ export function PropertyAssetUnitModule() {
 	const isEditable =
 		unit.status === 'Unit.Status.Draft' ||
 		unit.status === 'Unit.Status.Maintenance'
+	const isMultiProperty = clientUserProperty?.property?.type === 'MULTI'
 
 	const handleStatusChange = (newStatus: PropertyUnit['status']) => {
 		const statusProps = { propertyId: property_id, unitId: unit.id }
@@ -318,37 +319,38 @@ export function PropertyAssetUnitModule() {
 									</TooltipContent>
 								</Tooltip>
 							)}
-							{isEditable ? (
-								<Button
-									variant="destructive"
-									size="sm"
-									onClick={() => setOpenDeleteModal(true)}
-								>
-									<Trash className="mr-1 size-4" />
-									Delete
-								</Button>
-							) : (
-								<Tooltip>
-									<TooltipTrigger asChild>
-										<span tabIndex={0} className="cursor-not-allowed">
-											<Button
-												variant="destructive"
-												size="sm"
-												disabled
-												className="pointer-events-none"
-											>
-												<Trash className="mr-1 size-4" />
-												Delete
-											</Button>
-										</span>
-									</TooltipTrigger>
-									<TooltipContent side="top">
-										{isOccupied
-											? 'This unit is occupied and cannot be deleted.'
-											: 'Switch this unit to Draft or Maintenance to delete it.'}
-									</TooltipContent>
-								</Tooltip>
-							)}
+							{isMultiProperty &&
+								(isEditable ? (
+									<Button
+										variant="destructive"
+										size="sm"
+										onClick={() => setOpenDeleteModal(true)}
+									>
+										<Trash className="mr-1 size-4" />
+										Delete
+									</Button>
+								) : (
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<span tabIndex={0} className="cursor-not-allowed">
+												<Button
+													variant="destructive"
+													size="sm"
+													disabled
+													className="pointer-events-none"
+												>
+													<Trash className="mr-1 size-4" />
+													Delete
+												</Button>
+											</span>
+										</TooltipTrigger>
+										<TooltipContent side="top">
+											{isOccupied
+												? 'This unit is occupied and cannot be deleted.'
+												: 'Switch this unit to Draft or Maintenance to delete it.'}
+										</TooltipContent>
+									</Tooltip>
+								))}
 						</PropertyPermissionGuard>
 					</CardFooter>
 				</Card>

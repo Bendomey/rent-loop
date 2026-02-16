@@ -134,10 +134,10 @@ export function Step2() {
 					relationship_to_emergency_contact:
 						tenant.relationship_to_emergency_contact,
 					emergency_contact_phone: tenant.emergency_contact_phone,
-					employment_type: tenant.employment_type,
+					employer_type: tenant.employer_type,
 					occupation:
-						tenant.employment_type === 'STUDENT'
-							? tenant.employment_type
+						tenant.employer_type === 'STUDENT'
+							? tenant.employer_type
 							: tenant.occupation,
 					employer: tenant.employer,
 					occupation_address: tenant.occupation_address,

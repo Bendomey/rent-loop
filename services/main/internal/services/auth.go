@@ -35,7 +35,7 @@ type SendCodeInput struct {
 
 func (s *authService) SendCode(ctx context.Context, input SendCodeInput) error {
 	identifier := ""
-	if input.Channel == "email" {
+	if input.Channel == "EMAIL" {
 		identifier = *input.Email
 	} else {
 		identifier = *input.Phone
@@ -79,7 +79,7 @@ func (s *authService) SendCode(ctx context.Context, input SendCodeInput) error {
 		"{{expiry_duration}}", "1 hour",
 	).Replace(lib.AUTH_VERIFICATION_CODE_BODY)
 
-	if input.Channel == "email" {
+	if input.Channel == "EMAIL" {
 		go pkg.SendEmail(
 			s.appCtx,
 			pkg.SendEmailInput{

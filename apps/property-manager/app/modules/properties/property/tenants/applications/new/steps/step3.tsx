@@ -36,7 +36,7 @@ const ValidationSchema = z.object({
 	emergency_contact_phone: z
 		.string({ error: 'Phone Number is required' })
 		.min(9, 'Please enter a valid phone number'),
-	employment_type: z.enum(['STUDENT', 'WORKER'], {
+	employer_type: z.enum(['STUDENT', 'WORKER'], {
 		error: 'Please select an employment type',
 	}),
 	occupation: z.string().optional(),
@@ -45,9 +45,9 @@ const ValidationSchema = z.object({
 	proof_of_income_url: z.url('Please upload proof of income').optional(),
 })
 
-const employment_type: Array<{
+const employer_type: Array<{
 	label: string
-	value: TenantApplication['employment_type']
+	value: TenantApplication['employer_type']
 }> = [
 	{ label: 'Student', value: 'STUDENT' },
 	{ label: 'Worker', value: 'WORKER' },
@@ -62,7 +62,7 @@ export function Step3() {
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
-			employment_type: 'STUDENT',
+			employer_type: 'STUDENT',
 		},
 	})
 
@@ -84,7 +84,7 @@ export function Step3() {
 
 	const { watch, handleSubmit, formState, control, setValue } = rhfMethods
 
-	const isStudent = watch('employment_type') === 'STUDENT'
+	const isStudent = watch('employer_type') === 'STUDENT'
 
 	useEffect(() => {
 		if (formData.emergency_contact_name) {
@@ -109,8 +109,8 @@ export function Step3() {
 				shouldValidate: true,
 			})
 		}
-		if (formData.employment_type) {
-			setValue('employment_type', formData.employment_type, {
+		if (formData.employer_type) {
+			setValue('employer_type', formData.employer_type, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
@@ -147,10 +147,10 @@ export function Step3() {
 			emergency_contact_name: data.emergency_contact_name,
 			relationship_to_emergency_contact: data.relationship_to_emergency_contact,
 			emergency_contact_phone: data.emergency_contact_phone,
-			employment_type: data.employment_type,
+			employer_type: data.employer_type,
 			occupation:
-				data.employment_type === 'STUDENT'
-					? data.employment_type
+				data.employer_type === 'STUDENT'
+					? data.employer_type
 					: data.occupation,
 			employer: data.employer,
 			occupation_address: data.occupation_address,
@@ -254,32 +254,32 @@ export function Step3() {
 							</TypographyMuted>
 
 							<div className="flex space-x-3">
-								{employment_type.map((employment_type) => {
+								{employer_type.map((employer_type) => {
 									const isSelected =
-										watch('employment_type') === employment_type.value
+										watch('employer_type') === employer_type.value
 									return (
 										<Button
 											type="button"
 											onClick={() =>
-												setValue('employment_type', employment_type.value, {
+												setValue('employer_type', employer_type.value, {
 													shouldDirty: true,
 													shouldValidate: true,
 												})
 											}
-											key={employment_type.value}
+											key={employer_type.value}
 											variant={isSelected ? 'default' : 'outline'}
 											className={cn('w-1/2', {
 												'bg-rose-600 text-white': isSelected,
 											})}
 										>
-											{employment_type.label}
+											{employer_type.label}
 										</Button>
 									)
 								})}
 							</div>
-							{formState.errors?.employment_type ? (
+							{formState.errors?.employer_type ? (
 								<TypographySmall className="text-destructive mt-3">
-									{formState.errors.employment_type.message}
+									{formState.errors.employer_type.message}
 								</TypographySmall>
 							) : null}
 						</div>

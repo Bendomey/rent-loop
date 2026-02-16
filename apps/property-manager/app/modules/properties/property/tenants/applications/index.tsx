@@ -90,13 +90,16 @@ export function PropertyTenantApplicationsModule() {
 				header: 'Name',
 				cell: ({ row }) => {
 					return (
-						<div className="min-w-32">
+						<div className="flex min-w-32 flex-col">
+							<span className="e truncate text-xs">
+								{`${row.original.first_name} ${row.original.other_names ? row.original.other_names + ' ' : ''}${row.original.last_name}`}
+							</span>
 							<Link
 								to={`/properties/${clientUserProperty?.property_id}/tenants/applications/${row.original.id}`}
 								aria-label={`View details for application`}
 							>
 								<span className="truncate text-xs text-blue-600 hover:underline">
-									{`${row.original.first_name} ${row.original.other_names ? row.original.other_names + ' ' : ''}${row.original.last_name}`}
+									{row.original.code}
 								</span>
 							</Link>
 						</div>
@@ -121,21 +124,15 @@ export function PropertyTenantApplicationsModule() {
 			{
 				accessorKey: 'desired_unit.name',
 				header: 'Desired Unit',
-				cell: ({ getValue }) => (
-					<span className="truncate text-xs text-zinc-600">
-						{getValue<string>() ?? 'N/A'}
-					</span>
-				),
-			},
-			{
-				accessorKey: 'gender',
-				header: 'Gender',
-				cell: ({ getValue }) => (
-					<Badge variant="outline" className="text-muted-foreground px-1.5">
-						<span className="truncate text-xs text-zinc-600">
+				cell: ({ getValue, row }) => (
+					<Link
+						to={`/properties/${clientUserProperty?.property_id}/assets/units/${row.original.desired_unit_id}`}
+						aria-label={`View details for unit`}
+					>
+						<span className="truncate text-xs text-blue-600 hover:underline">
 							{getValue<string>()}
 						</span>
-					</Badge>
+					</Link>
 				),
 			},
 			{
@@ -162,7 +159,7 @@ export function PropertyTenantApplicationsModule() {
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
 						<span className="truncate text-xs text-zinc-600">
-							{localizedDayjs(getValue<Date>()).format('DD/MM/YYYY hh:mm a')}
+							{localizedDayjs(getValue<Date>()).format('LLLL')}
 						</span>
 					</div>
 				),
@@ -200,18 +197,8 @@ export function PropertyTenantApplicationsModule() {
 												setOpenCancelModal(true)
 											}}
 										>
-											<CircleX className="h-4 w-4" />
+											<CircleX className="h-4 w-4 text-rose-600" />
 											<span>Cancel</span>
-										</DropdownMenuItem>
-										<DropdownMenuItem
-											className="flex items-center gap-2 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-600 focus:bg-emerald-50 focus:text-emerald-600"
-											onClick={() => {
-												setSelectedApplication(row.original)
-												setOpenApproveModal(true)
-											}}
-										>
-											<CircleCheck className="h-4 w-4" />
-											<span>Approve</span>
 										</DropdownMenuItem>
 									</>
 								) : null}

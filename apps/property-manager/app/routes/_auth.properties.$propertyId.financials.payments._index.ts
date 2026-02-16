@@ -1,9 +1,9 @@
-import type { Route } from './+types/_auth.properties.$propertyId.financials.rent-payments._index'
+import type { Route } from './+types/_auth.properties.$propertyId.financials.payments._index'
 import { propertyContext } from '~/lib/actions/property.context.server'
 
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { PropertyFinancialsRentPaymentsModule } from '~/modules'
+import { PropertyFinancialsPaymentsModule } from '~/modules'
 
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const clientUserProperty = context.get(propertyContext)
@@ -16,7 +16,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `Rent Payments | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
+		title: `Payments | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,
@@ -27,4 +27,4 @@ export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	return meta
 }
 
-export default PropertyFinancialsRentPaymentsModule
+export default PropertyFinancialsPaymentsModule

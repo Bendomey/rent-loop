@@ -44,9 +44,9 @@ definitions:
     properties:
       channel:
         enum:
-        - email
-        - sms
-        example: email
+        - EMAIL
+        - SMS
+        example: EMAIL
         type: string
       email:
         example: email@example.com
@@ -409,11 +409,20 @@ definitions:
       employer:
         example: Acme Corp
         type: string
+      employer_type:
+        enum:
+        - WORKER
+        - STUDENT
+        example: WORKER
+        type: string
       first_name:
         example: John
         type: string
       gender:
-        example: Male
+        enum:
+        - MALE
+        - FEMALE
+        example: MALE
         type: string
       id_number:
         example: GHA-123456789
@@ -430,7 +439,12 @@ definitions:
         example: Doe
         type: string
       marital_status:
-        example: Single
+        enum:
+        - SINGLE
+        - MARRIED
+        - DIVORCED
+        - WIDOWED
+        example: SINGLE
         type: string
       nationality:
         example: Ghanaian
@@ -461,6 +475,7 @@ definitions:
     - emergency_contact_name
     - emergency_contact_phone
     - employer
+    - employer_type
     - first_name
     - gender
     - id_number
@@ -780,14 +795,14 @@ definitions:
         type: string
       payment_frequency:
         enum:
-        - Hourly
-        - Daily
-        - Monthly
-        - Quarterly
-        - BiAnnually
-        - Annually
-        - OneTime
-        example: Monthly
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
+        example: MONTHLY
         type: string
       property_inspection_date:
         example: "2024-06-30T15:00:00Z"
@@ -798,10 +813,10 @@ definitions:
         type: integer
       stay_duration_frequency:
         enum:
-        - Hours
-        - Days
-        - Months
-        example: Hours
+        - HOURS
+        - DAYS
+        - MONTHS
+        example: HOURS
         type: string
       utility_transfers_date:
         example: "2024-07-02T10:00:00Z"
@@ -932,14 +947,20 @@ definitions:
       employer:
         example: Acme Corp
         type: string
+      employer_type:
+        enum:
+        - WORKER
+        - STUDENT
+        example: WORKER
+        type: string
       first_name:
         example: John
         type: string
       gender:
         enum:
-        - Male
-        - Female
-        example: Male
+        - MALE
+        - FEMALE
+        example: MALE
         type: string
       id_back_url:
         example: https://example.com/id-back.jpg
@@ -988,11 +1009,11 @@ definitions:
         type: string
       marital_status:
         enum:
-        - Single
-        - Married
-        - Divorced
-        - Widowed
-        example: Single
+        - SINGLE
+        - MARRIED
+        - DIVORCED
+        - WIDOWED
+        example: SINGLE
         type: string
       nationality:
         example: Ghanaian
@@ -1008,14 +1029,14 @@ definitions:
         type: string
       payment_frequency:
         enum:
-        - Hourly
-        - Daily
-        - Monthly
-        - Quarterly
-        - BiAnnually
-        - Annually
-        - OneTime
-        example: Hourly
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
+        example: HOURLY
         type: string
       phone:
         example: "+233281234569"
@@ -1068,10 +1089,10 @@ definitions:
         type: integer
       stay_duration_frequency:
         enum:
-        - Hours
-        - Days
-        - Months
-        example: Hours
+        - HOURS
+        - DAYS
+        - MONTHS
+        example: HOURS
         type: string
     type: object
   handlers.UpdateUnitRequest:
@@ -2124,7 +2145,7 @@ definitions:
         example: "2024-07-01T00:00:00Z"
         type: string
       desired_unit:
-        $ref: '#/definitions/transformations.OutputUnit'
+        $ref: '#/definitions/transformations.AdminOutputUnit'
       desired_unit_id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
@@ -2138,7 +2159,10 @@ definitions:
         example: "+1122334455"
         type: string
       employer:
-        example: Tech Ltd.
+        example: UPSA
+        type: string
+      employer_type:
+        example: WORKER
         type: string
       first_name:
         example: John
@@ -2164,17 +2188,8 @@ definitions:
       initial_deposit_fee:
         example: 500
         type: integer
-      initial_deposit_paid_at:
-        example: "2024-06-05T10:00:00Z"
-        type: string
-      initial_deposit_payment_id:
-        example: pay-001
-        type: string
-      initial_deposit_payment_method:
-        example: ONLINE
-        type: string
-      initial_deposit_reference_number:
-        example: REF123
+      initial_deposit_fee_currency:
+        example: GHS
         type: string
       last_name:
         example: Doe
@@ -2203,7 +2218,7 @@ definitions:
         example: Ghanaian
         type: string
       occupation:
-        example: Software Engineer
+        example: STUDENT
         type: string
       occupation_address:
         example: 456 Tech Ave, Accra
@@ -2246,18 +2261,6 @@ definitions:
         type: integer
       security_deposit_fee_currency:
         example: USD
-        type: string
-      security_deposit_paid_at:
-        example: "2024-06-06T11:00:00Z"
-        type: string
-      security_deposit_payment_id:
-        example: pay-002
-        type: string
-      security_deposit_payment_method:
-        example: ONLINE
-        type: string
-      security_deposit_reference_number:
-        example: SECREF456
         type: string
       status:
         example: TenantApplication.Status.InProgress
@@ -3646,6 +3649,14 @@ paths:
           type: string
         name: ids
         type: array
+      - example: true
+        in: query
+        name: include_global_documents
+        type: boolean
+      - example: true
+        in: query
+        name: only_global_documents
+        type: boolean
       - enum:
         - asc
         - desc
@@ -5544,14 +5555,14 @@ paths:
         name: parent_lease_id
         type: string
       - enum:
-        - Hourly
-        - Daily
-        - Monthly
-        - Quarterly
-        - BiAnnually
-        - Annually
-        - OneTime
-        example: Hourly
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
+        example: HOURLY
         in: query
         name: payment_frequency
         type: string
@@ -5585,10 +5596,10 @@ paths:
         name: status
         type: string
       - enum:
-        - Hours
-        - Days
-        - Months
-        example: Hours
+        - HOURS
+        - DAYS
+        - MONTHS
+        example: HOURS
         in: query
         name: stay_duration_frequency
         type: string
@@ -6233,8 +6244,8 @@ paths:
         name: end_date
         type: string
       - enum:
-        - Male
-        - Female
+        - MALE
+        - FEMALE
         in: query
         name: gender
         type: string
@@ -6254,10 +6265,10 @@ paths:
         name: initial_deposit_payment_method
         type: string
       - enum:
-        - Single
-        - Married
-        - Divorced
-        - Widowed
+        - SINGLE
+        - MARRIED
+        - DIVORCED
+        - WIDOWED
         in: query
         name: marital_status
         type: string
@@ -6279,13 +6290,13 @@ paths:
         name: page_size
         type: integer
       - enum:
-        - Hourly
-        - Daily
-        - Monthly
-        - Quarterly
-        - BiAnnually
-        - Annually
-        - OneTime
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
         in: query
         name: payment_frequency
         type: string
@@ -6336,9 +6347,9 @@ paths:
         name: status
         type: string
       - enum:
-        - Hours
-        - Days
-        - Months
+        - HOURS
+        - DAYS
+        - MONTHS
         in: query
         name: stay_duration_frequency
         type: string
@@ -6837,14 +6848,14 @@ paths:
         name: parent_lease_id
         type: string
       - enum:
-        - Hourly
-        - Daily
-        - Monthly
-        - Quarterly
-        - BiAnnually
-        - Annually
-        - OneTime
-        example: Hourly
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
+        example: HOURLY
         in: query
         name: payment_frequency
         type: string
@@ -6878,10 +6889,10 @@ paths:
         name: status
         type: string
       - enum:
-        - Hours
-        - Days
-        - Months
-        example: Hours
+        - HOURS
+        - DAYS
+        - MONTHS
+        example: HOURS
         in: query
         name: stay_duration_frequency
         type: string

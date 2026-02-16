@@ -42,10 +42,10 @@ type CreateTenantApplicationRequest struct {
 	LastName                       string    `json:"last_name"                         validate:"required"                                                      example:"Doe"                                  description:"Last name of the applicant"`
 	Email                          *string   `json:"email,omitempty"                   validate:"omitempty,email"                                               example:"john.doe@example.com"                 description:"Email address of the applicant"`
 	Phone                          string    `json:"phone"                             validate:"required,e164"                                                 example:"+233281234569"                        description:"Phone number of the applicant"`
-	Gender                         string    `json:"gender"                            validate:"required"                                                      example:"Male"                                 description:"Gender of the applicant"`
+	Gender                         string    `json:"gender"                            validate:"required,oneof=MALE FEMALE"                                    example:"MALE"                                 description:"Gender of the applicant"`
 	DateOfBirth                    time.Time `json:"date_of_birth"                     validate:"required"                                                      example:"1990-01-01T00:00:00Z"                 description:"Date of birth of the applicant"`
 	Nationality                    string    `json:"nationality"                       validate:"required"                                                      example:"Ghanaian"                             description:"Nationality of the applicant"`
-	MaritalStatus                  string    `json:"marital_status"                    validate:"required"                                                      example:"Single"                               description:"Marital status of the applicant"`
+	MaritalStatus                  string    `json:"marital_status"                    validate:"required,oneof=SINGLE MARRIED DIVORCED WIDOWED"                example:"SINGLE"                               description:"Marital status of the applicant"`
 	IDType                         string    `json:"id_type"                           validate:"required,oneof=GHANA_CARD NATIONAL_ID PASSPORT DRIVER_LICENSE" example:"GHANA_CARD"                           description:"ID type of the applicant"`
 	IDNumber                       string    `json:"id_number"                         validate:"required"                                                      example:"GHA-123456789"                        description:"ID number of the applicant"`
 	CurrentAddress                 string    `json:"current_address"                   validate:"required"                                                      example:"123 Main St, Accra"                   description:"Current address of the applicant"`
@@ -54,6 +54,7 @@ type CreateTenantApplicationRequest struct {
 	RelationshipToEmergencyContact string    `json:"relationship_to_emergency_contact" validate:"required"                                                      example:"Sister"                               description:"Relationship to emergency contact"`
 	Occupation                     string    `json:"occupation"                        validate:"required"                                                      example:"Software Engineer"                    description:"Occupation of the applicant"`
 	Employer                       string    `json:"employer"                          validate:"required"                                                      example:"Acme Corp"                            description:"Employer of the applicant"`
+	EmployerType                   string    `json:"employer_type"                     validate:"required,oneof=WORKER STUDENT"                                 example:"WORKER"                               description:"Employer type of the applicant"`
 	OccupationAddress              string    `json:"occupation_address"                validate:"required"                                                      example:"456 Tech Ave, Accra"                  description:"Occupation address"`
 	ProfilePhotoUrl                *string   `json:"profile_photo_url,omitempty"       validate:"omitempty,url"                                                 example:"https://example.com/photo.jpg"        description:"Profile photo URL"`
 	CreatedById                    string    `json:"created_by_id"                     validate:"required,uuid"                                                 example:"72432ce6-5620-4ecf-a862-4bf2140556a1" description:"ID of the user who created the tenant application"`
@@ -105,6 +106,7 @@ func (h *TenantApplicationHandler) CreateTenantApplication(w http.ResponseWriter
 		RelationshipToEmergencyContact: body.RelationshipToEmergencyContact,
 		Occupation:                     body.Occupation,
 		Employer:                       body.Employer,
+		EmployerType:                   body.EmployerType,
 		OccupationAddress:              body.OccupationAddress,
 		ProfilePhotoUrl:                body.ProfilePhotoUrl,
 		CreatedById:                    body.CreatedById,
@@ -182,12 +184,12 @@ func (h *TenantApplicationHandler) SendTenantInvite(w http.ResponseWriter, r *ht
 type ListTenantApplicationsQuery struct {
 	lib.FilterQueryInput
 	Status                       *string   `json:"status,omitempty"                          validate:"omitempty,oneof=TenantApplication.Status.InProgress TenantApplication.Status.Cancelled TenantApplication.Status.Completed"`
-	StayDurationFrequency        *string   `json:"stay_duration_frequency,omitempty"         validate:"omitempty,oneof=Hours Days Months"`
-	PaymentFrequency             *string   `json:"payment_frequency,omitempty"               validate:"omitempty,oneof=Hourly Daily Monthly Quarterly BiAnnually Annually OneTime"`
+	StayDurationFrequency        *string   `json:"stay_duration_frequency,omitempty"         validate:"omitempty,oneof=HOURS DAYS MONTHS"`
+	PaymentFrequency             *string   `json:"payment_frequency,omitempty"               validate:"omitempty,oneof=HOURLY DAILY MONTHLY QUARTERLY BIANNUALLY ANNUALLY ONETIME"`
 	InitialDepositPaymentMethod  *string   `json:"initial_deposit_payment_method,omitempty"  validate:"omitempty,oneof=ONLINE CASH EXTERNAL"`
 	SecurityDepositPaymentMethod *string   `json:"security_deposit_payment_method,omitempty" validate:"omitempty,oneof=ONLINE CASH EXTERNAL"`
-	Gender                       *string   `json:"gender,omitempty"                          validate:"omitempty,oneof=Male Female"`
-	MaritalStatus                *string   `json:"marital_status,omitempty"                  validate:"omitempty,oneof=Single Married Divorced Widowed"`
+	Gender                       *string   `json:"gender,omitempty"                          validate:"omitempty,oneof=MALE FEMALE"`
+	MaritalStatus                *string   `json:"marital_status,omitempty"                  validate:"omitempty,oneof=SINGLE MARRIED DIVORCED WIDOWED"`
 	CreatedById                  *string   `json:"created_by_id,omitempty"                   validate:"omitempty,uuid"                                                                                                            example:"72432ce6-5620-4ecf-a862-4bf2140556a1"   description:"ID of the user who created the tenant application"`
 	DesiredUnitId                *string   `json:"desired_unit_id,omitempty"                 validate:"omitempty,uuid"                                                                                                            example:"72432ce6-5620-4ecf-a862-4bf2140556a1"   description:"ID of the unit that the tenant application is desired for"`
 	PropertyId                   *string   `json:"property_id,omitempty"                     validate:"omitempty,uuid"                                                                                                            example:"72432ce6-5620-4ecf-a862-4bf2140556a1"   description:"ID of the property to filter tenant applications by"`
@@ -310,10 +312,10 @@ type UpdateTenantApplicationRequest struct {
 	FirstName                      *string    `json:"first_name,omitempty"                        validate:"omitempty"                                                                  example:"John"                                 description:"First name of the applicant"`
 	LastName                       *string    `json:"last_name,omitempty"                         validate:"omitempty"                                                                  example:"Doe"                                  description:"Last name of the applicant"`
 	Phone                          *string    `json:"phone,omitempty"                             validate:"omitempty,e164"                                                             example:"+233281234569"                        description:"Phone number of the applicant"`
-	Gender                         *string    `json:"gender,omitempty"                            validate:"omitempty,oneof=Male Female"                                                example:"Male"                                 description:"Gender of the applicant"`
+	Gender                         *string    `json:"gender,omitempty"                            validate:"omitempty,oneof=MALE FEMALE"                                                example:"MALE"                                 description:"Gender of the applicant"`
 	DateOfBirth                    *time.Time `json:"date_of_birth,omitempty"                     validate:"omitempty"                                                                  example:"1990-01-01T00:00:00Z"                 description:"Date of birth of the applicant"`
 	Nationality                    *string    `json:"nationality,omitempty"                       validate:"omitempty"                                                                  example:"Ghanaian"                             description:"Nationality of the applicant"`
-	MaritalStatus                  *string    `json:"marital_status,omitempty"                    validate:"omitempty,oneof=Single Married Divorced Widowed"                            example:"Single"                               description:"Marital status of the applicant"`
+	MaritalStatus                  *string    `json:"marital_status,omitempty"                    validate:"omitempty,oneof=SINGLE MARRIED DIVORCED WIDOWED"                            example:"SINGLE"                               description:"Marital status of the applicant"`
 	IDNumber                       *string    `json:"id_number,omitempty"                         validate:"omitempty"                                                                  example:"GHA-123456789"                        description:"ID number of the applicant"`
 	CurrentAddress                 *string    `json:"current_address,omitempty"                   validate:"omitempty"                                                                  example:"123 Main St, Accra"                   description:"Current address of the applicant"`
 	EmergencyContactName           *string    `json:"emergency_contact_name,omitempty"            validate:"omitempty"                                                                  example:"Jane Doe"                             description:"Emergency contact name"`
@@ -321,11 +323,12 @@ type UpdateTenantApplicationRequest struct {
 	RelationshipToEmergencyContact *string    `json:"relationship_to_emergency_contact,omitempty" validate:"omitempty"                                                                  example:"Sister"                               description:"Relationship to emergency contact"`
 	Occupation                     *string    `json:"occupation,omitempty"                        validate:"omitempty"                                                                  example:"Software Engineer"                    description:"Occupation of the applicant"`
 	Employer                       *string    `json:"employer,omitempty"                          validate:"omitempty"                                                                  example:"Acme Corp"                            description:"Employer of the applicant"`
+	EmployerType                   *string    `json:"employer_type,omitempty"                     validate:"omitempty,oneof=WORKER STUDENT"                                             example:"WORKER"                               description:"Employer type of the applicant"`
 	OccupationAddress              *string    `json:"occupation_address,omitempty"                validate:"omitempty"                                                                  example:"456 Tech Ave, Accra"                  description:"Occupation address"`
 	DesiredMoveInDate              *time.Time `json:"desired_move_in_date,omitempty"              validate:"omitempty"                                                                  example:"2023-01-01T00:00:00Z"                 description:"Desired move in date"`
-	StayDurationFrequency          *string    `json:"stay_duration_frequency,omitempty"           validate:"omitempty,oneof=Hours Days Months"                                          example:"Hours"                                description:"Stay duration frequency"`
+	StayDurationFrequency          *string    `json:"stay_duration_frequency,omitempty"           validate:"omitempty,oneof=HOURS DAYS MONTHS"                                          example:"HOURS"                                description:"Stay duration frequency"`
 	StayDuration                   *int64     `json:"stay_duration,omitempty"                     validate:"omitempty"                                                                  example:"10"                                   description:"Stay duration"`
-	PaymentFrequency               *string    `json:"payment_frequency,omitempty"                 validate:"omitempty,oneof=Hourly Daily Monthly Quarterly BiAnnually Annually OneTime" example:"Hourly"                               description:"Payment frequency"`
+	PaymentFrequency               *string    `json:"payment_frequency,omitempty"                 validate:"omitempty,oneof=HOURLY DAILY MONTHLY QUARTERLY BIANNUALLY ANNUALLY ONETIME" example:"HOURLY"                               description:"Payment frequency"`
 	InitialDepositFee              *int64     `json:"initial_deposit_fee,omitempty"               validate:"omitempty"                                                                  example:"1000"                                 description:"Initial deposit fee"`
 	InitialDepositPaymentMethod    *string    `json:"initial_deposit_payment_method,omitempty"    validate:"omitempty,oneof=ONLINE CASH EXTERNAL"                                       example:"ONLINE"                               description:"Initial deposit payment method"`
 	InitialDepositReferenceNumber  *string    `json:"initial_deposit_reference_number,omitempty"  validate:"omitempty"                                                                  example:"123456789"                            description:"Initial deposit reference number"`
@@ -401,6 +404,7 @@ func (h *TenantApplicationHandler) UpdateTenantApplication(w http.ResponseWriter
 		RelationshipToEmergencyContact: body.RelationshipToEmergencyContact,
 		Occupation:                     body.Occupation,
 		Employer:                       body.Employer,
+		EmployerType:                   body.EmployerType,
 		OccupationAddress:              body.OccupationAddress,
 		DesiredMoveInDate:              body.DesiredMoveInDate,
 		StayDurationFrequency:          body.StayDurationFrequency,
