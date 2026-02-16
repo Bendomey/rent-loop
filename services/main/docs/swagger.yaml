@@ -44,9 +44,9 @@ definitions:
     properties:
       channel:
         enum:
-        - email
-        - sms
-        example: email
+        - EMAIL
+        - SMS
+        example: EMAIL
         type: string
       email:
         example: email@example.com
@@ -413,7 +413,10 @@ definitions:
         example: John
         type: string
       gender:
-        example: Male
+        enum:
+        - MALE
+        - FEMALE
+        example: MALE
         type: string
       id_number:
         example: GHA-123456789
@@ -430,7 +433,12 @@ definitions:
         example: Doe
         type: string
       marital_status:
-        example: Single
+        enum:
+        - SINGLE
+        - MARRIED
+        - DIVORCED
+        - WIDOWED
+        example: SINGLE
         type: string
       nationality:
         example: Ghanaian
@@ -780,14 +788,14 @@ definitions:
         type: string
       payment_frequency:
         enum:
-        - Hourly
-        - Daily
-        - Monthly
-        - Quarterly
-        - BiAnnually
-        - Annually
-        - OneTime
-        example: Monthly
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
+        example: MONTHLY
         type: string
       property_inspection_date:
         example: "2024-06-30T15:00:00Z"
@@ -798,10 +806,10 @@ definitions:
         type: integer
       stay_duration_frequency:
         enum:
-        - Hours
-        - Days
-        - Months
-        example: Hours
+        - HOURS
+        - DAYS
+        - MONTHS
+        example: HOURS
         type: string
       utility_transfers_date:
         example: "2024-07-02T10:00:00Z"
@@ -937,9 +945,9 @@ definitions:
         type: string
       gender:
         enum:
-        - Male
-        - Female
-        example: Male
+        - MALE
+        - FEMALE
+        example: MALE
         type: string
       id_back_url:
         example: https://example.com/id-back.jpg
@@ -988,11 +996,11 @@ definitions:
         type: string
       marital_status:
         enum:
-        - Single
-        - Married
-        - Divorced
-        - Widowed
-        example: Single
+        - SINGLE
+        - MARRIED
+        - DIVORCED
+        - WIDOWED
+        example: SINGLE
         type: string
       nationality:
         example: Ghanaian
@@ -1008,14 +1016,14 @@ definitions:
         type: string
       payment_frequency:
         enum:
-        - Hourly
-        - Daily
-        - Monthly
-        - Quarterly
-        - BiAnnually
-        - Annually
-        - OneTime
-        example: Hourly
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
+        example: HOURLY
         type: string
       phone:
         example: "+233281234569"
@@ -1068,10 +1076,10 @@ definitions:
         type: integer
       stay_duration_frequency:
         enum:
-        - Hours
-        - Days
-        - Months
-        example: Hours
+        - HOURS
+        - DAYS
+        - MONTHS
+        example: HOURS
         type: string
     type: object
   handlers.UpdateUnitRequest:
@@ -5531,14 +5539,14 @@ paths:
         name: parent_lease_id
         type: string
       - enum:
-        - Hourly
-        - Daily
-        - Monthly
-        - Quarterly
-        - BiAnnually
-        - Annually
-        - OneTime
-        example: Hourly
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
+        example: HOURLY
         in: query
         name: payment_frequency
         type: string
@@ -5572,10 +5580,10 @@ paths:
         name: status
         type: string
       - enum:
-        - Hours
-        - Days
-        - Months
-        example: Hours
+        - HOURS
+        - DAYS
+        - MONTHS
+        example: HOURS
         in: query
         name: stay_duration_frequency
         type: string
@@ -6220,8 +6228,8 @@ paths:
         name: end_date
         type: string
       - enum:
-        - Male
-        - Female
+        - MALE
+        - FEMALE
         in: query
         name: gender
         type: string
@@ -6241,10 +6249,10 @@ paths:
         name: initial_deposit_payment_method
         type: string
       - enum:
-        - Single
-        - Married
-        - Divorced
-        - Widowed
+        - SINGLE
+        - MARRIED
+        - DIVORCED
+        - WIDOWED
         in: query
         name: marital_status
         type: string
@@ -6266,13 +6274,13 @@ paths:
         name: page_size
         type: integer
       - enum:
-        - Hourly
-        - Daily
-        - Monthly
-        - Quarterly
-        - BiAnnually
-        - Annually
-        - OneTime
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
         in: query
         name: payment_frequency
         type: string
@@ -6323,9 +6331,9 @@ paths:
         name: status
         type: string
       - enum:
-        - Hours
-        - Days
-        - Months
+        - HOURS
+        - DAYS
+        - MONTHS
         in: query
         name: stay_duration_frequency
         type: string
@@ -6824,14 +6832,14 @@ paths:
         name: parent_lease_id
         type: string
       - enum:
-        - Hourly
-        - Daily
-        - Monthly
-        - Quarterly
-        - BiAnnually
-        - Annually
-        - OneTime
-        example: Hourly
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
+        example: HOURLY
         in: query
         name: payment_frequency
         type: string
@@ -6865,10 +6873,10 @@ paths:
         name: status
         type: string
       - enum:
-        - Hours
-        - Days
-        - Months
-        example: Hours
+        - HOURS
+        - DAYS
+        - MONTHS
+        example: HOURS
         in: query
         name: stay_duration_frequency
         type: string

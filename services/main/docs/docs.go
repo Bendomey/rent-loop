@@ -5258,16 +5258,16 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Hourly",
-                            "Daily",
-                            "Monthly",
-                            "Quarterly",
-                            "BiAnnually",
-                            "Annually",
-                            "OneTime"
+                            "HOURLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY",
+                            "ONETIME"
                         ],
                         "type": "string",
-                        "example": "Hourly",
+                        "example": "HOURLY",
                         "name": "payment_frequency",
                         "in": "query"
                     },
@@ -5315,12 +5315,12 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Hours",
-                            "Days",
-                            "Months"
+                            "HOURS",
+                            "DAYS",
+                            "MONTHS"
                         ],
                         "type": "string",
-                        "example": "Hours",
+                        "example": "HOURS",
                         "name": "stay_duration_frequency",
                         "in": "query"
                     },
@@ -6089,8 +6089,8 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Male",
-                            "Female"
+                            "MALE",
+                            "FEMALE"
                         ],
                         "type": "string",
                         "name": "gender",
@@ -6120,10 +6120,10 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Single",
-                            "Married",
-                            "Divorced",
-                            "Widowed"
+                            "SINGLE",
+                            "MARRIED",
+                            "DIVORCED",
+                            "WIDOWED"
                         ],
                         "type": "string",
                         "name": "marital_status",
@@ -6157,13 +6157,13 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Hourly",
-                            "Daily",
-                            "Monthly",
-                            "Quarterly",
-                            "BiAnnually",
-                            "Annually",
-                            "OneTime"
+                            "HOURLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY",
+                            "ONETIME"
                         ],
                         "type": "string",
                         "name": "payment_frequency",
@@ -6239,9 +6239,9 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Hours",
-                            "Days",
-                            "Months"
+                            "HOURS",
+                            "DAYS",
+                            "MONTHS"
                         ],
                         "type": "string",
                         "name": "stay_duration_frequency",
@@ -7071,16 +7071,16 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Hourly",
-                            "Daily",
-                            "Monthly",
-                            "Quarterly",
-                            "BiAnnually",
-                            "Annually",
-                            "OneTime"
+                            "HOURLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY",
+                            "ONETIME"
                         ],
                         "type": "string",
-                        "example": "Hourly",
+                        "example": "HOURLY",
                         "name": "payment_frequency",
                         "in": "query"
                     },
@@ -7128,12 +7128,12 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Hours",
-                            "Days",
-                            "Months"
+                            "HOURS",
+                            "DAYS",
+                            "MONTHS"
                         ],
                         "type": "string",
-                        "example": "Hours",
+                        "example": "HOURS",
                         "name": "stay_duration_frequency",
                         "in": "query"
                     },
@@ -7312,10 +7312,10 @@ const docTemplate = `{
                 "channel": {
                     "type": "string",
                     "enum": [
-                        "email",
-                        "sms"
+                        "EMAIL",
+                        "SMS"
                     ],
-                    "example": "email"
+                    "example": "EMAIL"
                 },
                 "email": {
                     "type": "string",
@@ -7826,7 +7826,11 @@ const docTemplate = `{
                 },
                 "gender": {
                     "type": "string",
-                    "example": "Male"
+                    "enum": [
+                        "MALE",
+                        "FEMALE"
+                    ],
+                    "example": "MALE"
                 },
                 "id_number": {
                     "type": "string",
@@ -7848,7 +7852,13 @@ const docTemplate = `{
                 },
                 "marital_status": {
                     "type": "string",
-                    "example": "Single"
+                    "enum": [
+                        "SINGLE",
+                        "MARRIED",
+                        "DIVORCED",
+                        "WIDOWED"
+                    ],
+                    "example": "SINGLE"
                 },
                 "nationality": {
                     "type": "string",
@@ -8307,15 +8317,15 @@ const docTemplate = `{
                 "payment_frequency": {
                     "type": "string",
                     "enum": [
-                        "Hourly",
-                        "Daily",
-                        "Monthly",
-                        "Quarterly",
-                        "BiAnnually",
-                        "Annually",
-                        "OneTime"
+                        "HOURLY",
+                        "DAILY",
+                        "MONTHLY",
+                        "QUARTERLY",
+                        "BIANNUALLY",
+                        "ANNUALLY",
+                        "ONETIME"
                     ],
-                    "example": "Monthly"
+                    "example": "MONTHLY"
                 },
                 "property_inspection_date": {
                     "type": "string",
@@ -8329,11 +8339,11 @@ const docTemplate = `{
                 "stay_duration_frequency": {
                     "type": "string",
                     "enum": [
-                        "Hours",
-                        "Days",
-                        "Months"
+                        "HOURS",
+                        "DAYS",
+                        "MONTHS"
                     ],
-                    "example": "Hours"
+                    "example": "HOURS"
                 },
                 "utility_transfers_date": {
                     "type": "string",
@@ -8516,10 +8526,10 @@ const docTemplate = `{
                 "gender": {
                     "type": "string",
                     "enum": [
-                        "Male",
-                        "Female"
+                        "MALE",
+                        "FEMALE"
                     ],
-                    "example": "Male"
+                    "example": "MALE"
                 },
                 "id_back_url": {
                     "type": "string",
@@ -8583,12 +8593,12 @@ const docTemplate = `{
                 "marital_status": {
                     "type": "string",
                     "enum": [
-                        "Single",
-                        "Married",
-                        "Divorced",
-                        "Widowed"
+                        "SINGLE",
+                        "MARRIED",
+                        "DIVORCED",
+                        "WIDOWED"
                     ],
-                    "example": "Single"
+                    "example": "SINGLE"
                 },
                 "nationality": {
                     "type": "string",
@@ -8609,15 +8619,15 @@ const docTemplate = `{
                 "payment_frequency": {
                     "type": "string",
                     "enum": [
-                        "Hourly",
-                        "Daily",
-                        "Monthly",
-                        "Quarterly",
-                        "BiAnnually",
-                        "Annually",
-                        "OneTime"
+                        "HOURLY",
+                        "DAILY",
+                        "MONTHLY",
+                        "QUARTERLY",
+                        "BIANNUALLY",
+                        "ANNUALLY",
+                        "ONETIME"
                     ],
-                    "example": "Hourly"
+                    "example": "HOURLY"
                 },
                 "phone": {
                     "type": "string",
@@ -8687,11 +8697,11 @@ const docTemplate = `{
                 "stay_duration_frequency": {
                     "type": "string",
                     "enum": [
-                        "Hours",
-                        "Days",
-                        "Months"
+                        "HOURS",
+                        "DAYS",
+                        "MONTHS"
                     ],
-                    "example": "Hours"
+                    "example": "HOURS"
                 }
             }
         },
