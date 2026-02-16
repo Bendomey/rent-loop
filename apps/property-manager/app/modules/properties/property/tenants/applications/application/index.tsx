@@ -58,7 +58,7 @@ const tenant: TenantApplication = {
 	emergency_contact_name: 'John',
 	emergency_contact_phone: '0277099230',
 	relationship_to_emergency_contact: 'Father',
-	employment_type: 'WORKER',
+	employer_type: 'WORKER',
 	occupation: 'Software Developer',
 	employer: 'RENT-LOOP',
 	occupation_address: 'Accra',

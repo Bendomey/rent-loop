@@ -53,7 +53,7 @@ const PreviewCard = ({
 export function Step4() {
 	const { goBack, goToPage, formData, onSubmit, isSubmitting } =
 		useCreatePropertyTenantApplicationContext()
-	const isStudent = formData.employment_type === 'STUDENT'
+	const isStudent = formData.employer_type === 'STUDENT'
 
 	return (
 		<form
