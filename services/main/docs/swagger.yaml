@@ -410,7 +410,10 @@ definitions:
         example: Acme Corp
         type: string
       employer_type:
-        example: PRINCIPAL
+        enum:
+        - WORKER
+        - STUDENT
+        example: WORKER
         type: string
       first_name:
         example: John
@@ -945,7 +948,10 @@ definitions:
         example: Acme Corp
         type: string
       employer_type:
-        example: PRINCIPAL
+        enum:
+        - WORKER
+        - STUDENT
+        example: WORKER
         type: string
       first_name:
         example: John
@@ -2156,7 +2162,7 @@ definitions:
         example: UPSA
         type: string
       employer_type:
-        example: PRINCIPAL
+        example: WORKER
         type: string
       first_name:
         example: John

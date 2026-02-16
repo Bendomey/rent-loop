@@ -7823,7 +7823,11 @@ const docTemplate = `{
                 },
                 "employer_type": {
                     "type": "string",
-                    "example": "PRINCIPAL"
+                    "enum": [
+                        "WORKER",
+                        "STUDENT"
+                    ],
+                    "example": "WORKER"
                 },
                 "first_name": {
                     "type": "string",
@@ -8526,7 +8530,11 @@ const docTemplate = `{
                 },
                 "employer_type": {
                     "type": "string",
-                    "example": "PRINCIPAL"
+                    "enum": [
+                        "WORKER",
+                        "STUDENT"
+                    ],
+                    "example": "WORKER"
                 },
                 "first_name": {
                     "type": "string",
@@ -10170,7 +10178,7 @@ const docTemplate = `{
                 },
                 "employer_type": {
                     "type": "string",
-                    "example": "PRINCIPAL"
+                    "example": "WORKER"
                 },
                 "first_name": {
                     "type": "string",

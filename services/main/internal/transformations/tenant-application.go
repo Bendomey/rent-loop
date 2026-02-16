@@ -72,7 +72,7 @@ type OutputTenantApplication struct {
 
 	Occupation        string  `json:"occupation"                    example:"STUDENT"`
 	Employer          string  `json:"employer"                      example:"UPSA"`
-	EmployerType      *string `json:"employer_type,omitempty"       example:"PRINCIPAL"`
+	EmployerType      *string `json:"employer_type,omitempty"       example:"WORKER"`
 	OccupationAddress string  `json:"occupation_address"            example:"456 Tech Ave, Accra"`
 	ProofOfIncomeUrl  *string `json:"proof_of_income_url,omitempty" example:"https://example.com/income.pdf"`
 
