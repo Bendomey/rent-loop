@@ -7767,6 +7767,7 @@
                 "emergency_contact_name",
                 "emergency_contact_phone",
                 "employer",
+                "employer_type",
                 "first_name",
                 "gender",
                 "id_number",
@@ -7811,6 +7812,10 @@
                 "employer": {
                     "type": "string",
                     "example": "Acme Corp"
+                },
+                "employer_type": {
+                    "type": "string",
+                    "example": "PRINCIPAL"
                 },
                 "first_name": {
                     "type": "string",
@@ -8510,6 +8515,10 @@
                 "employer": {
                     "type": "string",
                     "example": "Acme Corp"
+                },
+                "employer_type": {
+                    "type": "string",
+                    "example": "PRINCIPAL"
                 },
                 "first_name": {
                     "type": "string",
@@ -10149,7 +10158,11 @@
                 },
                 "employer": {
                     "type": "string",
-                    "example": "Tech Ltd."
+                    "example": "UPSA"
+                },
+                "employer_type": {
+                    "type": "string",
+                    "example": "PRINCIPAL"
                 },
                 "first_name": {
                     "type": "string",
@@ -10224,7 +10237,7 @@
                 },
                 "occupation": {
                     "type": "string",
-                    "example": "Software Engineer"
+                    "example": "STUDENT"
                 },
                 "occupation_address": {
                     "type": "string",

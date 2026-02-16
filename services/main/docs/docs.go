@@ -7775,6 +7775,7 @@ const docTemplate = `{
                 "emergency_contact_name",
                 "emergency_contact_phone",
                 "employer",
+                "employer_type",
                 "first_name",
                 "gender",
                 "id_number",
@@ -7819,6 +7820,10 @@ const docTemplate = `{
                 "employer": {
                     "type": "string",
                     "example": "Acme Corp"
+                },
+                "employer_type": {
+                    "type": "string",
+                    "example": "PRINCIPAL"
                 },
                 "first_name": {
                     "type": "string",
@@ -8518,6 +8523,10 @@ const docTemplate = `{
                 "employer": {
                     "type": "string",
                     "example": "Acme Corp"
+                },
+                "employer_type": {
+                    "type": "string",
+                    "example": "PRINCIPAL"
                 },
                 "first_name": {
                     "type": "string",
@@ -10157,7 +10166,11 @@ const docTemplate = `{
                 },
                 "employer": {
                     "type": "string",
-                    "example": "Tech Ltd."
+                    "example": "UPSA"
+                },
+                "employer_type": {
+                    "type": "string",
+                    "example": "PRINCIPAL"
                 },
                 "first_name": {
                     "type": "string",
@@ -10232,7 +10245,7 @@ const docTemplate = `{
                 },
                 "occupation": {
                     "type": "string",
-                    "example": "Software Engineer"
+                    "example": "STUDENT"
                 },
                 "occupation_address": {
                     "type": "string",

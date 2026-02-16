@@ -75,8 +75,9 @@ type TenantApplication struct {
 	EmergencyContactPhone          string `gorm:"not null;"`
 	RelationshipToEmergencyContact string `gorm:"not null;"`
 
-	Occupation        string  `gorm:"not null;"` // student
-	Employer          string  `gorm:"not null;"` // or school name
+	Occupation        string `gorm:"not null;"` // student
+	Employer          string `gorm:"not null;"` // or school name
+	EmployerType      *string
 	OccupationAddress string  `gorm:"not null;"` // or school address
 	ProofOfIncomeUrl  *string // or admission letter url
 
