@@ -1,13 +1,5 @@
 import dayjs from 'dayjs'
-import {
-	CircleCheck,
-	House,
-	MapPin,
-	MoreHorizontalIcon,
-	Pencil,
-	Trash,
-	Wrench,
-} from 'lucide-react'
+import { CircleCheck, Eye, Users } from 'lucide-react'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { PropertyAssetUnitsController } from './controller'
@@ -25,21 +17,16 @@ import {
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuGroup,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
 import { useProperty } from '~/providers/property-provider'
+import { useNavigate } from 'react-router'
 
 export function PropertyAssetUnitsModule() {
 	const { clientUserProperty } = useProperty()
 	const [searchParams] = useSearchParams()
+	const navigate = useNavigate()
 
 	const [selectedPropertyUnit, setSelectedPropertyUnit] =
 		useState<PropertyUnit>()
@@ -71,7 +58,6 @@ export function PropertyAssetUnitsModule() {
 			},
 		},
 	)
-
 	const isLoading = isPending || isRefetching
 
 	return (
@@ -129,9 +115,9 @@ export function PropertyAssetUnitsModule() {
 
 							<CardContent className="space-y-2 pb-2">
 								<div className="flex items-center gap-2">
-									<MapPin className="text-zinc-500" size={16} />
+									<Users className="text-zinc-500" size={16} />
 									<TypographyMuted className="truncate">
-										{data.max_occupants_allowed}
+										Max occupants: {data.max_occupants_allowed}
 									</TypographyMuted>
 								</div>
 								<div className="flex items-center gap-2">
@@ -143,65 +129,18 @@ export function PropertyAssetUnitsModule() {
 							<CardFooter className="flex justify-around border-t-[1px] pt-3">
 								<Button
 									type="button"
-									variant="ghost"
+									variant="outline"
 									size="icon-sm"
-									className="flex w-fit flex-col gap-1 px-3 py-6 text-xs text-zinc-500"
+									className="flex w-full flex-row gap-2 py-5 text-xs text-zinc-500"
+									onClick={() => {
+										void navigate(
+											`/properties/${data.property_id}/assets/units/${data.id}`,
+										)
+									}}
 								>
-									<House />
-									Tenants
+									<Eye />
+									View
 								</Button>
-
-								{/* <Button
-								type="button"
-								variant="ghost"
-								size="icon-sm"
-								className="flex w-fit flex-col gap-1 px-3 py-6 text-xs text-zinc-500"
-							>
-								<BadgeCent />
-								Accounting
-							</Button> */}
-
-								<Button
-									type="button"
-									variant="ghost"
-									size="icon-sm"
-									className="flex w-fit flex-col gap-1 px-3 py-6 text-xs text-zinc-500"
-								>
-									<Wrench />
-									Maintenance
-								</Button>
-
-								<div className="flex items-center">
-									<DropdownMenu>
-										<DropdownMenuTrigger asChild>
-											<Button
-												variant="outline"
-												size="icon"
-												aria-label="More Options"
-											>
-												<MoreHorizontalIcon />
-											</Button>
-										</DropdownMenuTrigger>
-										<DropdownMenuContent align="end" className="w-52">
-											<DropdownMenuGroup>
-												<DropdownMenuItem onClick={() => {}}>
-													<Pencil />
-													Edit
-												</DropdownMenuItem>
-												<DropdownMenuItem
-													variant="destructive"
-													onClick={() => {
-														setSelectedPropertyUnit(data)
-														setOpenDeletePropertyUnitModal(true)
-													}}
-												>
-													<Trash />
-													Delete
-												</DropdownMenuItem>
-											</DropdownMenuGroup>
-										</DropdownMenuContent>
-									</DropdownMenu>
-								</div>
 							</CardFooter>
 						</Card>
 					)}
