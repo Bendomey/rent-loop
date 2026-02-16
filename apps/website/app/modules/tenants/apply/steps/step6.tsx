@@ -59,7 +59,7 @@ const PreviewCard = ({
 export function Step6() {
 	const { goBack, goToPage, formData, onSubmit, isSubmitting, isEditable } =
 		useTenantApplicationContext()
-	const isStudent = formData.employment_type === 'STUDENT'
+	const isStudent = formData.employer_type === 'STUDENT'
 
 	return (
 		<form
