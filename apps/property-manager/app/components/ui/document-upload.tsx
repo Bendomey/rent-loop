@@ -118,8 +118,7 @@ export function DocumentUpload({
 	const handleButtonClick = () =>
 		inputRef?.current ? inputRef.current.click() : undefined
 
-	const displayName =
-		documentData.file?.file.name || documentName || undefined
+	const displayName = documentData.file?.file.name || documentName || undefined
 	const displaySize = documentData.file?.file.size
 		? formatFileSize(documentData.file.file.size)
 		: undefined
@@ -261,9 +260,7 @@ export function DocumentUpload({
 						type="button"
 						variant="outline"
 					>
-						{isResolved
-							? changeDocumentButtonLabel
-							: chooseDocumentButtonLabel}
+						{isResolved ? changeDocumentButtonLabel : chooseDocumentButtonLabel}
 					</Button>
 
 					<input

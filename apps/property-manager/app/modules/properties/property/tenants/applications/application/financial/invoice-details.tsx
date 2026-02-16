@@ -51,7 +51,10 @@ interface InvoiceDetailsProps {
 	onReconfigure: () => void
 }
 
-export function InvoiceDetails({ invoice, onReconfigure }: InvoiceDetailsProps) {
+export function InvoiceDetails({
+	invoice,
+	onReconfigure,
+}: InvoiceDetailsProps) {
 	const [countdown, setCountdown] = useState(COOLDOWN_SECONDS)
 	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -106,7 +109,10 @@ export function InvoiceDetails({ invoice, onReconfigure }: InvoiceDetailsProps) 
 
 					<div className="space-y-2">
 						{invoice.line_items.map((item) => (
-							<div key={item.id} className="flex items-center justify-between text-sm">
+							<div
+								key={item.id}
+								className="flex items-center justify-between text-sm"
+							>
 								<span className="text-zinc-500">
 									{item.label} x {item.quantity}
 								</span>
@@ -146,10 +152,7 @@ export function InvoiceDetails({ invoice, onReconfigure }: InvoiceDetailsProps) 
 			</CardContent>
 
 			<CardFooter className="flex justify-end">
-				<Button
-					variant="outline"
-					onClick={onReconfigure}
-				>
+				<Button variant="outline" onClick={onReconfigure}>
 					Reconfigure
 				</Button>
 			</CardFooter>

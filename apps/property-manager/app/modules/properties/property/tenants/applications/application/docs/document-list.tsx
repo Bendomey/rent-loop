@@ -43,14 +43,16 @@ export function DocumentList({
 
 	const debouncedSearch = useDebounce({
 		delay: 250,
-		value: search
+		value: search,
 	})
-		;
 	const { data: documents, isPending } = useGetDocuments({
 		filters,
 		pagination: { page: 1, per: 50 },
 		sorter: { sort: 'desc', sort_by: 'created_at' },
-		search: { fields: ['title'], query: debouncedSearch.length > 0 ? debouncedSearch : undefined },
+		search: {
+			fields: ['title'],
+			query: debouncedSearch.length > 0 ? debouncedSearch : undefined,
+		},
 	})
 
 	const hasDocuments = documents && documents.rows.length > 0
@@ -58,7 +60,7 @@ export function DocumentList({
 	return (
 		<div className="space-y-3">
 			<div className="relative">
-				<Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+				<Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-zinc-400" />
 				<Input
 					placeholder="Search documents..."
 					value={search}

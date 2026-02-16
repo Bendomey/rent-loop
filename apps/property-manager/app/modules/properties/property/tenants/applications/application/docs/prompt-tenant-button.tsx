@@ -39,9 +39,7 @@ export function PromptTenantButton() {
 				onClick={handlePrompt}
 			>
 				<Send className="size-4" />
-				{isOnCooldown
-					? `Resend in ${countdown}s`
-					: 'Prompt Tenant to Sign'}
+				{isOnCooldown ? `Resend in ${countdown}s` : 'Prompt Tenant to Sign'}
 			</Button>
 			{isOnCooldown && (
 				<p className="text-xs text-zinc-400">

@@ -34,13 +34,14 @@ export function InitialPaymentSetup({
 	securityDepositEnabled,
 	securityDepositAmount,
 }: InitialPaymentSetupProps) {
-	const [paymentMode, setPaymentMode] = useState<PaymentMode>('ONE_TIME_PAYMENT')
+	const [paymentMode, setPaymentMode] =
+		useState<PaymentMode>('ONE_TIME_PAYMENT')
 	const [customPeriods, setCustomPeriods] = useState(1)
 	const [generatedInvoice, setGeneratedInvoice] = useState<Invoice | null>(null)
 
 	if (hasFinancialChanges) {
 		return (
-			<Alert variant='default' className='bg-yellow-50 border-yellow-600'>
+			<Alert variant="default" className="border-yellow-600 bg-yellow-50">
 				<AlertCircle className="size-4" />
 				<AlertTitle>Unsaved financial changes</AlertTitle>
 				<AlertDescription>
@@ -53,7 +54,7 @@ export function InitialPaymentSetup({
 
 	if (!stayDuration || !stayDurationFrequency) {
 		return (
-			<Alert variant='default' className='bg-yellow-50 border-yellow-600'>
+			<Alert variant="default" className="border-yellow-600 bg-yellow-50">
 				<AlertCircle className="size-4" />
 				<AlertTitle>Stay duration required</AlertTitle>
 				<AlertDescription>
@@ -184,10 +185,7 @@ export function InitialPaymentSetup({
 					{hasChanges ? (
 						<Button disabled>Save</Button>
 					) : (
-						<Button
-							disabled={totalAmount <= 0}
-							onClick={handleGenerateInvoice}
-						>
+						<Button disabled={totalAmount <= 0} onClick={handleGenerateInvoice}>
 							<FileText className="size-4" />
 							Generate Invoice
 						</Button>

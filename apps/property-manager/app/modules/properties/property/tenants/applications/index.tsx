@@ -90,8 +90,8 @@ export function PropertyTenantApplicationsModule() {
 				header: 'Name',
 				cell: ({ row }) => {
 					return (
-						<div className="min-w-32 flex flex-col">
-							<span className="truncate text-xs e">
+						<div className="flex min-w-32 flex-col">
+							<span className="e truncate text-xs">
 								{`${row.original.first_name} ${row.original.other_names ? row.original.other_names + ' ' : ''}${row.original.last_name}`}
 							</span>
 							<Link
@@ -101,7 +101,6 @@ export function PropertyTenantApplicationsModule() {
 								<span className="truncate text-xs text-blue-600 hover:underline">
 									{row.original.code}
 								</span>
-
 							</Link>
 						</div>
 					)
@@ -133,7 +132,6 @@ export function PropertyTenantApplicationsModule() {
 						<span className="truncate text-xs text-blue-600 hover:underline">
 							{getValue<string>()}
 						</span>
-
 					</Link>
 				),
 			},
@@ -190,7 +188,7 @@ export function PropertyTenantApplicationsModule() {
 								</Link>
 								<DropdownMenuSeparator />
 								{row.original.status ===
-									'TenantApplication.Status.InProgress' ? (
+								'TenantApplication.Status.InProgress' ? (
 									<>
 										<DropdownMenuItem
 											className="flex items-center gap-2 text-rose-600 hover:bg-red-50 hover:text-rose-600 focus:bg-rose-50 focus:text-rose-600"
@@ -205,7 +203,7 @@ export function PropertyTenantApplicationsModule() {
 									</>
 								) : null}
 								{row.original.status ===
-									'TenantApplication.Status.Cancelled' ? (
+								'TenantApplication.Status.Cancelled' ? (
 									<DropdownMenuItem
 										className="flex items-center gap-2 text-rose-600 hover:bg-red-50 hover:text-rose-600 focus:bg-rose-50 focus:text-rose-600"
 										onClick={() => {

@@ -48,8 +48,8 @@ export function SignDocumentModal({
 				<DialogHeader>
 					<DialogTitle>Sign Document</DialogTitle>
 					<DialogDescription>
-						Add your signature to &ldquo;{documentTitle}&rdquo;. Draw
-						your signature in the box below.
+						Add your signature to &ldquo;{documentTitle}&rdquo;. Draw your
+						signature in the box below.
 					</DialogDescription>
 				</DialogHeader>
 

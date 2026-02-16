@@ -181,8 +181,7 @@ export function ImageUploadBulk({
 			try {
 				// Check for duplicate by file name and size
 				const isDuplicate = images.some(
-					(img) =>
-						img.file?.name === file.name && img.file?.size === file.size,
+					(img) => img.file?.name === file.name && img.file?.size === file.size,
 				)
 				if (isDuplicate) {
 					setErrorMessage(`${file.name} has already been selected.`)
@@ -275,7 +274,7 @@ export function ImageUploadBulk({
 									<button
 										type="button"
 										aria-label={`Remove ${image.id}`}
-										className="absolute top-1 right-1 z-10 rounded-full bg-white/90 p-0.5 opacity-0 shadow-sm transition-opacity hover:bg-white group-hover:opacity-100"
+										className="absolute top-1 right-1 z-10 rounded-full bg-white/90 p-0.5 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 hover:bg-white"
 										onClick={() => handleRemove(image)}
 									>
 										<X className="size-4 text-gray-600" />

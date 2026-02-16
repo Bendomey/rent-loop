@@ -32,9 +32,9 @@ export function PaymentModeSelector({
 			<div>
 				<h3 className="text-sm font-medium">Initial Payment</h3>
 				<p className="text-xs text-zinc-500">
-					How much should the tenant pay upfront before move-in? This can
-					be a full payment for the entire stay or a custom number of
-					periods (e.g. first month's rent + security deposit).
+					How much should the tenant pay upfront before move-in? This can be a
+					full payment for the entire stay or a custom number of periods (e.g.
+					first month's rent + security deposit).
 				</p>
 			</div>
 
@@ -72,9 +72,7 @@ export function PaymentModeSelector({
 							value={customPeriods}
 							onChange={(e) => {
 								const val = parseInt(e.target.value) || 1
-								onCustomPeriodsChange(
-									Math.min(Math.max(val, 1), stayDuration),
-								)
+								onCustomPeriodsChange(Math.min(Math.max(val, 1), stayDuration))
 							}}
 						/>
 					</div>

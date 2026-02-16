@@ -29,27 +29,24 @@ export function SignaturePad({ onSignatureChange }: SignaturePadProps) {
 		ctx.lineJoin = 'round'
 	}, [])
 
-	const getPos = useCallback(
-		(e: React.MouseEvent | React.TouchEvent) => {
-			const canvas = canvasRef.current
-			if (!canvas) return { x: 0, y: 0 }
-			const rect = canvas.getBoundingClientRect()
+	const getPos = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+		const canvas = canvasRef.current
+		if (!canvas) return { x: 0, y: 0 }
+		const rect = canvas.getBoundingClientRect()
 
-			if ('touches' in e) {
-				const touch = e.touches[0]
-				if (!touch) return { x: 0, y: 0 }
-				return {
-					x: touch.clientX - rect.left,
-					y: touch.clientY - rect.top,
-				}
-			}
+		if ('touches' in e) {
+			const touch = e.touches[0]
+			if (!touch) return { x: 0, y: 0 }
 			return {
-				x: e.clientX - rect.left,
-				y: e.clientY - rect.top,
+				x: touch.clientX - rect.left,
+				y: touch.clientY - rect.top,
 			}
-		},
-		[],
-	)
+		}
+		return {
+			x: e.clientX - rect.left,
+			y: e.clientY - rect.top,
+		}
+	}, [])
 
 	const startDrawing = useCallback(
 		(e: React.MouseEvent | React.TouchEvent) => {
@@ -114,9 +111,7 @@ export function SignaturePad({ onSignatureChange }: SignaturePadProps) {
 				/>
 				{!hasSignature && (
 					<div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-						<p className="text-sm text-zinc-400">
-							Draw your signature here
-						</p>
+						<p className="text-sm text-zinc-400">Draw your signature here</p>
 					</div>
 				)}
 			</div>

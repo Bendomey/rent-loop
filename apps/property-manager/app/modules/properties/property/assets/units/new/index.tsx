@@ -114,22 +114,19 @@ const unitTypes = [
 	{
 		type: 'STUDIO' as const,
 		name: 'Studio',
-		description:
-			'Single open-plan room combining bedroom and living space.',
+		description: 'Single open-plan room combining bedroom and living space.',
 		icon: LayoutGrid,
 	},
 	{
 		type: 'OFFICE' as const,
 		name: 'Office',
-		description:
-			'Workspace for professional or business use, not residential.',
+		description: 'Workspace for professional or business use, not residential.',
 		icon: Briefcase,
 	},
 	{
 		type: 'RETAIL' as const,
 		name: 'Retail',
-		description:
-			'Shopfront or commercial space for selling goods or services.',
+		description: 'Shopfront or commercial space for selling goods or services.',
 		icon: Store,
 	},
 ]
@@ -209,7 +206,8 @@ export function NewPropertyAssetUnitsModule() {
 		submitData.set('type', formData.type)
 		submitData.set('status', formData.status)
 		submitData.set('name', formData.name)
-		if (formData.description) submitData.set('description', formData.description)
+		if (formData.description)
+			submitData.set('description', formData.description)
 		if (formData.image_url) submitData.append('images', formData.image_url)
 		if (formData.tags) {
 			for (const tag of formData.tags) {
@@ -246,8 +244,8 @@ export function NewPropertyAssetUnitsModule() {
 				<div className="space-y-2">
 					<TypographyH2>Add New Property Unit</TypographyH2>
 					<TypographyMuted>
-						We break down properties into units to better organize and
-						manage rental spaces.
+						We break down properties into units to better organize and manage
+						rental spaces.
 					</TypographyMuted>
 				</div>
 
@@ -277,9 +275,7 @@ export function NewPropertyAssetUnitsModule() {
 				<div>
 					<div className="mb-3 space-y-1">
 						<Label>Unit Type</Label>
-						<TypographyMuted>
-							What kind of space is this unit?
-						</TypographyMuted>
+						<TypographyMuted>What kind of space is this unit?</TypographyMuted>
 					</div>
 					<div className="flex flex-col gap-2">
 						{unitTypes.map((model) => {
@@ -313,9 +309,7 @@ export function NewPropertyAssetUnitsModule() {
 										/>
 									</div>
 									<div className="min-w-0">
-										<p className="text-sm font-medium">
-											{model.name}
-										</p>
+										<p className="text-sm font-medium">{model.name}</p>
 										<p className="text-muted-foreground text-sm">
 											{model.description}
 										</p>
@@ -392,11 +386,7 @@ export function NewPropertyAssetUnitsModule() {
 						hero
 						shape="square"
 						hint="Optional"
-						acceptedFileTypes={[
-							'image/jpeg',
-							'image/jpg',
-							'image/png',
-						]}
+						acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
 						error={formState.errors?.image_url?.message}
 						fileCallback={upload}
 						isUploading={isUploading}
@@ -489,15 +479,13 @@ export function NewPropertyAssetUnitsModule() {
 										placeholder="e.g., 4"
 										min={1}
 										{...field}
-										onChange={(e) =>
-											field.onChange(e.target.valueAsNumber)
-										}
+										onChange={(e) => field.onChange(e.target.valueAsNumber)}
 									/>
 								</FormControl>
 								<FormMessage />
 								<FormDescription>
-									The maximum number of people that can live in
-									this unit at the same time.
+									The maximum number of people that can live in this unit at the
+									same time.
 								</FormDescription>
 							</FormItem>
 						)}
@@ -510,10 +498,7 @@ export function NewPropertyAssetUnitsModule() {
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Currency</FormLabel>
-									<Select
-										onValueChange={field.onChange}
-										value={field.value}
-									>
+									<Select onValueChange={field.onChange} value={field.value}>
 										<FormControl className="w-full">
 											<SelectTrigger>
 												<SelectValue placeholder="Select" />
@@ -543,9 +528,7 @@ export function NewPropertyAssetUnitsModule() {
 											placeholder="e.g., 5000.00"
 											min={0}
 											{...field}
-											onChange={(e) =>
-												field.onChange(e.target.valueAsNumber)
-											}
+											onChange={(e) => field.onChange(e.target.valueAsNumber)}
 										/>
 									</FormControl>
 									<FormMessage />
@@ -558,27 +541,20 @@ export function NewPropertyAssetUnitsModule() {
 						<Label>Payment Frequency</Label>
 						<div className="mt-3 flex flex-wrap gap-3">
 							{paymentFrequencies.map((item) => {
-								const isSelected =
-									watch('payment_frequency') === item.value
+								const isSelected = watch('payment_frequency') === item.value
 								return (
 									<Button
 										key={item.value}
 										type="button"
-										variant={
-											isSelected ? 'default' : 'outline'
-										}
+										variant={isSelected ? 'default' : 'outline'}
 										className={cn({
 											'bg-rose-600 text-white': isSelected,
 										})}
 										onClick={() =>
-											setValue(
-												'payment_frequency',
-												item.value,
-												{
-													shouldDirty: true,
-													shouldValidate: true,
-												},
-											)
+											setValue('payment_frequency', item.value, {
+												shouldDirty: true,
+												shouldValidate: true,
+											})
 										}
 									>
 										{item.label}
@@ -601,9 +577,7 @@ export function NewPropertyAssetUnitsModule() {
 
 				{/* Actions */}
 				<div className="mt-10 flex items-center justify-end space-x-5">
-					<Link
-						to={`/properties/${property_id}/assets/units`}
-					>
+					<Link to={`/properties/${property_id}/assets/units`}>
 						<Button
 							type="button"
 							size="sm"
