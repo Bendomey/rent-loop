@@ -149,9 +149,7 @@ export function Step3() {
 			emergency_contact_phone: data.emergency_contact_phone,
 			employer_type: data.employer_type,
 			occupation:
-				data.employer_type === 'STUDENT'
-					? data.employer_type
-					: data.occupation,
+				data.employer_type === 'STUDENT' ? data.employer_type : data.occupation,
 			employer: data.employer,
 			occupation_address: data.occupation_address,
 			proof_of_income_url: data.proof_of_income_url,
