@@ -43,11 +43,12 @@ definitions:
   handlers.AuthCodeRequest:
     properties:
       channel:
-        enum:
+        example:
         - EMAIL
         - SMS
-        example: EMAIL
-        type: string
+        items:
+          type: string
+        type: array
       email:
         example: email@example.com
         type: string
