@@ -45,7 +45,7 @@ interface TenantApplication {
 	cancelled_by: Nullable<ClientUser>
 
 	desired_unit_id: string
-	desired_unit: Unit
+	desired_unit: PropertyUnit
 	desired_move_in_date: Nullable<Date>
 	stay_duration_frequency: Nullable<string>
 	stay_duration: Nullable<number>

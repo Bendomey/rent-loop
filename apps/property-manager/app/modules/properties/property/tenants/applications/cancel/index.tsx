@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, type Dispatch, type SetStateAction } from 'react'
 import { useForm } from 'react-hook-form'
+import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useCancelTenantApplication } from '~/api/tenant-applications'
@@ -45,6 +46,7 @@ export type FormSchema = z.infer<typeof ValidationSchema>
 
 function CancelTenantApplicationModal({ opened, setOpened, data }: Props) {
 	const queryClient = useQueryClient()
+	const revalidator = useRevalidator()
 
 	const rhfMethods = useForm<FormSchema>({
 		defaultValues: {
@@ -88,6 +90,7 @@ function CancelTenantApplicationModal({ opened, setOpened, data }: Props) {
 							'The tenant application has been successfully cancelled',
 						)
 
+						void revalidator.revalidate()
 						void queryClient.invalidateQueries({
 							queryKey: [QUERY_KEYS.PROPERTY_TENANT_APPLICATIONS],
 						})
