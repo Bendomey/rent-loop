@@ -57,6 +57,12 @@ type IAccountingAPI struct {
 	ClientSecret string
 }
 
+type IGatekeeperAPI struct {
+	BaseURL   string
+	ApiKey    string
+	ProjectID string
+}
+
 // IChartOfAccounts holds the fincore account IDs for each account type.
 // These are loaded from environment variables since they differ per environment.
 type IChartOfAccounts struct {
@@ -79,6 +85,7 @@ type IChartOfAccounts struct {
 
 type IClients struct {
 	AccountingAPI IAccountingAPI
+	GatekeeperAPI IGatekeeperAPI
 }
 
 type Config struct {
@@ -147,6 +154,11 @@ func Load() Config {
 				BaseURL:      getEnv("FINCORE_API_BASE_URL", "http://localhost:8081/api/v1"),
 				ClientID:     getEnv("FINCORE_CLIENT_ID", ""),
 				ClientSecret: getEnv("FINCORE_CLIENT_SECRET", ""),
+			},
+			GatekeeperAPI: IGatekeeperAPI{
+				BaseURL:   getEnv("GATEKEEPER_API_BASE_URL", "http://localhost:8082/api/v1"),
+				ApiKey:    getEnv("GATEKEEPER_API_KEY", "fake-api-key"),
+				ProjectID: getEnv("GATEKEEPER_PROJECT_ID", "fake-project-id"),
 			},
 		},
 		ChartOfAccounts: IChartOfAccounts{

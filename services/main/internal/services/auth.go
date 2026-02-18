@@ -3,14 +3,11 @@ package services
 import (
 	"context"
 	"errors"
-	"strings"
+	"slices"
 	"time"
 
-	"github.com/Bendomey/goutilities/pkg/hashpassword"
-	"github.com/Bendomey/goutilities/pkg/validatehash"
-	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
-	gonanoid "github.com/matoous/go-nanoid"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -20,28 +17,39 @@ type AuthService interface {
 }
 
 type authService struct {
-	appCtx pkg.AppContext
+	appCtx           pkg.AppContext
+	gatekeeperClient gatekeeper.Client
 }
 
-func NewAuthService(appCtx pkg.AppContext) AuthService {
-	return &authService{appCtx: appCtx}
+func NewAuthService(appCtx pkg.AppContext, gatekeeperClient gatekeeper.Client) AuthService {
+	return &authService{appCtx: appCtx, gatekeeperClient: gatekeeperClient}
 }
 
 type SendCodeInput struct {
-	Channel string
+	Channel []string
 	Email   *string
 	Phone   *string
 }
 
 func (s *authService) SendCode(ctx context.Context, input SendCodeInput) error {
-	identifier := ""
-	if input.Channel == "EMAIL" {
-		identifier = *input.Email
-	} else {
-		identifier = *input.Phone
+	if input.Email == nil && input.Phone == nil {
+		return pkg.BadRequestError("EmailOrPhoneRequired", nil)
 	}
 
-	code, err := gonanoid.Generate("1234567890", 6)
+	if slices.Contains(input.Channel, "EMAIL") && input.Email == nil {
+		return pkg.BadRequestError("EmailRequired", nil)
+	}
+
+	if slices.Contains(input.Channel, "SMS") && input.Phone == nil {
+		return pkg.BadRequestError("PhoneRequired", nil)
+	}
+
+	req := gatekeeper.GenerateOtpInput{
+		PhoneNumber: input.Phone,
+		Email:       input.Email,
+		Size:        6,
+	}
+	response, err := s.gatekeeperClient.GenerateOtp(ctx, req)
 	if err != nil {
 		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
@@ -52,50 +60,25 @@ func (s *authService) SendCode(ctx context.Context, input SendCodeInput) error {
 		})
 	}
 
-	hash, hashErr := hashpassword.HashPassword(code)
-	if hashErr != nil {
-		return pkg.InternalServerError(hashErr.Error(), &pkg.RentLoopErrorParams{
-			Err: hashErr,
-			Metadata: map[string]string{
-				"function": "SendCode",
-				"action":   "hashing code",
-			},
-		})
+	pipe := s.appCtx.RDB.TxPipeline()
+
+	if slices.Contains(input.Channel, "EMAIL") && input.Email != nil {
+		pipe.Set(ctx, *input.Email, response.Reference, 10*time.Minute)
 	}
 
-	setErr := s.appCtx.RDB.Set(ctx, identifier, hash, 1*time.Hour).Err()
+	if slices.Contains(input.Channel, "SMS") && input.Phone != nil {
+		pipe.Set(ctx, *input.Phone, response.Reference, 10*time.Minute)
+	}
+
+	_, setErr := pipe.Exec(ctx)
 	if setErr != nil {
 		return pkg.InternalServerError(setErr.Error(), &pkg.RentLoopErrorParams{
 			Err: setErr,
 			Metadata: map[string]string{
 				"function": "SendCode",
-				"action":   "setting code",
+				"action":   "setting reference in redis",
 			},
 		})
-	}
-
-	message := strings.NewReplacer(
-		"{{verification_code}}", code,
-		"{{expiry_duration}}", "1 hour",
-	).Replace(lib.AUTH_VERIFICATION_CODE_BODY)
-
-	if input.Channel == "EMAIL" {
-		go pkg.SendEmail(
-			s.appCtx,
-			pkg.SendEmailInput{
-				Recipient: *input.Email,
-				Subject:   lib.AUTH_VERIFICATION_CODE_SUBJECT,
-				TextBody:  message,
-			},
-		)
-	} else {
-		go pkg.SendSMS(
-			s.appCtx,
-			pkg.SendSMSInput{
-				Recipient: *input.Phone,
-				Message:   message,
-			},
-		)
 	}
 
 	return nil
@@ -109,7 +92,7 @@ type VerifyCodeInput struct {
 
 func (s *authService) VerifyCode(ctx context.Context, input VerifyCodeInput) error {
 	if input.Email == nil && input.Phone == nil {
-		return pkg.BadRequestError("EnterEmailOrPhone", nil)
+		return pkg.BadRequestError("EmailOrPhoneRequired", nil)
 	}
 
 	identifier := ""
@@ -119,7 +102,7 @@ func (s *authService) VerifyCode(ctx context.Context, input VerifyCodeInput) err
 		identifier = *input.Phone
 	}
 
-	hash, getErr := s.appCtx.RDB.Get(ctx, identifier).Result()
+	reference, getErr := s.appCtx.RDB.Get(ctx, identifier).Result()
 	if getErr != nil {
 		if errors.Is(getErr, redis.Nil) {
 			return pkg.BadRequestError("CodeIncorrect", nil)
@@ -133,8 +116,21 @@ func (s *authService) VerifyCode(ctx context.Context, input VerifyCodeInput) err
 		})
 	}
 
-	isSame := validatehash.ValidateCipher(input.Code, hash)
-	if !isSame {
+	response, err := s.gatekeeperClient.VerifyOtp(ctx, gatekeeper.VerifyOtpRequest{
+		Reference: reference,
+		Otp:       input.Code,
+	})
+	if err != nil {
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "VerifyCode",
+				"action":   "verifying code",
+			},
+		})
+	}
+
+	if !response.Verified {
 		return pkg.BadRequestError("CodeIncorrect", nil)
 	}
 

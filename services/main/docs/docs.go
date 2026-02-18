@@ -7310,12 +7310,14 @@ const docTemplate = `{
             ],
             "properties": {
                 "channel": {
-                    "type": "string",
-                    "enum": [
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
                         "EMAIL",
                         "SMS"
-                    ],
-                    "example": "EMAIL"
+                    ]
                 },
                 "email": {
                     "type": "string",
