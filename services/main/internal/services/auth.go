@@ -17,12 +17,12 @@ type AuthService interface {
 }
 
 type authService struct {
-	appCtx pkg.AppContext
-	client gatekeeper.Client
+	appCtx           pkg.AppContext
+	gatekeeperClient gatekeeper.Client
 }
 
-func NewAuthService(appCtx pkg.AppContext, client gatekeeper.Client) AuthService {
-	return &authService{appCtx: appCtx, client: client}
+func NewAuthService(appCtx pkg.AppContext, gatekeeperClient gatekeeper.Client) AuthService {
+	return &authService{appCtx: appCtx, gatekeeperClient: gatekeeperClient}
 }
 
 type SendCodeInput struct {
@@ -33,15 +33,15 @@ type SendCodeInput struct {
 
 func (s *authService) SendCode(ctx context.Context, input SendCodeInput) error {
 	if input.Email == nil && input.Phone == nil {
-		return pkg.BadRequestError("EnterEmailOrPhone", nil)
+		return pkg.BadRequestError("EmailOrPhoneRequired", nil)
 	}
 
 	if slices.Contains(input.Channel, "EMAIL") && input.Email == nil {
-		return pkg.BadRequestError("EnterEmail", nil)
+		return pkg.BadRequestError("EmailRequired", nil)
 	}
 
 	if slices.Contains(input.Channel, "SMS") && input.Phone == nil {
-		return pkg.BadRequestError("EnterPhone", nil)
+		return pkg.BadRequestError("PhoneRequired", nil)
 	}
 
 	req := gatekeeper.GenerateOtpInput{
@@ -49,7 +49,7 @@ func (s *authService) SendCode(ctx context.Context, input SendCodeInput) error {
 		Email:       input.Email,
 		Size:        6,
 	}
-	response, err := s.client.GenerateOtp(ctx, req)
+	response, err := s.gatekeeperClient.GenerateOtp(ctx, req)
 	if err != nil {
 		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
@@ -92,7 +92,7 @@ type VerifyCodeInput struct {
 
 func (s *authService) VerifyCode(ctx context.Context, input VerifyCodeInput) error {
 	if input.Email == nil && input.Phone == nil {
-		return pkg.BadRequestError("EnterEmailOrPhone", nil)
+		return pkg.BadRequestError("EmailOrPhoneRequired", nil)
 	}
 
 	identifier := ""
@@ -116,7 +116,7 @@ func (s *authService) VerifyCode(ctx context.Context, input VerifyCodeInput) err
 		})
 	}
 
-	response, err := s.client.VerifyOtp(ctx, gatekeeper.VerifyOtpRequest{
+	response, err := s.gatekeeperClient.VerifyOtp(ctx, gatekeeper.VerifyOtpRequest{
 		Reference: reference,
 		Otp:       input.Code,
 	})
