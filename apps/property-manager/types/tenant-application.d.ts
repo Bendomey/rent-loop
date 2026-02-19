@@ -62,10 +62,14 @@ interface TenantApplication {
 
 	lease_agreement_document_mode: Nullable<'MANUAL' | 'ONLINE'>
 	lease_agreement_document_url: Nullable<string>
-	lease_agreement_document_property_manager_signed_by_id: Nullable<string>
-	lease_agreement_document_property_manager_signed_by: Nullable<ClientUser>
-	lease_agreement_document_property_manager_signed_at: Nullable<Date>
-	lease_agreement_document_tenant_signed_at: Nullable<Date>
+
+	lease_agreement_document_id: Nullable<string>
+	lease_agreement_document: Nullable<Document>
+	lease_agreement_document_status: Nullable<
+		'DRAFT' | 'FINALIZED' | 'SIGNING' | 'SIGNED'
+	>
+
+	lease_agreement_signatures: Array<RentloopDocumentSignature>
 
 	previous_landlord_name: Nullable<string>
 	previous_landlord_phone: Nullable<string>

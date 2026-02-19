@@ -34,6 +34,7 @@ func updateMigration(db *gorm.DB) error {
 		&models.Invoice{},
 		&models.InvoiceLineItem{},
 		&models.Payment{},
+		&models.DocumentSignature{},
 		// &models.MaintenanceRequest{},
 		// &models.MaintenanceRequestActivityLog{},
 		// &models.Announcement{},

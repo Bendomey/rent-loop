@@ -26,12 +26,14 @@ export function Editor({
 	editorSerializedState,
 	onChange,
 	onSerializedChange,
+	menuBar,
 }: {
 	editorState?: EditorState
 	editorSerializedState?: SerializedEditorState
 	onChange?: (editorState: EditorState) => void
 	onSerializedChange?: (editorSerializedState: SerializedEditorState) => void
 	document: RentloopDocument
+	menuBar?: React.ReactNode
 }) {
 	return (
 		<div className="overflow-hidden">
@@ -46,7 +48,7 @@ export function Editor({
 			>
 				<TooltipProvider>
 					<main>
-						<MenuBar document={document} />
+						{menuBar ?? <MenuBar document={document} />}
 						<Plugins />
 
 						<OnChangePlugin

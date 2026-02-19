@@ -122,6 +122,43 @@ export const useCreateDocument = () =>
 		mutationFn: createDocument,
 	})
 
+interface UpdateDocumentInputParams {
+	id: string
+	content?: string
+	title?: string
+	size?: number
+	tags?: Array<string>
+	property_id?: string
+}
+
+const updateDocument = async ({ id, ...data }: UpdateDocumentInputParams) => {
+	try {
+		const response = await fetchClient<ApiResponse<RentloopDocument>>(
+			`/v1/documents/${id}`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify(data),
+			},
+		)
+
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useUpdateDocument = () =>
+	useMutation({
+		mutationFn: updateDocument,
+	})
+
 const deleteDocument = async (id: string) => {
 	try {
 		await fetchClient(`/v1/documents/${id}`, {

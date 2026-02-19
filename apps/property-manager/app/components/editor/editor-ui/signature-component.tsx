@@ -12,9 +12,10 @@ import {
 	KEY_BACKSPACE_COMMAND,
 	KEY_DELETE_COMMAND,
 } from 'lexical'
-import { Pen } from 'lucide-react'
+import { Clock, Pen } from 'lucide-react'
 import { type JSX, useCallback, useEffect, useState } from 'react'
 
+import { useSigningContext } from '~/components/blocks/signing-view/signing-context'
 import {
 	$isSignatureNode,
 	type SignatureRole,
@@ -49,6 +50,7 @@ export default function SignatureComponent({
 }: SignatureComponentProps): JSX.Element {
 	const [editor] = useLexicalComposerContext()
 	const isEditable = useLexicalEditable()
+	const signingContext = useSigningContext()
 	const [isSelected, setSelected, clearSelection] =
 		useLexicalNodeSelection(nodeKey)
 	const [showSignModal, setShowSignModal] = useState(false)
@@ -56,6 +58,8 @@ export default function SignatureComponent({
 	const [hasDrawnSignature, setHasDrawnSignature] = useState(false)
 
 	const isSigned = signatureUrl !== null
+	const isSigningMode = signingContext !== null
+	const isMyRole = signingContext?.signerRole === role
 
 	const $onDelete = useCallback(
 		(payload: KeyboardEvent) => {
@@ -127,16 +131,34 @@ export default function SignatureComponent({
 	const handleConfirmSignature = () => {
 		if (!signatureDataUrl) return
 
-		editor.update(() => {
-			const node = $getNodeByKey(nodeKey)
-			if ($isSignatureNode(node)) {
-				node.setSignature(
-					signatureDataUrl,
-					'Current User',
-					new Date().toISOString(),
-				)
-			}
-		})
+		if (signingContext) {
+			// In signing mode: delegate to the signing context callback
+			signingContext.onSign(role, signatureDataUrl)
+
+			// Also update the node visually
+			editor.update(() => {
+				const node = $getNodeByKey(nodeKey)
+				if ($isSignatureNode(node)) {
+					node.setSignature(
+						signatureDataUrl,
+						signingContext.signerName,
+						new Date().toISOString(),
+					)
+				}
+			})
+		} else {
+			// In editor mode: just update the node directly
+			editor.update(() => {
+				const node = $getNodeByKey(nodeKey)
+				if ($isSignatureNode(node)) {
+					node.setSignature(
+						signatureDataUrl,
+						'Current User',
+						new Date().toISOString(),
+					)
+				}
+			})
+		}
 
 		setShowSignModal(false)
 		setSignatureDataUrl(null)
@@ -145,6 +167,7 @@ export default function SignatureComponent({
 
 	const isFocused = isSelected && isEditable
 
+	// --- Signed state (same in all modes) ---
 	if (isSigned) {
 		return (
 			<div
@@ -180,6 +203,94 @@ export default function SignatureComponent({
 		)
 	}
 
+	// --- Signing mode: current signer's role ---
+	if (isSigningMode && isMyRole) {
+		return (
+			<>
+				<div
+					data-signature-node=""
+					data-signature-key={nodeKey}
+					data-signature-role={role}
+					className="my-2 rounded-lg border-2 border-dashed border-rose-300 bg-rose-50 p-6 transition-colors"
+				>
+					<div className="flex flex-col items-center gap-3">
+						<Pen className="size-5 text-rose-500" />
+						<span className="text-sm font-medium text-rose-700">
+							{label} Signature
+						</span>
+						<Button
+							size="sm"
+							className="bg-rose-600 hover:bg-rose-700"
+							onClick={() => setShowSignModal(true)}
+							disabled={signingContext.isSigning}
+						>
+							<Pen className="size-3" />
+							Sign Here
+						</Button>
+					</div>
+				</div>
+
+				<Dialog open={showSignModal} onOpenChange={setShowSignModal}>
+					<DialogContent className="sm:max-w-lg">
+						<DialogHeader>
+							<DialogTitle>Sign as {label}</DialogTitle>
+							<DialogDescription>
+								Draw your signature in the box below to sign
+								this document.
+							</DialogDescription>
+						</DialogHeader>
+						<SignaturePad
+							onSignatureChange={handleSignatureChange}
+						/>
+						<DialogFooter>
+							<Button
+								variant="outline"
+								onClick={() => setShowSignModal(false)}
+							>
+								Cancel
+							</Button>
+							<Button
+								disabled={
+									!hasDrawnSignature ||
+									signingContext.isSigning
+								}
+								onClick={handleConfirmSignature}
+							>
+								<Pen className="size-4" />
+								{signingContext.isSigning
+									? 'Saving...'
+									: 'Confirm Signature'}
+							</Button>
+						</DialogFooter>
+					</DialogContent>
+				</Dialog>
+			</>
+		)
+	}
+
+	// --- Signing mode: another signer's role (greyed out) ---
+	if (isSigningMode && !isMyRole) {
+		return (
+			<div
+				data-signature-node=""
+				data-signature-key={nodeKey}
+				data-signature-role={role}
+				className="my-2 rounded-lg border-2 border-dashed border-zinc-200 bg-zinc-50 p-6"
+			>
+				<div className="flex flex-col items-center gap-1.5">
+					<Clock className="size-5 text-zinc-300" />
+					<span className="text-sm font-medium text-zinc-400">
+						{label} Signature
+					</span>
+					<span className="text-xs text-zinc-300">
+						Awaiting signature
+					</span>
+				</div>
+			</div>
+		)
+	}
+
+	// --- Editor mode: placeholder (default) ---
 	return (
 		<>
 			<div
