@@ -302,55 +302,52 @@ func (s *tenantApplicationService) GetOneTenantApplication(
 }
 
 type UpdateTenantApplicationInput struct {
-	TenantApplicationID                             string
-	DesiredUnitId                                   *string
-	RentFee                                         *int64
-	RentFeeCurrency                                 *string
-	FirstName                                       *string
-	LastName                                        *string
-	Phone                                           *string
-	Gender                                          *string
-	DateOfBirth                                     *time.Time
-	Nationality                                     *string
-	MaritalStatus                                   *string
-	IDNumber                                        *string
-	CurrentAddress                                  *string
-	EmergencyContactName                            *string
-	EmergencyContactPhone                           *string
-	RelationshipToEmergencyContact                  *string
-	Occupation                                      *string
-	Employer                                        *string
-	OccupationAddress                               *string
-	DesiredMoveInDate                               *time.Time
-	StayDurationFrequency                           *string
-	StayDuration                                    *int64
-	PaymentFrequency                                *string
-	InitialDepositFee                               *int64
-	InitialDepositPaymentMethod                     *string
-	InitialDepositReferenceNumber                   *string
-	InitialDepositPaidAt                            *time.Time
-	InitialDepositPaymentId                         *string
-	SecurityDepositFee                              *int64
-	SecurityDepositFeeCurrency                      *string
-	SecurityDepositPaymentMethod                    *string
-	SecurityDepositReferenceNumber                  *string
-	SecurityDepositPaidAt                           *time.Time
-	SecurityDepositPaymentId                        *string
-	OtherNames                                      *string
-	Email                                           *string
-	ProfilePhotoUrl                                 *string
-	IDType                                          *string
-	IDFrontUrl                                      *string
-	IDBackUrl                                       *string
-	PreviousLandlordName                            *string
-	PreviousLandlordPhone                           *string
-	PreviousTenancyPeriod                           *string
-	ProofOfIncomeUrl                                *string
-	LeaseAggreementDocumentMode                     *string
-	LeaseAgreementDocumentUrl                       *string
-	LeaseAgreementDocumentPropertyManagerSignedById *string
-	LeaseAgreementDocumentPropertyManagerSignedAt   *time.Time
-	LeaseAgreementDocumentTenantSignedAt            *time.Time
+	TenantApplicationID            string
+	DesiredUnitId                  *string
+	RentFee                        *int64
+	RentFeeCurrency                *string
+	FirstName                      *string
+	LastName                       *string
+	Phone                          *string
+	Gender                         *string
+	DateOfBirth                    *time.Time
+	Nationality                    *string
+	MaritalStatus                  *string
+	IDNumber                       *string
+	CurrentAddress                 *string
+	EmergencyContactName           *string
+	EmergencyContactPhone          *string
+	RelationshipToEmergencyContact *string
+	Occupation                     *string
+	Employer                       *string
+	OccupationAddress              *string
+	DesiredMoveInDate              *time.Time
+	StayDurationFrequency          *string
+	StayDuration                   *int64
+	PaymentFrequency               *string
+	InitialDepositFee              *int64
+	InitialDepositPaymentMethod    *string
+	InitialDepositReferenceNumber  *string
+	InitialDepositPaidAt           *time.Time
+	InitialDepositPaymentId        *string
+	SecurityDepositFee             *int64
+	SecurityDepositFeeCurrency     *string
+	SecurityDepositPaymentMethod   *string
+	SecurityDepositReferenceNumber *string
+	SecurityDepositPaidAt          *time.Time
+	SecurityDepositPaymentId       *string
+	OtherNames                     *string
+	Email                          *string
+	ProfilePhotoUrl                *string
+	IDType                         *string
+	IDFrontUrl                     *string
+	IDBackUrl                      *string
+	PreviousLandlordName           *string
+	PreviousLandlordPhone          *string
+	PreviousTenancyPeriod          *string
+	ProofOfIncomeUrl               *string
+	LeaseAggreementDocumentMode    *string
+	LeaseAgreementDocumentUrl      *string
 }
 
 func (s *tenantApplicationService) UpdateTenantApplication(
@@ -476,10 +473,6 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 
 	tenantApplication.LeaseAggreementDocumentMode = input.LeaseAggreementDocumentMode
 	tenantApplication.LeaseAgreementDocumentUrl = input.LeaseAgreementDocumentUrl
-
-	tenantApplication.LeaseAgreementDocumentPropertyManagerSignedById = input.LeaseAgreementDocumentPropertyManagerSignedById
-	tenantApplication.LeaseAgreementDocumentPropertyManagerSignedAt = input.LeaseAgreementDocumentPropertyManagerSignedAt
-	tenantApplication.LeaseAgreementDocumentTenantSignedAt = input.LeaseAgreementDocumentTenantSignedAt
 
 	updateTenantApplicationErr := s.repo.Update(ctx, *tenantApplication)
 	if updateTenantApplicationErr != nil {
@@ -731,9 +724,6 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		StayDuration:                *tenantApplication.StayDuration,
 		LeaseAggreementDocumentMode: tenantApplication.LeaseAggreementDocumentMode,
 		LeaseAgreementDocumentUrl:   *tenantApplication.LeaseAgreementDocumentUrl,
-		LeaseAgreementDocumentPropertyManagerSignedById: tenantApplication.LeaseAgreementDocumentPropertyManagerSignedById,
-		LeaseAgreementDocumentPropertyManagerSignedAt:   tenantApplication.LeaseAgreementDocumentPropertyManagerSignedAt,
-		LeaseAgreementDocumentTenantSignedAt:            tenantApplication.LeaseAgreementDocumentTenantSignedAt,
 	}
 	_, createLeaseErr := s.leaseService.CreateLease(transCtx, leaseInput)
 	if createLeaseErr != nil {

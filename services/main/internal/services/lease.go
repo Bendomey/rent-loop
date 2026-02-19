@@ -72,26 +72,22 @@ func (s *leaseService) CreateLease(ctx context.Context, input CreateLeaseInput) 
 	}
 
 	lease := models.Lease{
-		Status:                      input.Status,
-		UnitId:                      input.UnitId,
-		TenantId:                    input.TenantId,
-		TenantApplicationId:         input.TenantApplicationId,
-		RentFee:                     input.RentFee,
-		RentFeeCurrency:             input.RentFeeCurrency,
-		PaymentFrequency:            input.PaymentFrequency,
-		Meta:                        *metaJson,
-		MoveInDate:                  input.MoveInDate,
-		StayDurationFrequency:       input.StayDurationFrequency,
-		StayDuration:                input.StayDuration,
-		KeyHandoverDate:             input.KeyHandoverDate,
-		UtilityTransfersDate:        input.UtilityTransfersDate,
-		PropertyInspectionDate:      input.PropertyInspectionDate,
-		LeaseAggreementDocumentMode: input.LeaseAggreementDocumentMode,
-		LeaseAgreementDocumentUrl:   input.LeaseAgreementDocumentUrl,
-		LeaseAgreementDocumentPropertyManagerSignedById:     input.LeaseAgreementDocumentPropertyManagerSignedById,
-		LeaseAgreementDocumentPropertyManagerSignedAt:       input.LeaseAgreementDocumentPropertyManagerSignedAt,
-		LeaseAgreementDocumentTenantSignedAt:                input.LeaseAgreementDocumentTenantSignedAt,
-		TerminationAgreementDocumentUrl:                     input.TerminationAgreementDocumentUrl,
+		Status:                          input.Status,
+		UnitId:                          input.UnitId,
+		TenantId:                        input.TenantId,
+		TenantApplicationId:             input.TenantApplicationId,
+		RentFee:                         input.RentFee,
+		RentFeeCurrency:                 input.RentFeeCurrency,
+		PaymentFrequency:                input.PaymentFrequency,
+		Meta:                            *metaJson,
+		MoveInDate:                      input.MoveInDate,
+		StayDurationFrequency:           input.StayDurationFrequency,
+		StayDuration:                    input.StayDuration,
+		KeyHandoverDate:                 input.KeyHandoverDate,
+		UtilityTransfersDate:            input.UtilityTransfersDate,
+		PropertyInspectionDate:          input.PropertyInspectionDate,
+		LeaseAgreementDocumentUrl:       input.LeaseAgreementDocumentUrl,
+		TerminationAgreementDocumentUrl: input.TerminationAgreementDocumentUrl,
 		TerminationAgreementDocumentPropertyManagerSignedAt: input.TerminationAgreementDocumentPropertyManagerSignedAt,
 	}
 
@@ -207,14 +203,6 @@ func (s *leaseService) UpdateLease(ctx context.Context, input UpdateLeaseInput) 
 	lease.UtilityTransfersDate = input.UtilityTransfersDate
 
 	lease.PropertyInspectionDate = input.PropertyInspectionDate
-
-	lease.LeaseAggreementDocumentMode = input.LeaseAggreementDocumentMode
-
-	lease.LeaseAgreementDocumentPropertyManagerSignedById = input.LeaseAgreementDocumentPropertyManagerSignedById
-
-	lease.LeaseAgreementDocumentPropertyManagerSignedAt = input.LeaseAgreementDocumentPropertyManagerSignedAt
-
-	lease.LeaseAgreementDocumentTenantSignedAt = input.LeaseAgreementDocumentTenantSignedAt
 
 	lease.TerminationAgreementDocumentUrl = input.TerminationAgreementDocumentUrl
 

@@ -3,7 +3,10 @@ package models
 import (
 	"time"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/getsentry/raven-go"
 	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 // Lease Statuses
@@ -16,6 +19,7 @@ import (
 // Lease represents a lease agreement in the system.
 type Lease struct {
 	BaseModelSoftDelete
+	Code   string `gorm:"not null;uniqueIndex;"`                          // unique lease code for reference, e.g. "2602ABC123-1"
 	Status string `gorm:"not null;default:'Lease.Status.Pending';index;"` // Lease.Status.Pending, Lease.Status.Active, Lease.Status.Terminated, Lease.Status.Completed, Lease.Status.Cancelled
 
 	UnitId string `gorm:"not null;"`
@@ -45,13 +49,7 @@ type Lease struct {
 	PropertyInspectionDate *time.Time // a move-in checklist can be created in the process.
 
 	// docs setup
-	LeaseAggreementDocumentMode *string // MANUAL | ONLINE
-	LeaseAgreementDocumentUrl   string
-	// with the initial lease agreement, because they'd be signed before the lease is created, they might not need the other info below
-	LeaseAgreementDocumentPropertyManagerSignedById *string
-	LeaseAgreementDocumentPropertyManagerSignedBy   *ClientUser
-	LeaseAgreementDocumentPropertyManagerSignedAt   *time.Time
-	LeaseAgreementDocumentTenantSignedAt            *time.Time
+	LeaseAgreementDocumentUrl string
 
 	TerminationAgreementDocumentUrl                       *string
 	TerminationAgreementDocumentPropertyManagerSignedAt   *time.Time
@@ -78,4 +76,18 @@ type Lease struct {
 	// for lease renewals and extensions
 	ParentLeaseId *string `gorm:"index;"`
 	ParentLease   *Lease
+}
+
+func (t *Lease) BeforeCreate(tx *gorm.DB) error {
+	uniqueCode, genErr := lib.GenerateCode(tx, &Lease{})
+	if genErr != nil {
+		raven.CaptureError(genErr, map[string]string{
+			"function": "BeforeCreateLeaseHook",
+			"action":   "Generating a unique code",
+		})
+		return genErr
+	}
+
+	t.Code = *uniqueCode
+	return nil
 }

@@ -46,7 +46,7 @@ type TenantApplication struct {
 	LeaseAggreementDocumentMode *string // MANUAL | ONLINE
 	LeaseAgreementDocumentUrl   *string
 
-	// OFFLINE
+	// ONLINE
 	LeaseAgreementDocumentID     *string
 	LeaseAgreementDocument       *Document
 	LeaseAgreementDocumentStatus *string // "DRAFT" | "FINALIZED" | "SIGNING" | "SIGNED"

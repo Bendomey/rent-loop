@@ -37,8 +37,8 @@ type CreateDocumentRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			body	body		CreateDocumentRequest						true	"Document details"
-//	@Success		201		{object}	object{data=transformations.OutputDocument}	"Document created successfully"
+//	@Param			body	body		CreateDocumentRequest								true	"Document details"
+//	@Success		201		{object}	object{data=transformations.OutputAdminDocument}	"Document created successfully"
 //	@Failure		400		{object}	lib.HTTPError
 //	@Failure		401		{object}	string
 //	@Failure		500		{object}	string
@@ -85,7 +85,7 @@ func (h *DocumentHandler) CreateDocument(w http.ResponseWriter, r *http.Request)
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBDocumentToRestDocument(document),
+		"data": transformations.DBAdminDocumentToRestDocument(document),
 	})
 }
 
@@ -105,9 +105,9 @@ type UpdateDocumentRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			document_id	path		string										true	"Document ID"	format(uuid4)
-//	@Param			body		body		UpdateDocumentRequest						true	"Document details"
-//	@Success		200			{object}	object{data=transformations.OutputDocument}	"Document Updated successfully"
+//	@Param			document_id	path		string												true	"Document ID"	format(uuid4)
+//	@Param			body		body		UpdateDocumentRequest								true	"Document details"
+//	@Success		200			{object}	object{data=transformations.OutputAdminDocument}	"Document Updated successfully"
 //	@Failure		400			{object}	lib.HTTPError
 //	@Failure		401			{object}	string
 //	@Failure		500			{object}	string
@@ -158,7 +158,7 @@ func (h *DocumentHandler) UpdateDocument(w http.ResponseWriter, r *http.Request)
 	}
 
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBDocumentToRestDocument(document),
+		"data": transformations.DBAdminDocumentToRestDocument(document),
 	})
 }
 
@@ -202,7 +202,7 @@ type GetDocumentWithPopulateQuery struct {
 //	@Produce		json
 //	@Param			document_id	path		string							true	"Document ID"
 //	@Param			q			query		GetDocumentWithPopulateQuery	true	"Client user"
-//	@Success		200			{object}	object{data=transformations.OutputDocument}
+//	@Success		200			{object}	object{data=transformations.OutputAdminDocument}
 //	@Failure		400			{object}	lib.HTTPError
 //	@Failure		401			{object}	string
 //	@Failure		500			{object}	string
@@ -224,7 +224,7 @@ func (h *DocumentHandler) GetDocumentById(w http.ResponseWriter, r *http.Request
 	}
 
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBDocumentToRestDocument(document),
+		"data": transformations.DBAdminDocumentToRestDocument(document),
 	})
 }
 
@@ -247,7 +247,7 @@ type ListDocumentsFilterRequest struct {
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Param			q	query		ListDocumentsFilterRequest	true	"Documents"
-//	@Success		200	{object}	object{data=object{rows=[]transformations.OutputDocument,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Success		200	{object}	object{data=object{rows=[]transformations.OutputAdminDocument,meta=lib.HTTPReturnPaginatedMetaResponse}}
 //	@Failure		400	{object}	lib.HTTPError
 //	@Failure		401	{object}	string
 //	@Failure		500	{object}	string
@@ -313,7 +313,7 @@ func (h *DocumentHandler) ListDocuments(w http.ResponseWriter, r *http.Request) 
 	for _, document := range documents {
 		documentsTransformed = append(
 			documentsTransformed,
-			transformations.DBDocumentToRestDocument(&document),
+			transformations.DBAdminDocumentToRestDocument(&document),
 		)
 	}
 

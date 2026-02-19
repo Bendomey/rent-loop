@@ -66,11 +66,11 @@ type CreateTenantApplicationRequest struct {
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Produce		json
-//	@Param			body	body		CreateTenantApplicationRequest							true	"Create Tenant Application Request Body"
-//	@Success		201		{object}	object{data=transformations.OutputTenantApplication}	"Tenant application created successfully"
-//	@Failure		400		{object}	lib.HTTPError											"Error occurred when creating a tenant application"
-//	@Failure		422		{object}	lib.HTTPError											"Validation error"
-//	@Failure		500		{object}	string													"An unexpected error occurred"
+//	@Param			body	body		CreateTenantApplicationRequest								true	"Create Tenant Application Request Body"
+//	@Success		201		{object}	object{data=transformations.OutputAdminTenantApplication}	"Tenant application created successfully"
+//	@Failure		400		{object}	lib.HTTPError												"Error occurred when creating a tenant application"
+//	@Failure		422		{object}	lib.HTTPError												"Validation error"
+//	@Failure		500		{object}	string														"An unexpected error occurred"
 //	@Router			/api/v1/tenant-applications [post]
 func (h *TenantApplicationHandler) CreateTenantApplication(w http.ResponseWriter, r *http.Request) {
 	var body CreateTenantApplicationRequest
@@ -118,7 +118,7 @@ func (h *TenantApplicationHandler) CreateTenantApplication(w http.ResponseWriter
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBTenantApplicationToRest(tenantApplication),
+		"data": transformations.DBAdminTenantApplicationToRest(tenantApplication),
 	})
 }
 
@@ -205,7 +205,7 @@ type ListTenantApplicationsQuery struct {
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Param			q	query		ListTenantApplicationsQuery	true	"Tenant applications"
-//	@Success		200	{object}	object{data=object{rows=[]transformations.OutputTenantApplication,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Success		200	{object}	object{data=object{rows=[]transformations.OutputAdminTenantApplication,meta=lib.HTTPReturnPaginatedMetaResponse}}
 //	@Failure		400	{object}	lib.HTTPError	"An error occurred while filtering tenant applications"
 //	@Failure		401	{object}	string			"Absent or invalid authentication token"
 //	@Failure		500	{object}	string			"An unexpected error occurred"
@@ -255,7 +255,7 @@ func (h *TenantApplicationHandler) ListTenantApplications(w http.ResponseWriter,
 	for _, tenantApplication := range tenantApplications {
 		tenantApplicationsTransformed = append(
 			tenantApplicationsTransformed,
-			transformations.DBTenantApplicationToRest(&tenantApplication),
+			transformations.DBAdminTenantApplicationToRest(&tenantApplication),
 		)
 	}
 
@@ -275,13 +275,13 @@ type GetTenantApplicationQuery struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			tenant_application_id	path		string													true	"Tenant application ID"
-//	@Param			q						query		GetTenantApplicationQuery								true	"Tenant application"
-//	@Success		200						{object}	object{data=transformations.OutputTenantApplication}	"Tenant application retrieved successfully"
-//	@Failure		400						{object}	lib.HTTPError											"Error occurred when fetching a tenant application"
-//	@Failure		401						{object}	string													"Invalid or absent authentication token"
-//	@Failure		404						{object}	lib.HTTPError											"Tenant application not found"
-//	@Failure		500						{object}	string													"An unexpected error occurred"
+//	@Param			tenant_application_id	path		string														true	"Tenant application ID"
+//	@Param			q						query		GetTenantApplicationQuery									true	"Tenant application"
+//	@Success		200						{object}	object{data=transformations.OutputAdminTenantApplication}	"Tenant application retrieved successfully"
+//	@Failure		400						{object}	lib.HTTPError												"Error occurred when fetching a tenant application"
+//	@Failure		401						{object}	string														"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError												"Tenant application not found"
+//	@Failure		500						{object}	string														"An unexpected error occurred"
 //	@Router			/api/v1/tenant-applications/{tenant_application_id} [get]
 func (h *TenantApplicationHandler) GetTenantApplication(w http.ResponseWriter, r *http.Request) {
 	populate := GetPopulateFields(r)
@@ -299,7 +299,7 @@ func (h *TenantApplicationHandler) GetTenantApplication(w http.ResponseWriter, r
 	}
 
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBTenantApplicationToRest(tenantApplication),
+		"data": transformations.DBAdminTenantApplicationToRest(tenantApplication),
 	})
 }
 
@@ -357,14 +357,14 @@ type UpdateTenantApplicationRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			tenant_application_id	path		string													true	"Tenant application ID"
-//	@Param			body					body		UpdateTenantApplicationRequest							true	"Update Tenant Application Request Body"
-//	@Success		200						{object}	object{data=transformations.OutputTenantApplication}	"Tenant application updated successfully"
-//	@Failure		400						{object}	lib.HTTPError											"Error occurred when updating a tenant application"
-//	@Failure		401						{object}	string													"Invalid or absent authentication token"
-//	@Failure		404						{object}	lib.HTTPError											"Tenant application not found"
-//	@Failure		422						{object}	lib.HTTPError											"Validation error"
-//	@Failure		500						{object}	string													"An unexpected error occurred"
+//	@Param			tenant_application_id	path		string														true	"Tenant application ID"
+//	@Param			body					body		UpdateTenantApplicationRequest								true	"Update Tenant Application Request Body"
+//	@Success		200						{object}	object{data=transformations.OutputAdminTenantApplication}	"Tenant application updated successfully"
+//	@Failure		400						{object}	lib.HTTPError												"Error occurred when updating a tenant application"
+//	@Failure		401						{object}	string														"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError												"Tenant application not found"
+//	@Failure		422						{object}	lib.HTTPError												"Validation error"
+//	@Failure		500						{object}	string														"An unexpected error occurred"
 //	@Router			/api/v1/tenant-applications/{tenant_application_id} [patch]
 func (h *TenantApplicationHandler) UpdateTenantApplication(w http.ResponseWriter, r *http.Request) {
 	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
@@ -436,7 +436,7 @@ func (h *TenantApplicationHandler) UpdateTenantApplication(w http.ResponseWriter
 	}
 
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBTenantApplicationToRest(tenantApplication),
+		"data": transformations.DBAdminTenantApplicationToRest(tenantApplication),
 	})
 }
 
