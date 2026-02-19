@@ -13,6 +13,7 @@ type SigningRepository interface {
 	GetSigningTokenByToken(ctx context.Context, tokenStr string, populate *[]string) (*models.SigningToken, error)
 	UpdateSigningToken(ctx context.Context, token *models.SigningToken) error
 	CreateDocumentSignature(ctx context.Context, sig *models.DocumentSignature) error
+	GetDocumentSignatureByQuery(ctx context.Context, query map[string]any) (*models.DocumentSignature, error)
 }
 
 type signingRepository struct {
@@ -56,4 +57,18 @@ func (r *signingRepository) CreateDocumentSignature(
 	sig *models.DocumentSignature,
 ) error {
 	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Create(sig).Error
+}
+
+func (r *signingRepository) GetDocumentSignatureByQuery(
+	ctx context.Context,
+	query map[string]any,
+) (*models.DocumentSignature, error) {
+	var sig models.DocumentSignature
+	result := r.DB.WithContext(ctx).Where(query).First(&sig)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &sig, nil
 }

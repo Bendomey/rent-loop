@@ -16,6 +16,7 @@ type SigningService interface {
 	GenerateToken(ctx context.Context, input GenerateTokenInput) (*models.SigningToken, error)
 	VerifyToken(ctx context.Context, tokenStr string, populate *[]string) (*models.SigningToken, error)
 	SignDocument(ctx context.Context, input SignDocumentInput) (*models.DocumentSignature, error)
+	SignDocumentByPM(ctx context.Context, input SignDocumentPMInput) (*models.DocumentSignature, error)
 }
 
 type signingService struct {
@@ -196,6 +197,63 @@ func (s *signingService) SignDocument(
 			Metadata: map[string]string{
 				"function": "SignDocument",
 				"action":   "committing transaction",
+			},
+		})
+	}
+
+	return sig, nil
+}
+
+type SignDocumentPMInput struct {
+	DocumentID          string
+	SignatureUrl        string
+	TenantApplicationID *string
+	LeaseID             *string
+	SignedByID          string
+}
+
+func (s *signingService) SignDocumentByPM(
+	ctx context.Context,
+	input SignDocumentPMInput,
+) (*models.DocumentSignature, error) {
+	// check and make sure PM has not signed yet
+	existingSig, err := s.repo.GetDocumentSignatureByQuery(ctx, map[string]any{
+		"document_id":           input.DocumentID,
+		"role":                  "PROPERTY_MANAGER",
+		"tenant_application_id": input.TenantApplicationID,
+		"lease_id":              input.LeaseID,
+	})
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+				Err: err,
+				Metadata: map[string]string{
+					"function": "SignDocumentByPM",
+					"action":   "checking for existing PM signature",
+				},
+			})
+		}
+	}
+
+	if existingSig != nil {
+		return nil, pkg.BadRequestError("PMSignatureAlreadyExists", nil)
+	}
+
+	sig := &models.DocumentSignature{
+		DocumentID:          input.DocumentID,
+		TenantApplicationID: input.TenantApplicationID,
+		LeaseID:             input.LeaseID,
+		Role:                "PROPERTY_MANAGER",
+		SignatureUrl:        input.SignatureUrl,
+		SignedByID:          &input.SignedByID,
+	}
+
+	if createErr := s.repo.CreateDocumentSignature(ctx, sig); createErr != nil {
+		return nil, pkg.InternalServerError(createErr.Error(), &pkg.RentLoopErrorParams{
+			Err: createErr,
+			Metadata: map[string]string{
+				"function": "SignDocumentByPM",
+				"action":   "creating document signature",
 			},
 		})
 	}

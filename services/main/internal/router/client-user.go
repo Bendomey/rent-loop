@@ -158,8 +158,14 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					Patch("/{tenant_application_id}/approve", handlers.TenantApplicationHandler.ApproveTenantApplication)
 			})
 
-			// signing (authenticated — generate tokens)
-			r.Post("/v1/signing", handlers.SigningHandler.GenerateToken)
+			r.Route("/v1/signing", func(r chi.Router) {
+				// signing - generate tokens
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Post("/", handlers.SigningHandler.GenerateToken)
+
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Post("/direct", handlers.SigningHandler.SignDocumentPM)
+			})
 
 			r.Get("/v1/tenants/{tenant_id}/leases", handlers.LeaseHandler.ListLeasesByTenant)
 

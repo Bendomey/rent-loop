@@ -6100,6 +6100,63 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/signing/direct": {
+            "post": {
+                "description": "Submit a signature for a document using tenant application or lease context (for PMs)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Signing"
+                ],
+                "summary": "Submit a signature",
+                "parameters": [
+                    {
+                        "description": "Signature details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SignDocumentPMRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Signature created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputDocumentSignature"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/signing/{token}/sign": {
             "post": {
                 "description": "Submit a signature for a document using a signing token",
@@ -8356,6 +8413,27 @@ const docTemplate = `{
                 "unit_id": {
                     "type": "string",
                     "example": "b4d0243c-6581-4104-8185-d83a45ebe41b"
+                }
+            }
+        },
+        "handlers.SignDocumentPMRequest": {
+            "type": "object",
+            "required": [
+                "document_id",
+                "signature_url"
+            ],
+            "properties": {
+                "document_id": {
+                    "type": "string"
+                },
+                "lease_id": {
+                    "type": "string"
+                },
+                "signature_url": {
+                    "type": "string"
+                },
+                "tenant_application_id": {
+                    "type": "string"
                 }
             }
         },

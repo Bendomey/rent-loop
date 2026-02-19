@@ -687,6 +687,20 @@ definitions:
     required:
     - unit_id
     type: object
+  handlers.SignDocumentPMRequest:
+    properties:
+      document_id:
+        type: string
+      lease_id:
+        type: string
+      signature_url:
+        type: string
+      tenant_application_id:
+        type: string
+    required:
+    - document_id
+    - signature_url
+    type: object
   handlers.SignDocumentRequest:
     properties:
       signature_url:
@@ -6803,6 +6817,44 @@ paths:
           schema:
             $ref: '#/definitions/lib.HTTPError'
       summary: Verify a signing token
+      tags:
+      - Signing
+  /api/v1/signing/direct:
+    post:
+      consumes:
+      - application/json
+      description: Submit a signature for a document using tenant application or lease
+        context (for PMs)
+      parameters:
+      - description: Signature details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SignDocumentPMRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Signature created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputDocumentSignature'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Submit a signature
       tags:
       - Signing
   /api/v1/tenant-applications:

@@ -93,8 +93,8 @@ type VerifySigningTokenQuery struct {
 //	@Description	Validate a signing token and return document + signer info
 //	@Tags			Signing
 //	@Produce		json
-//	@Param			token	path		string	true	"Signing token"
-//	@Param			q			query		VerifySigningTokenQuery									true	"Query parameters for token verification"
+//	@Param			token	path		string											true	"Signing token"
+//	@Param			q		query		VerifySigningTokenQuery							true	"Query parameters for token verification"
 //	@Success		200		{object}	object{data=transformations.OutputSigningToken}	"Token verified successfully"
 //	@Failure		400		{object}	lib.HTTPError
 //	@Failure		404		{object}	lib.HTTPError
@@ -162,6 +162,61 @@ func (h *SigningHandler) SignDocument(w http.ResponseWriter, r *http.Request) {
 		SignatureUrl: body.SignatureUrl,
 		SignerName:   body.SignerName,
 		IPAddress:    ipAddress,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBDocumentSignatureToRest(sig),
+	})
+}
+
+type SignDocumentPMRequest struct {
+	DocumentID          string  `json:"document_id"           validate:"required,uuid4"`
+	SignatureUrl        string  `json:"signature_url"         validate:"required,url"`
+	TenantApplicationID *string `json:"tenant_application_id" validate:"omitempty,uuid4"`
+	LeaseID             *string `json:"lease_id"              validate:"omitempty,uuid4"`
+}
+
+// SignDocumentPM godoc
+//
+//	@Summary		Submit a signature
+//	@Description	Submit a signature for a document using tenant application or lease context (for PMs)
+//	@Tags			Signing
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		SignDocumentPMRequest									true	"Signature details"
+//	@Success		201		{object}	object{data=transformations.OutputDocumentSignature}	"Signature created"
+//	@Failure		400		{object}	lib.HTTPError
+//	@Failure		404		{object}	lib.HTTPError
+//	@Failure		500		{object}	string
+//	@Router			/api/v1/signing/direct [post]
+func (h *SigningHandler) SignDocumentPM(w http.ResponseWriter, r *http.Request) {
+	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
+	if !currentUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body SignDocumentPMRequest
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
+		return
+	}
+
+	sig, err := h.service.SignDocumentByPM(r.Context(), services.SignDocumentPMInput{
+		DocumentID:          body.DocumentID,
+		SignatureUrl:        body.SignatureUrl,
+		TenantApplicationID: body.TenantApplicationID,
+		LeaseID:             body.LeaseID,
+		SignedByID:          currentUser.ID,
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)
