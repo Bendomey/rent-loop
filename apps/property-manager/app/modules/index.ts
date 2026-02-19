@@ -66,6 +66,8 @@ export * from './properties/property/tenants/applications/application/docs'
 export * from './properties/property/tenants/applications/application/docs/lease-editor'
 export * from './properties/property/tenants/applications/application/docs/lease-signing'
 
+export * from './public-signing'
+
 export * from './properties/property/activities/announcements'
 export * from './properties/property/activities/inspections'
 export * from './properties/property/activities/maintenance-requests'
