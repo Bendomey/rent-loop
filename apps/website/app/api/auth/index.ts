@@ -6,7 +6,7 @@ import { fetchClient } from '~/lib/transport'
 // request OTP code
 
 interface GetOtpCodeInput {
-	channel: OTP['channel']
+	channel: Array<OTP['channel']>
 	phone?: Maybe<string>
 	email?: Maybe<string>
 }
