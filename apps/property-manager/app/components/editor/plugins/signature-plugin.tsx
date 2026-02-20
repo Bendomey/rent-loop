@@ -37,7 +37,12 @@ export function InsertSignatureDialog({
 	activeEditor,
 	onClose,
 }: {
-	activeEditor: { dispatchCommand: (cmd: LexicalCommand<InsertSignaturePayload>, payload: InsertSignaturePayload) => boolean }
+	activeEditor: {
+		dispatchCommand: (
+			cmd: LexicalCommand<InsertSignaturePayload>,
+			payload: InsertSignaturePayload,
+		) => boolean
+	}
 	onClose: () => void
 }): JSX.Element {
 	const [role, setRole] = useState<SignatureRole | ''>('')
@@ -52,10 +57,7 @@ export function InsertSignatureDialog({
 		<div className="grid gap-4 py-4">
 			<div className="grid gap-2">
 				<Label>Signer Role</Label>
-				<Select
-					value={role}
-					onValueChange={(v) => setRole(v as SignatureRole)}
-				>
+				<Select value={role} onValueChange={(v) => setRole(v as SignatureRole)}>
 					<SelectTrigger>
 						<SelectValue placeholder="Select who will sign here" />
 					</SelectTrigger>
@@ -73,11 +75,7 @@ export function InsertSignatureDialog({
 				</Select>
 			</div>
 			<DialogFooter>
-				<Button
-					type="submit"
-					disabled={!role}
-					onClick={handleInsert}
-				>
+				<Button type="submit" disabled={!role} onClick={handleInsert}>
 					Insert Signature Block
 				</Button>
 			</DialogFooter>
@@ -90,9 +88,7 @@ export function SignaturePlugin(): JSX.Element | null {
 
 	useEffect(() => {
 		if (!editor.hasNodes([SignatureNode])) {
-			throw new Error(
-				'SignaturePlugin: SignatureNode not registered on editor',
-			)
+			throw new Error('SignaturePlugin: SignatureNode not registered on editor')
 		}
 
 		return editor.registerCommand<InsertSignaturePayload>(
@@ -101,10 +97,7 @@ export function SignaturePlugin(): JSX.Element | null {
 				const signatureNode = $createSignatureNode(payload)
 				$insertNodes([signatureNode])
 				if ($isRootOrShadowRoot(signatureNode.getParentOrThrow())) {
-					$wrapNodeInElement(
-						signatureNode,
-						$createParagraphNode,
-					).selectEnd()
+					$wrapNodeInElement(signatureNode, $createParagraphNode).selectEnd()
 				}
 				return true
 			},

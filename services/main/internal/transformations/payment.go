@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
+	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/gofrs/uuid"
 )
 
@@ -30,15 +31,20 @@ type OutputPayment struct {
 	UpdatedAt time.Time `json:"updated_at" example:"2023-01-01T00:00:00Z" format:"date-time" description:"Timestamp when the payment was last updated"`
 }
 
-func DBPaymentToRest(p *models.Payment) interface{} {
+func DBPaymentToRest(services services.Services, p *models.Payment) (any, error) {
 	if p == nil || p.ID == uuid.Nil {
-		return nil
+		return nil, nil
+	}
+
+	invoice, invoiceErr := DBInvoiceToRest(services, &p.Invoice)
+	if invoiceErr != nil {
+		return nil, invoiceErr
 	}
 
 	data := map[string]interface{}{
 		"id":            p.ID.String(),
 		"invoice_id":    p.InvoiceID,
-		"invoice":       DBInvoiceToRest(&p.Invoice),
+		"invoice":       invoice,
 		"rail":          p.Rail,
 		"provider":      p.Provider,
 		"amount":        p.Amount,
@@ -52,17 +58,22 @@ func DBPaymentToRest(p *models.Payment) interface{} {
 		"updated_at":    p.UpdatedAt,
 	}
 
-	return data
+	return data, nil
 }
 
-func DBPaymentsToRest(payments *[]models.Payment) []interface{} {
+func DBPaymentsToRest(services services.Services, payments *[]models.Payment) []interface{} {
 	if payments == nil {
 		return []interface{}{}
 	}
 
 	result := make([]interface{}, len(*payments))
 	for i, p := range *payments {
-		result[i] = DBPaymentToRest(&p)
+		payment, paymentErr := DBPaymentToRest(services, &p)
+		if paymentErr != nil {
+			return nil
+		}
+
+		result[i] = payment
 	}
 	return result
 }

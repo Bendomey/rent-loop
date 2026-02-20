@@ -42,11 +42,9 @@ export function LeaseSigningModule() {
 		}, 500)
 	}
 
-	const signerName = [
-		tenantApplication.created_by?.name,
-	]
-		.filter(Boolean)
-		.join(' ') || 'Property Manager'
+	const signerName =
+		[tenantApplication.created_by?.name].filter(Boolean).join(' ') ||
+		'Property Manager'
 
 	return (
 		<SigningView

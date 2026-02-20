@@ -40,7 +40,7 @@ export function PropertyTenantApplicationDocs() {
 	const property_id = clientUserProperty?.property?.id
 	const attachedDoc = mockAttachedDoc
 
-	if(!loaderData?.tenantApplication) return null
+	if (!loaderData?.tenantApplication) return null
 
 	return (
 		<Card className="shadow-none">

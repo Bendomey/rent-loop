@@ -16,24 +16,31 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const tenantApplication = await getPropertyTenantApplicationForServer(
 		{
 			id: params.applicationId,
-			populate: ['DesiredUnit', 'CreatedBy', 'CompletedBy', 'CancelledBy', 'LeaseAgreementDocument', 'LeaseAgreementDocumentSignatures'],
+			populate: [
+				'DesiredUnit',
+				'CreatedBy',
+				'CompletedBy',
+				'CancelledBy',
+				'LeaseAgreementDocument',
+				'LeaseAgreementDocumentSignatures',
+			],
 		},
 		{
 			baseUrl,
 			authToken: authSession.get('authToken'),
-		}
+		},
 	)
-	
 
 	return {
 		origin: getDomainUrl(request),
 		clientUserProperty,
-		tenantApplication
+		tenantApplication,
 	}
 }
 
 export const handle = {
-	breadcrumb: (data: Awaited<ReturnType<typeof loader>>) => data?.tenantApplication?.code ?? "Tenant Application"
+	breadcrumb: (data: Awaited<ReturnType<typeof loader>>) =>
+		data?.tenantApplication?.code ?? 'Tenant Application',
 }
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {

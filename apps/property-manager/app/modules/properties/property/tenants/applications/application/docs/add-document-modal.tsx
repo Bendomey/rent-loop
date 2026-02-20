@@ -172,10 +172,7 @@ export function AddDocumentModal({
 					<Button variant="outline" onClick={() => onOpenChange(false)}>
 						Cancel
 					</Button>
-					<Button
-						disabled={!canSave || isSaving}
-						onClick={handleSave}
-					>
+					<Button disabled={!canSave || isSaving} onClick={handleSave}>
 						{(isSaving || isUploading) && (
 							<Loader2 className="size-4 animate-spin" />
 						)}

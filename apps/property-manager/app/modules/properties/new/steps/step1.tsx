@@ -32,7 +32,7 @@ const ValidationSchema = z.object({
 		.string()
 		.max(500, 'Description must be less than 500 characters')
 		.optional(),
-	tags: z.array(z.string().min(1).max(10)).optional(),
+	tags: z.array(z.string().min(1)).optional(),
 })
 
 export type FormSchema = z.infer<typeof ValidationSchema>

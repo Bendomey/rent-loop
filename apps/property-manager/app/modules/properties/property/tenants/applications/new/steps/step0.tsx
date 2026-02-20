@@ -264,7 +264,7 @@ export function Step0() {
 					desired_unit: {
 						id: watch('desired_unit_id'),
 						name: watch('desired_unit'),
-					}
+					},
 				}}
 				admin_id={admin_id}
 			/>

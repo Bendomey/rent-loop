@@ -24,13 +24,15 @@ export function AttachedDocumentView({
 }: AttachedDocumentViewProps) {
 	const { propertyId, applicationId } = useParams()
 	const isManual = tenantApplication.lease_agreement_document_mode === 'MANUAL'
-	const adminSignature = tenantApplication.lease_agreement_document_signatures?.find(
-		(signature) => signature.role === 'PROPERTY_MANAGER'
-	)
+	const adminSignature =
+		tenantApplication.lease_agreement_document_signatures?.find(
+			(signature) => signature.role === 'PROPERTY_MANAGER',
+		)
 	const adminSigned = Boolean(adminSignature)
-	const tenantSignature = tenantApplication.lease_agreement_document_signatures?.find(
-		(signature) => signature.role === 'TENANT'
-	)
+	const tenantSignature =
+		tenantApplication.lease_agreement_document_signatures?.find(
+			(signature) => signature.role === 'TENANT',
+		)
 	const tenantSigned = Boolean(tenantSignature)
 
 	return (
@@ -47,7 +49,9 @@ export function AttachedDocumentView({
 						</span>
 					</Badge>
 					<div>
-						<p className="text-sm font-medium">{tenantApplication.lease_agreement_document?.title}</p>
+						<p className="text-sm font-medium">
+							{tenantApplication.lease_agreement_document?.title}
+						</p>
 						<p className="text-xs text-zinc-500">
 							{isManual ? 'Manually uploaded' : 'Selected from library'}
 						</p>

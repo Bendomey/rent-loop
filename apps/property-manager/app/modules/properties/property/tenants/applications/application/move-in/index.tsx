@@ -63,7 +63,7 @@ interface FieldDisplayProps {
 function FieldDisplay({ label, value }: FieldDisplayProps) {
 	return (
 		<div>
-			<p className="text-sm text-muted-foreground">{label}</p>
+			<p className="text-muted-foreground text-sm">{label}</p>
 			<p className="text-sm font-medium">{value || '-'}</p>
 		</div>
 	)
@@ -100,7 +100,8 @@ export function PropertyTenantApplicationMoveIn() {
 			{
 				id: application.id,
 				data: {
-					desired_move_in_date: data.desired_move_in_date.toISOString() as unknown as Date,
+					desired_move_in_date:
+						data.desired_move_in_date.toISOString() as unknown as Date,
 					stay_duration_frequency: data.stay_duration_frequency,
 					stay_duration: data.stay_duration,
 				},
@@ -138,7 +139,7 @@ export function PropertyTenantApplicationMoveIn() {
 								<Pencil className="mr-1 h-4 w-4" />
 								Edit
 							</Button>
-						)} 
+						)}
 					</CardTitle>
 					<CardDescription>Move-in details for the tenant.</CardDescription>
 				</CardHeader>
@@ -149,7 +150,9 @@ export function PropertyTenantApplicationMoveIn() {
 							label="Desired Move-In Date"
 							value={
 								application?.desired_move_in_date
-									? dayjs(application.desired_move_in_date).format('MMM D, YYYY')
+									? dayjs(application.desired_move_in_date).format(
+											'MMM D, YYYY',
+										)
 									: undefined
 							}
 						/>
@@ -253,11 +256,17 @@ export function PropertyTenantApplicationMoveIn() {
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>
-												Stay Duration{' '}
-												<span className="text-red-500">*</span>
+												Stay Duration <span className="text-red-500">*</span>
 											</FormLabel>
 											<FormControl>
-												<Input type="number" min={1} {...field} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
+												<Input
+													type="number"
+													min={1}
+													{...field}
+													onChange={(e) =>
+														field.onChange(e.target.valueAsNumber)
+													}
+												/>
 											</FormControl>
 											<FormMessage />
 										</FormItem>

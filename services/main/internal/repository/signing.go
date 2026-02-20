@@ -14,6 +14,16 @@ type SigningRepository interface {
 	UpdateSigningToken(ctx context.Context, token *models.SigningToken) error
 	CreateDocumentSignature(ctx context.Context, sig *models.DocumentSignature) error
 	GetDocumentSignatureByQuery(ctx context.Context, query map[string]any) (*models.DocumentSignature, error)
+	ListDocumentSignatures(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters ListDocumentSignaturesFilter,
+	) (*[]models.DocumentSignature, error)
+	CountDocumentSignatures(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters ListDocumentSignaturesFilter,
+	) (int64, error)
 }
 
 type signingRepository struct {
@@ -71,4 +81,120 @@ func (r *signingRepository) GetDocumentSignatureByQuery(
 	}
 
 	return &sig, nil
+}
+
+type ListDocumentSignaturesFilter struct {
+	DocumentID          *string
+	TenantApplicationID *string
+	LeaseID             *string
+	Role                *string
+	SignedByID          *string
+	IDs                 *[]string
+}
+
+func DocumentSignatureDocumentIDScope(documentID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if documentID == nil {
+			return db
+		}
+		return db.Where("document_signatures.document_id = ?", *documentID)
+	}
+}
+
+func DocumentSignatureTenantApplicationIDScope(tenantApplicationID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if tenantApplicationID == nil {
+			return db
+		}
+		return db.Where("document_signatures.tenant_application_id = ?", *tenantApplicationID)
+	}
+}
+
+func DocumentSignatureLeaseIDScope(leaseID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if leaseID == nil {
+			return db
+		}
+		return db.Where("document_signatures.lease_id = ?", *leaseID)
+	}
+}
+
+func DocumentSignatureRoleScope(role *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if role == nil {
+			return db
+		}
+		return db.Where("document_signatures.role = ?", *role)
+	}
+}
+
+func DocumentSignatureSignedByIDScope(signedByID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if signedByID == nil {
+			return db
+		}
+		return db.Where("document_signatures.signed_by_id = ?", *signedByID)
+	}
+}
+
+func (r *signingRepository) ListDocumentSignatures(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters ListDocumentSignaturesFilter,
+) (*[]models.DocumentSignature, error) {
+	var signatures []models.DocumentSignature
+
+	db := r.DB.WithContext(ctx).
+		Scopes(
+			IDsFilterScope("document_signatures", filters.IDs),
+			DateRangeScope("document_signatures", filterQuery.DateRange),
+			DocumentSignatureDocumentIDScope(filters.DocumentID),
+			DocumentSignatureTenantApplicationIDScope(filters.TenantApplicationID),
+			DocumentSignatureLeaseIDScope(filters.LeaseID),
+			DocumentSignatureRoleScope(filters.Role),
+			DocumentSignatureSignedByIDScope(filters.SignedByID),
+			PaginationScope(filterQuery.Page, filterQuery.PageSize),
+			OrderScope("document_signatures", filterQuery.OrderBy, filterQuery.Order),
+		)
+
+	if filterQuery.Populate != nil {
+		for _, field := range *filterQuery.Populate {
+			db = db.Preload(field)
+		}
+	}
+
+	result := db.Find(&signatures)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &signatures, nil
+}
+
+func (r *signingRepository) CountDocumentSignatures(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters ListDocumentSignaturesFilter,
+) (int64, error) {
+	var count int64
+
+	result := r.DB.
+		WithContext(ctx).
+		Model(&models.DocumentSignature{}).
+		Scopes(
+			IDsFilterScope("document_signatures", filters.IDs),
+			DateRangeScope("document_signatures", filterQuery.DateRange),
+			DocumentSignatureDocumentIDScope(filters.DocumentID),
+			DocumentSignatureTenantApplicationIDScope(filters.TenantApplicationID),
+			DocumentSignatureLeaseIDScope(filters.LeaseID),
+			DocumentSignatureRoleScope(filters.Role),
+			DocumentSignatureSignedByIDScope(filters.SignedByID),
+		).
+		Count(&count)
+
+	if result.Error != nil {
+		return 0, result.Error
+	}
+
+	return count, nil
 }

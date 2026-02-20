@@ -34,18 +34,16 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 	documentHandler := NewDocumentHandler(appCtx, services.DocumentService)
 	propertyBlockHandler := NewPropertyBlockHandler(appCtx, services.PropertyBlockService)
 	unitHandler := NewUnitHandler(appCtx, services.UnitService)
-	invoiceHandler := NewInvoiceHandler(appCtx, services.InvoiceService)
-	paymentHandler := NewPaymentHandler(appCtx, services.PaymentService)
+	invoiceHandler := NewInvoiceHandler(appCtx, services)
+	paymentHandler := NewPaymentHandler(appCtx, services)
 
+	signingHandler := NewSigningHandler(appCtx, services)
 	tenantApplicationHandler := NewTenantApplicationHandler(
 		appCtx,
-		services.TenantApplicationService,
-		services.PaymentService,
-		services.InvoiceService,
+		services,
 	)
 	tenantHandler := NewTenantHandler(appCtx, services.TenantService)
-	leaseHandler := NewLeaseHandler(appCtx, services.LeaseService)
-	signingHandler := NewSigningHandler(appCtx, services.SigningService)
+	leaseHandler := NewLeaseHandler(appCtx, services)
 	paymentAccountHandler := NewPaymentAccountHandler(appCtx, services.PaymentAccountService)
 
 	return Handlers{

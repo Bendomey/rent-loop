@@ -188,16 +188,12 @@ export default function SignatureComponent({
 					<div className="text-center text-xs text-zinc-500">
 						{[
 							signedByName,
-							signedAt
-								? new Date(signedAt).toLocaleDateString()
-								: null,
+							signedAt ? new Date(signedAt).toLocaleDateString() : null,
 						]
 							.filter(Boolean)
 							.join(' — ')}
 					</div>
-					<div className="text-xs font-medium text-zinc-400">
-						{label}
-					</div>
+					<div className="text-xs font-medium text-zinc-400">{label}</div>
 				</div>
 			</div>
 		)
@@ -235,31 +231,20 @@ export default function SignatureComponent({
 						<DialogHeader>
 							<DialogTitle>Sign as {label}</DialogTitle>
 							<DialogDescription>
-								Draw your signature in the box below to sign
-								this document.
+								Draw your signature in the box below to sign this document.
 							</DialogDescription>
 						</DialogHeader>
-						<SignaturePad
-							onSignatureChange={handleSignatureChange}
-						/>
+						<SignaturePad onSignatureChange={handleSignatureChange} />
 						<DialogFooter>
-							<Button
-								variant="outline"
-								onClick={() => setShowSignModal(false)}
-							>
+							<Button variant="outline" onClick={() => setShowSignModal(false)}>
 								Cancel
 							</Button>
 							<Button
-								disabled={
-									!hasDrawnSignature ||
-									signingContext.isSigning
-								}
+								disabled={!hasDrawnSignature || signingContext.isSigning}
 								onClick={handleConfirmSignature}
 							>
 								<Pen className="size-4" />
-								{signingContext.isSigning
-									? 'Saving...'
-									: 'Confirm Signature'}
+								{signingContext.isSigning ? 'Saving...' : 'Confirm Signature'}
 							</Button>
 						</DialogFooter>
 					</DialogContent>
@@ -282,9 +267,7 @@ export default function SignatureComponent({
 					<span className="text-sm font-medium text-zinc-400">
 						{label} Signature
 					</span>
-					<span className="text-xs text-zinc-300">
-						Awaiting signature
-					</span>
+					<span className="text-xs text-zinc-300">Awaiting signature</span>
 				</div>
 			</div>
 		)
@@ -312,9 +295,7 @@ export default function SignatureComponent({
 						{label} Signature
 					</span>
 					{!isEditable && (
-						<span className="text-xs text-zinc-400">
-							Double-click to sign
-						</span>
+						<span className="text-xs text-zinc-400">Double-click to sign</span>
 					)}
 				</div>
 			</div>
@@ -324,16 +305,12 @@ export default function SignatureComponent({
 					<DialogHeader>
 						<DialogTitle>Sign as {label}</DialogTitle>
 						<DialogDescription>
-							Draw your signature in the box below to sign this
-							document.
+							Draw your signature in the box below to sign this document.
 						</DialogDescription>
 					</DialogHeader>
 					<SignaturePad onSignatureChange={handleSignatureChange} />
 					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => setShowSignModal(false)}
-						>
+						<Button variant="outline" onClick={() => setShowSignModal(false)}>
 							Cancel
 						</Button>
 						<Button

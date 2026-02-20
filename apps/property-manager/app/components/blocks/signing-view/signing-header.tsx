@@ -32,18 +32,12 @@ export function SigningHeader({
 		<div className="border-b bg-white">
 			<div className="mx-auto flex max-w-4xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
 				<div className="flex items-center space-x-3">
-					<Button
-						onClick={() => navigate(-1)}
-						size="sm"
-						variant="ghost"
-					>
+					<Button onClick={() => navigate(-1)} size="sm" variant="ghost">
 						<ArrowLeft />
 					</Button>
 					<Separator orientation="vertical" className="!h-5" />
 					<div>
-						<h1 className="text-sm font-medium">
-							{documentTitle}
-						</h1>
+						<h1 className="text-sm font-medium">{documentTitle}</h1>
 						<div className="flex items-center gap-2">
 							<span className="text-xs text-zinc-500">
 								Signing as{' '}
@@ -51,10 +45,7 @@ export function SigningHeader({
 									{SIGNATURE_ROLE_LABELS[signerRole]}
 								</span>
 							</span>
-							<Badge
-								variant="outline"
-								className="px-1.5 py-0 text-[10px]"
-							>
+							<Badge variant="outline" className="px-1.5 py-0 text-[10px]">
 								#{applicationCode}
 							</Badge>
 						</div>
@@ -63,10 +54,7 @@ export function SigningHeader({
 
 				<div className="flex items-center gap-3">
 					{signatureStatuses.map((status) => (
-						<div
-							key={status.role}
-							className="flex items-center gap-1.5"
-						>
+						<div key={status.role} className="flex items-center gap-1.5">
 							{status.signed ? (
 								<CheckCircle className="size-4 text-emerald-500" />
 							) : (
@@ -74,9 +62,7 @@ export function SigningHeader({
 							)}
 							<span
 								className={`text-xs ${
-									status.signed
-										? 'text-emerald-600'
-										: 'text-zinc-400'
+									status.signed ? 'text-emerald-600' : 'text-zinc-400'
 								}`}
 							>
 								{SIGNATURE_ROLE_LABELS[status.role]}

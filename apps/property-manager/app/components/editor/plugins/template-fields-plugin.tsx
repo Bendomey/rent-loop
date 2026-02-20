@@ -117,7 +117,9 @@ export function TemplateFieldsPlugin() {
 
 			<Separator className="my-4" />
 
-			<TypographyH4 className="text-zinc-400 mt-4">Signature Blocks</TypographyH4>
+			<TypographyH4 className="mt-4 text-zinc-400">
+				Signature Blocks
+			</TypographyH4>
 			<TypographySmall className="text-xs text-zinc-500">
 				Click to insert a signature placeholder.
 			</TypographySmall>

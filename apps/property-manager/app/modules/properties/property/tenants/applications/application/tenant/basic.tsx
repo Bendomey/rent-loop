@@ -63,7 +63,7 @@ interface FieldDisplayProps {
 function FieldDisplay({ label, value }: FieldDisplayProps) {
 	return (
 		<div>
-			<p className="text-sm text-muted-foreground">{label}</p>
+			<p className="text-muted-foreground text-sm">{label}</p>
 			<p className="text-sm font-medium">{value || '-'}</p>
 		</div>
 	)
@@ -163,38 +163,41 @@ export function PropertyTenantApplicationBasic() {
 							)}
 						</div>
 						<div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-2">
-						<FieldDisplay label="First Name" value={application?.first_name} />
-						<FieldDisplay label="Last Name" value={application?.last_name} />
-						<FieldDisplay
-							label="Other Names"
-							value={application?.other_names}
-						/>
-						<FieldDisplay
-							label="Gender"
-							value={
-								application?.gender
-									? toFirstUpperCase(application.gender)
-									: undefined
-							}
-						/>
-						<FieldDisplay
-							label="Marital Status"
-							value={
-								application?.marital_status
-									? toFirstUpperCase(application.marital_status)
-									: undefined
-							}
-						/>
-						<FieldDisplay label="Email" value={application?.email} />
-						<FieldDisplay label="Phone" value={application?.phone} />
-						<FieldDisplay
-							label="Date of Birth"
-							value={
-								application?.date_of_birth
-									? dayjs(application.date_of_birth).format('MMM D, YYYY')
-									: undefined
-							}
-						/>
+							<FieldDisplay
+								label="First Name"
+								value={application?.first_name}
+							/>
+							<FieldDisplay label="Last Name" value={application?.last_name} />
+							<FieldDisplay
+								label="Other Names"
+								value={application?.other_names}
+							/>
+							<FieldDisplay
+								label="Gender"
+								value={
+									application?.gender
+										? toFirstUpperCase(application.gender)
+										: undefined
+								}
+							/>
+							<FieldDisplay
+								label="Marital Status"
+								value={
+									application?.marital_status
+										? toFirstUpperCase(application.marital_status)
+										: undefined
+								}
+							/>
+							<FieldDisplay label="Email" value={application?.email} />
+							<FieldDisplay label="Phone" value={application?.phone} />
+							<FieldDisplay
+								label="Date of Birth"
+								value={
+									application?.date_of_birth
+										? dayjs(application.date_of_birth).format('MMM D, YYYY')
+										: undefined
+								}
+							/>
 						</div>
 					</div>
 				</CardContent>
@@ -231,10 +234,7 @@ export function PropertyTenantApplicationBasic() {
 					}}
 				/>
 				<Form {...rhfMethods}>
-					<form
-						id="basic-info-form"
-						onSubmit={handleSubmit(onSubmit)}
-					>
+					<form id="basic-info-form" onSubmit={handleSubmit(onSubmit)}>
 						<div className="grid grid-cols-1 gap-5 md:grid-cols-2">
 							<div>
 								<FormField
@@ -321,8 +321,7 @@ export function PropertyTenantApplicationBasic() {
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>
-												Marital Status{' '}
-												<span className="text-red-500">*</span>
+												Marital Status <span className="text-red-500">*</span>
 											</FormLabel>
 											<FormControl>
 												<Select
@@ -335,9 +334,7 @@ export function PropertyTenantApplicationBasic() {
 													<SelectContent>
 														<SelectItem value="SINGLE">Single</SelectItem>
 														<SelectItem value="MARRIED">Married</SelectItem>
-														<SelectItem value="DIVORCED">
-															Divorced
-														</SelectItem>
+														<SelectItem value="DIVORCED">Divorced</SelectItem>
 														<SelectItem value="WIDOWED">Widowed</SelectItem>
 													</SelectContent>
 												</Select>
@@ -386,8 +383,7 @@ export function PropertyTenantApplicationBasic() {
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>
-												Date of birth{' '}
-												<span className="text-red-500">*</span>
+												Date of birth <span className="text-red-500">*</span>
 											</FormLabel>
 											<FormControl>
 												<DatePickerInput

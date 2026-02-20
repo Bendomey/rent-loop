@@ -14,12 +14,13 @@ import (
 )
 
 type LeaseHandler struct {
-	appCtx  pkg.AppContext
-	service services.LeaseService
+	appCtx   pkg.AppContext
+	service  services.LeaseService
+	services services.Services
 }
 
-func NewLeaseHandler(appCtx pkg.AppContext, service services.LeaseService) LeaseHandler {
-	return LeaseHandler{appCtx: appCtx, service: service}
+func NewLeaseHandler(appCtx pkg.AppContext, services services.Services) LeaseHandler {
+	return LeaseHandler{appCtx: appCtx, service: services.LeaseService, services: services}
 }
 
 type UpdateLeaseRequest struct {
@@ -82,8 +83,14 @@ func (h *LeaseHandler) UpdateLease(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	transformed, transformedErr := transformations.DBAdminLeaseToRest(h.services, lease)
+	if transformedErr != nil {
+		HandleErrorResponse(w, transformedErr)
+		return
+	}
+
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBAdminLeaseToRest(lease),
+		"data": transformed,
 	})
 }
 
@@ -122,8 +129,14 @@ func (h *LeaseHandler) GetLeaseByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	transformed, transformedErr := transformations.DBAdminLeaseToRest(h.services, lease)
+	if transformedErr != nil {
+		HandleErrorResponse(w, transformedErr)
+		return
+	}
+
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBAdminLeaseToRest(lease),
+		"data": transformed,
 	})
 }
 
@@ -193,9 +206,15 @@ func (h *LeaseHandler) ListLeasesByTenant(w http.ResponseWriter, r *http.Request
 
 	leasesTransformed := make([]any, 0)
 	for _, lease := range leases {
+		transformed, transformedErr := transformations.DBAdminLeaseToRest(h.services, &lease)
+		if transformedErr != nil {
+			HandleErrorResponse(w, transformedErr)
+			return
+		}
+
 		leasesTransformed = append(
 			leasesTransformed,
-			transformations.DBAdminLeaseToRest(&lease),
+			transformed,
 		)
 	}
 
@@ -258,9 +277,15 @@ func (h *LeaseHandler) ListLeasesByProperty(w http.ResponseWriter, r *http.Reque
 
 	leasesTransformed := make([]any, 0)
 	for _, lease := range leases {
+		transformed, transformedErr := transformations.DBAdminLeaseToRest(h.services, &lease)
+		if transformedErr != nil {
+			HandleErrorResponse(w, transformedErr)
+			return
+		}
+
 		leasesTransformed = append(
 			leasesTransformed,
-			transformations.DBAdminLeaseToRest(&lease),
+			transformed,
 		)
 	}
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import {  Outlet, useLoaderData } from 'react-router'
+import { Outlet, useLoaderData } from 'react-router'
 import ApproveTenantApplicationModal from '../approve'
 import CancelTenantApplicationModal from '../cancel'
 import { PropertyTenantApplicationChecklist } from './components/checklist'
@@ -27,18 +27,23 @@ export function PropertyTenantApplicationContainer() {
 			<div className="col-span-8">
 				<div className="space-y-1">
 					<div className="flex items-center space-x-3">
-						<h1 className="text-3xl font-bold">Application Info #{tenantApplication?.code}</h1>
+						<h1 className="text-3xl font-bold">
+							Application Info #{tenantApplication?.code}
+						</h1>
 
-						{tenantApplication?.status === 'TenantApplication.Status.InProgress' ? (
+						{tenantApplication?.status ===
+						'TenantApplication.Status.InProgress' ? (
 							<Badge
 								variant="secondary"
 								className="bg-amber-400 px-2 py-1 text-xs text-amber-50"
 							>
 								In Progress
 							</Badge>
-						) : tenantApplication?.status === 'TenantApplication.Status.Cancelled' ? (
+						) : tenantApplication?.status ===
+						  'TenantApplication.Status.Cancelled' ? (
 							<Badge variant="destructive">Cancelled</Badge>
-						) : tenantApplication?.status === 'TenantApplication.Status.Completed' ? (
+						) : tenantApplication?.status ===
+						  'TenantApplication.Status.Completed' ? (
 							<Badge
 								variant="default"
 								className="bg-green-600 px-2 py-1 text-xs text-green-50"
@@ -48,7 +53,13 @@ export function PropertyTenantApplicationContainer() {
 						) : null}
 					</div>
 					<span className="text-sm text-gray-500">
-						Submitted on <strong>{localizedDayjs(tenantApplication?.created_at).format('LLLL')}</strong> {tenantApplication?.created_by ? `by ${tenantApplication.created_by.name}` : null}
+						Submitted on{' '}
+						<strong>
+							{localizedDayjs(tenantApplication?.created_at).format('LLLL')}
+						</strong>{' '}
+						{tenantApplication?.created_by
+							? `by ${tenantApplication.created_by.name}`
+							: null}
 					</span>
 				</div>
 				<div className="mt-5">
@@ -66,9 +77,15 @@ export function PropertyTenantApplicationContainer() {
 						</Button>
 						<Button onClick={() => setOpenApproveModal(true)}>Approve</Button>
 					</div>
-				) : tenantApplication.status === 'TenantApplication.Status.Cancelled' ? (
+				) : tenantApplication.status ===
+				  'TenantApplication.Status.Cancelled' ? (
 					<div className="mb-3 flex w-full flex-row items-center justify-end space-x-2">
-						<Button variant='destructive' onClick={() => setOpenApproveModal(true)}>Delete application</Button>
+						<Button
+							variant="destructive"
+							onClick={() => setOpenApproveModal(true)}
+						>
+							Delete application
+						</Button>
 					</div>
 				) : null}
 				<PropertyTenantApplicationChecklist application={tenantApplication} />
@@ -86,5 +103,3 @@ export function PropertyTenantApplicationContainer() {
 		</div>
 	)
 }
-
-

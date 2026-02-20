@@ -13,12 +13,13 @@ import (
 )
 
 type SigningHandler struct {
-	service services.SigningService
-	appCtx  pkg.AppContext
+	service  services.SigningService
+	appCtx   pkg.AppContext
+	services services.Services
 }
 
-func NewSigningHandler(appCtx pkg.AppContext, service services.SigningService) SigningHandler {
-	return SigningHandler{service: service, appCtx: appCtx}
+func NewSigningHandler(appCtx pkg.AppContext, services services.Services) SigningHandler {
+	return SigningHandler{service: services.SigningService, appCtx: appCtx, services: services}
 }
 
 type GenerateTokenRequest struct {
@@ -77,9 +78,15 @@ func (h *SigningHandler) GenerateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	signingTokenTransformed, signingTokenTransformedErr := transformations.DBAdminSigningTokenToRest(h.services, token)
+	if signingTokenTransformedErr != nil {
+		HandleErrorResponse(w, signingTokenTransformedErr)
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBAdminSigningTokenToRest(token),
+		"data": signingTokenTransformed,
 	})
 }
 

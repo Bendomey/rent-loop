@@ -11,12 +11,13 @@ import (
 )
 
 type PaymentHandler struct {
-	appCtx  pkg.AppContext
-	service services.PaymentService
+	appCtx   pkg.AppContext
+	service  services.PaymentService
+	services services.Services
 }
 
-func NewPaymentHandler(appCtx pkg.AppContext, service services.PaymentService) PaymentHandler {
-	return PaymentHandler{appCtx: appCtx, service: service}
+func NewPaymentHandler(appCtx pkg.AppContext, services services.Services) PaymentHandler {
+	return PaymentHandler{appCtx: appCtx, service: services.PaymentService, services: services}
 }
 
 type CreateOfflinePaymentRequest struct {
@@ -69,8 +70,14 @@ func (h *PaymentHandler) CreateOfflinePayment(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	transformed, transformErr := transformations.DBPaymentToRest(h.services, payment)
+	if transformErr != nil {
+		HandleErrorResponse(w, transformErr)
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBPaymentToRest(payment),
+		"data": transformed,
 	})
 }

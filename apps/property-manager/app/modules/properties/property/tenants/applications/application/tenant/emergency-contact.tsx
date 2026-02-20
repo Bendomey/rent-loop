@@ -68,7 +68,7 @@ interface FieldDisplayProps {
 function FieldDisplay({ label, value }: FieldDisplayProps) {
 	return (
 		<div>
-			<p className="text-sm text-muted-foreground">{label}</p>
+			<p className="text-muted-foreground text-sm">{label}</p>
 			<p className="text-sm font-medium">{value || '-'}</p>
 		</div>
 	)
@@ -117,9 +117,7 @@ export function PropertyTenantApplicationEmergencyContact() {
 					)
 				},
 				onSuccess: () => {
-					toast.success(
-						'Emergency contact information updated successfully.',
-					)
+					toast.success('Emergency contact information updated successfully.')
 					void revalidator.revalidate()
 					setIsEditing(false)
 				},
@@ -175,7 +173,7 @@ export function PropertyTenantApplicationEmergencyContact() {
 						/>
 					</div>
 
-					<div className="mb-2 mt-6">
+					<div className="mt-6 mb-2">
 						<Label className="text-sm font-medium">Employment</Label>
 					</div>
 					<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -426,10 +424,14 @@ export function PropertyTenantApplicationEmergencyContact() {
 											: undefined
 									}
 									dismissCallback={() => {
-										rhfMethods.setValue('proof_of_income_url' as never, undefined as never, {
-											shouldDirty: true,
-											shouldValidate: true,
-										})
+										rhfMethods.setValue(
+											'proof_of_income_url' as never,
+											undefined as never,
+											{
+												shouldDirty: true,
+												shouldValidate: true,
+											},
+										)
 									}}
 									label={`Proof of ${isStudent ? 'Admission' : 'Income'}`}
 									name="proof_of_income_url"

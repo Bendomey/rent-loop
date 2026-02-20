@@ -63,7 +63,7 @@ interface FieldDisplayProps {
 function FieldDisplay({ label, value }: FieldDisplayProps) {
 	return (
 		<div>
-			<p className="text-sm text-muted-foreground">{label}</p>
+			<p className="text-muted-foreground text-sm">{label}</p>
 			<p className="text-sm font-medium">{value || '-'}</p>
 		</div>
 	)
@@ -100,9 +100,7 @@ export function PropertyTenantApplicationIdentity() {
 			},
 			{
 				onError: () => {
-					toast.error(
-						'Failed to update identity information. Try again later.',
-					)
+					toast.error('Failed to update identity information. Try again later.')
 				},
 				onSuccess: () => {
 					toast.success('Identity information updated successfully.')
@@ -161,11 +159,11 @@ export function PropertyTenantApplicationIdentity() {
 						/>
 					</div>
 
-						<div className="mt-6">
+					<div className="mt-6">
 						<Label className="text-sm font-medium">ID Document Images</Label>
 						<div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-2">
 							<div>
-								<p className="mb-1 text-xs text-muted-foreground">Front</p>
+								<p className="text-muted-foreground mb-1 text-xs">Front</p>
 								{application?.id_front_url ? (
 									<img
 										src={application.id_front_url}
@@ -179,7 +177,7 @@ export function PropertyTenantApplicationIdentity() {
 								)}
 							</div>
 							<div>
-								<p className="mb-1 text-xs text-muted-foreground">Back</p>
+								<p className="text-muted-foreground mb-1 text-xs">Back</p>
 								{application?.id_back_url ? (
 									<img
 										src={application.id_back_url}
@@ -295,8 +293,7 @@ export function PropertyTenantApplicationIdentity() {
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>
-												Current Address{' '}
-												<span className="text-red-500">*</span>
+												Current Address <span className="text-red-500">*</span>
 											</FormLabel>
 											<FormControl>
 												<Input type="text" {...field} />

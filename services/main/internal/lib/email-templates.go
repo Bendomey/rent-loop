@@ -187,13 +187,10 @@ Your tenant application has been successfully submitted and is now under review.
 Application Details:
 
 Unit: {{unit_name}}
-
 Application Code: {{application_code}}
-
 Submitted on: {{submission_date}}
 
 Our team will review your application and contact you if additional information is needed. You will be notified once a decision has been made.
-
 Thank you for your interest.
 
 {{SUPPORT_DETAILS_TEMPLATE}}

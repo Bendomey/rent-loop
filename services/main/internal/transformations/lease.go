@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
+	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/gofrs/uuid"
 )
 
@@ -60,9 +61,14 @@ type OutputAdminLease struct {
 	UpdatedAt time.Time `json:"updated_at" example:"2024-06-10T09:00:00Z"`
 }
 
-func DBAdminLeaseToRest(i *models.Lease) any {
+func DBAdminLeaseToRest(services services.Services, i *models.Lease) (any, error) {
 	if i == nil || i.ID == uuid.Nil {
-		return nil
+		return nil, nil
+	}
+
+	tenantApplication, tenantApplicationErr := DBAdminTenantApplicationToRest(services, &i.TenantApplication)
+	if tenantApplicationErr != nil {
+		return nil, tenantApplicationErr
 	}
 
 	data := map[string]any{
@@ -74,7 +80,7 @@ func DBAdminLeaseToRest(i *models.Lease) any {
 		"tenant_id":                          i.TenantId,
 		"tenant":                             DBAdminTenantToRest(&i.Tenant),
 		"tenant_application_id":              i.TenantApplicationId,
-		"tenant_application":                 DBAdminTenantApplicationToRest(&i.TenantApplication),
+		"tenant_application":                 tenantApplication,
 		"rent_fee":                           i.RentFee,
 		"rent_fee_currency":                  i.RentFeeCurrency,
 		"payment_frequency":                  i.PaymentFrequency,
@@ -107,7 +113,7 @@ func DBAdminLeaseToRest(i *models.Lease) any {
 		"updated_at":       i.UpdatedAt,
 	}
 
-	return data
+	return data, nil
 }
 
 type OutputLease struct {

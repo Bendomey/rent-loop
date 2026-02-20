@@ -38,14 +38,17 @@ export const useGetPropertyTenantApplications = (
 	})
 
 interface GetPropertyTenantApplicationProps {
-	id: string;
-	populate?: Array<string>;
+	id: string
+	populate?: Array<string>
 }
 
-export const getPropertyTenantApplicationForServer = async (input: GetPropertyTenantApplicationProps, apiConfig: ApiConfigForServerConfig) => {
+export const getPropertyTenantApplicationForServer = async (
+	input: GetPropertyTenantApplicationProps,
+	apiConfig: ApiConfigForServerConfig,
+) => {
 	try {
 		const params = getQueryParams({
-		populate: input.populate,
+			populate: input.populate,
 		})
 		const response = await fetchServer<ApiResponse<TenantApplication>>(
 			`${apiConfig.baseUrl}/v1/tenant-applications/${input.id}?${params.toString()}`,

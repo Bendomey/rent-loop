@@ -1,9 +1,13 @@
 package transformations
 
 import (
+	"context"
 	"time"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
+	"github.com/Bendomey/rent-loop/services/main/internal/repository"
+	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/gofrs/uuid"
 )
 
@@ -83,73 +87,84 @@ type OutputAdminTenantApplication struct {
 	UpdatedAt time.Time `json:"updated_at" example:"2024-06-10T09:00:00Z"`
 }
 
-func DBAdminTenantApplicationToRest(i *models.TenantApplication) any {
+func DBAdminTenantApplicationToRest(services services.Services, i *models.TenantApplication) (any, error) {
 	if i == nil || i.ID == uuid.Nil {
-		return nil
+		return nil, nil
+	}
+
+	signatures, signatureErr := services.SigningService.ListDocumentSignatures(context.Background(), lib.FilterQuery{
+		Page:     1,
+		PageSize: 100,
+	}, repository.ListDocumentSignaturesFilter{
+		DocumentID:          i.LeaseAgreementDocumentID,
+		TenantApplicationID: lib.GetStringPointer(i.ID.String()),
+	})
+
+	if signatureErr != nil {
+		return nil, signatureErr
 	}
 
 	data := map[string]any{
-		"id":                              i.ID.String(),
-		"code":                            i.Code,
-		"status":                          i.Status,
-		"completed_at":                    i.CompletedAt,
-		"completed_by_id":                 i.CompletedById,
-		"completed_by":                    DBClientUserToRest(i.CompletedBy),
-		"cancelled_at":                    i.CancelledAt,
-		"cancelled_by_id":                 i.CancelledById,
-		"cancelled_by":                    DBClientUserToRest(i.CancelledBy),
-		"desired_unit_id":                 i.DesiredUnitId,
-		"desired_unit":                    DBAdminUnitToRest(&i.DesiredUnit),
-		"desired_move_in_date":            i.DesiredMoveInDate,
-		"stay_duration_frequency":         i.StayDurationFrequency,
-		"stay_duration":                   i.StayDuration,
-		"rent_fee":                        i.RentFee,
-		"rent_fee_currency":               i.RentFeeCurrency,
-		"payment_frequency":               i.PaymentFrequency,
-		"initial_deposit_fee":             i.InitialDepositFee,
-		"initial_deposit_fee_currency":    i.InitialDepositFeeCurrency,
-		"security_deposit_fee":            i.SecurityDepositFee,
-		"security_deposit_fee_currency":   i.SecurityDepositFeeCurrency,
-		"lease_agreement_document_mode":   i.LeaseAgreementDocumentMode,
-		"lease_agreement_document_url":    i.LeaseAgreementDocumentUrl,
-		"lease_agreement_document_id":     i.LeaseAgreementDocumentID,
-		"lease_agreement_document":        DBDocumentToRestDocument(i.LeaseAgreementDocument),
-		"lease_agreement_document_status": i.LeaseAgreementDocumentStatus,
-		// TODO: work on this
-		// "lease_agreement_document_signatures": DBDocumentSignaturesToRest(i.LeaseAgreementDocumentSignatures),
-		"first_name":                        i.FirstName,
-		"other_names":                       i.OtherNames,
-		"last_name":                         i.LastName,
-		"email":                             i.Email,
-		"phone":                             i.Phone,
-		"gender":                            i.Gender,
-		"date_of_birth":                     i.DateOfBirth,
-		"nationality":                       i.Nationality,
-		"marital_status":                    i.MaritalStatus,
-		"profile_photo_url":                 i.ProfilePhotoUrl,
-		"id_type":                           i.IDType,
-		"id_number":                         i.IDNumber,
-		"id_front_url":                      i.IDFrontUrl,
-		"id_back_url":                       i.IDBackUrl,
-		"previous_landlord_name":            i.PreviousLandlordName,
-		"previous_landlord_phone":           i.PreviousLandlordPhone,
-		"previous_tenancy_period":           i.PreviousTenancyPeriod,
-		"current_address":                   i.CurrentAddress,
-		"emergency_contact_name":            i.EmergencyContactName,
-		"emergency_contact_phone":           i.EmergencyContactPhone,
-		"relationship_to_emergency_contact": i.RelationshipToEmergencyContact,
-		"occupation":                        i.Occupation,
-		"employer":                          i.Employer,
-		"employer_type":                     i.EmployerType,
-		"occupation_address":                i.OccupationAddress,
-		"proof_of_income_url":               i.ProofOfIncomeUrl,
-		"created_by_id":                     i.CreatedById,
-		"created_by":                        DBClientUserToRest(&i.CreatedBy),
-		"created_at":                        i.CreatedAt,
-		"updated_at":                        i.UpdatedAt,
+		"id":                                  i.ID.String(),
+		"code":                                i.Code,
+		"status":                              i.Status,
+		"completed_at":                        i.CompletedAt,
+		"completed_by_id":                     i.CompletedById,
+		"completed_by":                        DBClientUserToRest(i.CompletedBy),
+		"cancelled_at":                        i.CancelledAt,
+		"cancelled_by_id":                     i.CancelledById,
+		"cancelled_by":                        DBClientUserToRest(i.CancelledBy),
+		"desired_unit_id":                     i.DesiredUnitId,
+		"desired_unit":                        DBAdminUnitToRest(&i.DesiredUnit),
+		"desired_move_in_date":                i.DesiredMoveInDate,
+		"stay_duration_frequency":             i.StayDurationFrequency,
+		"stay_duration":                       i.StayDuration,
+		"rent_fee":                            i.RentFee,
+		"rent_fee_currency":                   i.RentFeeCurrency,
+		"payment_frequency":                   i.PaymentFrequency,
+		"initial_deposit_fee":                 i.InitialDepositFee,
+		"initial_deposit_fee_currency":        i.InitialDepositFeeCurrency,
+		"security_deposit_fee":                i.SecurityDepositFee,
+		"security_deposit_fee_currency":       i.SecurityDepositFeeCurrency,
+		"lease_agreement_document_mode":       i.LeaseAgreementDocumentMode,
+		"lease_agreement_document_url":        i.LeaseAgreementDocumentUrl,
+		"lease_agreement_document_id":         i.LeaseAgreementDocumentID,
+		"lease_agreement_document":            DBDocumentToRestDocument(i.LeaseAgreementDocument),
+		"lease_agreement_document_status":     i.LeaseAgreementDocumentStatus,
+		"lease_agreement_document_signatures": DBDocumentSignaturesToRest(signatures),
+		"first_name":                          i.FirstName,
+		"other_names":                         i.OtherNames,
+		"last_name":                           i.LastName,
+		"email":                               i.Email,
+		"phone":                               i.Phone,
+		"gender":                              i.Gender,
+		"date_of_birth":                       i.DateOfBirth,
+		"nationality":                         i.Nationality,
+		"marital_status":                      i.MaritalStatus,
+		"profile_photo_url":                   i.ProfilePhotoUrl,
+		"id_type":                             i.IDType,
+		"id_number":                           i.IDNumber,
+		"id_front_url":                        i.IDFrontUrl,
+		"id_back_url":                         i.IDBackUrl,
+		"previous_landlord_name":              i.PreviousLandlordName,
+		"previous_landlord_phone":             i.PreviousLandlordPhone,
+		"previous_tenancy_period":             i.PreviousTenancyPeriod,
+		"current_address":                     i.CurrentAddress,
+		"emergency_contact_name":              i.EmergencyContactName,
+		"emergency_contact_phone":             i.EmergencyContactPhone,
+		"relationship_to_emergency_contact":   i.RelationshipToEmergencyContact,
+		"occupation":                          i.Occupation,
+		"employer":                            i.Employer,
+		"employer_type":                       i.EmployerType,
+		"occupation_address":                  i.OccupationAddress,
+		"proof_of_income_url":                 i.ProofOfIncomeUrl,
+		"created_by_id":                       i.CreatedById,
+		"created_by":                          DBClientUserToRest(&i.CreatedBy),
+		"created_at":                          i.CreatedAt,
+		"updated_at":                          i.UpdatedAt,
 	}
 
-	return data
+	return data, nil
 }
 
 type OutputTenantApplication struct {

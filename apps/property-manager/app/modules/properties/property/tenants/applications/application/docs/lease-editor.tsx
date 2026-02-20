@@ -97,7 +97,11 @@ export function LeaseDocumentModule() {
 			description:
 				'This document has been finalized and is ready for signing. You cannot make edits in this state.',
 			action: (
-				<Button variant="outline" disabled={updateTenantApplication.isPending} onClick={handleRevertToDraft}>
+				<Button
+					variant="outline"
+					disabled={updateTenantApplication.isPending}
+					onClick={handleRevertToDraft}
+				>
 					Back to Draft
 				</Button>
 			),
@@ -118,14 +122,16 @@ export function LeaseDocumentModule() {
 		},
 	} as const
 
-	const config =
-		isReadOnly && docStatus ? readOnlyConfig[docStatus] : null
+	const config = isReadOnly && docStatus ? readOnlyConfig[docStatus] : null
 
 	return (
 		<>
 			{config && (
 				<Dialog open onOpenChange={() => {}}>
-					<DialogContent showCloseButton={false} className="text-center sm:max-w-sm">
+					<DialogContent
+						showCloseButton={false}
+						className="text-center sm:max-w-sm"
+					>
 						<DialogHeader>
 							{config.icon}
 							<DialogTitle className="text-center">{config.title}</DialogTitle>
