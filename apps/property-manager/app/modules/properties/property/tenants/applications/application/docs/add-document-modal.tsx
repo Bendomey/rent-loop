@@ -19,21 +19,24 @@ import { DocumentUpload } from '~/components/ui/document-upload'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
+import type { IDocumentTemplate } from '~/modules/settings/documents/controller'
 
 interface AddDocumentModalProps {
 	open: boolean
 	onOpenChange: (open: boolean) => void
 	propertyId: string | undefined
-	applicationId: string | undefined
+	application: TenantApplication
 	attachedDoc: AttachedDocument | null
+	documentTemplates: IDocumentTemplate[]
 }
 
 export function AddDocumentModal({
 	open,
 	onOpenChange,
 	propertyId,
-	applicationId,
+	application,
 	attachedDoc,
+	documentTemplates,
 }: AddDocumentModalProps) {
 	const [mode, setMode] = useState<DocMode>('manual')
 	const [selectedDocument, setSelectedDocument] =
@@ -57,23 +60,25 @@ export function AddDocumentModal({
 		mode === 'online' ? Boolean(selectedDocument) : Boolean(uploadedUrl)
 
 	const handleSave = async () => {
-		if (!applicationId) return
+		if (!application.id) return
 
 		if (mode === 'manual') {
 			if (!uploadedUrl) return
 
 			await updateTenantApplication({
-				id: applicationId,
+				id: application.id,
 				data: {
 					lease_agreement_document_url: uploadedUrl,
 					lease_agreement_document_mode: 'MANUAL',
+					lease_agreement_document_id: null,
+					lease_agreement_document_status: null,
 				},
 			})
 		} else {
 			if (!selectedDocument) return
 
 			const newDoc = await createDocument({
-				title: selectedDocument.title,
+				title: `${application.code} - Lease Agreement`,
 				content: selectedDocument.content,
 				size: selectedDocument.size,
 				tags: selectedDocument.tags,
@@ -84,11 +89,12 @@ export function AddDocumentModal({
 			if (!newDoc) return
 
 			await updateTenantApplication({
-				id: applicationId,
+				id: application.id,
 				data: {
 					lease_agreement_document_id: newDoc.id,
 					lease_agreement_document_mode: 'ONLINE',
 					lease_agreement_document_status: 'DRAFT',
+					lease_agreement_document_url: null,
 				},
 			})
 		}
@@ -160,6 +166,7 @@ export function AddDocumentModal({
 							</Alert>
 
 							<DocumentList
+								documentTemplates={documentTemplates}
 								property_id={safeString(propertyId)}
 								selectedDocument={selectedDocument}
 								onSelectDocument={setSelectedDocument}

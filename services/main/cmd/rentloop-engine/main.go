@@ -7,12 +7,12 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/config"
 	"github.com/Bendomey/rent-loop/services/main/internal/db"
 	"github.com/Bendomey/rent-loop/services/main/internal/handlers"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/internal/router"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/getsentry/raven-go"
-	"github.com/go-playground/validator/v10"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -41,7 +41,7 @@ func main() {
 		DB:        database,
 		RDB:       redis,
 		Config:    cfg,
-		Validator: validator.New(),
+		Validator: lib.NewValidator(),
 	}
 
 	repository := repository.NewRepository(database)

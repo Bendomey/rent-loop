@@ -13,11 +13,19 @@ export function MenuBar({ document }: { document: RentloopDocument }) {
 	const [editor] = useLexicalComposerContext()
 	const updateDocument = useUpdateDocument()
 	const savedContentRef = useRef(document.content)
+	const isFirstUpdateRef = useRef(true)
 	const [hasChanges, setHasChanges] = useState(false)
 
 	useEffect(() => {
 		return editor.registerUpdateListener(({ editorState }) => {
 			const currentContent = JSON.stringify(editorState.toJSON())
+
+			if (isFirstUpdateRef.current) {
+				savedContentRef.current = currentContent
+				isFirstUpdateRef.current = false
+				return
+			}
+
 			setHasChanges(currentContent !== savedContentRef.current)
 		})
 	}, [editor])
