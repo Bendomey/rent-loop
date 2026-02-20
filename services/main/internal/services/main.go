@@ -1,7 +1,6 @@
 package services
 
 import (
-	"github.com/Bendomey/rent-loop/services/main/internal/clients"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 )
@@ -30,14 +29,13 @@ type Services struct {
 type INewServicesParams struct {
 	AppCtx     pkg.AppContext
 	Repository repository.Repository
-	Clients    clients.Clients
 }
 
 func NewServices(params INewServicesParams) Services {
-	accountingService := NewAccountingService(params.AppCtx, params.Clients.AccountingAPI)
+	accountingService := NewAccountingService(params.AppCtx)
 	invoiceService := NewInvoiceService(params.AppCtx, params.Repository.InvoiceRepository, accountingService)
 
-	authService := NewAuthService(params.AppCtx, params.Clients.GatekeeperAPI)
+	authService := NewAuthService(params.AppCtx)
 	adminService := NewAdminService(params.AppCtx, params.Repository.AdminRepository)
 	clientApplicationService := NewClientApplicationService(
 		params.AppCtx,

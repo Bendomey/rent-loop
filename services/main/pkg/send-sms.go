@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/Bendomey/goutilities/pkg/transport"
+	"github.com/Bendomey/rent-loop/services/main/internal/config"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/getsentry/raven-go"
 	"github.com/sirupsen/logrus"
@@ -31,31 +32,35 @@ type WittyflowSendMessageResponse struct {
 	Data    WittyflowSendMessageResponseData `json:"data"`
 }
 
-type SendSMSInput struct {
+type WittyflowSendSMSInput struct {
 	Recipient string
 	Message   string
 }
 
-// Usage:
-// go SendSMS(
-// appCtx,
-// 	SendSMSInput{
-// 		Recipient: "233200000000",
-// 		Message:  "This is a test sms.",
-// 		AppID:   "your-app-id",
-// 		AppSecret: "your-app-secret",
-// 		Env:      "development",
-// 	}
-// )
+/*
+SendSMS sends an SMS using Wittyflow
 
-// SendSMS sends an SMS using the Wittyflow service
-func SendSMS(appCtx AppContext, input SendSMSInput) error {
-	if appCtx.Config.Wittyflow.AppID == "" || appCtx.Config.Wittyflow.AppSecret == "" {
+Deprecated: use appCtx.Clients.GatekeeperAPI.SendSMS instead
+
+# Usage:
+
+go SendSMS(
+appCtx,
+
+	WittyflowSendSMSInput {
+		Recipient: "233200000000",
+		Message:  "This is a test sms.",
+	}
+
+)
+*/
+func SendSMS(cfg config.Config, input WittyflowSendSMSInput) error {
+	if cfg.Wittyflow.AppID == "" || cfg.Wittyflow.AppSecret == "" {
 		raven.CaptureError(errors.New("wittyflow credentials not set"), nil)
 		return errors.New("InternalServerError")
 	}
 
-	if appCtx.Config.Env == "" || appCtx.Config.Env == "development" {
+	if cfg.Env == "" || cfg.Env == "development" {
 		logrus.Info("Skipping sms send in development", input)
 		return nil
 	}
@@ -84,9 +89,9 @@ func SendSMS(appCtx AppContext, input SendSMSInput) error {
 			"from":       "Rentloop",
 			"to":         normalizePhone,
 			"type":       "1",
-			"message":    ApplyGlobalVariableTemplate(appCtx, input.Message),
-			"app_id":     appCtx.Config.Wittyflow.AppID,
-			"app_secret": appCtx.Config.Wittyflow.AppSecret,
+			"message":    lib.ApplyGlobalVariableTemplate(cfg, input.Message),
+			"app_id":     cfg.Wittyflow.AppID,
+			"app_secret": cfg.Wittyflow.AppSecret,
 		},
 		SuccessObj: sendResponseSuccess,
 		ErrorObj:   sendResponseFailed,

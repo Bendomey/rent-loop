@@ -8,6 +8,7 @@ import (
 	"github.com/Bendomey/goutilities/pkg/hashpassword"
 	"github.com/Bendomey/goutilities/pkg/signjwt"
 	"github.com/Bendomey/goutilities/pkg/validatehash"
+	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
@@ -142,7 +143,7 @@ func (s *clientUserService) CreateClientUser(
 	message := r.Replace(lib.CLIENT_USER_ADDED_BODY)
 
 	go pkg.SendEmail(
-		s.appCtx,
+		s.appCtx.Config,
 		pkg.SendEmailInput{
 			Recipient: input.Email,
 			Subject:   lib.CLIENT_USER_ADDED_SUBJECT,
@@ -150,9 +151,9 @@ func (s *clientUserService) CreateClientUser(
 		},
 	)
 
-	go pkg.SendSMS(
-		s.appCtx,
-		pkg.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
+		ctx,
+		gatekeeper.SendSMSInput{
 			Recipient: input.Phone,
 			Message:   message,
 		},
@@ -292,7 +293,7 @@ func (s *clientUserService) SendForgotPasswordResetLink(
 	message := r.Replace(lib.CLIENT_USER_PASSWORD_RESET_BODY)
 
 	go pkg.SendEmail(
-		s.appCtx,
+		s.appCtx.Config,
 		pkg.SendEmailInput{
 			Recipient: clientUser.Email,
 			Subject:   lib.CLIENT_USER_PASSWORD_RESET_SUBJECT,
@@ -481,7 +482,7 @@ func (s *clientUserService) ActivateClientUser(
 	message := r.Replace(lib.CLIENT_USER_ACTIVATED_BODY)
 
 	go pkg.SendEmail(
-		s.appCtx,
+		s.appCtx.Config,
 		pkg.SendEmailInput{
 			Recipient: clientUserToBeActivated.Email,
 			Subject:   lib.CLIENT_USER_ACTIVATED_SUBJECT,
@@ -489,9 +490,9 @@ func (s *clientUserService) ActivateClientUser(
 		},
 	)
 
-	go pkg.SendSMS(
-		s.appCtx,
-		pkg.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
+		ctx,
+		gatekeeper.SendSMSInput{
 			Recipient: clientUserToBeActivated.PhoneNumber,
 			Message:   message,
 		},
@@ -551,7 +552,7 @@ func (s *clientUserService) DeactivateClientUser(
 	message := r.Replace(lib.CLIENT_USER_DEACTIVATED_BODY)
 
 	go pkg.SendEmail(
-		s.appCtx,
+		s.appCtx.Config,
 		pkg.SendEmailInput{
 			Recipient: clientUserToBeDeactivated.Email,
 			Subject:   lib.CLIENT_USER_DEACTIVATED_SUBJECT,
@@ -559,9 +560,9 @@ func (s *clientUserService) DeactivateClientUser(
 		},
 	)
 
-	go pkg.SendSMS(
-		s.appCtx,
-		pkg.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
+		ctx,
+		gatekeeper.SendSMSInput{
 			Recipient: clientUserToBeDeactivated.PhoneNumber,
 			Message:   message,
 		},
@@ -689,7 +690,7 @@ func (s *clientUserService) UpateClientUserPassword(
 	message := r.Replace(lib.CLIENT_USER_PASSWORD_UPDATED_BODY)
 
 	go pkg.SendEmail(
-		s.appCtx,
+		s.appCtx.Config,
 		pkg.SendEmailInput{
 			Recipient: clientUser.Email,
 			Subject:   lib.CLIENT_USER_PASSWORD_UPDATED_SUBJECT,
@@ -697,9 +698,9 @@ func (s *clientUserService) UpateClientUserPassword(
 		},
 	)
 
-	go pkg.SendSMS(
-		s.appCtx,
-		pkg.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
+		ctx,
+		gatekeeper.SendSMSInput{
 			Recipient: clientUser.PhoneNumber,
 			Message:   message,
 		},

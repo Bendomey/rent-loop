@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
@@ -177,7 +178,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 
 	if input.Email != nil {
 		go pkg.SendEmail(
-			s.appCtx,
+			s.appCtx.Config,
 			pkg.SendEmailInput{
 				Recipient: *input.Email,
 				Subject:   lib.TENANT_APPLICATION_SUBMITTED_SUBJECT,
@@ -186,9 +187,9 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		)
 	}
 
-	go pkg.SendSMS(
-		s.appCtx,
-		pkg.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
+		ctx,
+		gatekeeper.SendSMSInput{
 			Recipient: input.Phone,
 			Message:   message,
 		},
@@ -230,7 +231,7 @@ func (s *tenantApplicationService) InviteTenant(ctx context.Context, input Invit
 
 	if input.Email != nil {
 		go pkg.SendEmail(
-			s.appCtx,
+			s.appCtx.Config,
 			pkg.SendEmailInput{
 				Recipient: *input.Email,
 				Subject:   lib.TENANT_INVITED_SUBJECT,
@@ -240,9 +241,9 @@ func (s *tenantApplicationService) InviteTenant(ctx context.Context, input Invit
 	}
 
 	if input.Phone != nil {
-		go pkg.SendSMS(
-			s.appCtx,
-			pkg.SendSMSInput{
+		go s.appCtx.Clients.GatekeeperAPI.SendSMS(
+			ctx,
+			gatekeeper.SendSMSInput{
 				Recipient: *input.Phone,
 				Message:   message,
 			},
@@ -661,7 +662,7 @@ func (s *tenantApplicationService) CancelTenantApplication(
 
 	if tenantApplication.Email != nil {
 		go pkg.SendEmail(
-			s.appCtx,
+			s.appCtx.Config,
 			pkg.SendEmailInput{
 				Recipient: *tenantApplication.Email,
 				Subject:   lib.TENANT_CANCELLED_SUBJECT,
@@ -670,9 +671,9 @@ func (s *tenantApplicationService) CancelTenantApplication(
 		)
 	}
 
-	go pkg.SendSMS(
-		s.appCtx,
-		pkg.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
+		ctx,
+		gatekeeper.SendSMSInput{
 			Recipient: tenantApplication.Phone,
 			Message:   message,
 		},
@@ -849,7 +850,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 
 	if tenantApplication.Email != nil {
 		go pkg.SendEmail(
-			s.appCtx,
+			s.appCtx.Config,
 			pkg.SendEmailInput{
 				Recipient: *tenantApplication.Email,
 				Subject:   lib.TENANT_APPLICATION_APPROVED_SUBJECT,
@@ -858,9 +859,9 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		)
 	}
 
-	go pkg.SendSMS(
-		s.appCtx,
-		pkg.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
+		ctx,
+		gatekeeper.SendSMSInput{
 			Recipient: tenantApplication.Phone,
 			Message:   message,
 		},

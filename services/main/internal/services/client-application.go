@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
@@ -137,13 +138,13 @@ func (s *clientApplicationService) CreateClientApplication(
 	message := lib.CLIENT_APPLICATION_SUBMITTED_BODY
 	message = strings.ReplaceAll(message, "{{owner_name}}", input.ContactName)
 
-	go pkg.SendEmail(s.appCtx, pkg.SendEmailInput{
+	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 		Recipient: input.ContactEmail,
 		Subject:   lib.CLIENT_APPLICATION_SUBMITTED_SUBJECT,
 		TextBody:  message,
 	})
 
-	go pkg.SendSMS(s.appCtx, pkg.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
 		Recipient: input.ContactPhoneNumber,
 		Message:   message,
 	})
@@ -196,13 +197,13 @@ func (s *clientApplicationService) RejectClientApplication(
 	message = strings.ReplaceAll(message, "{{owner_name}}", clientApplication.ContactName)
 	message = strings.ReplaceAll(message, "{{rejection_reason}}", input.Reason)
 
-	go pkg.SendEmail(s.appCtx, pkg.SendEmailInput{
+	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 		Recipient: clientApplication.ContactEmail,
 		Subject:   lib.CLIENT_APPLICATION_REJECTED_SUBJECT,
 		TextBody:  message,
 	})
 
-	go pkg.SendSMS(s.appCtx, pkg.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
 		Recipient: clientApplication.ContactPhoneNumber,
 		Message:   message,
 	})
@@ -327,13 +328,13 @@ func (s *clientApplicationService) ApproveClientApplication(
 	message = strings.ReplaceAll(message, "{{email}}", clientApplication.ContactEmail)
 	message = strings.ReplaceAll(message, "{{password}}", password)
 
-	go pkg.SendEmail(s.appCtx, pkg.SendEmailInput{
+	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 		Recipient: clientApplication.ContactEmail,
 		Subject:   lib.CLIENT_APPLICATION_ACCEPTED_SUBJECT,
 		TextBody:  message,
 	})
 
-	go pkg.SendSMS(s.appCtx, pkg.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
 		Recipient: clientApplication.ContactPhoneNumber,
 		Message:   message,
 	})

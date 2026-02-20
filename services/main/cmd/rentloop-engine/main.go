@@ -37,19 +37,20 @@ func main() {
 		log.Fatal("failed to connect redis:", err)
 	}
 
+	clients := clients.NewClients(cfg)
+
 	appCtx := pkg.AppContext{
 		DB:        database,
 		RDB:       redis,
 		Config:    cfg,
 		Validator: lib.NewValidator(),
+		Clients:   clients,
 	}
 
 	repository := repository.NewRepository(database)
-	clients := clients.NewClients(cfg)
 	services := services.NewServices(services.INewServicesParams{
 		AppCtx:     appCtx,
 		Repository: repository,
-		Clients:    clients,
 	})
 	handlers := handlers.NewHandlers(appCtx, services)
 

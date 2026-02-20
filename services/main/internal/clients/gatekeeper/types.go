@@ -45,3 +45,36 @@ type GatekeeperAPIErrorResponse struct {
 	Message           *string `json:"message,omitempty"`
 	AttemptsRemaining *int    `json:"attempts_remaining,omitempty"`
 }
+
+type Payload struct {
+	Rate              float64 `json:"rate"`
+	MessageID         string  `json:"messageId"`
+	Status            int     `json:"status"`
+	NetworkID         string  `json:"networkId"`
+	ClientReference   *string `json:"clientReference"`
+	StatusDescription string  `json:"statusDescription"`
+}
+
+type DeliveryStatus struct {
+	Message string  `json:"message"`
+	Payload Payload `json:"payload"`
+}
+
+type GatekeeperSendSMSResponse struct {
+	Message        string         `json:"message"`
+	PhoneNumber    string         `json:"phoneNumber"`
+	CreditsUsed    int            `json:"creditsUsed"`
+	MessageLength  int            `json:"messageLength"`
+	CampaignID     string         `json:"campaignId"`
+	DeliveryStatus DeliveryStatus `json:"deliveryStatus"`
+}
+
+type GatekeeperSendSMSRequest struct {
+	PhoneNumber string `json:"phoneNumber"`
+	Message     string `json:"message"`
+}
+
+type SendSMSInput struct {
+	Recipient string
+	Message   string
+}

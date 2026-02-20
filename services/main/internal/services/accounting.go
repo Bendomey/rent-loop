@@ -32,8 +32,8 @@ type AccountingServiceConfig struct {
 }
 
 // NewAccountingService creates a new accounting service
-func NewAccountingService(appCtx pkg.AppContext, client accounting.Client) AccountingService {
-	return &accountingService{appCtx, client}
+func NewAccountingService(appCtx pkg.AppContext) AccountingService {
+	return &accountingService{appCtx, appCtx.Clients.AccountingAPI}
 }
 
 func (s *accountingService) RecordInvoiceCreated(

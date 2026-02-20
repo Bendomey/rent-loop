@@ -48,6 +48,7 @@ definitions:
         - SMS
         items:
           type: string
+        minItems: 1
         type: array
       email:
         example: email@example.com

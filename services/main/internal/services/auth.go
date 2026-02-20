@@ -21,8 +21,8 @@ type authService struct {
 	gatekeeperClient gatekeeper.Client
 }
 
-func NewAuthService(appCtx pkg.AppContext, gatekeeperClient gatekeeper.Client) AuthService {
-	return &authService{appCtx: appCtx, gatekeeperClient: gatekeeperClient}
+func NewAuthService(appCtx pkg.AppContext) AuthService {
+	return &authService{appCtx: appCtx, gatekeeperClient: appCtx.Clients.GatekeeperAPI}
 }
 
 type SendCodeInput struct {
