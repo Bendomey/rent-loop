@@ -18,11 +18,7 @@ func NewClients(cfg config.Config) Clients {
 		ClientSecret: cfg.Clients.AccountingAPI.ClientSecret,
 	})
 
-	gatekeeperClient := gatekeeper.NewClient(gatekeeper.ClientConfig{
-		BaseURL:   cfg.Clients.GatekeeperAPI.BaseURL,
-		ApiKey:    cfg.Clients.GatekeeperAPI.ApiKey,
-		ProjectID: cfg.Clients.GatekeeperAPI.ProjectID,
-	})
+	gatekeeperClient := gatekeeper.NewClient(cfg)
 
 	return Clients{
 		AccountingAPI: accountingClient,

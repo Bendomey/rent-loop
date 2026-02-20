@@ -7559,6 +7559,7 @@ const docTemplate = `{
             "properties": {
                 "channel": {
                     "type": "array",
+                    "minItems": 1,
                     "items": {
                         "type": "string"
                     },

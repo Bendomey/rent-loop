@@ -9,36 +9,69 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/config"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/sirupsen/logrus"
 )
 
-type ClientConfig struct {
-	BaseURL   string
-	ApiKey    string
-	ProjectID string
-	Timeout   time.Duration
-}
-
 type Client interface {
+	// GenerateOtp verifies an OTP using the Gatekeeper service
+	//
+	// # Usage:
+	//
+	// go appCtx.Clients.GatekeeperAPI.GenerateOtp(
+	// ctx,
+	//
+	//	GenerateOtpInput{
+	//		PhoneNumber: "233200000000",
+	//		Email:       "some-email",
+	//		Size:        6,
+	//		Extra:       &map[string]any{"some": "extra"},
+	//	}
+	//
+	// )
 	GenerateOtp(ctx context.Context, req GenerateOtpInput) (*GenerateOtpResponse, error)
+	// VerifyOtp verifies an OTP using the Gatekeeper service
+	//
+	// # Usage:
+	//
+	// go appCtx.Clients.GatekeeperAPI.VerifyOtp(
+	// ctx,
+	//
+	//	VerifyOtpRequest{
+	//		Reference: "some-reference",
+	//		Otp:       "123456",
+	//	}
+	//
+	// )
 	VerifyOtp(ctx context.Context, req VerifyOtpRequest) (*VerifyOtpResponse, error)
+	// SendSMS sends an SMS using the Gatekeeper service
+	//
+	// # Usage:
+	//
+	// go appCtx.Clients.GatekeeperAPI.SendSMS(
+	// ctx,
+	//
+	//	SendSMSInput{
+	//		Recipient: "233200000000",
+	//		Message:  "This is a test sms.",
+	//	}
+	//
+	// )
+	SendSMS(ctx context.Context, req SendSMSInput) error
 	doRequest(ctx context.Context, method, path string, body, result interface{}) error
 }
 
 type gatekeeperClient struct {
-	config     ClientConfig
+	config     config.Config
 	httpClient *http.Client
 }
 
-func NewClient(config ClientConfig) Client {
-	if config.Timeout == 0 {
-		config.Timeout = 30 * time.Second
-	}
-
+func NewClient(cfg config.Config) Client {
 	return &gatekeeperClient{
-		config: config,
+		config: cfg,
 		httpClient: &http.Client{
-			Timeout: config.Timeout,
+			Timeout: 30 * time.Second,
 		},
 	}
 }
@@ -57,7 +90,7 @@ func (c *gatekeeperClient) GenerateOtp(ctx context.Context, req GenerateOtpInput
 	}
 
 	input := GenerateOtpRequest{
-		ProjectID:   c.config.ProjectID,
+		ProjectID:   c.config.Clients.GatekeeperAPI.ProjectID,
 		PhoneNumber: req.PhoneNumber,
 		Email:       req.Email,
 		Size:        req.Size,
@@ -83,8 +116,35 @@ func (c *gatekeeperClient) VerifyOtp(ctx context.Context, req VerifyOtpRequest) 
 	return &response, nil
 }
 
+func (c *gatekeeperClient) SendSMS(ctx context.Context, input SendSMSInput) error {
+	if c.config.Env == "" || c.config.Env == "development" {
+		logrus.Info("Skipping sms send in development", input)
+		return nil
+	}
+
+	normalizePhone, normalizePhoneErr := lib.NormalizePhoneNumber(input.Recipient)
+	if normalizePhoneErr != nil {
+		return normalizePhoneErr
+	}
+
+	message := lib.ApplyGlobalVariableTemplate(c.config, input.Message)
+	req := GatekeeperSendSMSRequest{
+		PhoneNumber: normalizePhone,
+		Message:     message,
+	}
+
+	var response GatekeeperSendSMSResponse
+
+	err := c.doRequest(ctx, http.MethodPost, "/send_sms", req, &response)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *gatekeeperClient) doRequest(ctx context.Context, method, path string, body, result interface{}) error {
-	fullURL := fmt.Sprintf("%s%s", c.config.BaseURL, path)
+	fullURL := fmt.Sprintf("%s%s", c.config.Clients.GatekeeperAPI.BaseURL, path)
 
 	var bodyReader io.Reader
 	if body != nil {
@@ -104,8 +164,8 @@ func (c *gatekeeperClient) doRequest(ctx context.Context, method, path string, b
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 
-	if c.config.ApiKey != "" {
-		req.Header.Set("X-API-Key", c.config.ApiKey)
+	if c.config.Clients.GatekeeperAPI.ApiKey != "" {
+		req.Header.Set("X-API-Key", c.config.Clients.GatekeeperAPI.ApiKey)
 	}
 
 	logrus.WithFields(logrus.Fields{

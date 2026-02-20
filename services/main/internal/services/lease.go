@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
@@ -357,7 +358,7 @@ func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInp
 
 	if lease.Tenant.Email != nil {
 		go pkg.SendEmail(
-			s.appCtx,
+			s.appCtx.Config,
 			pkg.SendEmailInput{
 				Recipient: *lease.Tenant.Email,
 				Subject:   lib.LEASE_ACTIVATED_SUBJECT,
@@ -366,9 +367,9 @@ func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInp
 		)
 	}
 
-	go pkg.SendSMS(
-		s.appCtx,
-		pkg.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
+		ctx,
+		gatekeeper.SendSMSInput{
 			Recipient: lease.Tenant.Phone,
 			Message:   message,
 		},
@@ -435,7 +436,7 @@ func (s *leaseService) CancelLease(ctx context.Context, input CancelLeaseInput) 
 
 	if lease.Tenant.Email != nil {
 		go pkg.SendEmail(
-			s.appCtx,
+			s.appCtx.Config,
 			pkg.SendEmailInput{
 				Recipient: *lease.Tenant.Email,
 				Subject:   lib.LEASE_CANCELLED_SUBJECT,
@@ -444,9 +445,9 @@ func (s *leaseService) CancelLease(ctx context.Context, input CancelLeaseInput) 
 		)
 	}
 
-	go pkg.SendSMS(
-		s.appCtx,
-		pkg.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
+		ctx,
+		gatekeeper.SendSMSInput{
 			Recipient: lease.Tenant.Phone,
 			Message:   message,
 		},
