@@ -1,6 +1,7 @@
 interface RentloopDocument {
 	id: string
 
+	type: 'TEMPLATE' | 'DOCUMENT'
 	title: string
 	content: string
 	size: number
@@ -37,6 +38,7 @@ interface RentloopDocumentSignature {
 interface FetchRentloopDocumentFilter {
 	property_id?: string
 	property_slug?: string
+	type?: string
 	tags?: Array<string>
 	ids?: Array<string>
 	only_global_documents?: boolean

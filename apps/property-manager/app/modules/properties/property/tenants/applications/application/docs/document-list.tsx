@@ -47,7 +47,10 @@ export function DocumentList({
 	})
 		;
 	const { data: documents, isPending } = useGetDocuments({
-		filters,
+		filters: {
+			...filters,
+			type: 'TEMPLATE',
+		},
 		pagination: { page: 1, per: 50 },
 		sorter: { sort: 'desc', sort_by: 'created_at' },
 		search: { fields: ['title'], query: debouncedSearch.length > 0 ? debouncedSearch : undefined },

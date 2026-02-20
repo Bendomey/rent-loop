@@ -66,6 +66,7 @@ export function PropertyDocumentsSettingsModule() {
 	const { data, isPending, isRefetching, error, refetch } = useGetDocuments({
 		filters: {
 			property_id: property_id,
+			type: 'TEMPLATE',
 		},
 		pagination: { page, per },
 		populate: ['CreatedBy'],
