@@ -9318,14 +9318,8 @@ const docTemplate = `{
                     "type": "string",
                     "example": "192.168.1.1"
                 },
-                "lease": {
-                    "$ref": "#/definitions/transformations.OutputAdminLease"
-                },
-                "lease_id": {
-                    "type": "string",
-                    "example": "770e8400-e29b-41d4-a716-446655440000"
-                },
                 "role": {
+                    "description": "TenantApplicationID *string                       ` + "`" + `json:\"tenant_application_id,omitempty\" example:\"660e8400-e29b-41d4-a716-446655440000\"` + "`" + `\nTenantApplication   *OutputAdminTenantApplication ` + "`" + `json:\"tenant_application,omitempty\"` + "`" + `\nLeaseID             *string                       ` + "`" + `json:\"lease_id,omitempty\"              example:\"770e8400-e29b-41d4-a716-446655440000\"` + "`" + `\nLease               *OutputAdminLease             ` + "`" + `json:\"lease,omitempty\"` + "`" + `",
                     "type": "string",
                     "example": "TENANT"
                 },
@@ -9343,13 +9337,6 @@ const docTemplate = `{
                 "signed_by_name": {
                     "type": "string",
                     "example": "John Doe"
-                },
-                "tenant_application": {
-                    "$ref": "#/definitions/transformations.OutputAdminTenantApplication"
-                },
-                "tenant_application_id": {
-                    "type": "string",
-                    "example": "660e8400-e29b-41d4-a716-446655440000"
                 },
                 "updated_at": {
                     "type": "string",

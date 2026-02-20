@@ -1334,12 +1334,12 @@ definitions:
       ip_address:
         example: 192.168.1.1
         type: string
-      lease:
-        $ref: '#/definitions/transformations.OutputAdminLease'
-      lease_id:
-        example: 770e8400-e29b-41d4-a716-446655440000
-        type: string
       role:
+        description: |-
+          TenantApplicationID *string                       `json:"tenant_application_id,omitempty" example:"660e8400-e29b-41d4-a716-446655440000"`
+          TenantApplication   *OutputAdminTenantApplication `json:"tenant_application,omitempty"`
+          LeaseID             *string                       `json:"lease_id,omitempty"              example:"770e8400-e29b-41d4-a716-446655440000"`
+          Lease               *OutputAdminLease             `json:"lease,omitempty"`
         example: TENANT
         type: string
       signature_url:
@@ -1352,11 +1352,6 @@ definitions:
         type: string
       signed_by_name:
         example: John Doe
-        type: string
-      tenant_application:
-        $ref: '#/definitions/transformations.OutputAdminTenantApplication'
-      tenant_application_id:
-        example: 660e8400-e29b-41d4-a716-446655440000
         type: string
       updated_at:
         example: "2024-06-10T09:00:00Z"
