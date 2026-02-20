@@ -791,6 +791,32 @@ definitions:
         type: string
     type: object
   handlers.UpdateDocumentRequest:
+    properties:
+      content:
+        type: string
+      property_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      size:
+        example: 3072
+        minimum: 1
+        type: integer
+      tags:
+        example:
+        - LEASE_AGREEMENT
+        - INSPECTION_REPORT
+        items:
+          type: string
+        type: array
+      title:
+        example: Updated Lease Agreement
+        type: string
+      type:
+        enum:
+        - TEMPLATE
+        - DOCUMENT
+        example: DOCUMENT
+        type: string
     type: object
   handlers.UpdateInvoiceRequest:
     properties:
@@ -966,6 +992,7 @@ definitions:
         enum:
         - WORKER
         - STUDENT
+        example: WORKER
         type: string
       first_name:
         example: John

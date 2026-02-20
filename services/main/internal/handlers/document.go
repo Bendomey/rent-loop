@@ -97,7 +97,7 @@ type UpdateDocumentRequest struct {
 	Content    *string              `json:"content,omitempty"     validate:"omitempty,json"`
 	Size       *int64               `json:"size,omitempty"        validate:"omitempty,min=1"                   example:"3072"`
 	Tags       *[]string            `json:"tags,omitempty"        validate:"omitempty,dive"                    example:"LEASE_AGREEMENT,INSPECTION_REPORT"`
-	PropertyID lib.Optional[string] `json:"property_id,omitempty" validate:"omitempty,uuid4"                   example:"550e8400-e29b-41d4-a716-446655440000"`
+	PropertyID lib.Optional[string] `json:"property_id,omitempty" validate:"omitempty,uuid4"                   example:"550e8400-e29b-41d4-a716-446655440000" swaggertype:"string"`
 }
 
 // UpdateDocument godoc
