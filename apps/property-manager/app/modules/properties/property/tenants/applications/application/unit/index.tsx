@@ -20,7 +20,9 @@ import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.applications.$applicationId'
 
 export function PropertyTenantApplicationUnitSetup() {
-	const loaderData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>('routes/_auth.properties.$propertyId.tenants.applications.$applicationId')
+	const loaderData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>(
+		'routes/_auth.properties.$propertyId.tenants.applications.$applicationId',
+	)
 	const { clientUserProperty } = useProperty()
 	const [changeUnitOpen, setChangeUnitOpen] = useState(false)
 
@@ -51,7 +53,7 @@ export function PropertyTenantApplicationUnitSetup() {
 	return (
 		<>
 			<div>
-				<Card className="relative mx-auto w-full max-w-sm pt-0 shadow-none mt-20">
+				<Card className="relative mx-auto mt-20 w-full max-w-sm pt-0 shadow-none">
 					{coverImage ? (
 						<img
 							src={coverImage}
@@ -71,18 +73,24 @@ export function PropertyTenantApplicationUnitSetup() {
 						</CardAction>
 						<CardTitle>{unit.name}</CardTitle>
 						<CardDescription>
-							{unit.type && <p className='lowercase'>{unit.type}</p>}
-							<p>Market Rent: <b>{formatAmount(unit.rent_fee)}</b>/{unit.payment_frequency?.toLowerCase()}</p>
+							{unit.type && <p className="lowercase">{unit.type}</p>}
+							<p>
+								Market Rent: <b>{formatAmount(unit.rent_fee)}</b>/
+								{unit.payment_frequency?.toLowerCase()}
+							</p>
 						</CardDescription>
 					</CardHeader>
-					<CardFooter className='w-full justify-between space-x-2'>
-						<ExternalLink className={isSingleProperty ? 'w-full' : 'w-2/4'} to={`/properties/${clientUserProperty?.property_id}/assets/units/${unit.id}`}>
-							<Button className='w-full'>View Unit</Button>
+					<CardFooter className="w-full justify-between space-x-2">
+						<ExternalLink
+							className={isSingleProperty ? 'w-full' : 'w-2/4'}
+							to={`/properties/${clientUserProperty?.property_id}/assets/units/${unit.id}`}
+						>
+							<Button className="w-full">View Unit</Button>
 						</ExternalLink>
 						{!isSingleProperty && (
 							<Button
-								className='w-2/4'
-								variant='secondary'
+								className="w-2/4"
+								variant="secondary"
 								onClick={() => setChangeUnitOpen(true)}
 							>
 								Change

@@ -148,7 +148,9 @@ function InviteTenantModal({ opened, setOpened, data, admin_id }: Props) {
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle className="flex items-center justify-between border-b pb-4">
-						<TypographyH3>Invite Tenant to {data?.desired_unit?.name}</TypographyH3>
+						<TypographyH3>
+							Invite Tenant to {data?.desired_unit?.name}
+						</TypographyH3>
 					</AlertDialogTitle>
 					<AlertDialogDescription className="space-y-4 pt-2">
 						<div className="space-y-2 pb-4">

@@ -55,9 +55,7 @@ export function PublicSigningModule() {
 			<div className="flex min-h-screen items-center justify-center bg-zinc-100">
 				<div className="w-full max-w-md rounded-lg bg-white p-8 shadow-sm">
 					<div className="mb-6 text-center">
-						<h1 className="text-xl font-semibold">
-							Sign Document
-						</h1>
+						<h1 className="text-xl font-semibold">Sign Document</h1>
 						<p className="mt-1 text-sm text-zinc-500">
 							You&apos;ve been invited to sign as{' '}
 							<span className="font-medium text-zinc-700">
@@ -68,26 +66,20 @@ export function PublicSigningModule() {
 
 					<div className="space-y-4">
 						<div className="space-y-2">
-							<Label htmlFor="signer-name">
-								Enter your full name
-							</Label>
+							<Label htmlFor="signer-name">Enter your full name</Label>
 							<Input
 								id="signer-name"
 								placeholder="e.g. Kofi Mensah"
 								value={enteredName}
 								onChange={(e) => setEnteredName(e.target.value)}
 								onKeyDown={(e) => {
-									if (
-										e.key === 'Enter' &&
-										enteredName.trim()
-									) {
+									if (e.key === 'Enter' && enteredName.trim()) {
 										setNameConfirmed(true)
 									}
 								}}
 							/>
 							<p className="text-xs text-zinc-400">
-								This name will appear alongside your signature
-								on the document.
+								This name will appear alongside your signature on the document.
 							</p>
 						</div>
 
@@ -131,9 +123,7 @@ function getSignatureStatuses(
 		if (node.type === 'signature') {
 			statuses.push({
 				role: node.role as SignatureRole,
-				signed:
-					node.signatureUrl !== null &&
-					node.signatureUrl !== undefined,
+				signed: node.signatureUrl !== null && node.signatureUrl !== undefined,
 			})
 		}
 		if (Array.isArray(node.children)) {

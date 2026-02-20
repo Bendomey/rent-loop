@@ -15,7 +15,6 @@ export function MenuBar({ document }: { document: RentloopDocument }) {
 	const savedContentRef = useRef(document.content)
 	const [hasChanges, setHasChanges] = useState(false)
 
-
 	useEffect(() => {
 		return editor.registerUpdateListener(({ editorState }) => {
 			const currentContent = JSON.stringify(editorState.toJSON())
@@ -63,9 +62,7 @@ export function MenuBar({ document }: { document: RentloopDocument }) {
 					<PencilLine />
 				</Button>
 			</div>
-			<div>
-				{hasChanges && <TypographyMuted>Changes Made</TypographyMuted>}
-			</div>
+			<div>{hasChanges && <TypographyMuted>Changes Made</TypographyMuted>}</div>
 			<div className="flex items-center space-x-2">
 				{hasChanges && (
 					<Button

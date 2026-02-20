@@ -1,6 +1,14 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { $getRoot, $nodesOfType } from 'lexical'
-import { ArrowLeft, CheckCircle2, Circle, Eye, Lock, RotateCcw, Save } from 'lucide-react'
+import {
+	ArrowLeft,
+	CheckCircle2,
+	Circle,
+	Eye,
+	Lock,
+	RotateCcw,
+	Save,
+} from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
@@ -57,9 +65,7 @@ export function LeaseMenuBar({
 	const handleSaveDraft = () => {
 		const editorState = editor.getEditorState()
 		const content = JSON.stringify(editorState.toJSON())
-		const charCount = editorState.read(() =>
-			$getRoot().getTextContent().length,
-		)
+		const charCount = editorState.read(() => $getRoot().getTextContent().length)
 
 		updateDocument.mutate(
 			{
@@ -102,10 +108,7 @@ export function LeaseMenuBar({
 
 	return (
 		<>
-			<Dialog
-				open={showFinalizeModal}
-				onOpenChange={setShowFinalizeModal}
-			>
+			<Dialog open={showFinalizeModal} onOpenChange={setShowFinalizeModal}>
 				<DialogContent className="sm:max-w-sm">
 					<DialogHeader>
 						<DialogTitle>Finalize for Signing</DialogTitle>
@@ -151,91 +154,86 @@ export function LeaseMenuBar({
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
-		<div className="flex flex-col justify-between gap-2 border-b py-3 md:flex-row md:items-center md:px-3">
-			<div className="flex items-center space-x-2">
-				<Button onClick={() => navigate(-1)} size="sm" variant="ghost">
-					<ArrowLeft />
-				</Button>
-				<Separator orientation="vertical" className="!h-5" />
-				<div className="flex flex-col">
-					<h1 className="text-sm font-medium">{document.title}</h1>
-					<div className="flex items-center gap-1.5">
-						<TypographyMuted className="text-xs">
-							{applicantName}
-						</TypographyMuted>
-						{unitName && (
-							<>
-								<span className="text-xs text-zinc-300">
-									/
-								</span>
-								<TypographyMuted className="text-xs">
-									{unitName}
-								</TypographyMuted>
-							</>
-						)}
-						<Badge
-							variant="outline"
-							className="ml-1 px-1.5 py-0 text-[10px]"
-						>
-							#{tenantApplication.code}
-						</Badge>
+			<div className="flex flex-col justify-between gap-2 border-b py-3 md:flex-row md:items-center md:px-3">
+				<div className="flex items-center space-x-2">
+					<Button onClick={() => navigate(-1)} size="sm" variant="ghost">
+						<ArrowLeft />
+					</Button>
+					<Separator orientation="vertical" className="!h-5" />
+					<div className="flex flex-col">
+						<h1 className="text-sm font-medium">{document.title}</h1>
+						<div className="flex items-center gap-1.5">
+							<TypographyMuted className="text-xs">
+								{applicantName}
+							</TypographyMuted>
+							{unitName && (
+								<>
+									<span className="text-xs text-zinc-300">/</span>
+									<TypographyMuted className="text-xs">
+										{unitName}
+									</TypographyMuted>
+								</>
+							)}
+							<Badge variant="outline" className="ml-1 px-1.5 py-0 text-[10px]">
+								#{tenantApplication.code}
+							</Badge>
+						</div>
 					</div>
 				</div>
-			</div>
 
-			<div className="flex items-center space-x-2">
-				{docStatus === 'DRAFT' ? (
-					hasChanges ? (
-						<Button
-							size="sm"
-							variant="outline"
-							className="text-xs"
-							onClick={handleSaveDraft}
-							disabled={updateDocument.isPending}
-						>
-							<Save className="size-3" />
-							{updateDocument.isPending ? 'Saving...' : 'Save Draft'}
-						</Button>
+				<div className="flex items-center space-x-2">
+					{docStatus === 'DRAFT' ? (
+						hasChanges ? (
+							<Button
+								size="sm"
+								variant="outline"
+								className="text-xs"
+								onClick={handleSaveDraft}
+								disabled={updateDocument.isPending}
+							>
+								<Save className="size-3" />
+								{updateDocument.isPending ? 'Saving...' : 'Save Draft'}
+							</Button>
+						) : (
+							<Button
+								size="sm"
+								className="bg-rose-600 text-xs hover:bg-rose-800"
+								onClick={() => setShowFinalizeModal(true)}
+							>
+								<Lock className="size-3" />
+								Finalize for Signing
+							</Button>
+						)
+					) : docStatus === 'FINALIZED' ? (
+						<>
+							<Badge
+								variant="outline"
+								className="gap-1 border-amber-300 bg-amber-50 px-2 py-1 text-[10px] text-amber-700"
+							>
+								<Lock className="size-3" />
+								Read Only — document is finalized
+							</Badge>
+							<Button
+								size="sm"
+								variant="outline"
+								className="text-xs"
+								onClick={onRevertToDraft}
+							>
+								<RotateCcw className="size-3" />
+								Back to Draft
+							</Button>
+						</>
 					) : (
-						<Button
-							size="sm"
-							className="bg-rose-600 text-xs hover:bg-rose-800"
-							onClick={() => setShowFinalizeModal(true)}
-						>
-							<Lock className="size-3" />
-							Finalize for Signing
-						</Button>
-					)
-				) : docStatus === 'FINALIZED' ? (
-					<>
 						<Badge
 							variant="outline"
-							className="gap-1 border-amber-300 bg-amber-50 px-2 py-1 text-[10px] text-amber-700"
+							className="gap-1 border-zinc-300 bg-zinc-50 px-2 py-1 text-[10px] text-zinc-500"
 						>
-							<Lock className="size-3" />
-							Read Only — document is finalized
+							<Eye className="size-3" />
+							View Only
 						</Badge>
-						<Button
-							size="sm"
-							variant="outline"
-							className="text-xs"
-							onClick={onRevertToDraft}
-						>
-							<RotateCcw className="size-3" />
-							Back to Draft
-						</Button>
-					</>
-				) : (
-					<Badge
-						variant="outline"
-						className="gap-1 border-zinc-300 bg-zinc-50 px-2 py-1 text-[10px] text-zinc-500"
-					>
-						<Eye className="size-3" />
-						View Only
-					</Badge>
-				)}
+					)}
+				</div>
 			</div>
-		</div>
 		</>
 	)
 }

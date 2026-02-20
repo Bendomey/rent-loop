@@ -120,8 +120,7 @@ export function ChangeUnitModal({
 					) : (
 						units.map((unit) => {
 							const isSelected = selectedUnitId === unit.id
-							const isAvailable =
-								unit.status === 'Unit.Status.Available'
+							const isAvailable = unit.status === 'Unit.Status.Available'
 							const isCurrent = currentUnitId === unit.id
 
 							return (
@@ -135,7 +134,9 @@ export function ChangeUnitModal({
 										isSelected
 											? 'border-primary bg-primary/5 ring-primary ring-1'
 											: 'hover:bg-gray-50',
-										!isAvailable && !isCurrent && 'cursor-not-allowed opacity-50',
+										!isAvailable &&
+											!isCurrent &&
+											'cursor-not-allowed opacity-50',
 									)}
 								>
 									{unit.images?.[0] ? (
@@ -149,15 +150,13 @@ export function ChangeUnitModal({
 											No img
 										</div>
 									)}
-									<div className="flex-1 min-w-0">
+									<div className="min-w-0 flex-1">
 										<div className="flex items-center gap-2">
-											<span className="font-medium truncate">
-												{unit.name}
-											</span>
+											<span className="truncate font-medium">{unit.name}</span>
 											<Badge
 												variant="outline"
 												className={cn(
-													'text-[10px] px-1.5 py-0',
+													'px-1.5 py-0 text-[10px]',
 													statusColor(unit.status),
 												)}
 											>
@@ -169,12 +168,13 @@ export function ChangeUnitModal({
 												</span>
 											)}
 										</div>
-										<p className="text-sm text-muted-foreground">
-											{formatAmount(unit.rent_fee)}/{unit.payment_frequency?.toLowerCase()}
+										<p className="text-muted-foreground text-sm">
+											{formatAmount(unit.rent_fee)}/
+											{unit.payment_frequency?.toLowerCase()}
 										</p>
 									</div>
 									{isSelected && (
-										<div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary">
+										<div className="bg-primary flex h-5 w-5 shrink-0 items-center justify-center rounded-full">
 											<Check className="h-3 w-3 text-white" />
 										</div>
 									)}
