@@ -384,7 +384,7 @@ export function Step3() {
 					{/* Contact & Address Section */}
 					<div className="space-y-5 rounded-lg border border-slate-100 bg-slate-50 p-5">
 						<h3 className="text-lg font-semibold text-slate-900">
-							Contact Information
+							Address Information
 						</h3>
 						<div className="space-y-5">
 							<FormField
@@ -415,8 +415,7 @@ export function Step3() {
 							Profile Picture
 						</h3>
 						<ImageUpload
-							hero
-							shape="square"
+							shape="circle"
 							hint="Optional"
 							acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
 							error={rhfMethods.formState.errors?.profile_photo_url?.message}

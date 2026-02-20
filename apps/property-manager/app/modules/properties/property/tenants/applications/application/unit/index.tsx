@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useRouteLoaderData } from 'react-router'
+import { useTenantApplicationContext } from '../context'
 import { ChangeUnitModal } from './change-unit-modal'
 import { ExternalLink } from '~/components/external-link'
 import { Badge } from '~/components/ui/badge'
@@ -17,16 +17,13 @@ import { getPropertyUnitStatusLabel } from '~/lib/properties.utils'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
-import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.applications.$applicationId'
 
 export function PropertyTenantApplicationUnitSetup() {
-	const loaderData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>(
-		'routes/_auth.properties.$propertyId.tenants.applications.$applicationId',
-	)
+
 	const { clientUserProperty } = useProperty()
 	const [changeUnitOpen, setChangeUnitOpen] = useState(false)
+	const { tenantApplication: application } = useTenantApplicationContext()
 
-	const application = loaderData?.tenantApplication
 	const unit = application?.desired_unit
 	const coverImage = unit?.images?.[0]
 	const propertyId = safeString(clientUserProperty?.property_id)

@@ -91,6 +91,8 @@ type CreateTenantApplicationInput struct {
 	MaritalStatus                  string
 	IDType                         string
 	IDNumber                       string
+	IDFrontUrl                     *string
+	IDBackUrl                      *string
 	CurrentAddress                 string
 	EmergencyContactName           string
 	EmergencyContactPhone          string
@@ -98,6 +100,7 @@ type CreateTenantApplicationInput struct {
 	Occupation                     string
 	Employer                       string
 	EmployerType                   string
+	ProofOfIncomeUrl               *string
 	OccupationAddress              string
 	ProfilePhotoUrl                *string
 	CreatedById                    string
@@ -138,6 +141,8 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		MaritalStatus:                  input.MaritalStatus,
 		IDType:                         input.IDType,
 		IDNumber:                       input.IDNumber,
+		IDFrontUrl:                     input.IDFrontUrl,
+		IDBackUrl:                      input.IDBackUrl,
 		CurrentAddress:                 input.CurrentAddress,
 		EmergencyContactName:           input.EmergencyContactName,
 		EmergencyContactPhone:          input.EmergencyContactPhone,
@@ -145,6 +150,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		Occupation:                     input.Occupation,
 		Employer:                       input.Employer,
 		EmployerType:                   &input.EmployerType,
+		ProofOfIncomeUrl:               input.ProofOfIncomeUrl,
 		OccupationAddress:              input.OccupationAddress,
 		ProfilePhotoUrl:                input.ProfilePhotoUrl,
 		CreatedById:                    input.CreatedById,

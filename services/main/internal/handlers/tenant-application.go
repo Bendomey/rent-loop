@@ -44,6 +44,8 @@ type CreateTenantApplicationRequest struct {
 	MaritalStatus                  string    `json:"marital_status"                    validate:"required,oneof=SINGLE MARRIED DIVORCED WIDOWED"                example:"SINGLE"                               description:"Marital status of the applicant"`
 	IDType                         string    `json:"id_type"                           validate:"required,oneof=GHANA_CARD NATIONAL_ID PASSPORT DRIVER_LICENSE" example:"GHANA_CARD"                           description:"ID type of the applicant"`
 	IDNumber                       string    `json:"id_number"                         validate:"required"                                                      example:"GHA-123456789"                        description:"ID number of the applicant"`
+	IDFrontUrl                     *string   `json:"id_front_url,omitempty"              validate:"omitempty,url"                                                 example:"https://example.com/id_front.jpg"    description:"ID front image URL"`
+	IDBackUrl                      *string   `json:"id_back_url,omitempty"               validate:"omitempty,url"                                                 example:"https://example.com/id_back.jpg"     description:"ID back image URL"`
 	CurrentAddress                 string    `json:"current_address"                   validate:"required"                                                      example:"123 Main St, Accra"                   description:"Current address of the applicant"`
 	EmergencyContactName           string    `json:"emergency_contact_name"            validate:"required"                                                      example:"Jane Doe"                             description:"Emergency contact name"`
 	EmergencyContactPhone          string    `json:"emergency_contact_phone"           validate:"required,e164"                                                 example:"+233281434579"                        description:"Emergency contact phone"`
@@ -51,6 +53,7 @@ type CreateTenantApplicationRequest struct {
 	Occupation                     string    `json:"occupation"                        validate:"required"                                                      example:"Software Engineer"                    description:"Occupation of the applicant"`
 	Employer                       string    `json:"employer"                          validate:"required"                                                      example:"Acme Corp"                            description:"Employer of the applicant"`
 	EmployerType                   string    `json:"employer_type"                     validate:"required,oneof=WORKER STUDENT"                                 example:"WORKER"                               description:"Employer type of the applicant"`
+	ProofOfIncomeUrl               *string   `json:"proof_of_income_url,omitempty"       validate:"omitempty,url"                                                 example:"https://example.com/proof_of_income.jpg" description:"Proof of income URL"`
 	OccupationAddress              string    `json:"occupation_address"                validate:"required"                                                      example:"456 Tech Ave, Accra"                  description:"Occupation address"`
 	ProfilePhotoUrl                *string   `json:"profile_photo_url,omitempty"       validate:"omitempty,url"                                                 example:"https://example.com/photo.jpg"        description:"Profile photo URL"`
 	CreatedById                    string    `json:"created_by_id"                     validate:"required,uuid"                                                 example:"72432ce6-5620-4ecf-a862-4bf2140556a1" description:"ID of the user who created the tenant application"`
@@ -96,6 +99,8 @@ func (h *TenantApplicationHandler) CreateTenantApplication(w http.ResponseWriter
 		MaritalStatus:                  body.MaritalStatus,
 		IDType:                         body.IDType,
 		IDNumber:                       body.IDNumber,
+		IDFrontUrl:                     body.IDFrontUrl,
+		IDBackUrl:                      body.IDBackUrl,
 		CurrentAddress:                 body.CurrentAddress,
 		EmergencyContactName:           body.EmergencyContactName,
 		EmergencyContactPhone:          body.EmergencyContactPhone,
@@ -103,6 +108,7 @@ func (h *TenantApplicationHandler) CreateTenantApplication(w http.ResponseWriter
 		Occupation:                     body.Occupation,
 		Employer:                       body.Employer,
 		EmployerType:                   body.EmployerType,
+		ProofOfIncomeUrl:               body.ProofOfIncomeUrl,
 		OccupationAddress:              body.OccupationAddress,
 		ProfilePhotoUrl:                body.ProfilePhotoUrl,
 		CreatedById:                    body.CreatedById,

@@ -35,15 +35,15 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 		)
 
 		return {
-		origin: getDomainUrl(request),
-		clientUserProperty,
-		tenantApplication,
-	}
+			origin: getDomainUrl(request),
+			clientUserProperty,
+			tenantApplication,
+		}
 	} catch {
 		return redirect(NOT_FOUND_ROUTE)
 	}
 
-	
+
 }
 
 export const handle = {

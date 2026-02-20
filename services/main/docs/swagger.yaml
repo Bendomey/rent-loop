@@ -432,6 +432,12 @@ definitions:
         - FEMALE
         example: MALE
         type: string
+      id_back_url:
+        example: https://example.com/id_back.jpg
+        type: string
+      id_front_url:
+        example: https://example.com/id_front.jpg
+        type: string
       id_number:
         example: GHA-123456789
         type: string
@@ -471,6 +477,9 @@ definitions:
         type: string
       profile_photo_url:
         example: https://example.com/photo.jpg
+        type: string
+      proof_of_income_url:
+        example: https://example.com/proof_of_income.jpg
         type: string
       relationship_to_emergency_contact:
         example: Sister

@@ -2,9 +2,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Pencil, X } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useRevalidator, useRouteLoaderData } from 'react-router'
+import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { useTenantApplicationContext } from '../context'
 import { useUpdateTenantApplication } from '~/api/tenant-applications'
 import { Button } from '~/components/ui/button'
 import {
@@ -30,15 +31,14 @@ import { Spinner } from '~/components/ui/spinner'
 import { safeString } from '~/lib/strings'
 import { toFirstUpperCase } from '~/lib/strings'
 import { cn } from '~/lib/utils'
-import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.applications.$applicationId'
 
 const employer_type: Array<{
 	label: string
 	value: TenantApplication['employer_type']
 }> = [
-	{ label: 'Student', value: 'STUDENT' },
-	{ label: 'Worker', value: 'WORKER' },
-]
+		{ label: 'Student', value: 'STUDENT' },
+		{ label: 'Worker', value: 'WORKER' },
+	]
 
 const ValidationSchema = z.object({
 	emergency_contact_name: z
@@ -75,11 +75,9 @@ function FieldDisplay({ label, value }: FieldDisplayProps) {
 }
 
 export function PropertyTenantApplicationEmergencyContact() {
-	const loaderData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>(
-		'routes/_auth.properties.$propertyId.tenants.applications.$applicationId',
-	)
+	const { tenantApplication: application } = useTenantApplicationContext()
+
 	const revalidator = useRevalidator()
-	const application = loaderData?.tenantApplication
 	const [isEditing, setIsEditing] = useState(false)
 
 	const rhfMethods = useForm<FormSchema>({

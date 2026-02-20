@@ -8100,6 +8100,14 @@ const docTemplate = `{
                     ],
                     "example": "MALE"
                 },
+                "id_back_url": {
+                    "type": "string",
+                    "example": "https://example.com/id_back.jpg"
+                },
+                "id_front_url": {
+                    "type": "string",
+                    "example": "https://example.com/id_front.jpg"
+                },
                 "id_number": {
                     "type": "string",
                     "example": "GHA-123456789"
@@ -8151,6 +8159,10 @@ const docTemplate = `{
                 "profile_photo_url": {
                     "type": "string",
                     "example": "https://example.com/photo.jpg"
+                },
+                "proof_of_income_url": {
+                    "type": "string",
+                    "example": "https://example.com/proof_of_income.jpg"
                 },
                 "relationship_to_emergency_contact": {
                     "type": "string",
