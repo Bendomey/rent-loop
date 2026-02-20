@@ -66,7 +66,6 @@ func ServiceAutoMigration(db *gorm.DB) error {
 	m = gormigrate.New(db, gormigrate.DefaultOptions, []*gormigrate.Migration{
 		jobs.SeedSuperAdmin(),
 		jobs.SeedSystemOfflinePaymentAccount(),
-		jobs.AddLifecycleActorFieldsLease(),
 	})
 	m.Migrate()
 
