@@ -9,6 +9,8 @@ import (
 type Document struct {
 	BaseModelSoftDelete
 
+	Type string `gorm:"not null"` // TEMPLATE | DOCUMENT
+
 	Title string `gorm:"not null"`
 	Size  int64  `gorm:"not null;"` // in bytes
 

@@ -86,6 +86,7 @@ func (r *documentRepository) Delete(ctx context.Context, documentID string) erro
 }
 
 type ListDocumentsFilter struct {
+	Type                   *string
 	Tags                   *[]string
 	PropertyID             *string
 	PropertySlug           *string
@@ -112,7 +113,7 @@ func (r *documentRepository) List(
 			PropertySlugFilterScope(filters.PropertySlug),
 			OnlyGlobalDocumentsFilterScope(filters.OnlyGlobalDocuments),
 			TagsFilterScope(filters.Tags),
-
+			DocumentTypeFilterScope(filters.Type),
 			PaginationScope(filterQuery.Page, filterQuery.PageSize),
 			OrderScope("documents", filterQuery.OrderBy, filterQuery.Order),
 		)
@@ -151,6 +152,7 @@ func (r *documentRepository) Count(
 			PropertySlugFilterScope(filters.PropertySlug),
 			OnlyGlobalDocumentsFilterScope(filters.OnlyGlobalDocuments),
 			TagsFilterScope(filters.Tags),
+			DocumentTypeFilterScope(filters.Type),
 		).
 		Count(&count)
 
@@ -210,5 +212,15 @@ func TagsFilterScope(tags *[]string) func(db *gorm.DB) *gorm.DB {
 		}
 
 		return db.Where("documents.tags && ?", pq.StringArray(*tags))
+	}
+}
+
+func DocumentTypeFilterScope(docType *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if docType == nil {
+			return db
+		}
+
+		return db.Where("documents.type = ?", *docType)
 	}
 }

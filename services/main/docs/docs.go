@@ -2168,6 +2168,16 @@ const docTemplate = `{
                         ],
                         "name": "tags",
                         "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "TEMPLATE",
+                            "DOCUMENT"
+                        ],
+                        "type": "string",
+                        "example": "DOCUMENT",
+                        "name": "type",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -7746,7 +7756,8 @@ const docTemplate = `{
             "required": [
                 "content",
                 "size",
-                "title"
+                "title",
+                "type"
             ],
             "properties": {
                 "content": {
@@ -7773,6 +7784,14 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "example": "Lease Agreement"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "TEMPLATE",
+                        "DOCUMENT"
+                    ],
+                    "example": "DOCUMENT"
                 }
             }
         },
@@ -8521,35 +8540,7 @@ const docTemplate = `{
             }
         },
         "handlers.UpdateDocumentRequest": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "property_id": {
-                    "type": "string",
-                    "example": "550e8400-e29b-41d4-a716-446655440000"
-                },
-                "size": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "example": 3072
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "LEASE_AGREEMENT",
-                        "INSPECTION_REPORT"
-                    ]
-                },
-                "title": {
-                    "type": "string",
-                    "example": "Updated Lease Agreement"
-                }
-            }
+            "type": "object"
         },
         "handlers.UpdateInvoiceRequest": {
             "type": "object",
@@ -9259,6 +9250,10 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "example": "Lease Agreement"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "TEMPLATE"
                 },
                 "updated_at": {
                     "type": "string",

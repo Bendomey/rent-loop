@@ -8,6 +8,7 @@ import (
 
 type OutputAdminDocument struct {
 	ID          string            `json:"id"                      example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	Type        string            `json:"type"                    example:"TEMPLATE"`
 	Title       string            `json:"title"                   example:"Lease Agreement"`
 	Content     string            `json:"content"`
 	Size        int64             `json:"size"                    example:"2048"`
@@ -30,6 +31,7 @@ func DBAdminDocumentToRestDocument(i *models.Document) interface{} {
 
 	data := map[string]interface{}{
 		"id":            i.ID.String(),
+		"type":          i.Type,
 		"title":         i.Title,
 		"content":       string(i.Content),
 		"size":          i.Size,

@@ -42,6 +42,7 @@ func NewDocumentService(appCtx pkg.AppContext, repo repository.DocumentRepositor
 }
 
 type CreateDocumentInput struct {
+	Type         string
 	Title        string
 	Content      map[string]interface{}
 	Size         int64
@@ -71,6 +72,7 @@ func (s *documentService) Create(
 	}
 
 	document := &models.Document{
+		Type:        input.Type,
 		Title:       input.Title,
 		Content:     contentBytes,
 		Size:        input.Size,
@@ -94,11 +96,12 @@ func (s *documentService) Create(
 
 type UpdateDocumentInput struct {
 	DocumentID   string
+	Type         *string
 	Title        *string
 	Content      *map[string]interface{}
 	Size         *int64
 	Tags         *[]string
-	PropertyID   *string
+	PropertyID   lib.Optional[string]
 	ClientUserID string
 }
 
@@ -150,7 +153,10 @@ func (s *documentService) Update(
 		document.Tags = *input.Tags
 	}
 
-	document.PropertyID = input.PropertyID
+	if input.PropertyID.IsSet {
+		document.PropertyID = input.PropertyID.Ptr()
+	}
+
 	document.UpdatedByID = &input.ClientUserID
 
 	if err := s.repo.Update(ctx, document); err != nil {

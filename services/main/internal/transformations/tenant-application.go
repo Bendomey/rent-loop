@@ -40,7 +40,7 @@ type OutputAdminTenantApplication struct {
 	SecurityDepositFeeCurrency *string `json:"security_deposit_fee_currency,omitempty" example:"USD"`
 
 	LeaseAgreementDocumentMode *string `json:"lease_agreement_document_mode,omitempty" example:"MANUAL"`
-	LeaseAgreementDocumentUrl  *string `json:"lease_agreement_document_url,omitempty"   example:"https://example.com/lease.pdf"`
+	LeaseAgreementDocumentUrl  *string `json:"lease_agreement_document_url,omitempty"  example:"https://example.com/lease.pdf"`
 
 	FirstName       string    `json:"first_name"                  example:"John"`
 	OtherNames      *string   `json:"other_names,omitempty"       example:"Michael"`

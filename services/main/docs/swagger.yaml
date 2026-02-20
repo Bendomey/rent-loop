@@ -205,10 +205,17 @@ definitions:
       title:
         example: Lease Agreement
         type: string
+      type:
+        enum:
+        - TEMPLATE
+        - DOCUMENT
+        example: DOCUMENT
+        type: string
     required:
     - content
     - size
     - title
+    - type
     type: object
   handlers.CreateOfflinePaymentRequest:
     properties:
@@ -759,26 +766,6 @@ definitions:
         type: string
     type: object
   handlers.UpdateDocumentRequest:
-    properties:
-      content:
-        type: string
-      property_id:
-        example: 550e8400-e29b-41d4-a716-446655440000
-        type: string
-      size:
-        example: 3072
-        minimum: 1
-        type: integer
-      tags:
-        example:
-        - LEASE_AGREEMENT
-        - INSPECTION_REPORT
-        items:
-          type: string
-        type: array
-      title:
-        example: Updated Lease Agreement
-        type: string
     type: object
   handlers.UpdateInvoiceRequest:
     properties:
@@ -1297,6 +1284,9 @@ definitions:
         type: array
       title:
         example: Lease Agreement
+        type: string
+      type:
+        example: TEMPLATE
         type: string
       updated_at:
         example: "2023-01-01T00:00:00Z"
@@ -4140,6 +4130,13 @@ paths:
           type: string
         name: tags
         type: array
+      - enum:
+        - TEMPLATE
+        - DOCUMENT
+        example: DOCUMENT
+        in: query
+        name: type
+        type: string
       produces:
       - application/json
       responses:
