@@ -40,13 +40,13 @@ import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.appli
 const ID_TYPE_LABELS: Record<string, string> = {
 	NATIONAL_ID: 'National ID',
 	PASSPORT: 'Passport',
-	DRIVERS_LICENSE: "Driver's License",
+	DRIVER_LICENSE: "Driver's License",
 	GHANA_CARD: 'Ghana Card',
 }
 
 const ValidationSchema = z.object({
 	nationality: z.string().trim().min(1, 'Nationality is required'),
-	id_type: z.enum(['DRIVERS_LICENSE', 'PASSPORT', 'NATIONAL_ID', 'GHANA_CARD'], {
+	id_type: z.enum(['DRIVER_LICENSE', 'PASSPORT', 'NATIONAL_ID', 'GHANA_CARD'], {
 		message: 'Please select an ID type',
 	}),
 	id_number: z.string().trim().min(1, 'ID number is required'),
@@ -257,7 +257,7 @@ export function PropertyTenantApplicationIdentity() {
 															National ID
 														</SelectItem>
 														<SelectItem value="PASSPORT">Passport</SelectItem>
-														<SelectItem value="DRIVERS_LICENSE">
+														<SelectItem value="DRIVER_LICENSE">
 															Driver's License
 														</SelectItem>
 														<SelectItem value="GHANA_CARD">

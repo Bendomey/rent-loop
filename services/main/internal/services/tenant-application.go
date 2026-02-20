@@ -97,6 +97,7 @@ type CreateTenantApplicationInput struct {
 	RelationshipToEmergencyContact string
 	Occupation                     string
 	Employer                       string
+	EmployerType                   string
 	OccupationAddress              string
 	ProfilePhotoUrl                *string
 	CreatedById                    string
@@ -141,6 +142,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		RelationshipToEmergencyContact: input.RelationshipToEmergencyContact,
 		Occupation:                     input.Occupation,
 		Employer:                       input.Employer,
+		EmployerType:                   &input.EmployerType,
 		OccupationAddress:              input.OccupationAddress,
 		ProfilePhotoUrl:                input.ProfilePhotoUrl,
 		CreatedById:                    input.CreatedById,
@@ -333,6 +335,7 @@ type UpdateTenantApplicationInput struct {
 	SecurityDepositPaymentId       *string
 
 	// Nullable fields that can be explicitly set to null
+	EmployerType                 lib.Optional[string]
 	DesiredMoveInDate            lib.Optional[time.Time]
 	StayDurationFrequency        lib.Optional[string]
 	StayDuration                 lib.Optional[int64]
@@ -455,6 +458,10 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 	}
 
 	// Nullable fields - update if field was explicitly sent (allows setting to null)
+	if input.EmployerType.IsSet {
+		tenantApplication.EmployerType = input.EmployerType.Ptr()
+	}
+
 	if input.DesiredMoveInDate.IsSet {
 		tenantApplication.DesiredMoveInDate = input.DesiredMoveInDate.Ptr()
 	}

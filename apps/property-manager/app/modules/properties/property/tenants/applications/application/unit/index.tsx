@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useRouteLoaderData } from 'react-router'
 import { ChangeUnitModal } from './change-unit-modal'
 import { ExternalLink } from '~/components/external-link'
-import { Badge } from "~/components/ui/badge"
-import { Button } from "~/components/ui/button"
+import { Badge } from '~/components/ui/badge'
+import { Button } from '~/components/ui/button'
 import {
 	Card,
 	CardAction,
@@ -11,7 +11,7 @@ import {
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from "~/components/ui/card"
+} from '~/components/ui/card'
 import { formatAmount } from '~/lib/format-amount'
 import { getPropertyUnitStatusLabel } from '~/lib/properties.utils'
 import { safeString } from '~/lib/strings'

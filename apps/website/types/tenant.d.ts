@@ -12,7 +12,7 @@ interface Tenant {
 	marital_status: 'SINGLE' | 'MARRIED' | 'DIVORCED' | 'WIDOWED'
 	profile_photo_url: Nullable<string>
 	id_type: Nullable<
-		'DRIVERS_LICENSE' | 'PASSPORT' | 'NATIONAL_ID' | 'GHANA_CARD'
+		'DRIVER_LICENSE' | 'PASSPORT' | 'NATIONAL_ID' | 'GHANA_CARD'
 	>
 	id_number: string
 	id_front_url: Nullable<string>
@@ -22,7 +22,7 @@ interface Tenant {
 	emergency_contact_name: string
 	emergency_contact_phone: string
 	relationship_to_emergency_contact: string
-	employment_type: 'WORKER' | 'STUDENT'
+	employer_type: 'WORKER' | 'STUDENT'
 	occupation: string
 	employer: string
 	occupation_address: string

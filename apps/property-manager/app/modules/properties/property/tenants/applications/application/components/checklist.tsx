@@ -48,7 +48,7 @@ export function PropertyTenantApplicationChecklist({ application }: Props) {
         { label: 'Emergency contact name', done: Boolean(application.emergency_contact_name) },
         { label: 'Emergency contact phone', done: Boolean(application.emergency_contact_phone) },
         { label: 'Relationship to emergency contact', done: Boolean(application.relationship_to_emergency_contact) },
-        { label: 'Employment type', done: Boolean(application.employment_type) },
+        { label: 'Employment type', done: Boolean(application.employer_type) },
         { label: 'Occupation', done: Boolean(application.occupation) },
         { label: 'Employer', done: Boolean(application.employer) },
         { label: 'Occupation address', done: Boolean(application.occupation_address) },

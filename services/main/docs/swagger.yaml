@@ -43,11 +43,12 @@ definitions:
   handlers.AuthCodeRequest:
     properties:
       channel:
-        enum:
-        - email
-        - sms
-        example: email
-        type: string
+        example:
+        - EMAIL
+        - SMS
+        items:
+          type: string
+        type: array
       email:
         example: email@example.com
         type: string
@@ -416,11 +417,20 @@ definitions:
       employer:
         example: Acme Corp
         type: string
+      employer_type:
+        enum:
+        - WORKER
+        - STUDENT
+        example: WORKER
+        type: string
       first_name:
         example: John
         type: string
       gender:
-        example: Male
+        enum:
+        - MALE
+        - FEMALE
+        example: MALE
         type: string
       id_number:
         example: GHA-123456789
@@ -437,7 +447,12 @@ definitions:
         example: Doe
         type: string
       marital_status:
-        example: Single
+        enum:
+        - SINGLE
+        - MARRIED
+        - DIVORCED
+        - WIDOWED
+        example: SINGLE
         type: string
       nationality:
         example: Ghanaian
@@ -468,6 +483,7 @@ definitions:
     - emergency_contact_name
     - emergency_contact_phone
     - employer
+    - employer_type
     - first_name
     - gender
     - id_number
@@ -937,6 +953,11 @@ definitions:
       employer:
         example: Acme Corp
         type: string
+      employer_type:
+        enum:
+        - WORKER
+        - STUDENT
+        type: string
       first_name:
         example: John
         type: string
@@ -1297,6 +1318,50 @@ definitions:
         example: c290f1ee-6c54-4b01-90e6-d701748f0852
         type: string
     type: object
+  transformations.OutputAdminDocumentSignature:
+    properties:
+      created_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      document:
+        $ref: '#/definitions/transformations.OutputAdminDocument'
+      document_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      ip_address:
+        example: 192.168.1.1
+        type: string
+      lease:
+        $ref: '#/definitions/transformations.OutputAdminLease'
+      lease_id:
+        example: 770e8400-e29b-41d4-a716-446655440000
+        type: string
+      role:
+        example: TENANT
+        type: string
+      signature_url:
+        example: https://s3.amazonaws.com/signatures/sig.png
+        type: string
+      signed_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      signed_by_id:
+        example: 880e8400-e29b-41d4-a716-446655440000
+        type: string
+      signed_by_name:
+        example: John Doe
+        type: string
+      tenant_application:
+        $ref: '#/definitions/transformations.OutputAdminTenantApplication'
+      tenant_application_id:
+        example: 660e8400-e29b-41d4-a716-446655440000
+        type: string
+      updated_at:
+        example: "2024-06-10T09:00:00Z"
+        type: string
+    type: object
   transformations.OutputAdminLease:
     properties:
       activated_at:
@@ -1606,7 +1671,10 @@ definitions:
         example: "+1122334455"
         type: string
       employer:
-        example: Tech Ltd.
+        example: UPSA
+        type: string
+      employer_type:
+        example: WORKER
         type: string
       first_name:
         example: John
@@ -1638,8 +1706,20 @@ definitions:
       last_name:
         example: Doe
         type: string
+      lease_agreement_document:
+        $ref: '#/definitions/transformations.OutputAdminDocument'
+      lease_agreement_document_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
       lease_agreement_document_mode:
         example: MANUAL
+        type: string
+      lease_agreement_document_signatures:
+        items:
+          $ref: '#/definitions/transformations.OutputAdminDocumentSignature'
+        type: array
+      lease_agreement_document_status:
+        example: DRAFT
         type: string
       lease_agreement_document_url:
         example: https://example.com/lease.pdf
@@ -1651,7 +1731,7 @@ definitions:
         example: Ghanaian
         type: string
       occupation:
-        example: Software Engineer
+        example: STUDENT
         type: string
       occupation_address:
         example: 456 Tech Ave, Accra
@@ -5982,14 +6062,14 @@ paths:
         name: parent_lease_id
         type: string
       - enum:
-        - Hourly
-        - Daily
-        - Monthly
-        - Quarterly
-        - BiAnnually
-        - Annually
-        - OneTime
-        example: Hourly
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
+        example: HOURLY
         in: query
         name: payment_frequency
         type: string
@@ -6023,10 +6103,10 @@ paths:
         name: status
         type: string
       - enum:
-        - Hours
-        - Days
-        - Months
-        example: Hours
+        - HOURS
+        - DAYS
+        - MONTHS
+        example: HOURS
         in: query
         name: stay_duration_frequency
         type: string
@@ -6826,8 +6906,8 @@ paths:
         name: end_date
         type: string
       - enum:
-        - Male
-        - Female
+        - MALE
+        - FEMALE
         in: query
         name: gender
         type: string
@@ -6847,10 +6927,10 @@ paths:
         name: initial_deposit_payment_method
         type: string
       - enum:
-        - Single
-        - Married
-        - Divorced
-        - Widowed
+        - SINGLE
+        - MARRIED
+        - DIVORCED
+        - WIDOWED
         in: query
         name: marital_status
         type: string
@@ -6872,13 +6952,13 @@ paths:
         name: page_size
         type: integer
       - enum:
-        - Hourly
-        - Daily
-        - Monthly
-        - Quarterly
-        - BiAnnually
-        - Annually
-        - OneTime
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
         in: query
         name: payment_frequency
         type: string
@@ -6929,9 +7009,9 @@ paths:
         name: status
         type: string
       - enum:
-        - Hours
-        - Days
-        - Months
+        - HOURS
+        - DAYS
+        - MONTHS
         in: query
         name: stay_duration_frequency
         type: string
@@ -7430,14 +7510,14 @@ paths:
         name: parent_lease_id
         type: string
       - enum:
-        - Hourly
-        - Daily
-        - Monthly
-        - Quarterly
-        - BiAnnually
-        - Annually
-        - OneTime
-        example: Hourly
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
+        example: HOURLY
         in: query
         name: payment_frequency
         type: string
@@ -7471,10 +7551,10 @@ paths:
         name: status
         type: string
       - enum:
-        - Hours
-        - Days
-        - Months
-        example: Hours
+        - HOURS
+        - DAYS
+        - MONTHS
+        example: HOURS
         in: query
         name: stay_duration_frequency
         type: string

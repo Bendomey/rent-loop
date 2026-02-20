@@ -5268,16 +5268,16 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Hourly",
-                            "Daily",
-                            "Monthly",
-                            "Quarterly",
-                            "BiAnnually",
-                            "Annually",
-                            "OneTime"
+                            "HOURLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY",
+                            "ONETIME"
                         ],
                         "type": "string",
-                        "example": "Hourly",
+                        "example": "HOURLY",
                         "name": "payment_frequency",
                         "in": "query"
                     },
@@ -5325,12 +5325,12 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Hours",
-                            "Days",
-                            "Months"
+                            "HOURS",
+                            "DAYS",
+                            "MONTHS"
                         ],
                         "type": "string",
-                        "example": "Hours",
+                        "example": "HOURS",
                         "name": "stay_duration_frequency",
                         "in": "query"
                     },
@@ -6337,8 +6337,8 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Male",
-                            "Female"
+                            "MALE",
+                            "FEMALE"
                         ],
                         "type": "string",
                         "name": "gender",
@@ -6368,10 +6368,10 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Single",
-                            "Married",
-                            "Divorced",
-                            "Widowed"
+                            "SINGLE",
+                            "MARRIED",
+                            "DIVORCED",
+                            "WIDOWED"
                         ],
                         "type": "string",
                         "name": "marital_status",
@@ -6405,13 +6405,13 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Hourly",
-                            "Daily",
-                            "Monthly",
-                            "Quarterly",
-                            "BiAnnually",
-                            "Annually",
-                            "OneTime"
+                            "HOURLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY",
+                            "ONETIME"
                         ],
                         "type": "string",
                         "name": "payment_frequency",
@@ -6487,9 +6487,9 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Hours",
-                            "Days",
-                            "Months"
+                            "HOURS",
+                            "DAYS",
+                            "MONTHS"
                         ],
                         "type": "string",
                         "name": "stay_duration_frequency",
@@ -7319,16 +7319,16 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Hourly",
-                            "Daily",
-                            "Monthly",
-                            "Quarterly",
-                            "BiAnnually",
-                            "Annually",
-                            "OneTime"
+                            "HOURLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY",
+                            "ONETIME"
                         ],
                         "type": "string",
-                        "example": "Hourly",
+                        "example": "HOURLY",
                         "name": "payment_frequency",
                         "in": "query"
                     },
@@ -7376,12 +7376,12 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "Hours",
-                            "Days",
-                            "Months"
+                            "HOURS",
+                            "DAYS",
+                            "MONTHS"
                         ],
                         "type": "string",
-                        "example": "Hours",
+                        "example": "HOURS",
                         "name": "stay_duration_frequency",
                         "in": "query"
                     },
@@ -7558,12 +7558,14 @@ const docTemplate = `{
             ],
             "properties": {
                 "channel": {
-                    "type": "string",
-                    "enum": [
-                        "email",
-                        "sms"
-                    ],
-                    "example": "email"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "EMAIL",
+                        "SMS"
+                    ]
                 },
                 "email": {
                     "type": "string",
@@ -8032,6 +8034,7 @@ const docTemplate = `{
                 "emergency_contact_name",
                 "emergency_contact_phone",
                 "employer",
+                "employer_type",
                 "first_name",
                 "gender",
                 "id_number",
@@ -8077,13 +8080,25 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Acme Corp"
                 },
+                "employer_type": {
+                    "type": "string",
+                    "enum": [
+                        "WORKER",
+                        "STUDENT"
+                    ],
+                    "example": "WORKER"
+                },
                 "first_name": {
                     "type": "string",
                     "example": "John"
                 },
                 "gender": {
                     "type": "string",
-                    "example": "Male"
+                    "enum": [
+                        "MALE",
+                        "FEMALE"
+                    ],
+                    "example": "MALE"
                 },
                 "id_number": {
                     "type": "string",
@@ -8105,7 +8120,13 @@ const docTemplate = `{
                 },
                 "marital_status": {
                     "type": "string",
-                    "example": "Single"
+                    "enum": [
+                        "SINGLE",
+                        "MARRIED",
+                        "DIVORCED",
+                        "WIDOWED"
+                    ],
+                    "example": "SINGLE"
                 },
                 "nationality": {
                     "type": "string",
@@ -8773,6 +8794,13 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Acme Corp"
                 },
+                "employer_type": {
+                    "type": "string",
+                    "enum": [
+                        "WORKER",
+                        "STUDENT"
+                    ]
+                },
                 "first_name": {
                     "type": "string",
                     "example": "John"
@@ -9268,6 +9296,67 @@ const docTemplate = `{
                 }
             }
         },
+        "transformations.OutputAdminDocumentSignature": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "document": {
+                    "$ref": "#/definitions/transformations.OutputAdminDocument"
+                },
+                "document_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "ip_address": {
+                    "type": "string",
+                    "example": "192.168.1.1"
+                },
+                "lease": {
+                    "$ref": "#/definitions/transformations.OutputAdminLease"
+                },
+                "lease_id": {
+                    "type": "string",
+                    "example": "770e8400-e29b-41d4-a716-446655440000"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "TENANT"
+                },
+                "signature_url": {
+                    "type": "string",
+                    "example": "https://s3.amazonaws.com/signatures/sig.png"
+                },
+                "signed_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "signed_by_id": {
+                    "type": "string",
+                    "example": "880e8400-e29b-41d4-a716-446655440000"
+                },
+                "signed_by_name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "tenant_application": {
+                    "$ref": "#/definitions/transformations.OutputAdminTenantApplication"
+                },
+                "tenant_application_id": {
+                    "type": "string",
+                    "example": "660e8400-e29b-41d4-a716-446655440000"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-06-10T09:00:00Z"
+                }
+            }
+        },
         "transformations.OutputAdminLease": {
             "type": "object",
             "properties": {
@@ -9690,7 +9779,11 @@ const docTemplate = `{
                 },
                 "employer": {
                     "type": "string",
-                    "example": "Tech Ltd."
+                    "example": "UPSA"
+                },
+                "employer_type": {
+                    "type": "string",
+                    "example": "WORKER"
                 },
                 "first_name": {
                     "type": "string",
@@ -9732,9 +9825,26 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Doe"
                 },
+                "lease_agreement_document": {
+                    "$ref": "#/definitions/transformations.OutputAdminDocument"
+                },
+                "lease_agreement_document_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
                 "lease_agreement_document_mode": {
                     "type": "string",
                     "example": "MANUAL"
+                },
+                "lease_agreement_document_signatures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/transformations.OutputAdminDocumentSignature"
+                    }
+                },
+                "lease_agreement_document_status": {
+                    "type": "string",
+                    "example": "DRAFT"
                 },
                 "lease_agreement_document_url": {
                     "type": "string",
@@ -9750,7 +9860,7 @@ const docTemplate = `{
                 },
                 "occupation": {
                     "type": "string",
-                    "example": "Software Engineer"
+                    "example": "STUDENT"
                 },
                 "occupation_address": {
                     "type": "string",

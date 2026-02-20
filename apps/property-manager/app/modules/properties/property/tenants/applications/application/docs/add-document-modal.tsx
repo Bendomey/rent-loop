@@ -109,10 +109,7 @@ export function AddDocumentModal({
 					</DialogDescription>
 				</DialogHeader>
 
-				<Tabs
-					value={mode}
-					onValueChange={(value) => setMode(value as DocMode)}
-				>
+				<Tabs value={mode} onValueChange={(value) => setMode(value as DocMode)}>
 					<TabsList>
 						<TabsTrigger value="manual">
 							<Upload className="size-4" />
@@ -130,8 +127,8 @@ export function AddDocumentModal({
 								<Info className="size-4" />
 								<AlertTitle>Manual Upload</AlertTitle>
 								<AlertDescription>
-									Upload your own lease agreement or tenancy document.
-									Accepted formats are PDF and Word documents up to 5MB.
+									Upload your own lease agreement or tenancy document. Accepted
+									formats are PDF and Word documents up to 5MB.
 								</AlertDescription>
 							</Alert>
 							<DocumentUpload
@@ -156,9 +153,9 @@ export function AddDocumentModal({
 								<Info className="size-4" />
 								<AlertTitle>Select from Library</AlertTitle>
 								<AlertDescription>
-									Choose from pre-existing document templates available on
-									the platform. These are ready-to-use lease agreements
-									that can be attached to this application.
+									Choose from pre-existing document templates available on the
+									platform. These are ready-to-use lease agreements that can be
+									attached to this application.
 								</AlertDescription>
 							</Alert>
 

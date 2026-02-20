@@ -32,9 +32,9 @@ import { toFirstUpperCase } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.applications.$applicationId'
 
-const EMPLOYMENT_TYPE_OPTIONS: Array<{
+const employer_type: Array<{
 	label: string
-	value: TenantApplication['employment_type']
+	value: TenantApplication['employer_type']
 }> = [
 	{ label: 'Student', value: 'STUDENT' },
 	{ label: 'Worker', value: 'WORKER' },
@@ -50,7 +50,7 @@ const ValidationSchema = z.object({
 	emergency_contact_phone: z
 		.string({ error: 'Phone Number is required' })
 		.min(9, 'Please enter a valid phone number'),
-	employment_type: z.enum(['STUDENT', 'WORKER'], {
+	employer_type: z.enum(['STUDENT', 'WORKER'], {
 		error: 'Please select an employment type',
 	}),
 	occupation: z.string().optional(),
@@ -90,17 +90,17 @@ export function PropertyTenantApplicationEmergencyContact() {
 				application?.relationship_to_emergency_contact,
 			),
 			emergency_contact_phone: safeString(application?.emergency_contact_phone),
-			employment_type: application?.employment_type || 'STUDENT',
-			occupation: safeString(application?.occupation) || '',
-			employer: safeString(application?.employer) || '',
-			occupation_address: safeString(application?.occupation_address) || '',
+			employer_type: application?.employer_type || 'STUDENT',
+			occupation: safeString(application?.occupation),
+			employer: safeString(application?.employer),
+			occupation_address: safeString(application?.occupation_address),
 		},
 	})
 
 	const { handleSubmit, reset, watch, setValue } = rhfMethods
 	const { isPending, mutate } = useUpdateTenantApplication()
 
-	const isStudent = watch('employment_type') === 'STUDENT'
+	const isStudent = watch('employer_type') === 'STUDENT'
 
 	const onSubmit = (data: FormSchema) => {
 		if (!application?.id) return
@@ -132,7 +132,7 @@ export function PropertyTenantApplicationEmergencyContact() {
 		setIsEditing(false)
 	}
 
-	const viewIsStudent = application?.employment_type === 'STUDENT'
+	const viewIsStudent = application?.employer_type === 'STUDENT'
 
 	if (!isEditing) {
 		return (
@@ -182,8 +182,8 @@ export function PropertyTenantApplicationEmergencyContact() {
 						<FieldDisplay
 							label="Employment Type"
 							value={
-								application?.employment_type
-									? toFirstUpperCase(application.employment_type)
+								application?.employer_type
+									? toFirstUpperCase(application.employer_type)
 									: undefined
 							}
 						/>
@@ -314,25 +314,25 @@ export function PropertyTenantApplicationEmergencyContact() {
 							</div>
 							<div className="col-span-2">
 								<div className="flex space-x-3">
-									{EMPLOYMENT_TYPE_OPTIONS.map((option) => {
+									{employer_type.map((employer_type) => {
 										const isSelected =
-											watch('employment_type') === option.value
+											watch('employer_type') === employer_type.value
 										return (
 											<Button
 												type="button"
 												onClick={() =>
-													setValue('employment_type', option.value, {
+													setValue('employer_type', employer_type.value, {
 														shouldDirty: true,
 														shouldValidate: true,
 													})
 												}
-												key={option.value}
+												key={employer_type.value}
 												variant={isSelected ? 'default' : 'outline'}
 												className={cn('w-1/2', {
 													'bg-rose-600 text-white': isSelected,
 												})}
 											>
-												{option.label}
+												{employer_type.label}
 											</Button>
 										)
 									})}

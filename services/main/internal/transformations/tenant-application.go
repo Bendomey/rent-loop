@@ -70,8 +70,9 @@ type OutputAdminTenantApplication struct {
 	EmergencyContactPhone          string `json:"emergency_contact_phone"           example:"+1122334455"`
 	RelationshipToEmergencyContact string `json:"relationship_to_emergency_contact" example:"sister"`
 
-	Occupation        string  `json:"occupation"                    example:"Software Engineer"`
-	Employer          string  `json:"employer"                      example:"Tech Ltd."`
+	Occupation        string  `json:"occupation"                    example:"STUDENT"`
+	Employer          string  `json:"employer"                      example:"UPSA"`
+	EmployerType      *string `json:"employer_type,omitempty"       example:"WORKER"`
 	OccupationAddress string  `json:"occupation_address"            example:"456 Tech Ave, Accra"`
 	ProofOfIncomeUrl  *string `json:"proof_of_income_url,omitempty" example:"https://example.com/income.pdf"`
 
@@ -139,6 +140,7 @@ func DBAdminTenantApplicationToRest(i *models.TenantApplication) any {
 		"relationship_to_emergency_contact": i.RelationshipToEmergencyContact,
 		"occupation":                        i.Occupation,
 		"employer":                          i.Employer,
+		"employer_type":                     i.EmployerType,
 		"occupation_address":                i.OccupationAddress,
 		"proof_of_income_url":               i.ProofOfIncomeUrl,
 		"created_by_id":                     i.CreatedById,

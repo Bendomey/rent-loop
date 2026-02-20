@@ -67,9 +67,9 @@ export async function action({ request }: Route.ActionArgs) {
 	const relationship_to_emergency_contact = formData.get(
 		'relationship_to_emergency_contact',
 	) as string
-	const employment_type = formData.get(
-		'employment_type',
-	) as TenantApplication['employment_type']
+	const employer_type = formData.get(
+		'employer_type',
+	) as TenantApplication['employer_type']
 	const occupation = formData.get('occupation') as string
 	const employer = formData.get('employer') as string
 	const occupation_address = formData.get('occupation_address') as string
@@ -101,7 +101,7 @@ export async function action({ request }: Route.ActionArgs) {
 				emergency_contact_name,
 				emergency_contact_phone,
 				relationship_to_emergency_contact,
-				employment_type,
+				employer_type,
 				occupation,
 				employer,
 				occupation_address,

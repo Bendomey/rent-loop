@@ -83,15 +83,13 @@ export function AttachedDocumentView({
 						</p>
 					</div>
 					<p className="mt-1 pl-7 text-xs text-emerald-600">
-						Manually uploaded documents are assumed to be pre-signed and
-						ready to go.
+						Manually uploaded documents are assumed to be pre-signed and ready
+						to go.
 					</p>
 				</div>
 			) : (
 				<div className="space-y-3">
-					<p className="text-sm font-medium text-zinc-700">
-						Signing Status
-					</p>
+					<p className="text-sm font-medium text-zinc-700">Signing Status</p>
 					<Separator />
 
 					<SigningStatusRow

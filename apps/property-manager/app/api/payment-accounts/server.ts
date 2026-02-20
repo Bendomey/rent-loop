@@ -5,7 +5,7 @@ import { fetchServer } from '~/lib/transport'
  * GET single payment account by ID.
  */
 export const getPaymentAccountForServer = async (
-	props: {payment_account_id: string	},
+	props: { payment_account_id: string },
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
