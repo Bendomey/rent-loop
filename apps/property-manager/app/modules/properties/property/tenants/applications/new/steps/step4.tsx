@@ -1,4 +1,4 @@
-import { ArrowLeft, Pencil } from 'lucide-react'
+import { ArrowLeft, FileText, Pencil } from 'lucide-react'
 import { useCreatePropertyTenantApplicationContext } from '../context'
 import { Image } from '~/components/Image'
 import { Button } from '~/components/ui/button'
@@ -225,13 +225,27 @@ export function Step4() {
 							<TypographyP className="mb-3 text-sm font-medium text-slate-600">
 								Proof of {isStudent ? 'Admission' : 'Income'}
 							</TypographyP>
-							<div className="mt-2">
-								<Image
-									src={formData.proof_of_income_url}
-									alt={`Proof of ${isStudent ? 'Admission' : 'Income'}`}
-									className="max-h-40 rounded-md object-cover"
-								/>
-							</div>
+							{(() => {
+								const ext = formData.proof_of_income_url
+									.split('?')[0]
+									?.split('.')
+									.pop()
+									?.toLowerCase()
+								return (
+									<a
+										href={formData.proof_of_income_url}
+										target="_blank"
+										rel="noopener noreferrer"
+										className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm text-rose-600 hover:bg-slate-50"
+									>
+										<FileText className="h-4 w-4" />
+										<span>
+											View Document
+											{ext ? ` (.${ext})` : ''}
+										</span>
+									</a>
+								)
+							})()}
 						</div>
 					)}
 				</div>

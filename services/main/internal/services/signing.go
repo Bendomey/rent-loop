@@ -17,6 +17,16 @@ type SigningService interface {
 	VerifyToken(ctx context.Context, tokenStr string, populate *[]string) (*models.SigningToken, error)
 	SignDocument(ctx context.Context, input SignDocumentInput) (*models.DocumentSignature, error)
 	SignDocumentByPM(ctx context.Context, input SignDocumentPMInput) (*models.DocumentSignature, error)
+	ListDocumentSignatures(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters repository.ListDocumentSignaturesFilter,
+	) (*[]models.DocumentSignature, error)
+	CountDocumentSignatures(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters repository.ListDocumentSignaturesFilter,
+	) (int64, error)
 }
 
 type signingService struct {
@@ -259,4 +269,42 @@ func (s *signingService) SignDocumentByPM(
 	}
 
 	return sig, nil
+}
+
+func (s *signingService) ListDocumentSignatures(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters repository.ListDocumentSignaturesFilter,
+) (*[]models.DocumentSignature, error) {
+	signatures, err := s.repo.ListDocumentSignatures(ctx, filterQuery, filters)
+	if err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ListDocumentSignatures",
+				"action":   "listing document signatures",
+			},
+		})
+	}
+
+	return signatures, nil
+}
+
+func (s *signingService) CountDocumentSignatures(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters repository.ListDocumentSignaturesFilter,
+) (int64, error) {
+	count, err := s.repo.CountDocumentSignatures(ctx, filterQuery, filters)
+	if err != nil {
+		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CountDocumentSignatures",
+				"action":   "counting document signatures",
+			},
+		})
+	}
+
+	return count, nil
 }

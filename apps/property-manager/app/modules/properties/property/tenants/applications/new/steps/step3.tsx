@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useCreatePropertyTenantApplicationContext } from '../context'
 import { Button } from '~/components/ui/button'
+import { DocumentUpload } from '~/components/ui/document-upload'
 import { FieldGroup } from '~/components/ui/field'
 import {
 	Form,
@@ -14,7 +15,6 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
-import { ImageUpload } from '~/components/ui/image-upload'
 import { Input } from '~/components/ui/input'
 import {
 	TypographyH2,
@@ -372,11 +372,9 @@ export function Step3() {
 							)}
 						</div>
 
-						<ImageUpload
-							hero
+						<DocumentUpload
 							shape="square"
 							hint="Optional"
-							acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
 							error={rhfMethods.formState.errors?.proof_of_income_url?.message}
 							fileCallback={uploadProofOfIncome}
 							isUploading={isUploadingProofOfIncome}
@@ -386,12 +384,9 @@ export function Step3() {
 									shouldValidate: true,
 								})
 							}}
-							imageSrc={safeString(rhfMethods.watch('proof_of_income_url'))}
+							documentName={safeString(rhfMethods.watch('proof_of_income_url'))}
 							label={`${isStudent ? 'Proof of Admission' : 'Proof of Income'}`}
 							name="proof_of_income"
-							validation={{
-								maxByteSize: 5242880, // 5MB
-							}}
 						/>
 					</div>
 				</FieldGroup>

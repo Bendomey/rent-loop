@@ -373,7 +373,7 @@ export function Step1() {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>
-									Address <span className="text-red-500">*</span>
+									Current Address <span className="text-red-500">*</span>
 								</FormLabel>
 								<FormControl>
 									<Input
@@ -388,8 +388,7 @@ export function Step1() {
 					/>
 
 					<ImageUpload
-						hero
-						shape="square"
+						shape="circle"
 						hint="Optional"
 						acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
 						error={rhfMethods.formState.errors?.profile_photo_url?.message}

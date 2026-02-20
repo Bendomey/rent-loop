@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
+	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/gofrs/uuid"
 )
 
@@ -25,9 +26,18 @@ type OutputAdminDocumentSignature struct {
 	UpdatedAt           time.Time                     `json:"updated_at"                      example:"2024-06-10T09:00:00Z"`
 }
 
-func DBAdminDocumentSignatureToRest(i *models.DocumentSignature) any {
+func DBAdminDocumentSignatureToRest(services services.Services, i *models.DocumentSignature) (any, error) {
 	if i == nil || i.ID == uuid.Nil {
-		return nil
+		return nil, nil
+	}
+
+	tenantApplication, tenantApplicationErr := DBAdminTenantApplicationToRest(services, i.TenantApplication)
+	if tenantApplicationErr != nil {
+		return nil, tenantApplicationErr
+	}
+	lease, leaseErr := DBAdminLeaseToRest(services, i.Lease)
+	if leaseErr != nil {
+		return nil, leaseErr
 	}
 
 	data := map[string]any{
@@ -35,9 +45,9 @@ func DBAdminDocumentSignatureToRest(i *models.DocumentSignature) any {
 		"document_id":           i.DocumentID,
 		"document":              DBAdminDocumentToRestDocument(&i.Document),
 		"tenant_application_id": i.TenantApplicationID,
-		"tenant_application":    DBAdminTenantApplicationToRest(i.TenantApplication),
+		"tenant_application":    tenantApplication,
 		"lease_id":              i.LeaseID,
-		"lease":                 DBAdminLeaseToRest(i.Lease),
+		"lease":                 lease,
 		"role":                  i.Role,
 		"signature_url":         i.SignatureUrl,
 		"signed_by_name":        i.SignedByName,
@@ -48,7 +58,7 @@ func DBAdminDocumentSignatureToRest(i *models.DocumentSignature) any {
 		"updated_at":            i.UpdatedAt,
 	}
 
-	return data
+	return data, nil
 }
 
 type OutputDocumentSignature struct {
@@ -89,4 +99,17 @@ func DBDocumentSignatureToRest(i *models.DocumentSignature) any {
 	}
 
 	return data
+}
+
+func DBDocumentSignaturesToRest(i *[]models.DocumentSignature) any {
+	if i == nil {
+		return nil
+	}
+
+	signatures := make([]any, 0)
+	for _, sig := range *i {
+		signatures = append(signatures, DBDocumentSignatureToRest(&sig))
+	}
+
+	return signatures
 }

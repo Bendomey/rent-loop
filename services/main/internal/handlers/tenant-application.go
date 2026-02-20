@@ -14,23 +14,19 @@ import (
 )
 
 type TenantApplicationHandler struct {
-	appCtx         pkg.AppContext
-	service        services.TenantApplicationService
-	paymentService services.PaymentService
-	invoiceService services.InvoiceService
+	appCtx   pkg.AppContext
+	service  services.TenantApplicationService
+	services services.Services
 }
 
 func NewTenantApplicationHandler(
 	appCtx pkg.AppContext,
-	service services.TenantApplicationService,
-	paymentService services.PaymentService,
-	invoiceService services.InvoiceService,
+	services services.Services,
 ) TenantApplicationHandler {
 	return TenantApplicationHandler{
-		appCtx:         appCtx,
-		service:        service,
-		paymentService: paymentService,
-		invoiceService: invoiceService,
+		appCtx:   appCtx,
+		service:  services.TenantApplicationService,
+		services: services,
 	}
 }
 
@@ -118,9 +114,18 @@ func (h *TenantApplicationHandler) CreateTenantApplication(w http.ResponseWriter
 		return
 	}
 
+	tenantApplicationTransformed, transformErr := transformations.DBAdminTenantApplicationToRest(
+		h.services,
+		tenantApplication,
+	)
+	if transformErr != nil {
+		HandleErrorResponse(w, transformErr)
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBAdminTenantApplicationToRest(tenantApplication),
+		"data": tenantApplicationTransformed,
 	})
 }
 
@@ -255,10 +260,21 @@ func (h *TenantApplicationHandler) ListTenantApplications(w http.ResponseWriter,
 
 	tenantApplicationsTransformed := make([]any, 0)
 	for _, tenantApplication := range tenantApplications {
+		tenantApplicationTransformed, transformErr := transformations.DBAdminTenantApplicationToRest(
+			h.services,
+			&tenantApplication,
+		)
+
+		if transformErr != nil {
+			HandleErrorResponse(w, transformErr)
+			return
+		}
+
 		tenantApplicationsTransformed = append(
 			tenantApplicationsTransformed,
-			transformations.DBAdminTenantApplicationToRest(&tenantApplication),
+			tenantApplicationTransformed,
 		)
+
 	}
 
 	json.NewEncoder(w).
@@ -300,8 +316,17 @@ func (h *TenantApplicationHandler) GetTenantApplication(w http.ResponseWriter, r
 		return
 	}
 
+	tenantApplicationTransformed, transformErr := transformations.DBAdminTenantApplicationToRest(
+		h.services,
+		tenantApplication,
+	)
+	if transformErr != nil {
+		HandleErrorResponse(w, transformErr)
+		return
+	}
+
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBAdminTenantApplicationToRest(tenantApplication),
+		"data": tenantApplicationTransformed,
 	})
 }
 
@@ -441,8 +466,17 @@ func (h *TenantApplicationHandler) UpdateTenantApplication(w http.ResponseWriter
 		return
 	}
 
+	tenantApplicationTransformed, transformErr := transformations.DBAdminTenantApplicationToRest(
+		h.services,
+		tenantApplication,
+	)
+	if transformErr != nil {
+		HandleErrorResponse(w, transformErr)
+		return
+	}
+
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBAdminTenantApplicationToRest(tenantApplication),
+		"data": tenantApplicationTransformed,
 	})
 }
 
@@ -625,9 +659,15 @@ func (h *TenantApplicationHandler) GenerateInvoice(w http.ResponseWriter, r *htt
 		return
 	}
 
+	transformed, transformErr := transformations.DBInvoiceToRest(h.services, invoice)
+	if transformErr != nil {
+		HandleErrorResponse(w, transformErr)
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBInvoiceToRest(invoice),
+		"data": transformed,
 	})
 }
 
@@ -686,13 +726,13 @@ func (h *TenantApplicationHandler) PayInvoice(w http.ResponseWriter, r *http.Req
 		},
 	}
 
-	_, getInvoiceErr := h.invoiceService.GetByQuery(r.Context(), query)
+	_, getInvoiceErr := h.services.InvoiceService.GetByQuery(r.Context(), query)
 	if getInvoiceErr != nil {
 		HandleErrorResponse(w, getInvoiceErr)
 		return
 	}
 
-	payment, err := h.paymentService.CreateOfflinePayment(r.Context(), services.CreateOfflinePaymentInput{
+	payment, err := h.services.PaymentService.CreateOfflinePayment(r.Context(), services.CreateOfflinePaymentInput{
 		PaymentAccountID: body.PaymentAccountID,
 		InvoiceID:        invoiceID,
 		Provider:         body.Provider,
@@ -706,12 +746,15 @@ func (h *TenantApplicationHandler) PayInvoice(w http.ResponseWriter, r *http.Req
 	}
 
 	// verify offline payment
-	_, verifyPaymentErr := h.paymentService.VerifyOfflinePayment(r.Context(), services.VerifyOfflinePaymentInput{
-		PaymentID:    payment.ID.String(),
-		VerifiedByID: clientUser.ID,
-		IsSuccessful: true,
-		Metadata:     body.Metadata,
-	})
+	_, verifyPaymentErr := h.services.PaymentService.VerifyOfflinePayment(
+		r.Context(),
+		services.VerifyOfflinePaymentInput{
+			PaymentID:    payment.ID.String(),
+			VerifiedByID: clientUser.ID,
+			IsSuccessful: true,
+			Metadata:     body.Metadata,
+		},
+	)
 	if verifyPaymentErr != nil {
 		HandleErrorResponse(w, verifyPaymentErr)
 		return
