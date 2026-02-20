@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Pencil, X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
@@ -28,6 +28,7 @@ import {
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { Spinner } from '~/components/ui/spinner'
+import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
 import { toFirstUpperCase } from '~/lib/strings'
 import { cn } from '~/lib/utils'
@@ -36,9 +37,9 @@ const employer_type: Array<{
 	label: string
 	value: TenantApplication['employer_type']
 }> = [
-		{ label: 'Student', value: 'STUDENT' },
-		{ label: 'Worker', value: 'WORKER' },
-	]
+	{ label: 'Student', value: 'STUDENT' },
+	{ label: 'Worker', value: 'WORKER' },
+]
 
 const ValidationSchema = z.object({
 	emergency_contact_name: z
@@ -56,6 +57,7 @@ const ValidationSchema = z.object({
 	occupation: z.string().optional(),
 	employer: z.string().optional(),
 	occupation_address: z.string().optional(),
+	proof_of_income_url: z.string().nullable().optional(),
 })
 
 type FormSchema = z.infer<typeof ValidationSchema>
@@ -80,6 +82,12 @@ export function PropertyTenantApplicationEmergencyContact() {
 	const revalidator = useRevalidator()
 	const [isEditing, setIsEditing] = useState(false)
 
+	const {
+		upload,
+		objectUrl,
+		isLoading: isUploading,
+	} = useUploadObject('tenant-applications/proof-of-income')
+
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
@@ -92,8 +100,18 @@ export function PropertyTenantApplicationEmergencyContact() {
 			occupation: safeString(application?.occupation),
 			employer: safeString(application?.employer),
 			occupation_address: safeString(application?.occupation_address),
+			proof_of_income_url: application?.proof_of_income_url ?? null,
 		},
 	})
+
+	useEffect(() => {
+		if (objectUrl) {
+			rhfMethods.setValue('proof_of_income_url', objectUrl, {
+				shouldDirty: true,
+			})
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [objectUrl])
 
 	const { handleSubmit, reset, watch, setValue } = rhfMethods
 	const { isPending, mutate } = useUpdateTenantApplication()
@@ -410,27 +428,18 @@ export function PropertyTenantApplicationEmergencyContact() {
 							<div className="col-span-2">
 								<DocumentUpload
 									hint="Optional"
-									acceptedFileTypes={[
-										'application/pdf',
-										'image/jpeg',
-										'image/jpg',
-										'image/png',
-									]}
 									documentName={
-										application?.proof_of_income_url
+										rhfMethods.watch('proof_of_income_url')
 											? `Proof of ${isStudent ? 'Admission' : 'Income'}`
 											: undefined
 									}
-									dismissCallback={() => {
-										rhfMethods.setValue(
-											'proof_of_income_url' as never,
-											undefined as never,
-											{
-												shouldDirty: true,
-												shouldValidate: true,
-											},
-										)
-									}}
+									fileCallback={upload}
+									isUploading={isUploading}
+									dismissCallback={() =>
+										rhfMethods.setValue('proof_of_income_url', null, {
+											shouldDirty: true,
+										})
+									}
 									label={`Proof of ${isStudent ? 'Admission' : 'Income'}`}
 									name="proof_of_income_url"
 									maxByteSize={5242880}

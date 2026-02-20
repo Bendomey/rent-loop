@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Pencil, X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
@@ -35,6 +35,7 @@ import {
 	SelectContent,
 } from '~/components/ui/select'
 import { Spinner } from '~/components/ui/spinner'
+import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
 
 const ID_TYPE_LABELS: Record<string, string> = {
@@ -51,6 +52,8 @@ const ValidationSchema = z.object({
 	}),
 	id_number: z.string().trim().min(1, 'ID number is required'),
 	current_address: z.string().trim().min(1, 'Current address is required'),
+	id_front_url: z.string().nullable().optional(),
+	id_back_url: z.string().nullable().optional(),
 })
 
 type FormSchema = z.infer<typeof ValidationSchema>
@@ -75,6 +78,18 @@ export function PropertyTenantApplicationIdentity() {
 	const revalidator = useRevalidator()
 	const [isEditing, setIsEditing] = useState(false)
 
+	const {
+		upload: uploadFront,
+		objectUrl: frontUrl,
+		isLoading: isUploadingFront,
+	} = useUploadObject('tenant-applications/id-documents')
+
+	const {
+		upload: uploadBack,
+		objectUrl: backUrl,
+		isLoading: isUploadingBack,
+	} = useUploadObject('tenant-applications/id-documents')
+
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
@@ -82,8 +97,24 @@ export function PropertyTenantApplicationIdentity() {
 			id_type: application?.id_type || undefined,
 			id_number: safeString(application?.id_number),
 			current_address: safeString(application?.current_address),
+			id_front_url: application?.id_front_url ?? null,
+			id_back_url: application?.id_back_url ?? null,
 		},
 	})
+
+	useEffect(() => {
+		if (frontUrl) {
+			rhfMethods.setValue('id_front_url', frontUrl, { shouldDirty: true })
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [frontUrl])
+
+	useEffect(() => {
+		if (backUrl) {
+			rhfMethods.setValue('id_back_url', backUrl, { shouldDirty: true })
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [backUrl])
 
 	const { handleSubmit, reset } = rhfMethods
 	const { isPending, mutate } = useUpdateTenantApplication()
@@ -310,9 +341,16 @@ export function PropertyTenantApplicationIdentity() {
 									shape="square"
 									hint="Optional"
 									acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-									imageSrc={safeString(application?.id_front_url)}
+									imageSrc={safeString(rhfMethods.watch('id_front_url'))}
 									label="ID Front"
 									name="id_front_url"
+									fileCallback={uploadFront}
+									isUploading={isUploadingFront}
+									dismissCallback={() =>
+										rhfMethods.setValue('id_front_url', null, {
+											shouldDirty: true,
+										})
+									}
 									validation={{
 										maxByteSize: 5242880,
 									}}
@@ -324,9 +362,16 @@ export function PropertyTenantApplicationIdentity() {
 									shape="square"
 									hint="Optional"
 									acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-									imageSrc={safeString(application?.id_back_url)}
+									imageSrc={safeString(rhfMethods.watch('id_back_url'))}
 									label="ID Back"
 									name="id_back_url"
+									fileCallback={uploadBack}
+									isUploading={isUploadingBack}
+									dismissCallback={() =>
+										rhfMethods.setValue('id_back_url', null, {
+											shouldDirty: true,
+										})
+									}
 									validation={{
 										maxByteSize: 5242880,
 									}}

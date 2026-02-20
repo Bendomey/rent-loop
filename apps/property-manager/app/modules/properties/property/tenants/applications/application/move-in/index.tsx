@@ -91,7 +91,6 @@ export function PropertyTenantApplicationMoveIn() {
 	const { handleSubmit, reset } = rhfMethods
 	const { isPending, mutate } = useUpdateTenantApplication()
 
-
 	const onSubmit = (data: FormSchema) => {
 		if (!application?.id) return
 
@@ -150,8 +149,8 @@ export function PropertyTenantApplicationMoveIn() {
 							value={
 								application?.desired_move_in_date
 									? dayjs(application.desired_move_in_date).format(
-										'MMM D, YYYY',
-									)
+											'MMM D, YYYY',
+										)
 									: undefined
 							}
 						/>

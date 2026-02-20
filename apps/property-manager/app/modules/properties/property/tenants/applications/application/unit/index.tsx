@@ -19,7 +19,6 @@ import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyTenantApplicationUnitSetup() {
-
 	const { clientUserProperty } = useProperty()
 	const [changeUnitOpen, setChangeUnitOpen] = useState(false)
 	const { tenantApplication: application } = useTenantApplicationContext()

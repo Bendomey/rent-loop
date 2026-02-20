@@ -22,7 +22,6 @@ export function PropertyTenantApplicationContainer() {
 		)
 	}
 
-
 	return (
 		<div className="m-5 grid grid-cols-12 gap-4">
 			<div className="col-span-8">
@@ -64,7 +63,7 @@ export function PropertyTenantApplicationContainer() {
 					</span>
 				</div>
 				<div className="mt-5">
-					<Outlet context={{tenantApplication}} />
+					<Outlet context={{ tenantApplication }} />
 				</div>
 			</div>
 			<div className="col-span-4">

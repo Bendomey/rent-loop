@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import dayjs from 'dayjs'
 import { Pencil, X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
@@ -37,6 +37,7 @@ import {
 	SelectContent,
 } from '~/components/ui/select'
 import { Spinner } from '~/components/ui/spinner'
+import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
 import { toFirstUpperCase } from '~/lib/strings'
 
@@ -51,6 +52,7 @@ const ValidationSchema = z.object({
 	email: z.string().email('Please enter a valid email'),
 	phone: z.string().trim().min(1, 'Phone is required'),
 	date_of_birth: z.date({ message: 'Date of birth is required' }),
+	profile_photo_url: z.string().nullable().optional(),
 })
 
 type FormSchema = z.infer<typeof ValidationSchema>
@@ -70,11 +72,16 @@ function FieldDisplay({ label, value }: FieldDisplayProps) {
 }
 
 export function PropertyTenantApplicationBasic() {
-	
 	const { tenantApplication: application } = useTenantApplicationContext()
 
 	const revalidator = useRevalidator()
 	const [isEditing, setIsEditing] = useState(false)
+
+	const {
+		upload,
+		objectUrl,
+		isLoading: isUploading,
+	} = useUploadObject('tenant-applications/profile-photos')
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
@@ -89,8 +96,18 @@ export function PropertyTenantApplicationBasic() {
 			date_of_birth: application?.date_of_birth
 				? new Date(application.date_of_birth)
 				: undefined,
+			profile_photo_url: application?.profile_photo_url ?? null,
 		},
 	})
+
+	useEffect(() => {
+		if (objectUrl) {
+			rhfMethods.setValue('profile_photo_url', objectUrl, {
+				shouldDirty: true,
+			})
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [objectUrl])
 
 	const { handleSubmit, reset } = rhfMethods
 	const { isPending, mutate } = useUpdateTenantApplication()
@@ -221,13 +238,19 @@ export function PropertyTenantApplicationBasic() {
 
 			<CardContent className="space-y-3">
 				<ImageUpload
-					hero
 					shape="circle"
 					hint="Optional"
 					acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-					imageSrc={safeString(application?.profile_photo_url)}
+					imageSrc={safeString(rhfMethods.watch('profile_photo_url'))}
 					label="Profile Photo"
 					name="profile_photo_url"
+					fileCallback={upload}
+					isUploading={isUploading}
+					dismissCallback={() =>
+						rhfMethods.setValue('profile_photo_url', null, {
+							shouldDirty: true,
+						})
+					}
 					validation={{
 						maxByteSize: 5242880,
 					}}

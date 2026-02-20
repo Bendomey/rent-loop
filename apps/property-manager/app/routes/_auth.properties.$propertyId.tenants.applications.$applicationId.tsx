@@ -42,13 +42,13 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	} catch {
 		return redirect(NOT_FOUND_ROUTE)
 	}
-
-
 }
 
 export const handle = {
 	breadcrumb: (data: Awaited<ReturnType<typeof loader>>) =>
-		'tenantApplication' in data ? data?.tenantApplication?.code : 'Tenant Application',
+		'tenantApplication' in data
+			? data?.tenantApplication?.code
+			: 'Tenant Application',
 }
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
