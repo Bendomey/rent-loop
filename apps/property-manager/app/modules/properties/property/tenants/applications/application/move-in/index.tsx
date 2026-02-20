@@ -38,19 +38,19 @@ import { Spinner } from '~/components/ui/spinner'
 import { toFirstUpperCase } from '~/lib/strings'
 
 const FREQUENCY_LABELS: Record<string, string> = {
-	HOURS: 'Hours',
-	DAYS: 'Days',
-	MONTHS: 'Months',
+	HOURLY: 'Hourly',
+	DAILY: 'Daily',
+	WEEKLY: 'Weekly',
+	MONTHLY: 'Monthly',
 }
 
 const ValidationSchema = z.object({
-	desired_move_in_date: z.date({ error: 'Move-in date is required' }),
-	stay_duration_frequency: z.enum(['HOURS', 'DAYS', 'MONTHS'], {
-		error: 'Please select a frequency',
-	}),
-	stay_duration: z
-		.number({ error: 'Stay duration is required' })
-		.min(1, 'Must be at least 1'),
+	desired_move_in_date: z.date().optional().nullable(),
+	stay_duration_frequency: z
+		.enum(['HOURLY', 'DAILY', 'WEEKLY', 'MONTHLY'])
+		.optional()
+		.nullable(),
+	stay_duration: z.number().min(1, 'Must be at least 1').optional().nullable(),
 })
 
 type FormSchema = z.infer<typeof ValidationSchema>
@@ -98,10 +98,11 @@ export function PropertyTenantApplicationMoveIn() {
 			{
 				id: application.id,
 				data: {
-					desired_move_in_date:
-						data.desired_move_in_date.toISOString() as unknown as Date,
-					stay_duration_frequency: data.stay_duration_frequency,
-					stay_duration: data.stay_duration,
+					desired_move_in_date: data.desired_move_in_date
+						? (data.desired_move_in_date.toISOString() as unknown as Date)
+						: undefined,
+					stay_duration_frequency: data.stay_duration_frequency ?? undefined,
+					stay_duration: data.stay_duration ?? undefined,
 				},
 			},
 			{
@@ -123,6 +124,10 @@ export function PropertyTenantApplicationMoveIn() {
 	}
 
 	if (!isEditing) {
+		const frequencyLabel = application?.stay_duration_frequency
+			? (FREQUENCY_LABELS[application.stay_duration_frequency] ??
+				toFirstUpperCase(application.stay_duration_frequency))
+			: undefined
 		return (
 			<Card className="shadow-none">
 				<CardHeader>
@@ -156,15 +161,10 @@ export function PropertyTenantApplicationMoveIn() {
 						/>
 						<FieldDisplay
 							label="Stay Duration Frequency"
-							value={
-								application?.stay_duration_frequency
-									? (FREQUENCY_LABELS[application.stay_duration_frequency] ??
-										toFirstUpperCase(application.stay_duration_frequency))
-									: undefined
-							}
+							value={frequencyLabel}
 						/>
 						<FieldDisplay
-							label="Stay Duration"
+							label={`Stay Duration${frequencyLabel ? ` (${frequencyLabel})` : ''}`}
 							value={
 								application?.stay_duration != null
 									? String(application.stay_duration)
@@ -201,13 +201,10 @@ export function PropertyTenantApplicationMoveIn() {
 									control={rhfMethods.control}
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>
-												Desired Move-In Date{' '}
-												<span className="text-red-500">*</span>
-											</FormLabel>
+											<FormLabel>Desired Move-In Date</FormLabel>
 											<FormControl>
 												<DatePickerInput
-													value={field.value}
+													value={field.value ?? undefined}
 													onChange={field.onChange}
 												/>
 											</FormControl>
@@ -222,13 +219,10 @@ export function PropertyTenantApplicationMoveIn() {
 									control={rhfMethods.control}
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>
-												Stay Duration Frequency{' '}
-												<span className="text-red-500">*</span>
-											</FormLabel>
+											<FormLabel>Stay Duration Frequency</FormLabel>
 											<FormControl>
 												<Select
-													value={field.value}
+													value={field.value ?? undefined}
 													onValueChange={field.onChange}
 													disabled
 												>
@@ -236,9 +230,10 @@ export function PropertyTenantApplicationMoveIn() {
 														<SelectValue placeholder="Please select" />
 													</SelectTrigger>
 													<SelectContent>
-														<SelectItem value="HOURS">Hours</SelectItem>
-														<SelectItem value="DAYS">Days</SelectItem>
-														<SelectItem value="MONTHS">Months</SelectItem>
+														<SelectItem value="HOURLY">Hourly</SelectItem>
+														<SelectItem value="DAILY">Daily</SelectItem>
+														<SelectItem value="WEEKLY">Weekly</SelectItem>
+														<SelectItem value="MONTHLY">Monthly</SelectItem>
 													</SelectContent>
 												</Select>
 											</FormControl>
@@ -253,14 +248,13 @@ export function PropertyTenantApplicationMoveIn() {
 									control={rhfMethods.control}
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>
-												Stay Duration <span className="text-red-500">*</span>
-											</FormLabel>
+											<FormLabel>Stay Duration</FormLabel>
 											<FormControl>
 												<Input
 													type="number"
 													min={1}
 													{...field}
+													value={field.value ?? undefined}
 													onChange={(e) =>
 														field.onChange(e.target.valueAsNumber)
 													}

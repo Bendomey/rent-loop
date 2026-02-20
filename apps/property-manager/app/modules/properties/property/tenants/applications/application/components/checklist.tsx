@@ -101,12 +101,9 @@ export function PropertyTenantApplicationChecklist({ application }: Props) {
 	const witnessSigs = signatures.filter(
 		(s) => s.role === 'PM_WITNESS' || s.role === 'TENANT_WITNESS',
 	)
+	const isManual = application.lease_agreement_document_mode === 'MANUAL'
 
 	const docsItems: SubItem[] = [
-		{
-			label: 'Document mode',
-			done: Boolean(application.lease_agreement_document_mode),
-		},
 		{
 			label: 'Document uploaded',
 			done:
@@ -114,8 +111,8 @@ export function PropertyTenantApplicationChecklist({ application }: Props) {
 					? Boolean(application.lease_agreement_document_id)
 					: Boolean(application.lease_agreement_document_url),
 		},
-		{ label: 'Manager signed', done: Boolean(managerSig) },
-		{ label: 'Tenant signed', done: Boolean(tenantSig) },
+		{ label: 'Manager signed', done: isManual || Boolean(managerSig) },
+		{ label: 'Tenant signed', done: isManual || Boolean(tenantSig) },
 		...witnessSigs.map((s) => ({
 			label: `Witness signed (${s.role === 'PM_WITNESS' ? 'PM' : 'Tenant'})`,
 			done: true,

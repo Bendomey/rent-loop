@@ -1,7 +1,7 @@
 import { type SerializedEditorState } from 'lexical'
 import { CheckCircle2, Lock, PenLine } from 'lucide-react'
 import { useState } from 'react'
-import { useLoaderData, useRevalidator } from 'react-router'
+import { Link, useLoaderData, useNavigate, useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 
 import { useUpdateTenantApplication } from '~/api/tenant-applications'
@@ -42,6 +42,7 @@ export function LeaseDocumentModule() {
 	const { document, tenantApplication } = useLoaderData<typeof loader>()
 	const updateTenantApplication = useUpdateTenantApplication()
 	const revalidator = useRevalidator()
+	const navigate = useNavigate()
 
 	const [editorState, setEditorState] = useState<SerializedEditorState>(
 		document?.content ? JSON.parse(document.content) : initialValue,
@@ -60,6 +61,9 @@ export function LeaseDocumentModule() {
 				onSuccess: () => {
 					toast.success('Document finalized')
 					void revalidator.revalidate()
+					void navigate(
+						`/properties/${tenantApplication.desired_unit.property_id}/tenants/applications/${tenantApplication.id}/docs`,
+					)
 				},
 				onError: () => {
 					toast.error('Failed to finalize')
@@ -97,13 +101,19 @@ export function LeaseDocumentModule() {
 			description:
 				'This document has been finalized and is ready for signing. You cannot make edits in this state.',
 			action: (
-				<Button
-					variant="outline"
-					disabled={updateTenantApplication.isPending}
-					onClick={handleRevertToDraft}
-				>
-					Back to Draft
-				</Button>
+				<div className="space-x-2">
+					<Link
+						to={`/properties/${tenantApplication.desired_unit.property_id}/tenants/applications/${tenantApplication.id}/docs`}
+					>
+						<Button variant="outline">Go Back</Button>
+					</Link>
+					<Button
+						disabled={updateTenantApplication.isPending}
+						onClick={handleRevertToDraft}
+					>
+						Back to Draft
+					</Button>
+				</div>
 			),
 		},
 		SIGNING: {

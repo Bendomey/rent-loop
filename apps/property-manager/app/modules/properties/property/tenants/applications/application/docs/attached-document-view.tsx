@@ -1,26 +1,23 @@
-import { CheckCircle, FileText, Pen, Replace, X } from 'lucide-react'
+import { CheckCircle, FileText, Pen, PenLine, X } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 import { PromptTenantButton } from './prompt-tenant-button'
 import { SigningStatusRow } from './signing-status-row'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Separator } from '~/components/ui/separator'
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from '~/components/ui/tooltip'
+import { Spinner } from '~/components/ui/spinner'
+import { cn } from '~/lib/utils'
 
 interface AttachedDocumentViewProps {
 	tenantApplication: TenantApplication
-	onChangeDocument: () => void
 	onClearDocument: () => void
+	isClearing: boolean
 }
 
 export function AttachedDocumentView({
 	tenantApplication,
-	onChangeDocument,
 	onClearDocument,
+	isClearing,
 }: AttachedDocumentViewProps) {
 	const { propertyId, applicationId } = useParams()
 	const isManual = tenantApplication.lease_agreement_document_mode === 'MANUAL'
@@ -49,33 +46,43 @@ export function AttachedDocumentView({
 						</span>
 					</Badge>
 					<div>
-						<p className="text-sm font-medium">
-							{tenantApplication.lease_agreement_document?.title}
-						</p>
+						<div className="flex items-center gap-2">
+							<p className="text-sm font-medium">
+								{tenantApplication.lease_agreement_document?.title}
+							</p>
+							{tenantApplication.lease_agreement_document_status && (
+								<Badge
+									variant="outline"
+									className={cn(
+										'text-[10px] font-semibold uppercase',
+										{
+											DRAFT: 'border-zinc-300 bg-zinc-100 text-zinc-600',
+											FINALIZED: 'border-blue-300 bg-blue-50 text-blue-700',
+											SIGNING: 'border-amber-300 bg-amber-50 text-amber-700',
+											SIGNED:
+												'border-emerald-300 bg-emerald-50 text-emerald-700',
+										}[tenantApplication.lease_agreement_document_status],
+									)}
+								>
+									{tenantApplication.lease_agreement_document_status}
+								</Badge>
+							)}
+						</div>
 						<p className="text-xs text-zinc-500">
 							{isManual ? 'Manually uploaded' : 'Selected from library'}
 						</p>
 					</div>
 				</div>
-				<div className="flex items-center gap-1">
-					<Button variant="outline" size="sm" onClick={onChangeDocument}>
-						<Replace className="size-4" />
-						Change
-					</Button>
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<Button
-								variant="ghost"
-								size="icon"
-								className="size-8 text-red-400 hover:text-red-500"
-								onClick={onClearDocument}
-							>
-								<X className="size-4" />
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent>Remove document</TooltipContent>
-					</Tooltip>
-				</div>
+				<Button
+					variant="outline"
+					size="sm"
+					className='hover:text-red-500" text-red-400'
+					disabled={isClearing}
+					onClick={onClearDocument}
+				>
+					{isClearing ? <Spinner /> : <X className="size-4" />}
+					Remove
+				</Button>
 			</div>
 
 			{isManual ? (
@@ -91,8 +98,44 @@ export function AttachedDocumentView({
 						to go.
 					</p>
 				</div>
+			) : tenantApplication.lease_agreement_document_status === 'DRAFT' ? (
+				<div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+					<div className="flex items-center gap-2">
+						<PenLine className="size-5 text-zinc-500" />
+						<p className="text-sm font-medium text-zinc-700">
+							Document needs editing
+						</p>
+					</div>
+					<p className="mt-1 pl-7 text-xs text-zinc-500">
+						This document is in draft. Edit and finalize it before sending for
+						signatures.
+					</p>
+					<Button size="sm" className="mt-3 ml-7" asChild>
+						<Link
+							to={`/properties/${propertyId}/tenants/applications/${applicationId}/lease-editor/${tenantApplication.lease_agreement_document_id}`}
+						>
+							<PenLine className="size-4" />
+							Edit Document
+						</Link>
+					</Button>
+				</div>
 			) : (
 				<div className="space-y-3">
+					{tenantApplication.lease_agreement_document_status ===
+						'FINALIZED' && (
+						<div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+							<p className="text-xs text-amber-700">
+								Need to make changes?{' '}
+								<Link
+									to={`/properties/${propertyId}/tenants/applications/${applicationId}/lease-editor/${tenantApplication.lease_agreement_document_id}`}
+									className="font-medium underline underline-offset-2"
+								>
+									Open the editor
+								</Link>{' '}
+								and revert the document to draft.
+							</p>
+						</div>
+					)}
 					<p className="text-sm font-medium text-zinc-700">Signing Status</p>
 					<Separator />
 

@@ -1,6 +1,22 @@
 package lib
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"reflect"
+	"time"
+
+	"github.com/go-playground/validator/v10"
+)
+
+// OptionalValue is an interface implemented by all Optional[T] types
+// to allow generic extraction of the underlying value for validation.
+type OptionalValue interface {
+	// GetValue returns the underlying value as an interface{}.
+	// Returns nil if not set or the value is nil.
+	GetValue() any
+	// WasSet returns true if the field was present in JSON.
+	WasSet() bool
+}
 
 // Optional wraps a pointer and tracks if it was explicitly set in JSON.
 // This allows distinguishing between "field not sent" vs "field set to null" vs "field set to value".
@@ -58,4 +74,48 @@ func (o Optional[T]) GetOr(defaultVal T) T {
 // Ptr returns the underlying pointer (may be nil).
 func (o Optional[T]) Ptr() *T {
 	return o.Value
+}
+
+// GetValue implements OptionalValue interface.
+func (o Optional[T]) GetValue() any {
+	if o.Value == nil {
+		return nil
+	}
+	return *o.Value
+}
+
+// WasSet implements OptionalValue interface.
+func (o Optional[T]) WasSet() bool {
+	return o.IsSet
+}
+
+// Ensure Optional implements OptionalValue at compile time.
+var (
+	_ OptionalValue = Optional[string]{}
+	_ OptionalValue = Optional[int64]{}
+	_ OptionalValue = Optional[time.Time]{}
+)
+
+// optionalCustomTypeFunc extracts the underlying value from Optional types for validation.
+func optionalCustomTypeFunc(field reflect.Value) any {
+	if field.CanInterface() {
+		if opt, ok := field.Interface().(OptionalValue); ok {
+			return opt.GetValue()
+		}
+	}
+	return nil
+}
+
+// NewValidator creates a validator instance configured to handle Optional types.
+func NewValidator() *validator.Validate {
+	v := validator.New()
+
+	// Register custom type func for all Optional types
+	v.RegisterCustomTypeFunc(optionalCustomTypeFunc,
+		Optional[string]{},
+		Optional[int64]{},
+		Optional[time.Time]{},
+	)
+
+	return v
 }

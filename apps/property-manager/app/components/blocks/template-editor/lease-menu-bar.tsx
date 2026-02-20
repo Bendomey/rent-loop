@@ -44,6 +44,7 @@ export function LeaseMenuBar({
 	const [editor] = useLexicalComposerContext()
 	const updateDocument = useUpdateDocument()
 	const savedContentRef = useRef(document.content)
+	const isFirstUpdateRef = useRef(true)
 	const [hasChanges, setHasChanges] = useState(false)
 	const [hasPmSignature, setHasPmSignature] = useState(false)
 	const [hasTenantSignature, setHasTenantSignature] = useState(false)
@@ -52,7 +53,15 @@ export function LeaseMenuBar({
 	useEffect(() => {
 		return editor.registerUpdateListener(({ editorState }) => {
 			const currentContent = JSON.stringify(editorState.toJSON())
-			setHasChanges(currentContent !== savedContentRef.current)
+
+			if (isFirstUpdateRef.current) {
+				// Lexical normalizes the state on hydration (field ordering, node IDs,
+				// defaults), so re-baseline the ref to avoid a false hasChanges=true.
+				savedContentRef.current = currentContent
+				isFirstUpdateRef.current = false
+			} else {
+				setHasChanges(currentContent !== savedContentRef.current)
+			}
 
 			editorState.read(() => {
 				const nodes = $nodesOfType(SignatureNode)
