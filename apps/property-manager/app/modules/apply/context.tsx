@@ -63,12 +63,12 @@ export function ApplyProvider({ children }: { children: React.ReactNode }) {
 			)
 		}
 
-		if (formData.support_phone) {
-			updatedData.support_phone = `+233${formData.support_phone.slice(-9)}`
+		if (updatedData.support_phone) {
+			updatedData.support_phone = `+233${updatedData.support_phone.slice(-9)}`
 		}
 
-		if (formData.contact_phone_number) {
-			updatedData.contact_phone_number = `+233${formData.contact_phone_number.slice(-9)}`
+		if (updatedData.contact_phone_number) {
+			updatedData.contact_phone_number = `+233${updatedData.contact_phone_number.slice(-9)}`
 		}
 
 		await applyFetcher.submit(updatedData, {
