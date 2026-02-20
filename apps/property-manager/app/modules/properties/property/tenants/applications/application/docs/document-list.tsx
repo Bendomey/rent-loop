@@ -18,13 +18,13 @@ const filterChips: { value: DocFilter; label: string }[] = [
 ]
 
 interface DocumentListProps {
-	selectedDocumentId?: string | null
-	onSelectDocument?: (documentId: string) => void
+	selectedDocument?: RentloopDocument | null
+	onSelectDocument?: (document: RentloopDocument) => void
 	property_id: string
 }
 
 export function DocumentList({
-	selectedDocumentId,
+	selectedDocument,
 	onSelectDocument,
 	property_id,
 }: DocumentListProps) {
@@ -43,9 +43,8 @@ export function DocumentList({
 
 	const debouncedSearch = useDebounce({
 		delay: 250,
-		value: search
+		value: search,
 	})
-		;
 	const { data: documents, isPending } = useGetDocuments({
 		filters: {
 			...filters,
@@ -119,8 +118,8 @@ export function DocumentList({
 						<DocumentCard
 							key={doc.id}
 							document={doc}
-							isSelected={selectedDocumentId === doc.id}
-							onClick={() => onSelectDocument?.(doc.id)}
+							isSelected={selectedDocument?.id === doc.id}
+							onClick={() => onSelectDocument?.(doc)}
 						/>
 					))}
 				</div>

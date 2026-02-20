@@ -69,7 +69,7 @@ interface TenantApplication {
 		'DRAFT' | 'FINALIZED' | 'SIGNING' | 'SIGNED'
 	>
 
-	lease_agreement_signatures: Array<RentloopDocumentSignature>
+	lease_agreement_document_signatures: Array<RentloopDocumentSignature>
 
 	previous_landlord_name: Nullable<string>
 	previous_landlord_phone: Nullable<string>

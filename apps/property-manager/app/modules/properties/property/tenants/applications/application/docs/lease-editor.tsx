@@ -1,9 +1,10 @@
 import { type SerializedEditorState } from 'lexical'
 import { CheckCircle2, Lock, PenLine } from 'lucide-react'
 import { useState } from 'react'
-import { useLoaderData, useNavigate } from 'react-router'
+import { useLoaderData, useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 
+import { useUpdateTenantApplication } from '~/api/tenant-applications'
 import { Editor } from '~/components/blocks/template-editor/editor'
 import { LeaseMenuBar } from '~/components/blocks/template-editor/lease-menu-bar'
 import { Button } from '~/components/ui/button'
@@ -39,7 +40,9 @@ const initialValue = {
 
 export function LeaseDocumentModule() {
 	const { document, tenantApplication } = useLoaderData<typeof loader>()
-	const navigate = useNavigate()
+	const updateTenantApplication = useUpdateTenantApplication()
+	const revalidator = useRevalidator()
+
 	const [editorState, setEditorState] = useState<SerializedEditorState>(
 		document?.content ? JSON.parse(document.content) : initialValue,
 	)
@@ -47,14 +50,41 @@ export function LeaseDocumentModule() {
 	if (!document || !tenantApplication) return null
 
 	const handleFinalize = () => {
-		// TODO: resolve template fields, lock document, update application status
-		toast.info('Finalize for signing is not yet implemented')
-		void navigate(-1)
+		if (updateTenantApplication.isPending) return
+		updateTenantApplication.mutate(
+			{
+				id: tenantApplication.id,
+				data: { lease_agreement_document_status: 'FINALIZED' },
+			},
+			{
+				onSuccess: () => {
+					toast.success('Document finalized')
+					void revalidator.revalidate()
+				},
+				onError: () => {
+					toast.error('Failed to finalize')
+				},
+			},
+		)
 	}
 
 	const handleRevertToDraft = () => {
-		// TODO: revert document status back to DRAFT
-		toast.info('Revert to draft is not yet implemented')
+		if (updateTenantApplication.isPending) return
+		updateTenantApplication.mutate(
+			{
+				id: tenantApplication.id,
+				data: { lease_agreement_document_status: 'DRAFT' },
+			},
+			{
+				onSuccess: () => {
+					toast.success('Reverted to draft')
+					void revalidator.revalidate()
+				},
+				onError: () => {
+					toast.error('Failed to revert')
+				},
+			},
+		)
 	}
 
 	const docStatus = tenantApplication.lease_agreement_document_status
@@ -67,7 +97,7 @@ export function LeaseDocumentModule() {
 			description:
 				'This document has been finalized and is ready for signing. You cannot make edits in this state.',
 			action: (
-				<Button variant="outline" onClick={handleRevertToDraft}>
+				<Button variant="outline" disabled={updateTenantApplication.isPending} onClick={handleRevertToDraft}>
 					Back to Draft
 				</Button>
 			),

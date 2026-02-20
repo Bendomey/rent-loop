@@ -65,6 +65,7 @@ interface CreateDocumentInputParams {
 	size: number
 	tags: Array<string>
 	title: string
+	type: 'TEMPLATE' | 'DOCUMENT'
 }
 
 export const createDocumentSSR = async (

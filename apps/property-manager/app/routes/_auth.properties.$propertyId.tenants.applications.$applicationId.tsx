@@ -16,7 +16,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const tenantApplication = await getPropertyTenantApplicationForServer(
 		{
 			id: params.applicationId,
-			populate: ['DesiredUnit', 'CreatedBy', 'CompletedBy', 'CancelledBy', 'LeaseAgreementDocumentPropertyManagerSignedBy'],
+			populate: ['DesiredUnit', 'CreatedBy', 'CompletedBy', 'CancelledBy', 'LeaseAgreementDocument', 'LeaseAgreementDocumentSignatures'],
 		},
 		{
 			baseUrl,

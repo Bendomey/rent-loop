@@ -39,8 +39,12 @@ type OutputAdminTenantApplication struct {
 	SecurityDepositFee         *int64  `json:"security_deposit_fee,omitempty"          example:"1000"`
 	SecurityDepositFeeCurrency *string `json:"security_deposit_fee_currency,omitempty" example:"USD"`
 
-	LeaseAgreementDocumentMode *string `json:"lease_agreement_document_mode,omitempty" example:"MANUAL"`
-	LeaseAgreementDocumentUrl  *string `json:"lease_agreement_document_url,omitempty"  example:"https://example.com/lease.pdf"`
+	LeaseAgreementDocumentMode       *string                        `json:"lease_agreement_document_mode,omitempty" example:"MANUAL"`
+	LeaseAgreementDocumentUrl        *string                        `json:"lease_agreement_document_url,omitempty"  example:"https://example.com/lease.pdf"`
+	LeaseAgreementDocumentID         *string                        `json:"lease_agreement_document_id,omitempty"  example:"550e8400-e29b-41d4-a716-446655440000"`
+	LeaseAgreementDocument           *OutputAdminDocument           `json:"lease_agreement_document,omitempty"`
+	LeaseAgreementDocumentStatus     *string                        `json:"lease_agreement_document_status,omitempty"  example:"DRAFT"`
+	LeaseAgreementDocumentSignatures []OutputAdminDocumentSignature `json:"lease_agreement_document_signatures,omitempty"`
 
 	FirstName       string    `json:"first_name"                  example:"John"`
 	OtherNames      *string   `json:"other_names,omitempty"       example:"Michael"`
@@ -84,32 +88,34 @@ func DBAdminTenantApplicationToRest(i *models.TenantApplication) any {
 	}
 
 	data := map[string]any{
-		"id":                                i.ID.String(),
-		"code":                              i.Code,
-		"status":                            i.Status,
-		"completed_at":                      i.CompletedAt,
-		"completed_by_id":                   i.CompletedById,
-		"completed_by":                      DBClientUserToRest(i.CompletedBy),
-		"cancelled_at":                      i.CancelledAt,
-		"cancelled_by_id":                   i.CancelledById,
-		"cancelled_by":                      DBClientUserToRest(i.CancelledBy),
-		"desired_unit_id":                   i.DesiredUnitId,
-		"desired_unit":                      DBAdminUnitToRest(&i.DesiredUnit),
-		"desired_move_in_date":              i.DesiredMoveInDate,
-		"stay_duration_frequency":           i.StayDurationFrequency,
-		"stay_duration":                     i.StayDuration,
-		"rent_fee":                          i.RentFee,
-		"rent_fee_currency":                 i.RentFeeCurrency,
-		"payment_frequency":                 i.PaymentFrequency,
-		"initial_deposit_fee":               i.InitialDepositFee,
-		"initial_deposit_fee_currency":      i.InitialDepositFeeCurrency,
-		"security_deposit_fee":              i.SecurityDepositFee,
-		"security_deposit_fee_currency":     i.SecurityDepositFeeCurrency,
-		"lease_agreement_document_mode":     i.LeaseAgreementDocumentMode,
-		"lease_agreement_document_url":      i.LeaseAgreementDocumentUrl,
-		"lease_agreement_document_id":       i.LeaseAgreementDocumentID,
-		"lease_agreement_document":          DBDocumentToRestDocument(i.LeaseAgreementDocument),
-		"lease_agreement_document_status":   i.LeaseAgreementDocumentStatus,
+		"id":                              i.ID.String(),
+		"code":                            i.Code,
+		"status":                          i.Status,
+		"completed_at":                    i.CompletedAt,
+		"completed_by_id":                 i.CompletedById,
+		"completed_by":                    DBClientUserToRest(i.CompletedBy),
+		"cancelled_at":                    i.CancelledAt,
+		"cancelled_by_id":                 i.CancelledById,
+		"cancelled_by":                    DBClientUserToRest(i.CancelledBy),
+		"desired_unit_id":                 i.DesiredUnitId,
+		"desired_unit":                    DBAdminUnitToRest(&i.DesiredUnit),
+		"desired_move_in_date":            i.DesiredMoveInDate,
+		"stay_duration_frequency":         i.StayDurationFrequency,
+		"stay_duration":                   i.StayDuration,
+		"rent_fee":                        i.RentFee,
+		"rent_fee_currency":               i.RentFeeCurrency,
+		"payment_frequency":               i.PaymentFrequency,
+		"initial_deposit_fee":             i.InitialDepositFee,
+		"initial_deposit_fee_currency":    i.InitialDepositFeeCurrency,
+		"security_deposit_fee":            i.SecurityDepositFee,
+		"security_deposit_fee_currency":   i.SecurityDepositFeeCurrency,
+		"lease_agreement_document_mode":   i.LeaseAgreementDocumentMode,
+		"lease_agreement_document_url":    i.LeaseAgreementDocumentUrl,
+		"lease_agreement_document_id":     i.LeaseAgreementDocumentID,
+		"lease_agreement_document":        DBDocumentToRestDocument(i.LeaseAgreementDocument),
+		"lease_agreement_document_status": i.LeaseAgreementDocumentStatus,
+		// TODO: work on this
+		// "lease_agreement_document_signatures": DBDocumentSignaturesToRest(i.LeaseAgreementDocumentSignatures),
 		"first_name":                        i.FirstName,
 		"other_names":                       i.OtherNames,
 		"last_name":                         i.LastName,

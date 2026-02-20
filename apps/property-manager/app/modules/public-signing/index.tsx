@@ -12,13 +12,17 @@ import { Label } from '~/components/ui/label'
 import type { loader } from '~/routes/sign.$token'
 
 export function PublicSigningModule() {
-	const { document, signerRole, signerName, applicationCode } =
-		useLoaderData<typeof loader>()
+	const { signingToken } = useLoaderData<typeof loader>()
+	const signerName = signingToken?.signer_name ?? null
 	const [isSigning, setIsSigning] = useState(false)
 	const [enteredName, setEnteredName] = useState('')
 	const [nameConfirmed, setNameConfirmed] = useState(!!signerName)
 
-	if (!document) return null
+	if (!signingToken?.document) return null
+
+	const document = signingToken.document
+	const signerRole = signingToken.role as SignatureRole
+	const applicationCode = signingToken.tenant_application?.code ?? ''
 
 	const editorState: SerializedEditorState = document.content
 		? JSON.parse(document.content)

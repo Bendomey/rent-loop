@@ -68,13 +68,27 @@ export function PropertyTenantApplicationChecklist({ application }: Props) {
         { label: 'Initial deposit currency', done: Boolean(application.initial_deposit_currency) },
     ]
 
+    const signatures = application.lease_agreement_document_signatures ?? []
+    const managerSig = signatures.find(s => s.role === 'PROPERTY_MANAGER')
+    const tenantSig = signatures.find(s => s.role === 'TENANT')
+    const witnessSigs = signatures.filter(
+        s => s.role === 'PM_WITNESS' || s.role === 'TENANT_WITNESS',
+    )
+
     const docsItems: SubItem[] = [
         { label: 'Document mode', done: Boolean(application.lease_agreement_document_mode) },
-        { label: 'Document uploaded', done: Boolean(application.lease_agreement_document_url) },
-        { label: 'Manager assigned', done: Boolean(application.lease_agreement_document_property_manager_signed_by_id) },
-        { label: 'Manager verified', done: Boolean(application.lease_agreement_document_property_manager_signed_by) },
-        { label: 'Manager signed', done: Boolean(application.lease_agreement_document_property_manager_signed_at) },
-        { label: 'Tenant signed', done: Boolean(application.lease_agreement_document_tenant_signed_at) },
+        {
+            label: 'Document uploaded',
+            done: application.lease_agreement_document_mode === 'ONLINE'
+                ? Boolean(application.lease_agreement_document_id)
+                : Boolean(application.lease_agreement_document_url),
+        },
+        { label: 'Manager signed', done: Boolean(managerSig) },
+        { label: 'Tenant signed', done: Boolean(tenantSig) },
+        ...witnessSigs.map(s => ({
+            label: `Witness signed (${s.role === 'PM_WITNESS' ? 'PM' : 'Tenant'})`,
+            done: true,
+        })),
     ]
 
     const checklistSections = [unitItems, tenantDetailItems, moveInItems, financialItems, docsItems]
