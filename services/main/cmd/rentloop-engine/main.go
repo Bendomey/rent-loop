@@ -44,6 +44,7 @@ func main() {
 		RDB:       redis,
 		Config:    cfg,
 		Validator: lib.NewValidator(),
+		Clients:   clients,
 	}
 
 	repository := repository.NewRepository(database)
