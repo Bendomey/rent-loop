@@ -972,9 +972,9 @@ definitions:
         type: string
       gender:
         enum:
-        - Male
-        - Female
-        example: Male
+        - MALE
+        - FEMALE
+        example: MALE
         type: string
       id_back_url:
         type: string
@@ -1019,11 +1019,11 @@ definitions:
         type: string
       marital_status:
         enum:
-        - Single
-        - Married
-        - Divorced
-        - Widowed
-        example: Single
+        - SINGLE
+        - MARRIED
+        - DIVORCED
+        - WIDOWED
+        example: SINGLE
         type: string
       nationality:
         example: Ghanaian

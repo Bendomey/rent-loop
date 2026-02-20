@@ -8820,10 +8820,10 @@ const docTemplate = `{
                 "gender": {
                     "type": "string",
                     "enum": [
-                        "Male",
-                        "Female"
+                        "MALE",
+                        "FEMALE"
                     ],
-                    "example": "Male"
+                    "example": "MALE"
                 },
                 "id_back_url": {
                     "type": "string"
@@ -8884,12 +8884,12 @@ const docTemplate = `{
                 "marital_status": {
                     "type": "string",
                     "enum": [
-                        "Single",
-                        "Married",
-                        "Divorced",
-                        "Widowed"
+                        "SINGLE",
+                        "MARRIED",
+                        "DIVORCED",
+                        "WIDOWED"
                     ],
-                    "example": "Single"
+                    "example": "SINGLE"
                 },
                 "nationality": {
                     "type": "string",
