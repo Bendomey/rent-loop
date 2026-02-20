@@ -43,8 +43,8 @@ type TenantApplication struct {
 	SecurityDepositFeeCurrency string `gorm:"not null;default:'GHS'"`
 
 	// docs setup
-	LeaseAggreementDocumentMode *string // MANUAL | ONLINE
-	LeaseAgreementDocumentUrl   *string
+	LeaseAgreementDocumentMode *string // MANUAL | ONLINE
+	LeaseAgreementDocumentUrl  *string
 
 	// ONLINE
 	LeaseAgreementDocumentID     *string

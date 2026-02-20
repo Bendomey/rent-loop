@@ -802,22 +802,6 @@ definitions:
   handlers.UpdateLeaseRequest:
     properties:
       key_handover_date:
-        example: "2024-07-01T09:00:00Z"
-        type: string
-      lease_agreement_document_mode:
-        enum:
-        - MANUAL
-        - ONLINE
-        example: MANUAL
-        type: string
-      lease_agreement_document_property_manager_signed_at:
-        example: "2024-06-15T12:00:00Z"
-        type: string
-      lease_agreement_document_property_manager_signed_by_id:
-        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
-        type: string
-      lease_agreement_document_tenant_signed_at:
-        example: "2024-06-16T14:00:00Z"
         type: string
       lease_agreement_document_url:
         example: https://example.com/lease.pdf
@@ -826,18 +810,8 @@ definitions:
         example: "2024-07-01T00:00:00Z"
         type: string
       payment_frequency:
-        enum:
-        - Hourly
-        - Daily
-        - Monthly
-        - Quarterly
-        - BiAnnually
-        - Annually
-        - OneTime
-        example: Monthly
         type: string
       property_inspection_date:
-        example: "2024-06-30T15:00:00Z"
         type: string
       stay_duration:
         example: 12
@@ -851,7 +825,6 @@ definitions:
         example: Hours
         type: string
       utility_transfers_date:
-        example: "2024-07-02T10:00:00Z"
         type: string
     type: object
   handlers.UpdatePaymentAccountRequest:
@@ -962,13 +935,11 @@ definitions:
         example: "1990-01-01T00:00:00Z"
         type: string
       desired_move_in_date:
-        example: "2023-01-01T00:00:00Z"
         type: string
       desired_unit_id:
         example: b4d0243c-6581-4104-8185-d83a45ebe41b
         type: string
       email:
-        example: john.doe@example.com
         type: string
       emergency_contact_name:
         example: Jane Doe
@@ -989,10 +960,8 @@ definitions:
         example: Male
         type: string
       id_back_url:
-        example: https://example.com/id-back.jpg
         type: string
       id_front_url:
-        example: https://example.com/id-front.jpg
         type: string
       id_number:
         example: GHA-123456789
@@ -1006,7 +975,6 @@ definitions:
         example: GHANA_CARD
         type: string
       initial_deposit_fee:
-        example: 1000
         type: integer
       initial_deposit_paid_at:
         example: "2023-01-01T00:00:00Z"
@@ -1024,14 +992,13 @@ definitions:
       last_name:
         example: Doe
         type: string
+      lease_agreement_document_id:
+        type: string
       lease_agreement_document_mode:
-        enum:
-        - MANUAL
-        - ONLINE
-        example: MANUAL
+        type: string
+      lease_agreement_document_status:
         type: string
       lease_agreement_document_url:
-        example: https://example.com/lease.pdf
         type: string
       marital_status:
         enum:
@@ -1051,36 +1018,21 @@ definitions:
         example: 456 Tech Ave, Accra
         type: string
       other_names:
-        example: Michael
         type: string
       payment_frequency:
-        enum:
-        - Hourly
-        - Daily
-        - Monthly
-        - Quarterly
-        - BiAnnually
-        - Annually
-        - OneTime
-        example: Hourly
         type: string
       phone:
         example: "+233281234569"
         type: string
       previous_landlord_name:
-        example: Mr. Smith
         type: string
       previous_landlord_phone:
-        example: "+233281234570"
         type: string
       previous_tenancy_period:
-        example: 2020-2022
         type: string
       profile_photo_url:
-        example: https://example.com/photo.jpg
         type: string
       proof_of_income_url:
-        example: https://example.com/income.pdf
         type: string
       relationship_to_emergency_contact:
         example: Sister
@@ -1092,7 +1044,6 @@ definitions:
         example: GHS
         type: string
       security_deposit_fee:
-        example: 1000
         type: integer
       security_deposit_fee_currency:
         example: GHS
@@ -1111,14 +1062,8 @@ definitions:
         example: "123456789"
         type: string
       stay_duration:
-        example: 10
         type: integer
       stay_duration_frequency:
-        enum:
-        - Hours
-        - Days
-        - Months
-        example: Hours
         type: string
     type: object
   handlers.UpdateUnitRequest:
@@ -1703,7 +1648,7 @@ definitions:
       last_name:
         example: Doe
         type: string
-      lease_aggreement_document_mode:
+      lease_agreement_document_mode:
         example: MANUAL
         type: string
       lease_agreement_document_url:

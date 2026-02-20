@@ -23,18 +23,14 @@ func NewLeaseHandler(appCtx pkg.AppContext, service services.LeaseService) Lease
 }
 
 type UpdateLeaseRequest struct {
-	PaymentFrequency                                *string    `json:"payment_frequency,omitempty"                                      validate:"omitempty,oneof=Hourly Daily Monthly Quarterly BiAnnually Annually OneTime" example:"Monthly"                              description:"Frequency of rent payments"`
-	MoveInDate                                      *time.Time `json:"move_in_date,omitempty"                                           validate:"omitempty"                                                                  example:"2024-07-01T00:00:00Z"                 description:"Tenant move-in date (RFC3339 format)"`
-	StayDurationFrequency                           *string    `json:"stay_duration_frequency,omitempty"                                validate:"omitempty,oneof=Hours Days Months"                                          example:"Hours"                                description:"Unit of stay duration (e.g., months, years)"`
-	StayDuration                                    *int64     `json:"stay_duration,omitempty"                                          validate:"omitempty,gte=0"                                                            example:"12"                                   description:"Length of stay in specified frequency"`
-	KeyHandoverDate                                 *time.Time `json:"key_handover_date,omitempty"                                      validate:"omitempty"                                                                  example:"2024-07-01T09:00:00Z"                 description:"Date and time for key handover (RFC3339 format)"`
-	UtilityTransfersDate                            *time.Time `json:"utility_transfers_date,omitempty"                                 validate:"omitempty"                                                                  example:"2024-07-02T10:00:00Z"                 description:"Date for utility transfers (RFC3339 format)"`
-	PropertyInspectionDate                          *time.Time `json:"property_inspection_date,omitempty"                               validate:"omitempty"                                                                  example:"2024-06-30T15:00:00Z"                 description:"Date for property inspection (RFC3339 format)"`
-	LeaseAggreementDocumentMode                     *string    `json:"lease_agreement_document_mode,omitempty"                          validate:"omitempty,oneof=MANUAL ONLINE"                                              example:"MANUAL"                               description:"Mode of lease agreement document (e.g., digital, paper)"`
-	LeaseAgreementDocumentUrl                       *string    `json:"lease_agreement_document_url,omitempty"                           validate:"omitempty,url"                                                              example:"https://example.com/lease.pdf"        description:"URL to the lease agreement document"`
-	LeaseAgreementDocumentPropertyManagerSignedById *string    `json:"lease_agreement_document_property_manager_signed_by_id,omitempty" validate:"omitempty,uuid4"                                                            example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456" description:"ID of property manager who signed the lease agreement"`
-	LeaseAgreementDocumentPropertyManagerSignedAt   *time.Time `json:"lease_agreement_document_property_manager_signed_at,omitempty"    validate:"omitempty"                                                                  example:"2024-06-15T12:00:00Z"                 description:"Timestamp when property manager signed the lease agreement"`
-	LeaseAgreementDocumentTenantSignedAt            *time.Time `json:"lease_agreement_document_tenant_signed_at,omitempty"              validate:"omitempty"                                                                  example:"2024-06-16T14:00:00Z"                 description:"Timestamp when tenant signed the lease agreement"`
+	PaymentFrequency          lib.Optional[string]    `json:"payment_frequency,omitempty"                                      swaggertype:"string" description:"Frequency of rent payments"`
+	MoveInDate                *time.Time              `json:"move_in_date,omitempty"                                           validate:"omitempty"                                                                  example:"2024-07-01T00:00:00Z"                 description:"Tenant move-in date (RFC3339 format)"`
+	StayDurationFrequency     *string                 `json:"stay_duration_frequency,omitempty"                                validate:"omitempty,oneof=Hours Days Months"                                          example:"Hours"                                description:"Unit of stay duration (e.g., months, years)"`
+	StayDuration              *int64                  `json:"stay_duration,omitempty"                                          validate:"omitempty,gte=0"                                                            example:"12"                                   description:"Length of stay in specified frequency"`
+	KeyHandoverDate           lib.Optional[time.Time] `json:"key_handover_date,omitempty"                                      swaggertype:"string" description:"Date and time for key handover (RFC3339 format)"`
+	UtilityTransfersDate      lib.Optional[time.Time] `json:"utility_transfers_date,omitempty"                                 swaggertype:"string" description:"Date for utility transfers (RFC3339 format)"`
+	PropertyInspectionDate    lib.Optional[time.Time] `json:"property_inspection_date,omitempty"                               swaggertype:"string" description:"Date for property inspection (RFC3339 format)"`
+	LeaseAgreementDocumentUrl *string                 `json:"lease_agreement_document_url,omitempty"                           validate:"omitempty,url"                                                              example:"https://example.com/lease.pdf"        description:"URL to the lease agreement document"`
 }
 
 // UpdateLease godoc
@@ -69,19 +65,15 @@ func (h *LeaseHandler) UpdateLease(w http.ResponseWriter, r *http.Request) {
 	}
 
 	input := services.UpdateLeaseInput{
-		LeaseID:                     leaseID,
-		PaymentFrequency:            body.PaymentFrequency,
-		MoveInDate:                  body.MoveInDate,
-		StayDurationFrequency:       body.StayDurationFrequency,
-		StayDuration:                body.StayDuration,
-		KeyHandoverDate:             body.KeyHandoverDate,
-		UtilityTransfersDate:        body.UtilityTransfersDate,
-		PropertyInspectionDate:      body.PropertyInspectionDate,
-		LeaseAggreementDocumentMode: body.LeaseAggreementDocumentMode,
-		LeaseAgreementDocumentUrl:   body.LeaseAgreementDocumentUrl,
-		LeaseAgreementDocumentPropertyManagerSignedById: body.LeaseAgreementDocumentPropertyManagerSignedById,
-		LeaseAgreementDocumentPropertyManagerSignedAt:   body.LeaseAgreementDocumentPropertyManagerSignedAt,
-		LeaseAgreementDocumentTenantSignedAt:            body.LeaseAgreementDocumentTenantSignedAt,
+		LeaseID:                   leaseID,
+		PaymentFrequency:          body.PaymentFrequency,
+		MoveInDate:                body.MoveInDate,
+		StayDurationFrequency:     body.StayDurationFrequency,
+		StayDuration:              body.StayDuration,
+		KeyHandoverDate:           body.KeyHandoverDate,
+		UtilityTransfersDate:      body.UtilityTransfersDate,
+		PropertyInspectionDate:    body.PropertyInspectionDate,
+		LeaseAgreementDocumentUrl: body.LeaseAgreementDocumentUrl,
 	}
 
 	lease, err := h.service.UpdateLease(r.Context(), input)

@@ -8581,28 +8581,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "key_handover_date": {
-                    "type": "string",
-                    "example": "2024-07-01T09:00:00Z"
-                },
-                "lease_agreement_document_mode": {
-                    "type": "string",
-                    "enum": [
-                        "MANUAL",
-                        "ONLINE"
-                    ],
-                    "example": "MANUAL"
-                },
-                "lease_agreement_document_property_manager_signed_at": {
-                    "type": "string",
-                    "example": "2024-06-15T12:00:00Z"
-                },
-                "lease_agreement_document_property_manager_signed_by_id": {
-                    "type": "string",
-                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
-                },
-                "lease_agreement_document_tenant_signed_at": {
-                    "type": "string",
-                    "example": "2024-06-16T14:00:00Z"
+                    "type": "string"
                 },
                 "lease_agreement_document_url": {
                     "type": "string",
@@ -8613,21 +8592,10 @@ const docTemplate = `{
                     "example": "2024-07-01T00:00:00Z"
                 },
                 "payment_frequency": {
-                    "type": "string",
-                    "enum": [
-                        "Hourly",
-                        "Daily",
-                        "Monthly",
-                        "Quarterly",
-                        "BiAnnually",
-                        "Annually",
-                        "OneTime"
-                    ],
-                    "example": "Monthly"
+                    "type": "string"
                 },
                 "property_inspection_date": {
-                    "type": "string",
-                    "example": "2024-06-30T15:00:00Z"
+                    "type": "string"
                 },
                 "stay_duration": {
                     "type": "integer",
@@ -8644,8 +8612,7 @@ const docTemplate = `{
                     "example": "Hours"
                 },
                 "utility_transfers_date": {
-                    "type": "string",
-                    "example": "2024-07-02T10:00:00Z"
+                    "type": "string"
                 }
             }
         },
@@ -8794,16 +8761,14 @@ const docTemplate = `{
                     "example": "1990-01-01T00:00:00Z"
                 },
                 "desired_move_in_date": {
-                    "type": "string",
-                    "example": "2023-01-01T00:00:00Z"
+                    "type": "string"
                 },
                 "desired_unit_id": {
                     "type": "string",
                     "example": "b4d0243c-6581-4104-8185-d83a45ebe41b"
                 },
                 "email": {
-                    "type": "string",
-                    "example": "john.doe@example.com"
+                    "type": "string"
                 },
                 "emergency_contact_name": {
                     "type": "string",
@@ -8830,12 +8795,10 @@ const docTemplate = `{
                     "example": "Male"
                 },
                 "id_back_url": {
-                    "type": "string",
-                    "example": "https://example.com/id-back.jpg"
+                    "type": "string"
                 },
                 "id_front_url": {
-                    "type": "string",
-                    "example": "https://example.com/id-front.jpg"
+                    "type": "string"
                 },
                 "id_number": {
                     "type": "string",
@@ -8852,8 +8815,7 @@ const docTemplate = `{
                     "example": "GHANA_CARD"
                 },
                 "initial_deposit_fee": {
-                    "type": "integer",
-                    "example": 1000
+                    "type": "integer"
                 },
                 "initial_deposit_paid_at": {
                     "type": "string",
@@ -8876,17 +8838,17 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Doe"
                 },
+                "lease_agreement_document_id": {
+                    "type": "string"
+                },
                 "lease_agreement_document_mode": {
-                    "type": "string",
-                    "enum": [
-                        "MANUAL",
-                        "ONLINE"
-                    ],
-                    "example": "MANUAL"
+                    "type": "string"
+                },
+                "lease_agreement_document_status": {
+                    "type": "string"
                 },
                 "lease_agreement_document_url": {
-                    "type": "string",
-                    "example": "https://example.com/lease.pdf"
+                    "type": "string"
                 },
                 "marital_status": {
                     "type": "string",
@@ -8911,45 +8873,29 @@ const docTemplate = `{
                     "example": "456 Tech Ave, Accra"
                 },
                 "other_names": {
-                    "type": "string",
-                    "example": "Michael"
+                    "type": "string"
                 },
                 "payment_frequency": {
-                    "type": "string",
-                    "enum": [
-                        "Hourly",
-                        "Daily",
-                        "Monthly",
-                        "Quarterly",
-                        "BiAnnually",
-                        "Annually",
-                        "OneTime"
-                    ],
-                    "example": "Hourly"
+                    "type": "string"
                 },
                 "phone": {
                     "type": "string",
                     "example": "+233281234569"
                 },
                 "previous_landlord_name": {
-                    "type": "string",
-                    "example": "Mr. Smith"
+                    "type": "string"
                 },
                 "previous_landlord_phone": {
-                    "type": "string",
-                    "example": "+233281234570"
+                    "type": "string"
                 },
                 "previous_tenancy_period": {
-                    "type": "string",
-                    "example": "2020-2022"
+                    "type": "string"
                 },
                 "profile_photo_url": {
-                    "type": "string",
-                    "example": "https://example.com/photo.jpg"
+                    "type": "string"
                 },
                 "proof_of_income_url": {
-                    "type": "string",
-                    "example": "https://example.com/income.pdf"
+                    "type": "string"
                 },
                 "relationship_to_emergency_contact": {
                     "type": "string",
@@ -8964,8 +8910,7 @@ const docTemplate = `{
                     "example": "GHS"
                 },
                 "security_deposit_fee": {
-                    "type": "integer",
-                    "example": 1000
+                    "type": "integer"
                 },
                 "security_deposit_fee_currency": {
                     "type": "string",
@@ -8989,17 +8934,10 @@ const docTemplate = `{
                     "example": "123456789"
                 },
                 "stay_duration": {
-                    "type": "integer",
-                    "example": 10
+                    "type": "integer"
                 },
                 "stay_duration_frequency": {
-                    "type": "string",
-                    "enum": [
-                        "Hours",
-                        "Days",
-                        "Months"
-                    ],
-                    "example": "Hours"
+                    "type": "string"
                 }
             }
         },
@@ -9799,7 +9737,7 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Doe"
                 },
-                "lease_aggreement_document_mode": {
+                "lease_agreement_document_mode": {
                     "type": "string",
                     "example": "MANUAL"
                 },
