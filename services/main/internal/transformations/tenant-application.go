@@ -39,11 +39,11 @@ type OutputAdminTenantApplication struct {
 	SecurityDepositFee         *int64  `json:"security_deposit_fee,omitempty"          example:"1000"`
 	SecurityDepositFeeCurrency *string `json:"security_deposit_fee_currency,omitempty" example:"USD"`
 
-	LeaseAgreementDocumentMode       *string                        `json:"lease_agreement_document_mode,omitempty" example:"MANUAL"`
-	LeaseAgreementDocumentUrl        *string                        `json:"lease_agreement_document_url,omitempty"  example:"https://example.com/lease.pdf"`
-	LeaseAgreementDocumentID         *string                        `json:"lease_agreement_document_id,omitempty"  example:"550e8400-e29b-41d4-a716-446655440000"`
+	LeaseAgreementDocumentMode       *string                        `json:"lease_agreement_document_mode,omitempty"       example:"MANUAL"`
+	LeaseAgreementDocumentUrl        *string                        `json:"lease_agreement_document_url,omitempty"        example:"https://example.com/lease.pdf"`
+	LeaseAgreementDocumentID         *string                        `json:"lease_agreement_document_id,omitempty"         example:"550e8400-e29b-41d4-a716-446655440000"`
 	LeaseAgreementDocument           *OutputAdminDocument           `json:"lease_agreement_document,omitempty"`
-	LeaseAgreementDocumentStatus     *string                        `json:"lease_agreement_document_status,omitempty"  example:"DRAFT"`
+	LeaseAgreementDocumentStatus     *string                        `json:"lease_agreement_document_status,omitempty"     example:"DRAFT"`
 	LeaseAgreementDocumentSignatures []OutputAdminDocumentSignature `json:"lease_agreement_document_signatures,omitempty"`
 
 	FirstName       string    `json:"first_name"                  example:"John"`
