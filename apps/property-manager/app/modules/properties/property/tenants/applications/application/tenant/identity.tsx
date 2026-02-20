@@ -1,4 +1,12 @@
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Pencil, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useRevalidator } from 'react-router'
+import { toast } from 'sonner'
+import { z } from 'zod'
+import { useTenantApplicationContext } from '../context'
+import { useUpdateTenantApplication } from '~/api/tenant-applications'
 import { Button } from '~/components/ui/button'
 import {
 	Card,
@@ -26,35 +34,221 @@ import {
 	SelectValue,
 	SelectContent,
 } from '~/components/ui/select'
+import { Spinner } from '~/components/ui/spinner'
+import { useUploadObject } from '~/hooks/use-upload-object'
+import { safeString } from '~/lib/strings'
+
+const ID_TYPE_LABELS: Record<string, string> = {
+	NATIONAL_ID: 'National ID',
+	PASSPORT: 'Passport',
+	DRIVER_LICENSE: "Driver's License",
+	GHANA_CARD: 'Ghana Card',
+}
+
+const ValidationSchema = z.object({
+	nationality: z.string().trim().min(1, 'Nationality is required'),
+	id_type: z.enum(['DRIVER_LICENSE', 'PASSPORT', 'NATIONAL_ID', 'GHANA_CARD'], {
+		message: 'Please select an ID type',
+	}),
+	id_number: z.string().trim().min(1, 'ID number is required'),
+	current_address: z.string().trim().min(1, 'Current address is required'),
+	id_front_url: z.string().nullable().optional(),
+	id_back_url: z.string().nullable().optional(),
+})
+
+type FormSchema = z.infer<typeof ValidationSchema>
+
+interface FieldDisplayProps {
+	label: string
+	value: string | undefined | null
+}
+
+function FieldDisplay({ label, value }: FieldDisplayProps) {
+	return (
+		<div>
+			<p className="text-muted-foreground text-sm">{label}</p>
+			<p className="text-sm font-medium">{value || '-'}</p>
+		</div>
+	)
+}
 
 export function PropertyTenantApplicationIdentity() {
-	const rhfMethods = useForm({
-		// resolver: zodResolver(ValidationSchema),
-		// defaultValues: {
-		// 	marital_status: formData.marital_status || 'SINGLE',
-		// 	gender: formData.gender || 'MALE',
-		// },
+	const { tenantApplication: application } = useTenantApplicationContext()
+
+	const revalidator = useRevalidator()
+	const [isEditing, setIsEditing] = useState(false)
+
+	const {
+		upload: uploadFront,
+		objectUrl: frontUrl,
+		isLoading: isUploadingFront,
+	} = useUploadObject('tenant-applications/id-documents')
+
+	const {
+		upload: uploadBack,
+		objectUrl: backUrl,
+		isLoading: isUploadingBack,
+	} = useUploadObject('tenant-applications/id-documents')
+
+	const rhfMethods = useForm<FormSchema>({
+		resolver: zodResolver(ValidationSchema),
+		defaultValues: {
+			nationality: safeString(application?.nationality),
+			id_type: application?.id_type || undefined,
+			id_number: safeString(application?.id_number),
+			current_address: safeString(application?.current_address),
+			id_front_url: application?.id_front_url ?? null,
+			id_back_url: application?.id_back_url ?? null,
+		},
 	})
-	const { control } = rhfMethods
+
+	useEffect(() => {
+		if (frontUrl) {
+			rhfMethods.setValue('id_front_url', frontUrl, { shouldDirty: true })
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [frontUrl])
+
+	useEffect(() => {
+		if (backUrl) {
+			rhfMethods.setValue('id_back_url', backUrl, { shouldDirty: true })
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [backUrl])
+
+	const { handleSubmit, reset } = rhfMethods
+	const { isPending, mutate } = useUpdateTenantApplication()
+
+	const onSubmit = (data: FormSchema) => {
+		if (!application?.id) return
+
+		mutate(
+			{
+				id: application.id,
+				data,
+			},
+			{
+				onError: () => {
+					toast.error('Failed to update identity information. Try again later.')
+				},
+				onSuccess: () => {
+					toast.success('Identity information updated successfully.')
+					void revalidator.revalidate()
+					setIsEditing(false)
+				},
+			},
+		)
+	}
+
+	const handleCancel = () => {
+		reset()
+		setIsEditing(false)
+	}
+
+	if (!isEditing) {
+		return (
+			<Card className="shadow-none">
+				<CardHeader>
+					<CardTitle className="flex items-center justify-between">
+						Identity Verification
+						{application?.status !== 'TenantApplication.Status.Cancelled' && (
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={() => setIsEditing(true)}
+							>
+								<Pencil className="mr-1 h-4 w-4" />
+								Edit
+							</Button>
+						)}
+					</CardTitle>
+					<CardDescription>
+						Tenant's identification details for verification.
+					</CardDescription>
+				</CardHeader>
+
+				<CardContent>
+					<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+						<FieldDisplay
+							label="Nationality"
+							value={application?.nationality}
+						/>
+						<FieldDisplay
+							label="ID Type"
+							value={
+								application?.id_type
+									? ID_TYPE_LABELS[application.id_type] || application.id_type
+									: undefined
+							}
+						/>
+						<FieldDisplay label="ID Number" value={application?.id_number} />
+						<FieldDisplay
+							label="Current Address"
+							value={application?.current_address}
+						/>
+					</div>
+
+					<div className="mt-6">
+						<Label className="text-sm font-medium">ID Document Images</Label>
+						<div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-2">
+							<div>
+								<p className="text-muted-foreground mb-1 text-xs">Front</p>
+								{application?.id_front_url ? (
+									<img
+										src={application.id_front_url}
+										alt="ID Front"
+										className="h-40 w-full rounded-md border object-cover"
+									/>
+								) : (
+									<div className="flex h-40 w-full items-center justify-center rounded-md border bg-gray-50 text-sm text-gray-400">
+										No image uploaded
+									</div>
+								)}
+							</div>
+							<div>
+								<p className="text-muted-foreground mb-1 text-xs">Back</p>
+								{application?.id_back_url ? (
+									<img
+										src={application.id_back_url}
+										alt="ID Back"
+										className="h-40 w-full rounded-md border object-cover"
+									/>
+								) : (
+									<div className="flex h-40 w-full items-center justify-center rounded-md border bg-gray-50 text-sm text-gray-400">
+										No image uploaded
+									</div>
+								)}
+							</div>
+						</div>
+					</div>
+				</CardContent>
+			</Card>
+		)
+	}
 
 	return (
 		<Card className="shadow-none">
 			<CardHeader>
-				<CardTitle>Identity Verification</CardTitle>
+				<CardTitle className="flex items-center justify-between">
+					Identity Verification
+					<Button variant="ghost" size="sm" onClick={handleCancel}>
+						<X className="mr-1 h-4 w-4" />
+						Cancel
+					</Button>
+				</CardTitle>
 				<CardDescription>
-					Review and update tenant's identification details and document images
-					for verification.
+					Review and update tenant's identification details.
 				</CardDescription>
 			</CardHeader>
 
 			<CardContent className="space-y-3">
 				<Form {...rhfMethods}>
-					<form>
+					<form id="identity-form" onSubmit={handleSubmit(onSubmit)}>
 						<div className="grid grid-cols-1 gap-5 md:grid-cols-2">
 							<div>
 								<FormField
 									name="nationality"
-									control={control}
+									control={rhfMethods.control}
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>
@@ -71,7 +265,7 @@ export function PropertyTenantApplicationIdentity() {
 							<div>
 								<FormField
 									name="id_type"
-									control={control}
+									control={rhfMethods.control}
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>
@@ -90,11 +284,11 @@ export function PropertyTenantApplicationIdentity() {
 															National ID
 														</SelectItem>
 														<SelectItem value="PASSPORT">Passport</SelectItem>
-														<SelectItem value="DRIVERS_LICENSE">
+														<SelectItem value="DRIVER_LICENSE">
 															Driver's License
 														</SelectItem>
-														<SelectItem value="STUDENT_ID">
-															Student ID
+														<SelectItem value="GHANA_CARD">
+															Ghana Card
 														</SelectItem>
 													</SelectContent>
 												</Select>
@@ -104,10 +298,10 @@ export function PropertyTenantApplicationIdentity() {
 									)}
 								/>
 							</div>
-							<div className="col-span-2">
+							<div>
 								<FormField
 									name="id_number"
-									control={control}
+									control={rhfMethods.control}
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>
@@ -121,7 +315,23 @@ export function PropertyTenantApplicationIdentity() {
 									)}
 								/>
 							</div>
-
+							<div>
+								<FormField
+									name="current_address"
+									control={rhfMethods.control}
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>
+												Current Address <span className="text-red-500">*</span>
+											</FormLabel>
+											<FormControl>
+												<Input type="text" {...field} />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</div>
 							<div className="col-span-2 mt-2">
 								<Label>ID Document Images</Label>
 							</div>
@@ -131,20 +341,18 @@ export function PropertyTenantApplicationIdentity() {
 									shape="square"
 									hint="Optional"
 									acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-									// error={rhfMethods.formState.errors?.profile_photo_url?.message}
-									// fileCallback={upload}
-									// isUploading={isUploading}
-									dismissCallback={() => {
-										rhfMethods.setValue('profile_photo_url', undefined, {
+									imageSrc={safeString(rhfMethods.watch('id_front_url'))}
+									label="ID Front"
+									name="id_front_url"
+									fileCallback={uploadFront}
+									isUploading={isUploadingFront}
+									dismissCallback={() =>
+										rhfMethods.setValue('id_front_url', null, {
 											shouldDirty: true,
-											shouldValidate: true,
 										})
-									}}
-									// imageSrc={safeString(rhfMethods.watch('profile_photo_url'))}
-									label="Profile Picture"
-									name="image_url"
+									}
 									validation={{
-										maxByteSize: 5242880, // 5MB
+										maxByteSize: 5242880,
 									}}
 								/>
 							</div>
@@ -154,20 +362,18 @@ export function PropertyTenantApplicationIdentity() {
 									shape="square"
 									hint="Optional"
 									acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-									// error={rhfMethods.formState.errors?.profile_photo_url?.message}
-									// fileCallback={upload}
-									// isUploading={isUploading}
-									dismissCallback={() => {
-										rhfMethods.setValue('profile_photo_url', undefined, {
+									imageSrc={safeString(rhfMethods.watch('id_back_url'))}
+									label="ID Back"
+									name="id_back_url"
+									fileCallback={uploadBack}
+									isUploading={isUploadingBack}
+									dismissCallback={() =>
+										rhfMethods.setValue('id_back_url', null, {
 											shouldDirty: true,
-											shouldValidate: true,
 										})
-									}}
-									// imageSrc={safeString(rhfMethods.watch('profile_photo_url'))}
-									label="Profile Picture"
-									name="image_url"
+									}
 									validation={{
-										maxByteSize: 5242880, // 5MB
+										maxByteSize: 5242880,
 									}}
 								/>
 							</div>
@@ -178,7 +384,16 @@ export function PropertyTenantApplicationIdentity() {
 
 			<CardFooter className="flex justify-end">
 				<div className="flex flex-row items-center space-x-2">
-					<Button disabled>Save</Button>
+					<Button variant="outline" onClick={handleCancel} disabled={isPending}>
+						Cancel
+					</Button>
+					<Button
+						type="submit"
+						form="identity-form"
+						disabled={isPending || !rhfMethods.formState.isDirty}
+					>
+						{isPending ? <Spinner /> : null} Save
+					</Button>
 				</div>
 			</CardFooter>
 		</Card>

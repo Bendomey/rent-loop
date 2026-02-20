@@ -13,12 +13,13 @@ import (
 )
 
 type InvoiceHandler struct {
-	appCtx  pkg.AppContext
-	service services.InvoiceService
+	appCtx   pkg.AppContext
+	service  services.InvoiceService
+	services services.Services
 }
 
-func NewInvoiceHandler(appCtx pkg.AppContext, service services.InvoiceService) InvoiceHandler {
-	return InvoiceHandler{appCtx: appCtx, service: service}
+func NewInvoiceHandler(appCtx pkg.AppContext, services services.Services) InvoiceHandler {
+	return InvoiceHandler{appCtx: appCtx, service: services.InvoiceService, services: services}
 }
 
 type UpdateInvoiceRequest struct {
@@ -68,9 +69,14 @@ func (h *InvoiceHandler) UpdateInvoice(w http.ResponseWriter, r *http.Request) {
 		HandleErrorResponse(w, err)
 		return
 	}
+	transformed, transformErr := transformations.DBInvoiceToRest(h.services, invoice)
+	if transformErr != nil {
+		HandleErrorResponse(w, transformErr)
+		return
+	}
 
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBInvoiceToRest(invoice),
+		"data": transformed,
 	})
 }
 
@@ -103,8 +109,14 @@ func (h *InvoiceHandler) VoidInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	transformed, transformErr := transformations.DBInvoiceToRest(h.services, invoice)
+	if transformErr != nil {
+		HandleErrorResponse(w, transformErr)
+		return
+	}
+
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBInvoiceToRest(invoice),
+		"data": transformed,
 	})
 }
 
@@ -143,8 +155,14 @@ func (h *InvoiceHandler) GetInvoiceByID(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	transformed, transformErr := transformations.DBInvoiceToRest(h.services, invoice)
+	if transformErr != nil {
+		HandleErrorResponse(w, transformErr)
+		return
+	}
+
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBInvoiceToRest(invoice),
+		"data": transformed,
 	})
 }
 
@@ -208,7 +226,13 @@ func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 
 	data := make([]interface{}, len(*invoices))
 	for i, invoice := range *invoices {
-		data[i] = transformations.DBInvoiceToRest(&invoice)
+		transformed, transformErr := transformations.DBInvoiceToRest(h.services, &invoice)
+		if transformErr != nil {
+			HandleErrorResponse(w, transformErr)
+			return
+		}
+
+		data[i] = transformed
 	}
 
 	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, data, count))

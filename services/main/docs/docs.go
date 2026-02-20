@@ -2168,6 +2168,16 @@ const docTemplate = `{
                         ],
                         "name": "tags",
                         "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "TEMPLATE",
+                            "DOCUMENT"
+                        ],
+                        "type": "string",
+                        "example": "DOCUMENT",
+                        "name": "type",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2185,7 +2195,7 @@ const docTemplate = `{
                                         "rows": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/transformations.OutputDocument"
+                                                "$ref": "#/definitions/transformations.OutputAdminDocument"
                                             }
                                         }
                                     }
@@ -2248,7 +2258,7 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "$ref": "#/definitions/transformations.OutputDocument"
+                                    "$ref": "#/definitions/transformations.OutputAdminDocument"
                                 }
                             }
                         }
@@ -2317,7 +2327,7 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "$ref": "#/definitions/transformations.OutputDocument"
+                                    "$ref": "#/definitions/transformations.OutputAdminDocument"
                                 }
                             }
                         }
@@ -2435,7 +2445,7 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "$ref": "#/definitions/transformations.OutputDocument"
+                                    "$ref": "#/definitions/transformations.OutputAdminDocument"
                                 }
                             }
                         }
@@ -6038,6 +6048,244 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/signing": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Generate a signing token for a document signer",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Signing"
+                ],
+                "summary": "Generate a signing token",
+                "parameters": [
+                    {
+                        "description": "Token details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.GenerateTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Token created successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdminSigningToken"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/signing/direct": {
+            "post": {
+                "description": "Submit a signature for a document using tenant application or lease context (for PMs)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Signing"
+                ],
+                "summary": "Submit a signature",
+                "parameters": [
+                    {
+                        "description": "Signature details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SignDocumentPMRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Signature created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputDocumentSignature"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/signing/{token}/sign": {
+            "post": {
+                "description": "Submit a signature for a document using a signing token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Signing"
+                ],
+                "summary": "Submit a signature",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Signing token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Signature details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SignDocumentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Signature created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputDocumentSignature"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/signing/{token}/verify": {
+            "get": {
+                "description": "Validate a signing token and return document + signer info",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Signing"
+                ],
+                "summary": "Verify a signing token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Signing token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Token verified successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputSigningToken"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/tenant-applications": {
             "get": {
                 "security": [
@@ -6263,7 +6511,7 @@ const docTemplate = `{
                                         "rows": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/transformations.OutputTenantApplication"
+                                                "$ref": "#/definitions/transformations.OutputAdminTenantApplication"
                                             }
                                         }
                                     }
@@ -6321,7 +6569,7 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "$ref": "#/definitions/transformations.OutputTenantApplication"
+                                    "$ref": "#/definitions/transformations.OutputAdminTenantApplication"
                                 }
                             }
                         }
@@ -6456,7 +6704,7 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "$ref": "#/definitions/transformations.OutputTenantApplication"
+                                    "$ref": "#/definitions/transformations.OutputAdminTenantApplication"
                                 }
                             }
                         }
@@ -6585,7 +6833,7 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "$ref": "#/definitions/transformations.OutputTenantApplication"
+                                    "$ref": "#/definitions/transformations.OutputAdminTenantApplication"
                                 }
                             }
                         }
@@ -7510,7 +7758,8 @@ const docTemplate = `{
             "required": [
                 "content",
                 "size",
-                "title"
+                "title",
+                "type"
             ],
             "properties": {
                 "content": {
@@ -7537,6 +7786,14 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "example": "Lease Agreement"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "TEMPLATE",
+                        "DOCUMENT"
+                    ],
+                    "example": "DOCUMENT"
                 }
             }
         },
@@ -7843,6 +8100,14 @@ const docTemplate = `{
                     ],
                     "example": "MALE"
                 },
+                "id_back_url": {
+                    "type": "string",
+                    "example": "https://example.com/id_back.jpg"
+                },
+                "id_front_url": {
+                    "type": "string",
+                    "example": "https://example.com/id_front.jpg"
+                },
                 "id_number": {
                     "type": "string",
                     "example": "GHA-123456789"
@@ -7894,6 +8159,10 @@ const docTemplate = `{
                 "profile_photo_url": {
                     "type": "string",
                     "example": "https://example.com/photo.jpg"
+                },
+                "proof_of_income_url": {
+                    "type": "string",
+                    "example": "https://example.com/proof_of_income.jpg"
                 },
                 "relationship_to_emergency_contact": {
                     "type": "string",
@@ -8014,6 +8283,41 @@ const docTemplate = `{
                 "due_date": {
                     "type": "string",
                     "example": "2024-07-01T00:00:00Z"
+                }
+            }
+        },
+        "handlers.GenerateTokenRequest": {
+            "type": "object",
+            "required": [
+                "document_id",
+                "role"
+            ],
+            "properties": {
+                "document_id": {
+                    "type": "string"
+                },
+                "lease_id": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "TENANT",
+                        "PM_WITNESS",
+                        "TENANT_WITNESS"
+                    ]
+                },
+                "signer_email": {
+                    "type": "string"
+                },
+                "signer_name": {
+                    "type": "string"
+                },
+                "signer_phone": {
+                    "type": "string"
+                },
+                "tenant_application_id": {
+                    "type": "string"
                 }
             }
         },
@@ -8164,6 +8468,41 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.SignDocumentPMRequest": {
+            "type": "object",
+            "required": [
+                "document_id",
+                "signature_url"
+            ],
+            "properties": {
+                "document_id": {
+                    "type": "string"
+                },
+                "lease_id": {
+                    "type": "string"
+                },
+                "signature_url": {
+                    "type": "string"
+                },
+                "tenant_application_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.SignDocumentRequest": {
+            "type": "object",
+            "required": [
+                "signature_url"
+            ],
+            "properties": {
+                "signature_url": {
+                    "type": "string"
+                },
+                "signer_name": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.UnlinkClientUserFromPropertyRequest": {
             "type": "object",
             "required": [
@@ -8261,6 +8600,14 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "example": "Updated Lease Agreement"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "TEMPLATE",
+                        "DOCUMENT"
+                    ],
+                    "example": "DOCUMENT"
                 }
             }
         },
@@ -8294,28 +8641,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "key_handover_date": {
-                    "type": "string",
-                    "example": "2024-07-01T09:00:00Z"
-                },
-                "lease_agreement_document_mode": {
-                    "type": "string",
-                    "enum": [
-                        "MANUAL",
-                        "ONLINE"
-                    ],
-                    "example": "MANUAL"
-                },
-                "lease_agreement_document_property_manager_signed_at": {
-                    "type": "string",
-                    "example": "2024-06-15T12:00:00Z"
-                },
-                "lease_agreement_document_property_manager_signed_by_id": {
-                    "type": "string",
-                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
-                },
-                "lease_agreement_document_tenant_signed_at": {
-                    "type": "string",
-                    "example": "2024-06-16T14:00:00Z"
+                    "type": "string"
                 },
                 "lease_agreement_document_url": {
                     "type": "string",
@@ -8326,21 +8652,10 @@ const docTemplate = `{
                     "example": "2024-07-01T00:00:00Z"
                 },
                 "payment_frequency": {
-                    "type": "string",
-                    "enum": [
-                        "HOURLY",
-                        "DAILY",
-                        "MONTHLY",
-                        "QUARTERLY",
-                        "BIANNUALLY",
-                        "ANNUALLY",
-                        "ONETIME"
-                    ],
-                    "example": "MONTHLY"
+                    "type": "string"
                 },
                 "property_inspection_date": {
-                    "type": "string",
-                    "example": "2024-06-30T15:00:00Z"
+                    "type": "string"
                 },
                 "stay_duration": {
                     "type": "integer",
@@ -8350,15 +8665,14 @@ const docTemplate = `{
                 "stay_duration_frequency": {
                     "type": "string",
                     "enum": [
-                        "HOURS",
-                        "DAYS",
-                        "MONTHS"
+                        "Hours",
+                        "Days",
+                        "Months"
                     ],
-                    "example": "HOURS"
+                    "example": "Hours"
                 },
                 "utility_transfers_date": {
-                    "type": "string",
-                    "example": "2024-07-02T10:00:00Z"
+                    "type": "string"
                 }
             }
         },
@@ -8507,16 +8821,14 @@ const docTemplate = `{
                     "example": "1990-01-01T00:00:00Z"
                 },
                 "desired_move_in_date": {
-                    "type": "string",
-                    "example": "2023-01-01T00:00:00Z"
+                    "type": "string"
                 },
                 "desired_unit_id": {
                     "type": "string",
                     "example": "b4d0243c-6581-4104-8185-d83a45ebe41b"
                 },
                 "email": {
-                    "type": "string",
-                    "example": "john.doe@example.com"
+                    "type": "string"
                 },
                 "emergency_contact_name": {
                     "type": "string",
@@ -8551,12 +8863,10 @@ const docTemplate = `{
                     "example": "MALE"
                 },
                 "id_back_url": {
-                    "type": "string",
-                    "example": "https://example.com/id-back.jpg"
+                    "type": "string"
                 },
                 "id_front_url": {
-                    "type": "string",
-                    "example": "https://example.com/id-front.jpg"
+                    "type": "string"
                 },
                 "id_number": {
                     "type": "string",
@@ -8573,8 +8883,7 @@ const docTemplate = `{
                     "example": "GHANA_CARD"
                 },
                 "initial_deposit_fee": {
-                    "type": "integer",
-                    "example": 1000
+                    "type": "integer"
                 },
                 "initial_deposit_paid_at": {
                     "type": "string",
@@ -8597,17 +8906,17 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Doe"
                 },
+                "lease_agreement_document_id": {
+                    "type": "string"
+                },
                 "lease_agreement_document_mode": {
-                    "type": "string",
-                    "enum": [
-                        "MANUAL",
-                        "ONLINE"
-                    ],
-                    "example": "MANUAL"
+                    "type": "string"
+                },
+                "lease_agreement_document_status": {
+                    "type": "string"
                 },
                 "lease_agreement_document_url": {
-                    "type": "string",
-                    "example": "https://example.com/lease.pdf"
+                    "type": "string"
                 },
                 "marital_status": {
                     "type": "string",
@@ -8632,45 +8941,29 @@ const docTemplate = `{
                     "example": "456 Tech Ave, Accra"
                 },
                 "other_names": {
-                    "type": "string",
-                    "example": "Michael"
+                    "type": "string"
                 },
                 "payment_frequency": {
-                    "type": "string",
-                    "enum": [
-                        "HOURLY",
-                        "DAILY",
-                        "MONTHLY",
-                        "QUARTERLY",
-                        "BIANNUALLY",
-                        "ANNUALLY",
-                        "ONETIME"
-                    ],
-                    "example": "HOURLY"
+                    "type": "string"
                 },
                 "phone": {
                     "type": "string",
                     "example": "+233281234569"
                 },
                 "previous_landlord_name": {
-                    "type": "string",
-                    "example": "Mr. Smith"
+                    "type": "string"
                 },
                 "previous_landlord_phone": {
-                    "type": "string",
-                    "example": "+233281234570"
+                    "type": "string"
                 },
                 "previous_tenancy_period": {
-                    "type": "string",
-                    "example": "2020-2022"
+                    "type": "string"
                 },
                 "profile_photo_url": {
-                    "type": "string",
-                    "example": "https://example.com/photo.jpg"
+                    "type": "string"
                 },
                 "proof_of_income_url": {
-                    "type": "string",
-                    "example": "https://example.com/income.pdf"
+                    "type": "string"
                 },
                 "relationship_to_emergency_contact": {
                     "type": "string",
@@ -8685,8 +8978,7 @@ const docTemplate = `{
                     "example": "GHS"
                 },
                 "security_deposit_fee": {
-                    "type": "integer",
-                    "example": 1000
+                    "type": "integer"
                 },
                 "security_deposit_fee_currency": {
                     "type": "string",
@@ -8710,17 +9002,10 @@ const docTemplate = `{
                     "example": "123456789"
                 },
                 "stay_duration": {
-                    "type": "integer",
-                    "example": 10
+                    "type": "integer"
                 },
                 "stay_duration_frequency": {
-                    "type": "string",
-                    "enum": [
-                        "HOURS",
-                        "DAYS",
-                        "MONTHS"
-                    ],
-                    "example": "HOURS"
+                    "type": "string"
                 }
             }
         },
@@ -8997,6 +9282,117 @@ const docTemplate = `{
                 }
             }
         },
+        "transformations.OutputAdminDocument": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "created_by_id": {
+                    "type": "string",
+                    "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "property": {
+                    "$ref": "#/definitions/transformations.OutputProperty"
+                },
+                "property_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "size": {
+                    "type": "integer",
+                    "example": 2048
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "LEASE_AGREEMENT",
+                        "INSPECTION_REPORT"
+                    ]
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Lease Agreement"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "TEMPLATE"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "updated_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "updated_by_id": {
+                    "type": "string",
+                    "example": "c290f1ee-6c54-4b01-90e6-d701748f0852"
+                }
+            }
+        },
+        "transformations.OutputAdminDocumentSignature": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "document": {
+                    "$ref": "#/definitions/transformations.OutputAdminDocument"
+                },
+                "document_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "ip_address": {
+                    "type": "string",
+                    "example": "192.168.1.1"
+                },
+                "role": {
+                    "description": "TenantApplicationID *string                       ` + "`" + `json:\"tenant_application_id,omitempty\" example:\"660e8400-e29b-41d4-a716-446655440000\"` + "`" + `\nTenantApplication   *OutputAdminTenantApplication ` + "`" + `json:\"tenant_application,omitempty\"` + "`" + `\nLeaseID             *string                       ` + "`" + `json:\"lease_id,omitempty\"              example:\"770e8400-e29b-41d4-a716-446655440000\"` + "`" + `\nLease               *OutputAdminLease             ` + "`" + `json:\"lease,omitempty\"` + "`" + `",
+                    "type": "string",
+                    "example": "TENANT"
+                },
+                "signature_url": {
+                    "type": "string",
+                    "example": "https://s3.amazonaws.com/signatures/sig.png"
+                },
+                "signed_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "signed_by_id": {
+                    "type": "string",
+                    "example": "880e8400-e29b-41d4-a716-446655440000"
+                },
+                "signed_by_name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-06-10T09:00:00Z"
+                }
+            }
+        },
         "transformations.OutputAdminLease": {
             "type": "object",
             "properties": {
@@ -9022,6 +9418,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
                 },
+                "code": {
+                    "type": "string",
+                    "example": "2602ABC123-1"
+                },
                 "completedBy": {
                     "$ref": "#/definitions/transformations.OutputClientUser"
                 },
@@ -9044,25 +9444,6 @@ const docTemplate = `{
                 "key_handover_date": {
                     "type": "string",
                     "example": "2024-07-01T09:00:00Z"
-                },
-                "leaseAgreementDocumentPropertyManagerSignedBy": {
-                    "$ref": "#/definitions/transformations.OutputClientUser"
-                },
-                "lease_agreement_document_mode": {
-                    "type": "string",
-                    "example": "MANUAL"
-                },
-                "lease_agreement_document_property_manager_signed_at": {
-                    "type": "string",
-                    "example": "2024-06-15T12:00:00Z"
-                },
-                "lease_agreement_document_property_manager_signed_by_id": {
-                    "type": "string",
-                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
-                },
-                "lease_agreement_document_tenant_signed_at": {
-                    "type": "string",
-                    "example": "2024-06-16T14:00:00Z"
                 },
                 "lease_agreement_document_url": {
                     "type": "string",
@@ -9109,10 +9490,10 @@ const docTemplate = `{
                     "example": "Months"
                 },
                 "tenant": {
-                    "$ref": "#/definitions/transformations.OutputTenant"
+                    "$ref": "#/definitions/transformations.OutputAdminTenant"
                 },
                 "tenantApplication": {
-                    "$ref": "#/definitions/transformations.OutputTenantApplication"
+                    "$ref": "#/definitions/transformations.OutputAdminTenantApplication"
                 },
                 "tenant_application_id": {
                     "type": "string",
@@ -9166,6 +9547,428 @@ const docTemplate = `{
                 "utility_transfers_date": {
                     "type": "string",
                     "example": "2024-07-02T10:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputAdminSigningToken": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "created_by_id": {
+                    "type": "string",
+                    "example": "880e8400-e29b-41d4-a716-446655440000"
+                },
+                "document": {
+                    "$ref": "#/definitions/transformations.OutputAdminDocument"
+                },
+                "document_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "document_signature": {
+                    "$ref": "#/definitions/transformations.OutputDocumentSignature"
+                },
+                "document_signature_id": {
+                    "type": "string",
+                    "example": "990e8400-e29b-41d4-a716-446655440000"
+                },
+                "expires_at": {
+                    "type": "string",
+                    "example": "2024-06-22T09:00:00Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "last_accessed_at": {
+                    "type": "string",
+                    "example": "2024-06-14T10:00:00Z"
+                },
+                "lease": {
+                    "$ref": "#/definitions/transformations.OutputAdminLease"
+                },
+                "lease_id": {
+                    "type": "string",
+                    "example": "770e8400-e29b-41d4-a716-446655440000"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "TENANT"
+                },
+                "signed_at": {
+                    "type": "string",
+                    "example": "2024-06-15T14:30:00Z"
+                },
+                "signer_email": {
+                    "type": "string",
+                    "example": "jane@example.com"
+                },
+                "signer_name": {
+                    "type": "string",
+                    "example": "Jane Doe"
+                },
+                "signer_phone": {
+                    "type": "string",
+                    "example": "+233201234567"
+                },
+                "tenant_application": {
+                    "$ref": "#/definitions/transformations.OutputAdminTenantApplication"
+                },
+                "tenant_application_id": {
+                    "type": "string",
+                    "example": "660e8400-e29b-41d4-a716-446655440000"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "2602ABC123-a8f3b2c1d4e5"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-06-10T09:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputAdminTenant": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "created_by_id": {
+                    "type": "string",
+                    "example": "72432ce6-5620-4ecf-a862-4bf2140556a"
+                },
+                "date_of_birth": {
+                    "type": "string",
+                    "example": "1990-01-01"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "emergency_contact_name": {
+                    "type": "string",
+                    "example": "Mary Doe"
+                },
+                "emergency_contact_phone": {
+                    "type": "string",
+                    "example": "+1122334455"
+                },
+                "employer": {
+                    "type": "string",
+                    "example": "Tech Ltd."
+                },
+                "first_name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "gender": {
+                    "type": "string",
+                    "example": "male"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "id_back_url": {
+                    "type": "string",
+                    "example": "https://example.com/id-back.jpg"
+                },
+                "id_front_url": {
+                    "type": "string",
+                    "example": "https://example.com/id-front.jpg"
+                },
+                "id_number": {
+                    "type": "string",
+                    "example": "ID123456"
+                },
+                "id_type": {
+                    "type": "string",
+                    "example": "GHANA_CARD"
+                },
+                "last_name": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "marital_status": {
+                    "type": "string",
+                    "example": "single"
+                },
+                "nationality": {
+                    "type": "string",
+                    "example": "Ghanaian"
+                },
+                "occupation": {
+                    "type": "string",
+                    "example": "Software Engineer"
+                },
+                "occupation_address": {
+                    "type": "string",
+                    "example": "456 Tech Ave, Accra"
+                },
+                "other_names": {
+                    "type": "string",
+                    "example": "Michael"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+1234567890"
+                },
+                "profile_photo_url": {
+                    "type": "string",
+                    "example": "https://example.com/photo.jpg"
+                },
+                "proof_of_income_url": {
+                    "type": "string",
+                    "example": "https://example.com/income.pdf"
+                },
+                "relationship_to_emergency_contact": {
+                    "type": "string",
+                    "example": "sister"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-06-10T09:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputAdminTenantApplication": {
+            "type": "object",
+            "properties": {
+                "cancelled_at": {
+                    "type": "string",
+                    "example": "2024-06-02T12:00:00Z"
+                },
+                "cancelled_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "cancelled_by_id": {
+                    "type": "string",
+                    "example": "user-456"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "9ucfjd3p"
+                },
+                "completed_at": {
+                    "type": "string",
+                    "example": "2024-06-01T12:00:00Z"
+                },
+                "completed_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "completed_by_id": {
+                    "type": "string",
+                    "example": "user-123"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "created_by_id": {
+                    "type": "string",
+                    "example": "72432ce6-5620-4ecf-a862-4bf2140556a1"
+                },
+                "current_address": {
+                    "type": "string",
+                    "example": "123 Main St, Accra"
+                },
+                "date_of_birth": {
+                    "type": "string",
+                    "example": "1990-01-01"
+                },
+                "desired_move_in_date": {
+                    "type": "string",
+                    "example": "2024-07-01T00:00:00Z"
+                },
+                "desired_unit": {
+                    "$ref": "#/definitions/transformations.AdminOutputUnit"
+                },
+                "desired_unit_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "emergency_contact_name": {
+                    "type": "string",
+                    "example": "Mary Doe"
+                },
+                "emergency_contact_phone": {
+                    "type": "string",
+                    "example": "+1122334455"
+                },
+                "employer": {
+                    "type": "string",
+                    "example": "UPSA"
+                },
+                "employer_type": {
+                    "type": "string",
+                    "example": "WORKER"
+                },
+                "first_name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "gender": {
+                    "type": "string",
+                    "example": "male"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "id_back_url": {
+                    "type": "string",
+                    "example": "https://example.com/id-back.jpg"
+                },
+                "id_front_url": {
+                    "type": "string",
+                    "example": "https://example.com/id-front.jpg"
+                },
+                "id_number": {
+                    "type": "string",
+                    "example": "ID123456"
+                },
+                "id_type": {
+                    "type": "string",
+                    "example": "GHANA_CARD"
+                },
+                "initial_deposit_fee": {
+                    "type": "integer",
+                    "example": 500
+                },
+                "initial_deposit_fee_currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
+                "last_name": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "lease_agreement_document": {
+                    "$ref": "#/definitions/transformations.OutputAdminDocument"
+                },
+                "lease_agreement_document_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "lease_agreement_document_mode": {
+                    "type": "string",
+                    "example": "MANUAL"
+                },
+                "lease_agreement_document_signatures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/transformations.OutputAdminDocumentSignature"
+                    }
+                },
+                "lease_agreement_document_status": {
+                    "type": "string",
+                    "example": "DRAFT"
+                },
+                "lease_agreement_document_url": {
+                    "type": "string",
+                    "example": "https://example.com/lease.pdf"
+                },
+                "marital_status": {
+                    "type": "string",
+                    "example": "single"
+                },
+                "nationality": {
+                    "type": "string",
+                    "example": "Ghanaian"
+                },
+                "occupation": {
+                    "type": "string",
+                    "example": "STUDENT"
+                },
+                "occupation_address": {
+                    "type": "string",
+                    "example": "456 Tech Ave, Accra"
+                },
+                "other_names": {
+                    "type": "string",
+                    "example": "Michael"
+                },
+                "payment_frequency": {
+                    "type": "string",
+                    "example": "monthly"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+1234567890"
+                },
+                "previous_landlord_name": {
+                    "type": "string",
+                    "example": "Jane Smith"
+                },
+                "previous_landlord_phone": {
+                    "type": "string",
+                    "example": "+1987654321"
+                },
+                "previous_tenancy_period": {
+                    "type": "string",
+                    "example": "2022-2023"
+                },
+                "profile_photo_url": {
+                    "type": "string",
+                    "example": "https://example.com/photo.jpg"
+                },
+                "proof_of_income_url": {
+                    "type": "string",
+                    "example": "https://example.com/income.pdf"
+                },
+                "relationship_to_emergency_contact": {
+                    "type": "string",
+                    "example": "sister"
+                },
+                "rent_fee": {
+                    "type": "integer",
+                    "example": 1500
+                },
+                "rent_fee_currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "security_deposit_fee": {
+                    "type": "integer",
+                    "example": 1000
+                },
+                "security_deposit_fee_currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "TenantApplication.Status.InProgress"
+                },
+                "stay_duration": {
+                    "type": "integer",
+                    "example": 12
+                },
+                "stay_duration_frequency": {
+                    "type": "string",
+                    "example": "monthly"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-06-10T09:00:00Z"
                 }
             }
         },
@@ -9502,27 +10305,9 @@ const docTemplate = `{
                 "content": {
                     "type": "string"
                 },
-                "created_at": {
-                    "type": "string",
-                    "example": "2023-01-01T00:00:00Z"
-                },
-                "created_by": {
-                    "$ref": "#/definitions/transformations.OutputClientUser"
-                },
-                "created_by_id": {
-                    "type": "string",
-                    "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
-                },
                 "id": {
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
-                },
-                "property": {
-                    "$ref": "#/definitions/transformations.OutputProperty"
-                },
-                "property_id": {
-                    "type": "string",
-                    "example": "550e8400-e29b-41d4-a716-446655440000"
                 },
                 "size": {
                     "type": "integer",
@@ -9541,17 +10326,60 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "example": "Lease Agreement"
+                }
+            }
+        },
+        "transformations.OutputDocumentSignature": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "document": {
+                    "$ref": "#/definitions/transformations.OutputDocument"
+                },
+                "document_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "ip_address": {
+                    "type": "string",
+                    "example": "192.168.1.1"
+                },
+                "lease": {
+                    "$ref": "#/definitions/transformations.OutputLease"
+                },
+                "lease_id": {
+                    "type": "string",
+                    "example": "770e8400-e29b-41d4-a716-446655440000"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "TENANT"
+                },
+                "signature_url": {
+                    "type": "string",
+                    "example": "https://s3.amazonaws.com/signatures/sig.png"
+                },
+                "signed_by_name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "tenant_application": {
+                    "$ref": "#/definitions/transformations.OutputTenantApplication"
+                },
+                "tenant_application_id": {
+                    "type": "string",
+                    "example": "660e8400-e29b-41d4-a716-446655440000"
                 },
                 "updated_at": {
                     "type": "string",
-                    "example": "2023-01-01T00:00:00Z"
-                },
-                "updated_by": {
-                    "$ref": "#/definitions/transformations.OutputClientUser"
-                },
-                "updated_by_id": {
-                    "type": "string",
-                    "example": "c290f1ee-6c54-4b01-90e6-d701748f0852"
+                    "example": "2024-06-10T09:00:00Z"
                 }
             }
         },
@@ -9585,7 +10413,7 @@ const docTemplate = `{
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
                 },
                 "context_tenant_application": {
-                    "$ref": "#/definitions/transformations.OutputTenantApplication"
+                    "$ref": "#/definitions/transformations.OutputAdminTenantApplication"
                 },
                 "context_tenant_application_id": {
                     "type": "string",
@@ -9730,6 +10558,128 @@ const docTemplate = `{
                 "updated_at": {
                     "type": "string",
                     "example": "2024-06-10T09:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputLease": {
+            "type": "object",
+            "properties": {
+                "activated_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "cancelled_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "2602ABC123-1"
+                },
+                "completed_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "key_handover_date": {
+                    "type": "string",
+                    "example": "2024-07-01T09:00:00Z"
+                },
+                "lease_agreement_document_url": {
+                    "type": "string",
+                    "example": "https://example.com/lease.pdf"
+                },
+                "meta": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "move_in_date": {
+                    "type": "string",
+                    "example": "2024-07-01T00:00:00Z"
+                },
+                "parent_lease_id": {
+                    "type": "string",
+                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
+                },
+                "payment_frequency": {
+                    "type": "string",
+                    "example": "Monthly"
+                },
+                "property_inspection_date": {
+                    "type": "string",
+                    "example": "2024-06-30T15:00:00Z"
+                },
+                "rent_fee": {
+                    "type": "integer",
+                    "example": 1200
+                },
+                "rent_fee_currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "Lease.Status.Pending"
+                },
+                "stay_duration": {
+                    "type": "integer",
+                    "example": 12
+                },
+                "stay_duration_frequency": {
+                    "type": "string",
+                    "example": "Months"
+                },
+                "tenant": {
+                    "$ref": "#/definitions/transformations.OutputTenant"
+                },
+                "tenant_application": {
+                    "$ref": "#/definitions/transformations.OutputTenantApplication"
+                },
+                "tenant_application_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "tenant_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "terminated_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "termination_agreement_document_property_manager_signed_at": {
+                    "type": "string",
+                    "example": "2024-12-01T10:00:00Z"
+                },
+                "termination_agreement_document_tenant_signed_at": {
+                    "type": "string",
+                    "example": "2024-12-02T11:00:00Z"
+                },
+                "termination_agreement_document_url": {
+                    "type": "string",
+                    "example": "https://example.com/termination.pdf"
+                },
+                "unit": {
+                    "$ref": "#/definitions/transformations.OutputUnit"
+                },
+                "unit_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-06-10T09:00:00Z"
+                },
+                "utility_transfers_date": {
+                    "type": "string",
+                    "example": "2024-07-02T10:00:00Z"
                 }
             }
         },
@@ -10010,6 +10960,83 @@ const docTemplate = `{
                 }
             }
         },
+        "transformations.OutputSigningToken": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "document": {
+                    "$ref": "#/definitions/transformations.OutputDocument"
+                },
+                "document_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "document_signature": {
+                    "$ref": "#/definitions/transformations.OutputDocumentSignature"
+                },
+                "document_signature_id": {
+                    "type": "string",
+                    "example": "990e8400-e29b-41d4-a716-446655440000"
+                },
+                "expires_at": {
+                    "type": "string",
+                    "example": "2024-06-22T09:00:00Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "last_accessed_at": {
+                    "type": "string",
+                    "example": "2024-06-14T10:00:00Z"
+                },
+                "lease": {
+                    "$ref": "#/definitions/transformations.OutputLease"
+                },
+                "lease_id": {
+                    "type": "string",
+                    "example": "770e8400-e29b-41d4-a716-446655440000"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "TENANT"
+                },
+                "signed_at": {
+                    "type": "string",
+                    "example": "2024-06-15T14:30:00Z"
+                },
+                "signer_email": {
+                    "type": "string",
+                    "example": "jane@example.com"
+                },
+                "signer_name": {
+                    "type": "string",
+                    "example": "Jane Doe"
+                },
+                "signer_phone": {
+                    "type": "string",
+                    "example": "+233201234567"
+                },
+                "tenant_application": {
+                    "$ref": "#/definitions/transformations.OutputTenantApplication"
+                },
+                "tenant_application_id": {
+                    "type": "string",
+                    "example": "660e8400-e29b-41d4-a716-446655440000"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "2602ABC123-a8f3b2c1d4e5"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-06-10T09:00:00Z"
+                }
+            }
+        },
         "transformations.OutputTenant": {
             "type": "object",
             "properties": {
@@ -10110,13 +11137,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2024-06-02T12:00:00Z"
                 },
-                "cancelled_by": {
-                    "$ref": "#/definitions/transformations.OutputClientUser"
-                },
-                "cancelled_by_id": {
-                    "type": "string",
-                    "example": "user-456"
-                },
                 "code": {
                     "type": "string",
                     "example": "9ucfjd3p"
@@ -10125,23 +11145,9 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2024-06-01T12:00:00Z"
                 },
-                "completed_by": {
-                    "$ref": "#/definitions/transformations.OutputClientUser"
-                },
-                "completed_by_id": {
-                    "type": "string",
-                    "example": "user-123"
-                },
                 "created_at": {
                     "type": "string",
                     "example": "2024-06-01T09:00:00Z"
-                },
-                "created_by": {
-                    "$ref": "#/definitions/transformations.OutputClientUser"
-                },
-                "created_by_id": {
-                    "type": "string",
-                    "example": "72432ce6-5620-4ecf-a862-4bf2140556a1"
                 },
                 "current_address": {
                     "type": "string",
@@ -10156,7 +11162,7 @@ const docTemplate = `{
                     "example": "2024-07-01T00:00:00Z"
                 },
                 "desired_unit": {
-                    "$ref": "#/definitions/transformations.AdminOutputUnit"
+                    "$ref": "#/definitions/transformations.OutputUnit"
                 },
                 "desired_unit_id": {
                     "type": "string",
@@ -10176,11 +11182,7 @@ const docTemplate = `{
                 },
                 "employer": {
                     "type": "string",
-                    "example": "UPSA"
-                },
-                "employer_type": {
-                    "type": "string",
-                    "example": "WORKER"
+                    "example": "Tech Ltd."
                 },
                 "first_name": {
                     "type": "string",
@@ -10222,25 +11224,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Doe"
                 },
-                "lease_aggreement_document_mode": {
-                    "type": "string",
-                    "example": "MANUAL"
-                },
-                "lease_agreement_document_property_manager_signed_at": {
-                    "type": "string",
-                    "example": "2024-06-07T12:00:00Z"
-                },
-                "lease_agreement_document_property_manager_signed_by": {
-                    "$ref": "#/definitions/transformations.OutputClientUser"
-                },
-                "lease_agreement_document_property_manager_signed_by_id": {
-                    "type": "string",
-                    "example": "user-789"
-                },
-                "lease_agreement_document_tenant_signed_at": {
-                    "type": "string",
-                    "example": "2024-06-08T12:00:00Z"
-                },
                 "lease_agreement_document_url": {
                     "type": "string",
                     "example": "https://example.com/lease.pdf"
@@ -10255,7 +11238,7 @@ const docTemplate = `{
                 },
                 "occupation": {
                     "type": "string",
-                    "example": "STUDENT"
+                    "example": "Software Engineer"
                 },
                 "occupation_address": {
                     "type": "string",

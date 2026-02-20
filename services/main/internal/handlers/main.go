@@ -21,6 +21,7 @@ type Handlers struct {
 	PaymentAccountHandler     PaymentAccountHandler
 	InvoiceHandler            InvoiceHandler
 	PaymentHandler            PaymentHandler
+	SigningHandler            SigningHandler
 }
 
 func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
@@ -33,17 +34,16 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 	documentHandler := NewDocumentHandler(appCtx, services.DocumentService)
 	propertyBlockHandler := NewPropertyBlockHandler(appCtx, services.PropertyBlockService)
 	unitHandler := NewUnitHandler(appCtx, services.UnitService)
-	invoiceHandler := NewInvoiceHandler(appCtx, services.InvoiceService)
-	paymentHandler := NewPaymentHandler(appCtx, services.PaymentService)
+	invoiceHandler := NewInvoiceHandler(appCtx, services)
+	paymentHandler := NewPaymentHandler(appCtx, services)
 
+	signingHandler := NewSigningHandler(appCtx, services)
 	tenantApplicationHandler := NewTenantApplicationHandler(
 		appCtx,
-		services.TenantApplicationService,
-		services.PaymentService,
-		services.InvoiceService,
+		services,
 	)
 	tenantHandler := NewTenantHandler(appCtx, services.TenantService)
-	leaseHandler := NewLeaseHandler(appCtx, services.LeaseService)
+	leaseHandler := NewLeaseHandler(appCtx, services)
 	paymentAccountHandler := NewPaymentAccountHandler(appCtx, services.PaymentAccountService)
 
 	return Handlers{
@@ -62,5 +62,6 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 		PaymentAccountHandler:     paymentAccountHandler,
 		InvoiceHandler:            invoiceHandler,
 		PaymentHandler:            paymentHandler,
+		SigningHandler:            signingHandler,
 	}
 }

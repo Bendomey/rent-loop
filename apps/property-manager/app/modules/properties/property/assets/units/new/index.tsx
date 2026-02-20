@@ -80,7 +80,7 @@ const ValidationSchema = z.object({
 		.string()
 		.max(500, 'Description must be less than 500 characters')
 		.optional(),
-	tags: z.array(z.string().min(1).max(10)).optional(),
+	tags: z.array(z.string().min(1)).optional(),
 	features: z.record(z.string(), z.string()).optional(),
 	area: z.number().positive('Area must be a positive number').optional(),
 	max_occupants_allowed: z

@@ -48,6 +48,7 @@ export async function action({ request }: Route.ActionArgs) {
 				size: charCount,
 				tags: [],
 				property_id: property_id,
+				type: 'TEMPLATE',
 			},
 			{
 				baseUrl,

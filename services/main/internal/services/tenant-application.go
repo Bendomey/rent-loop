@@ -91,6 +91,8 @@ type CreateTenantApplicationInput struct {
 	MaritalStatus                  string
 	IDType                         string
 	IDNumber                       string
+	IDFrontUrl                     *string
+	IDBackUrl                      *string
 	CurrentAddress                 string
 	EmergencyContactName           string
 	EmergencyContactPhone          string
@@ -98,6 +100,7 @@ type CreateTenantApplicationInput struct {
 	Occupation                     string
 	Employer                       string
 	EmployerType                   string
+	ProofOfIncomeUrl               *string
 	OccupationAddress              string
 	ProfilePhotoUrl                *string
 	CreatedById                    string
@@ -125,6 +128,8 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		DesiredUnitId:                  input.DesiredUnitId,
 		RentFee:                        unit.RentFee,
 		RentFeeCurrency:                unit.RentFeeCurrency,
+		StayDurationFrequency:          &unit.PaymentFrequency,
+		PaymentFrequency:               &unit.PaymentFrequency,
 		FirstName:                      input.FirstName,
 		OtherNames:                     input.OtherNames,
 		LastName:                       input.LastName,
@@ -136,6 +141,8 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		MaritalStatus:                  input.MaritalStatus,
 		IDType:                         input.IDType,
 		IDNumber:                       input.IDNumber,
+		IDFrontUrl:                     input.IDFrontUrl,
+		IDBackUrl:                      input.IDBackUrl,
 		CurrentAddress:                 input.CurrentAddress,
 		EmergencyContactName:           input.EmergencyContactName,
 		EmergencyContactPhone:          input.EmergencyContactPhone,
@@ -143,6 +150,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		Occupation:                     input.Occupation,
 		Employer:                       input.Employer,
 		EmployerType:                   &input.EmployerType,
+		ProofOfIncomeUrl:               input.ProofOfIncomeUrl,
 		OccupationAddress:              input.OccupationAddress,
 		ProfilePhotoUrl:                input.ProfilePhotoUrl,
 		CreatedById:                    input.CreatedById,
@@ -304,56 +312,57 @@ func (s *tenantApplicationService) GetOneTenantApplication(
 }
 
 type UpdateTenantApplicationInput struct {
-	TenantApplicationID                             string
-	DesiredUnitId                                   *string
-	RentFee                                         *int64
-	RentFeeCurrency                                 *string
-	FirstName                                       *string
-	LastName                                        *string
-	Phone                                           *string
-	Gender                                          *string
-	DateOfBirth                                     *time.Time
-	Nationality                                     *string
-	MaritalStatus                                   *string
-	IDNumber                                        *string
-	CurrentAddress                                  *string
-	EmergencyContactName                            *string
-	EmergencyContactPhone                           *string
-	RelationshipToEmergencyContact                  *string
-	Occupation                                      *string
-	Employer                                        *string
-	EmployerType                                    *string
-	OccupationAddress                               *string
-	DesiredMoveInDate                               *time.Time
-	StayDurationFrequency                           *string
-	StayDuration                                    *int64
-	PaymentFrequency                                *string
-	InitialDepositFee                               *int64
-	InitialDepositPaymentMethod                     *string
-	InitialDepositReferenceNumber                   *string
-	InitialDepositPaidAt                            *time.Time
-	InitialDepositPaymentId                         *string
-	SecurityDepositFee                              *int64
-	SecurityDepositFeeCurrency                      *string
-	SecurityDepositPaymentMethod                    *string
-	SecurityDepositReferenceNumber                  *string
-	SecurityDepositPaidAt                           *time.Time
-	SecurityDepositPaymentId                        *string
-	OtherNames                                      *string
-	Email                                           *string
-	ProfilePhotoUrl                                 *string
-	IDType                                          *string
-	IDFrontUrl                                      *string
-	IDBackUrl                                       *string
-	PreviousLandlordName                            *string
-	PreviousLandlordPhone                           *string
-	PreviousTenancyPeriod                           *string
-	ProofOfIncomeUrl                                *string
-	LeaseAggreementDocumentMode                     *string
-	LeaseAgreementDocumentUrl                       *string
-	LeaseAgreementDocumentPropertyManagerSignedById *string
-	LeaseAgreementDocumentPropertyManagerSignedAt   *time.Time
-	LeaseAgreementDocumentTenantSignedAt            *time.Time
+	TenantApplicationID            string
+	DesiredUnitId                  *string
+	RentFee                        *int64
+	RentFeeCurrency                *string
+	FirstName                      *string
+	LastName                       *string
+	Phone                          *string
+	Gender                         *string
+	DateOfBirth                    *time.Time
+	Nationality                    *string
+	MaritalStatus                  *string
+	IDNumber                       *string
+	CurrentAddress                 *string
+	EmergencyContactName           *string
+	EmergencyContactPhone          *string
+	RelationshipToEmergencyContact *string
+	Occupation                     *string
+	Employer                       *string
+	OccupationAddress              *string
+	IDType                         *string
+	InitialDepositPaymentMethod    *string
+	InitialDepositReferenceNumber  *string
+	InitialDepositPaidAt           *time.Time
+	InitialDepositPaymentId        *string
+	SecurityDepositFeeCurrency     *string
+	SecurityDepositPaymentMethod   *string
+	SecurityDepositReferenceNumber *string
+	SecurityDepositPaidAt          *time.Time
+	SecurityDepositPaymentId       *string
+
+	// Nullable fields that can be explicitly set to null
+	EmployerType                 lib.Optional[string]
+	DesiredMoveInDate            lib.Optional[time.Time]
+	StayDurationFrequency        lib.Optional[string]
+	StayDuration                 lib.Optional[int64]
+	PaymentFrequency             lib.Optional[string]
+	InitialDepositFee            lib.Optional[int64]
+	SecurityDepositFee           lib.Optional[int64]
+	OtherNames                   lib.Optional[string]
+	Email                        lib.Optional[string]
+	ProfilePhotoUrl              lib.Optional[string]
+	IDFrontUrl                   lib.Optional[string]
+	IDBackUrl                    lib.Optional[string]
+	PreviousLandlordName         lib.Optional[string]
+	PreviousLandlordPhone        lib.Optional[string]
+	PreviousTenancyPeriod        lib.Optional[string]
+	ProofOfIncomeUrl             lib.Optional[string]
+	LeaseAgreementDocumentMode   lib.Optional[string]
+	LeaseAgreementDocumentUrl    lib.Optional[string]
+	LeaseAgreementDocumentID     lib.Optional[string]
+	LeaseAgreementDocumentStatus lib.Optional[string]
 }
 
 func (s *tenantApplicationService) UpdateTenantApplication(
@@ -379,6 +388,7 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 		})
 	}
 
+	// Required fields - only update if a non-nil value was sent
 	if input.DesiredUnitId != nil {
 		tenantApplication.DesiredUnitId = *input.DesiredUnitId
 	}
@@ -451,42 +461,90 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 		tenantApplication.Employer = *input.Employer
 	}
 
-	if input.EmployerType != nil {
-		tenantApplication.EmployerType = input.EmployerType
-	}
-
 	if input.OccupationAddress != nil {
 		tenantApplication.OccupationAddress = *input.OccupationAddress
 	}
 
-	tenantApplication.DesiredMoveInDate = input.DesiredMoveInDate
-	tenantApplication.StayDurationFrequency = input.StayDurationFrequency
-	tenantApplication.StayDuration = input.StayDuration
+	// Nullable fields - update if field was explicitly sent (allows setting to null)
+	if input.EmployerType.IsSet {
+		tenantApplication.EmployerType = input.EmployerType.Ptr()
+	}
 
-	tenantApplication.PaymentFrequency = input.PaymentFrequency
+	if input.DesiredMoveInDate.IsSet {
+		tenantApplication.DesiredMoveInDate = input.DesiredMoveInDate.Ptr()
+	}
 
-	tenantApplication.InitialDepositFee = input.InitialDepositFee
+	if input.StayDurationFrequency.IsSet {
+		tenantApplication.StayDurationFrequency = input.StayDurationFrequency.Ptr()
+	}
 
-	tenantApplication.SecurityDepositFee = input.SecurityDepositFee
+	if input.StayDuration.IsSet {
+		tenantApplication.StayDuration = input.StayDuration.Ptr()
+	}
 
-	tenantApplication.OtherNames = input.OtherNames
-	tenantApplication.Email = input.Email
-	tenantApplication.ProfilePhotoUrl = input.ProfilePhotoUrl
-	tenantApplication.IDFrontUrl = input.IDFrontUrl
-	tenantApplication.IDBackUrl = input.IDBackUrl
+	if input.PaymentFrequency.IsSet {
+		tenantApplication.PaymentFrequency = input.PaymentFrequency.Ptr()
+	}
 
-	tenantApplication.PreviousLandlordName = input.PreviousLandlordName
-	tenantApplication.PreviousLandlordPhone = input.PreviousLandlordPhone
-	tenantApplication.PreviousTenancyPeriod = input.PreviousTenancyPeriod
+	if input.InitialDepositFee.IsSet {
+		tenantApplication.InitialDepositFee = input.InitialDepositFee.Ptr()
+	}
 
-	tenantApplication.ProofOfIncomeUrl = input.ProofOfIncomeUrl
+	if input.SecurityDepositFee.IsSet {
+		tenantApplication.SecurityDepositFee = input.SecurityDepositFee.Ptr()
+	}
 
-	tenantApplication.LeaseAggreementDocumentMode = input.LeaseAggreementDocumentMode
-	tenantApplication.LeaseAgreementDocumentUrl = input.LeaseAgreementDocumentUrl
+	if input.OtherNames.IsSet {
+		tenantApplication.OtherNames = input.OtherNames.Ptr()
+	}
 
-	tenantApplication.LeaseAgreementDocumentPropertyManagerSignedById = input.LeaseAgreementDocumentPropertyManagerSignedById
-	tenantApplication.LeaseAgreementDocumentPropertyManagerSignedAt = input.LeaseAgreementDocumentPropertyManagerSignedAt
-	tenantApplication.LeaseAgreementDocumentTenantSignedAt = input.LeaseAgreementDocumentTenantSignedAt
+	if input.Email.IsSet {
+		tenantApplication.Email = input.Email.Ptr()
+	}
+
+	if input.ProfilePhotoUrl.IsSet {
+		tenantApplication.ProfilePhotoUrl = input.ProfilePhotoUrl.Ptr()
+	}
+
+	if input.IDFrontUrl.IsSet {
+		tenantApplication.IDFrontUrl = input.IDFrontUrl.Ptr()
+	}
+
+	if input.IDBackUrl.IsSet {
+		tenantApplication.IDBackUrl = input.IDBackUrl.Ptr()
+	}
+
+	if input.PreviousLandlordName.IsSet {
+		tenantApplication.PreviousLandlordName = input.PreviousLandlordName.Ptr()
+	}
+
+	if input.PreviousLandlordPhone.IsSet {
+		tenantApplication.PreviousLandlordPhone = input.PreviousLandlordPhone.Ptr()
+	}
+
+	if input.PreviousTenancyPeriod.IsSet {
+		tenantApplication.PreviousTenancyPeriod = input.PreviousTenancyPeriod.Ptr()
+	}
+
+	if input.ProofOfIncomeUrl.IsSet {
+		tenantApplication.ProofOfIncomeUrl = input.ProofOfIncomeUrl.Ptr()
+	}
+
+	if input.LeaseAgreementDocumentMode.IsSet {
+		tenantApplication.LeaseAgreementDocumentMode = input.LeaseAgreementDocumentMode.Ptr()
+	}
+
+	if input.LeaseAgreementDocumentUrl.IsSet {
+		tenantApplication.LeaseAgreementDocumentUrl = input.LeaseAgreementDocumentUrl.Ptr()
+	}
+
+	if input.LeaseAgreementDocumentID.IsSet {
+		tenantApplication.LeaseAgreementDocumentID = input.LeaseAgreementDocumentID.Ptr()
+	}
+
+	if input.LeaseAgreementDocumentStatus.IsSet {
+		tenantApplication.LeaseAgreementDocumentStatus = input.LeaseAgreementDocumentStatus.Ptr()
+	}
 
 	updateTenantApplicationErr := s.repo.Update(ctx, *tenantApplication)
 	if updateTenantApplicationErr != nil {
@@ -725,22 +783,19 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		"security_deposit_fee_currency": tenantApplication.SecurityDepositFeeCurrency,
 	}
 	leaseInput := CreateLeaseInput{
-		Status:                      "Lease.Status.Pending",
-		UnitId:                      tenantApplication.DesiredUnitId,
-		TenantId:                    tenant.ID.String(),
-		TenantApplicationId:         tenantApplication.ID.String(),
-		RentFee:                     tenantApplication.RentFee,
-		RentFeeCurrency:             tenantApplication.RentFeeCurrency,
-		PaymentFrequency:            tenantApplication.PaymentFrequency,
-		Meta:                        meta,
-		MoveInDate:                  *tenantApplication.DesiredMoveInDate,
-		StayDurationFrequency:       *tenantApplication.StayDurationFrequency,
-		StayDuration:                *tenantApplication.StayDuration,
-		LeaseAggreementDocumentMode: tenantApplication.LeaseAggreementDocumentMode,
-		LeaseAgreementDocumentUrl:   *tenantApplication.LeaseAgreementDocumentUrl,
-		LeaseAgreementDocumentPropertyManagerSignedById: tenantApplication.LeaseAgreementDocumentPropertyManagerSignedById,
-		LeaseAgreementDocumentPropertyManagerSignedAt:   tenantApplication.LeaseAgreementDocumentPropertyManagerSignedAt,
-		LeaseAgreementDocumentTenantSignedAt:            tenantApplication.LeaseAgreementDocumentTenantSignedAt,
+		Status:                     "Lease.Status.Pending",
+		UnitId:                     tenantApplication.DesiredUnitId,
+		TenantId:                   tenant.ID.String(),
+		TenantApplicationId:        tenantApplication.ID.String(),
+		RentFee:                    tenantApplication.RentFee,
+		RentFeeCurrency:            tenantApplication.RentFeeCurrency,
+		PaymentFrequency:           tenantApplication.PaymentFrequency,
+		Meta:                       meta,
+		MoveInDate:                 *tenantApplication.DesiredMoveInDate,
+		StayDurationFrequency:      *tenantApplication.StayDurationFrequency,
+		StayDuration:               *tenantApplication.StayDuration,
+		LeaseAgreementDocumentMode: tenantApplication.LeaseAgreementDocumentMode,
+		LeaseAgreementDocumentUrl:  *tenantApplication.LeaseAgreementDocumentUrl,
 	}
 	_, createLeaseErr := s.leaseService.CreateLease(transCtx, leaseInput)
 	if createLeaseErr != nil {

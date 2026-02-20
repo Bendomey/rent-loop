@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { Dispatch, SetStateAction } from 'react'
+import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { useApproveTenantApplication } from '~/api/tenant-applications'
 import {
@@ -24,6 +25,7 @@ interface Props {
 
 function ApproveTenantApplicationModal({ opened, setOpened, data }: Props) {
 	const queryClient = useQueryClient()
+	const revalidator = useRevalidator()
 
 	const name =
 		[data?.first_name, data?.other_names, data?.last_name]
@@ -41,6 +43,7 @@ function ApproveTenantApplicationModal({ opened, setOpened, data }: Props) {
 				onSuccess: () => {
 					toast.success(`${name} was approved successfully.`)
 
+					void revalidator.revalidate()
 					void queryClient.invalidateQueries({
 						queryKey: [QUERY_KEYS.PROPERTY_TENANT_APPLICATIONS],
 					})

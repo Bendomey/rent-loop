@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
+	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/gofrs/uuid"
 )
 
@@ -27,8 +28,8 @@ type OutputInvoice struct {
 
 	ContextType string `json:"context_type" example:"LEASE_RENT"`
 
-	ContextTenantApplicationID *string                  `json:"context_tenant_application_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	ContextTenantApplication   *OutputTenantApplication `json:"context_tenant_application,omitempty"`
+	ContextTenantApplicationID *string                       `json:"context_tenant_application_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	ContextTenantApplication   *OutputAdminTenantApplication `json:"context_tenant_application,omitempty"`
 
 	ContextLeaseID *string     `json:"context_lease_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 	ContextLease   map[any]any `json:"context_lease,omitempty"`
@@ -54,9 +55,19 @@ type OutputInvoice struct {
 	UpdatedAt time.Time `json:"updated_at" example:"2024-06-10T09:00:00Z"`
 }
 
-func DBInvoiceToRest(i *models.Invoice) any {
+func DBInvoiceToRest(services services.Services, i *models.Invoice) (any, error) {
 	if i == nil || i.ID == uuid.Nil {
-		return nil
+		return nil, nil
+	}
+
+	tenantApplication, tenantApplicationErr := DBAdminTenantApplicationToRest(services, i.ContextTenantApplication)
+	if tenantApplicationErr != nil {
+		return nil, tenantApplicationErr
+	}
+
+	lease, leaseErr := DBAdminLeaseToRest(services, i.ContextLease)
+	if leaseErr != nil {
+		return nil, leaseErr
 	}
 
 	data := map[string]any{
@@ -74,9 +85,9 @@ func DBInvoiceToRest(i *models.Invoice) any {
 		"payee_client":                   DBClientToRestClient(i.PayeeClient),
 		"context_type":                   i.ContextType,
 		"context_tenant_application_id":  i.ContextTenantApplicationID,
-		"context_tenant_application":     DBTenantApplicationToRest(i.ContextTenantApplication),
+		"context_tenant_application":     tenantApplication,
 		"context_lease_id":               i.ContextLeaseID,
-		"context_lease":                  DBAdminLeaseToRest(i.ContextLease),
+		"context_lease":                  lease,
 		"context_maintenance_request_id": i.ContextMaintenanceRequestID,
 		"total_amount":                   i.TotalAmount,
 		"taxes":                          i.Taxes,
@@ -93,7 +104,7 @@ func DBInvoiceToRest(i *models.Invoice) any {
 		"updated_at":                     i.UpdatedAt,
 	}
 
-	return data
+	return data, nil
 }
 
 func DBInvoiceLineItemsToRest(items []models.InvoiceLineItem) []any {

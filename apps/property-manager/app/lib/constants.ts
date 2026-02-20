@@ -22,6 +22,7 @@ export const QUERY_KEYS = {
 	CLIENT_USERS: 'client-users',
 	CLIENT_USER_PROPERTIES: 'client-user-properties',
 	PAYMENT_ACCOUNTS: 'payment-accounts',
+	SIGNING_TOKENS: 'signing-tokens',
 } as const
 
 export const PermissionState = {

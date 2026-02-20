@@ -1,6 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Pencil, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useRevalidator } from 'react-router'
+import { toast } from 'sonner'
 import { z } from 'zod'
+import { useTenantApplicationContext } from '../context'
+import { useUpdateTenantApplication } from '~/api/tenant-applications'
 import { Button } from '~/components/ui/button'
 import {
 	Card,
@@ -10,6 +16,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
+import { DocumentUpload } from '~/components/ui/document-upload'
 import {
 	Form,
 	FormControl,
@@ -18,10 +25,12 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
-import { ImageUpload } from '~/components/ui/image-upload'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
+import { Spinner } from '~/components/ui/spinner'
+import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
+import { toFirstUpperCase } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 
 const employer_type: Array<{
@@ -48,26 +57,201 @@ const ValidationSchema = z.object({
 	occupation: z.string().optional(),
 	employer: z.string().optional(),
 	occupation_address: z.string().optional(),
-	proof_of_income_url: z.url('Please upload proof of income').optional(),
+	proof_of_income_url: z.string().nullable().optional(),
 })
 
+type FormSchema = z.infer<typeof ValidationSchema>
+
+interface FieldDisplayProps {
+	label: string
+	value: string | undefined | null
+}
+
+function FieldDisplay({ label, value }: FieldDisplayProps) {
+	return (
+		<div>
+			<p className="text-muted-foreground text-sm">{label}</p>
+			<p className="text-sm font-medium">{value || '-'}</p>
+		</div>
+	)
+}
+
 export function PropertyTenantApplicationEmergencyContact() {
-	const rhfMethods = useForm({
+	const { tenantApplication: application } = useTenantApplicationContext()
+
+	const revalidator = useRevalidator()
+	const [isEditing, setIsEditing] = useState(false)
+
+	const {
+		upload,
+		objectUrl,
+		isLoading: isUploading,
+	} = useUploadObject('tenant-applications/proof-of-income')
+
+	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
-			// 	marital_status: formData.marital_status || 'SINGLE',
-			// 	gender: formData.gender || 'MALE',
-			employer_type: 'STUDENT',
+			emergency_contact_name: safeString(application?.emergency_contact_name),
+			relationship_to_emergency_contact: safeString(
+				application?.relationship_to_emergency_contact,
+			),
+			emergency_contact_phone: safeString(application?.emergency_contact_phone),
+			employer_type: application?.employer_type || 'STUDENT',
+			occupation: safeString(application?.occupation),
+			employer: safeString(application?.employer),
+			occupation_address: safeString(application?.occupation_address),
+			proof_of_income_url: application?.proof_of_income_url ?? null,
 		},
 	})
-	const { control, watch, setValue } = rhfMethods
+
+	useEffect(() => {
+		if (objectUrl) {
+			rhfMethods.setValue('proof_of_income_url', objectUrl, {
+				shouldDirty: true,
+			})
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [objectUrl])
+
+	const { handleSubmit, reset, watch, setValue } = rhfMethods
+	const { isPending, mutate } = useUpdateTenantApplication()
 
 	const isStudent = watch('employer_type') === 'STUDENT'
+
+	const onSubmit = (data: FormSchema) => {
+		if (!application?.id) return
+
+		mutate(
+			{
+				id: application.id,
+				data,
+			},
+			{
+				onError: () => {
+					toast.error(
+						'Failed to update emergency contact information. Try again later.',
+					)
+				},
+				onSuccess: () => {
+					toast.success('Emergency contact information updated successfully.')
+					void revalidator.revalidate()
+					setIsEditing(false)
+				},
+			},
+		)
+	}
+
+	const handleCancel = () => {
+		reset()
+		setIsEditing(false)
+	}
+
+	const viewIsStudent = application?.employer_type === 'STUDENT'
+
+	if (!isEditing) {
+		return (
+			<Card className="shadow-none">
+				<CardHeader>
+					<CardTitle className="flex items-center justify-between">
+						Emergency Contact & Background
+						{application?.status !== 'TenantApplication.Status.Cancelled' && (
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={() => setIsEditing(true)}
+							>
+								<Pencil className="mr-1 h-4 w-4" />
+								Edit
+							</Button>
+						)}
+					</CardTitle>
+					<CardDescription>
+						Tenant's emergency contact information and background details.
+					</CardDescription>
+				</CardHeader>
+
+				<CardContent>
+					<div className="mb-2">
+						<Label className="text-sm font-medium">Emergency Contact</Label>
+					</div>
+					<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+						<FieldDisplay
+							label="Full Name"
+							value={application?.emergency_contact_name}
+						/>
+						<FieldDisplay
+							label="Relationship"
+							value={application?.relationship_to_emergency_contact}
+						/>
+						<FieldDisplay
+							label="Phone Number"
+							value={application?.emergency_contact_phone}
+						/>
+					</div>
+
+					<div className="mt-6 mb-2">
+						<Label className="text-sm font-medium">Employment</Label>
+					</div>
+					<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+						<FieldDisplay
+							label="Employment Type"
+							value={
+								application?.employer_type
+									? toFirstUpperCase(application.employer_type)
+									: undefined
+							}
+						/>
+						{!viewIsStudent && (
+							<FieldDisplay
+								label="Occupation"
+								value={application?.occupation}
+							/>
+						)}
+						<FieldDisplay
+							label={viewIsStudent ? 'Institution/School' : 'Employer'}
+							value={application?.employer}
+						/>
+						<FieldDisplay
+							label="Address"
+							value={application?.occupation_address}
+						/>
+					</div>
+
+					<div className="mt-6">
+						<Label className="text-sm font-medium">
+							Proof of {viewIsStudent ? 'Admission' : 'Income'}
+						</Label>
+						<div className="mt-2">
+							{application?.proof_of_income_url ? (
+								<DocumentUpload
+									disabled
+									documentName={`Proof of ${viewIsStudent ? 'Admission' : 'Income'}`}
+									label={`Proof of ${viewIsStudent ? 'Admission' : 'Income'}`}
+									name="proof_of_income_url"
+									hideDismissIcon
+								/>
+							) : (
+								<div className="flex h-16 w-full items-center justify-center rounded-md border bg-gray-50 text-sm text-gray-400">
+									No document uploaded
+								</div>
+							)}
+						</div>
+					</div>
+				</CardContent>
+			</Card>
+		)
+	}
 
 	return (
 		<Card className="shadow-none">
 			<CardHeader>
-				<CardTitle>Emergency Contact & Background Information</CardTitle>
+				<CardTitle className="flex items-center justify-between">
+					Emergency Contact & Background
+					<Button variant="ghost" size="sm" onClick={handleCancel}>
+						<X className="mr-1 h-4 w-4" />
+						Cancel
+					</Button>
+				</CardTitle>
 				<CardDescription>
 					Review and update tenant's emergency contact information and
 					background details.
@@ -76,7 +260,7 @@ export function PropertyTenantApplicationEmergencyContact() {
 
 			<CardContent className="space-y-3">
 				<Form {...rhfMethods}>
-					<form>
+					<form id="emergency-contact-form" onSubmit={handleSubmit(onSubmit)}>
 						<div className="grid grid-cols-1 gap-5 md:grid-cols-2">
 							<div className="col-span-2 mt-2">
 								<Label>Emergency Contact</Label>
@@ -84,7 +268,7 @@ export function PropertyTenantApplicationEmergencyContact() {
 							<div>
 								<FormField
 									name="emergency_contact_name"
-									control={control}
+									control={rhfMethods.control}
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>
@@ -101,7 +285,7 @@ export function PropertyTenantApplicationEmergencyContact() {
 							<div>
 								<FormField
 									name="relationship_to_emergency_contact"
-									control={control}
+									control={rhfMethods.control}
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>
@@ -118,7 +302,7 @@ export function PropertyTenantApplicationEmergencyContact() {
 							<div className="col-span-2">
 								<FormField
 									name="emergency_contact_phone"
-									control={control}
+									control={rhfMethods.control}
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>
@@ -174,11 +358,11 @@ export function PropertyTenantApplicationEmergencyContact() {
 									{isStudent ? 'Student Information' : 'Employment Information'}
 								</Label>
 							</div>
-							<div className={`${isStudent ? 'col-span-2' : 'col-span-1'}`}>
+							<div className={isStudent ? 'col-span-2' : 'col-span-1'}>
 								{!isStudent && (
 									<FormField
 										name="occupation"
-										control={control}
+										control={rhfMethods.control}
 										render={({ field }) => (
 											<FormItem>
 												<FormLabel>
@@ -200,7 +384,7 @@ export function PropertyTenantApplicationEmergencyContact() {
 							<div>
 								<FormField
 									name="employer"
-									control={control}
+									control={rhfMethods.control}
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>
@@ -220,10 +404,10 @@ export function PropertyTenantApplicationEmergencyContact() {
 								/>
 							</div>
 
-							<div className={`${isStudent ? 'col-span-1' : 'col-span-2'}`}>
+							<div className={isStudent ? 'col-span-1' : 'col-span-2'}>
 								<FormField
 									name="occupation_address"
-									control={control}
+									control={rhfMethods.control}
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>
@@ -242,28 +426,23 @@ export function PropertyTenantApplicationEmergencyContact() {
 								/>
 							</div>
 							<div className="col-span-2">
-								<ImageUpload
-									hero
-									shape="square"
+								<DocumentUpload
 									hint="Optional"
-									acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-									error={
-										rhfMethods.formState.errors?.proof_of_income_url?.message
+									documentName={
+										rhfMethods.watch('proof_of_income_url')
+											? `Proof of ${isStudent ? 'Admission' : 'Income'}`
+											: undefined
 									}
-									// fileCallback={upload}
-									// isUploading={isUploading}
-									dismissCallback={() => {
-										rhfMethods.setValue('proof_of_income_url', undefined, {
+									fileCallback={upload}
+									isUploading={isUploading}
+									dismissCallback={() =>
+										rhfMethods.setValue('proof_of_income_url', null, {
 											shouldDirty: true,
-											shouldValidate: true,
 										})
-									}}
-									imageSrc={safeString(rhfMethods.watch('proof_of_income_url'))}
+									}
 									label={`Proof of ${isStudent ? 'Admission' : 'Income'}`}
-									name="image_url"
-									validation={{
-										maxByteSize: 5242880, // 5MB
-									}}
+									name="proof_of_income_url"
+									maxByteSize={5242880}
 								/>
 							</div>
 						</div>
@@ -273,7 +452,16 @@ export function PropertyTenantApplicationEmergencyContact() {
 
 			<CardFooter className="flex justify-end">
 				<div className="flex flex-row items-center space-x-2">
-					<Button disabled>Save</Button>
+					<Button variant="outline" onClick={handleCancel} disabled={isPending}>
+						Cancel
+					</Button>
+					<Button
+						type="submit"
+						form="emergency-contact-form"
+						disabled={isPending || !rhfMethods.formState.isDirty}
+					>
+						{isPending ? <Spinner /> : null} Save
+					</Button>
 				</div>
 			</CardFooter>
 		</Card>

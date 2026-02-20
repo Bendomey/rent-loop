@@ -47,7 +47,7 @@ type CreateLeaseInput struct {
 	KeyHandoverDate                                       *time.Time
 	UtilityTransfersDate                                  *time.Time
 	PropertyInspectionDate                                *time.Time
-	LeaseAggreementDocumentMode                           *string
+	LeaseAgreementDocumentMode                            *string
 	LeaseAgreementDocumentUrl                             string
 	LeaseAgreementDocumentPropertyManagerSignedById       *string
 	LeaseAgreementDocumentPropertyManagerSignedAt         *time.Time
@@ -72,26 +72,22 @@ func (s *leaseService) CreateLease(ctx context.Context, input CreateLeaseInput) 
 	}
 
 	lease := models.Lease{
-		Status:                      input.Status,
-		UnitId:                      input.UnitId,
-		TenantId:                    input.TenantId,
-		TenantApplicationId:         input.TenantApplicationId,
-		RentFee:                     input.RentFee,
-		RentFeeCurrency:             input.RentFeeCurrency,
-		PaymentFrequency:            input.PaymentFrequency,
-		Meta:                        *metaJson,
-		MoveInDate:                  input.MoveInDate,
-		StayDurationFrequency:       input.StayDurationFrequency,
-		StayDuration:                input.StayDuration,
-		KeyHandoverDate:             input.KeyHandoverDate,
-		UtilityTransfersDate:        input.UtilityTransfersDate,
-		PropertyInspectionDate:      input.PropertyInspectionDate,
-		LeaseAggreementDocumentMode: input.LeaseAggreementDocumentMode,
-		LeaseAgreementDocumentUrl:   input.LeaseAgreementDocumentUrl,
-		LeaseAgreementDocumentPropertyManagerSignedById:     input.LeaseAgreementDocumentPropertyManagerSignedById,
-		LeaseAgreementDocumentPropertyManagerSignedAt:       input.LeaseAgreementDocumentPropertyManagerSignedAt,
-		LeaseAgreementDocumentTenantSignedAt:                input.LeaseAgreementDocumentTenantSignedAt,
-		TerminationAgreementDocumentUrl:                     input.TerminationAgreementDocumentUrl,
+		Status:                          input.Status,
+		UnitId:                          input.UnitId,
+		TenantId:                        input.TenantId,
+		TenantApplicationId:             input.TenantApplicationId,
+		RentFee:                         input.RentFee,
+		RentFeeCurrency:                 input.RentFeeCurrency,
+		PaymentFrequency:                input.PaymentFrequency,
+		Meta:                            *metaJson,
+		MoveInDate:                      input.MoveInDate,
+		StayDurationFrequency:           input.StayDurationFrequency,
+		StayDuration:                    input.StayDuration,
+		KeyHandoverDate:                 input.KeyHandoverDate,
+		UtilityTransfersDate:            input.UtilityTransfersDate,
+		PropertyInspectionDate:          input.PropertyInspectionDate,
+		LeaseAgreementDocumentUrl:       input.LeaseAgreementDocumentUrl,
+		TerminationAgreementDocumentUrl: input.TerminationAgreementDocumentUrl,
 		TerminationAgreementDocumentPropertyManagerSignedAt: input.TerminationAgreementDocumentPropertyManagerSignedAt,
 	}
 
@@ -110,28 +106,28 @@ func (s *leaseService) CreateLease(ctx context.Context, input CreateLeaseInput) 
 }
 
 type UpdateLeaseInput struct {
-	LeaseID                                               string
-	Status                                                *string
-	RentFee                                               *int64
-	RentFeeCurrency                                       *string
-	PaymentFrequency                                      *string
-	Meta                                                  *map[string]any
-	MoveInDate                                            *time.Time
-	StayDurationFrequency                                 *string
-	StayDuration                                          *int64
-	KeyHandoverDate                                       *time.Time
-	UtilityTransfersDate                                  *time.Time
-	PropertyInspectionDate                                *time.Time
-	LeaseAggreementDocumentMode                           *string
-	LeaseAgreementDocumentUrl                             *string
-	LeaseAgreementDocumentPropertyManagerSignedById       *string
-	LeaseAgreementDocumentPropertyManagerSignedAt         *time.Time
-	LeaseAgreementDocumentTenantSignedAt                  *time.Time
-	TerminationAgreementDocumentUrl                       *string
-	TerminationAgreementDocumentPropertyManagerSignedAt   *time.Time
-	TerminationAgreementDocumentPropertyManagerSignedByID *string
-	TerminationAgreementDocumentTenantSignedAt            *time.Time
-	ParentLeaseId                                         *string
+	LeaseID string
+
+	// Required fields (use pointer with nil check)
+	Status                    *string
+	RentFee                   *int64
+	RentFeeCurrency           *string
+	Meta                      *map[string]any
+	MoveInDate                *time.Time
+	StayDurationFrequency     *string
+	StayDuration              *int64
+	LeaseAgreementDocumentUrl *string
+
+	// Nullable fields (use Optional to allow explicit null)
+	PaymentFrequency                                      lib.Optional[string]
+	KeyHandoverDate                                       lib.Optional[time.Time]
+	UtilityTransfersDate                                  lib.Optional[time.Time]
+	PropertyInspectionDate                                lib.Optional[time.Time]
+	TerminationAgreementDocumentUrl                       lib.Optional[string]
+	TerminationAgreementDocumentPropertyManagerSignedAt   lib.Optional[time.Time]
+	TerminationAgreementDocumentPropertyManagerSignedByID lib.Optional[string]
+	TerminationAgreementDocumentTenantSignedAt            lib.Optional[time.Time]
+	ParentLeaseId                                         lib.Optional[string]
 }
 
 func (s *leaseService) UpdateLease(ctx context.Context, input UpdateLeaseInput) (*models.Lease, error) {
@@ -200,31 +196,42 @@ func (s *leaseService) UpdateLease(ctx context.Context, input UpdateLeaseInput) 
 		lease.Meta = *meta
 	}
 
-	lease.PaymentFrequency = input.PaymentFrequency
+	// Nullable fields - update if field was explicitly sent (allows setting to null)
+	if input.PaymentFrequency.IsSet {
+		lease.PaymentFrequency = input.PaymentFrequency.Ptr()
+	}
 
-	lease.KeyHandoverDate = input.KeyHandoverDate
+	if input.KeyHandoverDate.IsSet {
+		lease.KeyHandoverDate = input.KeyHandoverDate.Ptr()
+	}
 
-	lease.UtilityTransfersDate = input.UtilityTransfersDate
+	if input.UtilityTransfersDate.IsSet {
+		lease.UtilityTransfersDate = input.UtilityTransfersDate.Ptr()
+	}
 
-	lease.PropertyInspectionDate = input.PropertyInspectionDate
+	if input.PropertyInspectionDate.IsSet {
+		lease.PropertyInspectionDate = input.PropertyInspectionDate.Ptr()
+	}
 
-	lease.LeaseAggreementDocumentMode = input.LeaseAggreementDocumentMode
+	if input.TerminationAgreementDocumentUrl.IsSet {
+		lease.TerminationAgreementDocumentUrl = input.TerminationAgreementDocumentUrl.Ptr()
+	}
 
-	lease.LeaseAgreementDocumentPropertyManagerSignedById = input.LeaseAgreementDocumentPropertyManagerSignedById
+	if input.TerminationAgreementDocumentPropertyManagerSignedAt.IsSet {
+		lease.TerminationAgreementDocumentPropertyManagerSignedAt = input.TerminationAgreementDocumentPropertyManagerSignedAt.Ptr()
+	}
 
-	lease.LeaseAgreementDocumentPropertyManagerSignedAt = input.LeaseAgreementDocumentPropertyManagerSignedAt
+	if input.TerminationAgreementDocumentPropertyManagerSignedByID.IsSet {
+		lease.TerminationAgreementDocumentPropertyManagerSignedByID = input.TerminationAgreementDocumentPropertyManagerSignedByID.Ptr()
+	}
 
-	lease.LeaseAgreementDocumentTenantSignedAt = input.LeaseAgreementDocumentTenantSignedAt
+	if input.TerminationAgreementDocumentTenantSignedAt.IsSet {
+		lease.TerminationAgreementDocumentTenantSignedAt = input.TerminationAgreementDocumentTenantSignedAt.Ptr()
+	}
 
-	lease.TerminationAgreementDocumentUrl = input.TerminationAgreementDocumentUrl
-
-	lease.TerminationAgreementDocumentPropertyManagerSignedAt = input.TerminationAgreementDocumentPropertyManagerSignedAt
-
-	lease.TerminationAgreementDocumentPropertyManagerSignedByID = input.TerminationAgreementDocumentPropertyManagerSignedByID
-
-	lease.TerminationAgreementDocumentTenantSignedAt = input.TerminationAgreementDocumentTenantSignedAt
-
-	lease.ParentLeaseId = input.ParentLeaseId
+	if input.ParentLeaseId.IsSet {
+		lease.ParentLeaseId = input.ParentLeaseId.Ptr()
+	}
 
 	err := s.repo.Update(ctx, lease)
 	if err != nil {

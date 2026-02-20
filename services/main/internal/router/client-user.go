@@ -20,6 +20,10 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				handlers.ClientUserHandler.SendForgotPasswordResetLink,
 			)
 			r.Get("/v1/units/{unit_id}", handlers.UnitHandler.FetchClientUnit)
+
+			// signing (token-based auth, no JWT required)
+			r.Get("/v1/signing/{token}/verify", handlers.SigningHandler.VerifyToken)
+			r.Post("/v1/signing/{token}/sign", handlers.SigningHandler.SignDocument)
 		})
 
 		// protected client user routes
@@ -152,6 +156,15 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					Post("/{tenant_application_id}/invoice/{invoice_id}/pay", handlers.TenantApplicationHandler.PayInvoice)
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Patch("/{tenant_application_id}/approve", handlers.TenantApplicationHandler.ApproveTenantApplication)
+			})
+
+			r.Route("/v1/signing", func(r chi.Router) {
+				// signing - generate tokens
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Post("/", handlers.SigningHandler.GenerateToken)
+
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Post("/direct", handlers.SigningHandler.SignDocumentPM)
 			})
 
 			r.Get("/v1/tenants/{tenant_id}/leases", handlers.LeaseHandler.ListLeasesByTenant)

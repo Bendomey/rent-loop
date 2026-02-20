@@ -32,7 +32,14 @@ import { safeString } from '~/lib/strings'
 import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.applications.new'
 
 interface Props {
-	data?: Partial<TenantApplication>
+	data?: {
+		desired_unit: {
+			id: string
+			name: string
+		}
+		email?: string
+		phone?: string
+	}
 	admin_id: string
 	opened: boolean
 	setOpened: Dispatch<SetStateAction<boolean>>
@@ -74,7 +81,7 @@ function InviteTenantModal({ opened, setOpened, data, admin_id }: Props) {
 		useLoaderData<typeof loader>()
 	const property_id = safeString(clientUserProperty?.property?.id)
 
-	const generatedLink = `${rentLoopWebsiteUrl}/tenants/apply?unit=${data?.desired_unit_id}&referred_by=${admin_id}`
+	const generatedLink = `${rentLoopWebsiteUrl}/tenants/apply?unit=${data?.desired_unit?.id}&referred_by=${admin_id}`
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
@@ -83,8 +90,8 @@ function InviteTenantModal({ opened, setOpened, data, admin_id }: Props) {
 	const { setValue } = rhfMethods
 
 	useEffect(() => {
-		if (data?.desired_unit_id) {
-			setValue('desired_unit_id', data.desired_unit_id, {
+		if (data?.desired_unit?.id) {
+			setValue('desired_unit_id', data.desired_unit.id, {
 				shouldDirty: true,
 				shouldValidate: true,
 			})
@@ -141,7 +148,9 @@ function InviteTenantModal({ opened, setOpened, data, admin_id }: Props) {
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle className="flex items-center justify-between border-b pb-4">
-						<TypographyH3>Invite Tenant to {data?.desired_unit}</TypographyH3>
+						<TypographyH3>
+							Invite Tenant to {data?.desired_unit?.name}
+						</TypographyH3>
 					</AlertDialogTitle>
 					<AlertDialogDescription className="space-y-4 pt-2">
 						<div className="space-y-2 pb-4">

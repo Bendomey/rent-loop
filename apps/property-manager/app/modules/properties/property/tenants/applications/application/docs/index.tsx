@@ -1,5 +1,7 @@
 import { FileText, Plus } from 'lucide-react'
 import { useState } from 'react'
+import { useParams } from 'react-router'
+import { useTenantApplicationContext } from '../context'
 import { AddDocumentModal } from './add-document-modal'
 import { AttachedDocumentView } from './attached-document-view'
 import type { AttachedDocument } from './types'
@@ -28,6 +30,9 @@ const mockAttachedDoc: AttachedDocument = {
 }
 
 export function PropertyTenantApplicationDocs() {
+	const { tenantApplication } = useTenantApplicationContext()
+
+	const { applicationId } = useParams()
 	const { clientUserProperty } = useProperty()
 	const [open, setOpen] = useState(false)
 
@@ -46,7 +51,7 @@ export function PropertyTenantApplicationDocs() {
 			<CardContent>
 				{attachedDoc ? (
 					<AttachedDocumentView
-						doc={attachedDoc}
+						tenantApplication={tenantApplication}
 						onChangeDocument={() => setOpen(true)}
 						onClearDocument={() => {
 							// TODO: call API to remove attached document
@@ -77,6 +82,7 @@ export function PropertyTenantApplicationDocs() {
 				open={open}
 				onOpenChange={setOpen}
 				propertyId={property_id}
+				applicationId={applicationId}
 				attachedDoc={attachedDoc}
 			/>
 		</Card>

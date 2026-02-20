@@ -1,7 +1,10 @@
-import { FileText, Info, Upload } from 'lucide-react'
+import { FileText, Info, Loader2, Upload } from 'lucide-react'
 import { useState } from 'react'
+import { useRevalidator } from 'react-router'
 import { DocumentList } from './document-list'
 import type { AttachedDocument, DocMode } from './types'
+import { useCreateDocument } from '~/api/documents'
+import { useUpdateTenantApplication } from '~/api/tenant-applications'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
 import {
@@ -14,12 +17,14 @@ import {
 } from '~/components/ui/dialog'
 import { DocumentUpload } from '~/components/ui/document-upload'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
+import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
 
 interface AddDocumentModalProps {
 	open: boolean
 	onOpenChange: (open: boolean) => void
 	propertyId: string | undefined
+	applicationId: string | undefined
 	attachedDoc: AttachedDocument | null
 }
 
@@ -27,12 +32,70 @@ export function AddDocumentModal({
 	open,
 	onOpenChange,
 	propertyId,
+	applicationId,
 	attachedDoc,
 }: AddDocumentModalProps) {
 	const [mode, setMode] = useState<DocMode>('manual')
-	const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
-		null,
-	)
+	const [selectedDocument, setSelectedDocument] =
+		useState<RentloopDocument | null>(null)
+	const revalidator = useRevalidator()
+
+	const {
+		upload,
+		isLoading: isUploading,
+		objectUrl: uploadedUrl,
+	} = useUploadObject('tenant-applications/lease-documents')
+
+	const { mutateAsync: createDocument, isPending: isCreating } =
+		useCreateDocument()
+	const { mutateAsync: updateTenantApplication, isPending: isUpdating } =
+		useUpdateTenantApplication()
+
+	const isSaving = isCreating || isUpdating
+
+	const canSave =
+		mode === 'online' ? Boolean(selectedDocument) : Boolean(uploadedUrl)
+
+	const handleSave = async () => {
+		if (!applicationId) return
+
+		if (mode === 'manual') {
+			if (!uploadedUrl) return
+
+			await updateTenantApplication({
+				id: applicationId,
+				data: {
+					lease_agreement_document_url: uploadedUrl,
+					lease_agreement_document_mode: 'MANUAL',
+				},
+			})
+		} else {
+			if (!selectedDocument) return
+
+			const newDoc = await createDocument({
+				title: selectedDocument.title,
+				content: selectedDocument.content,
+				size: selectedDocument.size,
+				tags: selectedDocument.tags,
+				property_id: propertyId,
+				type: 'DOCUMENT',
+			})
+
+			if (!newDoc) return
+
+			await updateTenantApplication({
+				id: applicationId,
+				data: {
+					lease_agreement_document_id: newDoc.id,
+					lease_agreement_document_mode: 'ONLINE',
+					lease_agreement_document_status: 'DRAFT',
+				},
+			})
+		}
+
+		void revalidator.revalidate()
+		onOpenChange(false)
+	}
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -78,6 +141,8 @@ export function AddDocumentModal({
 								hint="Upload a PDF or Word document (max 5MB)"
 								name="lease_document"
 								maxByteSize={5242880}
+								fileCallback={upload}
+								isUploading={isUploading}
 							/>
 						</div>
 					</TabsContent>
@@ -96,8 +161,8 @@ export function AddDocumentModal({
 
 							<DocumentList
 								property_id={safeString(propertyId)}
-								selectedDocumentId={selectedDocumentId}
-								onSelectDocument={setSelectedDocumentId}
+								selectedDocument={selectedDocument}
+								onSelectDocument={setSelectedDocument}
 							/>
 						</div>
 					</TabsContent>
@@ -107,7 +172,10 @@ export function AddDocumentModal({
 					<Button variant="outline" onClick={() => onOpenChange(false)}>
 						Cancel
 					</Button>
-					<Button disabled={mode === 'online' ? !selectedDocumentId : true}>
+					<Button disabled={!canSave || isSaving} onClick={handleSave}>
+						{(isSaving || isUploading) && (
+							<Loader2 className="size-4 animate-spin" />
+						)}
 						Save
 					</Button>
 				</DialogFooter>

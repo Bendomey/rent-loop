@@ -19,6 +19,7 @@ type Repository struct {
 	PaymentAccountRepository     PaymentAccountRepository
 	InvoiceRepository            InvoiceRepository
 	PaymentRepository            PaymentRepository
+	SigningRepository            SigningRepository
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -38,6 +39,7 @@ func NewRepository(db *gorm.DB) Repository {
 	paymentAccountRepository := NewPaymentAccountRepository(db)
 	invoiceRepository := NewInvoiceRepository(db)
 	paymentRepository := NewPaymentRepository(db)
+	signingRepository := NewSigningRepository(db)
 
 	return Repository{
 		AdminRepository:              adminRepository,
@@ -56,5 +58,6 @@ func NewRepository(db *gorm.DB) Repository {
 		PaymentAccountRepository:     paymentAccountRepository,
 		InvoiceRepository:            invoiceRepository,
 		PaymentRepository:            paymentRepository,
+		SigningRepository:            signingRepository,
 	}
 }

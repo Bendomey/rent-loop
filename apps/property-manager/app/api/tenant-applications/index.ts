@@ -37,6 +37,39 @@ export const useGetPropertyTenantApplications = (
 		queryFn: () => getPropertyTenantApplications(query),
 	})
 
+interface GetPropertyTenantApplicationProps {
+	id: string
+	populate?: Array<string>
+}
+
+export const getPropertyTenantApplicationForServer = async (
+	input: GetPropertyTenantApplicationProps,
+	apiConfig: ApiConfigForServerConfig,
+) => {
+	try {
+		const params = getQueryParams({
+			populate: input.populate,
+		})
+		const response = await fetchServer<ApiResponse<TenantApplication>>(
+			`${apiConfig.baseUrl}/v1/tenant-applications/${input.id}?${params.toString()}`,
+			{
+				method: 'GET',
+				...apiConfig,
+			},
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
 export interface CreatePropertyTenantApplicationInput {
 	property_id: string
 	desired_unit_id: string
@@ -215,3 +248,39 @@ export const useDeleteTenantApplication = () =>
 	useMutation({
 		mutationFn: deleteTenantApplication,
 	})
+
+/**
+ * Update Tenant Application
+ */
+interface UpdateTenantApplicationProps {
+	id: string
+	data: Partial<TenantApplication>
+}
+
+const updateTenantApplication = async ({
+	id,
+	data,
+}: UpdateTenantApplicationProps) => {
+	try {
+		const response = await fetchClient<ApiResponse<TenantApplication>>(
+			`/v1/tenant-applications/${id}`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify(data),
+			},
+		)
+		return response.parsedBody.data
+	} catch (error) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useUpdateTenantApplication = () =>
+	useMutation({ mutationFn: updateTenantApplication })
