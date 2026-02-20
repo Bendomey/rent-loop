@@ -43,12 +43,13 @@ type TenantApplication struct {
 	SecurityDepositFeeCurrency string `gorm:"not null;default:'GHS'"`
 
 	// docs setup
-	LeaseAggreementDocumentMode                     *string // MANUAL | ONLINE
-	LeaseAgreementDocumentUrl                       *string
-	LeaseAgreementDocumentPropertyManagerSignedById *string
-	LeaseAgreementDocumentPropertyManagerSignedBy   *ClientUser
-	LeaseAgreementDocumentPropertyManagerSignedAt   *time.Time
-	LeaseAgreementDocumentTenantSignedAt            *time.Time
+	LeaseAgreementDocumentMode *string // MANUAL | ONLINE
+	LeaseAgreementDocumentUrl  *string
+
+	// ONLINE
+	LeaseAgreementDocumentID     *string
+	LeaseAgreementDocument       *Document
+	LeaseAgreementDocumentStatus *string // "DRAFT" | "FINALIZED" | "SIGNING" | "SIGNED"
 
 	// Basic details
 	FirstName       string `gorm:"not null;"`

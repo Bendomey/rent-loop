@@ -65,10 +65,12 @@ import { ImagePickerPlugin } from '~/components/editor/plugins/picker/image-pick
 import { NumberedListPickerPlugin } from '~/components/editor/plugins/picker/numbered-list-picker-plugin'
 import { ParagraphPickerPlugin } from '~/components/editor/plugins/picker/paragraph-picker-plugin'
 import { QuotePickerPlugin } from '~/components/editor/plugins/picker/quote-picker-plugin'
+import { SignaturePickerPlugin } from '~/components/editor/plugins/picker/signature-picker-plugin'
 import {
 	DynamicTablePickerPlugin,
 	TablePickerPlugin,
 } from '~/components/editor/plugins/picker/table-picker-plugin'
+import { SignaturePlugin } from '~/components/editor/plugins/signature-plugin'
 import { TabFocusPlugin } from '~/components/editor/plugins/tab-focus-plugin'
 import { TemplateFieldsPlugin } from '~/components/editor/plugins/template-fields-plugin'
 import { FormatBulletedList } from '~/components/editor/plugins/toolbar/block-format/format-bulleted-list'
@@ -83,6 +85,7 @@ import { InsertColumnsLayout } from '~/components/editor/plugins/toolbar/block-i
 // import { InsertEmbeds } from "~/components/editor/plugins/toolbar/block-insert/insert-embeds"
 import { InsertHorizontalRule } from '~/components/editor/plugins/toolbar/block-insert/insert-horizontal-rule'
 import { InsertImage } from '~/components/editor/plugins/toolbar/block-insert/insert-image'
+import { InsertSignature } from '~/components/editor/plugins/toolbar/block-insert/insert-signature'
 import { InsertTable } from '~/components/editor/plugins/toolbar/block-insert/insert-table'
 import { BlockInsertPlugin } from '~/components/editor/plugins/toolbar/block-insert-plugin'
 import { ClearFormattingToolbarPlugin } from '~/components/editor/plugins/toolbar/clear-formatting-toolbar-plugin'
@@ -162,6 +165,7 @@ export function Plugins({ maxLength }: Props) {
 								<BlockInsertPlugin>
 									<InsertHorizontalRule />
 									<InsertImage />
+									<InsertSignature />
 									<InsertTable />
 									<InsertColumnsLayout />
 									{/* <InsertEmbeds /> */}
@@ -204,6 +208,7 @@ export function Plugins({ maxLength }: Props) {
 							<KeywordsPlugin />
 							<EmojisPlugin />
 							<ImagesPlugin />
+							<SignaturePlugin />
 
 							<LayoutPlugin />
 
@@ -252,6 +257,7 @@ export function Plugins({ maxLength }: Props) {
 									EmbedsPickerPlugin({ embed: 'tweet' }),
 									EmbedsPickerPlugin({ embed: 'youtube-video' }),
 									ImagePickerPlugin(),
+									SignaturePickerPlugin(),
 									ColumnsLayoutPickerPlugin(),
 									AlignmentPickerPlugin({ alignment: 'left' }),
 									AlignmentPickerPlugin({ alignment: 'center' }),

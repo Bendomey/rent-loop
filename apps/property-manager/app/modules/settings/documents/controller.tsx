@@ -114,6 +114,7 @@ export function AddDocumentButton({
 				size: template.charCount,
 				tags: template.tags,
 				property_id: property?.id,
+				type: 'TEMPLATE',
 			},
 			{
 				onSuccess: (data) => {

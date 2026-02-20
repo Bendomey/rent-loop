@@ -1,9 +1,7 @@
 import { CheckCircle, FileText, Pen, Replace, X } from 'lucide-react'
-import { useState } from 'react'
+import { Link, useParams } from 'react-router'
 import { PromptTenantButton } from './prompt-tenant-button'
-import { SignDocumentModal } from './sign-document-modal'
 import { SigningStatusRow } from './signing-status-row'
-import type { AttachedDocument } from './types'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Separator } from '~/components/ui/separator'
@@ -14,20 +12,26 @@ import {
 } from '~/components/ui/tooltip'
 
 interface AttachedDocumentViewProps {
-	doc: AttachedDocument
+	tenantApplication: TenantApplication
 	onChangeDocument: () => void
 	onClearDocument: () => void
 }
 
 export function AttachedDocumentView({
-	doc,
+	tenantApplication,
 	onChangeDocument,
 	onClearDocument,
 }: AttachedDocumentViewProps) {
-	const [signModalOpen, setSignModalOpen] = useState(false)
-	const isManual = doc.mode === 'manual'
-	const adminSigned = !!doc.propertyManagerSignedAt
-	const tenantSigned = !!doc.tenantSignedAt
+	const { propertyId, applicationId } = useParams()
+	const isManual = tenantApplication.lease_agreement_document_mode === 'MANUAL'
+	const adminSignature = tenantApplication.lease_agreement_document_signatures?.find(
+		(signature) => signature.role === 'PROPERTY_MANAGER'
+	)
+	const adminSigned = Boolean(adminSignature)
+	const tenantSignature = tenantApplication.lease_agreement_document_signatures?.find(
+		(signature) => signature.role === 'TENANT'
+	)
+	const tenantSigned = Boolean(tenantSignature)
 
 	return (
 		<div className="space-y-4">
@@ -43,7 +47,7 @@ export function AttachedDocumentView({
 						</span>
 					</Badge>
 					<div>
-						<p className="text-sm font-medium">{doc.title}</p>
+						<p className="text-sm font-medium">{tenantApplication.lease_agreement_document?.title}</p>
 						<p className="text-xs text-zinc-500">
 							{isManual ? 'Manually uploaded' : 'Selected from library'}
 						</p>
@@ -91,32 +95,28 @@ export function AttachedDocumentView({
 					<SigningStatusRow
 						label="Property Manager"
 						signed={adminSigned}
-						signedAt={doc.propertyManagerSignedAt}
-						signedBy={doc.propertyManagerSignedBy?.name}
+						signedAt={adminSignature?.created_at ?? null}
+						signedBy={adminSignature?.signed_by?.name}
 					/>
 
 					{!adminSigned && (
-						<Button size="sm" onClick={() => setSignModalOpen(true)}>
-							<Pen className="size-4" />
-							Sign Document
+						<Button size="sm" asChild>
+							<Link
+								to={`/properties/${propertyId}/tenants/applications/${applicationId}/signing/${tenantApplication.lease_agreement_document_id}`}
+							>
+								<Pen className="size-4" />
+								Sign Document
+							</Link>
 						</Button>
 					)}
-
-					<SignDocumentModal
-						open={signModalOpen}
-						onOpenChange={setSignModalOpen}
-						documentTitle={doc.title}
-						onSign={(_signatureDataUrl) => {
-							// TODO: call API to submit admin signature
-						}}
-					/>
 
 					<Separator />
 
 					<SigningStatusRow
 						label="Tenant"
 						signed={tenantSigned}
-						signedAt={doc.tenantSignedAt}
+						signedAt={tenantSignature?.created_at ?? null}
+						signedBy={tenantSignature?.signed_by?.name}
 					/>
 
 					{!tenantSigned && <PromptTenantButton />}

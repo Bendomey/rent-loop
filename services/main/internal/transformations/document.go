@@ -6,8 +6,9 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 )
 
-type OutputDocument struct {
+type OutputAdminDocument struct {
 	ID          string            `json:"id"                      example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	Type        string            `json:"type"                    example:"TEMPLATE"`
 	Title       string            `json:"title"                   example:"Lease Agreement"`
 	Content     string            `json:"content"`
 	Size        int64             `json:"size"                    example:"2048"`
@@ -22,14 +23,15 @@ type OutputDocument struct {
 	UpdatedAt   time.Time         `json:"updated_at"              example:"2023-01-01T00:00:00Z"`
 }
 
-// DBDocumentToRestDocument transforms the db document model to a rest document model
-func DBDocumentToRestDocument(i *models.Document) interface{} {
+// DBAdminDocumentToRestDocument transforms the db document model to a rest document model
+func DBAdminDocumentToRestDocument(i *models.Document) interface{} {
 	if i == nil {
 		return nil
 	}
 
 	data := map[string]interface{}{
 		"id":            i.ID.String(),
+		"type":          i.Type,
 		"title":         i.Title,
 		"content":       string(i.Content),
 		"size":          i.Size,
@@ -42,6 +44,31 @@ func DBDocumentToRestDocument(i *models.Document) interface{} {
 		"updated_by":    DBClientUserToRest(i.UpdatedBy),
 		"created_at":    i.CreatedAt,
 		"updated_at":    i.UpdatedAt,
+	}
+
+	return data
+}
+
+type OutputDocument struct {
+	ID      string   `json:"id"      example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	Title   string   `json:"title"   example:"Lease Agreement"`
+	Content string   `json:"content"`
+	Size    int64    `json:"size"    example:"2048"`
+	Tags    []string `json:"tags"    example:"LEASE_AGREEMENT,INSPECTION_REPORT"`
+}
+
+// DBDocumentToRestDocument transforms the db document model to a rest document model
+func DBDocumentToRestDocument(i *models.Document) interface{} {
+	if i == nil {
+		return nil
+	}
+
+	data := map[string]interface{}{
+		"id":      i.ID.String(),
+		"title":   i.Title,
+		"content": string(i.Content),
+		"size":    i.Size,
+		"tags":    i.Tags,
 	}
 
 	return data

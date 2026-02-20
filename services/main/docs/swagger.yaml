@@ -206,10 +206,17 @@ definitions:
       title:
         example: Lease Agreement
         type: string
+      type:
+        enum:
+        - TEMPLATE
+        - DOCUMENT
+        example: DOCUMENT
+        type: string
     required:
     - content
     - size
     - title
+    - type
     type: object
   handlers.CreateOfflinePaymentRequest:
     properties:
@@ -576,6 +583,30 @@ definitions:
         example: "2024-07-01T00:00:00Z"
         type: string
     type: object
+  handlers.GenerateTokenRequest:
+    properties:
+      document_id:
+        type: string
+      lease_id:
+        type: string
+      role:
+        enum:
+        - TENANT
+        - PM_WITNESS
+        - TENANT_WITNESS
+        type: string
+      signer_email:
+        type: string
+      signer_name:
+        type: string
+      signer_phone:
+        type: string
+      tenant_application_id:
+        type: string
+    required:
+    - document_id
+    - role
+    type: object
   handlers.LinkClientUserToPropertiesRequest:
     properties:
       property_ids:
@@ -679,6 +710,29 @@ definitions:
     required:
     - unit_id
     type: object
+  handlers.SignDocumentPMRequest:
+    properties:
+      document_id:
+        type: string
+      lease_id:
+        type: string
+      signature_url:
+        type: string
+      tenant_application_id:
+        type: string
+    required:
+    - document_id
+    - signature_url
+    type: object
+  handlers.SignDocumentRequest:
+    properties:
+      signature_url:
+        type: string
+      signer_name:
+        type: string
+    required:
+    - signature_url
+    type: object
   handlers.UnlinkClientUserFromPropertyRequest:
     properties:
       property_ids:
@@ -728,26 +782,6 @@ definitions:
         type: string
     type: object
   handlers.UpdateDocumentRequest:
-    properties:
-      content:
-        type: string
-      property_id:
-        example: 550e8400-e29b-41d4-a716-446655440000
-        type: string
-      size:
-        example: 3072
-        minimum: 1
-        type: integer
-      tags:
-        example:
-        - LEASE_AGREEMENT
-        - INSPECTION_REPORT
-        items:
-          type: string
-        type: array
-      title:
-        example: Updated Lease Agreement
-        type: string
     type: object
   handlers.UpdateInvoiceRequest:
     properties:
@@ -771,22 +805,6 @@ definitions:
   handlers.UpdateLeaseRequest:
     properties:
       key_handover_date:
-        example: "2024-07-01T09:00:00Z"
-        type: string
-      lease_agreement_document_mode:
-        enum:
-        - MANUAL
-        - ONLINE
-        example: MANUAL
-        type: string
-      lease_agreement_document_property_manager_signed_at:
-        example: "2024-06-15T12:00:00Z"
-        type: string
-      lease_agreement_document_property_manager_signed_by_id:
-        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
-        type: string
-      lease_agreement_document_tenant_signed_at:
-        example: "2024-06-16T14:00:00Z"
         type: string
       lease_agreement_document_url:
         example: https://example.com/lease.pdf
@@ -795,18 +813,8 @@ definitions:
         example: "2024-07-01T00:00:00Z"
         type: string
       payment_frequency:
-        enum:
-        - HOURLY
-        - DAILY
-        - MONTHLY
-        - QUARTERLY
-        - BIANNUALLY
-        - ANNUALLY
-        - ONETIME
-        example: MONTHLY
         type: string
       property_inspection_date:
-        example: "2024-06-30T15:00:00Z"
         type: string
       stay_duration:
         example: 12
@@ -814,13 +822,12 @@ definitions:
         type: integer
       stay_duration_frequency:
         enum:
-        - HOURS
-        - DAYS
-        - MONTHS
-        example: HOURS
+        - Hours
+        - Days
+        - Months
+        example: Hours
         type: string
       utility_transfers_date:
-        example: "2024-07-02T10:00:00Z"
         type: string
     type: object
   handlers.UpdatePaymentAccountRequest:
@@ -931,13 +938,11 @@ definitions:
         example: "1990-01-01T00:00:00Z"
         type: string
       desired_move_in_date:
-        example: "2023-01-01T00:00:00Z"
         type: string
       desired_unit_id:
         example: b4d0243c-6581-4104-8185-d83a45ebe41b
         type: string
       email:
-        example: john.doe@example.com
         type: string
       emergency_contact_name:
         example: Jane Doe
@@ -952,22 +957,19 @@ definitions:
         enum:
         - WORKER
         - STUDENT
-        example: WORKER
         type: string
       first_name:
         example: John
         type: string
       gender:
         enum:
-        - MALE
-        - FEMALE
-        example: MALE
+        - Male
+        - Female
+        example: Male
         type: string
       id_back_url:
-        example: https://example.com/id-back.jpg
         type: string
       id_front_url:
-        example: https://example.com/id-front.jpg
         type: string
       id_number:
         example: GHA-123456789
@@ -981,7 +983,6 @@ definitions:
         example: GHANA_CARD
         type: string
       initial_deposit_fee:
-        example: 1000
         type: integer
       initial_deposit_paid_at:
         example: "2023-01-01T00:00:00Z"
@@ -999,22 +1000,21 @@ definitions:
       last_name:
         example: Doe
         type: string
+      lease_agreement_document_id:
+        type: string
       lease_agreement_document_mode:
-        enum:
-        - MANUAL
-        - ONLINE
-        example: MANUAL
+        type: string
+      lease_agreement_document_status:
         type: string
       lease_agreement_document_url:
-        example: https://example.com/lease.pdf
         type: string
       marital_status:
         enum:
-        - SINGLE
-        - MARRIED
-        - DIVORCED
-        - WIDOWED
-        example: SINGLE
+        - Single
+        - Married
+        - Divorced
+        - Widowed
+        example: Single
         type: string
       nationality:
         example: Ghanaian
@@ -1026,36 +1026,21 @@ definitions:
         example: 456 Tech Ave, Accra
         type: string
       other_names:
-        example: Michael
         type: string
       payment_frequency:
-        enum:
-        - HOURLY
-        - DAILY
-        - MONTHLY
-        - QUARTERLY
-        - BIANNUALLY
-        - ANNUALLY
-        - ONETIME
-        example: HOURLY
         type: string
       phone:
         example: "+233281234569"
         type: string
       previous_landlord_name:
-        example: Mr. Smith
         type: string
       previous_landlord_phone:
-        example: "+233281234570"
         type: string
       previous_tenancy_period:
-        example: 2020-2022
         type: string
       profile_photo_url:
-        example: https://example.com/photo.jpg
         type: string
       proof_of_income_url:
-        example: https://example.com/income.pdf
         type: string
       relationship_to_emergency_contact:
         example: Sister
@@ -1067,7 +1052,6 @@ definitions:
         example: GHS
         type: string
       security_deposit_fee:
-        example: 1000
         type: integer
       security_deposit_fee_currency:
         example: GHS
@@ -1086,14 +1070,8 @@ definitions:
         example: "123456789"
         type: string
       stay_duration:
-        example: 10
         type: integer
       stay_duration_frequency:
-        enum:
-        - HOURS
-        - DAYS
-        - MONTHS
-        example: HOURS
         type: string
     type: object
   handlers.UpdateUnitRequest:
@@ -1295,6 +1273,95 @@ definitions:
         example: "2023-01-01T00:00:00Z"
         type: string
     type: object
+  transformations.OutputAdminDocument:
+    properties:
+      content:
+        type: string
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      created_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      created_by_id:
+        example: d290f1ee-6c54-4b01-90e6-d701748f0851
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      property:
+        $ref: '#/definitions/transformations.OutputProperty'
+      property_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      size:
+        example: 2048
+        type: integer
+      tags:
+        example:
+        - LEASE_AGREEMENT
+        - INSPECTION_REPORT
+        items:
+          type: string
+        type: array
+      title:
+        example: Lease Agreement
+        type: string
+      type:
+        example: TEMPLATE
+        type: string
+      updated_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      updated_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      updated_by_id:
+        example: c290f1ee-6c54-4b01-90e6-d701748f0852
+        type: string
+    type: object
+  transformations.OutputAdminDocumentSignature:
+    properties:
+      created_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      document:
+        $ref: '#/definitions/transformations.OutputAdminDocument'
+      document_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      ip_address:
+        example: 192.168.1.1
+        type: string
+      lease:
+        $ref: '#/definitions/transformations.OutputAdminLease'
+      lease_id:
+        example: 770e8400-e29b-41d4-a716-446655440000
+        type: string
+      role:
+        example: TENANT
+        type: string
+      signature_url:
+        example: https://s3.amazonaws.com/signatures/sig.png
+        type: string
+      signed_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      signed_by_id:
+        example: 880e8400-e29b-41d4-a716-446655440000
+        type: string
+      signed_by_name:
+        example: John Doe
+        type: string
+      tenant_application:
+        $ref: '#/definitions/transformations.OutputAdminTenantApplication'
+      tenant_application_id:
+        example: 660e8400-e29b-41d4-a716-446655440000
+        type: string
+      updated_at:
+        example: "2024-06-10T09:00:00Z"
+        type: string
+    type: object
   transformations.OutputAdminLease:
     properties:
       activated_at:
@@ -1313,6 +1380,9 @@ definitions:
         type: string
       cancelledBy:
         $ref: '#/definitions/transformations.OutputClientUser'
+      code:
+        example: 2602ABC123-1
+        type: string
       completed_at:
         example: "2024-06-01T09:00:00Z"
         type: string
@@ -1330,23 +1400,9 @@ definitions:
       key_handover_date:
         example: "2024-07-01T09:00:00Z"
         type: string
-      lease_agreement_document_mode:
-        example: MANUAL
-        type: string
-      lease_agreement_document_property_manager_signed_at:
-        example: "2024-06-15T12:00:00Z"
-        type: string
-      lease_agreement_document_property_manager_signed_by_id:
-        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
-        type: string
-      lease_agreement_document_tenant_signed_at:
-        example: "2024-06-16T14:00:00Z"
-        type: string
       lease_agreement_document_url:
         example: https://example.com/lease.pdf
         type: string
-      leaseAgreementDocumentPropertyManagerSignedBy:
-        $ref: '#/definitions/transformations.OutputClientUser'
       meta:
         additionalProperties: {}
         type: object
@@ -1378,7 +1434,7 @@ definitions:
         example: Months
         type: string
       tenant:
-        $ref: '#/definitions/transformations.OutputTenant'
+        $ref: '#/definitions/transformations.OutputAdminTenant'
       tenant_application_id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
@@ -1386,7 +1442,7 @@ definitions:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
       tenantApplication:
-        $ref: '#/definitions/transformations.OutputTenantApplication'
+        $ref: '#/definitions/transformations.OutputAdminTenantApplication'
       terminated_at:
         example: "2024-06-01T09:00:00Z"
         type: string
@@ -1419,6 +1475,317 @@ definitions:
         type: string
       utility_transfers_date:
         example: "2024-07-02T10:00:00Z"
+        type: string
+    type: object
+  transformations.OutputAdminSigningToken:
+    properties:
+      created_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      created_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      created_by_id:
+        example: 880e8400-e29b-41d4-a716-446655440000
+        type: string
+      document:
+        $ref: '#/definitions/transformations.OutputAdminDocument'
+      document_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      document_signature:
+        $ref: '#/definitions/transformations.OutputDocumentSignature'
+      document_signature_id:
+        example: 990e8400-e29b-41d4-a716-446655440000
+        type: string
+      expires_at:
+        example: "2024-06-22T09:00:00Z"
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      last_accessed_at:
+        example: "2024-06-14T10:00:00Z"
+        type: string
+      lease:
+        $ref: '#/definitions/transformations.OutputAdminLease'
+      lease_id:
+        example: 770e8400-e29b-41d4-a716-446655440000
+        type: string
+      role:
+        example: TENANT
+        type: string
+      signed_at:
+        example: "2024-06-15T14:30:00Z"
+        type: string
+      signer_email:
+        example: jane@example.com
+        type: string
+      signer_name:
+        example: Jane Doe
+        type: string
+      signer_phone:
+        example: "+233201234567"
+        type: string
+      tenant_application:
+        $ref: '#/definitions/transformations.OutputAdminTenantApplication'
+      tenant_application_id:
+        example: 660e8400-e29b-41d4-a716-446655440000
+        type: string
+      token:
+        example: 2602ABC123-a8f3b2c1d4e5
+        type: string
+      updated_at:
+        example: "2024-06-10T09:00:00Z"
+        type: string
+    type: object
+  transformations.OutputAdminTenant:
+    properties:
+      created_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      created_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      created_by_id:
+        example: 72432ce6-5620-4ecf-a862-4bf2140556a
+        type: string
+      date_of_birth:
+        example: "1990-01-01"
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+      emergency_contact_name:
+        example: Mary Doe
+        type: string
+      emergency_contact_phone:
+        example: "+1122334455"
+        type: string
+      employer:
+        example: Tech Ltd.
+        type: string
+      first_name:
+        example: John
+        type: string
+      gender:
+        example: male
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      id_back_url:
+        example: https://example.com/id-back.jpg
+        type: string
+      id_front_url:
+        example: https://example.com/id-front.jpg
+        type: string
+      id_number:
+        example: ID123456
+        type: string
+      id_type:
+        example: GHANA_CARD
+        type: string
+      last_name:
+        example: Doe
+        type: string
+      marital_status:
+        example: single
+        type: string
+      nationality:
+        example: Ghanaian
+        type: string
+      occupation:
+        example: Software Engineer
+        type: string
+      occupation_address:
+        example: 456 Tech Ave, Accra
+        type: string
+      other_names:
+        example: Michael
+        type: string
+      phone:
+        example: "+1234567890"
+        type: string
+      profile_photo_url:
+        example: https://example.com/photo.jpg
+        type: string
+      proof_of_income_url:
+        example: https://example.com/income.pdf
+        type: string
+      relationship_to_emergency_contact:
+        example: sister
+        type: string
+      updated_at:
+        example: "2024-06-10T09:00:00Z"
+        type: string
+    type: object
+  transformations.OutputAdminTenantApplication:
+    properties:
+      cancelled_at:
+        example: "2024-06-02T12:00:00Z"
+        type: string
+      cancelled_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      cancelled_by_id:
+        example: user-456
+        type: string
+      code:
+        example: 9ucfjd3p
+        type: string
+      completed_at:
+        example: "2024-06-01T12:00:00Z"
+        type: string
+      completed_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      completed_by_id:
+        example: user-123
+        type: string
+      created_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      created_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      created_by_id:
+        example: 72432ce6-5620-4ecf-a862-4bf2140556a1
+        type: string
+      current_address:
+        example: 123 Main St, Accra
+        type: string
+      date_of_birth:
+        example: "1990-01-01"
+        type: string
+      desired_move_in_date:
+        example: "2024-07-01T00:00:00Z"
+        type: string
+      desired_unit:
+        $ref: '#/definitions/transformations.AdminOutputUnit'
+      desired_unit_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+      emergency_contact_name:
+        example: Mary Doe
+        type: string
+      emergency_contact_phone:
+        example: "+1122334455"
+        type: string
+      employer:
+        example: UPSA
+        type: string
+      employer_type:
+        example: WORKER
+        type: string
+      first_name:
+        example: John
+        type: string
+      gender:
+        example: male
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      id_back_url:
+        example: https://example.com/id-back.jpg
+        type: string
+      id_front_url:
+        example: https://example.com/id-front.jpg
+        type: string
+      id_number:
+        example: ID123456
+        type: string
+      id_type:
+        example: GHANA_CARD
+        type: string
+      initial_deposit_fee:
+        example: 500
+        type: integer
+      initial_deposit_fee_currency:
+        example: GHS
+        type: string
+      last_name:
+        example: Doe
+        type: string
+      lease_agreement_document:
+        $ref: '#/definitions/transformations.OutputAdminDocument'
+      lease_agreement_document_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      lease_agreement_document_mode:
+        example: MANUAL
+        type: string
+      lease_agreement_document_signatures:
+        items:
+          $ref: '#/definitions/transformations.OutputAdminDocumentSignature'
+        type: array
+      lease_agreement_document_status:
+        example: DRAFT
+        type: string
+      lease_agreement_document_url:
+        example: https://example.com/lease.pdf
+        type: string
+      marital_status:
+        example: single
+        type: string
+      nationality:
+        example: Ghanaian
+        type: string
+      occupation:
+        example: STUDENT
+        type: string
+      occupation_address:
+        example: 456 Tech Ave, Accra
+        type: string
+      other_names:
+        example: Michael
+        type: string
+      payment_frequency:
+        example: monthly
+        type: string
+      phone:
+        example: "+1234567890"
+        type: string
+      previous_landlord_name:
+        example: Jane Smith
+        type: string
+      previous_landlord_phone:
+        example: "+1987654321"
+        type: string
+      previous_tenancy_period:
+        example: 2022-2023
+        type: string
+      profile_photo_url:
+        example: https://example.com/photo.jpg
+        type: string
+      proof_of_income_url:
+        example: https://example.com/income.pdf
+        type: string
+      relationship_to_emergency_contact:
+        example: sister
+        type: string
+      rent_fee:
+        example: 1500
+        type: integer
+      rent_fee_currency:
+        example: USD
+        type: string
+      security_deposit_fee:
+        example: 1000
+        type: integer
+      security_deposit_fee_currency:
+        example: USD
+        type: string
+      status:
+        example: TenantApplication.Status.InProgress
+        type: string
+      stay_duration:
+        example: 12
+        type: integer
+      stay_duration_frequency:
+        example: monthly
+        type: string
+      updated_at:
+        example: "2024-06-10T09:00:00Z"
         type: string
     type: object
   transformations.OutputAdminWithToken:
@@ -1665,21 +2032,8 @@ definitions:
     properties:
       content:
         type: string
-      created_at:
-        example: "2023-01-01T00:00:00Z"
-        type: string
-      created_by:
-        $ref: '#/definitions/transformations.OutputClientUser'
-      created_by_id:
-        example: d290f1ee-6c54-4b01-90e6-d701748f0851
-        type: string
       id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
-        type: string
-      property:
-        $ref: '#/definitions/transformations.OutputProperty'
-      property_id:
-        example: 550e8400-e29b-41d4-a716-446655440000
         type: string
       size:
         example: 2048
@@ -1694,13 +2048,44 @@ definitions:
       title:
         example: Lease Agreement
         type: string
-      updated_at:
-        example: "2023-01-01T00:00:00Z"
+    type: object
+  transformations.OutputDocumentSignature:
+    properties:
+      created_at:
+        example: "2024-06-01T09:00:00Z"
         type: string
-      updated_by:
-        $ref: '#/definitions/transformations.OutputClientUser'
-      updated_by_id:
-        example: c290f1ee-6c54-4b01-90e6-d701748f0852
+      document:
+        $ref: '#/definitions/transformations.OutputDocument'
+      document_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      ip_address:
+        example: 192.168.1.1
+        type: string
+      lease:
+        $ref: '#/definitions/transformations.OutputLease'
+      lease_id:
+        example: 770e8400-e29b-41d4-a716-446655440000
+        type: string
+      role:
+        example: TENANT
+        type: string
+      signature_url:
+        example: https://s3.amazonaws.com/signatures/sig.png
+        type: string
+      signed_by_name:
+        example: John Doe
+        type: string
+      tenant_application:
+        $ref: '#/definitions/transformations.OutputTenantApplication'
+      tenant_application_id:
+        example: 660e8400-e29b-41d4-a716-446655440000
+        type: string
+      updated_at:
+        example: "2024-06-10T09:00:00Z"
         type: string
     type: object
   transformations.OutputInvoice:
@@ -1725,7 +2110,7 @@ definitions:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
       context_tenant_application:
-        $ref: '#/definitions/transformations.OutputTenantApplication'
+        $ref: '#/definitions/transformations.OutputAdminTenantApplication'
       context_tenant_application_id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
@@ -1831,6 +2216,96 @@ definitions:
         type: integer
       updated_at:
         example: "2024-06-10T09:00:00Z"
+        type: string
+    type: object
+  transformations.OutputLease:
+    properties:
+      activated_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      cancelled_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      code:
+        example: 2602ABC123-1
+        type: string
+      completed_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      created_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      key_handover_date:
+        example: "2024-07-01T09:00:00Z"
+        type: string
+      lease_agreement_document_url:
+        example: https://example.com/lease.pdf
+        type: string
+      meta:
+        additionalProperties: {}
+        type: object
+      move_in_date:
+        example: "2024-07-01T00:00:00Z"
+        type: string
+      parent_lease_id:
+        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
+        type: string
+      payment_frequency:
+        example: Monthly
+        type: string
+      property_inspection_date:
+        example: "2024-06-30T15:00:00Z"
+        type: string
+      rent_fee:
+        example: 1200
+        type: integer
+      rent_fee_currency:
+        example: USD
+        type: string
+      status:
+        example: Lease.Status.Pending
+        type: string
+      stay_duration:
+        example: 12
+        type: integer
+      stay_duration_frequency:
+        example: Months
+        type: string
+      tenant:
+        $ref: '#/definitions/transformations.OutputTenant'
+      tenant_application:
+        $ref: '#/definitions/transformations.OutputTenantApplication'
+      tenant_application_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      tenant_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      terminated_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      termination_agreement_document_property_manager_signed_at:
+        example: "2024-12-01T10:00:00Z"
+        type: string
+      termination_agreement_document_tenant_signed_at:
+        example: "2024-12-02T11:00:00Z"
+        type: string
+      termination_agreement_document_url:
+        example: https://example.com/termination.pdf
+        type: string
+      unit:
+        $ref: '#/definitions/transformations.OutputUnit'
+      unit_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      updated_at:
+        example: "2024-06-10T09:00:00Z"
+        type: string
+      utility_transfers_date:
+        example: "2024-07-02T10:00:00Z"
         type: string
     type: object
   transformations.OutputPayment:
@@ -2038,6 +2513,62 @@ definitions:
         format: date-time
         type: string
     type: object
+  transformations.OutputSigningToken:
+    properties:
+      created_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      document:
+        $ref: '#/definitions/transformations.OutputDocument'
+      document_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      document_signature:
+        $ref: '#/definitions/transformations.OutputDocumentSignature'
+      document_signature_id:
+        example: 990e8400-e29b-41d4-a716-446655440000
+        type: string
+      expires_at:
+        example: "2024-06-22T09:00:00Z"
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      last_accessed_at:
+        example: "2024-06-14T10:00:00Z"
+        type: string
+      lease:
+        $ref: '#/definitions/transformations.OutputLease'
+      lease_id:
+        example: 770e8400-e29b-41d4-a716-446655440000
+        type: string
+      role:
+        example: TENANT
+        type: string
+      signed_at:
+        example: "2024-06-15T14:30:00Z"
+        type: string
+      signer_email:
+        example: jane@example.com
+        type: string
+      signer_name:
+        example: Jane Doe
+        type: string
+      signer_phone:
+        example: "+233201234567"
+        type: string
+      tenant_application:
+        $ref: '#/definitions/transformations.OutputTenantApplication'
+      tenant_application_id:
+        example: 660e8400-e29b-41d4-a716-446655440000
+        type: string
+      token:
+        example: 2602ABC123-a8f3b2c1d4e5
+        type: string
+      updated_at:
+        example: "2024-06-10T09:00:00Z"
+        type: string
+    type: object
   transformations.OutputTenant:
     properties:
       date_of_birth:
@@ -2112,29 +2643,14 @@ definitions:
       cancelled_at:
         example: "2024-06-02T12:00:00Z"
         type: string
-      cancelled_by:
-        $ref: '#/definitions/transformations.OutputClientUser'
-      cancelled_by_id:
-        example: user-456
-        type: string
       code:
         example: 9ucfjd3p
         type: string
       completed_at:
         example: "2024-06-01T12:00:00Z"
         type: string
-      completed_by:
-        $ref: '#/definitions/transformations.OutputClientUser'
-      completed_by_id:
-        example: user-123
-        type: string
       created_at:
         example: "2024-06-01T09:00:00Z"
-        type: string
-      created_by:
-        $ref: '#/definitions/transformations.OutputClientUser'
-      created_by_id:
-        example: 72432ce6-5620-4ecf-a862-4bf2140556a1
         type: string
       current_address:
         example: 123 Main St, Accra
@@ -2146,7 +2662,7 @@ definitions:
         example: "2024-07-01T00:00:00Z"
         type: string
       desired_unit:
-        $ref: '#/definitions/transformations.AdminOutputUnit'
+        $ref: '#/definitions/transformations.OutputUnit'
       desired_unit_id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
@@ -2160,10 +2676,7 @@ definitions:
         example: "+1122334455"
         type: string
       employer:
-        example: UPSA
-        type: string
-      employer_type:
-        example: WORKER
+        example: Tech Ltd.
         type: string
       first_name:
         example: John
@@ -2195,20 +2708,6 @@ definitions:
       last_name:
         example: Doe
         type: string
-      lease_aggreement_document_mode:
-        example: MANUAL
-        type: string
-      lease_agreement_document_property_manager_signed_at:
-        example: "2024-06-07T12:00:00Z"
-        type: string
-      lease_agreement_document_property_manager_signed_by:
-        $ref: '#/definitions/transformations.OutputClientUser'
-      lease_agreement_document_property_manager_signed_by_id:
-        example: user-789
-        type: string
-      lease_agreement_document_tenant_signed_at:
-        example: "2024-06-08T12:00:00Z"
-        type: string
       lease_agreement_document_url:
         example: https://example.com/lease.pdf
         type: string
@@ -2219,7 +2718,7 @@ definitions:
         example: Ghanaian
         type: string
       occupation:
-        example: STUDENT
+        example: Software Engineer
         type: string
       occupation_address:
         example: 456 Tech Ave, Accra
@@ -3711,6 +4210,13 @@ paths:
           type: string
         name: tags
         type: array
+      - enum:
+        - TEMPLATE
+        - DOCUMENT
+        example: DOCUMENT
+        in: query
+        name: type
+        type: string
       produces:
       - application/json
       responses:
@@ -3724,7 +4230,7 @@ paths:
                     $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
                   rows:
                     items:
-                      $ref: '#/definitions/transformations.OutputDocument'
+                      $ref: '#/definitions/transformations.OutputAdminDocument'
                     type: array
                 type: object
             type: object
@@ -3764,7 +4270,7 @@ paths:
           schema:
             properties:
               data:
-                $ref: '#/definitions/transformations.OutputDocument'
+                $ref: '#/definitions/transformations.OutputAdminDocument'
             type: object
         "400":
           description: Bad Request
@@ -3840,7 +4346,7 @@ paths:
           schema:
             properties:
               data:
-                $ref: '#/definitions/transformations.OutputDocument'
+                $ref: '#/definitions/transformations.OutputAdminDocument'
             type: object
         "400":
           description: Bad Request
@@ -3884,7 +4390,7 @@ paths:
           schema:
             properties:
               data:
-                $ref: '#/definitions/transformations.OutputDocument'
+                $ref: '#/definitions/transformations.OutputAdminDocument'
             type: object
         "400":
           description: Bad Request
@@ -6218,6 +6724,161 @@ paths:
       summary: Get property by slug
       tags:
       - Properties
+  /api/v1/signing:
+    post:
+      consumes:
+      - application/json
+      description: Generate a signing token for a document signer
+      parameters:
+      - description: Token details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.GenerateTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Token created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminSigningToken'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Generate a signing token
+      tags:
+      - Signing
+  /api/v1/signing/{token}/sign:
+    post:
+      consumes:
+      - application/json
+      description: Submit a signature for a document using a signing token
+      parameters:
+      - description: Signing token
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: Signature details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SignDocumentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Signature created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputDocumentSignature'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Submit a signature
+      tags:
+      - Signing
+  /api/v1/signing/{token}/verify:
+    get:
+      description: Validate a signing token and return document + signer info
+      parameters:
+      - description: Signing token
+        in: path
+        name: token
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token verified successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputSigningToken'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+      summary: Verify a signing token
+      tags:
+      - Signing
+  /api/v1/signing/direct:
+    post:
+      consumes:
+      - application/json
+      description: Submit a signature for a document using tenant application or lease
+        context (for PMs)
+      parameters:
+      - description: Signature details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SignDocumentPMRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Signature created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputDocumentSignature'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Submit a signature
+      tags:
+      - Signing
   /api/v1/tenant-applications:
     get:
       consumes:
@@ -6367,7 +7028,7 @@ paths:
                     $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
                   rows:
                     items:
-                      $ref: '#/definitions/transformations.OutputTenantApplication'
+                      $ref: '#/definitions/transformations.OutputAdminTenantApplication'
                     type: array
                 type: object
             type: object
@@ -6407,7 +7068,7 @@ paths:
           schema:
             properties:
               data:
-                $ref: '#/definitions/transformations.OutputTenantApplication'
+                $ref: '#/definitions/transformations.OutputAdminTenantApplication'
             type: object
         "400":
           description: Error occurred when creating a tenant application
@@ -6487,7 +7148,7 @@ paths:
           schema:
             properties:
               data:
-                $ref: '#/definitions/transformations.OutputTenantApplication'
+                $ref: '#/definitions/transformations.OutputAdminTenantApplication'
             type: object
         "400":
           description: Error occurred when fetching a tenant application
@@ -6534,7 +7195,7 @@ paths:
           schema:
             properties:
               data:
-                $ref: '#/definitions/transformations.OutputTenantApplication'
+                $ref: '#/definitions/transformations.OutputAdminTenantApplication'
             type: object
         "400":
           description: Error occurred when updating a tenant application

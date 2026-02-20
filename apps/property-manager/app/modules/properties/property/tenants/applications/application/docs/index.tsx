@@ -1,5 +1,6 @@
 import { FileText, Plus } from 'lucide-react'
 import { useState } from 'react'
+import { useParams, useRouteLoaderData } from 'react-router'
 import { AddDocumentModal } from './add-document-modal'
 import { AttachedDocumentView } from './attached-document-view'
 import type { AttachedDocument } from './types'
@@ -12,6 +13,7 @@ import {
 	CardTitle,
 } from '~/components/ui/card'
 import { useProperty } from '~/providers/property-provider'
+import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.applications.$applicationId'
 
 // TODO: replace with real lease data from API
 // const mockAttachedDoc: AttachedDocument | null = null
@@ -28,11 +30,17 @@ const mockAttachedDoc: AttachedDocument = {
 }
 
 export function PropertyTenantApplicationDocs() {
+	const loaderData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>(
+		'routes/_auth.properties.$propertyId.tenants.applications.$applicationId',
+	)
+	const { applicationId } = useParams()
 	const { clientUserProperty } = useProperty()
 	const [open, setOpen] = useState(false)
 
 	const property_id = clientUserProperty?.property?.id
 	const attachedDoc = mockAttachedDoc
+
+	if(!loaderData?.tenantApplication) return null
 
 	return (
 		<Card className="shadow-none">
@@ -46,7 +54,7 @@ export function PropertyTenantApplicationDocs() {
 			<CardContent>
 				{attachedDoc ? (
 					<AttachedDocumentView
-						doc={attachedDoc}
+						tenantApplication={loaderData.tenantApplication}
 						onChangeDocument={() => setOpen(true)}
 						onClearDocument={() => {
 							// TODO: call API to remove attached document
@@ -77,6 +85,7 @@ export function PropertyTenantApplicationDocs() {
 				open={open}
 				onOpenChange={setOpen}
 				propertyId={property_id}
+				applicationId={applicationId}
 				attachedDoc={attachedDoc}
 			/>
 		</Card>

@@ -258,7 +258,14 @@ export function Step0() {
 			<InviteTenantModal
 				opened={openInviteTenantModal}
 				setOpened={setOpenInviteTenantModal}
-				data={formData}
+				data={{
+					email: formData.email,
+					phone: formData.phone,
+					desired_unit: {
+						id: watch('desired_unit_id'),
+						name: watch('desired_unit'),
+					}
+				}}
 				admin_id={admin_id}
 			/>
 		</>

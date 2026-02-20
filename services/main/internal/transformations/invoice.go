@@ -27,8 +27,8 @@ type OutputInvoice struct {
 
 	ContextType string `json:"context_type" example:"LEASE_RENT"`
 
-	ContextTenantApplicationID *string                  `json:"context_tenant_application_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	ContextTenantApplication   *OutputTenantApplication `json:"context_tenant_application,omitempty"`
+	ContextTenantApplicationID *string                       `json:"context_tenant_application_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	ContextTenantApplication   *OutputAdminTenantApplication `json:"context_tenant_application,omitempty"`
 
 	ContextLeaseID *string     `json:"context_lease_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 	ContextLease   map[any]any `json:"context_lease,omitempty"`
@@ -74,7 +74,7 @@ func DBInvoiceToRest(i *models.Invoice) any {
 		"payee_client":                   DBClientToRestClient(i.PayeeClient),
 		"context_type":                   i.ContextType,
 		"context_tenant_application_id":  i.ContextTenantApplicationID,
-		"context_tenant_application":     DBTenantApplicationToRest(i.ContextTenantApplication),
+		"context_tenant_application":     DBAdminTenantApplicationToRest(i.ContextTenantApplication),
 		"context_lease_id":               i.ContextLeaseID,
 		"context_lease":                  DBAdminLeaseToRest(i.ContextLease),
 		"context_maintenance_request_id": i.ContextMaintenanceRequestID,

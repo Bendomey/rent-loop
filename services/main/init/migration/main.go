@@ -34,6 +34,8 @@ func updateMigration(db *gorm.DB) error {
 		&models.Invoice{},
 		&models.InvoiceLineItem{},
 		&models.Payment{},
+		&models.DocumentSignature{},
+		&models.SigningToken{},
 		// &models.MaintenanceRequest{},
 		// &models.MaintenanceRequestActivityLog{},
 		// &models.Announcement{},
@@ -64,8 +66,6 @@ func ServiceAutoMigration(db *gorm.DB) error {
 	m = gormigrate.New(db, gormigrate.DefaultOptions, []*gormigrate.Migration{
 		jobs.SeedSuperAdmin(),
 		jobs.SeedSystemOfflinePaymentAccount(),
-		jobs.AddLifecycleActorFieldsLease(),
-		jobs.AddEmployerTypeTenantApplications(),
 	})
 	m.Migrate()
 
