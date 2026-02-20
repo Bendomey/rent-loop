@@ -125,6 +125,8 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		DesiredUnitId:                  input.DesiredUnitId,
 		RentFee:                        unit.RentFee,
 		RentFeeCurrency:                unit.RentFeeCurrency,
+		StayDurationFrequency:          &unit.PaymentFrequency,
+		PaymentFrequency:               &unit.PaymentFrequency,
 		FirstName:                      input.FirstName,
 		OtherNames:                     input.OtherNames,
 		LastName:                       input.LastName,

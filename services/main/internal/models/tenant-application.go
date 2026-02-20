@@ -28,7 +28,7 @@ type TenantApplication struct {
 
 	// move in details
 	DesiredMoveInDate     *time.Time
-	StayDurationFrequency *string // hours, days, months
+	StayDurationFrequency *string // HOURLY | WEEKLY | DAILY | MONTHLY
 	StayDuration          *int64
 
 	// financial setup
