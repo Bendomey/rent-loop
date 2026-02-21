@@ -64,7 +64,7 @@ interface TenantApplication {
 	lease_agreement_document_url: Nullable<string>
 
 	lease_agreement_document_id: Nullable<string>
-	lease_agreement_document: Nullable<Document>
+	lease_agreement_document: Nullable<RentloopDocument>
 	lease_agreement_document_status: Nullable<
 		'DRAFT' | 'FINALIZED' | 'SIGNING' | 'SIGNED'
 	>
