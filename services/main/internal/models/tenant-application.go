@@ -51,6 +51,8 @@ type TenantApplication struct {
 	LeaseAgreementDocument       *Document
 	LeaseAgreementDocumentStatus *string // "DRAFT" | "FINALIZED" | "SIGNING" | "SIGNED"
 
+	LeaseAgreementDocumentSignatures []DocumentSignature `gorm:"foreignKey:TenantApplicationId"`
+
 	// Basic details
 	FirstName       string `gorm:"not null;"`
 	OtherNames      *string

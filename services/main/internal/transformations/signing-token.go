@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
-	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/gofrs/uuid"
 )
 
@@ -32,19 +31,9 @@ type OutputAdminSigningToken struct {
 	UpdatedAt           time.Time                     `json:"updated_at"                      example:"2024-06-10T09:00:00Z"`
 }
 
-func DBAdminSigningTokenToRest(services services.Services, i *models.SigningToken) (any, error) {
+func DBAdminSigningTokenToRest(i *models.SigningToken) any {
 	if i == nil || i.ID == uuid.Nil {
-		return nil, nil
-	}
-
-	tenantApplication, tenantApplicationErr := DBAdminTenantApplicationToRest(services, i.TenantApplication)
-	if tenantApplicationErr != nil {
-		return nil, tenantApplicationErr
-	}
-
-	lease, leaseErr := DBAdminLeaseToRest(services, i.Lease)
-	if leaseErr != nil {
-		return nil, leaseErr
+		return nil
 	}
 
 	data := map[string]any{
@@ -53,9 +42,9 @@ func DBAdminSigningTokenToRest(services services.Services, i *models.SigningToke
 		"document_id":           i.DocumentID,
 		"document":              DBAdminDocumentToRestDocument(&i.Document),
 		"tenant_application_id": i.TenantApplicationID,
-		"tenant_application":    tenantApplication,
+		"tenant_application":    DBAdminTenantApplicationToRest(i.TenantApplication),
 		"lease_id":              i.LeaseID,
-		"lease":                 lease,
+		"lease":                 DBAdminLeaseToRest(i.Lease),
 		"role":                  i.Role,
 		"signer_name":           i.SignerName,
 		"signer_email":          i.SignerEmail,
@@ -71,7 +60,7 @@ func DBAdminSigningTokenToRest(services services.Services, i *models.SigningToke
 		"updated_at":            i.UpdatedAt,
 	}
 
-	return data, nil
+	return data
 }
 
 type OutputSigningToken struct {

@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
-	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/gofrs/uuid"
 )
 
@@ -55,19 +54,9 @@ type OutputInvoice struct {
 	UpdatedAt time.Time `json:"updated_at" example:"2024-06-10T09:00:00Z"`
 }
 
-func DBInvoiceToRest(services services.Services, i *models.Invoice) (any, error) {
+func DBInvoiceToRest(i *models.Invoice) any {
 	if i == nil || i.ID == uuid.Nil {
-		return nil, nil
-	}
-
-	tenantApplication, tenantApplicationErr := DBAdminTenantApplicationToRest(services, i.ContextTenantApplication)
-	if tenantApplicationErr != nil {
-		return nil, tenantApplicationErr
-	}
-
-	lease, leaseErr := DBAdminLeaseToRest(services, i.ContextLease)
-	if leaseErr != nil {
-		return nil, leaseErr
+		return nil
 	}
 
 	data := map[string]any{
@@ -85,9 +74,9 @@ func DBInvoiceToRest(services services.Services, i *models.Invoice) (any, error)
 		"payee_client":                   DBClientToRestClient(i.PayeeClient),
 		"context_type":                   i.ContextType,
 		"context_tenant_application_id":  i.ContextTenantApplicationID,
-		"context_tenant_application":     tenantApplication,
+		"context_tenant_application":     DBAdminTenantApplicationToRest(i.ContextTenantApplication),
 		"context_lease_id":               i.ContextLeaseID,
-		"context_lease":                  lease,
+		"context_lease":                  DBAdminLeaseToRest(i.ContextLease),
 		"context_maintenance_request_id": i.ContextMaintenanceRequestID,
 		"total_amount":                   i.TotalAmount,
 		"taxes":                          i.Taxes,
@@ -104,7 +93,7 @@ func DBInvoiceToRest(services services.Services, i *models.Invoice) (any, error)
 		"updated_at":                     i.UpdatedAt,
 	}
 
-	return data, nil
+	return data
 }
 
 func DBInvoiceLineItemsToRest(items []models.InvoiceLineItem) []any {

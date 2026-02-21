@@ -1,13 +1,9 @@
 package transformations
 
 import (
-	"context"
 	"time"
 
-	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
-	"github.com/Bendomey/rent-loop/services/main/internal/repository"
-	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/gofrs/uuid"
 )
 
@@ -87,21 +83,9 @@ type OutputAdminTenantApplication struct {
 	UpdatedAt time.Time `json:"updated_at" example:"2024-06-10T09:00:00Z"`
 }
 
-func DBAdminTenantApplicationToRest(services services.Services, i *models.TenantApplication) (any, error) {
+func DBAdminTenantApplicationToRest(i *models.TenantApplication) any {
 	if i == nil || i.ID == uuid.Nil {
-		return nil, nil
-	}
-
-	signatures, signatureErr := services.SigningService.ListDocumentSignatures(context.Background(), lib.FilterQuery{
-		Page:     1,
-		PageSize: 100,
-	}, repository.ListDocumentSignaturesFilter{
-		DocumentID:          i.LeaseAgreementDocumentID,
-		TenantApplicationID: lib.GetStringPointer(i.ID.String()),
-	})
-
-	if signatureErr != nil {
-		return nil, signatureErr
+		return nil
 	}
 
 	data := map[string]any{
@@ -131,7 +115,7 @@ func DBAdminTenantApplicationToRest(services services.Services, i *models.Tenant
 		"lease_agreement_document_id":         i.LeaseAgreementDocumentID,
 		"lease_agreement_document":            DBDocumentToRestDocument(i.LeaseAgreementDocument),
 		"lease_agreement_document_status":     i.LeaseAgreementDocumentStatus,
-		"lease_agreement_document_signatures": DBDocumentSignaturesToRest(signatures),
+		"lease_agreement_document_signatures": DBDocumentSignaturesToRest(&i.LeaseAgreementDocumentSignatures),
 		"first_name":                          i.FirstName,
 		"other_names":                         i.OtherNames,
 		"last_name":                           i.LastName,
@@ -164,7 +148,7 @@ func DBAdminTenantApplicationToRest(services services.Services, i *models.Tenant
 		"updated_at":                          i.UpdatedAt,
 	}
 
-	return data, nil
+	return data
 }
 
 type OutputTenantApplication struct {

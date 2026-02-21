@@ -120,18 +120,11 @@ func (h *TenantApplicationHandler) CreateTenantApplication(w http.ResponseWriter
 		return
 	}
 
-	tenantApplicationTransformed, transformErr := transformations.DBAdminTenantApplicationToRest(
-		h.services,
-		tenantApplication,
-	)
-	if transformErr != nil {
-		HandleErrorResponse(w, transformErr)
-		return
-	}
-
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": tenantApplicationTransformed,
+		"data": transformations.DBAdminTenantApplicationToRest(
+			tenantApplication,
+		),
 	})
 }
 
@@ -266,21 +259,12 @@ func (h *TenantApplicationHandler) ListTenantApplications(w http.ResponseWriter,
 
 	tenantApplicationsTransformed := make([]any, 0)
 	for _, tenantApplication := range tenantApplications {
-		tenantApplicationTransformed, transformErr := transformations.DBAdminTenantApplicationToRest(
-			h.services,
-			&tenantApplication,
-		)
-
-		if transformErr != nil {
-			HandleErrorResponse(w, transformErr)
-			return
-		}
-
 		tenantApplicationsTransformed = append(
 			tenantApplicationsTransformed,
-			tenantApplicationTransformed,
+			transformations.DBAdminTenantApplicationToRest(
+				&tenantApplication,
+			),
 		)
-
 	}
 
 	json.NewEncoder(w).
@@ -322,17 +306,10 @@ func (h *TenantApplicationHandler) GetTenantApplication(w http.ResponseWriter, r
 		return
 	}
 
-	tenantApplicationTransformed, transformErr := transformations.DBAdminTenantApplicationToRest(
-		h.services,
-		tenantApplication,
-	)
-	if transformErr != nil {
-		HandleErrorResponse(w, transformErr)
-		return
-	}
-
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": tenantApplicationTransformed,
+		"data": transformations.DBAdminTenantApplicationToRest(
+			tenantApplication,
+		),
 	})
 }
 
@@ -471,18 +448,10 @@ func (h *TenantApplicationHandler) UpdateTenantApplication(w http.ResponseWriter
 		HandleErrorResponse(w, updateTenantApplicationErr)
 		return
 	}
-
-	tenantApplicationTransformed, transformErr := transformations.DBAdminTenantApplicationToRest(
-		h.services,
-		tenantApplication,
-	)
-	if transformErr != nil {
-		HandleErrorResponse(w, transformErr)
-		return
-	}
-
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": tenantApplicationTransformed,
+		"data": transformations.DBAdminTenantApplicationToRest(
+			tenantApplication,
+		),
 	})
 }
 
@@ -665,15 +634,9 @@ func (h *TenantApplicationHandler) GenerateInvoice(w http.ResponseWriter, r *htt
 		return
 	}
 
-	transformed, transformErr := transformations.DBInvoiceToRest(h.services, invoice)
-	if transformErr != nil {
-		HandleErrorResponse(w, transformErr)
-		return
-	}
-
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformed,
+		"data": transformations.DBInvoiceToRest(invoice),
 	})
 }
 

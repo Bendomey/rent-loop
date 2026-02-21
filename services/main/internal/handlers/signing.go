@@ -78,15 +78,9 @@ func (h *SigningHandler) GenerateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	signingTokenTransformed, signingTokenTransformedErr := transformations.DBAdminSigningTokenToRest(h.services, token)
-	if signingTokenTransformedErr != nil {
-		HandleErrorResponse(w, signingTokenTransformedErr)
-		return
-	}
-
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": signingTokenTransformed,
+		"data": transformations.DBAdminSigningTokenToRest(token),
 	})
 }
 
