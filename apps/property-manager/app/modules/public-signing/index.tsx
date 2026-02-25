@@ -14,7 +14,7 @@ import type { loader } from '~/routes/sign.$token'
 function DocumentExpired() {
 	return (
 		<div className="flex min-h-screen items-center justify-center bg-zinc-100">
-			<div className="w-full max-w-md rounded-lg bg-white p-8 shadow-sm text-center">
+			<div className="w-full max-w-md rounded-lg bg-white p-8 text-center shadow-sm">
 				<div className="mb-4 flex justify-center">
 					<div className="flex h-14 w-14 items-center justify-center rounded-full bg-zinc-100">
 						<svg
@@ -33,7 +33,9 @@ function DocumentExpired() {
 						</svg>
 					</div>
 				</div>
-				<h1 className="text-xl font-semibold text-zinc-900">Link Unavailable</h1>
+				<h1 className="text-xl font-semibold text-zinc-900">
+					Link Unavailable
+				</h1>
 				<p className="mt-2 text-sm text-zinc-500">
 					This signing link has expired or the document no longer exists. Please
 					contact the sender to request a new link.
