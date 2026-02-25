@@ -6110,6 +6110,306 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/signing-tokens": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List signing tokens with optional filters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Signing"
+                ],
+                "summary": "List signing tokens",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "created_by_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "document_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "lease_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "TENANT",
+                            "PM_WITNESS",
+                            "TENANT_WITNESS"
+                        ],
+                        "type": "string",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "tenant_application_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputAdminSigningToken"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/signing-tokens/{signing_token_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update signer details on a token that has not yet been used",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Signing"
+                ],
+                "summary": "Update a signing token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid4",
+                        "description": "Signing token ID",
+                        "name": "signing_token_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Signer details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateSigningTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdminSigningToken"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/signing-tokens/{signing_token_id}/resend": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Extend the token expiry by 7 days and resend the notification to the signer",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Signing"
+                ],
+                "summary": "Resend a signing token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid4",
+                        "description": "Signing token ID",
+                        "name": "signing_token_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdminSigningToken"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/signing/direct": {
             "post": {
                 "description": "Submit a signature for a document using tenant application or lease context (for PMs)",
@@ -8807,6 +9107,23 @@ const docTemplate = `{
                         "beachfront",
                         "furnished"
                     ]
+                }
+            }
+        },
+        "handlers.UpdateSigningTokenRequest": {
+            "type": "object",
+            "properties": {
+                "signer_email": {
+                    "type": "string",
+                    "example": "jane@example.com"
+                },
+                "signer_name": {
+                    "type": "string",
+                    "example": "Jane Doe"
+                },
+                "signer_phone": {
+                    "type": "string",
+                    "example": "+233201234567"
                 }
             }
         },

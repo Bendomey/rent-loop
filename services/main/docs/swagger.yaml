@@ -965,6 +965,18 @@ definitions:
           type: string
         type: array
     type: object
+  handlers.UpdateSigningTokenRequest:
+    properties:
+      signer_email:
+        example: jane@example.com
+        type: string
+      signer_name:
+        example: Jane Doe
+        type: string
+      signer_phone:
+        example: "+233201234567"
+        type: string
+    type: object
   handlers.UpdateTenantApplicationRequest:
     properties:
       current_address:
@@ -6793,6 +6805,199 @@ paths:
       security:
       - BearerAuth: []
       summary: Generate a signing token
+      tags:
+      - Signing
+  /api/v1/signing-tokens:
+    get:
+      description: List signing tokens with optional filters
+      parameters:
+      - in: query
+        name: created_by_id
+        type: string
+      - in: query
+        name: document_id
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - in: query
+        name: lease_id
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - enum:
+        - TENANT
+        - PM_WITNESS
+        - TENANT_WITNESS
+        in: query
+        name: role
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - in: query
+        name: tenant_application_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputAdminSigningToken'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List signing tokens
+      tags:
+      - Signing
+  /api/v1/signing-tokens/{signing_token_id}:
+    patch:
+      consumes:
+      - application/json
+      description: Update signer details on a token that has not yet been used
+      parameters:
+      - description: Signing token ID
+        format: uuid4
+        in: path
+        name: signing_token_id
+        required: true
+        type: string
+      - description: Signer details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateSigningTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminSigningToken'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update a signing token
+      tags:
+      - Signing
+  /api/v1/signing-tokens/{signing_token_id}/resend:
+    post:
+      description: Extend the token expiry by 7 days and resend the notification to
+        the signer
+      parameters:
+      - description: Signing token ID
+        format: uuid4
+        in: path
+        name: signing_token_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminSigningToken'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Resend a signing token
       tags:
       - Signing
   /api/v1/signing/{token}/sign:

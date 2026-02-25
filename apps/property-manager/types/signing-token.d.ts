@@ -22,6 +22,13 @@ interface AdminSigningToken {
 	updated_at: Date
 }
 
+interface FetchSigningTokenFilter {
+	document_id?: string
+	tenant_application_id?: string
+	lease_id?: string
+	role?: 'TENANT' | 'PM_WITNESS' | 'TENANT_WITNESS'
+}
+
 interface SigningToken {
 	id: string
 	token: string

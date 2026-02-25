@@ -3,8 +3,10 @@ package services
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
@@ -17,6 +19,22 @@ type SigningService interface {
 	VerifyToken(ctx context.Context, tokenStr string, populate *[]string) (*models.SigningToken, error)
 	SignDocument(ctx context.Context, input SignDocumentInput) (*models.DocumentSignature, error)
 	SignDocumentByPM(ctx context.Context, input SignDocumentPMInput) (*models.DocumentSignature, error)
+	UpdateSigningTokenDetails(
+		ctx context.Context,
+		tokenID string,
+		input UpdateSigningTokenDetailsInput,
+	) (*models.SigningToken, error)
+	ResendSigningToken(ctx context.Context, tokenID string) (*models.SigningToken, error)
+	ListSigningTokens(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters repository.ListSigningTokensFilter,
+	) (*[]models.SigningToken, error)
+	CountSigningTokens(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters repository.ListSigningTokensFilter,
+	) (int64, error)
 	ListDocumentSignatures(
 		ctx context.Context,
 		filterQuery lib.FilterQuery,
@@ -77,6 +95,8 @@ func (s *signingService) GenerateToken(
 			},
 		})
 	}
+
+	s.sendSigningTokenNotification(ctx, token, false)
 
 	return token, nil
 }
@@ -269,6 +289,176 @@ func (s *signingService) SignDocumentByPM(
 	}
 
 	return sig, nil
+}
+
+type UpdateSigningTokenDetailsInput struct {
+	SignerName  lib.Optional[string]
+	SignerEmail lib.Optional[string]
+	SignerPhone lib.Optional[string]
+}
+
+func (s *signingService) sendSigningTokenNotification(
+	ctx context.Context,
+	token *models.SigningToken,
+	isResend bool,
+) {
+	signerName := "there"
+	if token.SignerName != nil {
+		signerName = *token.SignerName
+	}
+
+	expiresAt := token.ExpiresAt.Format("January 2, 2006 at 15:04 UTC")
+
+	subject := lib.SIGNING_TOKEN_INVITE_SUBJECT
+	body := lib.SIGNING_TOKEN_INVITE_BODY
+	if isResend {
+		subject = lib.SIGNING_TOKEN_RESENT_SUBJECT
+		body = lib.SIGNING_TOKEN_RESENT_BODY
+	}
+
+	message := strings.ReplaceAll(body, "{{signer_name}}", signerName)
+	message = strings.ReplaceAll(message, "{{token}}", token.Token)
+	message = strings.ReplaceAll(message, "{{expires_at}}", expiresAt)
+
+	if token.SignerEmail != nil {
+		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+			Recipient: *token.SignerEmail,
+			Subject:   subject,
+			TextBody:  message,
+		})
+	}
+
+	if token.SignerPhone != nil {
+		go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
+			Recipient: *token.SignerPhone,
+			Message:   message,
+		})
+	}
+}
+
+func (s *signingService) UpdateSigningTokenDetails(
+	ctx context.Context,
+	tokenID string,
+	input UpdateSigningTokenDetailsInput,
+) (*models.SigningToken, error) {
+	token, err := s.repo.GetSigningTokenByID(ctx, tokenID, nil)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("SigningTokenNotFound", &pkg.RentLoopErrorParams{Err: err})
+		}
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "UpdateSigningTokenDetails",
+				"action":   "fetching signing token",
+			},
+		})
+	}
+
+	if token.IsUsed() {
+		return nil, pkg.BadRequestError("SigningTokenAlreadyUsed", nil)
+	}
+
+	if input.SignerName.IsSet {
+		token.SignerName = input.SignerName.Ptr()
+	}
+
+	if input.SignerEmail.IsSet {
+		token.SignerEmail = input.SignerEmail.Ptr()
+	}
+
+	if input.SignerPhone.IsSet {
+		token.SignerPhone = input.SignerPhone.Ptr()
+	}
+
+	if updateErr := s.repo.UpdateSigningToken(ctx, token); updateErr != nil {
+		return nil, pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateErr,
+			Metadata: map[string]string{
+				"function": "UpdateSigningTokenDetails",
+				"action":   "updating signing token",
+			},
+		})
+	}
+
+	return token, nil
+}
+
+func (s *signingService) ResendSigningToken(
+	ctx context.Context,
+	tokenID string,
+) (*models.SigningToken, error) {
+	token, err := s.repo.GetSigningTokenByID(ctx, tokenID, nil)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("SigningTokenNotFound", &pkg.RentLoopErrorParams{Err: err})
+		}
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ResendSigningToken",
+				"action":   "fetching signing token",
+			},
+		})
+	}
+
+	if token.IsUsed() {
+		return nil, pkg.BadRequestError("SigningTokenAlreadyUsed", nil)
+	}
+
+	token.ExpiresAt = time.Now().Add(7 * 24 * time.Hour)
+
+	if updateErr := s.repo.UpdateSigningToken(ctx, token); updateErr != nil {
+		return nil, pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateErr,
+			Metadata: map[string]string{
+				"function": "ResendSigningToken",
+				"action":   "extending signing token expiry",
+			},
+		})
+	}
+
+	s.sendSigningTokenNotification(ctx, token, true)
+
+	return token, nil
+}
+
+func (s *signingService) ListSigningTokens(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters repository.ListSigningTokensFilter,
+) (*[]models.SigningToken, error) {
+	tokens, err := s.repo.ListSigningTokens(ctx, filterQuery, filters)
+	if err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ListSigningTokens",
+				"action":   "listing signing tokens",
+			},
+		})
+	}
+
+	return tokens, nil
+}
+
+func (s *signingService) CountSigningTokens(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters repository.ListSigningTokensFilter,
+) (int64, error) {
+	count, err := s.repo.CountSigningTokens(ctx, filterQuery, filters)
+	if err != nil {
+		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CountSigningTokens",
+				"action":   "counting signing tokens",
+			},
+		})
+	}
+
+	return count, nil
 }
 
 func (s *signingService) ListDocumentSignatures(

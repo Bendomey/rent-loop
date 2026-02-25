@@ -1,12 +1,14 @@
 import { CheckCircle, FileText, Pen, PenLine, X } from 'lucide-react'
 import React from 'react'
 import { Link, useParams } from 'react-router'
-import { PromptTenantButton } from './prompt-tenant-button'
+import { PromptSignatureButton } from './prompt-signature-button'
 import { SigningStatusRow } from './signing-status-row'
+import { useSigningTokens } from '~/api/signing'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Separator } from '~/components/ui/separator'
 import { Spinner } from '~/components/ui/spinner'
+import { getWitnessNodesFromContent } from '~/lib/document.utils'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 
@@ -14,46 +16,6 @@ interface AttachedDocumentViewProps {
 	tenantApplication: TenantApplication
 	onClearDocument: () => void
 	isClearing: boolean
-}
-
-type WitnessRole = 'pm_witness' | 'tenant_witness'
-interface WitnessNode {
-	role: WitnessRole
-	label: string
-}
-
-function getWitnessNodesFromContent(
-	content: string | null | undefined,
-): WitnessNode[] {
-	const nodes: WitnessNode[] = []
-	if (!content) return nodes
-	try {
-		const state = JSON.parse(content) as Record<string, unknown>
-		function walk(node: Record<string, unknown>) {
-			if (node.type === 'signature') {
-				const role = node.role as string
-				if (role === 'pm_witness' || role === 'tenant_witness') {
-					nodes.push({
-						role,
-						label:
-							(node.label as string) ||
-							(role === 'pm_witness'
-								? 'Property Manager Witness'
-								: 'Tenant Witness'),
-					})
-				}
-			}
-			if (Array.isArray(node.children)) {
-				for (const child of node.children) {
-					walk(child as Record<string, unknown>)
-				}
-			}
-		}
-		walk(state.root as Record<string, unknown>)
-	} catch {
-		// ignore parse errors
-	}
-	return nodes
 }
 
 export function AttachedDocumentView({
@@ -83,10 +45,16 @@ export function AttachedDocumentView({
 	const tenantWitnessSignatures = (
 		tenantApplication.lease_agreement_document_signatures ?? []
 	).filter((sig) => sig.role === 'TENANT_WITNESS')
-	const pmWitnessCount = witnessNodes.filter((n) => n.role === 'pm_witness').length
-	const tenantWitnessCount = witnessNodes.filter((n) => n.role === 'tenant_witness').length
+	const pmWitnessCount = witnessNodes.filter(
+		(n) => n.role === 'pm_witness',
+	).length
+	const tenantWitnessCount = witnessNodes.filter(
+		(n) => n.role === 'tenant_witness',
+	).length
 	const witnessEntries = witnessNodes.map((node, idx) => {
-		const roleIdx = witnessNodes.slice(0, idx).filter((n) => n.role === node.role).length
+		const roleIdx = witnessNodes
+			.slice(0, idx)
+			.filter((n) => n.role === node.role).length
 		const sig =
 			node.role === 'pm_witness'
 				? pmWitnessSignatures[roleIdx]
@@ -94,8 +62,22 @@ export function AttachedDocumentView({
 		const showTag =
 			node.role === 'pm_witness' ? pmWitnessCount > 1 : tenantWitnessCount > 1
 		const label = showTag ? `${node.label} #${roleIdx + 1}` : node.label
-		return { label, signature: sig ?? null }
+		return { label, signature: sig ?? null, role: node.role, roleIdx }
 	})
+
+	const documentId = tenantApplication.lease_agreement_document_id
+	const { data: signingTokens } = useSigningTokens({
+		filters: {
+			document_id: documentId ?? undefined,
+			tenant_application_id: applicationId,
+		},
+	})
+
+	const tenantToken = signingTokens?.find((t) => t.role === 'TENANT') ?? null
+	const pmWitnessTokens =
+		signingTokens?.filter((t) => t.role === 'PM_WITNESS') ?? []
+	const tenantWitnessTokens =
+		signingTokens?.filter((t) => t.role === 'TENANT_WITNESS') ?? []
 
 	return (
 		<div className="space-y-4">
@@ -188,21 +170,23 @@ export function AttachedDocumentView({
 				<div className="space-y-3">
 					{tenantApplication.lease_agreement_document_status ===
 						'FINALIZED' && (
-							<div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-								<p className="text-xs text-amber-700">
-									Need to make changes?{' '}
-									<Link
-										to={`/properties/${propertyId}/tenants/applications/${applicationId}/lease-editor/${tenantApplication.lease_agreement_document_id}`}
-										className="font-medium underline underline-offset-2"
-									>
-										Open the editor
-									</Link>{' '}
-									and revert the document to draft.
-								</p>
-							</div>
-						)}
+						<div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+							<p className="text-xs text-amber-700">
+								Need to make changes?{' '}
+								<Link
+									to={`/properties/${propertyId}/tenants/applications/${applicationId}/lease-editor/${tenantApplication.lease_agreement_document_id}`}
+									className="font-medium underline underline-offset-2"
+								>
+									Open the editor
+								</Link>{' '}
+								and revert the document to draft.
+							</p>
+						</div>
+					)}
 
-					{['SIGNING', 'SIGNED'].includes(safeString(tenantApplication.lease_agreement_document_status)) && (
+					{['SIGNING', 'SIGNED'].includes(
+						safeString(tenantApplication.lease_agreement_document_status),
+					) && (
 						<div className="rounded-lg border border-green-200 bg-green-50 p-3">
 							<p className="text-xs text-green-700">
 								<Link
@@ -210,7 +194,8 @@ export function AttachedDocumentView({
 									className="font-medium underline underline-offset-2"
 								>
 									View the document
-								</Link>{' '} to see the signing status and details.
+								</Link>{' '}
+								to see the signing status and details.
 							</p>
 						</div>
 					)}
@@ -245,19 +230,42 @@ export function AttachedDocumentView({
 						signedBy={tenantSignature?.signed_by?.name}
 					/>
 
-					{!tenantSigned && <PromptTenantButton />}
+					{!tenantSigned && (
+						<PromptSignatureButton
+							existingToken={tenantToken}
+							documentId={safeString(documentId)}
+							role="TENANT"
+							tenantApplicationId={applicationId}
+						/>
+					)}
 
-					{witnessEntries.map((entry, idx) => (
-						<React.Fragment key={idx}>
-							<Separator />
-							<SigningStatusRow
-								label={entry.label}
-								signed={Boolean(entry.signature)}
-								signedAt={entry.signature?.created_at ?? null}
-								signedBy={entry.signature?.signed_by?.name ?? undefined}
-							/>
-						</React.Fragment>
-					))}
+					{witnessEntries.map((entry, idx) => {
+						const witnessToken =
+							entry.role === 'pm_witness'
+								? (pmWitnessTokens[entry.roleIdx] ?? null)
+								: (tenantWitnessTokens[entry.roleIdx] ?? null)
+						return (
+							<React.Fragment key={idx}>
+								<Separator />
+								<SigningStatusRow
+									label={entry.label}
+									signed={Boolean(entry.signature)}
+									signedAt={entry.signature?.created_at ?? null}
+									signedBy={entry.signature?.signed_by?.name ?? undefined}
+								/>
+								<PromptSignatureButton
+									existingToken={witnessToken}
+									documentId={safeString(documentId)}
+									role={
+										entry.role === 'pm_witness'
+											? 'PM_WITNESS'
+											: 'TENANT_WITNESS'
+									}
+									tenantApplicationId={applicationId}
+								/>
+							</React.Fragment>
+						)
+					})}
 				</div>
 			)}
 		</div>

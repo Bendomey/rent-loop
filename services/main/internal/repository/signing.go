@@ -10,8 +10,19 @@ import (
 
 type SigningRepository interface {
 	CreateSigningToken(ctx context.Context, token *models.SigningToken) error
+	GetSigningTokenByID(ctx context.Context, id string, populate *[]string) (*models.SigningToken, error)
 	GetSigningTokenByToken(ctx context.Context, tokenStr string, populate *[]string) (*models.SigningToken, error)
 	UpdateSigningToken(ctx context.Context, token *models.SigningToken) error
+	ListSigningTokens(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters ListSigningTokensFilter,
+	) (*[]models.SigningToken, error)
+	CountSigningTokens(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters ListSigningTokensFilter,
+	) (int64, error)
 	CreateDocumentSignature(ctx context.Context, sig *models.DocumentSignature) error
 	GetDocumentSignatureByQuery(ctx context.Context, query map[string]any) (*models.DocumentSignature, error)
 	ListDocumentSignatures(
@@ -36,6 +47,26 @@ func NewSigningRepository(DB *gorm.DB) SigningRepository {
 
 func (r *signingRepository) CreateSigningToken(ctx context.Context, token *models.SigningToken) error {
 	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Create(token).Error
+}
+
+func (r *signingRepository) GetSigningTokenByID(
+	ctx context.Context,
+	id string,
+	populate *[]string,
+) (*models.SigningToken, error) {
+	var token models.SigningToken
+	db := r.DB.WithContext(ctx).Where("id = ?", id)
+
+	if populate != nil {
+		for _, field := range *populate {
+			db = db.Preload(field)
+		}
+	}
+
+	if result := db.First(&token); result.Error != nil {
+		return nil, result.Error
+	}
+	return &token, nil
 }
 
 func (r *signingRepository) GetSigningTokenByToken(
@@ -81,6 +112,122 @@ func (r *signingRepository) GetDocumentSignatureByQuery(
 	}
 
 	return &sig, nil
+}
+
+type ListSigningTokensFilter struct {
+	DocumentID          *string
+	TenantApplicationID *string
+	LeaseID             *string
+	Role                *string
+	CreatedByID         *string
+	IDs                 *[]string
+}
+
+func SigningTokenDocumentIDScope(documentID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if documentID == nil {
+			return db
+		}
+		return db.Where("signing_tokens.document_id = ?", *documentID)
+	}
+}
+
+func SigningTokenTenantApplicationIDScope(tenantApplicationID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if tenantApplicationID == nil {
+			return db
+		}
+		return db.Where("signing_tokens.tenant_application_id = ?", *tenantApplicationID)
+	}
+}
+
+func SigningTokenLeaseIDScope(leaseID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if leaseID == nil {
+			return db
+		}
+		return db.Where("signing_tokens.lease_id = ?", *leaseID)
+	}
+}
+
+func SigningTokenRoleScope(role *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if role == nil {
+			return db
+		}
+		return db.Where("signing_tokens.role = ?", *role)
+	}
+}
+
+func SigningTokenCreatedByIDScope(createdByID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if createdByID == nil {
+			return db
+		}
+		return db.Where("signing_tokens.created_by_id = ?", *createdByID)
+	}
+}
+
+func (r *signingRepository) ListSigningTokens(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters ListSigningTokensFilter,
+) (*[]models.SigningToken, error) {
+	var tokens []models.SigningToken
+
+	db := r.DB.WithContext(ctx).
+		Scopes(
+			IDsFilterScope("signing_tokens", filters.IDs),
+			DateRangeScope("signing_tokens", filterQuery.DateRange),
+			SigningTokenDocumentIDScope(filters.DocumentID),
+			SigningTokenTenantApplicationIDScope(filters.TenantApplicationID),
+			SigningTokenLeaseIDScope(filters.LeaseID),
+			SigningTokenRoleScope(filters.Role),
+			SigningTokenCreatedByIDScope(filters.CreatedByID),
+			PaginationScope(filterQuery.Page, filterQuery.PageSize),
+			OrderScope("signing_tokens", filterQuery.OrderBy, filterQuery.Order),
+		)
+
+	if filterQuery.Populate != nil {
+		for _, field := range *filterQuery.Populate {
+			db = db.Preload(field)
+		}
+	}
+
+	result := db.Find(&tokens)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &tokens, nil
+}
+
+func (r *signingRepository) CountSigningTokens(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters ListSigningTokensFilter,
+) (int64, error) {
+	var count int64
+
+	result := r.DB.
+		WithContext(ctx).
+		Model(&models.SigningToken{}).
+		Scopes(
+			IDsFilterScope("signing_tokens", filters.IDs),
+			DateRangeScope("signing_tokens", filterQuery.DateRange),
+			SigningTokenDocumentIDScope(filters.DocumentID),
+			SigningTokenTenantApplicationIDScope(filters.TenantApplicationID),
+			SigningTokenLeaseIDScope(filters.LeaseID),
+			SigningTokenRoleScope(filters.Role),
+			SigningTokenCreatedByIDScope(filters.CreatedByID),
+		).
+		Count(&count)
+
+	if result.Error != nil {
+		return 0, result.Error
+	}
+
+	return count, nil
 }
 
 type ListDocumentSignaturesFilter struct {

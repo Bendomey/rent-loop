@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -172,6 +173,195 @@ func (h *SigningHandler) SignDocument(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": transformations.DBDocumentSignatureToRest(sig),
+	})
+}
+
+type ListSigningTokensFilterRequest struct {
+	lib.FilterQueryInput
+	DocumentID          *string  `json:"document_id"           validate:"omitempty,uuid4"`
+	TenantApplicationID *string  `json:"tenant_application_id" validate:"omitempty,uuid4"`
+	LeaseID             *string  `json:"lease_id"              validate:"omitempty,uuid4"`
+	Role                *string  `json:"role"                  validate:"omitempty,oneof=TENANT PM_WITNESS TENANT_WITNESS"`
+	CreatedByID         *string  `json:"created_by_id"         validate:"omitempty,uuid4"`
+	IDs                 []string `json:"ids"                   validate:"omitempty,dive,uuid4"`
+}
+
+// ListSigningTokens godoc
+//
+//	@Summary		List signing tokens
+//	@Description	List signing tokens with optional filters
+//	@Tags			Signing
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			q	query		ListSigningTokensFilterRequest	true	"Filter query"
+//	@Success		200	{object}	object{data=object{rows=[]transformations.OutputAdminSigningToken,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400	{object}	lib.HTTPError
+//	@Failure		401	{object}	string
+//	@Failure		500	{object}	string
+//	@Router			/api/v1/signing-tokens [get]
+func (h *SigningHandler) ListSigningTokens(w http.ResponseWriter, r *http.Request) {
+	_, currentUserOk := lib.ClientUserFromContext(r.Context())
+	if !currentUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	q := r.URL.Query()
+	documentID := q.Get("document_id")
+	tenantApplicationID := q.Get("tenant_application_id")
+	leaseID := q.Get("lease_id")
+	role := q.Get("role")
+	createdByID := q.Get("created_by_id")
+
+	filters := ListSigningTokensFilterRequest{
+		IDs: q["ids"],
+	}
+	if documentID != "" {
+		filters.DocumentID = &documentID
+	}
+	if tenantApplicationID != "" {
+		filters.TenantApplicationID = &tenantApplicationID
+	}
+	if leaseID != "" {
+		filters.LeaseID = &leaseID
+	}
+	if role != "" {
+		filters.Role = &role
+	}
+	if createdByID != "" {
+		filters.CreatedByID = &createdByID
+	}
+
+	if !lib.ValidateRequest(h.appCtx.Validator, filters, w) {
+		return
+	}
+
+	filterQuery, filterErr := lib.GenerateQuery(q)
+	if filterErr != nil {
+		HandleErrorResponse(w, filterErr)
+		return
+	}
+
+	if !lib.ValidateRequest(h.appCtx.Validator, filterQuery, w) {
+		return
+	}
+
+	input := repository.ListSigningTokensFilter{
+		DocumentID:          filters.DocumentID,
+		TenantApplicationID: filters.TenantApplicationID,
+		LeaseID:             filters.LeaseID,
+		Role:                filters.Role,
+		CreatedByID:         filters.CreatedByID,
+		IDs:                 lib.NullOrStringArray(filters.IDs),
+	}
+
+	tokens, tokensErr := h.service.ListSigningTokens(r.Context(), *filterQuery, input)
+	if tokensErr != nil {
+		HandleErrorResponse(w, tokensErr)
+		return
+	}
+
+	count, countErr := h.service.CountSigningTokens(r.Context(), *filterQuery, input)
+	if countErr != nil {
+		HandleErrorResponse(w, countErr)
+		return
+	}
+
+	rows := make([]interface{}, 0)
+	for i := range *tokens {
+		rows = append(rows, transformations.DBAdminSigningTokenToRest(&(*tokens)[i]))
+	}
+
+	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, rows, count))
+}
+
+type UpdateSigningTokenRequest struct {
+	SignerName  lib.Optional[string] `json:"signer_name"  validate:"omitempty"       swaggertype:"string" example:"Jane Doe"`
+	SignerEmail lib.Optional[string] `json:"signer_email" validate:"omitempty,email" swaggertype:"string" example:"jane@example.com"`
+	SignerPhone lib.Optional[string] `json:"signer_phone" validate:"omitempty"       swaggertype:"string" example:"+233201234567"`
+}
+
+// UpdateToken godoc
+//
+//	@Summary		Update a signing token
+//	@Description	Update signer details on a token that has not yet been used
+//	@Tags			Signing
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			signing_token_id	path		string						true	"Signing token ID"	format(uuid4)
+//	@Param			body				body		UpdateSigningTokenRequest	true	"Signer details"
+//	@Success		200					{object}	object{data=transformations.OutputAdminSigningToken}
+//	@Failure		400					{object}	lib.HTTPError
+//	@Failure		401					{object}	string
+//	@Failure		404					{object}	lib.HTTPError
+//	@Failure		500					{object}	string
+//	@Router			/api/v1/signing-tokens/{signing_token_id} [patch]
+func (h *SigningHandler) UpdateToken(w http.ResponseWriter, r *http.Request) {
+	_, currentUserOk := lib.ClientUserFromContext(r.Context())
+	if !currentUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	tokenID := chi.URLParam(r, "signing_token_id")
+
+	var body UpdateSigningTokenRequest
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
+		return
+	}
+
+	token, err := h.service.UpdateSigningTokenDetails(r.Context(), tokenID, services.UpdateSigningTokenDetailsInput{
+		SignerName:  body.SignerName,
+		SignerEmail: body.SignerEmail,
+		SignerPhone: body.SignerPhone,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBAdminSigningTokenToRest(token),
+	})
+}
+
+// ResendToken godoc
+//
+//	@Summary		Resend a signing token
+//	@Description	Extend the token expiry by 7 days and resend the notification to the signer
+//	@Tags			Signing
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			signing_token_id	path		string	true	"Signing token ID"	format(uuid4)
+//	@Success		200					{object}	object{data=transformations.OutputAdminSigningToken}
+//	@Failure		400					{object}	lib.HTTPError
+//	@Failure		401					{object}	string
+//	@Failure		404					{object}	lib.HTTPError
+//	@Failure		500					{object}	string
+//	@Router			/api/v1/signing-tokens/{signing_token_id}/resend [post]
+func (h *SigningHandler) ResendToken(w http.ResponseWriter, r *http.Request) {
+	_, currentUserOk := lib.ClientUserFromContext(r.Context())
+	if !currentUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	tokenID := chi.URLParam(r, "signing_token_id")
+
+	token, err := h.service.ResendSigningToken(r.Context(), tokenID)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBAdminSigningTokenToRest(token),
 	})
 }
 
