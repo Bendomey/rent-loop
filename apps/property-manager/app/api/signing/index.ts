@@ -220,9 +220,9 @@ const fetchSigningTokens = async (
 ) => {
 	try {
 		const params = getQueryParams<FetchSigningTokenFilter>(query)
-		const response = await fetchClient<ApiResponse<AdminSigningToken[]>>(
-			`/v1/signing-tokens?${params.toString()}`,
-		)
+		const response = await fetchClient<
+			ApiResponse<FetchMultipleDataResponse<AdminSigningToken>>
+		>(`/v1/signing-tokens?${params.toString()}`)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {

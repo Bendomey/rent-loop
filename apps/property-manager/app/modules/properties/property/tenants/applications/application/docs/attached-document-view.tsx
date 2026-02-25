@@ -18,6 +18,20 @@ interface AttachedDocumentViewProps {
 	isClearing: boolean
 }
 
+const DOC_STATUS_LABEL: Record<string, string> = {
+	DRAFT: 'Draft',
+	FINALIZED: 'Ready for Signing',
+	SIGNING: 'Signing',
+	SIGNED: 'Signed',
+}
+
+const DOC_STATUS_CLASS: Record<string, string> = {
+	DRAFT: 'border-zinc-300 bg-zinc-100 text-zinc-600',
+	FINALIZED: 'border-blue-300 bg-blue-50 text-blue-700',
+	SIGNING: 'border-amber-300 bg-amber-50 text-amber-700',
+	SIGNED: 'border-emerald-300 bg-emerald-50 text-emerald-700',
+}
+
 export function AttachedDocumentView({
 	tenantApplication,
 	onClearDocument,
@@ -73,11 +87,12 @@ export function AttachedDocumentView({
 		},
 	})
 
-	const tenantToken = signingTokens?.find((t) => t.role === 'TENANT') ?? null
+	const tenantToken =
+		signingTokens?.rows?.find((t) => t.role === 'TENANT') ?? null
 	const pmWitnessTokens =
-		signingTokens?.filter((t) => t.role === 'PM_WITNESS') ?? []
+		signingTokens?.rows?.filter((t) => t.role === 'PM_WITNESS') ?? []
 	const tenantWitnessTokens =
-		signingTokens?.filter((t) => t.role === 'TENANT_WITNESS') ?? []
+		signingTokens?.rows?.filter((t) => t.role === 'TENANT_WITNESS') ?? []
 
 	return (
 		<div className="space-y-4">
@@ -101,17 +116,15 @@ export function AttachedDocumentView({
 								<Badge
 									variant="outline"
 									className={cn(
-										'text-[10px] font-semibold uppercase',
-										{
-											DRAFT: 'border-zinc-300 bg-zinc-100 text-zinc-600',
-											FINALIZED: 'border-blue-300 bg-blue-50 text-blue-700',
-											SIGNING: 'border-amber-300 bg-amber-50 text-amber-700',
-											SIGNED:
-												'border-emerald-300 bg-emerald-50 text-emerald-700',
-										}[tenantApplication.lease_agreement_document_status],
+										'text-[10px] font-semibold',
+										DOC_STATUS_CLASS[
+											tenantApplication.lease_agreement_document_status
+										],
 									)}
 								>
-									{tenantApplication.lease_agreement_document_status}
+									{DOC_STATUS_LABEL[
+										tenantApplication.lease_agreement_document_status
+									] ?? tenantApplication.lease_agreement_document_status}
 								</Badge>
 							)}
 						</div>
