@@ -7,6 +7,7 @@ import { useSigningTokens } from '~/api/signing'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Separator } from '~/components/ui/separator'
+import { Skeleton } from '~/components/ui/skeleton'
 import { Spinner } from '~/components/ui/spinner'
 import { getWitnessNodesFromContent } from '~/lib/document.utils'
 import { safeString } from '~/lib/strings'
@@ -80,7 +81,7 @@ export function AttachedDocumentView({
 	})
 
 	const documentId = tenantApplication.lease_agreement_document_id
-	const { data: signingTokens } = useSigningTokens({
+	const { data: signingTokens, isPending: isLoadingTokens } = useSigningTokens({
 		filters: {
 			document_id: documentId ?? undefined,
 			tenant_application_id: applicationId,
@@ -216,69 +217,85 @@ export function AttachedDocumentView({
 					<p className="text-sm font-medium text-zinc-700">Signing Status</p>
 					<Separator />
 
-					<SigningStatusRow
-						label="Property Manager"
-						signed={adminSigned}
-						signedAt={adminSignature?.created_at ?? null}
-						signedBy={adminSignature?.signed_by?.name}
-					/>
+					{isLoadingTokens ? (
+						<div className="space-y-3">
+							{[...Array(2)].map((_, i) => (
+								<div key={i} className="flex items-center justify-between">
+									<div className="space-y-1.5">
+										<Skeleton className="h-3.5 w-32" />
+										<Skeleton className="h-3 w-24" />
+									</div>
+									<Skeleton className="h-8 w-24 rounded-md" />
+								</div>
+							))}
+						</div>
+					) : (
+						<>
+							<SigningStatusRow
+								label="Property Manager"
+								signed={adminSigned}
+								signedAt={adminSignature?.created_at ?? null}
+								signedBy={adminSignature?.signed_by?.name}
+							/>
 
-					{!adminSigned && (
-						<Button size="sm" asChild>
-							<Link
-								to={`/properties/${propertyId}/tenants/applications/${applicationId}/signing/${tenantApplication.lease_agreement_document_id}`}
-							>
-								<Pen className="size-4" />
-								Sign Document
-							</Link>
-						</Button>
-					)}
+							{!adminSigned && (
+								<Button size="sm" asChild>
+									<Link
+										to={`/properties/${propertyId}/tenants/applications/${applicationId}/signing/${tenantApplication.lease_agreement_document_id}`}
+									>
+										<Pen className="size-4" />
+										Sign Document
+									</Link>
+								</Button>
+							)}
 
-					<Separator />
+							<Separator />
 
-					<SigningStatusRow
-						label="Tenant"
-						signed={tenantSigned}
-						signedAt={tenantSignature?.created_at ?? null}
-						signedBy={tenantSignature?.signed_by?.name}
-					/>
+							<SigningStatusRow
+								label="Tenant"
+								signed={tenantSigned}
+								signedAt={tenantSignature?.created_at ?? null}
+								signedBy={tenantSignature?.signed_by?.name}
+							/>
 
-					{!tenantSigned && (
-						<PromptSignatureButton
-							existingToken={tenantToken}
-							documentId={safeString(documentId)}
-							role="TENANT"
-							tenantApplicationId={applicationId}
-						/>
-					)}
-
-					{witnessEntries.map((entry, idx) => {
-						const witnessToken =
-							entry.role === 'pm_witness'
-								? (pmWitnessTokens[entry.roleIdx] ?? null)
-								: (tenantWitnessTokens[entry.roleIdx] ?? null)
-						return (
-							<React.Fragment key={idx}>
-								<Separator />
-								<SigningStatusRow
-									label={entry.label}
-									signed={Boolean(entry.signature)}
-									signedAt={entry.signature?.created_at ?? null}
-									signedBy={entry.signature?.signed_by?.name ?? undefined}
-								/>
+							{!tenantSigned && (
 								<PromptSignatureButton
-									existingToken={witnessToken}
+									existingToken={tenantToken}
 									documentId={safeString(documentId)}
-									role={
-										entry.role === 'pm_witness'
-											? 'PM_WITNESS'
-											: 'TENANT_WITNESS'
-									}
+									role="TENANT"
 									tenantApplicationId={applicationId}
 								/>
-							</React.Fragment>
-						)
-					})}
+							)}
+
+							{witnessEntries.map((entry, idx) => {
+								const witnessToken =
+									entry.role === 'pm_witness'
+										? (pmWitnessTokens[entry.roleIdx] ?? null)
+										: (tenantWitnessTokens[entry.roleIdx] ?? null)
+								return (
+									<React.Fragment key={idx}>
+										<Separator />
+										<SigningStatusRow
+											label={entry.label}
+											signed={Boolean(entry.signature)}
+											signedAt={entry.signature?.created_at ?? null}
+											signedBy={entry.signature?.signed_by?.name ?? undefined}
+										/>
+										<PromptSignatureButton
+											existingToken={witnessToken}
+											documentId={safeString(documentId)}
+											role={
+												entry.role === 'pm_witness'
+													? 'PM_WITNESS'
+													: 'TENANT_WITNESS'
+											}
+											tenantApplicationId={applicationId}
+										/>
+									</React.Fragment>
+								)
+							})}
+						</>
+					)}
 				</div>
 			)}
 		</div>
