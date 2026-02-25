@@ -1,11 +1,15 @@
 import { CheckCircle, FileText, Pen, PenLine, X } from 'lucide-react'
+import React from 'react'
 import { Link, useParams } from 'react-router'
-import { PromptTenantButton } from './prompt-tenant-button'
+import { PromptSignatureButton } from './prompt-signature-button'
 import { SigningStatusRow } from './signing-status-row'
+import { useSigningTokens } from '~/api/signing'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Separator } from '~/components/ui/separator'
 import { Spinner } from '~/components/ui/spinner'
+import { getWitnessNodesFromContent } from '~/lib/document.utils'
+import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 
 interface AttachedDocumentViewProps {
@@ -31,6 +35,49 @@ export function AttachedDocumentView({
 			(signature) => signature.role === 'TENANT',
 		)
 	const tenantSigned = Boolean(tenantSignature)
+
+	const witnessNodes = getWitnessNodesFromContent(
+		tenantApplication.lease_agreement_document?.content,
+	)
+	const pmWitnessSignatures = (
+		tenantApplication.lease_agreement_document_signatures ?? []
+	).filter((sig) => sig.role === 'PM_WITNESS')
+	const tenantWitnessSignatures = (
+		tenantApplication.lease_agreement_document_signatures ?? []
+	).filter((sig) => sig.role === 'TENANT_WITNESS')
+	const pmWitnessCount = witnessNodes.filter(
+		(n) => n.role === 'pm_witness',
+	).length
+	const tenantWitnessCount = witnessNodes.filter(
+		(n) => n.role === 'tenant_witness',
+	).length
+	const witnessEntries = witnessNodes.map((node, idx) => {
+		const roleIdx = witnessNodes
+			.slice(0, idx)
+			.filter((n) => n.role === node.role).length
+		const sig =
+			node.role === 'pm_witness'
+				? pmWitnessSignatures[roleIdx]
+				: tenantWitnessSignatures[roleIdx]
+		const showTag =
+			node.role === 'pm_witness' ? pmWitnessCount > 1 : tenantWitnessCount > 1
+		const label = showTag ? `${node.label} #${roleIdx + 1}` : node.label
+		return { label, signature: sig ?? null, role: node.role, roleIdx }
+	})
+
+	const documentId = tenantApplication.lease_agreement_document_id
+	const { data: signingTokens } = useSigningTokens({
+		filters: {
+			document_id: documentId ?? undefined,
+			tenant_application_id: applicationId,
+		},
+	})
+
+	const tenantToken = signingTokens?.find((t) => t.role === 'TENANT') ?? null
+	const pmWitnessTokens =
+		signingTokens?.filter((t) => t.role === 'PM_WITNESS') ?? []
+	const tenantWitnessTokens =
+		signingTokens?.filter((t) => t.role === 'TENANT_WITNESS') ?? []
 
 	return (
 		<div className="space-y-4">
@@ -136,6 +183,23 @@ export function AttachedDocumentView({
 							</p>
 						</div>
 					)}
+
+					{['SIGNING', 'SIGNED'].includes(
+						safeString(tenantApplication.lease_agreement_document_status),
+					) && (
+						<div className="rounded-lg border border-green-200 bg-green-50 p-3">
+							<p className="text-xs text-green-700">
+								<Link
+									to={`/properties/${propertyId}/tenants/applications/${applicationId}/signing/${tenantApplication.lease_agreement_document_id}`}
+									className="font-medium underline underline-offset-2"
+								>
+									View the document
+								</Link>{' '}
+								to see the signing status and details.
+							</p>
+						</div>
+					)}
+
 					<p className="text-sm font-medium text-zinc-700">Signing Status</p>
 					<Separator />
 
@@ -166,7 +230,42 @@ export function AttachedDocumentView({
 						signedBy={tenantSignature?.signed_by?.name}
 					/>
 
-					{!tenantSigned && <PromptTenantButton />}
+					{!tenantSigned && (
+						<PromptSignatureButton
+							existingToken={tenantToken}
+							documentId={safeString(documentId)}
+							role="TENANT"
+							tenantApplicationId={applicationId}
+						/>
+					)}
+
+					{witnessEntries.map((entry, idx) => {
+						const witnessToken =
+							entry.role === 'pm_witness'
+								? (pmWitnessTokens[entry.roleIdx] ?? null)
+								: (tenantWitnessTokens[entry.roleIdx] ?? null)
+						return (
+							<React.Fragment key={idx}>
+								<Separator />
+								<SigningStatusRow
+									label={entry.label}
+									signed={Boolean(entry.signature)}
+									signedAt={entry.signature?.created_at ?? null}
+									signedBy={entry.signature?.signed_by?.name ?? undefined}
+								/>
+								<PromptSignatureButton
+									existingToken={witnessToken}
+									documentId={safeString(documentId)}
+									role={
+										entry.role === 'pm_witness'
+											? 'PM_WITNESS'
+											: 'TENANT_WITNESS'
+									}
+									tenantApplicationId={applicationId}
+								/>
+							</React.Fragment>
+						)
+					})}
 				</div>
 			)}
 		</div>

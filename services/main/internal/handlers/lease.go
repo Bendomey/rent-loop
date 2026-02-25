@@ -83,14 +83,8 @@ func (h *LeaseHandler) UpdateLease(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	transformed, transformedErr := transformations.DBAdminLeaseToRest(h.services, lease)
-	if transformedErr != nil {
-		HandleErrorResponse(w, transformedErr)
-		return
-	}
-
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformed,
+		"data": transformations.DBAdminLeaseToRest(lease),
 	})
 }
 
@@ -129,14 +123,8 @@ func (h *LeaseHandler) GetLeaseByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	transformed, transformedErr := transformations.DBAdminLeaseToRest(h.services, lease)
-	if transformedErr != nil {
-		HandleErrorResponse(w, transformedErr)
-		return
-	}
-
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformed,
+		"data": transformations.DBAdminLeaseToRest(lease),
 	})
 }
 
@@ -206,15 +194,9 @@ func (h *LeaseHandler) ListLeasesByTenant(w http.ResponseWriter, r *http.Request
 
 	leasesTransformed := make([]any, 0)
 	for _, lease := range leases {
-		transformed, transformedErr := transformations.DBAdminLeaseToRest(h.services, &lease)
-		if transformedErr != nil {
-			HandleErrorResponse(w, transformedErr)
-			return
-		}
-
 		leasesTransformed = append(
 			leasesTransformed,
-			transformed,
+			transformations.DBAdminLeaseToRest(&lease),
 		)
 	}
 
@@ -277,15 +259,9 @@ func (h *LeaseHandler) ListLeasesByProperty(w http.ResponseWriter, r *http.Reque
 
 	leasesTransformed := make([]any, 0)
 	for _, lease := range leases {
-		transformed, transformedErr := transformations.DBAdminLeaseToRest(h.services, &lease)
-		if transformedErr != nil {
-			HandleErrorResponse(w, transformedErr)
-			return
-		}
-
 		leasesTransformed = append(
 			leasesTransformed,
-			transformed,
+			transformations.DBAdminLeaseToRest(&lease),
 		)
 	}
 

@@ -31,20 +31,15 @@ type OutputPayment struct {
 	UpdatedAt time.Time `json:"updated_at" example:"2023-01-01T00:00:00Z" format:"date-time" description:"Timestamp when the payment was last updated"`
 }
 
-func DBPaymentToRest(services services.Services, p *models.Payment) (any, error) {
+func DBPaymentToRest(p *models.Payment) any {
 	if p == nil || p.ID == uuid.Nil {
-		return nil, nil
-	}
-
-	invoice, invoiceErr := DBInvoiceToRest(services, &p.Invoice)
-	if invoiceErr != nil {
-		return nil, invoiceErr
+		return nil
 	}
 
 	data := map[string]interface{}{
 		"id":            p.ID.String(),
 		"invoice_id":    p.InvoiceID,
-		"invoice":       invoice,
+		"invoice":       DBInvoiceToRest(&p.Invoice),
 		"rail":          p.Rail,
 		"provider":      p.Provider,
 		"amount":        p.Amount,
@@ -58,7 +53,7 @@ func DBPaymentToRest(services services.Services, p *models.Payment) (any, error)
 		"updated_at":    p.UpdatedAt,
 	}
 
-	return data, nil
+	return data
 }
 
 func DBPaymentsToRest(services services.Services, payments *[]models.Payment) []interface{} {
@@ -68,12 +63,7 @@ func DBPaymentsToRest(services services.Services, payments *[]models.Payment) []
 
 	result := make([]interface{}, len(*payments))
 	for i, p := range *payments {
-		payment, paymentErr := DBPaymentToRest(services, &p)
-		if paymentErr != nil {
-			return nil
-		}
-
-		result[i] = payment
+		result[i] = DBPaymentToRest(&p)
 	}
 	return result
 }

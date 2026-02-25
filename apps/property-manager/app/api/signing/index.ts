@@ -1,4 +1,6 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { QUERY_KEYS } from '~/lib/constants'
+import { getQueryParams } from '~/lib/get-param'
 import { fetchClient, fetchServer } from '~/lib/transport'
 
 /**
@@ -142,4 +144,102 @@ const signDocumentDirect = async (body: SignDocumentDirectInput) => {
 export const useSignDocumentDirect = () =>
 	useMutation({
 		mutationFn: signDocumentDirect,
+	})
+
+/**
+ * Update signer details on an existing signing token.
+ */
+export interface UpdateSigningTokenInput {
+	signing_token_id: string
+	signer_name?: string
+	signer_email?: string
+	signer_phone?: string
+}
+
+const updateSigningToken = async ({
+	signing_token_id,
+	...body
+}: UpdateSigningTokenInput) => {
+	try {
+		const response = await fetchClient<ApiResponse<AdminSigningToken>>(
+			`/v1/signing-tokens/${signing_token_id}`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify(body),
+			},
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useUpdateSigningToken = () =>
+	useMutation({
+		mutationFn: updateSigningToken,
+	})
+
+/**
+ * Resend the signing notification for an existing token.
+ */
+const resendSigningToken = async (signing_token_id: string) => {
+	try {
+		const response = await fetchClient<ApiResponse<AdminSigningToken>>(
+			`/v1/signing-tokens/${signing_token_id}/resend`,
+			{ method: 'POST' },
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useResendSigningToken = () =>
+	useMutation({
+		mutationFn: resendSigningToken,
+	})
+
+/**
+ * Fetch signing tokens filtered by document and tenant application.
+ * GET /v1/signing-tokens
+ */
+const fetchSigningTokens = async (
+	query: FetchMultipleDataInputParams<FetchSigningTokenFilter>,
+) => {
+	try {
+		const params = getQueryParams<FetchSigningTokenFilter>(query)
+		const response = await fetchClient<ApiResponse<AdminSigningToken[]>>(
+			`/v1/signing-tokens?${params.toString()}`,
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useSigningTokens = (
+	query: FetchMultipleDataInputParams<FetchSigningTokenFilter>,
+) =>
+	useQuery({
+		queryKey: [QUERY_KEYS.SIGNING_TOKENS, query],
+		queryFn: () => fetchSigningTokens(query),
 	})

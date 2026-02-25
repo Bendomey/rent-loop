@@ -70,14 +70,8 @@ func (h *PaymentHandler) CreateOfflinePayment(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	transformed, transformErr := transformations.DBPaymentToRest(h.services, payment)
-	if transformErr != nil {
-		HandleErrorResponse(w, transformErr)
-		return
-	}
-
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformed,
+		"data": transformations.DBPaymentToRest(payment),
 	})
 }

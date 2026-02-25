@@ -69,14 +69,9 @@ func (h *InvoiceHandler) UpdateInvoice(w http.ResponseWriter, r *http.Request) {
 		HandleErrorResponse(w, err)
 		return
 	}
-	transformed, transformErr := transformations.DBInvoiceToRest(h.services, invoice)
-	if transformErr != nil {
-		HandleErrorResponse(w, transformErr)
-		return
-	}
 
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformed,
+		"data": transformations.DBInvoiceToRest(invoice),
 	})
 }
 
@@ -109,14 +104,8 @@ func (h *InvoiceHandler) VoidInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	transformed, transformErr := transformations.DBInvoiceToRest(h.services, invoice)
-	if transformErr != nil {
-		HandleErrorResponse(w, transformErr)
-		return
-	}
-
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformed,
+		"data": transformations.DBInvoiceToRest(invoice),
 	})
 }
 
@@ -155,14 +144,8 @@ func (h *InvoiceHandler) GetInvoiceByID(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	transformed, transformErr := transformations.DBInvoiceToRest(h.services, invoice)
-	if transformErr != nil {
-		HandleErrorResponse(w, transformErr)
-		return
-	}
-
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformed,
+		"data": transformations.DBInvoiceToRest(invoice),
 	})
 }
 
@@ -226,13 +209,7 @@ func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 
 	data := make([]interface{}, len(*invoices))
 	for i, invoice := range *invoices {
-		transformed, transformErr := transformations.DBInvoiceToRest(h.services, &invoice)
-		if transformErr != nil {
-			HandleErrorResponse(w, transformErr)
-			return
-		}
-
-		data[i] = transformed
+		data[i] = transformations.DBInvoiceToRest(&invoice)
 	}
 
 	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, data, count))

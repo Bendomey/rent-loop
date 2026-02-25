@@ -267,6 +267,46 @@ The Rentloop Team
 )
 
 const (
+	SIGNING_TOKEN_INVITE_SUBJECT = "You have a document to sign on Rentloop"
+	SIGNING_TOKEN_INVITE_BODY    = `Hi {{signer_name}},
+
+You have been invited to review and sign a document on Rentloop.
+
+Please use the secure link below to complete your signature:
+{{property_manager_portal_url}}/sign/{{token}}
+
+This link will expire on {{expires_at}}.
+
+If you weren't expecting this invitation, you can safely ignore this message.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop Team
+`
+)
+
+const (
+	SIGNING_TOKEN_RESENT_SUBJECT = "Reminder: You have a document to sign on Rentloop"
+	SIGNING_TOKEN_RESENT_BODY    = `Hi {{signer_name}},
+
+This is a reminder that you have a document awaiting your signature on Rentloop.
+
+Please use the secure link below to review and complete your signature:
+{{property_manager_portal_url}}/sign/{{token}}
+
+Your signing link has been refreshed and will now expire on {{expires_at}}.
+
+If you weren't expecting this, you can safely ignore this message.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop Team
+`
+)
+
+const (
 	LEASE_CANCELLED_SUBJECT = "Your Rentloop Lease Was Cancelled"
 	LEASE_CANCELLED_BODY    = `Hi {{tenant_name}},
 
