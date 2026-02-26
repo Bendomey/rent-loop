@@ -31,7 +31,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				handlers.TenantApplicationHandler.GetTenantApplication,
 			)
 
-			r.Patch("/v1/documents", handlers.DocumentHandler.UpdateDocument)
+			r.Patch("/v1/documents/{document_id}", handlers.DocumentHandler.UpdateDocument)
 		})
 
 		// protected client user routes
