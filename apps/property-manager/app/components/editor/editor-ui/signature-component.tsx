@@ -13,7 +13,7 @@ import {
 	KEY_DELETE_COMMAND,
 } from 'lexical'
 import { Clock, Pen } from 'lucide-react'
-import { type JSX, useCallback, useEffect, useState } from 'react'
+import { type JSX, useCallback, useEffect, useRef, useState } from 'react'
 
 import { useSigningContext } from '~/components/blocks/signing-view/signing-context'
 import {
@@ -56,6 +56,7 @@ export default function SignatureComponent({
 	const [showSignModal, setShowSignModal] = useState(false)
 	const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null)
 	const [hasDrawnSignature, setHasDrawnSignature] = useState(false)
+	const wasSigningRef = useRef(false)
 
 	const isSigned = signatureUrl !== null
 	const isSigningMode = signingContext !== null
@@ -120,6 +121,17 @@ export default function SignatureComponent({
 		)
 	}, [editor, onClick, $onDelete])
 
+	// Close the modal once the async signing operation completes
+	useEffect(() => {
+		const isSigning = signingContext?.isSigning ?? false
+		if (wasSigningRef.current && !isSigning) {
+			setShowSignModal(false)
+			setSignatureDataUrl(null)
+			setHasDrawnSignature(false)
+		}
+		wasSigningRef.current = isSigning
+	}, [signingContext?.isSigning])
+
 	const handleSignatureChange = useCallback(
 		(hasSig: boolean, dataUrl: string | null) => {
 			setHasDrawnSignature(hasSig)
@@ -132,22 +144,11 @@ export default function SignatureComponent({
 		if (!signatureDataUrl) return
 
 		if (signingContext) {
-			// In signing mode: delegate to the signing context callback
+			// In signing mode: delegate to the signing context callback.
+			// Modal is closed by useEffect once isSigning transitions back to false.
 			signingContext.onSign(role, signatureDataUrl)
-
-			// Also update the node visually
-			editor.update(() => {
-				const node = $getNodeByKey(nodeKey)
-				if ($isSignatureNode(node)) {
-					node.setSignature(
-						signatureDataUrl,
-						signingContext.signerName,
-						new Date().toISOString(),
-					)
-				}
-			})
 		} else {
-			// In editor mode: just update the node directly
+			// In editor mode: update the node directly and close immediately.
 			editor.update(() => {
 				const node = $getNodeByKey(nodeKey)
 				if ($isSignatureNode(node)) {
@@ -158,11 +159,10 @@ export default function SignatureComponent({
 					)
 				}
 			})
+			setShowSignModal(false)
+			setSignatureDataUrl(null)
+			setHasDrawnSignature(false)
 		}
-
-		setShowSignModal(false)
-		setSignatureDataUrl(null)
-		setHasDrawnSignature(false)
 	}
 
 	const isFocused = isSelected && isEditable

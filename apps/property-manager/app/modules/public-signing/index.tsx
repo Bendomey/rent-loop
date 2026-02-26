@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 
 import { useUpdateDocument } from '~/api/documents'
 import { useSignDocument } from '~/api/signing'
-import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
+import { useUpdateTenantApplication } from '~/api/tenant-applications'
 import { SigningView } from '~/components/blocks/signing-view/signing-view'
 import type { SignatureRole } from '~/components/editor/nodes/signature-node'
 import { SIGNATURE_ROLE_LABELS } from '~/components/editor/nodes/signature-node'
@@ -58,7 +58,7 @@ export function PublicSigningModule() {
 		useLoaderData<typeof loader>()
 	const signDocument = useSignDocument()
 	const updateDocument = useUpdateDocument()
-	const updateTenantApplication = useAdminUpdateTenantApplication()
+	const updateTenantApplication = useUpdateTenantApplication()
 	const revalidator = useRevalidator()
 
 	const signerName = signingToken?.signer_name ?? null
@@ -76,7 +76,7 @@ export function PublicSigningModule() {
 
 	const document = signingToken.document
 	const signerRole = signingToken.role as SignatureRole
-	const applicationCode = signingToken.tenant_application?.code ?? ''
+	const applicationCode = tenantApplication?.code ?? '' // TODO: if it's a lease instead, lets use it's code instead.
 
 	const editorState: SerializedEditorState = document.content
 		? JSON.parse(document.content)
@@ -217,7 +217,7 @@ export function PublicSigningModule() {
 			documentTitle={document.title}
 			applicationCode={applicationCode}
 			editorState={editorState}
-			signerRole={signerRole}
+			signerRole={signerRole.toLowerCase() as SignatureRole}
 			signerName={resolvedName}
 			signatureStatuses={signatureStatuses}
 			onSign={handleSign}
