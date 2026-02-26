@@ -8,7 +8,12 @@ import { useSignDocumentDirect } from '~/api/signing'
 import { useUpdateTenantApplication } from '~/api/tenant-applications'
 import { SigningView } from '~/components/blocks/signing-view/signing-view'
 import type { SignatureRole } from '~/components/editor/nodes/signature-node'
+import {
+	getSignatureStatuses,
+	injectSignatureIntoState,
+} from '~/lib/lexical.utils'
 import { safeString } from '~/lib/strings'
+import { dataUrlToBlob } from '~/lib/utils'
 import type { loader } from '~/routes/_auth.properties.$propertyId_.tenants.applications.$applicationId.signing.$documentId'
 
 export function LeaseSigningModule() {
@@ -21,7 +26,8 @@ export function LeaseSigningModule() {
 
 	if (!tenantApplication) return null
 
-	const editorState: SerializedEditorState = tenantApplication.lease_agreement_document?.content
+	const editorState: SerializedEditorState = tenantApplication
+		.lease_agreement_document?.content
 		? JSON.parse(tenantApplication.lease_agreement_document.content)
 		: null
 
@@ -90,10 +96,14 @@ export function LeaseSigningModule() {
 			})
 
 			// 5. Update application status based on remaining unsigned signatures
-			const allSigned = getSignatureStatuses(updatedState).every((s) => s.signed)
+			const allSigned = getSignatureStatuses(updatedState).every(
+				(s) => s.signed,
+			)
 			await updateTenantApplication.mutateAsync({
 				id: tenantApplication.id,
-				data: { lease_agreement_document_status: allSigned ? 'SIGNED' : 'SIGNING' },
+				data: {
+					lease_agreement_document_status: allSigned ? 'SIGNED' : 'SIGNING',
+				},
 			})
 
 			toast.success('Document signed successfully')
@@ -107,7 +117,9 @@ export function LeaseSigningModule() {
 
 	return (
 		<SigningView
-			documentTitle={tenantApplication.lease_agreement_document?.title ?? 'Lease Document'}
+			documentTitle={
+				tenantApplication.lease_agreement_document?.title ?? 'Lease Document'
+			}
 			applicationCode={tenantApplication.code}
 			editorState={editorState}
 			signerRole="property_manager"
@@ -117,73 +129,4 @@ export function LeaseSigningModule() {
 			isSigning={isSigning}
 		/>
 	)
-}
-
-function dataUrlToBlob(dataUrl: string): Blob {
-	const commaIndex = dataUrl.indexOf(',')
-	const header = dataUrl.slice(0, commaIndex)
-	const data = dataUrl.slice(commaIndex + 1)
-	const mime = header.match(/:(.*?);/)?.[1] ?? 'image/png'
-	const binary = atob(data)
-	const array = new Uint8Array(binary.length)
-	for (let i = 0; i < binary.length; i++) {
-		array[i] = binary.charCodeAt(i)
-	}
-	return new Blob([array], { type: mime })
-}
-
-/**
- * Deep-clones the serialized Lexical state and stamps the matching signature node
- * with the uploaded URL, signer name, and timestamp.
- */
-function injectSignatureIntoState(
-	state: SerializedEditorState,
-	role: SignatureRole,
-	signatureUrl: string,
-	signedByName: string,
-	signedAt: string,
-): SerializedEditorState {
-	const clone = JSON.parse(JSON.stringify(state)) as SerializedEditorState
-
-	function walk(node: Record<string, unknown>) {
-		if (node.type === 'signature' && node.role === role) {
-			node.signatureUrl = signatureUrl
-			node.signedByName = signedByName
-			node.signedAt = signedAt
-		}
-		if (Array.isArray(node.children)) {
-			for (const child of node.children) {
-				walk(child as Record<string, unknown>)
-			}
-		}
-	}
-
-	walk(clone.root as unknown as Record<string, unknown>)
-	return clone
-}
-
-/**
- * Scans the serialized Lexical state for signature nodes and returns their statuses.
- */
-function getSignatureStatuses(
-	state: SerializedEditorState,
-): Array<{ role: SignatureRole; signed: boolean }> {
-	const statuses: Array<{ role: SignatureRole; signed: boolean }> = []
-
-	function walk(node: Record<string, unknown>) {
-		if (node.type === 'signature') {
-			statuses.push({
-				role: node.role as SignatureRole,
-				signed: node.signatureUrl !== null && node.signatureUrl !== undefined,
-			})
-		}
-		if (Array.isArray(node.children)) {
-			for (const child of node.children) {
-				walk(child as Record<string, unknown>)
-			}
-		}
-	}
-
-	walk(state.root as unknown as Record<string, unknown>)
-	return statuses
 }
