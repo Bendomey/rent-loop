@@ -25,7 +25,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			r.Get("/v1/signing/{token}/verify", handlers.SigningHandler.VerifyToken)
 			r.Post("/v1/signing/{token}/sign", handlers.SigningHandler.SignDocument)
 
-			r.Patch("/v1/tenant-applications", handlers.TenantApplicationHandler.UpdateTenantApplication)
+			r.Patch("/v1/tenant-applications/{tenant_application_id}", handlers.TenantApplicationHandler.UpdateTenantApplication)
 			r.Get(
 				"/v1/tenant-applications/{tenant_application_id}",
 				handlers.TenantApplicationHandler.GetTenantApplication,
