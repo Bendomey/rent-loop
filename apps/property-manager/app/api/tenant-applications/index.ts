@@ -313,7 +313,6 @@ const adminUpdateTenantApplication = async ({
 export const useAdminUpdateTenantApplication = () =>
 	useMutation({ mutationFn: adminUpdateTenantApplication })
 
-
 /**
  * Update Tenant Application
  */

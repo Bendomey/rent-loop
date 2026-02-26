@@ -132,7 +132,10 @@ interface AdminUpdateDocumentInputParams {
 	property_id?: string
 }
 
-const adminUpdateDocument = async ({ id, ...data }: AdminUpdateDocumentInputParams) => {
+const adminUpdateDocument = async ({
+	id,
+	...data
+}: AdminUpdateDocumentInputParams) => {
 	try {
 		const response = await fetchClient<ApiResponse<RentloopDocument>>(
 			`/v1/admin/documents/${id}`,

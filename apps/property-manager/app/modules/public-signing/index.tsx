@@ -41,7 +41,9 @@ function DocumentExpired() {
 						</svg>
 					</div>
 				</div>
-				<h1 className="text-xl font-semibold text-zinc-900">Link Unavailable</h1>
+				<h1 className="text-xl font-semibold text-zinc-900">
+					Link Unavailable
+				</h1>
 				<p className="mt-2 text-sm text-zinc-500">
 					This signing link has expired or the document no longer exists. Please
 					contact the sender to request a new link.
@@ -85,30 +87,37 @@ export function PublicSigningModule() {
 	const resolvedName = signerName || enteredName
 	const signatureStatuses = getSignatureStatuses(editorState)
 
+	const uploadSignature = async (dataUrl: string) => {
+		const blob = dataUrlToBlob(dataUrl)
+		const file = new File([blob], 'signature.png', { type: 'image/png' })
+		const formData = new FormData()
+		formData.append('file', file)
+		formData.append(
+			'objectKey',
+			`signatures/${document.id}-${Date.now()}-${signerRole}.png`,
+		)
+
+		const uploadResponse = await fetch('/api/r2/upload', {
+			method: 'POST',
+			body: formData,
+		})
+		const uploadResult = (await uploadResponse.json()) as { url?: string }
+
+		if (!uploadResponse.ok || !uploadResult.url) {
+			toast.error('Failed to upload signature')
+			return
+		}
+
+		return uploadResult
+	}
+
 	const handleSign = async (role: SignatureRole, signatureDataUrl: string) => {
 		setIsSigning(true)
 
 		try {
 			// 1. Upload signature image to R2
-			const blob = dataUrlToBlob(signatureDataUrl)
-			const file = new File([blob], 'signature.png', { type: 'image/png' })
-			const formData = new FormData()
-			formData.append('file', file)
-			formData.append(
-				'objectKey',
-				`signatures/${document.id}-${Date.now()}-${signerRole}.png`,
-			)
-
-			const uploadResponse = await fetch('/api/r2/upload', {
-				method: 'POST',
-				body: formData,
-			})
-			const uploadResult = (await uploadResponse.json()) as { url?: string }
-
-			if (!uploadResponse.ok || !uploadResult.url) {
-				toast.error('Failed to upload signature')
-				return
-			}
+			const uploadResult = await uploadSignature(signatureDataUrl)
+			if (!uploadResult?.url) return
 
 			// 2. Submit signature using the signing token
 			await signDocument.mutateAsync({
