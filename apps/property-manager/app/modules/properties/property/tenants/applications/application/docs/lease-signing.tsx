@@ -1,54 +1,113 @@
 import type { SerializedEditorState } from 'lexical'
 import { useState } from 'react'
-import { useLoaderData } from 'react-router'
+import { useLoaderData, useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 
 import { useUpdateDocument } from '~/api/documents'
+import { useSignDocumentDirect } from '~/api/signing'
+import { useUpdateTenantApplication } from '~/api/tenant-applications'
 import { SigningView } from '~/components/blocks/signing-view/signing-view'
 import type { SignatureRole } from '~/components/editor/nodes/signature-node'
+import { safeString } from '~/lib/strings'
 import type { loader } from '~/routes/_auth.properties.$propertyId_.tenants.applications.$applicationId.signing.$documentId'
 
 export function LeaseSigningModule() {
-	const { document, tenantApplication } = useLoaderData<typeof loader>()
+	const { tenantApplication } = useLoaderData<typeof loader>()
+	const signDocumentDirect = useSignDocumentDirect()
 	const updateDocument = useUpdateDocument()
+	const updateTenantApplication = useUpdateTenantApplication()
+	const revalidator = useRevalidator()
 	const [isSigning, setIsSigning] = useState(false)
 
-	if (!document || !tenantApplication) return null
+	if (!tenantApplication) return null
 
-	const editorState: SerializedEditorState = document.content
-		? JSON.parse(document.content)
+	const editorState: SerializedEditorState = tenantApplication.lease_agreement_document?.content
+		? JSON.parse(tenantApplication.lease_agreement_document.content)
 		: null
 
 	if (!editorState) return null
 
-	// Derive signature statuses from the document content by scanning for signature nodes
 	const signatureStatuses = getSignatureStatuses(editorState)
-
-	const handleSign = (role: SignatureRole, signatureDataUrl: string) => {
-		setIsSigning(true)
-
-		// TODO: In the full implementation this would:
-		// 1. Upload signatureDataUrl to S3
-		// 2. Create a document_signatures record via API
-		// 3. Update the SignatureNode in the editor state with the S3 URL
-		// 4. Save the updated document
-		// 5. Update tenant_application signed_at timestamps
-
-		// For now: save the updated document state with the signature embedded
-		// The SignatureComponent already updates the node, so we re-serialize after a tick
-		setTimeout(() => {
-			toast.success(`${role} signature captured`)
-			setIsSigning(false)
-		}, 500)
-	}
 
 	const signerName =
 		[tenantApplication.created_by?.name].filter(Boolean).join(' ') ||
 		'Property Manager'
 
+	const uploadSignature = async (dataUrl: string) => {
+		const blob = dataUrlToBlob(dataUrl)
+		const file = new File([blob], 'signature.png', { type: 'image/png' })
+		const formData = new FormData()
+		formData.append('file', file)
+		formData.append(
+			'objectKey',
+			`signatures/${tenantApplication.id}-${Date.now()}-pm.png`,
+		)
+
+		const uploadResponse = await fetch('/api/r2/upload', {
+			method: 'POST',
+			body: formData,
+		})
+		const uploadResult = (await uploadResponse.json()) as { url?: string }
+
+		if (!uploadResponse.ok || !uploadResult.url) {
+			toast.error('Failed to upload signature')
+			return
+		}
+
+		return uploadResult
+	}
+
+	const handleSign = async (role: SignatureRole, signatureDataUrl: string) => {
+		if (!tenantApplication.lease_agreement_document) return
+		setIsSigning(true)
+
+		try {
+			// 1. Upload signature image to R2
+			const uploadResult = await uploadSignature(signatureDataUrl)
+			if (!uploadResult?.url) return
+
+			// 2. Submit direct signature record (backend creates document_signatures entry)
+			await signDocumentDirect.mutateAsync({
+				document_id: tenantApplication.lease_agreement_document.id,
+				signature_url: safeString(uploadResult.url),
+				tenant_application_id: tenantApplication.id,
+			})
+
+			// 3. Stamp the matching SignatureNode in the serialized editor state
+			const signedAt = new Date().toISOString()
+			const updatedState = injectSignatureIntoState(
+				editorState,
+				role,
+				uploadResult.url,
+				signerName,
+				signedAt,
+			)
+
+			// 4. Save the updated document content
+			await updateDocument.mutateAsync({
+				id: tenantApplication.lease_agreement_document.id,
+				content: JSON.stringify(updatedState),
+			})
+
+			// 5. Update application status based on remaining unsigned signatures
+			const allSigned = getSignatureStatuses(updatedState).every((s) => s.signed)
+			await updateTenantApplication.mutateAsync({
+				id: tenantApplication.id,
+				data: { lease_agreement_document_status: allSigned ? 'SIGNED' : 'SIGNING' },
+			})
+
+			toast.success('Document signed successfully')
+			void revalidator.revalidate()
+		} catch {
+			toast.error('Failed to sign document')
+		} finally {
+			setIsSigning(false)
+		}
+	}
+
 	return (
 		<SigningView
-			documentTitle={document.title}
+			documentTitle={tenantApplication.lease_agreement_document?.title ?? 'Lease Document'}
 			applicationCode={tenantApplication.code}
 			editorState={editorState}
 			signerRole="property_manager"
@@ -58,6 +117,49 @@ export function LeaseSigningModule() {
 			isSigning={isSigning}
 		/>
 	)
+}
+
+function dataUrlToBlob(dataUrl: string): Blob {
+	const commaIndex = dataUrl.indexOf(',')
+	const header = dataUrl.slice(0, commaIndex)
+	const data = dataUrl.slice(commaIndex + 1)
+	const mime = header.match(/:(.*?);/)?.[1] ?? 'image/png'
+	const binary = atob(data)
+	const array = new Uint8Array(binary.length)
+	for (let i = 0; i < binary.length; i++) {
+		array[i] = binary.charCodeAt(i)
+	}
+	return new Blob([array], { type: mime })
+}
+
+/**
+ * Deep-clones the serialized Lexical state and stamps the matching signature node
+ * with the uploaded URL, signer name, and timestamp.
+ */
+function injectSignatureIntoState(
+	state: SerializedEditorState,
+	role: SignatureRole,
+	signatureUrl: string,
+	signedByName: string,
+	signedAt: string,
+): SerializedEditorState {
+	const clone = JSON.parse(JSON.stringify(state)) as SerializedEditorState
+
+	function walk(node: Record<string, unknown>) {
+		if (node.type === 'signature' && node.role === role) {
+			node.signatureUrl = signatureUrl
+			node.signedByName = signedByName
+			node.signedAt = signedAt
+		}
+		if (Array.isArray(node.children)) {
+			for (const child of node.children) {
+				walk(child as Record<string, unknown>)
+			}
+		}
+	}
+
+	walk(clone.root as unknown as Record<string, unknown>)
+	return clone
 }
 
 /**

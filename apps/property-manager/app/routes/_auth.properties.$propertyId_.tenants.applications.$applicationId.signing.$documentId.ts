@@ -1,6 +1,5 @@
 import { redirect } from 'react-router'
 import type { Route } from './+types/_auth.properties.$propertyId_.tenants.applications.$applicationId.signing.$documentId'
-import { getDocument } from '~/api/documents'
 import { getPropertyTenantApplicationForServer } from '~/api/tenant-applications'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
@@ -18,20 +17,22 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 	}
 
 	try {
-		const [document, tenantApplication] = await Promise.all([
-			getDocument(params.documentId, { authToken, baseUrl }),
-			getPropertyTenantApplicationForServer(
-				{
-					id: params.applicationId,
-					populate: ['DesiredUnit', 'CreatedBy'],
-				},
-				{ baseUrl, authToken },
-			),
-		])
+		const tenantApplication = await getPropertyTenantApplicationForServer(
+			{
+				id: params.applicationId,
+				populate: [
+					'DesiredUnit',
+					'CreatedBy',
+					'LeaseAgreementDocumentSignatures',
+					'LeaseAgreementDocument',
+				],
+			},
+			{ baseUrl, authToken },
+		)
 
 		return {
 			origin: getDomainUrl(request),
-			document,
+			document: tenantApplication?.lease_agreement_document,
 			tenantApplication,
 		}
 	} catch {
