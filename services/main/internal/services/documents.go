@@ -102,7 +102,7 @@ type UpdateDocumentInput struct {
 	Size         *int64
 	Tags         *[]string
 	PropertyID   lib.Optional[string]
-	ClientUserID string
+	ClientUserID *string
 }
 
 func (s *documentService) Update(
@@ -157,7 +157,9 @@ func (s *documentService) Update(
 		document.PropertyID = input.PropertyID.Ptr()
 	}
 
-	document.UpdatedByID = &input.ClientUserID
+	if input.ClientUserID != nil {
+		document.UpdatedByID = input.ClientUserID
+	}
 
 	if err := s.repo.Update(ctx, document); err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{

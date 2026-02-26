@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Link, useLoaderData, useNavigate, useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 
-import { useUpdateTenantApplication } from '~/api/tenant-applications'
+import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
 import { Editor } from '~/components/blocks/template-editor/editor'
 import { LeaseMenuBar } from '~/components/blocks/template-editor/lease-menu-bar'
 import { Button } from '~/components/ui/button'
@@ -40,7 +40,7 @@ const initialValue = {
 
 export function LeaseDocumentModule() {
 	const { document, tenantApplication } = useLoaderData<typeof loader>()
-	const updateTenantApplication = useUpdateTenantApplication()
+	const updateTenantApplication = useAdminUpdateTenantApplication()
 	const revalidator = useRevalidator()
 	const navigate = useNavigate()
 

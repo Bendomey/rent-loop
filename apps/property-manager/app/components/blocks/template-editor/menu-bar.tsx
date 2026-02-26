@@ -4,14 +4,14 @@ import { ArrowLeft, PencilLine, Save } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
-import { useUpdateDocument } from '~/api/documents'
+import { useAdminUpdateDocument } from '~/api/documents'
 import { Button } from '~/components/ui/button'
 import { TypographyMuted } from '~/components/ui/typography'
 
 export function MenuBar({ document }: { document: RentloopDocument }) {
 	const navigate = useNavigate()
 	const [editor] = useLexicalComposerContext()
-	const updateDocument = useUpdateDocument()
+	const updateDocument = useAdminUpdateDocument()
 	const savedContentRef = useRef(document.content)
 	const isFirstUpdateRef = useRef(true)
 	const [hasChanges, setHasChanges] = useState(false)

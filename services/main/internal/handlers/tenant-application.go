@@ -71,7 +71,7 @@ type CreateTenantApplicationRequest struct {
 //	@Failure		400		{object}	lib.HTTPError												"Error occurred when creating a tenant application"
 //	@Failure		422		{object}	lib.HTTPError												"Validation error"
 //	@Failure		500		{object}	string														"An unexpected error occurred"
-//	@Router			/api/v1/tenant-applications [post]
+//	@Router			/api/v1/admin/tenant-applications [post]
 func (h *TenantApplicationHandler) CreateTenantApplication(w http.ResponseWriter, r *http.Request) {
 	var body CreateTenantApplicationRequest
 
@@ -149,7 +149,7 @@ type SendTenantInviteRequest struct {
 //	@Failure		404		{object}	lib.HTTPError	"TenantApplication not found"
 //	@Failure		422		{object}	string			"Validation error"
 //	@Failure		500		{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/tenant-applications/invite [post]
+//	@Router			/api/v1/admin/tenant-applications/invite [post]
 func (h *TenantApplicationHandler) SendTenantInvite(w http.ResponseWriter, r *http.Request) {
 	adminClientUser, adminClientUserOk := lib.ClientUserFromContext(r.Context())
 	if !adminClientUserOk {
@@ -215,7 +215,7 @@ type ListTenantApplicationsQuery struct {
 //	@Failure		400	{object}	lib.HTTPError	"An error occurred while filtering tenant applications"
 //	@Failure		401	{object}	string			"Absent or invalid authentication token"
 //	@Failure		500	{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/tenant-applications [get]
+//	@Router			/api/v1/admin/tenant-applications [get]
 func (h *TenantApplicationHandler) ListTenantApplications(w http.ResponseWriter, r *http.Request) {
 	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
 	if filterQueryErr != nil {
@@ -275,7 +275,7 @@ type GetTenantApplicationQuery struct {
 	lib.GetOneQueryInput
 }
 
-// GetTenantApplication godoc
+// AdminGetTenantApplication godoc
 //
 //	@Summary		Get tenant application
 //	@Description	Get tenant application
@@ -290,8 +290,8 @@ type GetTenantApplicationQuery struct {
 //	@Failure		401						{object}	string														"Invalid or absent authentication token"
 //	@Failure		404						{object}	lib.HTTPError												"Tenant application not found"
 //	@Failure		500						{object}	string														"An unexpected error occurred"
-//	@Router			/api/v1/tenant-applications/{tenant_application_id} [get]
-func (h *TenantApplicationHandler) GetTenantApplication(w http.ResponseWriter, r *http.Request) {
+//	@Router			/api/v1/admin/tenant-applications/{tenant_application_id} [get]
+func (h *TenantApplicationHandler) AdminGetTenantApplication(w http.ResponseWriter, r *http.Request) {
 	populate := GetPopulateFields(r)
 	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
 
@@ -313,7 +313,45 @@ func (h *TenantApplicationHandler) GetTenantApplication(w http.ResponseWriter, r
 	})
 }
 
-type UpdateTenantApplicationRequest struct {
+// GetTenantApplication godoc
+//
+//	@Summary		Get tenant application
+//	@Description	Get tenant application
+//	@Tags			TenantApplication
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			tenant_application_id	path		string													true	"Tenant application ID"
+//	@Param			q						query		GetTenantApplicationQuery								true	"Tenant application"
+//	@Success		200						{object}	object{data=transformations.OutputTenantApplication}	"Tenant application retrieved successfully"
+//	@Failure		400						{object}	lib.HTTPError											"Error occurred when fetching a tenant application"
+//	@Failure		401						{object}	string													"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError											"Tenant application not found"
+//	@Failure		500						{object}	string													"An unexpected error occurred"
+//	@Router			/api/v1/tenant-applications/{tenant_application_id} [get]
+func (h *TenantApplicationHandler) GetTenantApplication(w http.ResponseWriter, r *http.Request) {
+	populate := GetPopulateFields(r)
+	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
+
+	query := repository.GetTenantApplicationQuery{
+		TenantApplicationID: tenantApplicationID,
+		Populate:            populate,
+	}
+
+	tenantApplication, getTenantApplicationErr := h.service.GetOneTenantApplication(r.Context(), query)
+	if getTenantApplicationErr != nil {
+		HandleErrorResponse(w, getTenantApplicationErr)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBTenantApplicationToRest(
+			tenantApplication,
+		),
+	})
+}
+
+type AdminUpdateTenantApplicationRequest struct {
 	DesiredUnitId                  *string                 `json:"desired_unit_id,omitempty"                   validate:"omitempty,uuid"                                                 example:"b4d0243c-6581-4104-8185-d83a45ebe41b" description:"Desired unit ID"`
 	RentFee                        *int64                  `json:"rent_fee,omitempty"                          validate:"omitempty"                                                      example:"1000"                                 description:"Rent fee of the applicant"`
 	RentFeeCurrency                *string                 `json:"rent_fee_currency,omitempty"                 validate:"omitempty"                                                      example:"GHS"                                  description:"Rent fee currency of the applicant"`
@@ -362,7 +400,7 @@ type UpdateTenantApplicationRequest struct {
 	LeaseAgreementDocumentStatus   lib.Optional[string]    `json:"lease_agreement_document_status,omitempty"   validate:"omitempty"                                                                                                     description:"Lease agreement document status"    swaggertype:"string"`
 }
 
-// UpdateTenantApplication godoc
+// AdminUpdateTenantApplication godoc
 //
 //	@Summary		Update a tenant application
 //	@Description	Update a tenant application
@@ -371,18 +409,18 @@ type UpdateTenantApplicationRequest struct {
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Param			tenant_application_id	path		string														true	"Tenant application ID"
-//	@Param			body					body		UpdateTenantApplicationRequest								true	"Update Tenant Application Request Body"
+//	@Param			body					body		AdminUpdateTenantApplicationRequest							true	"Update Tenant Application Request Body"
 //	@Success		200						{object}	object{data=transformations.OutputAdminTenantApplication}	"Tenant application updated successfully"
 //	@Failure		400						{object}	lib.HTTPError												"Error occurred when updating a tenant application"
 //	@Failure		401						{object}	string														"Invalid or absent authentication token"
 //	@Failure		404						{object}	lib.HTTPError												"Tenant application not found"
 //	@Failure		422						{object}	lib.HTTPError												"Validation error"
 //	@Failure		500						{object}	string														"An unexpected error occurred"
-//	@Router			/api/v1/tenant-applications/{tenant_application_id} [patch]
-func (h *TenantApplicationHandler) UpdateTenantApplication(w http.ResponseWriter, r *http.Request) {
+//	@Router			/api/v1/admin/tenant-applications/{tenant_application_id} [patch]
+func (h *TenantApplicationHandler) AdminUpdateTenantApplication(w http.ResponseWriter, r *http.Request) {
 	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
 
-	var body UpdateTenantApplicationRequest
+	var body AdminUpdateTenantApplicationRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
 		return
@@ -455,6 +493,58 @@ func (h *TenantApplicationHandler) UpdateTenantApplication(w http.ResponseWriter
 	})
 }
 
+type UpdateTenantApplicationRequest struct {
+	LeaseAgreementDocumentStatus lib.Optional[string] `json:"lease_agreement_document_status,omitempty" validate:"omitempty" description:"Lease agreement document status" swaggertype:"string"`
+}
+
+// UpdateTenantApplication godoc
+//
+//	@Summary		Update a tenant application
+//	@Description	Update a tenant application
+//	@Tags			TenantApplication
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			tenant_application_id	path		string													true	"Tenant application ID"
+//	@Param			body					body		UpdateTenantApplicationRequest							true	"Update Tenant Application Request Body"
+//	@Success		200						{object}	object{data=transformations.OutputTenantApplication}	"Tenant application updated successfully"
+//	@Failure		400						{object}	lib.HTTPError											"Error occurred when updating a tenant application"
+//	@Failure		401						{object}	string													"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError											"Tenant application not found"
+//	@Failure		422						{object}	lib.HTTPError											"Validation error"
+//	@Failure		500						{object}	string													"An unexpected error occurred"
+//	@Router			/api/v1/tenant-applications/{tenant_application_id} [patch]
+func (h *TenantApplicationHandler) UpdateTenantApplication(w http.ResponseWriter, r *http.Request) {
+	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
+
+	var body UpdateTenantApplicationRequest
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	input := services.UpdateTenantApplicationInput{
+		TenantApplicationID:          tenantApplicationID,
+		LeaseAgreementDocumentStatus: body.LeaseAgreementDocumentStatus,
+	}
+
+	tenantApplication, updateTenantApplicationErr := h.service.UpdateTenantApplication(r.Context(), input)
+	if updateTenantApplicationErr != nil {
+		HandleErrorResponse(w, updateTenantApplicationErr)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBTenantApplicationToRest(
+			tenantApplication,
+		),
+	})
+}
+
 // DeleteTenantApplication godoc
 //
 //	@Summary		Delete a tenant application
@@ -469,7 +559,7 @@ func (h *TenantApplicationHandler) UpdateTenantApplication(w http.ResponseWriter
 //	@Failure		401						{object}	string			"Invalid or absent authentication token"
 //	@Failure		404						{object}	lib.HTTPError	"Tenant application not found"
 //	@Failure		500						{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/tenant-applications/{tenant_application_id} [delete]
+//	@Router			/api/v1/admin/tenant-applications/{tenant_application_id} [delete]
 func (h *TenantApplicationHandler) DeleteTenantApplication(w http.ResponseWriter, r *http.Request) {
 	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
 
@@ -502,7 +592,7 @@ type CancelTenantApplicationRequest struct {
 //	@Failure		404						{object}	lib.HTTPError	"Tenant application not found"
 //	@Failure		422						{object}	lib.HTTPError	"Validation error"
 //	@Failure		500						{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/tenant-applications/{tenant_application_id}/cancel [patch]
+//	@Router			/api/v1/admin/tenant-applications/{tenant_application_id}/cancel [patch]
 func (h *TenantApplicationHandler) CancelTenantApplication(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentClientUserOk {
@@ -554,7 +644,7 @@ func (h *TenantApplicationHandler) CancelTenantApplication(w http.ResponseWriter
 //	@Failure		409						{object}	lib.HTTPError	"Tenant application already approved"
 //	@Failure		422						{object}	lib.HTTPError	"Validation error"
 //	@Failure		500						{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/tenant-applications/{tenant_application_id}/approve [patch]
+//	@Router			/api/v1/admin/tenant-applications/{tenant_application_id}/approve [patch]
 func (h *TenantApplicationHandler) ApproveTenantApplication(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentClientUserOk {
@@ -599,7 +689,7 @@ type GenerateInvoiceRequest struct {
 //	@Failure		404						{object}	lib.HTTPError								"Tenant application not found"
 //	@Failure		422						{object}	lib.HTTPError								"Validation error"
 //	@Failure		500						{object}	string										"An unexpected error occurred"
-//	@Router			/api/v1/tenant-applications/{tenant_application_id}/invoice:generate [post]
+//	@Router			/api/v1/admin/tenant-applications/{tenant_application_id}/invoice:generate [post]
 func (h *TenantApplicationHandler) GenerateInvoice(w http.ResponseWriter, r *http.Request) {
 	_, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentClientUserOk {
@@ -664,7 +754,7 @@ type PayInvoiceRequest struct {
 //	@Failure		404						{object}	lib.HTTPError	"Tenant application or invoice not found"
 //	@Failure		422						{object}	lib.HTTPError	"Validation error"
 //	@Failure		500						{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay [post]
+//	@Router			/api/v1/admin/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay [post]
 func (h *TenantApplicationHandler) PayInvoice(w http.ResponseWriter, r *http.Request) {
 	clientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentClientUserOk {

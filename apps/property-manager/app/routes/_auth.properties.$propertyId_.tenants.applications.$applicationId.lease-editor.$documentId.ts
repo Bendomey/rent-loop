@@ -1,7 +1,7 @@
 import { redirect } from 'react-router'
 import type { Route } from './+types/_auth.properties.$propertyId_.tenants.applications.$applicationId.lease-editor.$documentId'
 import { getDocument } from '~/api/documents'
-import { getPropertyTenantApplicationForServer } from '~/api/tenant-applications'
+import { getAdminPropertyTenantApplicationForServer } from '~/api/tenant-applications'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { NOT_FOUND_ROUTE } from '~/lib/constants'
@@ -20,7 +20,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 	try {
 		const [document, tenantApplication] = await Promise.all([
 			getDocument(params.documentId, { authToken, baseUrl }),
-			getPropertyTenantApplicationForServer(
+			getAdminPropertyTenantApplicationForServer(
 				{
 					id: params.applicationId,
 					populate: ['DesiredUnit', 'CreatedBy'],

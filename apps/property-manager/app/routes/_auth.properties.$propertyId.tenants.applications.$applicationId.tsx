@@ -1,6 +1,6 @@
 import { redirect } from 'react-router'
 import type { Route } from './+types/_auth.properties.$propertyId.tenants.applications.$applicationId'
-import { getPropertyTenantApplicationForServer } from '~/api/tenant-applications'
+import { getAdminPropertyTenantApplicationForServer } from '~/api/tenant-applications'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
@@ -17,7 +17,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const clientUserProperty = context.get(propertyContext)
 
 	try {
-		const tenantApplication = await getPropertyTenantApplicationForServer(
+		const tenantApplication = await getAdminPropertyTenantApplicationForServer(
 			{
 				id: params.applicationId,
 				populate: [

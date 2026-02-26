@@ -12,7 +12,7 @@ import {
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
-import { useUpdateDocument } from '~/api/documents'
+import { useAdminUpdateDocument } from '~/api/documents'
 import { SignatureNode } from '~/components/editor/nodes/signature-node'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -42,7 +42,7 @@ export function LeaseMenuBar({
 }: LeaseMenuBarProps) {
 	const navigate = useNavigate()
 	const [editor] = useLexicalComposerContext()
-	const updateDocument = useUpdateDocument()
+	const updateDocument = useAdminUpdateDocument()
 	const savedContentRef = useRef(document.content)
 	const isFirstUpdateRef = useRef(true)
 	const [hasChanges, setHasChanges] = useState(false)

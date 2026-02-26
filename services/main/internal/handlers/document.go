@@ -43,7 +43,7 @@ type CreateDocumentRequest struct {
 //	@Failure		400		{object}	lib.HTTPError
 //	@Failure		401		{object}	string
 //	@Failure		500		{object}	string
-//	@Router			/api/v1/documents [post]
+//	@Router			/api/v1/admin/documents [post]
 func (h *DocumentHandler) CreateDocument(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 
@@ -91,7 +91,7 @@ func (h *DocumentHandler) CreateDocument(w http.ResponseWriter, r *http.Request)
 	})
 }
 
-type UpdateDocumentRequest struct {
+type AdminUpdateDocumentRequest struct {
 	Type       *string              `json:"type,omitempty"        validate:"omitempty,oneof=TEMPLATE DOCUMENT" example:"DOCUMENT"`
 	Title      *string              `json:"title,omitempty"       validate:"omitempty"                         example:"Updated Lease Agreement"`
 	Content    *string              `json:"content,omitempty"     validate:"omitempty,json"`
@@ -100,7 +100,7 @@ type UpdateDocumentRequest struct {
 	PropertyID lib.Optional[string] `json:"property_id,omitempty" validate:"omitempty,uuid4"                   example:"550e8400-e29b-41d4-a716-446655440000" swaggertype:"string"`
 }
 
-// UpdateDocument godoc
+// AdminUpdateDocument godoc
 //
 //	@Summary		Update an existing document
 //	@Description	Update an existing document
@@ -109,13 +109,13 @@ type UpdateDocumentRequest struct {
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Param			document_id	path		string												true	"Document ID"	format(uuid4)
-//	@Param			body		body		UpdateDocumentRequest								true	"Document details"
+//	@Param			body		body		AdminUpdateDocumentRequest							true	"Document details"
 //	@Success		200			{object}	object{data=transformations.OutputAdminDocument}	"Document Updated successfully"
 //	@Failure		400			{object}	lib.HTTPError
 //	@Failure		401			{object}	string
 //	@Failure		500			{object}	string
-//	@Router			/api/v1/documents/{document_id} [patch]
-func (h *DocumentHandler) UpdateDocument(w http.ResponseWriter, r *http.Request) {
+//	@Router			/api/v1/admin/documents/{document_id} [patch]
+func (h *DocumentHandler) AdminUpdateDocument(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 
 	if !currentUserOk {
@@ -123,7 +123,7 @@ func (h *DocumentHandler) UpdateDocument(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	var body UpdateDocumentRequest
+	var body AdminUpdateDocumentRequest
 
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
 		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
@@ -154,7 +154,7 @@ func (h *DocumentHandler) UpdateDocument(w http.ResponseWriter, r *http.Request)
 		Size:         body.Size,
 		Tags:         body.Tags,
 		PropertyID:   body.PropertyID,
-		ClientUserID: currentUser.ID,
+		ClientUserID: &currentUser.ID,
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)
@@ -163,6 +163,63 @@ func (h *DocumentHandler) UpdateDocument(w http.ResponseWriter, r *http.Request)
 
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": transformations.DBAdminDocumentToRestDocument(document),
+	})
+}
+
+type UpdateDocumentRequest struct {
+	Content *string `json:"content,omitempty" validate:"omitempty,json"`
+}
+
+// UpdateDocument godoc
+//
+//	@Summary		Update an existing document
+//	@Description	Update an existing document
+//	@Tags			Documents
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			document_id	path		string										true	"Document ID"	format(uuid4)
+//	@Param			body		body		UpdateDocumentRequest						true	"Document details"
+//	@Success		200			{object}	object{data=transformations.OutputDocument}	"Document Updated successfully"
+//	@Failure		400			{object}	lib.HTTPError
+//	@Failure		401			{object}	string
+//	@Failure		500			{object}	string
+//	@Router			/api/v1/documents/{document_id} [patch]
+func (h *DocumentHandler) UpdateDocument(w http.ResponseWriter, r *http.Request) {
+	var body UpdateDocumentRequest
+
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+
+	if !isPassedValidation {
+		return
+	}
+
+	documentID := chi.URLParam(r, "document_id")
+
+	var contentData *map[string]interface{} = nil
+	if body.Content != nil {
+		if marshalErr := json.Unmarshal([]byte(*body.Content), &contentData); marshalErr != nil {
+			http.Error(w, "Invalid JSON format in content field", http.StatusUnprocessableEntity)
+			return
+		}
+	}
+
+	document, err := h.service.Update(r.Context(), services.UpdateDocumentInput{
+		DocumentID: documentID,
+		Content:    contentData,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBDocumentToRestDocument(document),
 	})
 }
 
@@ -179,7 +236,7 @@ func (h *DocumentHandler) UpdateDocument(w http.ResponseWriter, r *http.Request)
 //	@Failure		400			{object}	lib.HTTPError
 //	@Failure		401			{object}	string
 //	@Failure		500			{object}	string
-//	@Router			/api/v1/documents/{document_id} [delete]
+//	@Router			/api/v1/admin/documents/{document_id} [delete]
 func (h *DocumentHandler) DeleteDocument(w http.ResponseWriter, r *http.Request) {
 	documentID := chi.URLParam(r, "document_id")
 
@@ -210,7 +267,7 @@ type GetDocumentWithPopulateQuery struct {
 //	@Failure		400			{object}	lib.HTTPError
 //	@Failure		401			{object}	string
 //	@Failure		500			{object}	string
-//	@Router			/api/v1/documents/{document_id} [get]
+//	@Router			/api/v1/admin/documents/{document_id} [get]
 func (h *DocumentHandler) GetDocumentById(w http.ResponseWriter, r *http.Request) {
 	documentID := chi.URLParam(r, "document_id")
 
@@ -256,7 +313,7 @@ type ListDocumentsFilterRequest struct {
 //	@Failure		400	{object}	lib.HTTPError
 //	@Failure		401	{object}	string
 //	@Failure		500	{object}	string
-//	@Router			/api/v1/documents [get]
+//	@Router			/api/v1/admin/documents [get]
 func (h *DocumentHandler) ListDocuments(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 

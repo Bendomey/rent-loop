@@ -14,7 +14,7 @@ const getPropertyTenantApplications = async (
 		const params = getQueryParams<FetchTenantApplicationFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<TenantApplication>>
-		>(`/v1/tenant-applications?${params.toString()}`)
+		>(`/v1/admin/tenant-applications?${params.toString()}`)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -40,6 +40,34 @@ export const useGetPropertyTenantApplications = (
 interface GetPropertyTenantApplicationProps {
 	id: string
 	populate?: Array<string>
+}
+
+export const getAdminPropertyTenantApplicationForServer = async (
+	input: GetPropertyTenantApplicationProps,
+	apiConfig: ApiConfigForServerConfig,
+) => {
+	try {
+		const params = getQueryParams({
+			populate: input.populate,
+		})
+		const response = await fetchServer<ApiResponse<TenantApplication>>(
+			`${apiConfig.baseUrl}/v1/admin/tenant-applications/${input.id}?${params.toString()}`,
+			{
+				method: 'GET',
+				...apiConfig,
+			},
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
 }
 
 export const getPropertyTenantApplicationForServer = async (
@@ -114,7 +142,7 @@ export const createTenantApplication = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<TenantApplication>>(
-			`${apiConfig?.baseUrl}/v1/tenant-applications`,
+			`${apiConfig?.baseUrl}/v1/admin/tenant-applications`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),
@@ -143,7 +171,7 @@ const inviteTenantToProperty = async (props: {
 	phone: Maybe<string>
 }) => {
 	try {
-		await fetchClient(`/v1/tenant-applications/invite`, {
+		await fetchClient(`/v1/admin/tenant-applications/invite`, {
 			method: 'POST',
 			body: JSON.stringify(props),
 		})
@@ -178,7 +206,7 @@ const cancelTenantApplication = async ({
 }: cancelTenantApplicationProps) => {
 	try {
 		const response = await fetchClient<ApiResponse<TenantApplication>>(
-			`/v1/tenant-applications/${id}/cancel`,
+			`/v1/admin/tenant-applications/${id}/cancel`,
 			{
 				method: 'PATCH',
 				body: JSON.stringify({ reason }),
@@ -205,7 +233,7 @@ export const useCancelTenantApplication = () =>
 
 const approveTenantApplication = async (id: string) => {
 	try {
-		await fetchClient<boolean>(`/v1/tenant-applications/${id}/approve`, {
+		await fetchClient<boolean>(`/v1/admin/tenant-applications/${id}/approve`, {
 			method: 'PATCH',
 		})
 	} catch (error) {
@@ -229,7 +257,7 @@ export const useApproveTenantApplication = () =>
  */
 const deleteTenantApplication = async (props: { id: string }) => {
 	try {
-		await fetchClient(`/v1/tenant-applications/${props.id}`, {
+		await fetchClient(`/v1/admin/tenant-applications/${props.id}`, {
 			method: 'DELETE',
 		})
 	} catch (error: unknown) {
@@ -248,6 +276,42 @@ export const useDeleteTenantApplication = () =>
 	useMutation({
 		mutationFn: deleteTenantApplication,
 	})
+
+/**
+ * Update Admin Tenant Application
+ */
+interface AdminUpdateTenantApplicationProps {
+	id: string
+	data: Partial<TenantApplication>
+}
+
+const adminUpdateTenantApplication = async ({
+	id,
+	data,
+}: AdminUpdateTenantApplicationProps) => {
+	try {
+		const response = await fetchClient<ApiResponse<TenantApplication>>(
+			`/v1/admin/tenant-applications/${id}`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify(data),
+			},
+		)
+		return response.parsedBody.data
+	} catch (error) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useAdminUpdateTenantApplication = () =>
+	useMutation({ mutationFn: adminUpdateTenantApplication })
 
 /**
  * Update Tenant Application

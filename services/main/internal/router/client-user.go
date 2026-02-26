@@ -24,6 +24,14 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			// signing (token-based auth, no JWT required)
 			r.Get("/v1/signing/{token}/verify", handlers.SigningHandler.VerifyToken)
 			r.Post("/v1/signing/{token}/sign", handlers.SigningHandler.SignDocument)
+
+			r.Patch("/v1/tenant-applications", handlers.TenantApplicationHandler.UpdateTenantApplication)
+			r.Get(
+				"/v1/tenant-applications/{tenant_application_id}",
+				handlers.TenantApplicationHandler.GetTenantApplication,
+			)
+
+			r.Patch("/v1/documents", handlers.DocumentHandler.UpdateDocument)
 		})
 
 		// protected client user routes
@@ -119,13 +127,13 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			})
 
 			// documents
-			r.Route("/v1/documents", func(r chi.Router) {
+			r.Route("/v1/admin/documents", func(r chi.Router) {
 				r.Post("/", handlers.DocumentHandler.CreateDocument)
 				r.Get("/", handlers.DocumentHandler.ListDocuments)
 
 				r.Route("/{document_id}", func(r chi.Router) {
 					r.Get("/", handlers.DocumentHandler.GetDocumentById)
-					r.Patch("/", handlers.DocumentHandler.UpdateDocument)
+					r.Patch("/", handlers.DocumentHandler.AdminUpdateDocument)
 					r.Delete("/", handlers.DocumentHandler.DeleteDocument)
 				})
 			})
@@ -139,13 +147,13 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				)
 			})
 
-			r.Route("/v1/tenant-applications", func(r chi.Router) {
+			r.Route("/v1/admin/tenant-applications", func(r chi.Router) {
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Post("/invite", handlers.TenantApplicationHandler.SendTenantInvite)
 				r.Get("/", handlers.TenantApplicationHandler.ListTenantApplications)
-				r.Get("/{tenant_application_id}", handlers.TenantApplicationHandler.GetTenantApplication)
+				r.Get("/{tenant_application_id}", handlers.TenantApplicationHandler.AdminGetTenantApplication)
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Patch("/{tenant_application_id}", handlers.TenantApplicationHandler.UpdateTenantApplication)
+					Patch("/{tenant_application_id}", handlers.TenantApplicationHandler.AdminUpdateTenantApplication)
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Delete("/{tenant_application_id}", handlers.TenantApplicationHandler.DeleteTenantApplication)
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
