@@ -3,9 +3,9 @@ import { useState } from 'react'
 import { useLoaderData, useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 
-import { useUpdateDocument } from '~/api/documents'
+import { useAdminUpdateDocument } from '~/api/documents'
 import { useSignDocumentDirect } from '~/api/signing'
-import { useUpdateTenantApplication } from '~/api/tenant-applications'
+import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
 import { SigningView } from '~/components/blocks/signing-view/signing-view'
 import type { SignatureRole } from '~/components/editor/nodes/signature-node'
 import {
@@ -19,8 +19,8 @@ import type { loader } from '~/routes/_auth.properties.$propertyId_.tenants.appl
 export function LeaseSigningModule() {
 	const { tenantApplication } = useLoaderData<typeof loader>()
 	const signDocumentDirect = useSignDocumentDirect()
-	const updateDocument = useUpdateDocument()
-	const updateTenantApplication = useUpdateTenantApplication()
+	const updateDocument = useAdminUpdateDocument()
+	const updateTenantApplication = useAdminUpdateTenantApplication()
 	const revalidator = useRevalidator()
 	const [isSigning, setIsSigning] = useState(false)
 

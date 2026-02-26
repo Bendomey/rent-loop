@@ -7,7 +7,7 @@ import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useTenantApplicationContext } from '../context'
-import { useUpdateTenantApplication } from '~/api/tenant-applications'
+import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
 import { DatePickerInput } from '~/components/date-picker-input'
 import { Button } from '~/components/ui/button'
 import {
@@ -110,7 +110,7 @@ export function PropertyTenantApplicationBasic() {
 	}, [objectUrl])
 
 	const { handleSubmit, reset } = rhfMethods
-	const { isPending, mutate } = useUpdateTenantApplication()
+	const { isPending, mutate } = useAdminUpdateTenantApplication()
 
 	const onSubmit = (data: FormSchema) => {
 		if (!application?.id) return

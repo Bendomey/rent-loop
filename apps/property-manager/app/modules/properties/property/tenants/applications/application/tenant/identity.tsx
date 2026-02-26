@@ -6,7 +6,7 @@ import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useTenantApplicationContext } from '../context'
-import { useUpdateTenantApplication } from '~/api/tenant-applications'
+import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
 import { Button } from '~/components/ui/button'
 import {
 	Card,
@@ -117,7 +117,7 @@ export function PropertyTenantApplicationIdentity() {
 	}, [backUrl])
 
 	const { handleSubmit, reset } = rhfMethods
-	const { isPending, mutate } = useUpdateTenantApplication()
+	const { isPending, mutate } = useAdminUpdateTenantApplication()
 
 	const onSubmit = (data: FormSchema) => {
 		if (!application?.id) return

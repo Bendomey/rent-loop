@@ -4,7 +4,7 @@ import { useRevalidator } from 'react-router'
 import { DocumentList } from './document-list'
 import type { AttachedDocument, DocMode } from './types'
 import { useCreateDocument } from '~/api/documents'
-import { useUpdateTenantApplication } from '~/api/tenant-applications'
+import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
 import {
@@ -52,7 +52,7 @@ export function AddDocumentModal({
 	const { mutateAsync: createDocument, isPending: isCreating } =
 		useCreateDocument()
 	const { mutateAsync: updateTenantApplication, isPending: isUpdating } =
-		useUpdateTenantApplication()
+		useAdminUpdateTenantApplication()
 
 	const isSaving = isCreating || isUpdating
 

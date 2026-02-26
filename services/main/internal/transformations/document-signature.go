@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
-	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/gofrs/uuid"
 )
 
@@ -26,9 +25,9 @@ type OutputAdminDocumentSignature struct {
 	UpdatedAt    time.Time         `json:"updated_at"               example:"2024-06-10T09:00:00Z"`
 }
 
-func DBAdminDocumentSignatureToRest(services services.Services, i *models.DocumentSignature) (any, error) {
+func DBAdminDocumentSignatureToRest(i *models.DocumentSignature) any {
 	if i == nil || i.ID == uuid.Nil {
-		return nil, nil
+		return nil
 	}
 
 	// tenantApplication, tenantApplicationErr := DBAdminTenantApplicationToRest(services, i.TenantApplication)
@@ -58,7 +57,20 @@ func DBAdminDocumentSignatureToRest(services services.Services, i *models.Docume
 		"updated_at":     i.UpdatedAt,
 	}
 
-	return data, nil
+	return data
+}
+
+func DBAdminDocumentSignaturesToRest(i *[]models.DocumentSignature) any {
+	if i == nil {
+		return nil
+	}
+
+	signatures := make([]any, 0)
+	for _, sig := range *i {
+		signatures = append(signatures, DBAdminDocumentSignatureToRest(&sig))
+	}
+
+	return signatures
 }
 
 type OutputDocumentSignature struct {

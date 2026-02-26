@@ -1,5 +1,6 @@
 import type { Route } from './+types/sign.$token'
 import { verifySigningToken } from '~/api/signing'
+import { getPropertyTenantApplicationForServer } from '~/api/tenant-applications'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
@@ -20,10 +21,28 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 			}
 		}
 
+		let tenantApplication: TenantApplication | undefined
+		if (payload?.tenant_application_id) {
+			const tenantApplicationResponse =
+				await getPropertyTenantApplicationForServer(
+					{
+						populate: [
+							'LeaseAgreementDocument',
+							'LeaseAgreementDocumentSignatures',
+						],
+						id: payload.tenant_application_id,
+					},
+					{ baseUrl },
+				)
+			tenantApplication = tenantApplicationResponse
+		}
+		// TODO: add case for lease fetching too. in the case of termination or extension.
+
 		return {
 			signingToken: payload,
 			expired: false,
 			origin: getDomainUrl(request),
+			tenantApplication,
 		}
 	} catch {
 		return {

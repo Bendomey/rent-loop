@@ -10,7 +10,7 @@ const getDocuments = async (
 		const params = getQueryParams<FetchRentloopDocumentFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<RentloopDocument>>
-		>(`/v1/documents?${params.toString()}`)
+		>(`/v1/admin/documents?${params.toString()}`)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -31,7 +31,7 @@ export const getDocument = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<RentloopDocument>>(
-			`${apiConfig?.baseUrl}/v1/documents/${id}`,
+			`${apiConfig?.baseUrl}/v1/admin/documents/${id}`,
 			{
 				method: 'GET',
 				...(apiConfig ? apiConfig : {}),
@@ -74,7 +74,7 @@ export const createDocumentSSR = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<RentloopDocument>>(
-			`${apiConfig?.baseUrl}/v1/documents`,
+			`${apiConfig?.baseUrl}/v1/admin/documents`,
 			{
 				method: 'POST',
 				body: JSON.stringify(params),
@@ -98,7 +98,7 @@ export const createDocumentSSR = async (
 export const createDocument = async (params: CreateDocumentInputParams) => {
 	try {
 		const response = await fetchClient<ApiResponse<RentloopDocument>>(
-			'/v1/documents',
+			'/v1/admin/documents',
 			{
 				method: 'POST',
 				body: JSON.stringify(params),
@@ -123,13 +123,46 @@ export const useCreateDocument = () =>
 		mutationFn: createDocument,
 	})
 
-interface UpdateDocumentInputParams {
+interface AdminUpdateDocumentInputParams {
 	id: string
 	content?: string
 	title?: string
 	size?: number
 	tags?: Array<string>
 	property_id?: string
+}
+
+const adminUpdateDocument = async ({ id, ...data }: AdminUpdateDocumentInputParams) => {
+	try {
+		const response = await fetchClient<ApiResponse<RentloopDocument>>(
+			`/v1/admin/documents/${id}`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify(data),
+			},
+		)
+
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useAdminUpdateDocument = () =>
+	useMutation({
+		mutationFn: adminUpdateDocument,
+	})
+
+interface UpdateDocumentInputParams {
+	id: string
+	content: string
 }
 
 const updateDocument = async ({ id, ...data }: UpdateDocumentInputParams) => {
@@ -139,6 +172,7 @@ const updateDocument = async ({ id, ...data }: UpdateDocumentInputParams) => {
 			{
 				method: 'PATCH',
 				body: JSON.stringify(data),
+				isUnAuthorizedRequest: true,
 			},
 		)
 
@@ -162,7 +196,7 @@ export const useUpdateDocument = () =>
 
 const deleteDocument = async (id: string) => {
 	try {
-		await fetchClient(`/v1/documents/${id}`, {
+		await fetchClient(`/v1/admin/documents/${id}`, {
 			method: 'DELETE',
 		})
 	} catch (error: unknown) {

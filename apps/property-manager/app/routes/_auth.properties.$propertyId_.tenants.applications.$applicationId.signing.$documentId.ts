@@ -1,6 +1,6 @@
 import { redirect } from 'react-router'
 import type { Route } from './+types/_auth.properties.$propertyId_.tenants.applications.$applicationId.signing.$documentId'
-import { getPropertyTenantApplicationForServer } from '~/api/tenant-applications'
+import { getAdminPropertyTenantApplicationForServer } from '~/api/tenant-applications'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { NOT_FOUND_ROUTE } from '~/lib/constants'
@@ -17,7 +17,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 	}
 
 	try {
-		const tenantApplication = await getPropertyTenantApplicationForServer(
+		const tenantApplication = await getAdminPropertyTenantApplicationForServer(
 			{
 				id: params.applicationId,
 				populate: [

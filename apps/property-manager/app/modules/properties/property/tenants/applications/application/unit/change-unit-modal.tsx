@@ -3,7 +3,7 @@ import { Check } from 'lucide-react'
 import { useState, type Dispatch, type SetStateAction } from 'react'
 import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
-import { useUpdateTenantApplication } from '~/api/tenant-applications'
+import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
 import { useGetPropertyUnits } from '~/api/units'
 import {
 	AlertDialog,
@@ -48,7 +48,7 @@ export function ChangeUnitModal({
 		pagination: { per: 1000 },
 	})
 
-	const { isPending, mutate } = useUpdateTenantApplication()
+	const { isPending, mutate } = useAdminUpdateTenantApplication()
 
 	const handleSubmit = () => {
 		if (!selectedUnitId || selectedUnitId === currentUnitId) return

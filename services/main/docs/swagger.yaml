@@ -40,6 +40,180 @@ definitions:
     - total_amount
     - unit_amount
     type: object
+  handlers.AdminUpdateDocumentRequest:
+    properties:
+      content:
+        type: string
+      property_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      size:
+        example: 3072
+        minimum: 1
+        type: integer
+      tags:
+        example:
+        - LEASE_AGREEMENT
+        - INSPECTION_REPORT
+        items:
+          type: string
+        type: array
+      title:
+        example: Updated Lease Agreement
+        type: string
+      type:
+        enum:
+        - TEMPLATE
+        - DOCUMENT
+        example: DOCUMENT
+        type: string
+    type: object
+  handlers.AdminUpdateTenantApplicationRequest:
+    properties:
+      current_address:
+        example: 123 Main St, Accra
+        type: string
+      date_of_birth:
+        example: "1990-01-01T00:00:00Z"
+        type: string
+      desired_move_in_date:
+        type: string
+      desired_unit_id:
+        example: b4d0243c-6581-4104-8185-d83a45ebe41b
+        type: string
+      email:
+        type: string
+      emergency_contact_name:
+        example: Jane Doe
+        type: string
+      emergency_contact_phone:
+        example: "+233281434579"
+        type: string
+      employer:
+        example: Acme Corp
+        type: string
+      employer_type:
+        enum:
+        - WORKER
+        - STUDENT
+        example: WORKER
+        type: string
+      first_name:
+        example: John
+        type: string
+      gender:
+        enum:
+        - MALE
+        - FEMALE
+        example: MALE
+        type: string
+      id_back_url:
+        type: string
+      id_front_url:
+        type: string
+      id_number:
+        example: GHA-123456789
+        type: string
+      id_type:
+        enum:
+        - GHANA_CARD
+        - NATIONAL_ID
+        - PASSPORT
+        - DRIVER_LICENSE
+        example: GHANA_CARD
+        type: string
+      initial_deposit_fee:
+        type: integer
+      initial_deposit_paid_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      initial_deposit_payment_method:
+        enum:
+        - ONLINE
+        - CASH
+        - EXTERNAL
+        example: ONLINE
+        type: string
+      initial_deposit_reference_number:
+        example: "123456789"
+        type: string
+      last_name:
+        example: Doe
+        type: string
+      lease_agreement_document_id:
+        type: string
+      lease_agreement_document_mode:
+        type: string
+      lease_agreement_document_status:
+        type: string
+      lease_agreement_document_url:
+        type: string
+      marital_status:
+        enum:
+        - SINGLE
+        - MARRIED
+        - DIVORCED
+        - WIDOWED
+        example: SINGLE
+        type: string
+      nationality:
+        example: Ghanaian
+        type: string
+      occupation:
+        example: Software Engineer
+        type: string
+      occupation_address:
+        example: 456 Tech Ave, Accra
+        type: string
+      other_names:
+        type: string
+      payment_frequency:
+        type: string
+      phone:
+        example: "+233281234569"
+        type: string
+      previous_landlord_name:
+        type: string
+      previous_landlord_phone:
+        type: string
+      previous_tenancy_period:
+        type: string
+      profile_photo_url:
+        type: string
+      proof_of_income_url:
+        type: string
+      relationship_to_emergency_contact:
+        example: Sister
+        type: string
+      rent_fee:
+        example: 1000
+        type: integer
+      rent_fee_currency:
+        example: GHS
+        type: string
+      security_deposit_fee:
+        type: integer
+      security_deposit_fee_currency:
+        example: GHS
+        type: string
+      security_deposit_paid_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      security_deposit_payment_method:
+        enum:
+        - ONLINE
+        - CASH
+        - EXTERNAL
+        example: ONLINE
+        type: string
+      security_deposit_reference_number:
+        example: "123456789"
+        type: string
+      stay_duration:
+        type: integer
+      stay_duration_frequency:
+        type: string
+    type: object
   handlers.AuthCodeRequest:
     properties:
       channel:
@@ -795,29 +969,6 @@ definitions:
     properties:
       content:
         type: string
-      property_id:
-        example: 550e8400-e29b-41d4-a716-446655440000
-        type: string
-      size:
-        example: 3072
-        minimum: 1
-        type: integer
-      tags:
-        example:
-        - LEASE_AGREEMENT
-        - INSPECTION_REPORT
-        items:
-          type: string
-        type: array
-      title:
-        example: Updated Lease Agreement
-        type: string
-      type:
-        enum:
-        - TEMPLATE
-        - DOCUMENT
-        example: DOCUMENT
-        type: string
     type: object
   handlers.UpdateInvoiceRequest:
     properties:
@@ -979,148 +1130,7 @@ definitions:
     type: object
   handlers.UpdateTenantApplicationRequest:
     properties:
-      current_address:
-        example: 123 Main St, Accra
-        type: string
-      date_of_birth:
-        example: "1990-01-01T00:00:00Z"
-        type: string
-      desired_move_in_date:
-        type: string
-      desired_unit_id:
-        example: b4d0243c-6581-4104-8185-d83a45ebe41b
-        type: string
-      email:
-        type: string
-      emergency_contact_name:
-        example: Jane Doe
-        type: string
-      emergency_contact_phone:
-        example: "+233281434579"
-        type: string
-      employer:
-        example: Acme Corp
-        type: string
-      employer_type:
-        enum:
-        - WORKER
-        - STUDENT
-        example: WORKER
-        type: string
-      first_name:
-        example: John
-        type: string
-      gender:
-        enum:
-        - MALE
-        - FEMALE
-        example: MALE
-        type: string
-      id_back_url:
-        type: string
-      id_front_url:
-        type: string
-      id_number:
-        example: GHA-123456789
-        type: string
-      id_type:
-        enum:
-        - GHANA_CARD
-        - NATIONAL_ID
-        - PASSPORT
-        - DRIVER_LICENSE
-        example: GHANA_CARD
-        type: string
-      initial_deposit_fee:
-        type: integer
-      initial_deposit_paid_at:
-        example: "2023-01-01T00:00:00Z"
-        type: string
-      initial_deposit_payment_method:
-        enum:
-        - ONLINE
-        - CASH
-        - EXTERNAL
-        example: ONLINE
-        type: string
-      initial_deposit_reference_number:
-        example: "123456789"
-        type: string
-      last_name:
-        example: Doe
-        type: string
-      lease_agreement_document_id:
-        type: string
-      lease_agreement_document_mode:
-        type: string
       lease_agreement_document_status:
-        type: string
-      lease_agreement_document_url:
-        type: string
-      marital_status:
-        enum:
-        - SINGLE
-        - MARRIED
-        - DIVORCED
-        - WIDOWED
-        example: SINGLE
-        type: string
-      nationality:
-        example: Ghanaian
-        type: string
-      occupation:
-        example: Software Engineer
-        type: string
-      occupation_address:
-        example: 456 Tech Ave, Accra
-        type: string
-      other_names:
-        type: string
-      payment_frequency:
-        type: string
-      phone:
-        example: "+233281234569"
-        type: string
-      previous_landlord_name:
-        type: string
-      previous_landlord_phone:
-        type: string
-      previous_tenancy_period:
-        type: string
-      profile_photo_url:
-        type: string
-      proof_of_income_url:
-        type: string
-      relationship_to_emergency_contact:
-        example: Sister
-        type: string
-      rent_fee:
-        example: 1000
-        type: integer
-      rent_fee_currency:
-        example: GHS
-        type: string
-      security_deposit_fee:
-        type: integer
-      security_deposit_fee_currency:
-        example: GHS
-        type: string
-      security_deposit_paid_at:
-        example: "2023-01-01T00:00:00Z"
-        type: string
-      security_deposit_payment_method:
-        enum:
-        - ONLINE
-        - CASH
-        - EXTERNAL
-        example: ONLINE
-        type: string
-      security_deposit_reference_number:
-        example: "123456789"
-        type: string
-      stay_duration:
-        type: integer
-      stay_duration_frequency:
         type: string
     type: object
   handlers.UpdateUnitRequest:
@@ -2752,6 +2762,13 @@ definitions:
       last_name:
         example: Doe
         type: string
+      lease_agreement_document_signatures:
+        items:
+          $ref: '#/definitions/transformations.OutputDocumentSignature'
+        type: array
+      lease_agreement_document_status:
+        example: DRAFT
+        type: string
       lease_agreement_document_url:
         example: https://example.com/lease.pdf
         type: string
@@ -2882,6 +2899,863 @@ info:
   title: RentLoop API
   version: "1.0"
 paths:
+  /api/v1/admin/documents:
+    get:
+      consumes:
+      - application/json
+      description: Get all documents
+      parameters:
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - example: true
+        in: query
+        name: include_global_documents
+        type: boolean
+      - example: true
+        in: query
+        name: only_global_documents
+        type: boolean
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - example: 550e8400-e29b-41d4-a716-446655440000
+        in: query
+        name: property_id
+        type: string
+      - example: downtown-apartment-101
+        in: query
+        name: property_slug
+        type: string
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - collectionFormat: csv
+        example:
+        - LEASE_AGREEMENT
+        - INSPECTION_REPORT
+        in: query
+        items:
+          type: string
+        name: tags
+        type: array
+      - enum:
+        - TEMPLATE
+        - DOCUMENT
+        example: DOCUMENT
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputAdminDocument'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get all documents
+      tags:
+      - Documents
+    post:
+      consumes:
+      - application/json
+      description: Create a new document
+      parameters:
+      - description: Document details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateDocumentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Document created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminDocument'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a new document
+      tags:
+      - Documents
+  /api/v1/admin/documents/{document_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a document
+      parameters:
+      - description: Document ID
+        in: path
+        name: document_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete a document
+      tags:
+      - Documents
+    get:
+      consumes:
+      - application/json
+      description: Get document by ID
+      parameters:
+      - description: Document ID
+        in: path
+        name: document_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminDocument'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get document by ID
+      tags:
+      - Documents
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing document
+      parameters:
+      - description: Document ID
+        format: uuid4
+        in: path
+        name: document_id
+        required: true
+        type: string
+      - description: Document details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AdminUpdateDocumentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Document Updated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminDocument'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update an existing document
+      tags:
+      - Documents
+  /api/v1/admin/tenant-applications:
+    get:
+      consumes:
+      - application/json
+      description: List all tenant applications
+      parameters:
+      - example: 72432ce6-5620-4ecf-a862-4bf2140556a1
+        in: query
+        name: created_by_id
+        type: string
+      - example: 72432ce6-5620-4ecf-a862-4bf2140556a1
+        in: query
+        name: desired_unit_id
+        type: string
+      - collectionFormat: multi
+        example:
+        - john.doe@example.com
+        - email@example.com
+        in: query
+        items:
+          type: string
+        name: email
+        type: array
+      - in: query
+        name: end_date
+        type: string
+      - enum:
+        - MALE
+        - FEMALE
+        in: query
+        name: gender
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - ONLINE
+        - CASH
+        - EXTERNAL
+        in: query
+        name: initial_deposit_payment_method
+        type: string
+      - enum:
+        - SINGLE
+        - MARRIED
+        - DIVORCED
+        - WIDOWED
+        in: query
+        name: marital_status
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - enum:
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
+        in: query
+        name: payment_frequency
+        type: string
+      - collectionFormat: multi
+        example:
+        - "+233281234569"
+        - "+233281234569"
+        in: query
+        items:
+          type: string
+        name: phone
+        type: array
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - example: 72432ce6-5620-4ecf-a862-4bf2140556a1
+        in: query
+        name: property_id
+        type: string
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - enum:
+        - ONLINE
+        - CASH
+        - EXTERNAL
+        in: query
+        name: security_deposit_payment_method
+        type: string
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - TenantApplication.Status.InProgress
+        - TenantApplication.Status.Cancelled
+        - TenantApplication.Status.Completed
+        in: query
+        name: status
+        type: string
+      - enum:
+        - HOURS
+        - DAYS
+        - MONTHS
+        in: query
+        name: stay_duration_frequency
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputAdminTenantApplication'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: An error occurred while filtering tenant applications
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Absent or invalid authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List all tenant applications
+      tags:
+      - TenantApplication
+    post:
+      consumes:
+      - application/json
+      description: Create a new tenant application
+      parameters:
+      - description: Create Tenant Application Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateTenantApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Tenant application created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminTenantApplication'
+            type: object
+        "400":
+          description: Error occurred when creating a tenant application
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Create a new tenant application
+      tags:
+      - TenantApplication
+  /api/v1/admin/tenant-applications/{tenant_application_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a tenant application. Only applications with status 'TenantApplication.Status.Cancelled'
+        can be deleted.
+      parameters:
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Tenant application deleted successfully
+        "400":
+          description: Error occurred when deleting a tenant application or application
+            is not cancelled
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete a tenant application
+      tags:
+      - TenantApplication
+    get:
+      consumes:
+      - application/json
+      description: Get tenant application
+      parameters:
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tenant application retrieved successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminTenantApplication'
+            type: object
+        "400":
+          description: Error occurred when fetching a tenant application
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get tenant application
+      tags:
+      - TenantApplication
+    patch:
+      consumes:
+      - application/json
+      description: Update a tenant application
+      parameters:
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      - description: Update Tenant Application Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AdminUpdateTenantApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tenant application updated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminTenantApplication'
+            type: object
+        "400":
+          description: Error occurred when updating a tenant application
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update a tenant application
+      tags:
+      - TenantApplication
+  /api/v1/admin/tenant-applications/{tenant_application_id}/approve:
+    patch:
+      consumes:
+      - application/json
+      description: Approve a tenant application
+      parameters:
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Tenant application approved successfully
+        "400":
+          description: Error occurred when approving a tenant application
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Tenant application not approved
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Tenant application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "409":
+          description: Tenant application already approved
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Approve a tenant application
+      tags:
+      - TenantApplication
+  /api/v1/admin/tenant-applications/{tenant_application_id}/cancel:
+    patch:
+      consumes:
+      - application/json
+      description: Cancel a tenant application
+      parameters:
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      - description: Cancel Tenant Application Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CancelTenantApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Tenant application cancelled successfully
+        "400":
+          description: Error occurred when cancelling a tenant application
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Cancel a tenant application
+      tags:
+      - TenantApplication
+  /api/v1/admin/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay:
+    post:
+      consumes:
+      - application/json
+      description: Pay an invoice for a tenant application (security deposit and/or
+        initial deposit)
+      parameters:
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Invoice paid successfully
+        "400":
+          description: Error occurred when paying invoice
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant application or invoice not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Pay an invoice for a tenant application
+      tags:
+      - TenantApplication
+  /api/v1/admin/tenant-applications/{tenant_application_id}/invoice:generate:
+    post:
+      consumes:
+      - application/json
+      description: Generate an invoice for a tenant application (security deposit
+        and/or initial deposit)
+      parameters:
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      - description: Generate Invoice Request Body
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.GenerateInvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Invoice generated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputInvoice'
+            type: object
+        "400":
+          description: Error occurred when generating invoice
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Generate an invoice for a tenant application
+      tags:
+      - TenantApplication
+  /api/v1/admin/tenant-applications/invite:
+    post:
+      consumes:
+      - application/json
+      description: Sends a tenant invite to a possible tenant
+      parameters:
+      - description: Send Tenant Invite Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SendTenantInviteRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Tenant invite sent successfully
+        "400":
+          description: Error occurred when sending tenant invite
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: TenantApplication not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Sends a tenant invite to a possible tenant
+      tags:
+      - TenantApplication
   /api/v1/admins:
     get:
       consumes:
@@ -4176,239 +5050,7 @@ paths:
       summary: Create a new client application
       tags:
       - ClientApplications
-  /api/v1/documents:
-    get:
-      consumes:
-      - application/json
-      description: Get all documents
-      parameters:
-      - in: query
-        name: end_date
-        type: string
-      - collectionFormat: multi
-        example:
-        - a8098c1a-f86e-11da-bd1a-00112444be1e
-        in: query
-        items:
-          type: string
-        name: ids
-        type: array
-      - example: true
-        in: query
-        name: include_global_documents
-        type: boolean
-      - example: true
-        in: query
-        name: only_global_documents
-        type: boolean
-      - enum:
-        - asc
-        - desc
-        in: query
-        name: order
-        type: string
-      - in: query
-        name: order_by
-        type: string
-      - in: query
-        minimum: 0
-        name: page
-        type: integer
-      - in: query
-        minimum: 0
-        name: page_size
-        type: integer
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      - example: 550e8400-e29b-41d4-a716-446655440000
-        in: query
-        name: property_id
-        type: string
-      - example: downtown-apartment-101
-        in: query
-        name: property_slug
-        type: string
-      - in: query
-        name: query
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        minItems: 1
-        name: search_fields
-        type: array
-      - in: query
-        name: start_date
-        type: string
-      - collectionFormat: csv
-        example:
-        - LEASE_AGREEMENT
-        - INSPECTION_REPORT
-        in: query
-        items:
-          type: string
-        name: tags
-        type: array
-      - enum:
-        - TEMPLATE
-        - DOCUMENT
-        example: DOCUMENT
-        in: query
-        name: type
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                properties:
-                  meta:
-                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
-                  rows:
-                    items:
-                      $ref: '#/definitions/transformations.OutputAdminDocument'
-                    type: array
-                type: object
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Get all documents
-      tags:
-      - Documents
-    post:
-      consumes:
-      - application/json
-      description: Create a new document
-      parameters:
-      - description: Document details
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.CreateDocumentRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Document created successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputAdminDocument'
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Create a new document
-      tags:
-      - Documents
   /api/v1/documents/{document_id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a document
-      parameters:
-      - description: Document ID
-        in: path
-        name: document_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No Content
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Delete a document
-      tags:
-      - Documents
-    get:
-      consumes:
-      - application/json
-      description: Get document by ID
-      parameters:
-      - description: Document ID
-        in: path
-        name: document_id
-        required: true
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputAdminDocument'
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Get document by ID
-      tags:
-      - Documents
     patch:
       consumes:
       - application/json
@@ -4434,7 +5076,7 @@ paths:
           schema:
             properties:
               data:
-                $ref: '#/definitions/transformations.OutputAdminDocument'
+                $ref: '#/definitions/transformations.OutputDocument'
             type: object
         "400":
           description: Bad Request
@@ -7116,251 +7758,7 @@ paths:
       summary: Submit a signature
       tags:
       - Signing
-  /api/v1/tenant-applications:
-    get:
-      consumes:
-      - application/json
-      description: List all tenant applications
-      parameters:
-      - example: 72432ce6-5620-4ecf-a862-4bf2140556a1
-        in: query
-        name: created_by_id
-        type: string
-      - example: 72432ce6-5620-4ecf-a862-4bf2140556a1
-        in: query
-        name: desired_unit_id
-        type: string
-      - collectionFormat: multi
-        example:
-        - john.doe@example.com
-        - email@example.com
-        in: query
-        items:
-          type: string
-        name: email
-        type: array
-      - in: query
-        name: end_date
-        type: string
-      - enum:
-        - MALE
-        - FEMALE
-        in: query
-        name: gender
-        type: string
-      - collectionFormat: multi
-        example:
-        - a8098c1a-f86e-11da-bd1a-00112444be1e
-        in: query
-        items:
-          type: string
-        name: ids
-        type: array
-      - enum:
-        - ONLINE
-        - CASH
-        - EXTERNAL
-        in: query
-        name: initial_deposit_payment_method
-        type: string
-      - enum:
-        - SINGLE
-        - MARRIED
-        - DIVORCED
-        - WIDOWED
-        in: query
-        name: marital_status
-        type: string
-      - enum:
-        - asc
-        - desc
-        in: query
-        name: order
-        type: string
-      - in: query
-        name: order_by
-        type: string
-      - in: query
-        minimum: 0
-        name: page
-        type: integer
-      - in: query
-        minimum: 0
-        name: page_size
-        type: integer
-      - enum:
-        - HOURLY
-        - DAILY
-        - MONTHLY
-        - QUARTERLY
-        - BIANNUALLY
-        - ANNUALLY
-        - ONETIME
-        in: query
-        name: payment_frequency
-        type: string
-      - collectionFormat: multi
-        example:
-        - "+233281234569"
-        - "+233281234569"
-        in: query
-        items:
-          type: string
-        name: phone
-        type: array
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      - example: 72432ce6-5620-4ecf-a862-4bf2140556a1
-        in: query
-        name: property_id
-        type: string
-      - in: query
-        name: query
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        minItems: 1
-        name: search_fields
-        type: array
-      - enum:
-        - ONLINE
-        - CASH
-        - EXTERNAL
-        in: query
-        name: security_deposit_payment_method
-        type: string
-      - in: query
-        name: start_date
-        type: string
-      - enum:
-        - TenantApplication.Status.InProgress
-        - TenantApplication.Status.Cancelled
-        - TenantApplication.Status.Completed
-        in: query
-        name: status
-        type: string
-      - enum:
-        - HOURS
-        - DAYS
-        - MONTHS
-        in: query
-        name: stay_duration_frequency
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                properties:
-                  meta:
-                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
-                  rows:
-                    items:
-                      $ref: '#/definitions/transformations.OutputAdminTenantApplication'
-                    type: array
-                type: object
-            type: object
-        "400":
-          description: An error occurred while filtering tenant applications
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Absent or invalid authentication token
-          schema:
-            type: string
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: List all tenant applications
-      tags:
-      - TenantApplication
-    post:
-      consumes:
-      - application/json
-      description: Create a new tenant application
-      parameters:
-      - description: Create Tenant Application Request Body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.CreateTenantApplicationRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Tenant application created successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputAdminTenantApplication'
-            type: object
-        "400":
-          description: Error occurred when creating a tenant application
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      summary: Create a new tenant application
-      tags:
-      - TenantApplication
   /api/v1/tenant-applications/{tenant_application_id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a tenant application. Only applications with status 'TenantApplication.Status.Cancelled'
-        can be deleted.
-      parameters:
-      - description: Tenant application ID
-        in: path
-        name: tenant_application_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Tenant application deleted successfully
-        "400":
-          description: Error occurred when deleting a tenant application or application
-            is not cancelled
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Tenant application not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Delete a tenant application
-      tags:
-      - TenantApplication
     get:
       consumes:
       - application/json
@@ -7385,7 +7783,7 @@ paths:
           schema:
             properties:
               data:
-                $ref: '#/definitions/transformations.OutputAdminTenantApplication'
+                $ref: '#/definitions/transformations.OutputTenantApplication'
             type: object
         "400":
           description: Error occurred when fetching a tenant application
@@ -7432,7 +7830,7 @@ paths:
           schema:
             properties:
               data:
-                $ref: '#/definitions/transformations.OutputAdminTenantApplication'
+                $ref: '#/definitions/transformations.OutputTenantApplication'
             type: object
         "400":
           description: Error occurred when updating a tenant application
@@ -7457,243 +7855,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Update a tenant application
-      tags:
-      - TenantApplication
-  /api/v1/tenant-applications/{tenant_application_id}/approve:
-    patch:
-      consumes:
-      - application/json
-      description: Approve a tenant application
-      parameters:
-      - description: Tenant application ID
-        in: path
-        name: tenant_application_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Tenant application approved successfully
-        "400":
-          description: Error occurred when approving a tenant application
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "403":
-          description: Tenant application not approved
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "404":
-          description: Tenant application not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "409":
-          description: Tenant application already approved
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Approve a tenant application
-      tags:
-      - TenantApplication
-  /api/v1/tenant-applications/{tenant_application_id}/cancel:
-    patch:
-      consumes:
-      - application/json
-      description: Cancel a tenant application
-      parameters:
-      - description: Tenant application ID
-        in: path
-        name: tenant_application_id
-        required: true
-        type: string
-      - description: Cancel Tenant Application Request Body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.CancelTenantApplicationRequest'
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Tenant application cancelled successfully
-        "400":
-          description: Error occurred when cancelling a tenant application
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Tenant application not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Cancel a tenant application
-      tags:
-      - TenantApplication
-  /api/v1/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay:
-    post:
-      consumes:
-      - application/json
-      description: Pay an invoice for a tenant application (security deposit and/or
-        initial deposit)
-      parameters:
-      - description: Tenant application ID
-        in: path
-        name: tenant_application_id
-        required: true
-        type: string
-      - description: Invoice ID
-        in: path
-        name: invoice_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Invoice paid successfully
-        "400":
-          description: Error occurred when paying invoice
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Tenant application or invoice not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Pay an invoice for a tenant application
-      tags:
-      - TenantApplication
-  /api/v1/tenant-applications/{tenant_application_id}/invoice:generate:
-    post:
-      consumes:
-      - application/json
-      description: Generate an invoice for a tenant application (security deposit
-        and/or initial deposit)
-      parameters:
-      - description: Tenant application ID
-        in: path
-        name: tenant_application_id
-        required: true
-        type: string
-      - description: Generate Invoice Request Body
-        in: body
-        name: body
-        schema:
-          $ref: '#/definitions/handlers.GenerateInvoiceRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Invoice generated successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputInvoice'
-            type: object
-        "400":
-          description: Error occurred when generating invoice
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Tenant application not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Generate an invoice for a tenant application
-      tags:
-      - TenantApplication
-  /api/v1/tenant-applications/invite:
-    post:
-      consumes:
-      - application/json
-      description: Sends a tenant invite to a possible tenant
-      parameters:
-      - description: Send Tenant Invite Request Body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.SendTenantInviteRequest'
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Tenant invite sent successfully
-        "400":
-          description: Error occurred when sending tenant invite
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: TenantApplication not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            type: string
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Sends a tenant invite to a possible tenant
       tags:
       - TenantApplication
   /api/v1/tenants/{tenant_id}/leases:

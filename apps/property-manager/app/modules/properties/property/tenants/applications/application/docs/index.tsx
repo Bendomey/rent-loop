@@ -6,7 +6,7 @@ import { AddDocumentModal } from './add-document-modal'
 import { AttachedDocumentView } from './attached-document-view'
 import type { AttachedDocument } from './types'
 import { useDeleteDocument } from '~/api/documents'
-import { useUpdateTenantApplication } from '~/api/tenant-applications'
+import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
 import { Button } from '~/components/ui/button'
 import {
 	Card,
@@ -27,7 +27,7 @@ export function PropertyTenantApplicationDocs() {
 	const [open, setOpen] = useState(false)
 	const revalidator = useRevalidator()
 	const { mutateAsync: updateTenantApplication, isPending: isUpdating } =
-		useUpdateTenantApplication()
+		useAdminUpdateTenantApplication()
 	const { mutateAsync: deleteDocument, isPending: isDeletingDocument } =
 		useDeleteDocument()
 

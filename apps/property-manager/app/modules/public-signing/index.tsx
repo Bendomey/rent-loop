@@ -1,14 +1,22 @@
 import type { SerializedEditorState } from 'lexical'
 import { useState } from 'react'
-import { useLoaderData } from 'react-router'
+import { useLoaderData, useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 
+import { useUpdateDocument } from '~/api/documents'
+import { useSignDocument } from '~/api/signing'
+import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
 import { SigningView } from '~/components/blocks/signing-view/signing-view'
 import type { SignatureRole } from '~/components/editor/nodes/signature-node'
 import { SIGNATURE_ROLE_LABELS } from '~/components/editor/nodes/signature-node'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
+import {
+	getSignatureStatuses,
+	injectSignatureIntoState,
+} from '~/lib/lexical.utils'
+import { dataUrlToBlob } from '~/lib/utils'
 import type { loader } from '~/routes/sign.$token'
 
 function DocumentExpired() {
@@ -33,9 +41,7 @@ function DocumentExpired() {
 						</svg>
 					</div>
 				</div>
-				<h1 className="text-xl font-semibold text-zinc-900">
-					Link Unavailable
-				</h1>
+				<h1 className="text-xl font-semibold text-zinc-900">Link Unavailable</h1>
 				<p className="mt-2 text-sm text-zinc-500">
 					This signing link has expired or the document no longer exists. Please
 					contact the sender to request a new link.
@@ -46,14 +52,25 @@ function DocumentExpired() {
 }
 
 export function PublicSigningModule() {
-	const { signingToken, expired } = useLoaderData<typeof loader>()
+	const { signingToken, expired, tenantApplication } =
+		useLoaderData<typeof loader>()
+	const signDocument = useSignDocument()
+	const updateDocument = useUpdateDocument()
+	const updateTenantApplication = useAdminUpdateTenantApplication()
+	const revalidator = useRevalidator()
 
 	const signerName = signingToken?.signer_name ?? null
 	const [isSigning, setIsSigning] = useState(false)
 	const [enteredName, setEnteredName] = useState('')
 	const [nameConfirmed, setNameConfirmed] = useState(!!signerName)
 
-	if (expired || !signingToken?.document) return <DocumentExpired />
+	if (
+		expired ||
+		!signingToken?.document ||
+		(signingToken?.tenant_application_id && !tenantApplication)
+	) {
+		return <DocumentExpired />
+	}
 
 	const document = signingToken.document
 	const signerRole = signingToken.role as SignatureRole
@@ -68,20 +85,74 @@ export function PublicSigningModule() {
 	const resolvedName = signerName || enteredName
 	const signatureStatuses = getSignatureStatuses(editorState)
 
-	const handleSign = (_role: SignatureRole, _signatureDataUrl: string) => {
+	const handleSign = async (role: SignatureRole, signatureDataUrl: string) => {
 		setIsSigning(true)
 
-		// TODO: In the full implementation:
-		// 1. Upload signatureDataUrl to S3
-		// 2. POST to /v1/signing/:token/sign with the S3 URL
-		// 3. Backend creates document_signatures record
-		// 4. Backend updates the SignatureNode in the document JSON
-		// 5. Backend stamps signed_at on the tenant application
+		try {
+			// 1. Upload signature image to R2
+			const blob = dataUrlToBlob(signatureDataUrl)
+			const file = new File([blob], 'signature.png', { type: 'image/png' })
+			const formData = new FormData()
+			formData.append('file', file)
+			formData.append(
+				'objectKey',
+				`signatures/${document.id}-${Date.now()}-${signerRole}.png`,
+			)
 
-		setTimeout(() => {
-			toast.success('Signature captured')
+			const uploadResponse = await fetch('/api/r2/upload', {
+				method: 'POST',
+				body: formData,
+			})
+			const uploadResult = (await uploadResponse.json()) as { url?: string }
+
+			if (!uploadResponse.ok || !uploadResult.url) {
+				toast.error('Failed to upload signature')
+				return
+			}
+
+			// 2. Submit signature using the signing token
+			await signDocument.mutateAsync({
+				token: signingToken.token,
+				signature_url: uploadResult.url,
+				signer_name: resolvedName,
+			})
+
+			// 3. Stamp the matching SignatureNode in the serialized editor state
+			const signedAt = new Date().toISOString()
+			const updatedState = injectSignatureIntoState(
+				editorState,
+				role,
+				uploadResult.url,
+				resolvedName,
+				signedAt,
+			)
+
+			// 4. Save the updated document content
+			await updateDocument.mutateAsync({
+				id: document.id,
+				content: JSON.stringify(updatedState),
+			})
+
+			// 5. Update application status based on remaining unsigned signatures
+			if (tenantApplication) {
+				const allSigned = getSignatureStatuses(updatedState).every(
+					(s) => s.signed,
+				)
+				await updateTenantApplication.mutateAsync({
+					id: tenantApplication.id,
+					data: {
+						lease_agreement_document_status: allSigned ? 'SIGNED' : 'SIGNING',
+					},
+				})
+			}
+
+			toast.success('Document signed successfully')
+			void revalidator.revalidate()
+		} catch {
+			toast.error('Failed to sign document')
+		} finally {
 			setIsSigning(false)
-		}, 500)
+		}
 	}
 
 	// --- Name entry gate ---
@@ -144,30 +215,4 @@ export function PublicSigningModule() {
 			isSigning={isSigning}
 		/>
 	)
-}
-
-/**
- * Scans the serialized Lexical state for signature nodes and returns their statuses.
- */
-function getSignatureStatuses(
-	state: SerializedEditorState,
-): Array<{ role: SignatureRole; signed: boolean }> {
-	const statuses: Array<{ role: SignatureRole; signed: boolean }> = []
-
-	function walk(node: Record<string, unknown>) {
-		if (node.type === 'signature') {
-			statuses.push({
-				role: node.role as SignatureRole,
-				signed: node.signatureUrl !== null && node.signatureUrl !== undefined,
-			})
-		}
-		if (Array.isArray(node.children)) {
-			for (const child of node.children) {
-				walk(child as Record<string, unknown>)
-			}
-		}
-	}
-
-	walk(state.root as unknown as Record<string, unknown>)
-	return statuses
 }
