@@ -115,8 +115,11 @@ export function LeaseSigningModule() {
 		}
 	}
 
+	const signedCount = signatureStatuses.filter((s) => s.signed).length
+
 	return (
 		<SigningView
+			key={signedCount}
 			documentTitle={
 				tenantApplication.lease_agreement_document?.title ?? 'Lease Document'
 			}

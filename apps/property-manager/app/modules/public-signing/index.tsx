@@ -211,9 +211,12 @@ export function PublicSigningModule() {
 		)
 	}
 
+	const signedCount = signatureStatuses.filter((s) => s.signed).length
+
 	// --- Signing view ---
 	return (
 		<SigningView
+			key={signedCount}
 			documentTitle={document.title}
 			applicationCode={applicationCode}
 			editorState={editorState}

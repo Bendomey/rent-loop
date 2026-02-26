@@ -165,7 +165,7 @@ export function Plugins({ maxLength }: Props) {
 								<BlockInsertPlugin>
 									<InsertHorizontalRule />
 									<InsertImage />
-									<InsertSignature />
+									{/* <InsertSignature /> */}
 									<InsertTable />
 									<InsertColumnsLayout />
 									{/* <InsertEmbeds /> */}

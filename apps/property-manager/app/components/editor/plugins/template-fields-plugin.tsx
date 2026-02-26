@@ -7,11 +7,14 @@ import {
 	$getSelection,
 	$isRootOrShadowRoot,
 	$insertNodes,
+	$nodesOfType,
 } from 'lexical'
 import { PenLine, TextCursorInput } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 import {
 	$createSignatureNode,
+	SignatureNode,
 	type SignatureRole,
 } from '~/components/editor/nodes/signature-node'
 import { Button } from '~/components/ui/button'
@@ -59,12 +62,31 @@ const TEMPLATE_FIELDS = [
 const SIGNATURE_BLOCKS: Array<{ label: string; role: SignatureRole }> = [
 	{ label: 'Property Manager', role: 'property_manager' },
 	{ label: 'Tenant', role: 'tenant' },
-	{ label: 'PM Witness', role: 'pm_witness' },
+	{ label: 'Property Manager Witness', role: 'pm_witness' },
 	{ label: 'Tenant Witness', role: 'tenant_witness' },
 ]
 
+// These roles can only appear once in a document
+const SINGLETON_ROLES: SignatureRole[] = ['property_manager', 'tenant', 'pm_witness', 'tenant_witness']
+
 export function TemplateFieldsPlugin() {
 	const [editor] = useLexicalComposerContext()
+	const [existingRoles, setExistingRoles] = useState<Set<SignatureRole>>(
+		new Set(),
+	)
+
+	useEffect(() => {
+		const readRoles = () => {
+			editor.getEditorState().read(() => {
+				const roles = $nodesOfType(SignatureNode).map((n) => n.getRole())
+				setExistingRoles(new Set(roles))
+			})
+		}
+
+		readRoles()
+
+		return editor.registerUpdateListener(readRoles)
+	}, [editor])
 
 	const insertTextField = (value: string) => {
 		editor.update(() => {
@@ -124,19 +146,25 @@ export function TemplateFieldsPlugin() {
 				Click to insert a signature placeholder.
 			</TypographySmall>
 			<div className="mt-3 space-y-3">
-				{SIGNATURE_BLOCKS.map((item) => (
-					<Button
-						onClick={() => insertSignatureBlock(item.role)}
-						key={item.role}
-						variant="outline"
-						className="w-full items-center justify-start gap-2"
-					>
-						<PenLine className="size-5" />
-						<TypographySmall className="text-xs font-normal">
-							{item.label}
-						</TypographySmall>
-					</Button>
-				))}
+				{SIGNATURE_BLOCKS.map((item) => {
+					const isDisabled =
+						SINGLETON_ROLES.includes(item.role) && existingRoles.has(item.role)
+					return (
+						<Button
+							onClick={() => insertSignatureBlock(item.role)}
+							key={item.role}
+							variant="outline"
+							disabled={isDisabled}
+							title={isDisabled ? 'This signature block is already in the document' : undefined}
+							className="w-full items-center justify-start gap-2"
+						>
+							<PenLine className="size-5" />
+							<TypographySmall className="text-xs font-normal">
+								{item.label}
+							</TypographySmall>
+						</Button>
+					)
+				})}
 			</div>
 		</>
 	)
