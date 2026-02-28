@@ -139,6 +139,17 @@ export function PropertyFinancialsPaymentsModule() {
 				},
 			},
 			{
+				accessorKey: 'created_at',
+				header: 'Created On',
+				cell: ({ getValue }) => (
+					<div className="min-w-32">
+						<span className="truncate text-xs text-zinc-600">
+							{localizedDayjs(getValue<Date>()).format('DD/MM/YYYY hh:mm a')}
+						</span>
+					</div>
+				),
+			},
+			{
 				id: 'actions',
 				cell: ({ row }) => {
 					return (
