@@ -40,29 +40,29 @@ export function AttachedDocumentView({
 }: AttachedDocumentViewProps) {
 	const { propertyId, applicationId } = useParams()
 	const isManual = tenantApplication.lease_agreement_document_mode === 'MANUAL'
-	const signatures = (tenantApplication.lease_agreement_document_signatures ?? []).filter(
+	const signatures = (
+		tenantApplication.lease_agreement_document_signatures ?? []
+	).filter(
 		(s) => s.document_id === tenantApplication.lease_agreement_document_id,
 	)
-	const adminSignature =
-		signatures?.find(
-			(signature) => signature.role === 'PROPERTY_MANAGER',
-		)
+	const adminSignature = signatures?.find(
+		(signature) => signature.role === 'PROPERTY_MANAGER',
+	)
 	const adminSigned = Boolean(adminSignature)
-	const tenantSignature =
-		signatures?.find(
-			(signature) => signature.role === 'TENANT',
-		)
+	const tenantSignature = signatures?.find(
+		(signature) => signature.role === 'TENANT',
+	)
 	const tenantSigned = Boolean(tenantSignature)
 
 	const witnessNodes = getWitnessNodesFromContent(
 		tenantApplication.lease_agreement_document?.content,
 	)
-	const pmWitnessSignatures = (
-		signatures
-	).filter((sig) => sig.role === 'PM_WITNESS')
-	const tenantWitnessSignatures = (
-		signatures
-	).filter((sig) => sig.role === 'TENANT_WITNESS')
+	const pmWitnessSignatures = signatures.filter(
+		(sig) => sig.role === 'PM_WITNESS',
+	)
+	const tenantWitnessSignatures = signatures.filter(
+		(sig) => sig.role === 'TENANT_WITNESS',
+	)
 	const pmWitnessCount = witnessNodes.filter(
 		(n) => n.role === 'pm_witness',
 	).length
@@ -122,7 +122,7 @@ export function AttachedDocumentView({
 									className={cn(
 										'text-[10px] font-semibold',
 										DOC_STATUS_CLASS[
-										tenantApplication.lease_agreement_document_status
+											tenantApplication.lease_agreement_document_status
 										],
 									)}
 								>
@@ -187,35 +187,35 @@ export function AttachedDocumentView({
 				<div className="space-y-3">
 					{tenantApplication.lease_agreement_document_status ===
 						'FINALIZED' && (
-							<div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-								<p className="text-xs text-amber-700">
-									Need to make changes?{' '}
-									<Link
-										to={`/properties/${propertyId}/tenants/applications/${applicationId}/lease-editor/${tenantApplication.lease_agreement_document_id}`}
-										className="font-medium underline underline-offset-2"
-									>
-										Open the editor
-									</Link>{' '}
-									and revert the document to draft.
-								</p>
-							</div>
-						)}
+						<div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+							<p className="text-xs text-amber-700">
+								Need to make changes?{' '}
+								<Link
+									to={`/properties/${propertyId}/tenants/applications/${applicationId}/lease-editor/${tenantApplication.lease_agreement_document_id}`}
+									className="font-medium underline underline-offset-2"
+								>
+									Open the editor
+								</Link>{' '}
+								and revert the document to draft.
+							</p>
+						</div>
+					)}
 
 					{['SIGNING', 'SIGNED'].includes(
 						safeString(tenantApplication.lease_agreement_document_status),
 					) && (
-							<div className="rounded-lg border border-green-200 bg-green-50 p-3">
-								<p className="text-xs text-green-700">
-									<Link
-										to={`/properties/${propertyId}/tenants/applications/${applicationId}/signing/${tenantApplication.lease_agreement_document_id}`}
-										className="font-medium underline underline-offset-2"
-									>
-										View the document
-									</Link>{' '}
-									to see the signing status and details.
-								</p>
-							</div>
-						)}
+						<div className="rounded-lg border border-green-200 bg-green-50 p-3">
+							<p className="text-xs text-green-700">
+								<Link
+									to={`/properties/${propertyId}/tenants/applications/${applicationId}/signing/${tenantApplication.lease_agreement_document_id}`}
+									className="font-medium underline underline-offset-2"
+								>
+									View the document
+								</Link>{' '}
+								to see the signing status and details.
+							</p>
+						</div>
+					)}
 
 					<p className="text-sm font-medium text-zinc-700">Signing Status</p>
 					<Separator />
@@ -285,21 +285,18 @@ export function AttachedDocumentView({
 											signedAt={entry.signature?.created_at ?? null}
 											signedBy={entry.signature?.signed_by?.name ?? undefined}
 										/>
-										{
-											!witnessSigned && (
-												<PromptSignatureButton
-													existingToken={witnessToken}
-													documentId={safeString(documentId)}
-													role={
-														entry.role === 'pm_witness'
-															? 'PM_WITNESS'
-															: 'TENANT_WITNESS'
-													}
-													tenantApplicationId={applicationId}
-												/>
-											)
-										}
-
+										{!witnessSigned && (
+											<PromptSignatureButton
+												existingToken={witnessToken}
+												documentId={safeString(documentId)}
+												role={
+													entry.role === 'pm_witness'
+														? 'PM_WITNESS'
+														: 'TENANT_WITNESS'
+												}
+												tenantApplicationId={applicationId}
+											/>
+										)}
 									</React.Fragment>
 								)
 							})}

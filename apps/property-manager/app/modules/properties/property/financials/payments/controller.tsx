@@ -22,15 +22,16 @@ export const PropertyFinancialsRentPaymentController = ({
 				value: {
 					options: [
 						{
-							label: 'Processing',
-							value: 'TenantApplication.Status.Processing',
+							label: 'Draft',
+							value: 'DRAFT',
 						},
 						{
-							label: 'Successful',
-							value: 'TenantApplication.Status.Successful',
+							label: 'Issued',
+							value: 'ISSUED',
 						},
-						{ label: 'Expired', value: 'TenantApplication.Status.Expired' },
-						{ label: 'Failed', value: 'TenantApplication.Status.Failed' },
+						{ label: 'Partially Paid', value: 'PARTIALLY_PAID' },
+						{ label: 'Paid', value: 'PAID' },
+						{ label: 'Void', value: 'VOID' },
 					],
 					urlParam: 'status',
 					defaultValues: [],
@@ -41,21 +42,41 @@ export const PropertyFinancialsRentPaymentController = ({
 				id: 2,
 				type: 'selector',
 				selectType: 'single',
-				label: 'Payment Method',
+				label: 'Payer Type',
 				value: {
 					options: [
 						{
-							label: 'Processing',
-							value: 'TenantApplication.Status.Processing',
+							label: 'Tenant',
+							value: 'TENANT',
 						},
 						{
-							label: 'Successful',
-							value: 'TenantApplication.Status.Successful',
+							label: 'Applicant',
+							value: 'TENANT_APPLICATION',
 						},
-						{ label: 'Expired', value: 'TenantApplication.Status.Expired' },
-						{ label: 'Failed', value: 'TenantApplication.Status.Failed' },
+						{ label: 'Owner', value: 'PROPERTY_OWNER' },
 					],
-					urlParam: 'status',
+					urlParam: 'payer_type',
+					defaultValues: [],
+				},
+				Icon: ToggleLeft,
+			},
+			{
+				id: 3,
+				type: 'selector',
+				selectType: 'single',
+				label: 'Payee Type',
+				value: {
+					options: [
+						{
+							label: 'Owner',
+							value: 'PROPERTY_OWNER',
+						},
+						{
+							label: 'System',
+							value: 'RENTLOOP',
+						},
+					],
+					urlParam: 'payee_type',
 					defaultValues: [],
 				},
 				Icon: ToggleLeft,
@@ -73,7 +94,7 @@ export const PropertyFinancialsRentPaymentController = ({
 			</div>
 			<div className="flex flex-wrap items-center justify-between gap-4">
 				<div className="flex items-center gap-2 text-sm">
-					<SearchInput placeholder="Search payment..." />
+					<SearchInput placeholder="Search invoice..." />
 				</div>
 				<div className="flex items-center justify-end gap-2">
 					<Button

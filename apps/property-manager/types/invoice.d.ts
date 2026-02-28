@@ -55,5 +55,6 @@ interface Invoice {
 
 interface FetchInvoiceFilter {
 	payee_type?: string
+	payer_type?: string
 	status?: string
 }

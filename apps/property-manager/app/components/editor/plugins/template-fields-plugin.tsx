@@ -67,7 +67,12 @@ const SIGNATURE_BLOCKS: Array<{ label: string; role: SignatureRole }> = [
 ]
 
 // These roles can only appear once in a document
-const SINGLETON_ROLES: SignatureRole[] = ['property_manager', 'tenant', 'pm_witness', 'tenant_witness']
+const SINGLETON_ROLES: SignatureRole[] = [
+	'property_manager',
+	'tenant',
+	'pm_witness',
+	'tenant_witness',
+]
 
 export function TemplateFieldsPlugin() {
 	const [editor] = useLexicalComposerContext()
@@ -155,7 +160,11 @@ export function TemplateFieldsPlugin() {
 							key={item.role}
 							variant="outline"
 							disabled={isDisabled}
-							title={isDisabled ? 'This signature block is already in the document' : undefined}
+							title={
+								isDisabled
+									? 'This signature block is already in the document'
+									: undefined
+							}
 							className="w-full items-center justify-start gap-2"
 						>
 							<PenLine className="size-5" />
