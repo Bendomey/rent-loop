@@ -29,6 +29,8 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 						populate: [
 							'LeaseAgreementDocument',
 							'LeaseAgreementDocumentSignatures',
+							'DesiredUnit',
+							'CreatedBy',
 						],
 						id: payload.tenant_application_id,
 					},

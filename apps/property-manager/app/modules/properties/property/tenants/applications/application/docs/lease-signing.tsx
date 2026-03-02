@@ -12,6 +12,10 @@ import {
 	getSignatureStatuses,
 	injectSignatureIntoState,
 } from '~/lib/lexical.utils'
+import {
+	buildTemplateFieldMap,
+	resolveTemplateFields,
+} from '~/lib/resolve-template-fields'
 import { safeString } from '~/lib/strings'
 import { dataUrlToBlob } from '~/lib/utils'
 import type { loader } from '~/routes/_auth.properties.$propertyId_.tenants.applications.$applicationId.signing.$documentId'
@@ -33,7 +37,10 @@ export function LeaseSigningModule() {
 
 	if (!editorState) return null
 
-	const signatureStatuses = getSignatureStatuses(editorState)
+	const fieldMap = buildTemplateFieldMap(tenantApplication)
+	const resolvedEditorState = resolveTemplateFields(editorState, fieldMap)
+
+	const signatureStatuses = getSignatureStatuses(resolvedEditorState)
 
 	const signerName =
 		[tenantApplication.created_by?.name].filter(Boolean).join(' ') ||
@@ -82,7 +89,7 @@ export function LeaseSigningModule() {
 			// 3. Stamp the matching SignatureNode in the serialized editor state
 			const signedAt = new Date().toISOString()
 			const updatedState = injectSignatureIntoState(
-				editorState,
+				resolvedEditorState,
 				role,
 				uploadResult.url,
 				signerName,
@@ -124,7 +131,7 @@ export function LeaseSigningModule() {
 				tenantApplication.lease_agreement_document?.title ?? 'Lease Document'
 			}
 			applicationCode={tenantApplication.code}
-			editorState={editorState}
+			editorState={resolvedEditorState}
 			signerRole="property_manager"
 			signerName={signerName}
 			signatureStatuses={signatureStatuses}

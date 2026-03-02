@@ -16,6 +16,10 @@ import {
 	getSignatureStatuses,
 	injectSignatureIntoState,
 } from '~/lib/lexical.utils'
+import {
+	buildTemplateFieldMap,
+	resolveTemplateFields,
+} from '~/lib/resolve-template-fields'
 import { dataUrlToBlob } from '~/lib/utils'
 import type { loader } from '~/routes/sign.$token'
 
@@ -84,8 +88,15 @@ export function PublicSigningModule() {
 
 	if (!editorState) return null
 
+	const resolvedEditorState = tenantApplication
+		? resolveTemplateFields(
+				editorState,
+				buildTemplateFieldMap(tenantApplication),
+			)
+		: editorState
+
 	const resolvedName = signerName || enteredName
-	const signatureStatuses = getSignatureStatuses(editorState)
+	const signatureStatuses = getSignatureStatuses(resolvedEditorState)
 
 	const uploadSignature = async (dataUrl: string) => {
 		const blob = dataUrlToBlob(dataUrl)
@@ -129,7 +140,7 @@ export function PublicSigningModule() {
 			// 3. Stamp the matching SignatureNode in the serialized editor state
 			const signedAt = new Date().toISOString()
 			const updatedState = injectSignatureIntoState(
-				editorState,
+				resolvedEditorState,
 				role,
 				uploadResult.url,
 				resolvedName,
@@ -219,7 +230,7 @@ export function PublicSigningModule() {
 			key={signedCount}
 			documentTitle={document.title}
 			applicationCode={applicationCode}
-			editorState={editorState}
+			editorState={resolvedEditorState}
 			signerRole={signerRole.toLowerCase() as SignatureRole}
 			signerName={resolvedName}
 			signatureStatuses={signatureStatuses}
