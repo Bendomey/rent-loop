@@ -39,6 +39,8 @@ type OutputAdminTenantApplication struct {
 	SecurityDepositFee         *int64  `json:"security_deposit_fee,omitempty"          example:"1000"`
 	SecurityDepositFeeCurrency *string `json:"security_deposit_fee_currency,omitempty" example:"USD"`
 
+	ApplicationPaymentInvoice *OutputInvoice `json:"application_payment_invoice,omitempty"`
+
 	LeaseAgreementDocumentMode       *string                        `json:"lease_agreement_document_mode,omitempty"       example:"MANUAL"`
 	LeaseAgreementDocumentUrl        *string                        `json:"lease_agreement_document_url,omitempty"        example:"https://example.com/lease.pdf"`
 	LeaseAgreementDocumentID         *string                        `json:"lease_agreement_document_id,omitempty"         example:"550e8400-e29b-41d4-a716-446655440000"`
@@ -110,6 +112,7 @@ func DBAdminTenantApplicationToRest(i *models.TenantApplication) any {
 		"initial_deposit_fee_currency":        i.InitialDepositFeeCurrency,
 		"security_deposit_fee":                i.SecurityDepositFee,
 		"security_deposit_fee_currency":       i.SecurityDepositFeeCurrency,
+		"application_payment_invoice":         DBInvoiceToRest(i.ApplicationPaymentInvoice),
 		"lease_agreement_document_mode":       i.LeaseAgreementDocumentMode,
 		"lease_agreement_document_url":        i.LeaseAgreementDocumentUrl,
 		"lease_agreement_document_id":         i.LeaseAgreementDocumentID,

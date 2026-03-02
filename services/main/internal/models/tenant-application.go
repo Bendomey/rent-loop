@@ -42,6 +42,9 @@ type TenantApplication struct {
 	SecurityDepositFee         *int64 // if it's null or 0 then it's not opted in!
 	SecurityDepositFeeCurrency string `gorm:"not null;default:'GHS'"`
 
+	// initial deposit + security deposit (if opted in)
+	ApplicationPaymentInvoice *Invoice `gorm:"foreignKey:ContextTenantApplicationID"`
+
 	// docs setup
 	LeaseAgreementDocumentMode *string // MANUAL | ONLINE
 	LeaseAgreementDocumentUrl  *string

@@ -55,6 +55,8 @@ type Invoice struct {
 	AllowedPaymentRails pq.StringArray `gorm:"type:text[];not null;default:'{MOMO,OFFLINE}'"` // ['MOMO', 'BANK_TRANSFER', 'OFFLINE', 'CARD']. Based on the payment accounts for the payee type, filter and fetch for UI
 
 	LineItems []InvoiceLineItem
+
+	Payments []Payment `gorm:"foreignKey:InvoiceID"`
 }
 
 type InvoiceLineItem struct {
