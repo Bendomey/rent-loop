@@ -15,7 +15,7 @@ export const getPropertyBlocks = async (
 		const params = getQueryParams<FetchPropertyBlockFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<PropertyBlock>>
-		>(`/v1/properties/${props.property_id}/blocks?${params.toString()}`)
+		>(`/v1/admin/properties/${props.property_id}/blocks?${params.toString()}`)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -51,7 +51,7 @@ export interface CreatePropertyBlockInput {
 export const createPropertyBlock = async (props: CreatePropertyBlockInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<PropertyBlock>>(
-			`/v1/properties/${props.property_id}/blocks`,
+			`/v1/admin/properties/${props.property_id}/blocks`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),
@@ -80,7 +80,7 @@ export const useCreatePropertyBlock = () =>
 const getPropertyBlock = async (props: { property_id: string; id: string }) => {
 	try {
 		const response = await fetchClient<ApiResponse<PropertyBlock>>(
-			`/v1/properties/${props.property_id}/blocks/${props.id}`,
+			`/v1/admin/properties/${props.property_id}/blocks/${props.id}`,
 		)
 
 		return response.parsedBody.data
@@ -117,7 +117,7 @@ interface UpdatePropertyBlockProps {
 const updatePropertyBlock = async (props: UpdatePropertyBlockProps) => {
 	try {
 		await fetchClient<PropertyBlock>(
-			`/v1/properties/${props.data.property_id}/blocks/${props.id}`,
+			`/v1/admin/properties/${props.data.property_id}/blocks/${props.id}`,
 			{
 				method: 'PATCH',
 				body: JSON.stringify(props.data),
@@ -147,7 +147,7 @@ const deletePropertyBlock = async (props: {
 }) => {
 	try {
 		await fetchClient(
-			`/v1/properties/${props.property_id}/blocks/${props.block_id}`,
+			`/v1/admin/properties/${props.property_id}/blocks/${props.block_id}`,
 			{
 				method: 'DELETE',
 			},

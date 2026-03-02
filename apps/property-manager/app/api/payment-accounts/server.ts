@@ -10,7 +10,7 @@ export const getPaymentAccountForServer = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<PaymentAccount>>(
-			`${apiConfig.baseUrl}/v1/payment-accounts/${props.payment_account_id}`,
+			`${apiConfig.baseUrl}/v1/admin/payment-accounts/${props.payment_account_id}`,
 			{
 				...apiConfig,
 			},

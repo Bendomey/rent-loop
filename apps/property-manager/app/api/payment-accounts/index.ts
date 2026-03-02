@@ -14,7 +14,7 @@ const getPaymentAccounts = async (
 		const params = getQueryParams<FetchPaymentAccountFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<PaymentAccount>>
-		>(`/v1/payment-accounts?${params.toString()}`)
+		>(`/v1/admin/payment-accounts?${params.toString()}`)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -37,7 +37,7 @@ export const getPaymentAccountsForServer = async (
 		const response = await fetchServer<
 			ApiResponse<FetchMultipleDataResponse<PaymentAccount>>
 		>(
-			`${apiConfig?.baseUrl}/v1/payment-accounts?${params.toString()}`,
+			`${apiConfig?.baseUrl}/v1/admin/payment-accounts?${params.toString()}`,
 			apiConfig,
 		)
 		return response.parsedBody.data
@@ -75,10 +75,13 @@ interface UpdatePaymentAccountProps {
 
 const updatePaymentAccount = async (props: UpdatePaymentAccountProps) => {
 	try {
-		await fetchClient<PaymentAccount>(`/v1/payment-accounts/${props.id}`, {
-			method: 'PATCH',
-			body: JSON.stringify(props),
-		})
+		await fetchClient<PaymentAccount>(
+			`/v1/admin/payment-accounts/${props.id}`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify(props),
+			},
+		)
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
@@ -99,9 +102,12 @@ export const useUpdatePaymentAccount = () =>
  */
 const deletePaymentAccount = async (props: { payment_account_id: string }) => {
 	try {
-		await fetchClient(`/v1/payment-accounts/${props.payment_account_id}`, {
-			method: 'DELETE',
-		})
+		await fetchClient(
+			`/v1/admin/payment-accounts/${props.payment_account_id}`,
+			{
+				method: 'DELETE',
+			},
+		)
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()

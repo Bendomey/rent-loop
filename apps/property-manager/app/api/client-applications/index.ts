@@ -32,7 +32,7 @@ export const applyAsAClient = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<ClientApplication>>(
-			`${apiConfig?.baseUrl}/v1/clients/apply`,
+			`${apiConfig?.baseUrl}/v1/admin/clients/apply`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),

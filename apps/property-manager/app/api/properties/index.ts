@@ -13,7 +13,7 @@ const getProperties = async (
 		const params = getQueryParams<FetchPropertyFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<Property>>
-		>(`/v1/properties?${params.toString()}`)
+		>(`/v1/admin/properties?${params.toString()}`)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -44,7 +44,7 @@ export const getPropertiesForServer = async (
 		const params = getQueryParams<FetchPropertyFilter>(props)
 		const response = await fetchServer<
 			ApiResponse<FetchMultipleDataResponse<Property>>
-		>(`${apiConfig?.baseUrl}/v1/properties?${params.toString()}`, {
+		>(`${apiConfig?.baseUrl}/v1/admin/properties?${params.toString()}`, {
 			method: 'GET',
 			...apiConfig,
 		})
@@ -71,7 +71,7 @@ export const getProperty = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<Property>>(
-			`${apiConfig?.baseUrl}/v1/properties/${id}`,
+			`${apiConfig?.baseUrl}/v1/admin/properties/${id}`,
 			{
 				method: 'GET',
 				...(apiConfig ? apiConfig : {}),
@@ -97,7 +97,7 @@ export const getPropertyBySlug = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<Property>>(
-			`${apiConfig?.baseUrl}/v1/properties/slug/${slug}`,
+			`${apiConfig?.baseUrl}/v1/admin/properties/slug/${slug}`,
 			{
 				method: 'GET',
 				...(apiConfig ? apiConfig : {}),
@@ -139,7 +139,7 @@ export const createProperty = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<Property>>(
-			`${apiConfig?.baseUrl}/v1/properties`,
+			`${apiConfig?.baseUrl}/v1/admin/properties`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),
@@ -165,7 +165,7 @@ export const createProperty = async (
  */
 const deleteProperty = async (id: string) => {
 	try {
-		await fetchClient(`/v1/properties/${id}`, {
+		await fetchClient(`/v1/admin/properties/${id}`, {
 			method: 'DELETE',
 		})
 	} catch (error: unknown) {
@@ -193,7 +193,7 @@ export const getClientUserProperties = async (
 		const params = getQueryParams<FetchClientUserPropertyFilter>(props)
 		const response = await fetchServer<
 			ApiResponse<FetchMultipleDataResponse<ClientUserProperty>>
-		>(`${apiConfig.baseUrl}/v1/properties/me?${params.toString()}`, {
+		>(`${apiConfig.baseUrl}/v1/admin/properties/me?${params.toString()}`, {
 			method: 'GET',
 			authToken: apiConfig.authToken,
 		})
@@ -218,7 +218,7 @@ const getClientUserPropertiesForClient = async (
 		const params = getQueryParams<FetchClientUserPropertyFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<ClientUserProperty>>
-		>(`/v1/properties/me?${params.toString()}`, {
+		>(`/v1/admin/properties/me?${params.toString()}`, {
 			method: 'GET',
 		})
 

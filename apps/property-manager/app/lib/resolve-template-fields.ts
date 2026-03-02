@@ -61,10 +61,7 @@ export function buildTemplateFieldMap(
 	// Application & Lease terms
 	set('ApplicationCode', app.code)
 	if (app.desired_move_in_date) {
-		set(
-			'LeaseStartDate',
-			dayjs(app.desired_move_in_date).format('MMM D, YYYY'),
-		)
+		set('LeaseStartDate', dayjs(app.desired_move_in_date).format('MMM D, YYYY'))
 	}
 	if (app.stay_duration && app.stay_duration_frequency) {
 		set(
@@ -72,7 +69,11 @@ export function buildTemplateFieldMap(
 			`${app.stay_duration} ${app.stay_duration_frequency.toLowerCase()}`,
 		)
 	}
-	if (app.desired_move_in_date && app.stay_duration && app.stay_duration_frequency) {
+	if (
+		app.desired_move_in_date &&
+		app.stay_duration &&
+		app.stay_duration_frequency
+	) {
 		const unit = frequencyToDayjsUnit(app.stay_duration_frequency)
 		if (unit) {
 			set(
@@ -101,9 +102,7 @@ export function buildTemplateFieldMap(
 	const pmSig = signatures.find((s) => s.role === 'PROPERTY_MANAGER')
 	const tenantSig = signatures.find((s) => s.role === 'TENANT')
 	const pmWitnessSig = signatures.find((s) => s.role === 'PM_WITNESS')
-	const tenantWitnessSig = signatures.find(
-		(s) => s.role === 'TENANT_WITNESS',
-	)
+	const tenantWitnessSig = signatures.find((s) => s.role === 'TENANT_WITNESS')
 
 	if (pmSig?.created_at) {
 		set('LandlordSignedOn', dayjs(pmSig.created_at).format('MMM D, YYYY'))
@@ -240,7 +239,10 @@ function intToWords(n: number): string {
 	if (n < 20) return ONES[n] ?? ''
 	if (n < 100) {
 		const remainder = n % 10
-		return (TENS[Math.floor(n / 10)] ?? '') + (remainder ? '-' + (ONES[remainder] ?? '') : '')
+		return (
+			(TENS[Math.floor(n / 10)] ?? '') +
+			(remainder ? '-' + (ONES[remainder] ?? '') : '')
+		)
 	}
 	if (n < 1000) {
 		const remainder = n % 100
@@ -255,7 +257,9 @@ function intToWords(n: number): string {
 		return (
 			intToWords(Math.floor(n / 1000)) +
 			' thousand' +
-			(remainder ? (remainder < 100 ? ' and ' : ' ') + intToWords(remainder) : '')
+			(remainder
+				? (remainder < 100 ? ' and ' : ' ') + intToWords(remainder)
+				: '')
 		)
 	}
 	if (n < 1_000_000_000) {

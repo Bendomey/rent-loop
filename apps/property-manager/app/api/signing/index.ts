@@ -6,7 +6,6 @@ import { fetchClient, fetchServer } from '~/lib/transport'
 /**
  * Verify a signing token and return document + signer info.
  * Public — the token itself is the authorization.
- * GET /v1/signing/{token}/verify
  */
 export const verifySigningToken = async (
 	token: string,
@@ -32,7 +31,6 @@ export const verifySigningToken = async (
 /**
  * Generate a signing token for a document signer.
  * Authenticated — requires ADMIN or OWNER role.
- * POST /v1/signing
  */
 export interface GenerateSigningTokenInput {
 	document_id: string
@@ -47,7 +45,7 @@ export interface GenerateSigningTokenInput {
 const generateSigningToken = async (body: GenerateSigningTokenInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<AdminSigningToken>>(
-			'/v1/signing',
+			'/v1/admin/signing-tokens',
 			{
 				method: 'POST',
 				body: JSON.stringify(body),
@@ -73,7 +71,6 @@ export const useGenerateSigningToken = () =>
 /**
  * Submit a signature using a signing token.
  * Public — the token itself is the authorization.
- * POST /v1/signing/{token}/sign
  */
 export interface SignDocumentInput {
 	token: string
@@ -111,7 +108,6 @@ export const useSignDocument = () =>
 /**
  * Submit a signature directly as a property manager (no token required).
  * Authenticated — requires ADMIN or OWNER role.
- * POST /v1/signing/direct
  */
 export interface SignDocumentDirectInput {
 	document_id: string
@@ -123,7 +119,7 @@ export interface SignDocumentDirectInput {
 const signDocumentDirect = async (body: SignDocumentDirectInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<RentloopDocumentSignature>>(
-			'/v1/signing/direct',
+			'/v1/admin/signing',
 			{
 				method: 'POST',
 				body: JSON.stringify(body),
@@ -162,7 +158,7 @@ const updateSigningToken = async ({
 }: UpdateSigningTokenInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<AdminSigningToken>>(
-			`/v1/signing-tokens/${signing_token_id}`,
+			`/v1/admin/signing-tokens/${signing_token_id}`,
 			{
 				method: 'PATCH',
 				body: JSON.stringify(body),
@@ -191,7 +187,7 @@ export const useUpdateSigningToken = () =>
 const resendSigningToken = async (signing_token_id: string) => {
 	try {
 		const response = await fetchClient<ApiResponse<AdminSigningToken>>(
-			`/v1/signing-tokens/${signing_token_id}/resend`,
+			`/v1/admin/signing-tokens/${signing_token_id}/resend`,
 			{ method: 'POST' },
 		)
 		return response.parsedBody.data
@@ -213,7 +209,6 @@ export const useResendSigningToken = () =>
 
 /**
  * Fetch signing tokens filtered by document and tenant application.
- * GET /v1/signing-tokens
  */
 const fetchSigningTokens = async (
 	query: FetchMultipleDataInputParams<FetchSigningTokenFilter>,
@@ -222,7 +217,7 @@ const fetchSigningTokens = async (
 		const params = getQueryParams<FetchSigningTokenFilter>(query)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<AdminSigningToken>>
-		>(`/v1/signing-tokens?${params.toString()}`)
+		>(`/v1/admin/signing-tokens?${params.toString()}`)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {

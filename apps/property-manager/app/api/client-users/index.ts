@@ -14,7 +14,7 @@ const getClientUsers = async (
 		const params = getQueryParams<FetchClientUserFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<ClientUser>>
-		>(`/v1/client-users?${params.toString()}`)
+		>(`/v1/admin/client-users?${params.toString()}`)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -54,7 +54,7 @@ export const createClientUser = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<ClientUser>>(
-			`${apiConfig?.baseUrl}/v1/client-users`,
+			`${apiConfig?.baseUrl}/v1/admin/client-users`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),
@@ -89,7 +89,7 @@ const deactivateClientUser = async ({
 }: deactivateClientUserProps) => {
 	try {
 		const response = await fetchClient<ApiResponse<ClientUser>>(
-			`/v1/client-users/${id}/deactivate`,
+			`/v1/admin/client-users/${id}/deactivate`,
 			{
 				method: 'POST',
 				body: JSON.stringify({ reason }),
@@ -116,7 +116,7 @@ export const useDeactivateClientUser = () =>
 
 const activateClientUser = async (id: string) => {
 	try {
-		await fetchClient<boolean>(`/v1/client-users/${id}/activate`, {
+		await fetchClient<boolean>(`/v1/admin/client-users/${id}/activate`, {
 			method: 'POST',
 		})
 	} catch (error) {

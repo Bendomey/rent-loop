@@ -1504,7 +1504,7 @@ export const BASIC = {
 						format: 1,
 						mode: 'normal',
 						style: '',
-						text: 'three (3) months\'',
+						text: "three (3) months'",
 						type: 'text',
 						version: 1,
 					},
