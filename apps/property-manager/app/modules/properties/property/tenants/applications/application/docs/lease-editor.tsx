@@ -16,7 +16,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '~/components/ui/dialog'
-import type { loader } from '~/routes/_auth.properties.$propertyId_.tenants.applications.$applicationId.lease-editor.$documentId'
+import type { loader } from '~/routes/_auth.properties.$propertyId_.tenants.applications.$applicationId.editor.$documentId'
 
 const initialValue = {
 	root: {

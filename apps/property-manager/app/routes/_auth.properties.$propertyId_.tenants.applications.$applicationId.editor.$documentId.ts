@@ -1,5 +1,5 @@
 import { redirect } from 'react-router'
-import type { Route } from './+types/_auth.properties.$propertyId_.tenants.applications.$applicationId.lease-editor.$documentId'
+import type { Route } from './+types/_auth.properties.$propertyId_.tenants.applications.$applicationId.editor.$documentId'
 import { getDocument } from '~/api/documents'
 import { getAdminPropertyTenantApplicationForServer } from '~/api/tenant-applications'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
