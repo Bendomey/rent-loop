@@ -10303,6 +10303,9 @@ const docTemplate = `{
         "transformations.OutputAdminTenantApplication": {
             "type": "object",
             "properties": {
+                "application_payment_invoice": {
+                    "$ref": "#/definitions/transformations.OutputInvoice"
+                },
                 "cancelled_at": {
                     "type": "string",
                     "example": "2024-06-02T12:00:00Z"

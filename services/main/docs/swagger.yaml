@@ -1674,6 +1674,8 @@ definitions:
     type: object
   transformations.OutputAdminTenantApplication:
     properties:
+      application_payment_invoice:
+        $ref: '#/definitions/transformations.OutputInvoice'
       cancelled_at:
         example: "2024-06-02T12:00:00Z"
         type: string
