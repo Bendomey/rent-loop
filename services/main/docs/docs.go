@@ -24,6 +24,1925 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/admin/admins": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all admins (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admins"
+                ],
+                "summary": "Get all admins (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputAdmin"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new admin (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admins"
+                ],
+                "summary": "Create a new admin (Admin)",
+                "parameters": [
+                    {
+                        "description": "Admin details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateAdminRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdmin"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/admins/login": {
+            "post": {
+                "description": "Authenticate admin and return token (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admins"
+                ],
+                "summary": "Authenticate admin and return token (Admin)",
+                "parameters": [
+                    {
+                        "description": "Login credentials",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdminWithToken"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/admins/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the currently authenticated admin (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admins"
+                ],
+                "summary": "Get the currently authenticated admin (Admin)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdmin"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/admins/{admin_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get admin by ID (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admins"
+                ],
+                "summary": "Get admin by ID (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Admin ID",
+                        "name": "admin_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdmin"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/client-applications": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all ClientApplications (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientApplications"
+                ],
+                "summary": "Get all ClientApplications (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "ClientApplication.Status.Pending",
+                            "ClientApplication.Status.Approved",
+                            "ClientApplication.Status.Rejected"
+                        ],
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "LANDLORD",
+                            "PROPERTY_MANAGER",
+                            "DEVELOPER",
+                            "AGENCY"
+                        ],
+                        "type": "string",
+                        "name": "sub_type",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "INDIVIDUAL",
+                            "COMPANY"
+                        ],
+                        "type": "string",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputClientApplication"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/client-applications/{application_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get clientApplication by ID (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientApplications"
+                ],
+                "summary": "Get clientApplication by ID (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ClientApplication ID",
+                        "name": "application_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientApplication"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/client-applications/{application_id}/approve": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Admin approves a client's application after review (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientApplications"
+                ],
+                "summary": "Approve a client application (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client Application ID",
+                        "name": "application_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientApplication"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/client-applications/{application_id}/reject": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Admin rejects a client application with a reason (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientApplications"
+                ],
+                "summary": "Reject a client application (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client Application ID",
+                        "name": "application_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Rejection reason",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RejectClientApplicationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientApplication"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/client-user-properties": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List all client user properties (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUserProperties"
+                ],
+                "summary": "List all client user properties (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "a8098c1a-f86e-11da-bd1a-00112444be1e",
+                        "name": "client_user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "a8098c1a-f86e-11da-bd1a-00112444be1e",
+                        "name": "property_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "MANAGER",
+                            "STAFF"
+                        ],
+                        "type": "string",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputClientUserProperty"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/client-user-properties/{client_user_property_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Fetch client user property with populate (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUserProperties"
+                ],
+                "summary": "Fetch client user property with populate (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client user property ID",
+                        "name": "client_user_property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Client user property retrieved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientUserProperty"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Client user property not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/client-users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all client users (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Get all client users (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "e4ad26d4-d7e9-4599-a246-5e88abba6083",
+                        "name": "not_in_property_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "OWNER",
+                            "ADMIN",
+                            "STAFF"
+                        ],
+                        "type": "string",
+                        "example": "OWNER",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "ClientUser.Status.Active",
+                            "ClientUser.Status.Inactive"
+                        ],
+                        "type": "string",
+                        "example": "ClientUser.Status.Active",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputClientUser"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "An error occurred while filtering client users",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Absent or invalid authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new client user (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Creates new client user (Admin)",
+                "parameters": [
+                    {
+                        "description": "Create Client User Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateClientUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Client user created successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientUser"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when creating a client user",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/client-users/forgot-password": {
+            "post": {
+                "description": "Sends forgot password reset link to client user (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Sends forgot password reset link to client user (Admin)",
+                "parameters": [
+                    {
+                        "description": "Send Forgot Password Reset Link Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SendForgotPasswordResetLinkRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Forgot password reset link sent successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when sending forgot password reset link to client user",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/client-users/login": {
+            "post": {
+                "description": "Authenticate client user and returns client user and token (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Authenticates client user and returns token (Admin)",
+                "parameters": [
+                    {
+                        "description": "Client user login credentials",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LoginClientUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Client user authenticated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientUserWithToken"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when authenticating a client user",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden Access",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/client-users/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the currently authenticated client user (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Get the currently authenticated client user (Admin)",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientUser"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "update client user (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "update client user (Admin)",
+                "parameters": [
+                    {
+                        "description": "Update Client User Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateClientUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientUser"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating client user",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Client user not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error occured",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/client-users/me/password": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update client user password (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Update client user password (Admin)",
+                "parameters": [
+                    {
+                        "description": "Update Client User Password Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateClientUserPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientUser"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating client user password",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Client user not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error occured",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/client-users/reset-password": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Resets the password for a client user (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Resets the password for a client user (Admin)",
+                "parameters": [
+                    {
+                        "description": "Reset Password Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ResetPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Password reset successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when resetting password for client user",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/client-users/{client_user_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get client user with populate (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Get client user with populate (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client user ID",
+                        "name": "client_user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Client user retrieved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientUser"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Client user not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/client-users/{client_user_id}/activate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Activate client user (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Activate client user (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client user ID",
+                        "name": "client_user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Client user activated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientUser"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when activating client user",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Client user not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error occured",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/client-users/{client_user_id}/deactivate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deactivate client user (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUsers"
+                ],
+                "summary": "Deactivate client user (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client user ID",
+                        "name": "client_user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Deactivate Client User Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.DeactivateClientUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Client user deactivated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientUser"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when deactivating client user",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Client user not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error occured",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/client-users/{client_user_id}/properties:link": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Link client user to properties (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUserProperties"
+                ],
+                "summary": "Link client user to properties (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client user ID",
+                        "name": "client_user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Link Client User To Properties Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LinkClientUserToPropertiesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Client user linked to properties successfully"
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error occured",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/client-users/{client_user_id}/properties:unlink": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Unlink client user from properties (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUserProperties"
+                ],
+                "summary": "Unlink client user from properties (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client user ID",
+                        "name": "client_user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Unlink Client User From Properties Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UnlinkClientUserFromPropertyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Client user unlinked from properties successfully"
+                    },
+                    "422": {
+                        "description": "Validation error occured",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/apply": {
+            "post": {
+                "description": "Create a new client application (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientApplications"
+                ],
+                "summary": "Create a new client application (Admin)",
+                "parameters": [
+                    {
+                        "description": "Client Application details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateClientApplicationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientApplication"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/documents": {
             "get": {
                 "security": [
@@ -31,7 +1950,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get all documents",
+                "description": "Get all documents (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -41,7 +1960,7 @@ const docTemplate = `{
                 "tags": [
                     "Documents"
                 ],
-                "summary": "Get all documents",
+                "summary": "Get all documents (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -212,7 +2131,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create a new document",
+                "description": "Create a new document (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -222,7 +2141,7 @@ const docTemplate = `{
                 "tags": [
                     "Documents"
                 ],
-                "summary": "Create a new document",
+                "summary": "Create a new document (Admin)",
                 "parameters": [
                     {
                         "description": "Document details",
@@ -274,7 +2193,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get document by ID",
+                "description": "Get document by ID (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -284,7 +2203,7 @@ const docTemplate = `{
                 "tags": [
                     "Documents"
                 ],
-                "summary": "Get document by ID",
+                "summary": "Get document by ID (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -341,7 +2260,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Delete a document",
+                "description": "Delete a document (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -351,7 +2270,7 @@ const docTemplate = `{
                 "tags": [
                     "Documents"
                 ],
-                "summary": "Delete a document",
+                "summary": "Delete a document (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -391,7 +2310,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update an existing document",
+                "description": "Update an existing document (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -401,7 +2320,7 @@ const docTemplate = `{
                 "tags": [
                     "Documents"
                 ],
-                "summary": "Update an existing document",
+                "summary": "Update an existing document (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -454,6 +2373,3934 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/invoices": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List invoices with optional filters (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "List invoices (Admin)",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "name": "active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "context_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payee_client_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payee_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payer_client_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payer_tenant_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "payer_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoices",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputInvoice"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when listing invoices",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/invoices/{invoice_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get invoice by ID (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Get invoice (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoice",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputInvoice"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when getting invoice",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Invoice not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update an existing invoice (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Update invoice (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update invoice request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateInvoiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoice Updated Successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputInvoice"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating invoice",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Invoice not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/invoices/{invoice_id}/line-items": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all line items for an invoice (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Get line items for an invoice (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Line Items",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/transformations.OutputInvoiceLineItem"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when getting line items",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Add a line item to an existing invoice (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Add line item to invoice (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Add line item request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AddLineItemRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Line Item Added Successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputInvoiceLineItem"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when adding line item",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Invoice not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/invoices/{invoice_id}/line-items/{line_item_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove a line item from an existing draft invoice (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Remove line item from invoice (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Line Item ID",
+                        "name": "line_item_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Line Item Removed Successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when removing line item",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Invoice or line item not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/invoices/{invoice_id}/void": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Void an existing invoice (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Void invoice (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoice Voided Successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputInvoice"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when voiding invoice",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Invoice not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/leases/{lease_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get lease (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "Get lease (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lease",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdminLease"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when getting lease",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Lease not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update lease (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "Update lease (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update lease request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateLeaseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lease Updated Successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdminLease"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating lease",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Lease not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/leases/{lease_id}/status:active": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Activate lease (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "Activate lease (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Lease Activated Successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when activating lease",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Lease not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/leases/{lease_id}/status:cancelled": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancel lease (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "Cancel lease (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Cancel lease request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CancelLeaseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Lease Cancelled Successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when cancelling lease",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Lease not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/payment-accounts": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all payment accounts for the current client (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Payment Accounts"
+                ],
+                "summary": "Get all payment accounts (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "is_default",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "owner_types",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "MTN",
+                            "VODAFONE",
+                            "AIRTELTIGO",
+                            "BANK_API"
+                        ],
+                        "type": "string",
+                        "name": "provider",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "MOMO",
+                            "BANK_TRANSFER",
+                            "CARD",
+                            "OFFLINE"
+                        ],
+                        "type": "string",
+                        "name": "rail",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "ACTIVE",
+                            "DISABLED"
+                        ],
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputPaymentAccount"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new payment account for a client (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Payment Accounts"
+                ],
+                "summary": "Creates a new payment account (Admin)",
+                "parameters": [
+                    {
+                        "description": "Create Payment Account Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreatePaymentAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Payment account created successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputPaymentAccount"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when creating a payment account",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/payment-accounts/{payment_account_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get payment account by ID (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Payment Accounts"
+                ],
+                "summary": "Get payment account by ID (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Payment Account ID",
+                        "name": "payment_account_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputPaymentAccount"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when fetching a payment account",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Payment account not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a payment account (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Payment Accounts"
+                ],
+                "summary": "Delete a payment account (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Payment Account ID",
+                        "name": "payment_account_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Payment account deleted successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when deleting a payment account",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update an existing payment account (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Payment Accounts"
+                ],
+                "summary": "Update an existing payment account (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid4",
+                        "description": "Payment Account ID",
+                        "name": "payment_account_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Payment account details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdatePaymentAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment account updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputPaymentAccount"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating a payment account",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Payment account not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/properties": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all properties (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Properties"
+                ],
+                "summary": "Get all properties (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Property.Status.Active",
+                            "Property.Status.Maintenance",
+                            "Property.Status.Inactive"
+                        ],
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "SINGLE",
+                            "MULTI"
+                        ],
+                        "type": "string",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputProperty"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new property (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Properties"
+                ],
+                "summary": "Creates a new property (Admin)",
+                "parameters": [
+                    {
+                        "description": "Create Property Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreatePropertyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Property created successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputProperty"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when creating a property",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/properties/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get my properties (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUserProperties"
+                ],
+                "summary": "Get my properties (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "MANAGER",
+                            "STAFF"
+                        ],
+                        "type": "string",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputClientUserProperty"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/properties/slug/{slug}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get property by slug (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Properties"
+                ],
+                "summary": "Get property by slug (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Property of slug retrieved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputProperty"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when fetching a property",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Property not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occured",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/properties/{property_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get property by ID (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Properties"
+                ],
+                "summary": "Get property by ID (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputProperty"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when fetching a property",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Property not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occured",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a property (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Properties"
+                ],
+                "summary": "Delete a property (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Property deleted successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when updating a property",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occured",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update an existing property (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Properties"
+                ],
+                "summary": "Update an existing property (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid4",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Property details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdatePropertyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Property updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputProperty"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating a property",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Property not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occured",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/properties/{property_id}/blocks": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List property blocks (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PropertyBlocks"
+                ],
+                "summary": "List property blocks (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "PropertyBlock.Status.Active",
+                            "PropertyBlock.Status.Inactive",
+                            "PropertyBlock.Status.Maintenance"
+                        ],
+                        "type": "string",
+                        "example": "PropertyBlock.Status.Active",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputPropertyBlock"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new property block (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PropertyBlocks"
+                ],
+                "summary": "Create a new property block (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Property block details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreatePropertyBlockRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Property block created successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputPropertyBlock"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when creating a property block",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden access",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/properties/{property_id}/blocks/{block_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get property block by ID (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PropertyBlocks"
+                ],
+                "summary": "Get property block by ID (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property block ID",
+                        "name": "block_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Property block retrieved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputPropertyBlock"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when fetching a property block",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Property block not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occured",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a property block (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PropertyBlocks"
+                ],
+                "summary": "Delete a property block (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property block ID",
+                        "name": "block_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Property block deleted successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when deleting a property block",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden access",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Property block not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a property block (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PropertyBlocks"
+                ],
+                "summary": "Update a property block (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property block ID",
+                        "name": "block_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Property block details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdatePropertyBlockRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Property block updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputPropertyBlock"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating a property block",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden access",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Property block not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/properties/{property_id}/blocks/{block_id}/units": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create unit (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Create unit (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property block ID",
+                        "name": "block_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Unit",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateUnitRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.AdminOutputUnit"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when creating a unit",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden access",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/properties/{property_id}/client-users:link": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Link property to client users (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUserProperties"
+                ],
+                "summary": "Link property to client users (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Link Property To Client Users Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LinkPropertyToClientUsersRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Property linked to client users successfully"
+                    },
+                    "422": {
+                        "description": "Validation error occured",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/properties/{property_id}/client-users:unlink": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Unlink property from client users (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientUserProperties"
+                ],
+                "summary": "Unlink property from client users (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Unlink Property From Client Users Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UnlinkPropertyFromClientUsersRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Property unlinked from client users successfully"
+                    },
+                    "422": {
+                        "description": "Validation error occured",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/properties/{property_id}/leases": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List leases by property (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "List leases by property (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "MANUAL",
+                            "ONLINE"
+                        ],
+                        "type": "string",
+                        "example": "MANUAL",
+                        "name": "lease_agreement_document_mode",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "b4d0243c-6581-4104-8185-d83a45ebe41b",
+                        "name": "parent_lease_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "HOURLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY",
+                            "ONETIME"
+                        ],
+                        "type": "string",
+                        "example": "HOURLY",
+                        "name": "payment_frequency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Lease.Status.Pending",
+                            "Lease.Status.Active",
+                            "Lease.Status.Terminated",
+                            "Lease.Status.Completed",
+                            "Lease.Status.Cancelled"
+                        ],
+                        "type": "string",
+                        "example": "Lease.Status.Pending",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "HOURS",
+                            "DAYS",
+                            "MONTHS"
+                        ],
+                        "type": "string",
+                        "example": "HOURS",
+                        "name": "stay_duration_frequency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "unit_ids",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputAdminLease"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "An error occurred while filtering leases",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Absent or invalid authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/properties/{property_id}/units": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List units (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Units"
+                ],
+                "summary": "List units (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "767d8e23-8c9f-4c51-85af-5908039869da",
+                            "3d90d606-2a22-4487-9431-69736829094f"
+                        ],
+                        "name": "block_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "WEEKLY",
+                            "DAILY",
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "BIANNUALLY",
+                            "ANNUALLY"
+                        ],
+                        "type": "string",
+                        "example": "WEEKLY",
+                        "name": "payment_frequency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "prop_123",
+                        "name": "property_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Unit.Status.Draft",
+                            "Unit.Status.Available",
+                            "Unit.Status.Occupied",
+                            "Unit.Status.Maintenance"
+                        ],
+                        "type": "string",
+                        "example": "Unit.Status.Available",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "APARTMENT",
+                            "HOUSE",
+                            "STUDIO",
+                            "OFFICE",
+                            "RETAIL"
+                        ],
+                        "type": "string",
+                        "example": "SINGLE",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.AdminOutputUnit"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/properties/{property_id}/units/{unit_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get unit (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Get unit (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Unit ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Unit retrieved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.AdminOutputUnit"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when fetching a unit",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Unit not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "delete a unit (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Units"
+                ],
+                "summary": "delete a unit (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Unit ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Unit deleted successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when deleting a unit",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden access",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Unit not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update unit (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Update unit (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Unit ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Unit",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateUnitRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.AdminOutputUnit"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating a unit",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden access",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Unit not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/properties/{property_id}/units/{unit_id}/status:available": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update unit (Admin) status to available",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Update unit (Admin) status to available",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Unit ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Unit status updated successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when updating unit status",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden access",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Unit not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/properties/{property_id}/units/{unit_id}/status:draft": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update unit (Admin) status to draft",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Update unit (Admin) status to draft",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Unit ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Unit status updated successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when updating unit status",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden access",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Unit not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/properties/{property_id}/units/{unit_id}/status:maintenance": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update unit (Admin) status to maintenance",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Update unit (Admin) status to maintenance",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Unit ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Unit status updated successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when updating unit status",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden access",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Unit not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/signing": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Generate a signing token for a document signer (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Signing"
+                ],
+                "summary": "Generate a signing token (Admin)",
+                "parameters": [
+                    {
+                        "description": "Token details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.GenerateTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Token created successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdminSigningToken"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/signing-tokens": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List signing tokens with optional filters (Admin)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Signing"
+                ],
+                "summary": "List signing tokens (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "created_by_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "document_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "lease_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "TENANT",
+                            "PM_WITNESS",
+                            "TENANT_WITNESS"
+                        ],
+                        "type": "string",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "tenant_application_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputAdminSigningToken"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/signing-tokens/{signing_token_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update signer details on a token that has not yet been used (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Signing"
+                ],
+                "summary": "Update a signing token (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid4",
+                        "description": "Signing token ID",
+                        "name": "signing_token_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Signer details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateSigningTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdminSigningToken"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/signing-tokens/{signing_token_id}/resend": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Extend the token expiry by 7 days and resend the notification to the signer (Admin)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Signing"
+                ],
+                "summary": "Resend a signing token (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid4",
+                        "description": "Signing token ID",
+                        "name": "signing_token_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdminSigningToken"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/signing/direct": {
+            "post": {
+                "description": "Submit a signature for a document using tenant application or lease context (for PMs) (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Signing"
+                ],
+                "summary": "Submit a signature (Admin)",
+                "parameters": [
+                    {
+                        "description": "Signature details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SignDocumentPMRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Signature created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputDocumentSignature"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/tenant-applications": {
             "get": {
                 "security": [
@@ -461,7 +6308,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "List all tenant applications",
+                "description": "List all tenant applications (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -471,7 +6318,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "List all tenant applications",
+                "summary": "List all tenant applications (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -708,7 +6555,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Create a new tenant application",
+                "description": "Create a new tenant application (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -718,7 +6565,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Create a new tenant application",
+                "summary": "Create a new tenant application (Admin)",
                 "parameters": [
                     {
                         "description": "Create Tenant Application Request Body",
@@ -770,7 +6617,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Sends a tenant invite to a possible tenant",
+                "description": "Sends a tenant invite to a possible tenant (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -780,7 +6627,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Sends a tenant invite to a possible tenant",
+                "summary": "Sends a tenant invite to a possible tenant (Admin)",
                 "parameters": [
                     {
                         "description": "Send Tenant Invite Request Body",
@@ -836,7 +6683,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get tenant application",
+                "description": "Get tenant application (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -846,7 +6693,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Get tenant application",
+                "summary": "Get tenant application (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -909,7 +6756,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Delete a tenant application. Only applications with status 'TenantApplication.Status.Cancelled' can be deleted.",
+                "description": "Delete a tenant application. Only applications with status 'TenantApplication.Status.Cancelled' can be deleted. (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -919,7 +6766,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Delete a tenant application",
+                "summary": "Delete a tenant application (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -965,7 +6812,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update a tenant application",
+                "description": "Update a tenant application (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -975,7 +6822,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Update a tenant application",
+                "summary": "Update a tenant application (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -1046,7 +6893,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Approve a tenant application",
+                "description": "Approve a tenant application (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1056,7 +6903,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Approve a tenant application",
+                "summary": "Approve a tenant application (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -1122,7 +6969,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Cancel a tenant application",
+                "description": "Cancel a tenant application (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1132,7 +6979,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Cancel a tenant application",
+                "summary": "Cancel a tenant application (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -1195,7 +7042,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Pay an invoice for a tenant application (security deposit and/or initial deposit)",
+                "description": "Pay an invoice for a tenant application (security deposit and/or initial deposit) (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1205,7 +7052,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Pay an invoice for a tenant application",
+                "summary": "Pay an invoice for a tenant application (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -1266,7 +7113,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Generate an invoice for a tenant application (security deposit and/or initial deposit)",
+                "description": "Generate an invoice for a tenant application (security deposit and/or initial deposit) (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1276,7 +7123,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Generate an invoice for a tenant application",
+                "summary": "Generate an invoice for a tenant application (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -1339,2710 +7186,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admins": {
+        "/api/v1/admin/tenants/{tenant_id}/leases": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get all admins",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admins"
-                ],
-                "summary": "Get all admins",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "example": [
-                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
-                        ],
-                        "name": "ids",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "name": "order",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "query",
-                        "in": "query"
-                    },
-                    {
-                        "minItems": 1,
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "search_fields",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_date",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "properties": {
-                                        "meta": {
-                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
-                                        },
-                                        "rows": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/transformations.OutputAdmin"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a new admin",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admins"
-                ],
-                "summary": "Create a new admin",
-                "parameters": [
-                    {
-                        "description": "Admin details",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.CreateAdminRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputAdmin"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admins/login": {
-            "post": {
-                "description": "Authenticate admin and return token",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admins"
-                ],
-                "summary": "Authenticate admin and return token",
-                "parameters": [
-                    {
-                        "description": "Login credentials",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.LoginRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputAdminWithToken"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admins/me": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get the currently authenticated admin",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admins"
-                ],
-                "summary": "Get the currently authenticated admin",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputAdmin"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admins/{admin_id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get admin by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admins"
-                ],
-                "summary": "Get admin by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Admin ID",
-                        "name": "admin_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputAdmin"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/codes": {
-            "post": {
-                "description": "Send verification code",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Send verification code",
-                "parameters": [
-                    {
-                        "description": "Auth code request body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.AuthCodeRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    },
-                    "400": {
-                        "description": "Error occurred when sending verification code",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/codes/verify": {
-            "post": {
-                "description": "Verify verification code",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Verify verification code",
-                "parameters": [
-                    {
-                        "description": "Verify code request body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.VerifyCodeRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    },
-                    "400": {
-                        "description": "Error occurred when verifying verification code",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/client-applications": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get all ClientApplications",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientApplications"
-                ],
-                "summary": "Get all ClientApplications",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "example": [
-                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
-                        ],
-                        "name": "ids",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "name": "order",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "query",
-                        "in": "query"
-                    },
-                    {
-                        "minItems": 1,
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "search_fields",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_date",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "ClientApplication.Status.Pending",
-                            "ClientApplication.Status.Approved",
-                            "ClientApplication.Status.Rejected"
-                        ],
-                        "type": "string",
-                        "name": "status",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "LANDLORD",
-                            "PROPERTY_MANAGER",
-                            "DEVELOPER",
-                            "AGENCY"
-                        ],
-                        "type": "string",
-                        "name": "sub_type",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "INDIVIDUAL",
-                            "COMPANY"
-                        ],
-                        "type": "string",
-                        "name": "type",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "properties": {
-                                        "meta": {
-                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
-                                        },
-                                        "rows": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/transformations.OutputClientApplication"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/client-applications/{application_id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get clientApplication by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientApplications"
-                ],
-                "summary": "Get clientApplication by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "ClientApplication ID",
-                        "name": "application_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientApplication"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/client-applications/{application_id}/approve": {
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Admin approves a client's application after review",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientApplications"
-                ],
-                "summary": "Approve a client application",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Client Application ID",
-                        "name": "application_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientApplication"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/client-applications/{application_id}/reject": {
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Admin rejects a client application with a reason",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientApplications"
-                ],
-                "summary": "Reject a client application",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Client Application ID",
-                        "name": "application_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Rejection reason",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.RejectClientApplicationRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientApplication"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/client-user-properties": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "List all client user properties",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUserProperties"
-                ],
-                "summary": "List all client user properties",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "example": "a8098c1a-f86e-11da-bd1a-00112444be1e",
-                        "name": "client_user_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "example": [
-                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
-                        ],
-                        "name": "ids",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "name": "order",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "a8098c1a-f86e-11da-bd1a-00112444be1e",
-                        "name": "property_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "query",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "MANAGER",
-                            "STAFF"
-                        ],
-                        "type": "string",
-                        "name": "role",
-                        "in": "query"
-                    },
-                    {
-                        "minItems": 1,
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "search_fields",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_date",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "properties": {
-                                        "meta": {
-                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
-                                        },
-                                        "rows": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/transformations.OutputClientUserProperty"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/client-user-properties/{client_user_property_id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Fetch client user property with populate",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUserProperties"
-                ],
-                "summary": "Fetch client user property with populate",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Client user property ID",
-                        "name": "client_user_property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Client user property retrieved successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientUserProperty"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Client user property not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/client-users": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get all client users",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUsers"
-                ],
-                "summary": "Get all client users",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "example": [
-                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
-                        ],
-                        "name": "ids",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "e4ad26d4-d7e9-4599-a246-5e88abba6083",
-                        "name": "not_in_property_id",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "name": "order",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "query",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "OWNER",
-                            "ADMIN",
-                            "STAFF"
-                        ],
-                        "type": "string",
-                        "example": "OWNER",
-                        "name": "role",
-                        "in": "query"
-                    },
-                    {
-                        "minItems": 1,
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "search_fields",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_date",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "ClientUser.Status.Active",
-                            "ClientUser.Status.Inactive"
-                        ],
-                        "type": "string",
-                        "example": "ClientUser.Status.Active",
-                        "name": "status",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "properties": {
-                                        "meta": {
-                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
-                                        },
-                                        "rows": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/transformations.OutputClientUser"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "An error occurred while filtering client users",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Absent or invalid authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a new client user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUsers"
-                ],
-                "summary": "Creates new client user",
-                "parameters": [
-                    {
-                        "description": "Create Client User Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.CreateClientUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Client user created successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientUser"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when creating a client user",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/client-users/forgot-password": {
-            "post": {
-                "description": "Sends forgot password reset link to client user",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUsers"
-                ],
-                "summary": "Sends forgot password reset link to client user",
-                "parameters": [
-                    {
-                        "description": "Send Forgot Password Reset Link Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.SendForgotPasswordResetLinkRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Forgot password reset link sent successfully"
-                    },
-                    "400": {
-                        "description": "Error occurred when sending forgot password reset link to client user",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/client-users/login": {
-            "post": {
-                "description": "Authenticate client user and returns client user and token",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUsers"
-                ],
-                "summary": "Authenticates client user and returns token",
-                "parameters": [
-                    {
-                        "description": "Client user login credentials",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.LoginClientUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Client user authenticated successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientUserWithToken"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when authenticating a client user",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden Access",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/client-users/me": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get the currently authenticated client user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUsers"
-                ],
-                "summary": "Get the currently authenticated client user",
-                "parameters": [
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientUser"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "update client user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUsers"
-                ],
-                "summary": "update client user",
-                "parameters": [
-                    {
-                        "description": "Update Client User Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdateClientUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientUser"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when updating client user",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Client user not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error occured",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/client-users/me/password": {
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update client user password",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUsers"
-                ],
-                "summary": "Update client user password",
-                "parameters": [
-                    {
-                        "description": "Update Client User Password Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdateClientUserPasswordRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientUser"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when updating client user password",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Client user not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error occured",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/client-users/reset-password": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Resets the password for a client user",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUsers"
-                ],
-                "summary": "Resets the password for a client user",
-                "parameters": [
-                    {
-                        "description": "Reset Password Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ResetPasswordRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Password reset successfully"
-                    },
-                    "400": {
-                        "description": "Error occurred when resetting password for client user",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/client-users/{client_user_id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get client user with populate",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUsers"
-                ],
-                "summary": "Get client user with populate",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Client user ID",
-                        "name": "client_user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Client user retrieved successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientUser"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Client user not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/client-users/{client_user_id}/activate": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Activate client user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUsers"
-                ],
-                "summary": "Activate client user",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Client user ID",
-                        "name": "client_user_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Client user activated successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientUser"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when activating client user",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Client user not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error occured",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/client-users/{client_user_id}/deactivate": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Deactivate client user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUsers"
-                ],
-                "summary": "Deactivate client user",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Client user ID",
-                        "name": "client_user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Deactivate Client User Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.DeactivateClientUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Client user deactivated successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientUser"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when deactivating client user",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Client user not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error occured",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/client-users/{client_user_id}/properties:link": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Link client user to properties",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUserProperties"
-                ],
-                "summary": "Link client user to properties",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Client user ID",
-                        "name": "client_user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Link Client User To Properties Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.LinkClientUserToPropertiesRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Client user linked to properties successfully"
-                    },
-                    "400": {
-                        "description": "Invalid request body",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error occured",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/client-users/{client_user_id}/properties:unlink": {
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Unlink client user from properties",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUserProperties"
-                ],
-                "summary": "Unlink client user from properties",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Client user ID",
-                        "name": "client_user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Unlink Client User From Properties Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UnlinkClientUserFromPropertyRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Client user unlinked from properties successfully"
-                    },
-                    "422": {
-                        "description": "Validation error occured",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/clients/apply": {
-            "post": {
-                "description": "Create a new client application",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientApplications"
-                ],
-                "summary": "Create a new client application",
-                "parameters": [
-                    {
-                        "description": "Client Application details",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.CreateClientApplicationRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientApplication"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/documents/{document_id}": {
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update an existing document",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Documents"
-                ],
-                "summary": "Update an existing document",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "format": "uuid4",
-                        "description": "Document ID",
-                        "name": "document_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Document details",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdateDocumentRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Document Updated successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputDocument"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/invoices": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "List invoices with optional filters",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "List invoices",
-                "parameters": [
-                    {
-                        "type": "boolean",
-                        "name": "active",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "context_type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "example": [
-                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
-                        ],
-                        "name": "ids",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "name": "order",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "payee_client_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "payee_type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "payer_client_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "payer_tenant_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "payer_type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "query",
-                        "in": "query"
-                    },
-                    {
-                        "minItems": 1,
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "search_fields",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "status",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Invoices",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "properties": {
-                                        "meta": {
-                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
-                                        },
-                                        "rows": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/transformations.OutputInvoice"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when listing invoices",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/invoices/{invoice_id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get invoice by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "Get invoice",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Invoice ID",
-                        "name": "invoice_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Invoice",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputInvoice"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when getting invoice",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Invoice not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update an existing invoice",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "Update invoice",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Invoice ID",
-                        "name": "invoice_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Update invoice request body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdateInvoiceRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Invoice Updated Successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputInvoice"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when updating invoice",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Invoice not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/invoices/{invoice_id}/line-items": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get all line items for an invoice",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "Get line items for an invoice",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Invoice ID",
-                        "name": "invoice_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Line Items",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/transformations.OutputInvoiceLineItem"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when getting line items",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Add a line item to an existing invoice",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "Add line item to invoice",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Invoice ID",
-                        "name": "invoice_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Add line item request body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.AddLineItemRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Line Item Added Successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputInvoiceLineItem"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when adding line item",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Invoice not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/invoices/{invoice_id}/line-items/{line_item_id}": {
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Remove a line item from an existing draft invoice",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "Remove line item from invoice",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Invoice ID",
-                        "name": "invoice_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Line Item ID",
-                        "name": "line_item_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Line Item Removed Successfully"
-                    },
-                    "400": {
-                        "description": "Error occurred when removing line item",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Invoice or line item not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/invoices/{invoice_id}/void": {
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Void an existing invoice",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "Void invoice",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Invoice ID",
-                        "name": "invoice_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Invoice Voided Successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputInvoice"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when voiding invoice",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Invoice not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/leases/{lease_id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get lease",
+                "description": "List leases by tenant (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -4052,2113 +7203,12 @@ const docTemplate = `{
                 "tags": [
                     "Lease"
                 ],
-                "summary": "Get lease",
+                "summary": "List leases by tenant (Admin)",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Lease ID",
-                        "name": "lease_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Lease",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputAdminLease"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when getting lease",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Lease not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update lease",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Lease"
-                ],
-                "summary": "Update lease",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Lease ID",
-                        "name": "lease_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Update lease request body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdateLeaseRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Lease Updated Successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputAdminLease"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when updating lease",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Lease not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/leases/{lease_id}/status:active": {
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Activate lease",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Lease"
-                ],
-                "summary": "Activate lease",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Lease ID",
-                        "name": "lease_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Lease Activated Successfully"
-                    },
-                    "400": {
-                        "description": "Error occurred when activating lease",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Lease not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/leases/{lease_id}/status:cancelled": {
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Cancel lease",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Lease"
-                ],
-                "summary": "Cancel lease",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Lease ID",
-                        "name": "lease_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Cancel lease request body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.CancelLeaseRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Lease Cancelled Successfully"
-                    },
-                    "400": {
-                        "description": "Error occurred when cancelling lease",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Lease not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/payment-accounts": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get all payment accounts for the current client",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Payment Accounts"
-                ],
-                "summary": "Get all payment accounts",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "example": [
-                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
-                        ],
-                        "name": "ids",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "name": "is_default",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "name": "order",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "owner_types",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "MTN",
-                            "VODAFONE",
-                            "AIRTELTIGO",
-                            "BANK_API"
-                        ],
-                        "type": "string",
-                        "name": "provider",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "query",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "MOMO",
-                            "BANK_TRANSFER",
-                            "CARD",
-                            "OFFLINE"
-                        ],
-                        "type": "string",
-                        "name": "rail",
-                        "in": "query"
-                    },
-                    {
-                        "minItems": 1,
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "search_fields",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_date",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "ACTIVE",
-                            "DISABLED"
-                        ],
-                        "type": "string",
-                        "name": "status",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "properties": {
-                                        "meta": {
-                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
-                                        },
-                                        "rows": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/transformations.OutputPaymentAccount"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a new payment account for a client",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Payment Accounts"
-                ],
-                "summary": "Creates a new payment account",
-                "parameters": [
-                    {
-                        "description": "Create Payment Account Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.CreatePaymentAccountRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Payment account created successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputPaymentAccount"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when creating a payment account",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/payment-accounts/{payment_account_id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get payment account by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Payment Accounts"
-                ],
-                "summary": "Get payment account by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Payment Account ID",
-                        "name": "payment_account_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputPaymentAccount"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when fetching a payment account",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Payment account not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Delete a payment account",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Payment Accounts"
-                ],
-                "summary": "Delete a payment account",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Payment Account ID",
-                        "name": "payment_account_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Payment account deleted successfully"
-                    },
-                    "400": {
-                        "description": "Error occurred when deleting a payment account",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update an existing payment account",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Payment Accounts"
-                ],
-                "summary": "Update an existing payment account",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "format": "uuid4",
-                        "description": "Payment Account ID",
-                        "name": "payment_account_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Payment account details",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdatePaymentAccountRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Payment account updated successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputPaymentAccount"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when updating a payment account",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Payment account not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/payments/offline": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Record an offline payment for an invoice. The payment will be created in PENDING status and requires verification by a property manager.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Payments"
-                ],
-                "summary": "Create an offline payment",
-                "parameters": [
-                    {
-                        "description": "Create Offline Payment Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.CreateOfflinePaymentRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Payment created successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputPayment"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when creating payment",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/properties": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get all properties",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Properties"
-                ],
-                "summary": "Get all properties",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "example": [
-                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
-                        ],
-                        "name": "ids",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "name": "order",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "query",
-                        "in": "query"
-                    },
-                    {
-                        "minItems": 1,
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "search_fields",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_date",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "Property.Status.Active",
-                            "Property.Status.Maintenance",
-                            "Property.Status.Inactive"
-                        ],
-                        "type": "string",
-                        "name": "status",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "SINGLE",
-                            "MULTI"
-                        ],
-                        "type": "string",
-                        "name": "type",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "properties": {
-                                        "meta": {
-                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
-                                        },
-                                        "rows": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/transformations.OutputProperty"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a new property",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Properties"
-                ],
-                "summary": "Creates a new property",
-                "parameters": [
-                    {
-                        "description": "Create Property Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.CreatePropertyRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Property created successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputProperty"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when creating a property",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/properties/me": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get my properties",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUserProperties"
-                ],
-                "summary": "Get my properties",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "example": [
-                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
-                        ],
-                        "name": "ids",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "name": "order",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "query",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "MANAGER",
-                            "STAFF"
-                        ],
-                        "type": "string",
-                        "name": "role",
-                        "in": "query"
-                    },
-                    {
-                        "minItems": 1,
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "search_fields",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_date",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "properties": {
-                                        "meta": {
-                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
-                                        },
-                                        "rows": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/transformations.OutputClientUserProperty"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/properties/slug/{slug}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get property by slug",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Properties"
-                ],
-                "summary": "Get property by slug",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property slug",
-                        "name": "slug",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Property of slug retrieved successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputProperty"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when fetching a property",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Property not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occured",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/properties/{property_id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get property by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Properties"
-                ],
-                "summary": "Get property by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputProperty"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when fetching a property",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Property not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occured",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Delete a property",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Properties"
-                ],
-                "summary": "Delete a property",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Property deleted successfully"
-                    },
-                    "400": {
-                        "description": "Error occurred when updating a property",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occured",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update an existing property",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Properties"
-                ],
-                "summary": "Update an existing property",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "format": "uuid4",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Property details",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdatePropertyRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Property updated successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputProperty"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when updating a property",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Property not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occured",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/properties/{property_id}/blocks": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "List property blocks",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PropertyBlocks"
-                ],
-                "summary": "List property blocks",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "example": [
-                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
-                        ],
-                        "name": "ids",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "name": "order",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "query",
-                        "in": "query"
-                    },
-                    {
-                        "minItems": 1,
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "search_fields",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_date",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "PropertyBlock.Status.Active",
-                            "PropertyBlock.Status.Inactive",
-                            "PropertyBlock.Status.Maintenance"
-                        ],
-                        "type": "string",
-                        "example": "PropertyBlock.Status.Active",
-                        "name": "status",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "properties": {
-                                        "meta": {
-                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
-                                        },
-                                        "rows": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/transformations.OutputPropertyBlock"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a new property block",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PropertyBlocks"
-                ],
-                "summary": "Create a new property block",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Property block details",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.CreatePropertyBlockRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Property block created successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputPropertyBlock"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when creating a property block",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden access",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Invalid request body",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/properties/{property_id}/blocks/{block_id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get property block by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PropertyBlocks"
-                ],
-                "summary": "Get property block by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Property block ID",
-                        "name": "block_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Property block retrieved successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputPropertyBlock"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when fetching a property block",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Property block not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occured",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Delete a property block",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PropertyBlocks"
-                ],
-                "summary": "Delete a property block",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Property block ID",
-                        "name": "block_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Property block deleted successfully"
-                    },
-                    "400": {
-                        "description": "Error occurred when deleting a property block",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden access",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Property block not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update a property block",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PropertyBlocks"
-                ],
-                "summary": "Update a property block",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Property block ID",
-                        "name": "block_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Property block details",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdatePropertyBlockRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Property block updated successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputPropertyBlock"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when updating a property block",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden access",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Property block not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Invalid request body",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/properties/{property_id}/blocks/{block_id}/units": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create unit",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Units"
-                ],
-                "summary": "Create unit",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Property block ID",
-                        "name": "block_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Unit",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.CreateUnitRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.AdminOutputUnit"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when creating a unit",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden access",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Invalid request body",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/properties/{property_id}/client-users:link": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Link property to client users",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUserProperties"
-                ],
-                "summary": "Link property to client users",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Link Property To Client Users Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.LinkPropertyToClientUsersRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Property linked to client users successfully"
-                    },
-                    "422": {
-                        "description": "Validation error occured",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/properties/{property_id}/client-users:unlink": {
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Unlink property from client users",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUserProperties"
-                ],
-                "summary": "Unlink property from client users",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Unlink Property From Client Users Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UnlinkPropertyFromClientUsersRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Property unlinked from client users successfully"
-                    },
-                    "422": {
-                        "description": "Validation error occured",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/properties/{property_id}/leases": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "List leases by property",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Lease"
-                ],
-                "summary": "List leases by property",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
+                        "description": "Tenant ID",
+                        "name": "tenant_id",
                         "in": "path",
                         "required": true
                     },
@@ -6346,14 +7396,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/properties/{property_id}/units": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "List units",
+        "/api/v1/auth/codes": {
+            "post": {
+                "description": "Send verification code",
                 "consumes": [
                     "application/json"
                 ],
@@ -6361,422 +7406,32 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Units"
+                    "Auth"
                 ],
-                "summary": "List units",
+                "summary": "Send verification code",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "example": [
-                            "767d8e23-8c9f-4c51-85af-5908039869da",
-                            "3d90d606-2a22-4487-9431-69736829094f"
-                        ],
-                        "name": "block_ids",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "example": [
-                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
-                        ],
-                        "name": "ids",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "name": "order",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "WEEKLY",
-                            "DAILY",
-                            "MONTHLY",
-                            "QUARTERLY",
-                            "BIANNUALLY",
-                            "ANNUALLY"
-                        ],
-                        "type": "string",
-                        "example": "WEEKLY",
-                        "name": "payment_frequency",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "prop_123",
-                        "name": "property_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "query",
-                        "in": "query"
-                    },
-                    {
-                        "minItems": 1,
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "search_fields",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_date",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "Unit.Status.Draft",
-                            "Unit.Status.Available",
-                            "Unit.Status.Occupied",
-                            "Unit.Status.Maintenance"
-                        ],
-                        "type": "string",
-                        "example": "Unit.Status.Available",
-                        "name": "status",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "APARTMENT",
-                            "HOUSE",
-                            "STUDIO",
-                            "OFFICE",
-                            "RETAIL"
-                        ],
-                        "type": "string",
-                        "example": "SINGLE",
-                        "name": "type",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "properties": {
-                                        "meta": {
-                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
-                                        },
-                                        "rows": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/transformations.AdminOutputUnit"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/properties/{property_id}/units/{unit_id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get unit",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Units"
-                ],
-                "summary": "Get unit",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Unit ID",
-                        "name": "unit_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Unit retrieved successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.AdminOutputUnit"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when fetching a unit",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Unit not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "delete a unit",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Units"
-                ],
-                "summary": "delete a unit",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Unit ID",
-                        "name": "unit_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Unit deleted successfully"
-                    },
-                    "400": {
-                        "description": "Error occurred when deleting a unit",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden access",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Unit not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update unit",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Units"
-                ],
-                "summary": "Update unit",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Unit ID",
-                        "name": "unit_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Unit",
+                        "description": "Auth code request body",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.UpdateUnitRequest"
+                            "$ref": "#/definitions/handlers.AuthCodeRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.AdminOutputUnit"
-                                }
-                            }
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "400": {
-                        "description": "Error occurred when updating a unit",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden access",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Unit not found",
+                        "description": "Error occurred when sending verification code",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "422": {
-                        "description": "Invalid request body",
+                        "description": "Validation error",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -6790,227 +7445,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/properties/{property_id}/units/{unit_id}/status:available": {
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update unit status to available",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Units"
-                ],
-                "summary": "Update unit status to available",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Unit ID",
-                        "name": "unit_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Unit status updated successfully"
-                    },
-                    "400": {
-                        "description": "Error occurred when updating unit status",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden access",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Unit not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/properties/{property_id}/units/{unit_id}/status:draft": {
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update unit status to draft",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Units"
-                ],
-                "summary": "Update unit status to draft",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Unit ID",
-                        "name": "unit_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Unit status updated successfully"
-                    },
-                    "400": {
-                        "description": "Error occurred when updating unit status",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden access",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Unit not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/properties/{property_id}/units/{unit_id}/status:maintenance": {
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update unit status to maintenance",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Units"
-                ],
-                "summary": "Update unit status to maintenance",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Unit ID",
-                        "name": "unit_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Unit status updated successfully"
-                    },
-                    "400": {
-                        "description": "Error occurred when updating unit status",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden access",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Unit not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/signing": {
+        "/api/v1/auth/codes/verify": {
             "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Generate a signing token for a document signer",
+                "description": "Verify verification code",
                 "consumes": [
                     "application/json"
                 ],
@@ -7018,46 +7455,38 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Signing"
+                    "Auth"
                 ],
-                "summary": "Generate a signing token",
+                "summary": "Verify verification code",
                 "parameters": [
                     {
-                        "description": "Token details",
+                        "description": "Verify code request body",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.GenerateTokenRequest"
+                            "$ref": "#/definitions/handlers.VerifyCodeRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Token created successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputAdminSigningToken"
-                                }
-                            }
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Error occurred when verifying verification code",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
+                    "422": {
+                        "description": "Validation error",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "An unexpected error occurred",
                         "schema": {
                             "type": "string"
                         }
@@ -7065,141 +7494,51 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/signing-tokens": {
-            "get": {
+        "/api/v1/documents/{document_id}": {
+            "patch": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "List signing tokens with optional filters",
+                "description": "Update an existing document",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Signing"
+                    "Documents"
                 ],
-                "summary": "List signing tokens",
+                "summary": "Update an existing document",
                 "parameters": [
                     {
                         "type": "string",
-                        "name": "created_by_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
+                        "format": "uuid4",
+                        "description": "Document ID",
                         "name": "document_id",
-                        "in": "query"
+                        "in": "path",
+                        "required": true
                     },
                     {
-                        "type": "string",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "ids",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "lease_id",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "name": "order",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "query",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "TENANT",
-                            "PM_WITNESS",
-                            "TENANT_WITNESS"
-                        ],
-                        "type": "string",
-                        "name": "role",
-                        "in": "query"
-                    },
-                    {
-                        "minItems": 1,
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "search_fields",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "tenant_application_id",
-                        "in": "query"
+                        "description": "Document details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateDocumentRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Document Updated successfully",
                         "schema": {
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "type": "object",
-                                    "properties": {
-                                        "meta": {
-                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
-                                        },
-                                        "rows": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/transformations.OutputAdminSigningToken"
-                                            }
-                                        }
-                                    }
+                                    "$ref": "#/definitions/transformations.OutputDocument"
                                 }
                             }
                         }
@@ -7225,14 +7564,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/signing-tokens/{signing_token_id}": {
-            "patch": {
+        "/api/v1/payments/offline": {
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update signer details on a token that has not yet been used",
+                "description": "Record an offline payment for an invoice. The payment will be created in PENDING status and requires verification by a property manager.",
                 "consumes": [
                     "application/json"
                 ],
@@ -7240,181 +7579,52 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Signing"
+                    "Payments"
                 ],
-                "summary": "Update a signing token",
+                "summary": "Create an offline payment",
                 "parameters": [
                     {
-                        "type": "string",
-                        "format": "uuid4",
-                        "description": "Signing token ID",
-                        "name": "signing_token_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Signer details",
+                        "description": "Create Offline Payment Request Body",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.UpdateSigningTokenRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputAdminSigningToken"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/signing-tokens/{signing_token_id}/resend": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Extend the token expiry by 7 days and resend the notification to the signer",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Signing"
-                ],
-                "summary": "Resend a signing token",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "format": "uuid4",
-                        "description": "Signing token ID",
-                        "name": "signing_token_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputAdminSigningToken"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/signing/direct": {
-            "post": {
-                "description": "Submit a signature for a document using tenant application or lease context (for PMs)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Signing"
-                ],
-                "summary": "Submit a signature",
-                "parameters": [
-                    {
-                        "description": "Signature details",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.SignDocumentPMRequest"
+                            "$ref": "#/definitions/handlers.CreateOfflinePaymentRequest"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Signature created",
+                        "description": "Payment created successfully",
                         "schema": {
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "$ref": "#/definitions/transformations.OutputDocumentSignature"
+                                    "$ref": "#/definitions/transformations.OutputPayment"
                                 }
                             }
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Error occurred when creating payment",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "An unexpected error occurred",
                         "schema": {
                             "type": "string"
                         }
@@ -7745,216 +7955,6 @@ const docTemplate = `{
                         "description": "Invalid phone number",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/tenants/{tenant_id}/leases": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "List leases by tenant",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Lease"
-                ],
-                "summary": "List leases by tenant",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Tenant ID",
-                        "name": "tenant_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "example": [
-                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
-                        ],
-                        "name": "ids",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "MANUAL",
-                            "ONLINE"
-                        ],
-                        "type": "string",
-                        "example": "MANUAL",
-                        "name": "lease_agreement_document_mode",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "name": "order",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "b4d0243c-6581-4104-8185-d83a45ebe41b",
-                        "name": "parent_lease_id",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "HOURLY",
-                            "DAILY",
-                            "MONTHLY",
-                            "QUARTERLY",
-                            "BIANNUALLY",
-                            "ANNUALLY",
-                            "ONETIME"
-                        ],
-                        "type": "string",
-                        "example": "HOURLY",
-                        "name": "payment_frequency",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "query",
-                        "in": "query"
-                    },
-                    {
-                        "minItems": 1,
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "search_fields",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_date",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "Lease.Status.Pending",
-                            "Lease.Status.Active",
-                            "Lease.Status.Terminated",
-                            "Lease.Status.Completed",
-                            "Lease.Status.Cancelled"
-                        ],
-                        "type": "string",
-                        "example": "Lease.Status.Pending",
-                        "name": "status",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "HOURS",
-                            "DAYS",
-                            "MONTHS"
-                        ],
-                        "type": "string",
-                        "example": "HOURS",
-                        "name": "stay_duration_frequency",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "example": [
-                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
-                        ],
-                        "name": "unit_ids",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "properties": {
-                                        "meta": {
-                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
-                                        },
-                                        "rows": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/transformations.OutputAdminLease"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "An error occurred while filtering leases",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Absent or invalid authentication token",
-                        "schema": {
-                            "type": "string"
                         }
                     },
                     "500": {

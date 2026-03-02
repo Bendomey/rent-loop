@@ -28,8 +28,8 @@ type LoginRequest struct {
 
 // AuthenticateAdmin godoc
 //
-//	@Summary		Authenticate admin and return token
-//	@Description	Authenticate admin and return token
+//	@Summary		Authenticate admin and return token (Admin)
+//	@Description	Authenticate admin and return token (Admin)
 //	@Tags			Admins
 //	@Accept			json
 //	@Produce		json
@@ -37,7 +37,7 @@ type LoginRequest struct {
 //	@Success		200		{object}	object{data=transformations.OutputAdminWithToken}
 //	@Failure		400		{object}	lib.HTTPError
 //	@Failure		500		{object}	string
-//	@Router			/api/v1/admins/login [post]
+//	@Router			/api/v1/admin/admins/login [post]
 func (h *AdminHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
 	var body LoginRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
@@ -75,8 +75,8 @@ type CreateAdminRequest struct {
 
 // CreateAdmin godoc
 //
-//	@Summary		Create a new admin
-//	@Description	Create a new admin
+//	@Summary		Create a new admin (Admin)
+//	@Description	Create a new admin (Admin)
 //	@Tags			Admins
 //	@Accept			json
 //	@Security		BearerAuth
@@ -86,7 +86,7 @@ type CreateAdminRequest struct {
 //	@Failure		400		{object}	lib.HTTPError
 //	@Failure		401		{object}	string
 //	@Failure		500		{object}	string
-//	@Router			/api/v1/admins [post]
+//	@Router			/api/v1/admin/admins [post]
 func (h *AdminHandler) CreateAdmin(w http.ResponseWriter, r *http.Request) {
 	currentAdmin, currentAdminOk := lib.AdminFromContext(r.Context())
 
@@ -125,8 +125,8 @@ func (h *AdminHandler) CreateAdmin(w http.ResponseWriter, r *http.Request) {
 
 // GetCurrentAdmin godoc
 //
-//	@Summary		Get the currently authenticated admin
-//	@Description	Get the currently authenticated admin
+//	@Summary		Get the currently authenticated admin (Admin)
+//	@Description	Get the currently authenticated admin (Admin)
 //	@Tags			Admins
 //	@Accept			json
 //	@Security		BearerAuth
@@ -135,7 +135,7 @@ func (h *AdminHandler) CreateAdmin(w http.ResponseWriter, r *http.Request) {
 //	@Failure		400	{object}	lib.HTTPError
 //	@Failure		401	{object}	string
 //	@Failure		500	{object}	string
-//	@Router			/api/v1/admins/me [get]
+//	@Router			/api/v1/admin/admins/me [get]
 func (h *AdminHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	currentAdmin, adminOk := lib.AdminFromContext(r.Context())
 
@@ -157,8 +157,8 @@ func (h *AdminHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 
 // GetAdminById godoc
 //
-//	@Summary		Get admin by ID
-//	@Description	Get admin by ID
+//	@Summary		Get admin by ID (Admin)
+//	@Description	Get admin by ID (Admin)
 //	@Tags			Admins
 //	@Accept			json
 //	@Security		BearerAuth
@@ -168,7 +168,7 @@ func (h *AdminHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 //	@Failure		400			{object}	lib.HTTPError
 //	@Failure		401			{object}	string
 //	@Failure		500			{object}	string
-//	@Router			/api/v1/admins/{admin_id} [get]
+//	@Router			/api/v1/admin/admins/{admin_id} [get]
 func (h *AdminHandler) GetAdminById(w http.ResponseWriter, r *http.Request) {
 	adminId := chi.URLParam(r, "admin_id")
 
@@ -190,8 +190,8 @@ type ListAdminsFilterRequest struct {
 
 // GetAdmins godoc
 //
-//	@Summary		Get all admins
-//	@Description	Get all admins
+//	@Summary		Get all admins (Admin)
+//	@Description	Get all admins (Admin)
 //	@Tags			Admins
 //	@Accept			json
 //	@Security		BearerAuth
@@ -201,7 +201,7 @@ type ListAdminsFilterRequest struct {
 //	@Failure		400	{object}	lib.HTTPError
 //	@Failure		401	{object}	string
 //	@Failure		500	{object}	string
-//	@Router			/api/v1/admins [get]
+//	@Router			/api/v1/admin/admins [get]
 func (h *AdminHandler) ListAdmins(w http.ResponseWriter, r *http.Request) {
 	_, adminOk := lib.AdminFromContext(r.Context())
 

@@ -14,7 +14,7 @@ const getInvoices = async (
 		const params = getQueryParams<FetchInvoiceFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<Invoice>>
-		>(`/v1/invoices?${params.toString()}`)
+		>(`/v1/admin/invoices?${params.toString()}`)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {

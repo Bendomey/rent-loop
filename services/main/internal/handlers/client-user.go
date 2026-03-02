@@ -33,8 +33,8 @@ type CreateClientUserRequest struct {
 
 // CreateClientUser godoc
 //
-//	@Summary		Creates new client user
-//	@Description	Create a new client user
+//	@Summary		Creates new client user (Admin)
+//	@Description	Create a new client user (Admin)
 //	@Tags			ClientUsers
 //	@Accept			json
 //	@Security		BearerAuth
@@ -44,7 +44,7 @@ type CreateClientUserRequest struct {
 //	@Failure		400		{object}	lib.HTTPError									"Error occurred when creating a client user"
 //	@Failure		401		{object}	string											"Invalid or absent authentication token"
 //	@Failure		500		{object}	string											"An unexpected error occurred"
-//	@Router			/api/v1/client-users [post]
+//	@Router			/api/v1/admin/client-users [post]
 func (h *ClientUserHandler) CreateClientUser(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 
@@ -92,8 +92,8 @@ type LoginClientUserRequest struct {
 
 // AuthenticateClientUser godoc
 //
-//	@Summary		Authenticates client user and returns token
-//	@Description	Authenticate client user and returns client user and token
+//	@Summary		Authenticates client user and returns token (Admin)
+//	@Description	Authenticate client user and returns client user and token (Admin)
 //	@Tags			ClientUsers
 //	@Accept			json
 //	@Produce		json
@@ -102,7 +102,7 @@ type LoginClientUserRequest struct {
 //	@Failure		400		{object}	lib.HTTPError											"Error occurred when authenticating a client user"
 //	@Failure		403		{object}	lib.HTTPError											"Forbidden Access"
 //	@Failure		500		{object}	string													"An unexpected error occurred"
-//	@Router			/api/v1/client-users/login [post]
+//	@Router			/api/v1/admin/client-users/login [post]
 func (h *ClientUserHandler) AuthenticateClientUser(w http.ResponseWriter, r *http.Request) {
 	var body LoginClientUserRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
@@ -143,8 +143,8 @@ type GetClientUserQuery struct {
 
 // GetCurrentClientUser godoc
 //
-//	@Summary		Get the currently authenticated client user
-//	@Description	Get the currently authenticated client user
+//	@Summary		Get the currently authenticated client user (Admin)
+//	@Description	Get the currently authenticated client user (Admin)
 //	@Tags			ClientUsers
 //	@Accept			json
 //	@Security		BearerAuth
@@ -155,7 +155,7 @@ type GetClientUserQuery struct {
 //	@Failure		401	{object}	string
 //	@Failure		403	{object}	lib.HTTPError
 //	@Failure		500	{object}	string
-//	@Router			/api/v1/client-users/me [get]
+//	@Router			/api/v1/admin/client-users/me [get]
 func (h *ClientUserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 
@@ -188,15 +188,15 @@ type SendForgotPasswordResetLinkRequest struct {
 
 // SendForgotPasswordResetLink godoc
 //
-//	@Summary		Sends forgot password reset link to client user
-//	@Description	Sends forgot password reset link to client user
+//	@Summary		Sends forgot password reset link to client user (Admin)
+//	@Description	Sends forgot password reset link to client user (Admin)
 //	@Tags			ClientUsers
 //	@Accept			json
 //	@Param			body	body	SendForgotPasswordResetLinkRequest	true	"Send Forgot Password Reset Link Request Body"
 //	@Success		204		"Forgot password reset link sent successfully"
 //	@Failure		400		{object}	lib.HTTPError	"Error occurred when sending forgot password reset link to client user"
 //	@Failure		500		{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/client-users/forgot-password [post]
+//	@Router			/api/v1/admin/client-users/forgot-password [post]
 func (h *ClientUserHandler) SendForgotPasswordResetLink(w http.ResponseWriter, r *http.Request) {
 	var body SendForgotPasswordResetLinkRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
@@ -225,8 +225,8 @@ type ResetPasswordRequest struct {
 
 // ResetClientUserPassword godoc
 //
-//	@Summary		Resets the password for a client user
-//	@Description	Resets the password for a client user
+//	@Summary		Resets the password for a client user (Admin)
+//	@Description	Resets the password for a client user (Admin)
 //	@Tags			ClientUsers
 //	@Accept			json
 //	@Security		BearerAuth
@@ -234,7 +234,7 @@ type ResetPasswordRequest struct {
 //	@Success		204		"Password reset successfully"
 //	@Failure		400		{object}	lib.HTTPError	"Error occurred when resetting password for client user"
 //	@Failure		500		{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/client-users/reset-password [post]
+//	@Router			/api/v1/admin/client-users/reset-password [post]
 func (h *ClientUserHandler) ResetClientUserPassword(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 
@@ -277,8 +277,8 @@ type ListClientUsersFilterRequest struct {
 
 // ListClientUsers godoc
 //
-//	@Summary		Get all client users
-//	@Description	Get all client users
+//	@Summary		Get all client users (Admin)
+//	@Description	Get all client users (Admin)
 //	@Tags			ClientUsers
 //	@Accept			json
 //	@Security		BearerAuth
@@ -288,7 +288,7 @@ type ListClientUsersFilterRequest struct {
 //	@Failure		400	{object}	lib.HTTPError	"An error occurred while filtering client users"
 //	@Failure		401	{object}	string			"Absent or invalid authentication token"
 //	@Failure		500	{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/client-users [get]
+//	@Router			/api/v1/admin/client-users [get]
 func (h *ClientUserHandler) ListClientUsers(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {
@@ -346,8 +346,8 @@ type GetClientUserWithPopulateQuery struct {
 
 // GetClientUserWithPopulate	godoc
 //
-//	@Summary		Get client user with populate
-//	@Description	Get client user with populate
+//	@Summary		Get client user with populate (Admin)
+//	@Description	Get client user with populate (Admin)
 //	@Tags			ClientUsers
 //	@Accept			json
 //	@Security		BearerAuth
@@ -358,7 +358,7 @@ type GetClientUserWithPopulateQuery struct {
 //	@Failure		401				{object}	string											"Invalid or absent authentication token"
 //	@Failure		404				{object}	lib.HTTPError									"Client user not found"
 //	@Failure		500				{object}	string											"An unexpected error occurred"
-//	@Router			/api/v1/client-users/{client_user_id} [get]
+//	@Router			/api/v1/admin/client-users/{client_user_id} [get]
 func (h *ClientUserHandler) GetClientUserWithPopulate(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {
@@ -392,8 +392,8 @@ type DeactivateClientUserRequest struct {
 
 // DeactivateClientUser godoc
 //
-//	@Summary		Deactivate client user
-//	@Description	Deactivate client user
+//	@Summary		Deactivate client user (Admin)
+//	@Description	Deactivate client user (Admin)
 //	@Tags			ClientUsers
 //	@Accept			json
 //	@Security		BearerAuth
@@ -406,7 +406,7 @@ type DeactivateClientUserRequest struct {
 //	@Failure		404				{object}	lib.HTTPError									"Client user not found"
 //	@Failure		422				{object}	string											"Validation error occured"
 //	@Failure		500				{object}	string											"An unexpected error occurred"
-//	@Router			/api/v1/client-users/{client_user_id}/deactivate [post]
+//	@Router			/api/v1/admin/client-users/{client_user_id}/deactivate [post]
 func (h *ClientUserHandler) DeactivateClientUser(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {
@@ -447,8 +447,8 @@ func (h *ClientUserHandler) DeactivateClientUser(w http.ResponseWriter, r *http.
 
 // ActivateClientUser godoc
 //
-//	@Summary		Activate client user
-//	@Description	Activate client user
+//	@Summary		Activate client user (Admin)
+//	@Description	Activate client user (Admin)
 //	@Tags			ClientUsers
 //	@Accept			json
 //	@Security		BearerAuth
@@ -460,7 +460,7 @@ func (h *ClientUserHandler) DeactivateClientUser(w http.ResponseWriter, r *http.
 //	@Failure		404				{object}	lib.HTTPError									"Client user not found"
 //	@Failure		422				{object}	string											"Validation error occured"
 //	@Failure		500				{object}	string											"An unexpected error occurred"
-//	@Router			/api/v1/client-users/{client_user_id}/activate [post]
+//	@Router			/api/v1/admin/client-users/{client_user_id}/activate [post]
 func (h *ClientUserHandler) ActivateClientUser(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {
@@ -493,8 +493,8 @@ type UpdateClientUserRequest struct {
 
 // UpdateClientUserSelf godoc
 //
-//	@Summary		update client user
-//	@Description	update client user
+//	@Summary		update client user (Admin)
+//	@Description	update client user (Admin)
 //	@Tags			ClientUsers
 //	@Accept			json
 //	@Security		BearerAuth
@@ -506,7 +506,7 @@ type UpdateClientUserRequest struct {
 //	@Failure		404		{object}	lib.HTTPError	"Client user not found"
 //	@Failure		422		{object}	lib.HTTPError	"Validation error occured"
 //	@Failure		500		{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/client-users/me [patch]
+//	@Router			/api/v1/admin/client-users/me [patch]
 func (h *ClientUserHandler) UpdateClientUserSelf(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {
@@ -550,8 +550,8 @@ type UpdateClientUserPasswordRequest struct {
 
 // UpdateClientUserPassword godoc
 //
-//	@Summary		Update client user password
-//	@Description	Update client user password
+//	@Summary		Update client user password (Admin)
+//	@Description	Update client user password (Admin)
 //	@Tags			ClientUsers
 //	@Accept			json
 //	@Security		BearerAuth
@@ -563,7 +563,7 @@ type UpdateClientUserPasswordRequest struct {
 //	@Failure		404		{object}	lib.HTTPError	"Client user not found"
 //	@Failure		422		{object}	lib.HTTPError	"Validation error occured"
 //	@Failure		500		{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/client-users/me/password [patch]
+//	@Router			/api/v1/admin/client-users/me/password [patch]
 func (h *ClientUserHandler) UpdateClientUserPassword(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {

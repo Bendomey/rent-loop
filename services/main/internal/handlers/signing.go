@@ -35,8 +35,8 @@ type GenerateTokenRequest struct {
 
 // GenerateToken godoc
 //
-//	@Summary		Generate a signing token
-//	@Description	Generate a signing token for a document signer
+//	@Summary		Generate a signing token (Admin)
+//	@Description	Generate a signing token for a document signer (Admin)
 //	@Tags			Signing
 //	@Accept			json
 //	@Security		BearerAuth
@@ -46,7 +46,7 @@ type GenerateTokenRequest struct {
 //	@Failure		400		{object}	lib.HTTPError
 //	@Failure		401		{object}	string
 //	@Failure		500		{object}	string
-//	@Router			/api/v1/signing [post]
+//	@Router			/api/v1/admin/signing [post]
 func (h *SigningHandler) GenerateToken(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {
@@ -188,8 +188,8 @@ type ListSigningTokensFilterRequest struct {
 
 // ListSigningTokens godoc
 //
-//	@Summary		List signing tokens
-//	@Description	List signing tokens with optional filters
+//	@Summary		List signing tokens (Admin)
+//	@Description	List signing tokens with optional filters (Admin)
 //	@Tags			Signing
 //	@Produce		json
 //	@Security		BearerAuth
@@ -198,7 +198,7 @@ type ListSigningTokensFilterRequest struct {
 //	@Failure		400	{object}	lib.HTTPError
 //	@Failure		401	{object}	string
 //	@Failure		500	{object}	string
-//	@Router			/api/v1/signing-tokens [get]
+//	@Router			/api/v1/admin/signing-tokens [get]
 func (h *SigningHandler) ListSigningTokens(w http.ResponseWriter, r *http.Request) {
 	_, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {
@@ -283,8 +283,8 @@ type UpdateSigningTokenRequest struct {
 
 // UpdateToken godoc
 //
-//	@Summary		Update a signing token
-//	@Description	Update signer details on a token that has not yet been used
+//	@Summary		Update a signing token (Admin)
+//	@Description	Update signer details on a token that has not yet been used (Admin)
 //	@Tags			Signing
 //	@Accept			json
 //	@Security		BearerAuth
@@ -296,7 +296,7 @@ type UpdateSigningTokenRequest struct {
 //	@Failure		401					{object}	string
 //	@Failure		404					{object}	lib.HTTPError
 //	@Failure		500					{object}	string
-//	@Router			/api/v1/signing-tokens/{signing_token_id} [patch]
+//	@Router			/api/v1/admin/signing-tokens/{signing_token_id} [patch]
 func (h *SigningHandler) UpdateToken(w http.ResponseWriter, r *http.Request) {
 	_, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {
@@ -333,8 +333,8 @@ func (h *SigningHandler) UpdateToken(w http.ResponseWriter, r *http.Request) {
 
 // ResendToken godoc
 //
-//	@Summary		Resend a signing token
-//	@Description	Extend the token expiry by 7 days and resend the notification to the signer
+//	@Summary		Resend a signing token (Admin)
+//	@Description	Extend the token expiry by 7 days and resend the notification to the signer (Admin)
 //	@Tags			Signing
 //	@Security		BearerAuth
 //	@Produce		json
@@ -344,7 +344,7 @@ func (h *SigningHandler) UpdateToken(w http.ResponseWriter, r *http.Request) {
 //	@Failure		401					{object}	string
 //	@Failure		404					{object}	lib.HTTPError
 //	@Failure		500					{object}	string
-//	@Router			/api/v1/signing-tokens/{signing_token_id}/resend [post]
+//	@Router			/api/v1/admin/signing-tokens/{signing_token_id}/resend [post]
 func (h *SigningHandler) ResendToken(w http.ResponseWriter, r *http.Request) {
 	_, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {
@@ -374,8 +374,8 @@ type SignDocumentPMRequest struct {
 
 // SignDocumentPM godoc
 //
-//	@Summary		Submit a signature
-//	@Description	Submit a signature for a document using tenant application or lease context (for PMs)
+//	@Summary		Submit a signature (Admin)
+//	@Description	Submit a signature for a document using tenant application or lease context (for PMs) (Admin)
 //	@Tags			Signing
 //	@Accept			json
 //	@Produce		json
@@ -384,7 +384,7 @@ type SignDocumentPMRequest struct {
 //	@Failure		400		{object}	lib.HTTPError
 //	@Failure		404		{object}	lib.HTTPError
 //	@Failure		500		{object}	string
-//	@Router			/api/v1/signing/direct [post]
+//	@Router			/api/v1/admin/signing/direct [post]
 func (h *SigningHandler) SignDocumentPM(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {

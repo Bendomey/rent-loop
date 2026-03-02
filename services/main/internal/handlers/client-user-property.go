@@ -35,8 +35,8 @@ type ListMyPropertiesFilterRequest struct {
 
 // GetMyProperties godoc
 //
-//	@Summary		Get my properties
-//	@Description	Get my properties
+//	@Summary		Get my properties (Admin)
+//	@Description	Get my properties (Admin)
 //	@Tags			ClientUserProperties
 //	@Accept			json
 //	@Security		BearerAuth
@@ -46,7 +46,7 @@ type ListMyPropertiesFilterRequest struct {
 //	@Failure		400	{object}	lib.HTTPError
 //	@Failure		401	{object}	string
 //	@Failure		500	{object}	string
-//	@Router			/api/v1/properties/me [get]
+//	@Router			/api/v1/admin/properties/me [get]
 func (h *ClientUserPropertyHandler) ListClientUserProperties(w http.ResponseWriter, r *http.Request) {
 	clientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 
@@ -106,8 +106,8 @@ type ListAllClientUserPropertiesFilterRequest struct {
 
 // ListAllClientUserProperties godoc
 //
-//	@Summary		List all client user properties
-//	@Description	List all client user properties
+//	@Summary		List all client user properties (Admin)
+//	@Description	List all client user properties (Admin)
 //	@Tags			ClientUserProperties
 //	@Accept			json
 //	@Security		BearerAuth
@@ -117,7 +117,7 @@ type ListAllClientUserPropertiesFilterRequest struct {
 //	@Failure		400	{object}	lib.HTTPError
 //	@Failure		401	{object}	string
 //	@Failure		500	{object}	string
-//	@Router			/api/v1/client-user-properties [get]
+//	@Router			/api/v1/admin/client-user-properties [get]
 func (h *ClientUserPropertyHandler) ListAllClientUserProperties(w http.ResponseWriter, r *http.Request) {
 	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
 	if filterErr != nil {
@@ -167,8 +167,8 @@ type GetClientUserPropertyWithPopulateQuery struct {
 
 // FetchClientUserPropertyWithPopulate godoc
 //
-//	@Summary		Fetch client user property with populate
-//	@Description	Fetch client user property with populate
+//	@Summary		Fetch client user property with populate (Admin)
+//	@Description	Fetch client user property with populate (Admin)
 //	@Tags			ClientUserProperties
 //	@Accept			json
 //	@Security		BearerAuth
@@ -179,7 +179,7 @@ type GetClientUserPropertyWithPopulateQuery struct {
 //	@Failure		401						{object}	string													"Invalid or absent authentication token"
 //	@Failure		404						{object}	lib.HTTPError											"Client user property not found"
 //	@Failure		500						{object}	string													"An unexpected error occurred"
-//	@Router			/api/v1/client-user-properties/{client_user_property_id} [get]
+//	@Router			/api/v1/admin/client-user-properties/{client_user_property_id} [get]
 func (h *ClientUserPropertyHandler) FetchClientUserPropertyWithPopulate(w http.ResponseWriter, r *http.Request) {
 	clientUserPropertyId := chi.URLParam(r, "client_user_property_id")
 
@@ -208,8 +208,8 @@ type LinkClientUserToPropertiesRequest struct {
 
 // LinkClientUserToProperties godoc
 //
-//	@Summary		Link client user to properties
-//	@Description	Link client user to properties
+//	@Summary		Link client user to properties (Admin)
+//	@Description	Link client user to properties (Admin)
 //	@Tags			ClientUserProperties
 //	@Accept			json
 //	@Security		BearerAuth
@@ -220,7 +220,7 @@ type LinkClientUserToPropertiesRequest struct {
 //	@Failure		400				{object}	lib.HTTPError						"Invalid request body"
 //	@Failure		422				{object}	string								"Validation error occured"
 //	@Failure		500				{object}	string								"An unexpected error occurred"
-//	@Router			/api/v1/client-users/{client_user_id}/properties:link [post]
+//	@Router			/api/v1/admin/client-users/{client_user_id}/properties:link [post]
 func (h *ClientUserPropertyHandler) LinkClientUserToProperties(w http.ResponseWriter, r *http.Request) {
 	clientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {
@@ -262,8 +262,8 @@ type UnlinkClientUserFromPropertyRequest struct {
 
 // UnlinkClientUserFromProperties godoc
 //
-//	@Summary		Unlink client user from properties
-//	@Description	Unlink client user from properties
+//	@Summary		Unlink client user from properties (Admin)
+//	@Description	Unlink client user from properties (Admin)
 //	@Tags			ClientUserProperties
 //	@Accept			json
 //	@Security		BearerAuth
@@ -273,7 +273,7 @@ type UnlinkClientUserFromPropertyRequest struct {
 //	@Success		204				{object}	nil									"Client user unlinked from properties successfully"
 //	@Failure		422				{object}	lib.HTTPError						"Validation error occured"
 //	@Failure		500				{object}	string								"An unexpected error occurred"
-//	@Router			/api/v1/client-users/{client_user_id}/properties:unlink [delete]
+//	@Router			/api/v1/admin/client-users/{client_user_id}/properties:unlink [delete]
 func (h *ClientUserPropertyHandler) UnlinkClientUserFromProperties(w http.ResponseWriter, r *http.Request) {
 	clientUserId := chi.URLParam(r, "client_user_id")
 	var body UnlinkClientUserFromPropertyRequest
@@ -309,8 +309,8 @@ type LinkPropertyToClientUsersRequest struct {
 
 // LinkPropertyToClientUsers godoc
 //
-//	@Summary		Link property to client users
-//	@Description	Link property to client users
+//	@Summary		Link property to client users (Admin)
+//	@Description	Link property to client users (Admin)
 //	@Tags			ClientUserProperties
 //	@Accept			json
 //	@Security		BearerAuth
@@ -320,7 +320,7 @@ type LinkPropertyToClientUsersRequest struct {
 //	@Success		204			{object}	nil									"Property linked to client users successfully"
 //	@Failure		422			{object}	string								"Validation error occured"
 //	@Failure		500			{object}	string								"An unexpected error occurred"
-//	@Router			/api/v1/properties/{property_id}/client-users:link [post]
+//	@Router			/api/v1/admin/properties/{property_id}/client-users:link [post]
 func (h *ClientUserPropertyHandler) LinkPropertyToClientUsers(w http.ResponseWriter, r *http.Request) {
 	clientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {
@@ -362,8 +362,8 @@ type UnlinkPropertyFromClientUsersRequest struct {
 
 // UnlinkPropertyFromClientUsers godoc
 //
-//	@Summary		Unlink property from client users
-//	@Description	Unlink property from client users
+//	@Summary		Unlink property from client users (Admin)
+//	@Description	Unlink property from client users (Admin)
 //	@Tags			ClientUserProperties
 //	@Accept			json
 //	@Security		BearerAuth
@@ -373,7 +373,7 @@ type UnlinkPropertyFromClientUsersRequest struct {
 //	@Success		204			{object}	nil										"Property unlinked from client users successfully"
 //	@Failure		422			{object}	lib.HTTPError							"Validation error occured"
 //	@Failure		500			{object}	string									"An unexpected error occurred"
-//	@Router			/api/v1/properties/{property_id}/client-users:unlink [delete]
+//	@Router			/api/v1/admin/properties/{property_id}/client-users:unlink [delete]
 func (h *ClientUserPropertyHandler) UnlinkPropertyFromClientUsers(w http.ResponseWriter, r *http.Request) {
 	propertyId := chi.URLParam(r, "property_id")
 	var body UnlinkPropertyFromClientUsersRequest

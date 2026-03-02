@@ -12,7 +12,7 @@ func NewAdminRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func(r ch
 		r.Use(middlewares.InjectAdminAuthMiddleware(appCtx))
 
 		r.Group(func(r chi.Router) {
-			r.Post("/v1/admins/login", handlers.AdminHandler.Authenticate)
+			r.Post("/v1/admin/admins/login", handlers.AdminHandler.Authenticate)
 		})
 
 		// protected client routes ...
@@ -20,23 +20,31 @@ func NewAdminRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func(r ch
 			// ensure auth is present
 			r.Use(middlewares.CheckForAdminAuthPresenceMiddleware)
 
-			r.Post("/v1/admins", handlers.AdminHandler.CreateAdmin)
-			r.Get("/v1/admins/me", handlers.AdminHandler.GetMe)
-			r.Get("/v1/admins/{admin_id}", handlers.AdminHandler.GetAdminById)
-			r.Get("/v1/admins", handlers.AdminHandler.ListAdmins)
-			r.Get("/v1/client-applications", handlers.ClientApplicationHandler.ListClientApplications)
-			r.Get(
-				"/v1/client-applications/{application_id}",
-				handlers.ClientApplicationHandler.GetClientApplicationById,
-			)
-			r.Patch(
-				"/v1/client-applications/{application_id}/approve",
-				handlers.ClientApplicationHandler.ApproveClientApplication,
-			)
-			r.Patch(
-				"/v1/client-applications/{application_id}/reject",
-				handlers.ClientApplicationHandler.RejectClientApplication,
-			)
+			r.Route("/v1/admin/admins", func(r chi.Router) {
+				r.Post("/", handlers.AdminHandler.CreateAdmin)
+				r.Get("/me", handlers.AdminHandler.GetMe)
+				r.Get("/{admin_id}", handlers.AdminHandler.GetAdminById)
+				r.Get("/", handlers.AdminHandler.ListAdmins)
+			})
+
+			r.Route("/v1/admin/client-applications", func(r chi.Router) {
+				r.Get("/", handlers.ClientApplicationHandler.ListClientApplications)
+
+				r.Route("/{application_id}", func(r chi.Router) {
+					r.Get(
+						"/",
+						handlers.ClientApplicationHandler.GetClientApplicationById,
+					)
+					r.Patch(
+						"/approve",
+						handlers.ClientApplicationHandler.ApproveClientApplication,
+					)
+					r.Patch(
+						"/reject",
+						handlers.ClientApplicationHandler.RejectClientApplication,
+					)
+				})
+			})
 		})
 	}
 }
