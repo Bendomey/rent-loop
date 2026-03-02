@@ -52,3 +52,9 @@ interface Invoice {
 	created_at: Date
 	updated_at: Date
 }
+
+interface FetchInvoiceFilter {
+	payee_type?: string
+	payer_type?: string
+	status?: string
+}

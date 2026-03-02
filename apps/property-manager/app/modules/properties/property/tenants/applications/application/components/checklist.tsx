@@ -96,9 +96,9 @@ export function PropertyTenantApplicationChecklist({ application }: Props) {
 		},
 	]
 
-	const signatures = (application.lease_agreement_document_signatures ?? []).filter(
-		(s) => s.document_id === application.lease_agreement_document_id,
-	)
+	const signatures = (
+		application.lease_agreement_document_signatures ?? []
+	).filter((s) => s.document_id === application.lease_agreement_document_id)
 	const managerSig = signatures.find((s) => s.role === 'PROPERTY_MANAGER')
 	const tenantSig = signatures.find((s) => s.role === 'TENANT')
 	const pmWitnessSignatures = signatures.filter((s) => s.role === 'PM_WITNESS')
