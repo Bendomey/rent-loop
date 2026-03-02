@@ -17,7 +17,7 @@ export const login = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<LoginClientUserResponse>>(
-			`${apiConfig?.baseUrl}/v1/client-users/login`,
+			`${apiConfig?.baseUrl}/v1/admin/client-users/login`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),
@@ -40,7 +40,7 @@ export const login = async (
 export const getCurrentUser = async (apiConfig?: ApiConfigForServerConfig) => {
 	try {
 		const response = await fetchServer<ApiResponse<ClientUser>>(
-			`${apiConfig?.baseUrl}/v1/client-users/me?populate=Client`,
+			`${apiConfig?.baseUrl}/v1/admin/client-users/me?populate=Client`,
 			{
 				method: 'GET',
 				...(apiConfig ? apiConfig : {}),
@@ -69,10 +69,13 @@ export const sendForgotPasswordLink = async (
 	apiConfig?: ApiConfigForServerConfig,
 ) => {
 	try {
-		await fetchServer(`${apiConfig?.baseUrl}/v1/client-users/forgot-password`, {
-			method: 'POST',
-			body: JSON.stringify(props),
-		})
+		await fetchServer(
+			`${apiConfig?.baseUrl}/v1/admin/client-users/forgot-password`,
+			{
+				method: 'POST',
+				body: JSON.stringify(props),
+			},
+		)
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
@@ -95,7 +98,7 @@ export const resetPassword = async (
 ) => {
 	try {
 		await fetchServer<ApiResponse<string>>(
-			`${apiConfig?.baseUrl}/v1/client-users/reset-password`,
+			`${apiConfig?.baseUrl}/v1/admin/client-users/reset-password`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),
@@ -126,7 +129,7 @@ interface UpdatePasswordProps {
 const updatePassword = async (props: UpdatePasswordProps) => {
 	try {
 		const response = await fetchClient<ApiResponse<ClientUser>>(
-			`/v1/client-users/me/password`,
+			`/v1/admin/client-users/me/password`,
 			{
 				method: 'PATCH',
 				body: JSON.stringify(props),

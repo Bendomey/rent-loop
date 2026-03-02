@@ -13,7 +13,7 @@ const getClientUserProperties = async (
 		const params = getQueryParams<FetchClientUserPropertyFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<ClientUserProperty>>
-		>(`/v1/client-user-properties?${params.toString()}`)
+		>(`/v1/admin/client-user-properties?${params.toString()}`)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -52,7 +52,7 @@ const clientUserPropertyLink = async ({
 }: ClientUserPropertyLinkProps) => {
 	try {
 		const response = await fetchClient<ApiResponse<ClientUserProperty>>(
-			`/v1/properties/${property_id}/client-users:link`,
+			`/v1/admin/properties/${property_id}/client-users:link`,
 			{
 				method: 'POST',
 				body: JSON.stringify({ role, client_user_ids }),
@@ -88,7 +88,7 @@ const clientUserPropertyUnlink = async ({
 }: ClientUserPropertyUnlinkProps) => {
 	try {
 		await fetchClient<boolean>(
-			`/v1/properties/${property_id}/client-users:unlink`,
+			`/v1/admin/properties/${property_id}/client-users:unlink`,
 			{
 				method: 'DELETE',
 				body: JSON.stringify({ client_user_ids }),

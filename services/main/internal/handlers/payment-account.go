@@ -32,8 +32,8 @@ type CreatePaymentAccountRequest struct {
 
 // CreatePaymentAccount godoc
 //
-//	@Summary		Creates a new payment account
-//	@Description	Create a new payment account for a client
+//	@Summary		Creates a new payment account (Admin)
+//	@Description	Create a new payment account for a client (Admin)
 //	@Tags			Payment Accounts
 //	@Accept			json
 //	@Security		BearerAuth
@@ -43,7 +43,7 @@ type CreatePaymentAccountRequest struct {
 //	@Failure		400		{object}	lib.HTTPError										"Error occurred when creating a payment account"
 //	@Failure		401		{object}	string												"Invalid or absent authentication token"
 //	@Failure		500		{object}	string												"An unexpected error occurred"
-//	@Router			/api/v1/payment-accounts [post]
+//	@Router			/api/v1/admin/payment-accounts [post]
 func (h *PaymentAccountHandler) CreatePaymentAccount(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 
@@ -98,8 +98,8 @@ type ListPaymentAccountsFilterRequest struct {
 
 // ListPaymentAccounts godoc
 //
-//	@Summary		Get all payment accounts
-//	@Description	Get all payment accounts for the current client
+//	@Summary		Get all payment accounts (Admin)
+//	@Description	Get all payment accounts for the current client (Admin)
 //	@Tags			Payment Accounts
 //	@Accept			json
 //	@Security		BearerAuth
@@ -109,7 +109,7 @@ type ListPaymentAccountsFilterRequest struct {
 //	@Failure		400	{object}	lib.HTTPError
 //	@Failure		401	{object}	string
 //	@Failure		500	{object}	string
-//	@Router			/api/v1/payment-accounts [get]
+//	@Router			/api/v1/admin/payment-accounts [get]
 func (h *PaymentAccountHandler) ListPaymentAccounts(w http.ResponseWriter, r *http.Request) {
 	clientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 
@@ -169,8 +169,8 @@ type GetPaymentAccountQuery struct {
 
 // GetPaymentAccountById godoc
 //
-//	@Summary		Get payment account by ID
-//	@Description	Get payment account by ID
+//	@Summary		Get payment account by ID (Admin)
+//	@Description	Get payment account by ID (Admin)
 //	@Tags			Payment Accounts
 //	@Accept			json
 //	@Security		BearerAuth
@@ -182,7 +182,7 @@ type GetPaymentAccountQuery struct {
 //	@Failure		401					{object}	string			"Invalid or absent authentication token"
 //	@Failure		404					{object}	lib.HTTPError	"Payment account not found"
 //	@Failure		500					{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/payment-accounts/{payment_account_id} [get]
+//	@Router			/api/v1/admin/payment-accounts/{payment_account_id} [get]
 func (h *PaymentAccountHandler) GetPaymentAccountById(w http.ResponseWriter, r *http.Request) {
 	_, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {
@@ -228,8 +228,8 @@ type UpdatePaymentAccountRequest struct {
 
 // UpdatePaymentAccount godoc
 //
-//	@Summary		Update an existing payment account
-//	@Description	Update an existing payment account
+//	@Summary		Update an existing payment account (Admin)
+//	@Description	Update an existing payment account (Admin)
 //	@Tags			Payment Accounts
 //	@Accept			json
 //	@Security		BearerAuth
@@ -241,7 +241,7 @@ type UpdatePaymentAccountRequest struct {
 //	@Failure		401					{object}	string												"Invalid or absent authentication token"
 //	@Failure		404					{object}	lib.HTTPError										"Payment account not found"
 //	@Failure		500					{object}	string												"An unexpected error occurred"
-//	@Router			/api/v1/payment-accounts/{payment_account_id} [patch]
+//	@Router			/api/v1/admin/payment-accounts/{payment_account_id} [patch]
 func (h *PaymentAccountHandler) UpdatePaymentAccount(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 
@@ -290,8 +290,8 @@ func (h *PaymentAccountHandler) UpdatePaymentAccount(w http.ResponseWriter, r *h
 
 // DeletePaymentAccount godoc
 //
-//	@Summary		Delete a payment account
-//	@Description	Delete a payment account
+//	@Summary		Delete a payment account (Admin)
+//	@Description	Delete a payment account (Admin)
 //	@Tags			Payment Accounts
 //	@Accept			json
 //	@Security		BearerAuth
@@ -301,7 +301,7 @@ func (h *PaymentAccountHandler) UpdatePaymentAccount(w http.ResponseWriter, r *h
 //	@Failure		400					{object}	lib.HTTPError	"Error occurred when deleting a payment account"
 //	@Failure		401					{object}	string			"Invalid or absent authentication token"
 //	@Failure		500					{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/payment-accounts/{payment_account_id} [delete]
+//	@Router			/api/v1/admin/payment-accounts/{payment_account_id} [delete]
 func (h *PaymentAccountHandler) DeletePaymentAccount(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentClientUserOk {

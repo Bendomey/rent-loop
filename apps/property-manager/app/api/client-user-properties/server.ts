@@ -12,10 +12,13 @@ export const getClientUserPropertiesForServer = async (
 		const params = getQueryParams<FetchClientUserPropertyFilter>(props)
 		const response = await fetchServer<
 			ApiResponse<FetchMultipleDataResponse<ClientUserProperty>>
-		>(`${apiConfig.baseUrl}/v1/client-user-properties?${params.toString()}`, {
-			method: 'GET',
-			...apiConfig,
-		})
+		>(
+			`${apiConfig.baseUrl}/v1/admin/client-user-properties?${params.toString()}`,
+			{
+				method: 'GET',
+				...apiConfig,
+			},
+		)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {

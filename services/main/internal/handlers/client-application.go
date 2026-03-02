@@ -52,8 +52,8 @@ type CreateClientApplicationRequest struct {
 
 // CreateClientApplication godoc
 //
-//	@Summary		Create a new client application
-//	@Description	Create a new client application
+//	@Summary		Create a new client application (Admin)
+//	@Description	Create a new client application (Admin)
 //	@Tags			ClientApplications
 //	@Accept			json
 //	@Produce		json
@@ -61,7 +61,7 @@ type CreateClientApplicationRequest struct {
 //	@Success		201		{object}	object{data=transformations.OutputClientApplication}
 //	@Failure		400		{object}	lib.HTTPError
 //	@Failure		500		{object}	string
-//	@Router			/api/v1/clients/apply [post]
+//	@Router			/api/v1/admin/clients/apply [post]
 func (h *ClientApplicationHandler) CreateClientApplication(w http.ResponseWriter, r *http.Request) {
 	var body CreateClientApplicationRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
@@ -113,8 +113,8 @@ func (h *ClientApplicationHandler) CreateClientApplication(w http.ResponseWriter
 
 // GetClientApplicationById godoc
 //
-//	@Summary		Get clientApplication by ID
-//	@Description	Get clientApplication by ID
+//	@Summary		Get clientApplication by ID (Admin)
+//	@Description	Get clientApplication by ID (Admin)
 //	@Tags			ClientApplications
 //	@Accept			json
 //	@Security		BearerAuth
@@ -124,7 +124,7 @@ func (h *ClientApplicationHandler) CreateClientApplication(w http.ResponseWriter
 //	@Failure		400				{object}	lib.HTTPError
 //	@Failure		401				{object}	string
 //	@Failure		500				{object}	string
-//	@Router			/api/v1/client-applications/{application_id} [get]
+//	@Router			/api/v1/admin/client-applications/{application_id} [get]
 func (h *ClientApplicationHandler) GetClientApplicationById(w http.ResponseWriter, r *http.Request) {
 	applicationId := chi.URLParam(r, "application_id")
 
@@ -145,8 +145,8 @@ type RejectClientApplicationRequest struct {
 
 // RejectClientApplication godoc
 //
-//	@Summary		Reject a client application
-//	@Description	Admin rejects a client application with a reason
+//	@Summary		Reject a client application (Admin)
+//	@Description	Admin rejects a client application with a reason (Admin)
 //	@Tags			ClientApplications
 //	@Accept			json
 //	@Security		BearerAuth
@@ -158,7 +158,7 @@ type RejectClientApplicationRequest struct {
 //	@Failure		401				{object}	string
 //	@Failure		404				{object}	lib.HTTPError
 //	@Failure		500				{object}	lib.HTTPError
-//	@Router			/api/v1/client-applications/{application_id}/reject [patch]
+//	@Router			/api/v1/admin/client-applications/{application_id}/reject [patch]
 func (h *ClientApplicationHandler) RejectClientApplication(w http.ResponseWriter, r *http.Request) {
 	currentAdmin, adminOk := lib.AdminFromContext(r.Context())
 
@@ -197,8 +197,8 @@ func (h *ClientApplicationHandler) RejectClientApplication(w http.ResponseWriter
 
 // ApproveClientApplication godoc
 //
-//	@Summary		Approve a client application
-//	@Description	Admin approves a client's application after review
+//	@Summary		Approve a client application (Admin)
+//	@Description	Admin approves a client's application after review (Admin)
 //	@Tags			ClientApplications
 //	@Accept			json
 //	@Security		BearerAuth
@@ -209,7 +209,7 @@ func (h *ClientApplicationHandler) RejectClientApplication(w http.ResponseWriter
 //	@Failure		401				{object}	string
 //	@Failure		404				{object}	lib.HTTPError
 //	@Failure		500				{object}	lib.HTTPError
-//	@Router			/api/v1/client-applications/{application_id}/approve [patch]
+//	@Router			/api/v1/admin/client-applications/{application_id}/approve [patch]
 func (h *ClientApplicationHandler) ApproveClientApplication(w http.ResponseWriter, r *http.Request) {
 	currentAdmin, adminOk := lib.AdminFromContext(r.Context())
 
@@ -241,8 +241,8 @@ type ListClientApplicationsFilterRequest struct {
 
 // GetClientApplications godoc
 //
-//	@Summary		Get all ClientApplications
-//	@Description	Get all ClientApplications
+//	@Summary		Get all ClientApplications (Admin)
+//	@Description	Get all ClientApplications (Admin)
 //	@Tags			ClientApplications
 //	@Accept			json
 //	@Security		BearerAuth
@@ -252,7 +252,7 @@ type ListClientApplicationsFilterRequest struct {
 //	@Failure		400	{object}	lib.HTTPError
 //	@Failure		401	{object}	string
 //	@Failure		500	{object}	string
-//	@Router			/api/v1/client-applications [get]
+//	@Router			/api/v1/admin/client-applications [get]
 func (h *ClientApplicationHandler) ListClientApplications(w http.ResponseWriter, r *http.Request) {
 	filters := ListClientApplicationsFilterRequest{
 		Status:  lib.NullOrString(r.URL.Query().Get("status")),

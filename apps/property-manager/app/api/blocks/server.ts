@@ -16,7 +16,7 @@ export const getPropertyBlocksForServer = async (
 		const response = await fetchServer<
 			ApiResponse<FetchMultipleDataResponse<PropertyBlock>>
 		>(
-			`${apiConfig.baseUrl}/v1/properties/${props.property_id}/blocks?${params.toString()}`,
+			`${apiConfig.baseUrl}/v1/admin/properties/${props.property_id}/blocks?${params.toString()}`,
 			{
 				method: 'GET',
 				...apiConfig,
@@ -42,7 +42,7 @@ export const createPropertyBlockForServer = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<PropertyBlock>>(
-			`${apiConfig.baseUrl}/v1/properties/${props.property_id}/blocks`,
+			`${apiConfig.baseUrl}/v1/admin/properties/${props.property_id}/blocks`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),

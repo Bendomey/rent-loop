@@ -39,8 +39,8 @@ type CreatePropertyRequest struct {
 
 // CreateProperty godoc
 //
-//	@Summary		Creates a new property
-//	@Description	Create a new property
+//	@Summary		Creates a new property (Admin)
+//	@Description	Create a new property (Admin)
 //	@Tags			Properties
 //	@Accept			json
 //	@Security		BearerAuth
@@ -50,7 +50,7 @@ type CreatePropertyRequest struct {
 //	@Failure		400		{object}	lib.HTTPError								"Error occurred when creating a property"
 //	@Failure		401		{object}	string										"Invalid or absent authentication token"
 //	@Failure		500		{object}	string										"An unexpected error occurred"
-//	@Router			/api/v1/properties [post]
+//	@Router			/api/v1/admin/properties [post]
 func (h *PropertyHandler) CreateProperty(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 
@@ -109,8 +109,8 @@ type ListPropertiesFilterRequest struct {
 
 // GetProperties godoc
 //
-//	@Summary		Get all properties
-//	@Description	Get all properties
+//	@Summary		Get all properties (Admin)
+//	@Description	Get all properties (Admin)
 //	@Tags			Properties
 //	@Accept			json
 //	@Security		BearerAuth
@@ -120,7 +120,7 @@ type ListPropertiesFilterRequest struct {
 //	@Failure		400	{object}	lib.HTTPError
 //	@Failure		401	{object}	string
 //	@Failure		500	{object}	string
-//	@Router			/api/v1/properties [get]
+//	@Router			/api/v1/admin/properties [get]
 func (h *PropertyHandler) ListProperties(w http.ResponseWriter, r *http.Request) {
 	clientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 
@@ -177,8 +177,8 @@ type GetPropertyQuery struct {
 
 // GetPropertyById godoc
 //
-//	@Summary		Get property by ID
-//	@Description	Get property by ID
+//	@Summary		Get property by ID (Admin)
+//	@Description	Get property by ID (Admin)
 //	@Tags			Properties
 //	@Accept			json
 //	@Security		BearerAuth
@@ -190,7 +190,7 @@ type GetPropertyQuery struct {
 //	@Failure		401			{object}	string			"Invalid or absent authentication token"
 //	@Failure		404			{object}	lib.HTTPError	"Property not found"
 //	@Failure		500			{object}	string			"An unexpected error occured"
-//	@Router			/api/v1/properties/{property_id} [get]
+//	@Router			/api/v1/admin/properties/{property_id} [get]
 func (h *PropertyHandler) GetPropertyById(w http.ResponseWriter, r *http.Request) {
 	_, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {
@@ -228,8 +228,8 @@ func (h *PropertyHandler) GetPropertyById(w http.ResponseWriter, r *http.Request
 
 // GetPropertyBySlug godoc
 //
-//	@Summary		Get property by slug
-//	@Description	Get property by slug
+//	@Summary		Get property by slug (Admin)
+//	@Description	Get property by slug (Admin)
 //	@Tags			Properties
 //	@Accept			json
 //	@Security		BearerAuth
@@ -241,7 +241,7 @@ func (h *PropertyHandler) GetPropertyById(w http.ResponseWriter, r *http.Request
 //	@Failure		401		{object}	string										"Invalid or absent authentication token"
 //	@Failure		404		{object}	lib.HTTPError								"Property not found"
 //	@Failure		500		{object}	string										"An unexpected error occured"
-//	@Router			/api/v1/properties/slug/{slug} [get]
+//	@Router			/api/v1/admin/properties/slug/{slug} [get]
 func (h *PropertyHandler) GetPropertyBySlug(w http.ResponseWriter, r *http.Request) {
 	propertySlug := chi.URLParam(r, "slug")
 	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
@@ -287,8 +287,8 @@ type UpdatePropertyRequest struct {
 
 // UpdateProperty godoc
 //
-//	@Summary		Update an existing property
-//	@Description	Update an existing property
+//	@Summary		Update an existing property (Admin)
+//	@Description	Update an existing property (Admin)
 //	@Tags			Properties
 //	@Accept			json
 //	@Security		BearerAuth
@@ -300,7 +300,7 @@ type UpdatePropertyRequest struct {
 //	@Failure		401			{object}	string										"Invalid or absent authentication token"
 //	@Failure		404			{object}	lib.HTTPError								"Property not found"
 //	@Failure		500			{object}	string										"An unexpected error occured"
-//	@Router			/api/v1/properties/{property_id} [patch]
+//	@Router			/api/v1/admin/properties/{property_id} [patch]
 func (h *PropertyHandler) UpdateProperty(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 
@@ -355,8 +355,8 @@ func (h *PropertyHandler) UpdateProperty(w http.ResponseWriter, r *http.Request)
 
 // DeleteProperty godoc
 //
-//	@Summary		Delete a property
-//	@Description	Delete a property
+//	@Summary		Delete a property (Admin)
+//	@Description	Delete a property (Admin)
 //	@Tags			Properties
 //	@Accept			json
 //	@Security		BearerAuth
@@ -366,7 +366,7 @@ func (h *PropertyHandler) UpdateProperty(w http.ResponseWriter, r *http.Request)
 //	@Failure		400			{object}	lib.HTTPError	"Error occurred when updating a property"
 //	@Failure		401			{object}	string			"Invalid or absent authentication token"
 //	@Failure		500			{object}	string			"An unexpected error occured"
-//	@Router			/api/v1/properties/{property_id} [delete]
+//	@Router			/api/v1/admin/properties/{property_id} [delete]
 func (h *PropertyHandler) DeleteProperty(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentClientUserOk {

@@ -13,10 +13,10 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 
 		// unprotected client user routes
 		r.Group(func(r chi.Router) {
-			r.Post("/v1/clients/apply", handlers.ClientApplicationHandler.CreateClientApplication)
-			r.Post("/v1/client-users/login", handlers.ClientUserHandler.AuthenticateClientUser)
+			r.Post("/v1/admin/clients/apply", handlers.ClientApplicationHandler.CreateClientApplication)
+			r.Post("/v1/admin/client-users/login", handlers.ClientUserHandler.AuthenticateClientUser)
 			r.Post(
-				"/v1/client-users/forgot-password",
+				"/v1/admin/client-users/forgot-password",
 				handlers.ClientUserHandler.SendForgotPasswordResetLink,
 			)
 			r.Get("/v1/units/{unit_id}", handlers.UnitHandler.FetchClientUnit)
@@ -25,7 +25,10 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			r.Get("/v1/signing/{token}/verify", handlers.SigningHandler.VerifyToken)
 			r.Post("/v1/signing/{token}/sign", handlers.SigningHandler.SignDocument)
 
-			r.Patch("/v1/tenant-applications/{tenant_application_id}", handlers.TenantApplicationHandler.UpdateTenantApplication)
+			r.Patch(
+				"/v1/tenant-applications/{tenant_application_id}",
+				handlers.TenantApplicationHandler.UpdateTenantApplication,
+			)
 			r.Get(
 				"/v1/tenant-applications/{tenant_application_id}",
 				handlers.TenantApplicationHandler.GetTenantApplication,
@@ -39,33 +42,36 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			r.Use(middlewares.CheckForClientUserAuthPresenceMiddleware)
 
 			// client users
-			r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-				Post("/v1/client-users", handlers.ClientUserHandler.CreateClientUser)
-			r.Post(
-				"/v1/client-users/reset-password",
-				handlers.ClientUserHandler.ResetClientUserPassword,
-			)
-			r.Get("/v1/client-users", handlers.ClientUserHandler.ListClientUsers)
-			r.Route("/v1/client-users/me", func(r chi.Router) {
-				r.Get("/", handlers.ClientUserHandler.GetMe)
-				r.Patch("/", handlers.ClientUserHandler.UpdateClientUserSelf)
-				r.Patch("/password", handlers.ClientUserHandler.UpdateClientUserPassword)
-			})
+			r.Route("/v1/admin/client-users", func(r chi.Router) {
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Post("/", handlers.ClientUserHandler.CreateClientUser)
+				r.Post(
+					"/reset-password",
+					handlers.ClientUserHandler.ResetClientUserPassword,
+				)
 
-			r.Route("/v1/client-users/{client_user_id}", func(r chi.Router) {
-				r.Get("/", handlers.ClientUserHandler.GetClientUserWithPopulate)
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Post("/properties:link", handlers.ClientUserPropertyHandler.LinkClientUserToProperties)
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Delete("/properties:unlink", handlers.ClientUserPropertyHandler.UnlinkClientUserFromProperties)
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Post("/activate", handlers.ClientUserHandler.ActivateClientUser)
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Post("/deactivate", handlers.ClientUserHandler.DeactivateClientUser)
+				r.Get("/", handlers.ClientUserHandler.ListClientUsers)
+				r.Route("/me", func(r chi.Router) {
+					r.Get("/", handlers.ClientUserHandler.GetMe)
+					r.Patch("/", handlers.ClientUserHandler.UpdateClientUserSelf)
+					r.Patch("/password", handlers.ClientUserHandler.UpdateClientUserPassword)
+				})
+
+				r.Route("/{client_user_id}", func(r chi.Router) {
+					r.Get("/", handlers.ClientUserHandler.GetClientUserWithPopulate)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Post("/properties:link", handlers.ClientUserPropertyHandler.LinkClientUserToProperties)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Delete("/properties:unlink", handlers.ClientUserPropertyHandler.UnlinkClientUserFromProperties)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Post("/activate", handlers.ClientUserHandler.ActivateClientUser)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Post("/deactivate", handlers.ClientUserHandler.DeactivateClientUser)
+				})
 			})
 
 			// properties
-			r.Route("/v1/properties", func(r chi.Router) {
+			r.Route("/v1/admin/properties", func(r chi.Router) {
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Post("/", handlers.PropertyHandler.CreateProperty)
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
@@ -139,7 +145,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			})
 
 			// client user properties
-			r.Route("/v1/client-user-properties", func(r chi.Router) {
+			r.Route("/v1/admin/client-user-properties", func(r chi.Router) {
 				r.Get("/", handlers.ClientUserPropertyHandler.ListAllClientUserProperties)
 				r.Get(
 					"/{client_user_property_id}",
@@ -166,16 +172,17 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					Patch("/{tenant_application_id}/approve", handlers.TenantApplicationHandler.ApproveTenantApplication)
 			})
 
-			r.Route("/v1/signing", func(r chi.Router) {
+			r.Route("/v1/admin/signing", func(r chi.Router) {
+				// property owner signing.
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Post("/", handlers.SigningHandler.SignDocumentPM)
+			})
+
+			r.Route("/v1/admin/signing-tokens", func(r chi.Router) {
 				// signing - generate tokens
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Post("/", handlers.SigningHandler.GenerateToken)
 
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Post("/direct", handlers.SigningHandler.SignDocumentPM)
-			})
-
-			r.Route("/v1/signing-tokens", func(r chi.Router) {
 				r.Get("/", handlers.SigningHandler.ListSigningTokens)
 				r.Route("/{signing_token_id}", func(r chi.Router) {
 					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
@@ -185,9 +192,9 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				})
 			})
 
-			r.Get("/v1/tenants/{tenant_id}/leases", handlers.LeaseHandler.ListLeasesByTenant)
+			r.Get("/v1/admin/tenants/{tenant_id}/leases", handlers.LeaseHandler.ListLeasesByTenant)
 
-			r.Route("/v1/leases/{lease_id}", func(r chi.Router) {
+			r.Route("/v1/admin/leases/{lease_id}", func(r chi.Router) {
 				r.Get("/", handlers.LeaseHandler.GetLeaseByID)
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Patch("/", handlers.LeaseHandler.UpdateLease)
@@ -197,7 +204,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					Patch("/status:cancelled", handlers.LeaseHandler.CancelLease)
 			})
 
-			r.Route("/v1/payment-accounts", func(r chi.Router) {
+			r.Route("/v1/admin/payment-accounts", func(r chi.Router) {
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Post("/", handlers.PaymentAccountHandler.CreatePaymentAccount)
 				r.Get("/", handlers.PaymentAccountHandler.ListPaymentAccounts)
@@ -210,7 +217,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				})
 			})
 
-			r.Route("/v1/invoices", func(r chi.Router) {
+			r.Route("/v1/admin/invoices", func(r chi.Router) {
 				r.Get("/", handlers.InvoiceHandler.ListInvoices)
 				r.Route("/{invoice_id}", func(r chi.Router) {
 					r.Get("/", handlers.InvoiceHandler.GetInvoiceByID)

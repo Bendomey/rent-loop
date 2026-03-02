@@ -32,8 +32,8 @@ type CreateDocumentRequest struct {
 
 // CreateDocument godoc
 //
-//	@Summary		Create a new document
-//	@Description	Create a new document
+//	@Summary		Create a new document (Admin)
+//	@Description	Create a new document (Admin)
 //	@Tags			Documents
 //	@Accept			json
 //	@Security		BearerAuth
@@ -102,8 +102,8 @@ type AdminUpdateDocumentRequest struct {
 
 // AdminUpdateDocument godoc
 //
-//	@Summary		Update an existing document
-//	@Description	Update an existing document
+//	@Summary		Update an existing document (Admin)
+//	@Description	Update an existing document (Admin)
 //	@Tags			Documents
 //	@Accept			json
 //	@Security		BearerAuth
@@ -225,8 +225,8 @@ func (h *DocumentHandler) UpdateDocument(w http.ResponseWriter, r *http.Request)
 
 // DeleteDocument godoc
 //
-//	@Summary		Delete a document
-//	@Description	Delete a document
+//	@Summary		Delete a document (Admin)
+//	@Description	Delete a document (Admin)
 //	@Tags			Documents
 //	@Accept			json
 //	@Security		BearerAuth
@@ -255,8 +255,8 @@ type GetDocumentWithPopulateQuery struct {
 
 // GetDocumentById godoc
 //
-//	@Summary		Get document by ID
-//	@Description	Get document by ID
+//	@Summary		Get document by ID (Admin)
+//	@Description	Get document by ID (Admin)
 //	@Tags			Documents
 //	@Accept			json
 //	@Security		BearerAuth
@@ -302,8 +302,8 @@ type ListDocumentsFilterRequest struct {
 
 // GetDocuments godoc
 //
-//	@Summary		Get all documents
-//	@Description	Get all documents
+//	@Summary		Get all documents (Admin)
+//	@Description	Get all documents (Admin)
 //	@Tags			Documents
 //	@Accept			json
 //	@Security		BearerAuth

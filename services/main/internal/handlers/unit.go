@@ -38,8 +38,8 @@ type CreateUnitRequest struct {
 
 // CreateUnit godoc
 //
-//	@Summary		Create unit
-//	@Description	Create unit
+//	@Summary		Create unit (Admin)
+//	@Description	Create unit (Admin)
 //	@Tags			Units
 //	@Accept			json
 //	@Security		BearerAuth
@@ -53,7 +53,7 @@ type CreateUnitRequest struct {
 //	@Failure		403			{object}	lib.HTTPError	"Forbidden access"
 //	@Failure		422			{object}	lib.HTTPError	"Invalid request body"
 //	@Failure		500			{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/properties/{property_id}/blocks/{block_id}/units [post]
+//	@Router			/api/v1/admin/properties/{property_id}/blocks/{block_id}/units [post]
 func (h *UnitHandler) CreateUnit(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {
@@ -118,8 +118,8 @@ type ListUnitsFilterRequest struct {
 
 // ListUnits godoc
 //
-//	@Summary		List units
-//	@Description	List units
+//	@Summary		List units (Admin)
+//	@Description	List units (Admin)
 //	@Tags			Units
 //	@Accept			json
 //	@Security		BearerAuth
@@ -130,7 +130,7 @@ type ListUnitsFilterRequest struct {
 //	@Failure		400			{object}	lib.HTTPError
 //	@Failure		401			{object}	string
 //	@Failure		500			{object}	string
-//	@Router			/api/v1/properties/{property_id}/units [get]
+//	@Router			/api/v1/admin/properties/{property_id}/units [get]
 func (h *UnitHandler) ListUnits(w http.ResponseWriter, r *http.Request) {
 	propertyID := chi.URLParam(r, "property_id")
 	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
@@ -180,8 +180,8 @@ type GetUnitQuery struct {
 
 // GetUnit godoc
 //
-//	@Summary		Get unit
-//	@Description	Get unit
+//	@Summary		Get unit (Admin)
+//	@Description	Get unit (Admin)
 //	@Tags			Units
 //	@Accept			json
 //	@Security		BearerAuth
@@ -194,7 +194,7 @@ type GetUnitQuery struct {
 //	@Failure		401			{object}	string											"Invalid or absent authentication token"
 //	@Failure		404			{object}	lib.HTTPError									"Unit not found"
 //	@Failure		500			{object}	string											"An unexpected error occurred"
-//	@Router			/api/v1/properties/{property_id}/units/{unit_id} [get]
+//	@Router			/api/v1/admin/properties/{property_id}/units/{unit_id} [get]
 func (s *UnitHandler) GetUnit(w http.ResponseWriter, r *http.Request) {
 	propertyID := chi.URLParam(r, "property_id")
 	unitID := chi.URLParam(r, "unit_id")
@@ -234,8 +234,8 @@ type UpdateUnitRequest struct {
 
 // UpdateUnit godoc
 //
-//	@Summary		Update unit
-//	@Description	Update unit
+//	@Summary		Update unit (Admin)
+//	@Description	Update unit (Admin)
 //	@Tags			Units
 //	@Accept			json
 //	@Security		BearerAuth
@@ -250,7 +250,7 @@ type UpdateUnitRequest struct {
 //	@Failure		404			{object}	lib.HTTPError	"Unit not found"
 //	@Failure		422			{object}	lib.HTTPError	"Invalid request body"
 //	@Failure		500			{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/properties/{property_id}/units/{unit_id} [patch]
+//	@Router			/api/v1/admin/properties/{property_id}/units/{unit_id} [patch]
 func (h *UnitHandler) UpdateUnit(w http.ResponseWriter, r *http.Request) {
 	propertyID := chi.URLParam(r, "property_id")
 	unitID := chi.URLParam(r, "unit_id")
@@ -296,8 +296,8 @@ func (h *UnitHandler) UpdateUnit(w http.ResponseWriter, r *http.Request) {
 
 // UpdateUnitToDraftStatus godoc
 //
-//	@Summary		Update unit status to draft
-//	@Description	Update unit status to draft
+//	@Summary		Update unit (Admin) status to draft
+//	@Description	Update unit (Admin) status to draft
 //	@Tags			Units
 //	@Accept			json
 //	@Security		BearerAuth
@@ -310,7 +310,7 @@ func (h *UnitHandler) UpdateUnit(w http.ResponseWriter, r *http.Request) {
 //	@Failure		403			{object}	lib.HTTPError	"Forbidden access"
 //	@Failure		404			{object}	lib.HTTPError	"Unit not found"
 //	@Failure		500			{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/properties/{property_id}/units/{unit_id}/status:draft [patch]
+//	@Router			/api/v1/admin/properties/{property_id}/units/{unit_id}/status:draft [patch]
 func (h *UnitHandler) UpdateUnitToDraftStatus(w http.ResponseWriter, r *http.Request) {
 	propertyID := chi.URLParam(r, "property_id")
 	unitID := chi.URLParam(r, "unit_id")
@@ -332,8 +332,8 @@ func (h *UnitHandler) UpdateUnitToDraftStatus(w http.ResponseWriter, r *http.Req
 
 // UpdateUnitToMaintenanceStatus godoc
 //
-//	@Summary		Update unit status to maintenance
-//	@Description	Update unit status to maintenance
+//	@Summary		Update unit (Admin) status to maintenance
+//	@Description	Update unit (Admin) status to maintenance
 //	@Tags			Units
 //	@Accept			json
 //	@Security		BearerAuth
@@ -346,7 +346,7 @@ func (h *UnitHandler) UpdateUnitToDraftStatus(w http.ResponseWriter, r *http.Req
 //	@Failure		403			{object}	lib.HTTPError	"Forbidden access"
 //	@Failure		404			{object}	lib.HTTPError	"Unit not found"
 //	@Failure		500			{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/properties/{property_id}/units/{unit_id}/status:maintenance [patch]
+//	@Router			/api/v1/admin/properties/{property_id}/units/{unit_id}/status:maintenance [patch]
 func (h *UnitHandler) UpdateUnitToMaintenanceStatus(w http.ResponseWriter, r *http.Request) {
 	propertyID := chi.URLParam(r, "property_id")
 	unitID := chi.URLParam(r, "unit_id")
@@ -368,8 +368,8 @@ func (h *UnitHandler) UpdateUnitToMaintenanceStatus(w http.ResponseWriter, r *ht
 
 // UpdateUnitToAvailableStatus godoc
 //
-//	@Summary		Update unit status to available
-//	@Description	Update unit status to available
+//	@Summary		Update unit (Admin) status to available
+//	@Description	Update unit (Admin) status to available
 //	@Tags			Units
 //	@Accept			json
 //	@Security		BearerAuth
@@ -382,7 +382,7 @@ func (h *UnitHandler) UpdateUnitToMaintenanceStatus(w http.ResponseWriter, r *ht
 //	@Failure		403			{object}	lib.HTTPError	"Forbidden access"
 //	@Failure		404			{object}	lib.HTTPError	"Unit not found"
 //	@Failure		500			{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/properties/{property_id}/units/{unit_id}/status:available [patch]
+//	@Router			/api/v1/admin/properties/{property_id}/units/{unit_id}/status:available [patch]
 func (h *UnitHandler) UpdateUnitToAvailableStatus(w http.ResponseWriter, r *http.Request) {
 	propertyID := chi.URLParam(r, "property_id")
 	unitID := chi.URLParam(r, "unit_id")
@@ -404,8 +404,8 @@ func (h *UnitHandler) UpdateUnitToAvailableStatus(w http.ResponseWriter, r *http
 
 // DeleteUnit godoc
 //
-//	@Summary		delete a unit
-//	@Description	delete a unit
+//	@Summary		delete a unit (Admin)
+//	@Description	delete a unit (Admin)
 //	@Tags			Units
 //	@Accept			json
 //	@Security		BearerAuth
@@ -418,7 +418,7 @@ func (h *UnitHandler) UpdateUnitToAvailableStatus(w http.ResponseWriter, r *http
 //	@Failure		403			{object}	lib.HTTPError	"Forbidden access"
 //	@Failure		404			{object}	lib.HTTPError	"Unit not found"
 //	@Failure		500			{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/properties/{property_id}/units/{unit_id} [delete]
+//	@Router			/api/v1/admin/properties/{property_id}/units/{unit_id} [delete]
 func (h *UnitHandler) DeleteUnit(w http.ResponseWriter, r *http.Request) {
 	propertyID := chi.URLParam(r, "property_id")
 	unitID := chi.URLParam(r, "unit_id")

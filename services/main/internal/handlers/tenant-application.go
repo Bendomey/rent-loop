@@ -30,7 +30,6 @@ func NewTenantApplicationHandler(
 	}
 }
 
-// TenantApplication.Status.InProgress, TenantApplication.Status.Cancelled, TenantApplication.Status.Completed
 type CreateTenantApplicationRequest struct {
 	DesiredUnitId                  string    `json:"desired_unit_id"                   validate:"required,uuid"                                                 example:"b4d0243c-6581-4104-8185-d83a45ebe41b"    description:"Desired unit ID"`
 	FirstName                      string    `json:"first_name"                        validate:"required"                                                      example:"John"                                    description:"First name of the applicant"`
@@ -61,8 +60,8 @@ type CreateTenantApplicationRequest struct {
 
 // CreateTenantApplication godoc
 //
-//	@Summary		Create a new tenant application
-//	@Description	Create a new tenant application
+//	@Summary		Create a new tenant application (Admin)
+//	@Description	Create a new tenant application (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Produce		json
@@ -136,8 +135,8 @@ type SendTenantInviteRequest struct {
 
 // SendTenantInvite godoc
 //
-//	@Summary		Sends a tenant invite to a possible tenant
-//	@Description	Sends a tenant invite to a possible tenant
+//	@Summary		Sends a tenant invite to a possible tenant (Admin)
+//	@Description	Sends a tenant invite to a possible tenant (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
@@ -204,8 +203,8 @@ type ListTenantApplicationsQuery struct {
 
 // ListTenantApplications godoc
 //
-//	@Summary		List all tenant applications
-//	@Description	List all tenant applications
+//	@Summary		List all tenant applications (Admin)
+//	@Description	List all tenant applications (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
@@ -277,8 +276,8 @@ type GetTenantApplicationQuery struct {
 
 // AdminGetTenantApplication godoc
 //
-//	@Summary		Get tenant application
-//	@Description	Get tenant application
+//	@Summary		Get tenant application (Admin)
+//	@Description	Get tenant application (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
@@ -402,8 +401,8 @@ type AdminUpdateTenantApplicationRequest struct {
 
 // AdminUpdateTenantApplication godoc
 //
-//	@Summary		Update a tenant application
-//	@Description	Update a tenant application
+//	@Summary		Update a tenant application (Admin)
+//	@Description	Update a tenant application (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
@@ -547,8 +546,8 @@ func (h *TenantApplicationHandler) UpdateTenantApplication(w http.ResponseWriter
 
 // DeleteTenantApplication godoc
 //
-//	@Summary		Delete a tenant application
-//	@Description	Delete a tenant application. Only applications with status 'TenantApplication.Status.Cancelled' can be deleted.
+//	@Summary		Delete a tenant application (Admin)
+//	@Description	Delete a tenant application. Only applications with status 'TenantApplication.Status.Cancelled' can be deleted. (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
@@ -578,8 +577,8 @@ type CancelTenantApplicationRequest struct {
 
 // CancelTenantApplication godoc
 //
-//	@Summary		Cancel a tenant application
-//	@Description	Cancel a tenant application
+//	@Summary		Cancel a tenant application (Admin)
+//	@Description	Cancel a tenant application (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
@@ -629,8 +628,8 @@ func (h *TenantApplicationHandler) CancelTenantApplication(w http.ResponseWriter
 
 // ApproveTenantApplication godoc
 //
-//	@Summary		Approve a tenant application
-//	@Description	Approve a tenant application
+//	@Summary		Approve a tenant application (Admin)
+//	@Description	Approve a tenant application (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
@@ -675,8 +674,8 @@ type GenerateInvoiceRequest struct {
 
 // GenerateInvoice godoc
 //
-//	@Summary		Generate an invoice for a tenant application
-//	@Description	Generate an invoice for a tenant application (security deposit and/or initial deposit)
+//	@Summary		Generate an invoice for a tenant application (Admin)
+//	@Description	Generate an invoice for a tenant application (security deposit and/or initial deposit) (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
@@ -740,8 +739,8 @@ type PayInvoiceRequest struct {
 
 // PayInvoice godoc
 //
-//	@Summary		Pay an invoice for a tenant application
-//	@Description	Pay an invoice for a tenant application (security deposit and/or initial deposit)
+//	@Summary		Pay an invoice for a tenant application (Admin)
+//	@Description	Pay an invoice for a tenant application (security deposit and/or initial deposit) (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth

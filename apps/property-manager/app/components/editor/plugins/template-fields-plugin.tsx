@@ -36,8 +36,14 @@ const TEMPLATE_FIELDS = [
 	{ label: 'Tenant Nationality', value: 'TenantNationality' },
 	{ label: 'Tenant Occupation', value: 'TenantOccupation' },
 	{ label: 'Tenant Employer', value: 'TenantEmployer' },
-	{ label: 'Tenant Emergency Contact Name', value: 'TenantEmergencyContactName' },
-	{ label: 'Tenant Emergency Contact Phone', value: 'TenantEmergencyContactPhone' },
+	{
+		label: 'Tenant Emergency Contact Name',
+		value: 'TenantEmergencyContactName',
+	},
+	{
+		label: 'Tenant Emergency Contact Phone',
+		value: 'TenantEmergencyContactPhone',
+	},
 
 	{ label: 'Property Name', value: 'PropertyName' },
 	{ label: 'Property Address', value: 'PropertyAddress' },
