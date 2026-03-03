@@ -52,7 +52,7 @@ type Invoice struct {
 	VoidedAt *time.Time
 
 	// for now let's default to what we support
-	AllowedPaymentRails pq.StringArray `gorm:"type:text[];not null;default:'{MOMO,OFFLINE}'"` // ['MOMO', 'BANK_TRANSFER', 'OFFLINE', 'CARD']. Based on the payment accounts for the payee type, filter and fetch for UI
+	AllowedPaymentRails pq.StringArray `gorm:"type:text[];not null;default:'{OFFLINE}'"` // ['MOMO', 'BANK_TRANSFER', 'OFFLINE', 'CARD']. Based on the payment accounts for the payee type, filter and fetch for UI
 
 	LineItems []InvoiceLineItem
 

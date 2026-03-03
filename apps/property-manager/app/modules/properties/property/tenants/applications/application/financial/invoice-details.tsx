@@ -1,4 +1,13 @@
-import { CheckCircle2, Clock, CreditCard, Receipt, Send } from 'lucide-react'
+import dayjs from 'dayjs'
+import {
+	AlertCircle,
+	CalendarClock,
+	CheckCircle2,
+	Clock,
+	CreditCard,
+	Receipt,
+	Send,
+} from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
@@ -8,6 +17,7 @@ import {
 	useVoidInvoice,
 } from '~/api/invoices'
 import { usePayApplicationInvoice } from '~/api/tenant-applications'
+import { Alert, AlertDescription } from '~/components/ui/alert'
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -28,9 +38,24 @@ import {
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '~/components/ui/dialog'
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '~/components/ui/select'
 import { Separator } from '~/components/ui/separator'
 import { Spinner } from '~/components/ui/spinner'
-import { formatAmount } from '~/lib/format-amount'
+import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 
 const COOLDOWN_SECONDS = 60
 
@@ -65,6 +90,13 @@ const STATUS_CONFIG: Record<
 	},
 }
 
+const RAIL_LABELS: Record<PAYMENT_RAIL, string> = {
+	MOMO: 'Mobile Money',
+	BANK_TRANSFER: 'Bank Transfer',
+	OFFLINE: 'Cash / Offline',
+	CARD: 'Card',
+}
+
 interface InvoiceDetailsProps {
 	invoice: Invoice
 	applicationId: string
@@ -78,7 +110,10 @@ export function InvoiceDetails({
 	const [countdown, setCountdown] = useState(COOLDOWN_SECONDS)
 	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 	const [showReconfigureAlert, setShowReconfigureAlert] = useState(false)
-	const [showPayAlert, setShowPayAlert] = useState(false)
+	const [showPayDialog, setShowPayDialog] = useState(false)
+	const [selectedRail, setSelectedRail] = useState<PAYMENT_RAIL>(
+		invoice.allowed_payment_rails[0] ?? 'OFFLINE',
+	)
 
 	const { isPending: isVoiding, mutate: voidInvoiceMutation } = useVoidInvoice()
 	const { mutate: deleteInvoiceMutation } = useDeleteInvoice()
@@ -128,7 +163,7 @@ export function InvoiceDetails({
 					},
 					onSuccess: () => {
 						toast.success(
-							'Invoice removed. You can now reconfigure the payment.',
+							'Invoice cancelled. You can now update the payment setup.',
 						)
 						setShowReconfigureAlert(false)
 						void revalidator.revalidate()
@@ -140,14 +175,17 @@ export function InvoiceDetails({
 
 	const handleRecordPayment = () => {
 		payInvoiceMutation(
-			{ tenant_application_id: applicationId, invoice_id: invoice.id },
+			{
+				tenant_application_id: applicationId,
+				invoice_id: invoice.id,
+			},
 			{
 				onError: () => {
 					toast.error('Failed to record payment. Please try again.')
 				},
 				onSuccess: () => {
 					toast.success('Payment recorded successfully.')
-					setShowPayAlert(false)
+					setShowPayDialog(false)
 					void revalidator.revalidate()
 				},
 			},
@@ -169,7 +207,7 @@ export function InvoiceDetails({
 						<div className="space-y-1">
 							<CardTitle>Initial Payment Invoice</CardTitle>
 							<CardDescription>
-								{invoice.code} · Invoice generated for the tenant.
+								Invoice generated for the tenant.
 							</CardDescription>
 						</div>
 						<Badge variant="outline" className={statusConfig.className}>
@@ -180,10 +218,81 @@ export function InvoiceDetails({
 				</CardHeader>
 
 				<CardContent className="space-y-4">
+					{/* Invoice metadata */}
+					<div className="space-y-3 rounded-lg border p-4">
+						<div className="flex items-center gap-2">
+							<CalendarClock className="size-4 text-zinc-500" />
+							<h3 className="text-sm font-medium">Invoice Info</h3>
+						</div>
+
+						<div className="space-y-2 text-sm">
+							<div className="flex justify-between">
+								<span className="text-zinc-500">Reference</span>
+								<span className="font-mono">{invoice.code}</span>
+							</div>
+
+							<div className="flex justify-between">
+								<span className="text-zinc-500">Currency</span>
+								<span>{invoice.currency}</span>
+							</div>
+
+							{invoice.issued_at && (
+								<div className="flex justify-between">
+									<span className="text-zinc-500">Issued On</span>
+									<span>{dayjs(invoice.issued_at).format('MMM D, YYYY')}</span>
+								</div>
+							)}
+
+							{invoice.due_date && (
+								<div className="flex justify-between">
+									<span className="text-zinc-500">Due Date</span>
+									<span>{dayjs(invoice.due_date).format('MMM D, YYYY')}</span>
+								</div>
+							)}
+
+							{isPaid && invoice.paid_at && (
+								<div className="flex justify-between">
+									<span className="text-zinc-500">Paid on</span>
+									<span className="text-emerald-600">
+										{dayjs(invoice.paid_at).format('MMM D, YYYY')}
+									</span>
+								</div>
+							)}
+
+							{isVoided && invoice.voided_at && (
+								<div className="flex justify-between">
+									<span className="text-zinc-500">Voided on</span>
+									<span className="text-zinc-500">
+										{dayjs(invoice.voided_at).format('MMM D, YYYY')}
+									</span>
+								</div>
+							)}
+						</div>
+
+						{invoice.allowed_payment_rails.length > 0 && (
+							<>
+								<Separator />
+								<div className="space-y-1.5">
+									<p className="text-xs text-zinc-500">
+										Accepted payment methods
+									</p>
+									<div className="flex flex-wrap gap-1.5">
+										{invoice.allowed_payment_rails.map((rail) => (
+											<Badge key={rail} variant="outline" className="text-xs">
+												{RAIL_LABELS[rail]}
+											</Badge>
+										))}
+									</div>
+								</div>
+							</>
+						)}
+					</div>
+
+					{/* Line items */}
 					<div className="space-y-3 rounded-lg border p-4">
 						<div className="flex items-center gap-2">
 							<Receipt className="size-4 text-zinc-500" />
-							<h3 className="text-sm font-medium">Invoice Details</h3>
+							<h3 className="text-sm font-medium">Items</h3>
 						</div>
 
 						<div className="space-y-2">
@@ -192,10 +301,10 @@ export function InvoiceDetails({
 									key={item.id}
 									className="flex items-center justify-between text-sm"
 								>
-									<span className="text-zinc-500">
-										{item.label} x {item.quantity}
+									<span className="text-zinc-500">{item.label}</span>
+									<span>
+										{formatAmount(convertPesewasToCedis(item.total_amount))}
 									</span>
-									<span>{formatAmount(item.total_amount)}</span>
 								</div>
 							))}
 
@@ -203,7 +312,9 @@ export function InvoiceDetails({
 
 							<div className="flex items-center justify-between text-sm font-semibold">
 								<span>Total</span>
-								<span>{formatAmount(invoice.total_amount)}</span>
+								<span>
+									{formatAmount(convertPesewasToCedis(invoice.total_amount))}
+								</span>
 							</div>
 						</div>
 					</div>
@@ -238,13 +349,13 @@ export function InvoiceDetails({
 								size="sm"
 								onClick={() => setShowReconfigureAlert(true)}
 							>
-								Reconfigure
+								Change Payment Setup
 							</Button>
 						)}
 					</div>
 					<div>
 						{isActive && (
-							<Button size="sm" onClick={() => setShowPayAlert(true)}>
+							<Button size="sm" onClick={() => setShowPayDialog(true)}>
 								<CreditCard className="size-4" />
 								Record Payment
 							</Button>
@@ -260,10 +371,10 @@ export function InvoiceDetails({
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>Void this invoice?</AlertDialogTitle>
+						<AlertDialogTitle>Change the payment setup?</AlertDialogTitle>
 						<AlertDialogDescription>
-							This will void the current invoice and allow you to reconfigure
-							the initial payment setup. This action cannot be undone.
+							This will cancel the current invoice so you can update the payment
+							details. This action cannot be undone.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
@@ -282,33 +393,64 @@ export function InvoiceDetails({
 				</AlertDialogContent>
 			</AlertDialog>
 
-			{/* Record Payment confirmation */}
-			<AlertDialog open={showPayAlert} onOpenChange={setShowPayAlert}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Record payment?</AlertDialogTitle>
-						<AlertDialogDescription>
-							This will mark the invoice of{' '}
-							<strong>{formatAmount(invoice.total_amount)}</strong> as paid.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel disabled={isRecordingPayment}>
-							Cancel
-						</AlertDialogCancel>
-						<AlertDialogAction
+			{/* Record Payment dialog with payment rail selection */}
+			<Dialog open={showPayDialog} onOpenChange={setShowPayDialog}>
+				<DialogContent className="sm:max-w-sm">
+					<DialogHeader>
+						<DialogTitle>Record Payment</DialogTitle>
+						<DialogDescription>
+							Record an offline payment of{' '}
+							<strong>
+								{formatAmount(convertPesewasToCedis(invoice.total_amount))}
+							</strong>{' '}
+							for this invoice.
+						</DialogDescription>
+					</DialogHeader>
+
+					<div className="space-y-4 py-2">
+						<Alert className="border-blue-200 bg-blue-50">
+							<AlertCircle className="size-4 text-blue-500" />
+							<AlertDescription className="text-xs text-blue-700">
+								We only support offline payments for now. To enable online
+								payments, reach out to support.
+							</AlertDescription>
+						</Alert>
+
+						<div className="space-y-1.5">
+							<label className="text-sm font-medium">Payment Method</label>
+							<Select
+								value={selectedRail}
+								onValueChange={(v) => setSelectedRail(v as PAYMENT_RAIL)}
+							>
+								<SelectTrigger className="w-full">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{invoice.allowed_payment_rails.map((rail) => (
+										<SelectItem key={rail} value={rail}>
+											{RAIL_LABELS[rail]}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+					</div>
+
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => setShowPayDialog(false)}
 							disabled={isRecordingPayment}
-							onClick={(e) => {
-								e.preventDefault()
-								handleRecordPayment()
-							}}
 						>
+							Cancel
+						</Button>
+						<Button onClick={handleRecordPayment} disabled={isRecordingPayment}>
 							{isRecordingPayment ? <Spinner /> : null}
-							Confirm
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+							Confirm Payment
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</>
 	)
 }

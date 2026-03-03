@@ -1,3 +1,4 @@
+import { Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
@@ -10,7 +11,6 @@ import { Button } from '~/components/ui/button'
 import {
 	Card,
 	CardContent,
-	CardDescription,
 	CardFooter,
 	CardHeader,
 	CardTitle,
@@ -19,7 +19,23 @@ import { Spinner } from '~/components/ui/spinner'
 import {
 	convertCedisToPesewas,
 	convertPesewasToCedis,
+	formatAmount,
 } from '~/lib/format-amount'
+import { getPaymentFrequencyLabel } from '~/lib/properties.utils'
+
+interface FieldDisplayProps {
+	label: string
+	value: string | null | undefined
+}
+
+function FieldDisplay({ label, value }: FieldDisplayProps) {
+	return (
+		<div>
+			<p className="text-muted-foreground text-sm">{label}</p>
+			<p className="text-sm font-medium">{value || '-'}</p>
+		</div>
+	)
+}
 
 export function PropertyTenantApplicationFinancial() {
 	const { tenantApplication } = useTenantApplicationContext()
@@ -27,7 +43,6 @@ export function PropertyTenantApplicationFinancial() {
 
 	const unit = tenantApplication.desired_unit
 
-	// These are the persisted values on the application (may differ from unit defaults)
 	// API stores fees in pesewas — convert to cedis for display/form state
 	const savedRentFee = convertPesewasToCedis(
 		tenantApplication.rent_fee || unit.rent_fee,
@@ -41,6 +56,7 @@ export function PropertyTenantApplicationFinancial() {
 		tenantApplication.security_deposit_fee,
 	)
 
+	const [isEditing, setIsEditing] = useState(false)
 	const [rentAmount, setRentAmount] = useState(savedRentFee)
 	const [paymentFrequency, setPaymentFrequency] = useState(
 		savedPaymentFrequency,
@@ -52,15 +68,24 @@ export function PropertyTenantApplicationFinancial() {
 
 	const { isPending, mutate } = useAdminUpdateTenantApplication()
 
-	// True when form values differ from what's persisted on the application
 	const hasFinancialChanges =
 		rentAmount !== savedRentFee ||
 		depositEnabled !== savedSecurityDepositEnabled ||
 		(depositEnabled && depositAmount !== savedSecurityDepositFee)
 
+	const hasInvoice = Boolean(tenantApplication.application_payment_invoice)
+
 	const handleReset = () => {
 		setRentAmount(convertPesewasToCedis(unit.rent_fee))
 		setPaymentFrequency(unit.payment_frequency)
+	}
+
+	const handleCancel = () => {
+		setRentAmount(savedRentFee)
+		setPaymentFrequency(savedPaymentFrequency)
+		setDepositEnabled(savedSecurityDepositEnabled)
+		setDepositAmount(savedSecurityDepositFee)
+		setIsEditing(false)
 	}
 
 	const handleSave = () => {
@@ -84,6 +109,7 @@ export function PropertyTenantApplicationFinancial() {
 				},
 				onSuccess: () => {
 					toast.success('Financial setup saved.')
+					setIsEditing(false)
 					void revalidator.revalidate()
 				},
 			},
@@ -94,42 +120,89 @@ export function PropertyTenantApplicationFinancial() {
 		<div className="space-y-4">
 			<Card className="shadow-none">
 				<CardHeader>
-					<CardTitle>Financial Setup</CardTitle>
-					<CardDescription>
-						Setup financial details for the tenant.
-					</CardDescription>
+					<CardTitle className="flex items-center justify-between">
+						Financial Setup
+						{!isEditing && !hasInvoice && (
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={() => setIsEditing(true)}
+							>
+								<Pencil className="size-4" />
+								Edit
+							</Button>
+						)}
+						{isEditing && (
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={handleCancel}
+								disabled={isPending}
+							>
+								Cancel
+							</Button>
+						)}
+					</CardTitle>
 				</CardHeader>
 
-				<CardContent className="space-y-3">
-					<RentSetup
-						rentAmount={rentAmount}
-						paymentFrequency={paymentFrequency}
-						defaultRentAmount={convertPesewasToCedis(unit.rent_fee)}
-						defaultPaymentFrequency={unit.payment_frequency}
-						onRentAmountChange={setRentAmount}
-						onPaymentFrequencyChange={setPaymentFrequency}
-						onReset={handleReset}
-					/>
+				{!isEditing ? (
+					<CardContent className="space-y-4">
+						<div className="grid grid-cols-2 gap-4">
+							<FieldDisplay
+								label="Agreed Rent Fee"
+								value={`${formatAmount(savedRentFee)} / ${getPaymentFrequencyLabel(savedPaymentFrequency)}`}
+							/>
+							<FieldDisplay
+								label="Security Deposit"
+								value={
+									savedSecurityDepositEnabled
+										? formatAmount(savedSecurityDepositFee)
+										: 'Not required'
+								}
+							/>
+						</div>
+					</CardContent>
+				) : (
+					<>
+						<CardContent className="space-y-3">
+							<RentSetup
+								rentAmount={rentAmount}
+								paymentFrequency={paymentFrequency}
+								defaultRentAmount={convertPesewasToCedis(unit.rent_fee)}
+								defaultPaymentFrequency={unit.payment_frequency}
+								onRentAmountChange={setRentAmount}
+								onPaymentFrequencyChange={setPaymentFrequency}
+								onReset={handleReset}
+							/>
 
-					<SecurityDeposit
-						enabled={depositEnabled}
-						amount={depositAmount}
-						onEnabledChange={setDepositEnabled}
-						onAmountChange={setDepositAmount}
-					/>
-				</CardContent>
+							<SecurityDeposit
+								enabled={depositEnabled}
+								amount={depositAmount}
+								onEnabledChange={setDepositEnabled}
+								onAmountChange={setDepositAmount}
+							/>
+						</CardContent>
 
-				<CardFooter className="flex justify-end">
-					<div className="flex flex-row items-center space-x-2">
-						<Button
-							disabled={!hasFinancialChanges || isPending}
-							onClick={handleSave}
-						>
-							{isPending ? <Spinner /> : null}
-							Save
-						</Button>
-					</div>
-				</CardFooter>
+						<CardFooter className="flex justify-end">
+							<div className="flex items-center gap-2">
+								<Button
+									variant="outline"
+									onClick={handleCancel}
+									disabled={isPending}
+								>
+									Cancel
+								</Button>
+								<Button
+									disabled={!hasFinancialChanges || isPending}
+									onClick={handleSave}
+								>
+									{isPending ? <Spinner /> : null}
+									Save
+								</Button>
+							</div>
+						</CardFooter>
+					</>
+				)}
 			</Card>
 
 			<InitialPaymentSetup

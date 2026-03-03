@@ -12,7 +12,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
-import { formatAmount } from '~/lib/format-amount'
+import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { getPropertyUnitStatusLabel } from '~/lib/properties.utils'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
@@ -71,7 +71,8 @@ export function PropertyTenantApplicationUnitSetup() {
 						<CardDescription>
 							{unit.type && <p className="lowercase">{unit.type}</p>}
 							<p>
-								Market Rent: <b>{formatAmount(unit.rent_fee)}</b>/
+								Market Rent:{' '}
+								<b>{formatAmount(convertPesewasToCedis(unit.rent_fee))}</b>/
 								{unit.payment_frequency?.toLowerCase()}
 							</p>
 						</CardDescription>

@@ -28,6 +28,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 					'LeaseAgreementDocument',
 					'LeaseAgreementDocumentSignatures',
 					'ApplicationPaymentInvoice',
+					'ApplicationPaymentInvoice.LineItems',
 				],
 			},
 			{
