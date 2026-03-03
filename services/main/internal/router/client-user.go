@@ -226,6 +226,8 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 						Patch("/void", handlers.InvoiceHandler.VoidInvoice)
 					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Delete("/", handlers.InvoiceHandler.DeleteInvoice)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 						Post("/line-items", handlers.InvoiceHandler.AddLineItem)
 					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 						Delete("/line-items/{line_item_id}", handlers.InvoiceHandler.RemoveLineItem)

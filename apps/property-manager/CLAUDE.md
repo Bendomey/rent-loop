@@ -98,3 +98,12 @@ Dates: `dayjs(date).format('MMM D, YYYY')`
 - Unused imports are errors — always clean up
 - Unhandled promises need `void` operator (e.g., `void navigate(...)`)
 - Run `yarn types:check` before considering work complete
+
+## API Documentation
+
+Backend REST API is documented at:
+**https://rentloop-api-staging.fly.dev/swagger/index.html**
+
+Always consult the Swagger docs when adding new API calls — use `WebFetch` on
+that URL to look up available endpoints, request bodies, and response shapes
+before writing mutations or queries.

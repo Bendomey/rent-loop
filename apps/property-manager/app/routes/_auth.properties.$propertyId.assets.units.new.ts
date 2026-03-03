@@ -6,6 +6,7 @@ import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
 import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'
 import { NOT_FOUND_ROUTE } from '~/lib/constants'
+import { convertCedisToPesewas } from '~/lib/format-amount'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { NewPropertyAssetUnitsModule } from '~/modules'
@@ -43,7 +44,7 @@ export async function action({ request }: Route.ActionArgs) {
 	const max_occupants_allowed = Number(formData.get('max_occupants_allowed'))
 	const area = parseFloat(formData.get('area') as string)
 	const rent_fee_currency = formData.get('rent_fee_currency') as string
-	const rent_fee = Number(formData.get('rent_fee'))
+	const rent_fee = convertCedisToPesewas(Number(formData.get('rent_fee')))
 	const payment_frequency = formData.get(
 		'payment_frequency',
 	) as PropertyUnit['payment_frequency']

@@ -124,19 +124,6 @@ definitions:
         type: string
       initial_deposit_fee:
         type: integer
-      initial_deposit_paid_at:
-        example: "2023-01-01T00:00:00Z"
-        type: string
-      initial_deposit_payment_method:
-        enum:
-        - ONLINE
-        - CASH
-        - EXTERNAL
-        example: ONLINE
-        type: string
-      initial_deposit_reference_number:
-        example: "123456789"
-        type: string
       last_name:
         example: Doe
         type: string
@@ -193,22 +180,6 @@ definitions:
         type: string
       security_deposit_fee:
         type: integer
-      security_deposit_fee_currency:
-        example: GHS
-        type: string
-      security_deposit_paid_at:
-        example: "2023-01-01T00:00:00Z"
-        type: string
-      security_deposit_payment_method:
-        enum:
-        - ONLINE
-        - CASH
-        - EXTERNAL
-        example: ONLINE
-        type: string
-      security_deposit_reference_number:
-        example: "123456789"
-        type: string
       stay_duration:
         type: integer
       stay_duration_frequency:
@@ -4520,6 +4491,42 @@ paths:
       tags:
       - Invoice
   /api/v1/admin/invoices/{invoice_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an invoice in DRAFT or VOID status (Admin)
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Invoice Deleted Successfully
+        "400":
+          description: Invoice cannot be deleted in its current status
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Invoice not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete invoice (Admin)
+      tags:
+      - Invoice
     get:
       consumes:
       - application/json

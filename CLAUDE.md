@@ -90,6 +90,14 @@ For complete backend guidance, see `services/main/CLAUDE.md`.
 
 **Frontend:** API base URL configured via environment variables.
 
+## API Documentation
+
+Backend REST API Swagger docs (staging):
+**https://rentloop-api-staging.fly.dev/swagger/index.html**
+
+Use `WebFetch` on this URL to look up available endpoints, request/response
+shapes, and required fields before writing any new API calls.
+
 ## Deployment
 
 - **Platform:** Fly.io

@@ -7,6 +7,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '~/components/ui/select'
+import { getPaymentFrequencyPeriodLabel } from '~/lib/properties.utils'
 
 export type PaymentMode = 'ONE_TIME_PAYMENT' | 'CUSTOM'
 
@@ -27,6 +28,11 @@ export function PaymentModeSelector({
 	onPaymentModeChange,
 	onCustomPeriodsChange,
 }: PaymentModeSelectorProps) {
+	const periodLabel = getPaymentFrequencyPeriodLabel(
+		stayDurationFrequency,
+		stayDuration,
+	)
+
 	return (
 		<div className="space-y-3 rounded-lg border p-4">
 			<div>
@@ -62,7 +68,9 @@ export function PaymentModeSelector({
 				{paymentMode === 'CUSTOM' && (
 					<div className="space-y-1.5">
 						<Label htmlFor="custom-periods" className="text-xs">
-							Number of periods (max {stayDuration})
+							Number of{' '}
+							{getPaymentFrequencyPeriodLabel(stayDurationFrequency, 2)} (max{' '}
+							{stayDuration})
 						</Label>
 						<Input
 							id="custom-periods"
@@ -82,7 +90,7 @@ export function PaymentModeSelector({
 					<div className="space-y-1.5">
 						<Label className="text-xs">Periods</Label>
 						<div className="flex h-9 items-center rounded-md border bg-zinc-50 px-3 text-sm text-zinc-500">
-							{stayDuration} {stayDurationFrequency.toLowerCase()}
+							{stayDuration} {periodLabel}
 						</div>
 					</div>
 				)}

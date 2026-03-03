@@ -375,14 +375,7 @@ type AdminUpdateTenantApplicationRequest struct {
 	StayDuration                   lib.Optional[int64]     `json:"stay_duration,omitempty"                     validate:"omitempty"                                                                                                     description:"Stay duration"                      swaggertype:"integer"`
 	PaymentFrequency               lib.Optional[string]    `json:"payment_frequency,omitempty"                 validate:"omitempty"                                                                                                     description:"Payment frequency"                  swaggertype:"string"`
 	InitialDepositFee              lib.Optional[int64]     `json:"initial_deposit_fee,omitempty"               validate:"omitempty"                                                                                                     description:"Initial deposit fee"                swaggertype:"integer"`
-	InitialDepositPaymentMethod    *string                 `json:"initial_deposit_payment_method,omitempty"    validate:"omitempty,oneof=ONLINE CASH EXTERNAL"                           example:"ONLINE"                               description:"Initial deposit payment method"`
-	InitialDepositReferenceNumber  *string                 `json:"initial_deposit_reference_number,omitempty"  validate:"omitempty"                                                      example:"123456789"                            description:"Initial deposit reference number"`
-	InitialDepositPaidAt           *time.Time              `json:"initial_deposit_paid_at,omitempty"           validate:"omitempty"                                                      example:"2023-01-01T00:00:00Z"                 description:"Initial deposit paid at"`
 	SecurityDepositFee             lib.Optional[int64]     `json:"security_deposit_fee,omitempty"              validate:"omitempty"                                                                                                     description:"Security deposit fee"               swaggertype:"integer"`
-	SecurityDepositFeeCurrency     *string                 `json:"security_deposit_fee_currency,omitempty"     validate:"omitempty"                                                      example:"GHS"                                  description:"Security deposit fee currency"`
-	SecurityDepositPaymentMethod   *string                 `json:"security_deposit_payment_method,omitempty"   validate:"omitempty,oneof=ONLINE CASH EXTERNAL"                           example:"ONLINE"                               description:"Security deposit payment method"`
-	SecurityDepositReferenceNumber *string                 `json:"security_deposit_reference_number,omitempty" validate:"omitempty"                                                      example:"123456789"                            description:"Security deposit reference number"`
-	SecurityDepositPaidAt          *time.Time              `json:"security_deposit_paid_at,omitempty"          validate:"omitempty"                                                      example:"2023-01-01T00:00:00Z"                 description:"Security deposit paid at"`
 	OtherNames                     lib.Optional[string]    `json:"other_names,omitempty"                       validate:"omitempty"                                                                                                     description:"Other names of the applicant"       swaggertype:"string"`
 	Email                          lib.Optional[string]    `json:"email,omitempty"                             validate:"omitempty"                                                                                                     description:"Email address of the applicant"     swaggertype:"string"`
 	ProfilePhotoUrl                lib.Optional[string]    `json:"profile_photo_url,omitempty"                 validate:"omitempty"                                                                                                     description:"Profile photo URL"                  swaggertype:"string"`
@@ -456,14 +449,7 @@ func (h *TenantApplicationHandler) AdminUpdateTenantApplication(w http.ResponseW
 		StayDuration:                   body.StayDuration,
 		PaymentFrequency:               body.PaymentFrequency,
 		InitialDepositFee:              body.InitialDepositFee,
-		InitialDepositPaymentMethod:    body.InitialDepositPaymentMethod,
-		InitialDepositReferenceNumber:  body.InitialDepositReferenceNumber,
-		InitialDepositPaidAt:           body.InitialDepositPaidAt,
 		SecurityDepositFee:             body.SecurityDepositFee,
-		SecurityDepositFeeCurrency:     body.SecurityDepositFeeCurrency,
-		SecurityDepositPaymentMethod:   body.SecurityDepositPaymentMethod,
-		SecurityDepositReferenceNumber: body.SecurityDepositReferenceNumber,
-		SecurityDepositPaidAt:          body.SecurityDepositPaidAt,
 		OtherNames:                     body.OtherNames,
 		Email:                          body.Email,
 		ProfilePhotoUrl:                body.ProfilePhotoUrl,

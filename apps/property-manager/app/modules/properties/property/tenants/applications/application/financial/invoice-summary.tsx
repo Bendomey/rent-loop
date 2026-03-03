@@ -1,6 +1,10 @@
 import { Receipt } from 'lucide-react'
 import { Separator } from '~/components/ui/separator'
 import { formatAmount } from '~/lib/format-amount'
+import {
+	getPaymentFrequencyLabel,
+	getPaymentFrequencyPeriodLabel,
+} from '~/lib/properties.utils'
 
 interface InvoiceSummaryProps {
 	rentAmount: number
@@ -20,6 +24,8 @@ export function InvoiceSummary({
 	totalAmount,
 }: InvoiceSummaryProps) {
 	const rentTotal = rentAmount * periods
+	const frequencyLabel = getPaymentFrequencyLabel(paymentFrequency)
+	const periodLabel = getPaymentFrequencyPeriodLabel(paymentFrequency, periods)
 
 	return (
 		<div className="space-y-3 rounded-lg border p-4">
@@ -31,8 +37,7 @@ export function InvoiceSummary({
 			<div className="space-y-2">
 				<div className="flex items-center justify-between text-sm">
 					<span className="text-zinc-500">
-						Rent ({paymentFrequency.toLowerCase()}) x {periods}{' '}
-						{periods === 1 ? 'period' : 'periods'}
+						Rent ({frequencyLabel}) x {periods} {periodLabel}
 					</span>
 					<span>{formatAmount(rentTotal)}</span>
 				</div>
