@@ -46,6 +46,10 @@ import {
 } from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { QUERY_KEYS } from '~/lib/constants'
+import {
+	convertCedisToPesewas,
+	convertPesewasToCedis,
+} from '~/lib/format-amount'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
@@ -177,7 +181,7 @@ export function EditPropertyAssetUnitModule() {
 				type: unit.type,
 				area: unit.area ?? undefined,
 				max_occupants_allowed: unit.max_occupants_allowed ?? 1,
-				rent_fee: unit.rent_fee,
+				rent_fee: convertPesewasToCedis(unit.rent_fee),
 				rent_fee_currency: unit.rent_fee_currency ?? 'GHS',
 				payment_frequency: unit.payment_frequency,
 			})
@@ -218,7 +222,9 @@ export function EditPropertyAssetUnitModule() {
 					max_occupants_allowed: dirtyFields.max_occupants_allowed
 						? formData.max_occupants_allowed
 						: undefined,
-					rent_fee: dirtyFields.rent_fee ? formData.rent_fee : undefined,
+					rent_fee: dirtyFields.rent_fee
+						? convertCedisToPesewas(formData.rent_fee)
+						: undefined,
 					rent_fee_currency: dirtyFields.rent_fee_currency
 						? formData.rent_fee_currency
 						: undefined,

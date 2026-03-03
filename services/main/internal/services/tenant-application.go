@@ -333,15 +333,6 @@ type UpdateTenantApplicationInput struct {
 	Employer                       *string
 	OccupationAddress              *string
 	IDType                         *string
-	InitialDepositPaymentMethod    *string
-	InitialDepositReferenceNumber  *string
-	InitialDepositPaidAt           *time.Time
-	InitialDepositPaymentId        *string
-	SecurityDepositFeeCurrency     *string
-	SecurityDepositPaymentMethod   *string
-	SecurityDepositReferenceNumber *string
-	SecurityDepositPaidAt          *time.Time
-	SecurityDepositPaymentId       *string
 
 	// Nullable fields that can be explicitly set to null
 	EmployerType                 lib.Optional[string]

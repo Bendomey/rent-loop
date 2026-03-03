@@ -312,6 +312,33 @@ func (h *InvoiceHandler) GetLineItems(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// DeleteInvoice godoc
+//
+//	@Summary		Delete invoice (Admin)
+//	@Description	Delete an invoice in DRAFT or VOID status (Admin)
+//	@Tags			Invoice
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			invoice_id	path	string	true	"Invoice ID"
+//	@Success		204			"Invoice Deleted Successfully"
+//	@Failure		400			{object}	lib.HTTPError	"Invoice cannot be deleted in its current status"
+//	@Failure		401			{object}	string			"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError	"Invoice not found"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/admin/invoices/{invoice_id} [delete]
+func (h *InvoiceHandler) DeleteInvoice(w http.ResponseWriter, r *http.Request) {
+	invoiceID := chi.URLParam(r, "invoice_id")
+
+	err := h.service.DeleteInvoice(r.Context(), invoiceID)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // RemoveLineItem godoc
 //
 //	@Summary		Remove line item from invoice (Admin)

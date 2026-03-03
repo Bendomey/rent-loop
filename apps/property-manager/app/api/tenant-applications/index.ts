@@ -348,3 +348,71 @@ const updateTenantApplication = async ({
 
 export const useUpdateTenantApplication = () =>
 	useMutation({ mutationFn: updateTenantApplication })
+
+/**
+ * Generate application payment invoice
+ * Backend derives rent_fee, payment_frequency, periods etc. from the saved
+ * tenant application fields. Only an optional due_date can be provided.
+ */
+interface GenerateApplicationPaymentInvoiceInput {
+	id: string
+	due_date?: string
+}
+
+const generateApplicationPaymentInvoice = async ({
+	id,
+	due_date,
+}: GenerateApplicationPaymentInvoiceInput) => {
+	try {
+		const response = await fetchClient<ApiResponse<Invoice>>(
+			`/v1/admin/tenant-applications/${id}/invoice:generate`,
+			{
+				method: 'POST',
+				body: JSON.stringify(due_date ? { due_date } : {}),
+			},
+		)
+		return response.parsedBody.data
+	} catch (error) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useGenerateApplicationPaymentInvoice = () =>
+	useMutation({ mutationFn: generateApplicationPaymentInvoice })
+
+/**
+ * Pay (record an offline payment for) an application invoice.
+ */
+interface PayApplicationInvoiceInput {
+	tenant_application_id: string
+	invoice_id: string
+}
+
+const payApplicationInvoice = async ({
+	tenant_application_id,
+	invoice_id,
+}: PayApplicationInvoiceInput) => {
+	try {
+		await fetchClient(
+			`/v1/admin/tenant-applications/${tenant_application_id}/invoice/${invoice_id}/pay`,
+			{ method: 'POST' },
+		)
+	} catch (error) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const usePayApplicationInvoice = () =>
+	useMutation({ mutationFn: payApplicationInvoice })

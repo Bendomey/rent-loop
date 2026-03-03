@@ -1,11 +1,18 @@
-import { AlertCircle, FileText } from 'lucide-react'
+import { AlertCircle, CalendarIcon, FileText } from 'lucide-react'
 import { useState } from 'react'
+import { useRevalidator } from 'react-router'
+import { toast } from 'sonner'
 import { InvoiceDetails } from './invoice-details'
 import { InvoiceSummary } from './invoice-summary'
 import { PaymentModeSelector } from './payment-mode-selector'
 import type { PaymentMode } from './payment-mode-selector'
+import {
+	useAdminUpdateTenantApplication,
+	useGenerateApplicationPaymentInvoice,
+} from '~/api/tenant-applications'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
+import { Calendar } from '~/components/ui/calendar'
 import {
 	Card,
 	CardContent,
@@ -14,8 +21,30 @@ import {
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '~/components/ui/dialog'
+import { Label } from '~/components/ui/label'
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '~/components/ui/popover'
+import { Spinner } from '~/components/ui/spinner'
+import {
+	convertCedisToPesewas,
+	convertPesewasToCedis,
+} from '~/lib/format-amount'
+import { cn } from '~/lib/utils'
 
 interface InitialPaymentSetupProps {
+	applicationId: string
+	existingInvoice: Invoice | null
 	hasFinancialChanges: boolean
 	stayDuration: number | null
 	stayDurationFrequency: string | null
@@ -23,9 +52,29 @@ interface InitialPaymentSetupProps {
 	paymentFrequency: string
 	securityDepositEnabled: boolean
 	securityDepositAmount: number
+	initialDepositFee: number | null
+}
+
+function derivePaymentMode(
+	initialDepositFeePesewas: number | null,
+	rentAmountCedis: number,
+	stayDuration: number,
+): { paymentMode: PaymentMode; customPeriods: number } {
+	if (!initialDepositFeePesewas || !rentAmountCedis) {
+		return { paymentMode: 'ONE_TIME_PAYMENT', customPeriods: 1 }
+	}
+	const periods = Math.round(
+		convertPesewasToCedis(initialDepositFeePesewas) / rentAmountCedis,
+	)
+	if (!periods || periods >= stayDuration) {
+		return { paymentMode: 'ONE_TIME_PAYMENT', customPeriods: 1 }
+	}
+	return { paymentMode: 'CUSTOM', customPeriods: periods }
 }
 
 export function InitialPaymentSetup({
+	applicationId,
+	existingInvoice,
 	hasFinancialChanges,
 	stayDuration,
 	stayDurationFrequency,
@@ -33,11 +82,25 @@ export function InitialPaymentSetup({
 	paymentFrequency,
 	securityDepositEnabled,
 	securityDepositAmount,
+	initialDepositFee,
 }: InitialPaymentSetupProps) {
-	const [paymentMode, setPaymentMode] =
-		useState<PaymentMode>('ONE_TIME_PAYMENT')
-	const [customPeriods, setCustomPeriods] = useState(1)
-	const [generatedInvoice, setGeneratedInvoice] = useState<Invoice | null>(null)
+	const revalidator = useRevalidator()
+
+	const derived = stayDuration
+		? derivePaymentMode(initialDepositFee, rentAmount, stayDuration)
+		: { paymentMode: 'ONE_TIME_PAYMENT' as PaymentMode, customPeriods: 1 }
+
+	const [paymentMode, setPaymentMode] = useState<PaymentMode>(
+		derived.paymentMode,
+	)
+	const [customPeriods, setCustomPeriods] = useState(derived.customPeriods)
+	const [showGenerateDialog, setShowGenerateDialog] = useState(false)
+	const [dueDate, setDueDate] = useState<Date | undefined>(undefined)
+
+	const { isPending: isUpdating, mutateAsync: updateApplication } =
+		useAdminUpdateTenantApplication()
+	const { isPending: isGenerating, mutateAsync: generateInvoice } =
+		useGenerateApplicationPaymentInvoice()
 
 	if (hasFinancialChanges) {
 		return (
@@ -65,12 +128,9 @@ export function InitialPaymentSetup({
 		)
 	}
 
-	if (generatedInvoice) {
+	if (existingInvoice) {
 		return (
-			<InvoiceDetails
-				invoice={generatedInvoice}
-				onReconfigure={() => setGeneratedInvoice(null)}
-			/>
+			<InvoiceDetails invoice={existingInvoice} applicationId={applicationId} />
 		)
 	}
 
@@ -80,118 +140,130 @@ export function InitialPaymentSetup({
 	const depositTotal = securityDepositEnabled ? securityDepositAmount : 0
 	const totalAmount = rentAmount * periods + depositTotal
 
-	const hasChanges = paymentMode !== 'ONE_TIME_PAYMENT' || customPeriods !== 1
-
-	const handleGenerateInvoice = () => {
-		const lineItems: Array<InvoiceLineItem> = [
-			{
-				id: crypto.randomUUID(),
-				invoice_id: null,
-				label: `Rent (${paymentFrequency.toLowerCase()})`,
-				category: 'RENT',
-				quantity: periods,
-				unit_amount: rentAmount,
-				total_amount: rentAmount * periods,
-				currency: 'GHS',
-				metadata: null,
-				created_at: new Date(),
-				updated_at: new Date(),
-			},
-		]
-
-		if (securityDepositEnabled && securityDepositAmount > 0) {
-			lineItems.push({
-				id: crypto.randomUUID(),
-				invoice_id: null,
-				label: 'Security deposit',
-				category: 'SECURITY_DEPOSIT',
-				quantity: 1,
-				unit_amount: securityDepositAmount,
-				total_amount: securityDepositAmount,
-				currency: 'GHS',
-				metadata: null,
-				created_at: new Date(),
-				updated_at: new Date(),
+	const handleConfirmGenerate = async () => {
+		try {
+			await updateApplication({
+				id: applicationId,
+				data: {
+					initial_deposit_fee: convertCedisToPesewas(rentAmount * periods),
+					initial_deposit_fee_currency: 'GHS',
+				},
 			})
-		}
+			await generateInvoice({
+				id: applicationId,
+				due_date: dueDate ? dueDate.toISOString() : undefined,
+			})
 
-		// TODO: replace with actual API call to generate invoice
-		setGeneratedInvoice({
-			id: crypto.randomUUID(),
-			code: 'INV-DRAFT',
-			payer_type: 'TENANT_APPLICATION',
-			payer_client_id: null,
-			payer_client: null,
-			payer_property_id: null,
-			payer_property: null,
-			payer_tenant_id: null,
-			payer_tenant: null,
-			payee_type: 'PROPERTY_OWNER',
-			payee_client_id: null,
-			payee_client: null,
-			context_type: 'TENANT_APPLICATION',
-			context_tenant_application_id: null,
-			context_tenant_application: null,
-			context_lease: null,
-			context_lease_id: null,
-			context_maintenance_request_id: null,
-			total_amount: totalAmount,
-			taxes: 0,
-			sub_total: totalAmount,
-			currency: 'GHS',
-			status: 'ISSUED',
-			due_date: null,
-			issued_at: new Date(),
-			paid_at: null,
-			voided_at: null,
-			allowed_payment_rails: ['MOMO', 'BANK_TRANSFER'],
-			line_items: lineItems,
-			created_at: new Date(),
-			updated_at: new Date(),
-		})
+			toast.success('Invoice generated successfully.')
+			setShowGenerateDialog(false)
+			void revalidator.revalidate()
+		} catch {
+			toast.error('Failed to generate invoice.')
+		}
 	}
 
 	return (
-		<Card className="shadow-none">
-			<CardHeader>
-				<CardTitle>Initial Payment Setup</CardTitle>
-				<CardDescription>
-					Configure the initial payment the tenant needs to make.
-				</CardDescription>
-			</CardHeader>
+		<>
+			<Card className="shadow-none">
+				<CardHeader>
+					<CardTitle>Initial Payment Setup</CardTitle>
+					<CardDescription>
+						Configure the initial payment the tenant needs to make.
+					</CardDescription>
+				</CardHeader>
 
-			<CardContent className="space-y-4">
-				<PaymentModeSelector
-					paymentMode={paymentMode}
-					customPeriods={customPeriods}
-					stayDuration={stayDuration}
-					stayDurationFrequency={stayDurationFrequency}
-					onPaymentModeChange={setPaymentMode}
-					onCustomPeriodsChange={setCustomPeriods}
-				/>
+				<CardContent className="space-y-4">
+					<PaymentModeSelector
+						paymentMode={paymentMode}
+						customPeriods={customPeriods}
+						stayDuration={stayDuration}
+						stayDurationFrequency={stayDurationFrequency}
+						onPaymentModeChange={setPaymentMode}
+						onCustomPeriodsChange={setCustomPeriods}
+					/>
 
-				<InvoiceSummary
-					rentAmount={rentAmount}
-					paymentFrequency={paymentFrequency}
-					periods={periods}
-					securityDepositEnabled={securityDepositEnabled}
-					securityDepositAmount={securityDepositAmount}
-					totalAmount={totalAmount}
-				/>
-			</CardContent>
+					<InvoiceSummary
+						rentAmount={rentAmount}
+						paymentFrequency={paymentFrequency}
+						periods={periods}
+						securityDepositEnabled={securityDepositEnabled}
+						securityDepositAmount={securityDepositAmount}
+						totalAmount={totalAmount}
+					/>
+				</CardContent>
 
-			<CardFooter className="flex justify-end">
-				<div className="flex flex-row items-center space-x-2">
-					{hasChanges ? (
-						<Button disabled>Save</Button>
-					) : (
-						<Button disabled={totalAmount <= 0} onClick={handleGenerateInvoice}>
-							<FileText className="size-4" />
+				<CardFooter className="flex justify-end">
+					<Button
+						disabled={totalAmount <= 0}
+						onClick={() => setShowGenerateDialog(true)}
+					>
+						<FileText className="size-4" />
+						Generate Invoice
+					</Button>
+				</CardFooter>
+			</Card>
+
+			<Dialog open={showGenerateDialog} onOpenChange={setShowGenerateDialog}>
+				<DialogContent className="sm:max-w-sm">
+					<DialogHeader>
+						<DialogTitle>Generate Invoice</DialogTitle>
+						<DialogDescription>
+							An invoice will be generated for the tenant. Optionally set a due
+							date for payment.
+						</DialogDescription>
+					</DialogHeader>
+
+					<div className="space-y-1.5 py-2">
+						<Label className="text-xs">Due Date (optional)</Label>
+						<Popover>
+							<PopoverTrigger asChild>
+								<Button
+									variant="outline"
+									className={cn(
+										'w-full justify-start text-left font-normal',
+										!dueDate && 'text-muted-foreground',
+									)}
+								>
+									<CalendarIcon className="mr-2 size-4" />
+									{dueDate
+										? dueDate.toLocaleDateString('en-US', {
+												month: 'short',
+												day: 'numeric',
+												year: 'numeric',
+											})
+										: 'Pick a date'}
+								</Button>
+							</PopoverTrigger>
+							<PopoverContent className="w-auto p-0" align="start">
+								<Calendar
+									mode="single"
+									selected={dueDate}
+									onSelect={setDueDate}
+									disabled={(date) => date < new Date()}
+									initialFocus
+								/>
+							</PopoverContent>
+						</Popover>
+					</div>
+
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => setShowGenerateDialog(false)}
+							disabled={isUpdating || isGenerating}
+						>
+							Cancel
+						</Button>
+						<Button
+							onClick={handleConfirmGenerate}
+							disabled={isUpdating || isGenerating}
+						>
+							{isUpdating || isGenerating ? <Spinner /> : null}
 							Generate Invoice
 						</Button>
-					)}
-				</div>
-			</CardFooter>
-		</Card>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+		</>
 	)
 }

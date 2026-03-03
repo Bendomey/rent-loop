@@ -1,5 +1,11 @@
 import { Check, ChevronRight, X } from 'lucide-react'
 import { Link, useLocation } from 'react-router'
+import { getDocsItems } from './checklist-docs'
+import { getFinancialItems } from './checklist-financial'
+import { getMoveInItems } from './checklist-move-in'
+import { getTenantDetailItems } from './checklist-tenant-details'
+import type { ChecklistItem } from './checklist-types'
+import { getUnitItems } from './checklist-unit'
 import {
 	Card,
 	CardContent,
@@ -15,13 +21,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from '~/components/ui/tooltip'
-import { getWitnessNodesFromContent } from '~/lib/document.utils'
 import { cn } from '~/lib/utils'
-
-interface SubItem {
-	label: string
-	done: boolean
-}
 
 interface Props {
 	application: TenantApplication
@@ -30,119 +30,11 @@ interface Props {
 export function PropertyTenantApplicationChecklist({ application }: Props) {
 	const baseUrl = `/properties/${application.desired_unit?.property_id}/tenants/applications/${application.id}`
 
-	const unitItems: SubItem[] = [
-		{ label: 'Unit selected', done: Boolean(application.desired_unit) },
-	]
-
-	const tenantDetailItems: SubItem[] = [
-		{ label: 'First name', done: Boolean(application.first_name) },
-		{ label: 'Last name', done: Boolean(application.last_name) },
-		{ label: 'Email', done: Boolean(application.email) },
-		{ label: 'Phone', done: Boolean(application.phone) },
-		{ label: 'Gender', done: Boolean(application.gender) },
-		{ label: 'Date of birth', done: Boolean(application.date_of_birth) },
-		{ label: 'Nationality', done: Boolean(application.nationality) },
-		{ label: 'Marital status', done: Boolean(application.marital_status) },
-		{ label: 'ID type', done: Boolean(application.id_type) },
-		{ label: 'ID number', done: Boolean(application.id_number) },
-		{ label: 'Current address', done: Boolean(application.current_address) },
-		{
-			label: 'Emergency contact name',
-			done: Boolean(application.emergency_contact_name),
-		},
-		{
-			label: 'Emergency contact phone',
-			done: Boolean(application.emergency_contact_phone),
-		},
-		{
-			label: 'Relationship to emergency contact',
-			done: Boolean(application.relationship_to_emergency_contact),
-		},
-		{ label: 'Employment type', done: Boolean(application.employer_type) },
-		{ label: 'Occupation', done: Boolean(application.occupation) },
-		{ label: 'Employer', done: Boolean(application.employer) },
-		{
-			label: 'Occupation address',
-			done: Boolean(application.occupation_address),
-		},
-	]
-
-	const moveInItems: SubItem[] = [
-		{ label: 'Move-in date', done: Boolean(application.desired_move_in_date) },
-		{
-			label: 'Stay duration frequency',
-			done: Boolean(application.stay_duration_frequency),
-		},
-		{ label: 'Stay duration', done: Boolean(application.stay_duration) },
-	]
-
-	const financialItems: SubItem[] = [
-		{ label: 'Rent fee', done: Boolean(application.rent_fee) },
-		{
-			label: 'Rent fee currency',
-			done: Boolean(application.rent_fee_currency),
-		},
-		{
-			label: 'Payment frequency',
-			done: Boolean(application.payment_frequency),
-		},
-		{
-			label: 'Initial deposit',
-			done: Boolean(application.initial_deposit_fee),
-		},
-		{
-			label: 'Initial deposit currency',
-			done: Boolean(application.initial_deposit_currency),
-		},
-	]
-
-	const signatures = (
-		application.lease_agreement_document_signatures ?? []
-	).filter((s) => s.document_id === application.lease_agreement_document_id)
-	const managerSig = signatures.find((s) => s.role === 'PROPERTY_MANAGER')
-	const tenantSig = signatures.find((s) => s.role === 'TENANT')
-	const pmWitnessSignatures = signatures.filter((s) => s.role === 'PM_WITNESS')
-	const tenantWitnessSignatures = signatures.filter(
-		(s) => s.role === 'TENANT_WITNESS',
-	)
-	const isManual = application.lease_agreement_document_mode === 'MANUAL'
-
-	const witnessNodes = getWitnessNodesFromContent(
-		application.lease_agreement_document?.content,
-	)
-	const pmWitnessCount = witnessNodes.filter(
-		(n) => n.role === 'pm_witness',
-	).length
-	const tenantWitnessCount = witnessNodes.filter(
-		(n) => n.role === 'tenant_witness',
-	).length
-
-	const witnessItems: SubItem[] = witnessNodes.map((node, idx) => {
-		const roleIdx = witnessNodes
-			.slice(0, idx)
-			.filter((n) => n.role === node.role).length
-		const sig =
-			node.role === 'pm_witness'
-				? pmWitnessSignatures[roleIdx]
-				: tenantWitnessSignatures[roleIdx]
-		const showTag =
-			node.role === 'pm_witness' ? pmWitnessCount > 1 : tenantWitnessCount > 1
-		const label = showTag ? `${node.label} #${roleIdx + 1}` : node.label
-		return { label: `${label} signed`, done: isManual || Boolean(sig) }
-	})
-
-	const docsItems: SubItem[] = [
-		{
-			label: 'Document uploaded',
-			done:
-				application.lease_agreement_document_mode === 'ONLINE'
-					? Boolean(application.lease_agreement_document_id)
-					: Boolean(application.lease_agreement_document_url),
-		},
-		{ label: 'Manager signed', done: isManual || Boolean(managerSig) },
-		{ label: 'Tenant signed', done: isManual || Boolean(tenantSig) },
-		...witnessItems,
-	]
+	const unitItems = getUnitItems(application)
+	const tenantDetailItems = getTenantDetailItems(application)
+	const moveInItems = getMoveInItems(application)
+	const financialItems = getFinancialItems(application)
+	const docsItems = getDocsItems(application)
 
 	const checklistSections = [
 		unitItems,
@@ -205,9 +97,10 @@ export function PropertyTenantApplicationChecklist({ application }: Props) {
 
 interface MenuItemProps {
 	label: string
-	subItems: SubItem[]
+	subItems: ChecklistItem[]
 	href: string
 }
+
 function MenuItem({ label, subItems, href }: MenuItemProps) {
 	const { pathname } = useLocation()
 

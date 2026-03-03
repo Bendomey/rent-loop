@@ -55,10 +55,12 @@ interface TenantApplication {
 	payment_frequency: Nullable<string>
 
 	initial_deposit_fee: Nullable<number>
-	initial_deposit_currency: Nullable<string>
+	initial_deposit_fee_currency: Nullable<string>
 
 	security_deposit_fee: Nullable<number>
 	security_deposit_fee_currency: Nullable<string>
+
+	application_payment_invoice: Nullable<Invoice>
 
 	lease_agreement_document_mode: Nullable<'MANUAL' | 'ONLINE'>
 	lease_agreement_document_url: Nullable<string>

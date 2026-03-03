@@ -1,5 +1,23 @@
-import { CheckCircle2, Clock, Receipt, Send } from 'lucide-react'
+import { CheckCircle2, Clock, CreditCard, Receipt, Send } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useRevalidator } from 'react-router'
+import { toast } from 'sonner'
+import {
+	useDeleteInvoice,
+	useNotifyTenantForInvoice,
+	useVoidInvoice,
+} from '~/api/invoices'
+import { usePayApplicationInvoice } from '~/api/tenant-applications'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '~/components/ui/alert-dialog'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -11,6 +29,7 @@ import {
 	CardTitle,
 } from '~/components/ui/card'
 import { Separator } from '~/components/ui/separator'
+import { Spinner } from '~/components/ui/spinner'
 import { formatAmount } from '~/lib/format-amount'
 
 const COOLDOWN_SECONDS = 60
@@ -48,15 +67,24 @@ const STATUS_CONFIG: Record<
 
 interface InvoiceDetailsProps {
 	invoice: Invoice
-	onReconfigure: () => void
+	applicationId: string
 }
 
 export function InvoiceDetails({
 	invoice,
-	onReconfigure,
+	applicationId,
 }: InvoiceDetailsProps) {
+	const revalidator = useRevalidator()
 	const [countdown, setCountdown] = useState(COOLDOWN_SECONDS)
 	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+	const [showReconfigureAlert, setShowReconfigureAlert] = useState(false)
+	const [showPayAlert, setShowPayAlert] = useState(false)
+
+	const { isPending: isVoiding, mutate: voidInvoiceMutation } = useVoidInvoice()
+	const { mutate: deleteInvoiceMutation } = useDeleteInvoice()
+	const { mutate: notifyMutation } = useNotifyTenantForInvoice()
+	const { isPending: isRecordingPayment, mutate: payInvoiceMutation } =
+		usePayApplicationInvoice()
 
 	const isOnCooldown = countdown < COOLDOWN_SECONDS && countdown > 0
 
@@ -67,7 +95,14 @@ export function InvoiceDetails({
 	}, [])
 
 	const handleNotify = useCallback(() => {
-		// TODO: call API to notify tenant to make payment
+		notifyMutation(invoice.id, {
+			onError: () => {
+				toast.error('Failed to send payment notification.')
+			},
+			onSuccess: () => {
+				toast.success('Payment notification sent to tenant.')
+			},
+		})
 		setCountdown(COOLDOWN_SECONDS - 1)
 		intervalRef.current = setInterval(() => {
 			setCountdown((prev) => {
@@ -78,84 +113,202 @@ export function InvoiceDetails({
 				return prev - 1
 			})
 		}, 1000)
-	}, [])
+	}, [invoice.id, notifyMutation])
+
+	const handleVoidConfirm = () => {
+		voidInvoiceMutation(invoice.id, {
+			onError: () => {
+				toast.error('Failed to void invoice. Please try again.')
+			},
+			onSuccess: () => {
+				deleteInvoiceMutation(invoice.id, {
+					onError: () => {
+						toast.error('Invoice voided but could not be deleted.')
+						void revalidator.revalidate()
+					},
+					onSuccess: () => {
+						toast.success(
+							'Invoice removed. You can now reconfigure the payment.',
+						)
+						setShowReconfigureAlert(false)
+						void revalidator.revalidate()
+					},
+				})
+			},
+		})
+	}
+
+	const handleRecordPayment = () => {
+		payInvoiceMutation(
+			{ tenant_application_id: applicationId, invoice_id: invoice.id },
+			{
+				onError: () => {
+					toast.error('Failed to record payment. Please try again.')
+				},
+				onSuccess: () => {
+					toast.success('Payment recorded successfully.')
+					setShowPayAlert(false)
+					void revalidator.revalidate()
+				},
+			},
+		)
+	}
 
 	const statusConfig = STATUS_CONFIG[invoice.status]
 	const StatusIcon = statusConfig.icon
+	const isActive =
+		invoice.status === 'ISSUED' || invoice.status === 'PARTIALLY_PAID'
+	const isPaid = invoice.status === 'PAID'
+	const isVoided = invoice.status === 'VOID'
 
 	return (
-		<Card className="shadow-none">
-			<CardHeader>
-				<div className="flex items-center justify-between">
-					<div className="space-y-1">
-						<CardTitle>Initial Payment Invoice</CardTitle>
-						<CardDescription>
-							Invoice has been generated for the tenant.
-						</CardDescription>
+		<>
+			<Card className="shadow-none">
+				<CardHeader>
+					<div className="flex items-center justify-between">
+						<div className="space-y-1">
+							<CardTitle>Initial Payment Invoice</CardTitle>
+							<CardDescription>
+								{invoice.code} · Invoice generated for the tenant.
+							</CardDescription>
+						</div>
+						<Badge variant="outline" className={statusConfig.className}>
+							<StatusIcon className="mr-1 size-3" />
+							{statusConfig.label}
+						</Badge>
 					</div>
-					<Badge variant="outline" className={statusConfig.className}>
-						<StatusIcon className="mr-1 size-3" />
-						{statusConfig.label}
-					</Badge>
-				</div>
-			</CardHeader>
+				</CardHeader>
 
-			<CardContent className="space-y-4">
-				<div className="space-y-3 rounded-lg border p-4">
-					<div className="flex items-center gap-2">
-						<Receipt className="size-4 text-zinc-500" />
-						<h3 className="text-sm font-medium">Invoice Details</h3>
-					</div>
+				<CardContent className="space-y-4">
+					<div className="space-y-3 rounded-lg border p-4">
+						<div className="flex items-center gap-2">
+							<Receipt className="size-4 text-zinc-500" />
+							<h3 className="text-sm font-medium">Invoice Details</h3>
+						</div>
 
-					<div className="space-y-2">
-						{invoice.line_items.map((item) => (
-							<div
-								key={item.id}
-								className="flex items-center justify-between text-sm"
-							>
-								<span className="text-zinc-500">
-									{item.label} x {item.quantity}
-								</span>
-								<span>{formatAmount(item.total_amount)}</span>
+						<div className="space-y-2">
+							{invoice.line_items.map((item) => (
+								<div
+									key={item.id}
+									className="flex items-center justify-between text-sm"
+								>
+									<span className="text-zinc-500">
+										{item.label} x {item.quantity}
+									</span>
+									<span>{formatAmount(item.total_amount)}</span>
+								</div>
+							))}
+
+							<Separator />
+
+							<div className="flex items-center justify-between text-sm font-semibold">
+								<span>Total</span>
+								<span>{formatAmount(invoice.total_amount)}</span>
 							</div>
-						))}
-
-						<Separator />
-
-						<div className="flex items-center justify-between text-sm font-semibold">
-							<span>Total</span>
-							<span>{formatAmount(invoice.total_amount)}</span>
 						</div>
 					</div>
-				</div>
 
-				{invoice.status === 'ISSUED' && (
-					<div className="flex items-center gap-3">
-						<Button
-							size="sm"
-							variant="outline"
-							disabled={isOnCooldown}
-							onClick={handleNotify}
-						>
-							<Send className="size-4" />
-							{isOnCooldown
-								? `Resend in ${countdown}s`
-								: 'Notify Tenant to Pay'}
-						</Button>
-						{isOnCooldown && (
-							<p className="text-xs text-zinc-400">
-								A payment notification has been sent to the tenant.
-							</p>
+					{isActive && (
+						<div className="flex items-center gap-3">
+							<Button
+								size="sm"
+								variant="outline"
+								disabled={isOnCooldown}
+								onClick={handleNotify}
+							>
+								<Send className="size-4" />
+								{isOnCooldown
+									? `Resend in ${countdown}s`
+									: 'Notify Tenant to Pay'}
+							</Button>
+							{isOnCooldown && (
+								<p className="text-xs text-zinc-400">
+									A payment notification has been sent to the tenant.
+								</p>
+							)}
+						</div>
+					)}
+				</CardContent>
+
+				<CardFooter className="flex justify-between">
+					<div>
+						{!isPaid && !isVoided && (
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => setShowReconfigureAlert(true)}
+							>
+								Reconfigure
+							</Button>
 						)}
 					</div>
-				)}
-			</CardContent>
+					<div>
+						{isActive && (
+							<Button size="sm" onClick={() => setShowPayAlert(true)}>
+								<CreditCard className="size-4" />
+								Record Payment
+							</Button>
+						)}
+					</div>
+				</CardFooter>
+			</Card>
 
-			<CardFooter className="flex justify-end">
-				<Button variant="outline" onClick={onReconfigure}>
-					Reconfigure
-				</Button>
-			</CardFooter>
-		</Card>
+			{/* Reconfigure (void) confirmation */}
+			<AlertDialog
+				open={showReconfigureAlert}
+				onOpenChange={setShowReconfigureAlert}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Void this invoice?</AlertDialogTitle>
+						<AlertDialogDescription>
+							This will void the current invoice and allow you to reconfigure
+							the initial payment setup. This action cannot be undone.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={isVoiding}>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							disabled={isVoiding}
+							onClick={(e) => {
+								e.preventDefault()
+								handleVoidConfirm()
+							}}
+						>
+							{isVoiding ? <Spinner /> : null}
+							Void Invoice
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+
+			{/* Record Payment confirmation */}
+			<AlertDialog open={showPayAlert} onOpenChange={setShowPayAlert}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Record payment?</AlertDialogTitle>
+						<AlertDialogDescription>
+							This will mark the invoice of{' '}
+							<strong>{formatAmount(invoice.total_amount)}</strong> as paid.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={isRecordingPayment}>
+							Cancel
+						</AlertDialogCancel>
+						<AlertDialogAction
+							disabled={isRecordingPayment}
+							onClick={(e) => {
+								e.preventDefault()
+								handleRecordPayment()
+							}}
+						>
+							{isRecordingPayment ? <Spinner /> : null}
+							Confirm
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+		</>
 	)
 }
