@@ -6,16 +6,11 @@ import {
 	Clock,
 	CreditCard,
 	Receipt,
-	Send,
 } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
-import {
-	useDeleteInvoice,
-	useNotifyTenantForInvoice,
-	useVoidInvoice,
-} from '~/api/invoices'
+import { useDeleteInvoice, useVoidInvoice } from '~/api/invoices'
 import { usePayApplicationInvoice } from '~/api/tenant-applications'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 import {
@@ -56,8 +51,6 @@ import {
 import { Separator } from '~/components/ui/separator'
 import { Spinner } from '~/components/ui/spinner'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
-
-const COOLDOWN_SECONDS = 60
 
 const STATUS_CONFIG: Record<
 	Invoice['status'],
@@ -107,8 +100,6 @@ export function InvoiceDetails({
 	applicationId,
 }: InvoiceDetailsProps) {
 	const revalidator = useRevalidator()
-	const [countdown, setCountdown] = useState(COOLDOWN_SECONDS)
-	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 	const [showReconfigureAlert, setShowReconfigureAlert] = useState(false)
 	const [showPayDialog, setShowPayDialog] = useState(false)
 	const [selectedRail, setSelectedRail] = useState<PAYMENT_RAIL>(
@@ -117,38 +108,8 @@ export function InvoiceDetails({
 
 	const { isPending: isVoiding, mutate: voidInvoiceMutation } = useVoidInvoice()
 	const { mutate: deleteInvoiceMutation } = useDeleteInvoice()
-	const { mutate: notifyMutation } = useNotifyTenantForInvoice()
 	const { isPending: isRecordingPayment, mutate: payInvoiceMutation } =
 		usePayApplicationInvoice()
-
-	const isOnCooldown = countdown < COOLDOWN_SECONDS && countdown > 0
-
-	useEffect(() => {
-		return () => {
-			if (intervalRef.current) clearInterval(intervalRef.current)
-		}
-	}, [])
-
-	const handleNotify = useCallback(() => {
-		notifyMutation(invoice.id, {
-			onError: () => {
-				toast.error('Failed to send payment notification.')
-			},
-			onSuccess: () => {
-				toast.success('Payment notification sent to tenant.')
-			},
-		})
-		setCountdown(COOLDOWN_SECONDS - 1)
-		intervalRef.current = setInterval(() => {
-			setCountdown((prev) => {
-				if (prev <= 1) {
-					if (intervalRef.current) clearInterval(intervalRef.current)
-					return COOLDOWN_SECONDS
-				}
-				return prev - 1
-			})
-		}, 1000)
-	}, [invoice.id, notifyMutation])
 
 	const handleVoidConfirm = () => {
 		voidInvoiceMutation(invoice.id, {
@@ -319,26 +280,6 @@ export function InvoiceDetails({
 						</div>
 					</div>
 
-					{isActive && (
-						<div className="flex items-center gap-3">
-							<Button
-								size="sm"
-								variant="outline"
-								disabled={isOnCooldown}
-								onClick={handleNotify}
-							>
-								<Send className="size-4" />
-								{isOnCooldown
-									? `Resend in ${countdown}s`
-									: 'Notify Tenant to Pay'}
-							</Button>
-							{isOnCooldown && (
-								<p className="text-xs text-zinc-400">
-									A payment notification has been sent to the tenant.
-								</p>
-							)}
-						</div>
-					)}
 				</CardContent>
 
 				<CardFooter className="flex justify-between">

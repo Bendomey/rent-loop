@@ -731,8 +731,9 @@ type PayInvoiceRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			tenant_application_id	path	string	true	"Tenant application ID"
-//	@Param			invoice_id				path	string	true	"Invoice ID"
+//	@Param			tenant_application_id	path	string				true	"Tenant application ID"
+//	@Param			invoice_id				path	string				true	"Invoice ID"
+//	@Param			body					body	PayInvoiceRequest	true	"Pay invoice request body"
 //	@Success		204						"Invoice paid successfully"
 //	@Failure		400						{object}	lib.HTTPError	"Error occurred when paying invoice"
 //	@Failure		401						{object}	string			"Invalid or absent authentication token"

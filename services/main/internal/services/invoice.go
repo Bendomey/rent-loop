@@ -138,6 +138,9 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 		SubTotal:                    input.SubTotal,
 		Currency:                    input.Currency,
 		DueDate:                     input.DueDate,
+		AllowedPaymentRails: pq.StringArray{
+			"OFFLINE",
+		}, // TODO: remove this when we start to support other payment methods.
 		// AllowedPaymentRails:         pq.StringArray(input.AllowedPaymentRails), // should always be defaulted on the DB for now.
 		LineItems: lineItems,
 	}

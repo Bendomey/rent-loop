@@ -7123,6 +7123,15 @@ const docTemplate = `{
                         "name": "invoice_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Pay invoice request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.PayInvoiceRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -9191,6 +9200,44 @@ const docTemplate = `{
                     "maxLength": 255,
                     "minLength": 8,
                     "example": "strongpassword123"
+                }
+            }
+        },
+        "handlers.PayInvoiceRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "payment_account_id",
+                "provider"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "integer",
+                    "example": 1000
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "payment_account_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "provider": {
+                    "type": "string",
+                    "enum": [
+                        "MTN",
+                        "VODAFONE",
+                        "AIRTELTIGO",
+                        "PAYSTACK",
+                        "BANK_API",
+                        "CASH"
+                    ],
+                    "example": "CASH"
+                },
+                "reference": {
+                    "type": "string",
+                    "example": "RCP-2024-001"
                 }
             }
         },

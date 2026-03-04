@@ -827,6 +827,35 @@ definitions:
     - email
     - password
     type: object
+  handlers.PayInvoiceRequest:
+    properties:
+      amount:
+        example: 1000
+        type: integer
+      metadata:
+        additionalProperties: {}
+        type: object
+      payment_account_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      provider:
+        enum:
+        - MTN
+        - VODAFONE
+        - AIRTELTIGO
+        - PAYSTACK
+        - BANK_API
+        - CASH
+        example: CASH
+        type: string
+      reference:
+        example: RCP-2024-001
+        type: string
+    required:
+    - amount
+    - payment_account_id
+    - provider
+    type: object
   handlers.RejectClientApplicationRequest:
     properties:
       reason:
@@ -7412,6 +7441,12 @@ paths:
         name: invoice_id
         required: true
         type: string
+      - description: Pay invoice request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.PayInvoiceRequest'
       produces:
       - application/json
       responses:
