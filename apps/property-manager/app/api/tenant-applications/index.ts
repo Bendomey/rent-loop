@@ -157,7 +157,6 @@ export const createTenantApplication = async (
 		if (error instanceof Error) {
 			throw error
 		}
-
 	}
 }
 

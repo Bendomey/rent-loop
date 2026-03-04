@@ -3,6 +3,7 @@ import { Outlet, useLoaderData } from 'react-router'
 import ApproveTenantApplicationModal from '../approve'
 import CancelTenantApplicationModal from '../cancel'
 import { PropertyTenantApplicationChecklist } from './components/checklist'
+import { useCalculateChecklist } from './components/use-calculate-checklist'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -30,6 +31,9 @@ export function PropertyTenantApplicationContainer() {
 			</div>
 		)
 	}
+
+	// eslint-disable-next-line react-hooks/rules-of-hooks
+	const { progress } = useCalculateChecklist(tenantApplication)
 
 	return (
 		<div className="m-5 grid grid-cols-12 gap-4">
@@ -96,7 +100,12 @@ export function PropertyTenantApplicationContainer() {
 								</TooltipContent>
 							)}
 						</Tooltip>
-						<Button onClick={() => setOpenApproveModal(true)}>Approve</Button>
+						<Button
+							disabled={progress !== 100}
+							onClick={() => setOpenApproveModal(true)}
+						>
+							Approve
+						</Button>
 					</div>
 				) : tenantApplication.status ===
 				  'TenantApplication.Status.Cancelled' ? (

@@ -1,11 +1,7 @@
 import { Check, ChevronRight, X } from 'lucide-react'
 import { Link, useLocation } from 'react-router'
-import { getDocsItems } from './checklist-docs'
-import { getFinancialItems } from './checklist-financial'
-import { getMoveInItems } from './checklist-move-in'
-import { getTenantDetailItems } from './checklist-tenant-details'
 import type { ChecklistItem } from './checklist-types'
-import { getUnitItems } from './checklist-unit'
+import { useCalculateChecklist } from './use-calculate-checklist'
 import {
 	Card,
 	CardContent,
@@ -30,23 +26,14 @@ interface Props {
 export function PropertyTenantApplicationChecklist({ application }: Props) {
 	const baseUrl = `/properties/${application.desired_unit?.property_id}/tenants/applications/${application.id}`
 
-	const unitItems = getUnitItems(application)
-	const tenantDetailItems = getTenantDetailItems(application)
-	const moveInItems = getMoveInItems(application)
-	const financialItems = getFinancialItems(application)
-	const docsItems = getDocsItems(application)
-
-	const checklistSections = [
+	const {
+		progress,
 		unitItems,
 		tenantDetailItems,
 		moveInItems,
 		financialItems,
 		docsItems,
-	]
-	const sectionsComplete = checklistSections.filter((items) =>
-		items.every((i) => i.done),
-	).length
-	const progress = (sectionsComplete / checklistSections.length) * 100
+	} = useCalculateChecklist(application)
 
 	return (
 		<Card className="mt-10 rounded-md shadow-none">
