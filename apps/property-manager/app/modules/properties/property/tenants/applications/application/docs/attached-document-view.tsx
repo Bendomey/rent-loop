@@ -39,6 +39,9 @@ export function AttachedDocumentView({
 	isClearing,
 }: AttachedDocumentViewProps) {
 	const { propertyId, applicationId } = useParams()
+	const shouldHideRemoveButton =
+		tenantApplication.status === 'TenantApplication.Status.Completed'
+
 	const isManual = tenantApplication.lease_agreement_document_mode === 'MANUAL'
 	const signatures = (
 		tenantApplication.lease_agreement_document_signatures ?? []
@@ -137,16 +140,18 @@ export function AttachedDocumentView({
 						</p>
 					</div>
 				</div>
-				<Button
-					variant="outline"
-					size="sm"
-					className='hover:text-red-500" text-red-400'
-					disabled={isClearing}
-					onClick={onClearDocument}
-				>
-					{isClearing ? <Spinner /> : <X className="size-4" />}
-					Remove
-				</Button>
+				{!shouldHideRemoveButton && (
+					<Button
+						variant="outline"
+						size="sm"
+						className='hover:text-red-500" text-red-400'
+						disabled={isClearing}
+						onClick={onClearDocument}
+					>
+						{isClearing ? <Spinner /> : <X className="size-4" />}
+						Remove
+					</Button>
+				)}
 			</div>
 
 			{isManual ? (

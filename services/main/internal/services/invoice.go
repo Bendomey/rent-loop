@@ -22,6 +22,7 @@ type InvoiceService interface {
 	CreateInvoice(context context.Context, input CreateInvoiceInput) (*models.Invoice, error)
 	VoidInvoice(context context.Context, input VoidInvoiceInput) (*models.Invoice, error)
 	UpdateInvoice(context context.Context, input UpdateInvoiceInput) (*models.Invoice, error)
+	DeleteInvoice(context context.Context, invoiceID string) error
 	GetByQuery(context context.Context, query repository.GetInvoiceQuery) (*models.Invoice, error)
 	ListInvoices(context context.Context, filterQuery repository.ListInvoicesFilter) (*[]models.Invoice, int64, error)
 	AddLineItem(context context.Context, input AddLineItemInput) (*models.InvoiceLineItem, error)
@@ -137,6 +138,9 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 		SubTotal:                    input.SubTotal,
 		Currency:                    input.Currency,
 		DueDate:                     input.DueDate,
+		AllowedPaymentRails: pq.StringArray{
+			"OFFLINE",
+		}, // TODO: remove this when we start to support other payment methods.
 		// AllowedPaymentRails:         pq.StringArray(input.AllowedPaymentRails), // should always be defaulted on the DB for now.
 		LineItems: lineItems,
 	}
@@ -294,6 +298,47 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, input UpdateInvoiceI
 	}
 
 	return invoice, nil
+}
+
+func (s *invoiceService) DeleteInvoice(ctx context.Context, invoiceID string) error {
+	invoice, getErr := s.repo.GetByQuery(ctx, repository.GetInvoiceQuery{
+		Query: map[string]any{"id": invoiceID},
+	})
+	if getErr != nil {
+		if errors.Is(getErr, gorm.ErrRecordNotFound) {
+			return pkg.NotFoundError("InvoiceNotFound", &pkg.RentLoopErrorParams{Err: getErr})
+		}
+		return pkg.InternalServerError(getErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getErr,
+			Metadata: map[string]string{
+				"function": "DeleteInvoice",
+				"action":   "getting invoice",
+			},
+		})
+	}
+
+	if invoice.Status != "DRAFT" && invoice.Status != "VOID" {
+		return pkg.BadRequestError("Invoice can only be deleted when in DRAFT or VOID status", &pkg.RentLoopErrorParams{
+			Metadata: map[string]string{
+				"function":       "DeleteInvoice",
+				"action":         "checking invoice status",
+				"current_status": invoice.Status,
+			},
+		})
+	}
+
+	deleteErr := s.repo.Delete(ctx, invoiceID)
+	if deleteErr != nil {
+		return pkg.InternalServerError(deleteErr.Error(), &pkg.RentLoopErrorParams{
+			Err: deleteErr,
+			Metadata: map[string]string{
+				"function": "DeleteInvoice",
+				"action":   "deleting invoice",
+			},
+		})
+	}
+
+	return nil
 }
 
 func (s *invoiceService) GetByQuery(ctx context.Context, query repository.GetInvoiceQuery) (*models.Invoice, error) {

@@ -26,7 +26,7 @@ import {
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
-import { formatAmount } from '~/lib/format-amount'
+import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import {
 	getInvoiceContextTypeLabel,
 	getInvoiceStatusLabel,
@@ -91,7 +91,8 @@ export function PropertyFinancialsPaymentsModule() {
 				header: 'Amount',
 				cell: ({ row }) => (
 					<span className="truncate text-xs font-semibold text-zinc-800">
-						{formatAmount(row.original.total_amount) ?? 'N/A'}
+						{formatAmount(convertPesewasToCedis(row.original.total_amount)) ??
+							'N/A'}
 					</span>
 				),
 			},

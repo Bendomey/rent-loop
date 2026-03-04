@@ -56,7 +56,7 @@ import {
 	TypographyP,
 } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
-import { formatAmount } from '~/lib/format-amount'
+import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { getPropertyUnitStatusLabel } from '~/lib/properties.utils'
 import { safeString, toFirstUpperCase } from '~/lib/strings'
 import { cn } from '~/lib/utils'
@@ -280,7 +280,7 @@ export function PropertyAssetUnitModule() {
 						<div className="space-y-1">
 							<TypographyMuted className="text-xs">Rent Fee</TypographyMuted>
 							<p className="text-2xl font-semibold">
-								{formatAmount(unit.rent_fee)}
+								{formatAmount(convertPesewasToCedis(unit.rent_fee))}
 							</p>
 							<TypographyMuted className="text-xs">
 								{paymentFrequencyLabels[unit.payment_frequency]}

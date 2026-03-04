@@ -3,8 +3,14 @@ import { Outlet, useLoaderData } from 'react-router'
 import ApproveTenantApplicationModal from '../approve'
 import CancelTenantApplicationModal from '../cancel'
 import { PropertyTenantApplicationChecklist } from './components/checklist'
+import { useCalculateChecklist } from './components/use-calculate-checklist'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '~/components/ui/tooltip'
 
 import { localizedDayjs } from '~/lib/date'
 import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.applications.$applicationId'
@@ -14,6 +20,10 @@ export function PropertyTenantApplicationContainer() {
 	const [openCancelModal, setOpenCancelModal] = useState(false)
 	const [openApproveModal, setOpenApproveModal] = useState(false)
 
+	const isInvoicePaid = ['PAID', 'PARTIALLY_PAID'].includes(
+		tenantApplication?.application_payment_invoice?.status ?? '',
+	)
+
 	if (!tenantApplication) {
 		return (
 			<div className="m-5 flex items-center justify-center">
@@ -21,6 +31,9 @@ export function PropertyTenantApplicationContainer() {
 			</div>
 		)
 	}
+
+	// eslint-disable-next-line react-hooks/rules-of-hooks
+	const { progress } = useCalculateChecklist(tenantApplication)
 
 	return (
 		<div className="m-5 grid grid-cols-12 gap-4">
@@ -69,13 +82,30 @@ export function PropertyTenantApplicationContainer() {
 			<div className="col-span-4">
 				{tenantApplication?.status === 'TenantApplication.Status.InProgress' ? (
 					<div className="mb-3 flex w-full flex-row items-center justify-end space-x-2">
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<span>
+									<Button
+										variant="secondary"
+										disabled={isInvoicePaid}
+										onClick={() => setOpenCancelModal(true)}
+									>
+										Cancel
+									</Button>
+								</span>
+							</TooltipTrigger>
+							{isInvoicePaid && (
+								<TooltipContent>
+									Cannot cancel after invoice payments have been made
+								</TooltipContent>
+							)}
+						</Tooltip>
 						<Button
-							variant={'secondary'}
-							onClick={() => setOpenCancelModal(true)}
+							disabled={progress !== 100}
+							onClick={() => setOpenApproveModal(true)}
 						>
-							Cancel
+							Approve
 						</Button>
-						<Button onClick={() => setOpenApproveModal(true)}>Approve</Button>
 					</div>
 				) : tenantApplication.status ===
 				  'TenantApplication.Status.Cancelled' ? (

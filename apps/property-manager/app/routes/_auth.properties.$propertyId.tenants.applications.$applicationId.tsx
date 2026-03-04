@@ -27,6 +27,8 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 					'CancelledBy',
 					'LeaseAgreementDocument',
 					'LeaseAgreementDocumentSignatures',
+					'ApplicationPaymentInvoice',
+					'ApplicationPaymentInvoice.LineItems',
 				],
 			},
 			{

@@ -2623,6 +2623,62 @@ const docTemplate = `{
                     }
                 }
             },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete an invoice in DRAFT or VOID status (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Delete invoice (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Invoice Deleted Successfully"
+                    },
+                    "400": {
+                        "description": "Invoice cannot be deleted in its current status",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Invoice not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "patch": {
                 "security": [
                     {
@@ -6573,7 +6629,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.CreateTenantApplicationRequest"
+                            "$ref": "#/definitions/handlers.AdminCreateTenantApplicationRequest"
                         }
                     }
                 ],
@@ -7067,6 +7123,15 @@ const docTemplate = `{
                         "name": "invoice_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Pay invoice request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.PayInvoiceRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -7751,6 +7816,63 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/tenant-applications": {
+            "post": {
+                "description": "Create a new tenant application",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TenantApplication"
+                ],
+                "summary": "Create a new tenant application",
+                "parameters": [
+                    {
+                        "description": "Create Tenant Application Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateTenantApplicationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Tenant application created successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputTenantApplication"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when creating a tenant application",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/tenant-applications/{tenant_application_id}": {
             "get": {
                 "security": [
@@ -8075,6 +8197,147 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.AdminCreateTenantApplicationRequest": {
+            "type": "object",
+            "required": [
+                "current_address",
+                "date_of_birth",
+                "desired_unit_id",
+                "emergency_contact_name",
+                "emergency_contact_phone",
+                "employer",
+                "employer_type",
+                "first_name",
+                "gender",
+                "id_number",
+                "id_type",
+                "last_name",
+                "marital_status",
+                "nationality",
+                "occupation",
+                "occupation_address",
+                "phone",
+                "relationship_to_emergency_contact"
+            ],
+            "properties": {
+                "current_address": {
+                    "type": "string",
+                    "example": "123 Main St, Accra"
+                },
+                "date_of_birth": {
+                    "type": "string",
+                    "example": "1990-01-01T00:00:00Z"
+                },
+                "desired_unit_id": {
+                    "type": "string",
+                    "example": "b4d0243c-6581-4104-8185-d83a45ebe41b"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "emergency_contact_name": {
+                    "type": "string",
+                    "example": "Jane Doe"
+                },
+                "emergency_contact_phone": {
+                    "type": "string",
+                    "example": "+233281434579"
+                },
+                "employer": {
+                    "type": "string",
+                    "example": "Acme Corp"
+                },
+                "employer_type": {
+                    "type": "string",
+                    "enum": [
+                        "WORKER",
+                        "STUDENT"
+                    ],
+                    "example": "WORKER"
+                },
+                "first_name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "gender": {
+                    "type": "string",
+                    "enum": [
+                        "MALE",
+                        "FEMALE"
+                    ],
+                    "example": "MALE"
+                },
+                "id_back_url": {
+                    "type": "string",
+                    "example": "https://example.com/id_back.jpg"
+                },
+                "id_front_url": {
+                    "type": "string",
+                    "example": "https://example.com/id_front.jpg"
+                },
+                "id_number": {
+                    "type": "string",
+                    "example": "GHA-123456789"
+                },
+                "id_type": {
+                    "type": "string",
+                    "enum": [
+                        "GHANA_CARD",
+                        "NATIONAL_ID",
+                        "PASSPORT",
+                        "DRIVER_LICENSE"
+                    ],
+                    "example": "GHANA_CARD"
+                },
+                "last_name": {
+                    "type": "string",
+                    "example": "Doe"
+                },
+                "marital_status": {
+                    "type": "string",
+                    "enum": [
+                        "SINGLE",
+                        "MARRIED",
+                        "DIVORCED",
+                        "WIDOWED"
+                    ],
+                    "example": "SINGLE"
+                },
+                "nationality": {
+                    "type": "string",
+                    "example": "Ghanaian"
+                },
+                "occupation": {
+                    "type": "string",
+                    "example": "Software Engineer"
+                },
+                "occupation_address": {
+                    "type": "string",
+                    "example": "456 Tech Ave, Accra"
+                },
+                "other_names": {
+                    "type": "string",
+                    "example": "Michael"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+233281234569"
+                },
+                "profile_photo_url": {
+                    "type": "string",
+                    "example": "https://example.com/photo.jpg"
+                },
+                "proof_of_income_url": {
+                    "type": "string",
+                    "example": "https://example.com/proof_of_income.jpg"
+                },
+                "relationship_to_emergency_contact": {
+                    "type": "string",
+                    "example": "Sister"
+                }
+            }
+        },
         "handlers.AdminUpdateDocumentRequest": {
             "type": "object",
             "properties": {
@@ -8190,23 +8453,6 @@ const docTemplate = `{
                 "initial_deposit_fee": {
                     "type": "integer"
                 },
-                "initial_deposit_paid_at": {
-                    "type": "string",
-                    "example": "2023-01-01T00:00:00Z"
-                },
-                "initial_deposit_payment_method": {
-                    "type": "string",
-                    "enum": [
-                        "ONLINE",
-                        "CASH",
-                        "EXTERNAL"
-                    ],
-                    "example": "ONLINE"
-                },
-                "initial_deposit_reference_number": {
-                    "type": "string",
-                    "example": "123456789"
-                },
                 "last_name": {
                     "type": "string",
                     "example": "Doe"
@@ -8284,27 +8530,6 @@ const docTemplate = `{
                 },
                 "security_deposit_fee": {
                     "type": "integer"
-                },
-                "security_deposit_fee_currency": {
-                    "type": "string",
-                    "example": "GHS"
-                },
-                "security_deposit_paid_at": {
-                    "type": "string",
-                    "example": "2023-01-01T00:00:00Z"
-                },
-                "security_deposit_payment_method": {
-                    "type": "string",
-                    "enum": [
-                        "ONLINE",
-                        "CASH",
-                        "EXTERNAL"
-                    ],
-                    "example": "ONLINE"
-                },
-                "security_deposit_reference_number": {
-                    "type": "string",
-                    "example": "123456789"
                 },
                 "stay_duration": {
                     "type": "integer"
@@ -9173,6 +9398,44 @@ const docTemplate = `{
                     "maxLength": 255,
                     "minLength": 8,
                     "example": "strongpassword123"
+                }
+            }
+        },
+        "handlers.PayInvoiceRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "payment_account_id",
+                "provider"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "integer",
+                    "example": 1000
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "payment_account_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "provider": {
+                    "type": "string",
+                    "enum": [
+                        "MTN",
+                        "VODAFONE",
+                        "AIRTELTIGO",
+                        "PAYSTACK",
+                        "BANK_API",
+                        "CASH"
+                    ],
+                    "example": "CASH"
+                },
+                "reference": {
+                    "type": "string",
+                    "example": "RCP-2024-001"
                 }
             }
         },

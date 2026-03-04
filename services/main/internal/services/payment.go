@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/clients/accounting"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
@@ -32,6 +33,7 @@ type paymentService struct {
 	repo                  repository.PaymentRepository
 	paymentAccountService PaymentAccountService
 	invoiceService        InvoiceService
+	accountingService     AccountingService
 }
 
 type PaymentServiceDeps struct {
@@ -39,6 +41,7 @@ type PaymentServiceDeps struct {
 	Repo                  repository.PaymentRepository
 	PaymentAccountService PaymentAccountService
 	InvoiceService        InvoiceService
+	AccountingService     AccountingService
 }
 
 func NewPaymentService(deps PaymentServiceDeps) PaymentService {
@@ -47,6 +50,7 @@ func NewPaymentService(deps PaymentServiceDeps) PaymentService {
 		repo:                  deps.Repo,
 		paymentAccountService: deps.PaymentAccountService,
 		invoiceService:        deps.InvoiceService,
+		accountingService:     deps.AccountingService,
 	}
 }
 
@@ -235,6 +239,7 @@ func (s *paymentService) VerifyOfflinePayment(
 		PaymentID: input.PaymentID,
 		Populate:  &populate,
 	})
+
 	if paymentErr != nil {
 		if !errors.Is(paymentErr, gorm.ErrRecordNotFound) {
 			return nil, pkg.InternalServerError(paymentErr.Error(), &pkg.RentLoopErrorParams{
@@ -378,6 +383,53 @@ func (s *paymentService) VerifyOfflinePayment(
 					"payment_id": input.PaymentID,
 					"invoice_id": payment.Invoice.ID.String(),
 					"new_status": newInvoiceStatus,
+				},
+			})
+		}
+
+		// Post payment receipt journal entry: Debit Cash/Bank, Credit AR
+		transactionDate := now.Format(time.RFC3339)
+		accounts := s.appCtx.Config.ChartOfAccounts
+		reference := fmt.Sprintf("PMT-%s", payment.Invoice.Code)
+		if payment.Reference != nil {
+			reference = *payment.Reference
+		}
+
+		_, journalErr := s.accountingService.RecordInvoicePayment(transCtx, accounting.CreateJournalEntryRequest{
+			Status:          string(accounting.JournalEntryStatusPosted),
+			Reference:       reference,
+			TransactionDate: &transactionDate,
+			Metadata: map[string]any{
+				"payment_id":   input.PaymentID,
+				"invoice_id":   payment.Invoice.ID.String(),
+				"invoice_code": payment.Invoice.Code,
+				"amount":       payment.Amount,
+				"currency":     payment.Currency,
+			},
+			Lines: []accounting.CreateJournalEntryLineRequest{
+				{
+					AccountID: accounts.CashBankAccountID,
+					Debit:     payment.Amount,
+					Credit:    0,
+					Notes:     lib.StringPointer(fmt.Sprintf("Cash receipt for invoice %s", payment.Invoice.Code)),
+				},
+				{
+					AccountID: accounts.AccountsReceivableID,
+					Debit:     0,
+					Credit:    payment.Amount,
+					Notes: lib.StringPointer(
+						fmt.Sprintf("AR reduction on payment for invoice %s", payment.Invoice.Code),
+					),
+				},
+			},
+		})
+		if journalErr != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError("failed to record payment journal entry", &pkg.RentLoopErrorParams{
+				Err: journalErr,
+				Metadata: map[string]string{
+					"payment_id": input.PaymentID,
+					"invoice_id": payment.Invoice.ID.String(),
 				},
 			})
 		}
