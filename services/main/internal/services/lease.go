@@ -22,6 +22,7 @@ type LeaseService interface {
 	CountLeases(context context.Context, filters repository.ListLeasesFilter) (int64, error)
 	ActivateLease(context context.Context, input ActivateLeaseInput) error
 	CancelLease(context context.Context, input CancelLeaseInput) error
+	CountOccupyingByUnitID(context context.Context, unitID string) (int64, error)
 }
 
 type leaseService struct {
@@ -96,6 +97,21 @@ func (s *leaseService) CreateLease(ctx context.Context, input CreateLeaseInput) 
 	}
 
 	return &lease, nil
+}
+
+func (s *leaseService) CountOccupyingByUnitID(ctx context.Context, unitID string) (int64, error) {
+	count, err := s.repo.CountActiveByUnitID(ctx, unitID)
+	if err != nil {
+		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CountOccupyingByUnitID",
+				"action":   "counting occupying leases for unit",
+			},
+		})
+	}
+
+	return count, nil
 }
 
 type UpdateLeaseInput struct {

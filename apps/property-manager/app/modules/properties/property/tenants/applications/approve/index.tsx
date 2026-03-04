@@ -80,19 +80,15 @@ function ApprovalModalContent({
 					</div>
 					<DialogTitle>Approve Application</DialogTitle>
 					<DialogDescription className="text-center">
-						This will generate the lease agreement PDF, securely store
-						it, and approve the tenant application. This action cannot
-						be undone.
+						This will generate the lease agreement PDF, securely store it, and
+						approve the tenant application. This action cannot be undone.
 					</DialogDescription>
 				</DialogHeader>
 				<div className="flex justify-end gap-3 pt-2">
 					<Button variant="outline" onClick={handleClose}>
 						Cancel
 					</Button>
-					<Button
-						onClick={start}
-						className="bg-green-500 hover:bg-green-600"
-					>
+					<Button onClick={start} className="bg-green-500 hover:bg-green-600">
 						Yes, Approve
 					</Button>
 				</div>
@@ -105,17 +101,15 @@ function ApprovalModalContent({
 		return (
 			<div className="flex flex-col items-center justify-center px-4 py-8 text-center">
 				<Spinner className="text-primary mb-6 size-8" />
-				<h3 className="mb-2 text-lg font-semibold">
-					Processing Approval
-				</h3>
+				<h3 className="mb-2 text-lg font-semibold">Processing Approval</h3>
 				<p className="text-muted-foreground mb-6 min-h-[20px] text-sm">
 					{description}
 				</p>
 				<Progress value={progress} className="mb-4 h-2.5 w-full" />
 				<Alert variant="default" className="mt-2">
 					<AlertDescription className="text-xs">
-						Please do not close this tab or navigate away while the
-						approval is being processed.
+						Please do not close this tab or navigate away while the approval is
+						being processed.
 					</AlertDescription>
 				</Alert>
 			</div>
@@ -129,9 +123,7 @@ function ApprovalModalContent({
 				<div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
 					<CheckCircle2 className="size-8 text-green-600" />
 				</div>
-				<h3 className="mb-2 text-lg font-semibold">
-					Application Approved
-				</h3>
+				<h3 className="mb-2 text-lg font-semibold">Application Approved</h3>
 				<p className="text-muted-foreground text-sm">
 					{name}&apos;s application has been approved successfully.
 				</p>
@@ -146,9 +138,7 @@ function ApprovalModalContent({
 				<div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
 					<AlertTriangle className="size-8 text-red-600" />
 				</div>
-				<h3 className="mb-2 text-lg font-semibold">
-					Something went wrong
-				</h3>
+				<h3 className="mb-2 text-lg font-semibold">Something went wrong</h3>
 				<p className="text-muted-foreground mb-6 text-sm">
 					{state.error ||
 						'An error occurred while processing the approval. Please try again.'}

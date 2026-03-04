@@ -160,7 +160,8 @@ export function PropertyTenantApplicationMoveIn() {
 								</TooltipTrigger>
 								{isInvoicePaid && (
 									<TooltipContent>
-										Cannot edit move-in setup details after payment has been made
+										Cannot edit move-in setup details after payment has been
+										made
 									</TooltipContent>
 								)}
 							</Tooltip>

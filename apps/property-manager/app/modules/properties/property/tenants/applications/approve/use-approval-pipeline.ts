@@ -63,8 +63,7 @@ export function useApprovalPipeline({
 		application.lease_agreement_document != null &&
 		application.lease_agreement_document.content != null
 
-	const hasExistingPdfUrl =
-		application.lease_agreement_document_url != null
+	const hasExistingPdfUrl = application.lease_agreement_document_url != null
 
 	const steps: ApprovalStep[] =
 		hasLeaseDocument && !hasExistingPdfUrl

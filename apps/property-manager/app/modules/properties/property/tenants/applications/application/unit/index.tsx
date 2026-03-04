@@ -33,10 +33,12 @@ export function PropertyTenantApplicationUnitSetup() {
 	const propertyId = safeString(clientUserProperty?.property_id)
 	const isSingleProperty = clientUserProperty?.property?.type === 'SINGLE'
 
-	const isInvoicePaid =
-		['PAID', 'PARTIALLY_PAID'].includes(safeString(application?.application_payment_invoice?.status))
-	const isDocSigned =
-		['SIGNED', 'SIGNING'].includes(safeString(application?.lease_agreement_document_status))
+	const isInvoicePaid = ['PAID', 'PARTIALLY_PAID'].includes(
+		safeString(application?.application_payment_invoice?.status),
+	)
+	const isDocSigned = ['SIGNED', 'SIGNING'].includes(
+		safeString(application?.lease_agreement_document_status),
+	)
 	const isChangeLocked = isInvoicePaid || isDocSigned
 
 	const statusLabel = unit ? getPropertyUnitStatusLabel(unit.status) : ''

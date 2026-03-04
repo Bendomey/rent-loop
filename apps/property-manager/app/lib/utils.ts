@@ -21,3 +21,12 @@ export function dataUrlToBlob(dataUrl: string): Blob {
 	}
 	return new Blob([array], { type: mime })
 }
+
+export async function blobToDataUrl(blob: Blob): Promise<string> {
+	return await new Promise((resolve, reject) => {
+		const reader = new FileReader()
+		reader.onload = () => resolve(String(reader.result ?? ''))
+		reader.onerror = () => reject(reader.error)
+		reader.readAsDataURL(blob)
+	})
+}

@@ -840,16 +840,24 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		return createTenantAccountErr
 	}
 
-	unit.Status = "Unit.Status.Occupied"
-	updateUnitErr := s.unitService.UpdateUnitStatus(transCtx, UpdateUnitStatusInput{
-		PropertyID: unit.PropertyID,
-		UnitID:     unit.ID.String(),
-		Status:     unit.Status,
-	})
+	occupyingLeases, err := s.leaseService.CountOccupyingByUnitID(ctx, unit.ID.String())
+	if err != nil {
+		return err
+	}
 
-	if updateUnitErr != nil {
-		transaction.Rollback()
-		return updateUnitErr
+	if occupyingLeases >= int64(unit.MaxOccupantsAllowed) && unit.Status != "Unit.Status.Occupied" {
+		unit.Status = "Unit.Status.Occupied"
+		updateUnitErr := s.unitService.UpdateUnitStatus(transCtx, UpdateUnitStatusInput{
+			PropertyID: unit.PropertyID,
+			UnitID:     unit.ID.String(),
+			Status:     unit.Status,
+		})
+
+		if updateUnitErr != nil {
+			transaction.Rollback()
+			return updateUnitErr
+		}
+
 	}
 
 	if commitErr := transaction.Commit().Error; commitErr != nil {

@@ -8,11 +8,9 @@ export async function uploadPdfToR2(
 	blob: Blob,
 	filename: string,
 ): Promise<string> {
-	const file = new File(
-		[blob],
-		`${sanitizeFilename(filename)}.pdf`,
-		{ type: 'application/pdf' },
-	)
+	const file = new File([blob], `${sanitizeFilename(filename)}.pdf`, {
+		type: 'application/pdf',
+	})
 
 	const formData = new FormData()
 	formData.append('file', file)

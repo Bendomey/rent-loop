@@ -3,6 +3,7 @@ import { $generateHtmlFromNodes } from '@lexical/html'
 
 import { nodes } from '~/components/blocks/template-editor/nodes'
 import { editorTheme } from '~/components/editor/themes/editor-theme'
+import { blobToDataUrl } from '~/lib/utils'
 
 const PDF_STYLES = `
 	* { margin: 0; padding: 0; box-sizing: border-box; }
@@ -31,6 +32,60 @@ const PDF_STYLES = `
 	u { text-decoration: underline; }
 	img { max-width: 100%; height: auto; }
 `
+
+async function waitForImageLoad(img: HTMLImageElement): Promise<void> {
+	if (img.complete) return
+
+	await new Promise<void>((resolve) => {
+		const onDone = () => {
+			img.removeEventListener('load', onDone)
+			img.removeEventListener('error', onDone)
+			resolve()
+		}
+
+		img.addEventListener('load', onDone, { once: true })
+		img.addEventListener('error', onDone, { once: true })
+		setTimeout(onDone, 8000)
+	})
+}
+
+async function prepareImagesForPdf(root: HTMLElement): Promise<void> {
+	const images = Array.from(root.querySelectorAll('img'))
+
+	await Promise.all(
+		images.map(async (img) => {
+			const src = img.getAttribute('src')
+			if (!src) return
+
+			img.setAttribute('crossorigin', 'anonymous')
+			img.crossOrigin = 'anonymous'
+			img.referrerPolicy = 'no-referrer'
+
+			if (src.startsWith('data:') || src.startsWith('blob:')) {
+				await waitForImageLoad(img)
+				return
+			}
+
+			try {
+				const response = await fetch(src, {
+					mode: 'cors',
+					credentials: 'omit',
+				})
+				if (response.ok) {
+					const blob = await response.blob()
+					const dataUrl = await blobToDataUrl(blob)
+					if (dataUrl) {
+						img.src = dataUrl
+					}
+				}
+			} catch {
+				// no-op; keep original URL
+			}
+
+			await waitForImageLoad(img)
+		}),
+	)
+}
 
 /**
  * Converts a serialized Lexical editor state (JSON string) to a PDF Blob.
@@ -74,6 +129,8 @@ export async function lexicalToPdf(
 	container.style.width = '800px'
 	document.body.appendChild(container)
 
+	await prepareImagesForPdf(container)
+
 	try {
 		const { default: html2pdf } = await import('html2pdf.js')
 
@@ -85,6 +142,7 @@ export async function lexicalToPdf(
 				html2canvas: {
 					scale: 2,
 					useCORS: true,
+					imageTimeout: 20000,
 					windowWidth: 800,
 					onclone: (clonedDoc: Document) => {
 						// Remove ALL stylesheets so Tailwind's oklch colors
@@ -97,6 +155,10 @@ export async function lexicalToPdf(
 						const style = clonedDoc.createElement('style')
 						style.textContent = PDF_STYLES
 						clonedDoc.head.appendChild(style)
+
+						clonedDoc.querySelectorAll('img').forEach((img) => {
+							img.setAttribute('crossorigin', 'anonymous')
+						})
 					},
 				},
 				jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
