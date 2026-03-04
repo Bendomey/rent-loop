@@ -50,3 +50,54 @@ interface TenantApplication {
 	created_at: Date
 	updated_at: Date
 }
+
+interface TrackingApplication {
+	code: string
+	status: TenantApplication['status']
+	first_name: string
+	last_name: string
+	desired_unit: Nullable<{
+		name: string
+		type: string
+		property: Nullable<{ name: string; address: string }>
+	}>
+	desired_move_in_date: Nullable<string>
+	stay_duration: Nullable<number>
+	stay_duration_frequency: Nullable<string>
+	rent_fee: number
+	rent_fee_currency: string
+	payment_frequency: Nullable<string>
+	initial_deposit_fee: Nullable<number>
+	security_deposit_fee: Nullable<number>
+	lease_agreement_document_status: Nullable<
+		'DRAFT' | 'FINALIZED' | 'SIGNING' | 'SIGNED'
+	>
+	lease_agreement_document_signing_url: Nullable<string>
+	lease_agreement_document_url: Nullable<string>
+	application_payment_invoice: Nullable<TrackingInvoice>
+	checklist_progress: {
+		unit_selected: boolean
+		personal_details_complete: boolean
+		move_in_setup_complete: boolean
+		financial_setup_complete: boolean
+		lease_document_ready: boolean
+	}
+	created_at: string
+	completed_at: Nullable<string>
+	cancelled_at: Nullable<string>
+}
+
+interface TrackingInvoice {
+	code: string
+	status: 'DRAFT' | 'ISSUED' | 'PARTIALLY_PAID' | 'PAID' | 'VOID'
+	total_amount: number
+	currency: string
+	line_items: Array<{
+		label: string
+		category: string
+		total_amount: number
+		currency: string
+	}>
+	paid_at: Nullable<string>
+	due_date: Nullable<string>
+}
