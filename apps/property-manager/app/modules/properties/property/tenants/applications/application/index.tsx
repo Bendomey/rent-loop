@@ -5,6 +5,11 @@ import CancelTenantApplicationModal from '../cancel'
 import { PropertyTenantApplicationChecklist } from './components/checklist'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '~/components/ui/tooltip'
 
 import { localizedDayjs } from '~/lib/date'
 import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.applications.$applicationId'
@@ -13,6 +18,10 @@ export function PropertyTenantApplicationContainer() {
 	const { tenantApplication } = useLoaderData<typeof loader>()
 	const [openCancelModal, setOpenCancelModal] = useState(false)
 	const [openApproveModal, setOpenApproveModal] = useState(false)
+
+	const isInvoicePaid = ['PAID', 'PARTIALLY_PAID'].includes(
+		tenantApplication?.application_payment_invoice?.status ?? '',
+	)
 
 	if (!tenantApplication) {
 		return (
@@ -69,12 +78,24 @@ export function PropertyTenantApplicationContainer() {
 			<div className="col-span-4">
 				{tenantApplication?.status === 'TenantApplication.Status.InProgress' ? (
 					<div className="mb-3 flex w-full flex-row items-center justify-end space-x-2">
-						<Button
-							variant={'secondary'}
-							onClick={() => setOpenCancelModal(true)}
-						>
-							Cancel
-						</Button>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<span>
+									<Button
+										variant="secondary"
+										disabled={isInvoicePaid}
+										onClick={() => setOpenCancelModal(true)}
+									>
+										Cancel
+									</Button>
+								</span>
+							</TooltipTrigger>
+							{isInvoicePaid && (
+								<TooltipContent>
+									Cannot cancel after invoice payments have been made
+								</TooltipContent>
+							)}
+						</Tooltip>
 						<Button onClick={() => setOpenApproveModal(true)}>Approve</Button>
 					</div>
 				) : tenantApplication.status ===

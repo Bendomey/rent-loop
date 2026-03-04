@@ -35,6 +35,11 @@ import {
 	SelectValue,
 } from '~/components/ui/select'
 import { Spinner } from '~/components/ui/spinner'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '~/components/ui/tooltip'
 import { toFirstUpperCase } from '~/lib/strings'
 
 const FREQUENCY_LABELS: Record<string, string> = {
@@ -71,6 +76,11 @@ function FieldDisplay({ label, value }: FieldDisplayProps) {
 
 export function PropertyTenantApplicationMoveIn() {
 	const { tenantApplication: application } = useTenantApplicationContext()
+
+	const isInvoicePaid = ['PAID', 'PARTIALLY_PAID'].includes(
+		application?.application_payment_invoice?.status ?? '',
+	)
+
 	const revalidator = useRevalidator()
 
 	const [isEditing, setIsEditing] = useState(false)
@@ -134,14 +144,26 @@ export function PropertyTenantApplicationMoveIn() {
 					<CardTitle className="flex items-center justify-between">
 						Move In Setup
 						{application?.status !== 'TenantApplication.Status.Cancelled' && (
-							<Button
-								variant="ghost"
-								size="sm"
-								onClick={() => setIsEditing(true)}
-							>
-								<Pencil className="mr-1 h-4 w-4" />
-								Edit
-							</Button>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<span>
+										<Button
+											variant="ghost"
+											size="sm"
+											disabled={isInvoicePaid}
+											onClick={() => setIsEditing(true)}
+										>
+											<Pencil className="mr-1 h-4 w-4" />
+											Edit
+										</Button>
+									</span>
+								</TooltipTrigger>
+								{isInvoicePaid && (
+									<TooltipContent>
+										Cannot edit move-in setup details after payment has been made
+									</TooltipContent>
+								)}
+							</Tooltip>
 						)}
 					</CardTitle>
 					<CardDescription>Move-in details for the tenant.</CardDescription>

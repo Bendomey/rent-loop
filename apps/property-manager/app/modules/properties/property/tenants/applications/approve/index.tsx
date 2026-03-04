@@ -72,12 +72,10 @@ function ApproveTenantApplicationModal({ opened, setOpened, data }: Props) {
 						Cancel
 					</AlertDialogCancel>
 					<AlertDialogAction
-						// ToDo: Change to disabled={isPending} once all integrations are done
-						disabled
 						onClick={() => handleSubmit()}
 						className="bg-green-500 hover:bg-green-600"
 					>
-						{isPending ? <Spinner /> : null}Yes Approve
+						{isPending ? <Spinner /> : null}Yes, Approve
 					</AlertDialogAction>
 				</AlertDialogFooter>
 			</AlertDialogContent>
