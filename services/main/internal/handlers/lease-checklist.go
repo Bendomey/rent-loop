@@ -22,8 +22,7 @@ func NewLeaseChecklistHandler(appCtx pkg.AppContext, service services.LeaseCheck
 }
 
 type CreateLeaseChecklistRequest struct {
-	LeaseId string `json:"lease_id" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b" validate:"required,uuid"`
-	Type    string `json:"type"     example:"CHECK_IN"                             validate:"required,oneof=CHECK_IN CHECK_OUT ROUTINE"`
+	Type string `json:"type" example:"CHECK_IN" validate:"required,oneof=CHECK_IN CHECK_OUT ROUTINE"`
 }
 
 // CreateLeaseChecklist godoc
@@ -34,14 +33,15 @@ type CreateLeaseChecklistRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			body	body		CreateLeaseChecklistRequest							true	"Create lease checklist request body"
-//	@Success		201		{object}	object{data=transformations.OutputLeaseChecklist}	"Lease checklist Created Successfully"
-//	@Failure		400		{object}	lib.HTTPError										"Error occurred when creating lease checklist"
-//	@Failure		401		{object}	lib.HTTPError										"Invalid or absent authentication token"
-//	@Failure		403		{object}	lib.HTTPError										"Forbidden"
-//	@Failure		422		{object}	lib.HTTPError										"Validation error"
-//	@Failure		500		{object}	string												"An unexpected error occurred"
-//	@Router			/api/v1/admin/lease-checklists [post]
+//	@Param			lease_id	path		string												true	"Lease ID"
+//	@Param			body		body		CreateLeaseChecklistRequest							true	"Create lease checklist request body"
+//	@Success		201			{object}	object{data=transformations.OutputLeaseChecklist}	"Lease checklist Created Successfully"
+//	@Failure		400			{object}	lib.HTTPError										"Error occurred when creating lease checklist"
+//	@Failure		401			{object}	lib.HTTPError										"Invalid or absent authentication token"
+//	@Failure		403			{object}	lib.HTTPError										"Forbidden"
+//	@Failure		422			{object}	lib.HTTPError										"Validation error"
+//	@Failure		500			{object}	string												"An unexpected error occurred"
+//	@Router			/api/v1/admin/leases/{lease_id}/checklists [post]
 func (h *LeaseChecklistHandler) CreateLeaseChecklist(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentClientUserOk {
@@ -49,6 +49,7 @@ func (h *LeaseChecklistHandler) CreateLeaseChecklist(w http.ResponseWriter, r *h
 		return
 	}
 
+	leaseID := chi.URLParam(r, "lease_id")
 	var body CreateLeaseChecklistRequest
 
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
@@ -62,7 +63,7 @@ func (h *LeaseChecklistHandler) CreateLeaseChecklist(w http.ResponseWriter, r *h
 	}
 
 	input := services.CreateLeaseChecklistInput{
-		LeaseId:     body.LeaseId,
+		LeaseId:     leaseID,
 		Type:        body.Type,
 		CreatedById: currentClientUser.ID,
 	}
@@ -92,20 +93,23 @@ type GetLeaseCheckListQuery struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			lease_checklist_id	path		string												true	"Lease checklist ID"
-//	@Param			q					query		GetLeaseCheckListQuery								true	"Lease checklist"
-//	@Success		200					{object}	object{data=transformations.OutputLeaseChecklist}	"Lease Checklist retrieved successfully"
-//	@Failure		400					{object}	lib.HTTPError										"Error occurred when fetching lease checklist"
-//	@Failure		401					{object}	string												"Invalid or absent authentication token"
-//	@Failure		404					{object}	lib.HTTPError										"Lease checklist not found"
-//	@Failure		500					{object}	string												"An unexpected error occurred"
-//	@Router			/api/v1/admin/lease-checklists/{lease_checklist_id} [get]
+//	@Param			lease_id		path		string												true	"Lease ID"
+//	@Param			checklist_id	path		string												true	"Lease checklist ID"
+//	@Param			q				query		GetLeaseCheckListQuery								true	"Lease checklist"
+//	@Success		200				{object}	object{data=transformations.OutputLeaseChecklist}	"Lease Checklist retrieved successfully"
+//	@Failure		400				{object}	lib.HTTPError										"Error occurred when fetching lease checklist"
+//	@Failure		401				{object}	string												"Invalid or absent authentication token"
+//	@Failure		404				{object}	lib.HTTPError										"Lease checklist not found"
+//	@Failure		500				{object}	string												"An unexpected error occurred"
+//	@Router			/api/v1/admin/leases/{lease_id}/checklists/{checklist_id} [get]
 func (h *LeaseChecklistHandler) GetLeaseCheckList(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "lease_checklist_id")
+	id := chi.URLParam(r, "checklist_id")
+	leaseID := chi.URLParam(r, "lease_id")
 	populate := GetPopulateFields(r)
 
 	query := repository.GetLeaseCheckListQuery{
 		ID:       id,
+		LeaseID:  leaseID,
 		Populate: populate,
 	}
 
@@ -132,18 +136,20 @@ type UpdateLeaseChecklistRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			lease_checklist_id	path		string												true	"Lease checklist ID"
-//	@Param			body				body		UpdateLeaseChecklistRequest							true	"Update lease checklist request body"
-//	@Success		200					{object}	object{data=transformations.OutputLeaseChecklist}	"Lease checklist updated successfully"
-//	@Failure		400					{object}	lib.HTTPError										"Error occurred when updating lease checklist"
-//	@Failure		401					{object}	string												"Invalid or absent authentication token"
-//	@Failure		403					{object}	lib.HTTPError										"Forbidden"
-//	@Failure		404					{object}	lib.HTTPError										"Lease checklist not found"
-//	@Failure		422					{object}	lib.HTTPError										"Validation error"
-//	@Failure		500					{object}	string												"An unexpected error occurred"
-//	@Router			/api/v1/admin/lease-checklists/{lease_checklist_id} [patch]
+//	@Param			lease_id		path		string												true	"Lease ID"
+//	@Param			checklist_id	path		string												true	"Lease checklist ID"
+//	@Param			body			body		UpdateLeaseChecklistRequest							true	"Update lease checklist request body"
+//	@Success		200				{object}	object{data=transformations.OutputLeaseChecklist}	"Lease checklist updated successfully"
+//	@Failure		400				{object}	lib.HTTPError										"Error occurred when updating lease checklist"
+//	@Failure		401				{object}	string												"Invalid or absent authentication token"
+//	@Failure		403				{object}	lib.HTTPError										"Forbidden"
+//	@Failure		404				{object}	lib.HTTPError										"Lease checklist not found"
+//	@Failure		422				{object}	lib.HTTPError										"Validation error"
+//	@Failure		500				{object}	string												"An unexpected error occurred"
+//	@Router			/api/v1/admin/leases/{lease_id}/checklists/{checklist_id} [patch]
 func (h *LeaseChecklistHandler) UpdateLeaseChecklist(w http.ResponseWriter, r *http.Request) {
-	leaseCheckListID := chi.URLParam(r, "lease_checklist_id")
+	leaseCheckListID := chi.URLParam(r, "checklist_id")
+	leaseID := chi.URLParam(r, "lease_id")
 
 	var body UpdateLeaseChecklistRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -157,6 +163,7 @@ func (h *LeaseChecklistHandler) UpdateLeaseChecklist(w http.ResponseWriter, r *h
 	}
 	input := services.UpdateLeaseChecklistInput{
 		LeaseChecklistID: leaseCheckListID,
+		LeaseID:          leaseID,
 		Type:             body.Type,
 	}
 
@@ -179,18 +186,24 @@ func (h *LeaseChecklistHandler) UpdateLeaseChecklist(w http.ResponseWriter, r *h
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			lease_checklist_id	path		string			true	"Lease checklist ID"
-//	@Success		204					{object}	nil				"Lease checklist deleted successfully"
-//	@Failure		400					{object}	lib.HTTPError	"Error occurred when deleting lease checklist"
-//	@Failure		401					{object}	string			"Invalid or absent authentication token"
-//	@Failure		403					{object}	lib.HTTPError	"Forbidden"
-//	@Failure		404					{object}	lib.HTTPError	"Lease checklist not found"
-//	@Failure		500					{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/lease-checklists/{lease_checklist_id} [delete]
+//	@Param			lease_id		path		string			true	"Lease ID"
+//	@Param			checklist_id	path		string			true	"Lease checklist ID"
+//	@Success		204				{object}	nil				"Lease checklist deleted successfully"
+//	@Failure		400				{object}	lib.HTTPError	"Error occurred when deleting lease checklist"
+//	@Failure		401				{object}	string			"Invalid or absent authentication token"
+//	@Failure		403				{object}	lib.HTTPError	"Forbidden"
+//	@Failure		404				{object}	lib.HTTPError	"Lease checklist not found"
+//	@Failure		500				{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/admin/leases/{lease_id}/checklists/{checklist_id} [delete]
 func (h *LeaseChecklistHandler) DeleteLeaseChecklist(w http.ResponseWriter, r *http.Request) {
-	leaseChecklistID := chi.URLParam(r, "lease_checklist_id")
+	leaseID := chi.URLParam(r, "lease_id")
+	leaseChecklistID := chi.URLParam(r, "checklist_id")
 
-	deleteLeaseChecklistErr := h.service.DeleteLeaseChecklist(r.Context(), leaseChecklistID)
+	input := repository.DeleteLeaseChecklistQuery{
+		LeaseID:          leaseID,
+		LeaseChecklistID: leaseChecklistID,
+	}
+	deleteLeaseChecklistErr := h.service.DeleteLeaseChecklist(r.Context(), input)
 	if deleteLeaseChecklistErr != nil {
 		HandleErrorResponse(w, deleteLeaseChecklistErr)
 		return
@@ -201,9 +214,8 @@ func (h *LeaseChecklistHandler) DeleteLeaseChecklist(w http.ResponseWriter, r *h
 
 type ListLeaseChecklistsQuery struct {
 	lib.FilterQueryInput
-	LeaseId *string  `json:"lease_id,omitempty" validate:"omitempty,uuid4"                            example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b" description:"Lease ID"`
-	Type    *string  `json:"type,omitempty"     validate:"omitempty,oneof=CHECK_IN CHECK_OUT ROUTINE" example:"CHECK_IN"                             description:"Lease checklist type"`
-	IDs     []string `json:"ids"                validate:"omitempty,dive,uuid4"                       example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of lease checklist IDs to filter by" collectionFormat:"multi"`
+	Type *string  `json:"type,omitempty" validate:"omitempty,oneof=CHECK_IN CHECK_OUT ROUTINE" example:"CHECK_IN"                             description:"Lease checklist type"`
+	IDs  []string `json:"ids"            validate:"omitempty,dive,uuid4"                       example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of lease checklist IDs to filter by" collectionFormat:"multi"`
 }
 
 // ListLeaseChecklists godoc
@@ -214,13 +226,15 @@ type ListLeaseChecklistsQuery struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			q	query		ListLeaseChecklistsQuery	true	"Lease checklists"
-//	@Success		200	{object}	object{data=object{rows=[]transformations.OutputLeaseChecklist,meta=lib.HTTPReturnPaginatedMetaResponse}}
-//	@Failure		400	{object}	lib.HTTPError	"An error occurred while filtering lease checklists"
-//	@Failure		401	{object}	string			"Absent or invalid authentication token"
-//	@Failure		500	{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/lease-checklists [get]
+//	@Param			lease_id	path		string						true	"Lease ID"
+//	@Param			q			query		ListLeaseChecklistsQuery	true	"Lease checklists"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.OutputLeaseChecklist,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400			{object}	lib.HTTPError	"An error occurred while filtering lease checklists"
+//	@Failure		401			{object}	string			"Absent or invalid authentication token"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/admin/leases/{lease_id}/checklists [get]
 func (h *LeaseChecklistHandler) ListLeaseChecklists(w http.ResponseWriter, r *http.Request) {
+	leaseId := chi.URLParam(r, "lease_id")
 	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
 	if filterQueryErr != nil {
 		HandleErrorResponse(w, filterQueryErr)
@@ -234,7 +248,7 @@ func (h *LeaseChecklistHandler) ListLeaseChecklists(w http.ResponseWriter, r *ht
 
 	input := repository.ListLeaseChecklistsFilter{
 		FilterQuery: *filterQuery,
-		LeaseId:     lib.NullOrString(r.URL.Query().Get("lease_id")),
+		LeaseId:     leaseId,
 		Type:        lib.NullOrString(r.URL.Query().Get("type")),
 		IDs:         lib.NullOrStringArray(r.URL.Query()["ids"]),
 	}

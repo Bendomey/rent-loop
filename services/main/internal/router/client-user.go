@@ -208,6 +208,19 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					Patch("/status:active", handlers.LeaseHandler.ActivateLease)
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Patch("/status:cancelled", handlers.LeaseHandler.CancelLease)
+
+				r.Route("/checklists", func(r chi.Router) {
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Post("/", handlers.LeaseChecklistHandler.CreateLeaseChecklist)
+					r.Get("/", handlers.LeaseChecklistHandler.ListLeaseChecklists)
+					r.Route("/{checklist_id}", func(r chi.Router) {
+						r.Get("/", handlers.LeaseChecklistHandler.GetLeaseCheckList)
+						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+							Patch("/", handlers.LeaseChecklistHandler.UpdateLeaseChecklist)
+						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+							Delete("/", handlers.LeaseChecklistHandler.DeleteLeaseChecklist)
+					})
+				})
 			})
 
 			r.Route("/v1/admin/payment-accounts", func(r chi.Router) {
@@ -238,19 +251,6 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 						Delete("/line-items/{line_item_id}", handlers.InvoiceHandler.RemoveLineItem)
 					r.Get("/line-items", handlers.InvoiceHandler.GetLineItems)
-				})
-			})
-
-			r.Route("/v1/admin/lease-checklists", func(r chi.Router) {
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Post("/", handlers.LeaseChecklistHandler.CreateLeaseChecklist)
-				r.Get("/", handlers.LeaseChecklistHandler.ListLeaseChecklists)
-				r.Route("/{lease_checklist_id}", func(r chi.Router) {
-					r.Get("/", handlers.LeaseChecklistHandler.GetLeaseCheckList)
-					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-						Patch("/", handlers.LeaseChecklistHandler.UpdateLeaseChecklist)
-					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-						Delete("/", handlers.LeaseChecklistHandler.DeleteLeaseChecklist)
 				})
 			})
 		})

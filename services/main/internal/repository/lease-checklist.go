@@ -13,7 +13,7 @@ type LeaseChecklistRepository interface {
 	Create(context context.Context, leaseChecklist *models.LeaseChecklist) error
 	GetOneWithPopulate(context context.Context, query GetLeaseCheckListQuery) (*models.LeaseChecklist, error)
 	Update(context context.Context, leaseChecklist *models.LeaseChecklist) error
-	Delete(context context.Context, id string) error
+	Delete(context context.Context, query DeleteLeaseChecklistQuery) error
 	List(
 		context context.Context,
 		filters ListLeaseChecklistsFilter,
@@ -37,6 +37,7 @@ func (r *leaseChecklistRepository) Create(ctx context.Context, leaseChecklist *m
 
 type GetLeaseCheckListQuery struct {
 	ID       string
+	LeaseID  string
 	Populate *[]string
 }
 
@@ -46,7 +47,7 @@ func (r *leaseChecklistRepository) GetOneWithPopulate(
 ) (*models.LeaseChecklist, error) {
 	var leaseChecklist models.LeaseChecklist
 
-	db := r.db.WithContext(ctx).Where("id = ?", query.ID)
+	db := r.db.WithContext(ctx).Where("id = ? AND lease_id = ?", query.ID, query.LeaseID)
 
 	if query.Populate != nil {
 		for _, field := range *query.Populate {
@@ -68,16 +69,23 @@ func (r *leaseChecklistRepository) Update(ctx context.Context, leaseChecklist *m
 	return db.WithContext(ctx).Save(leaseChecklist).Error
 }
 
-func (r *leaseChecklistRepository) Delete(ctx context.Context, leaseChecklistID string) error {
+type DeleteLeaseChecklistQuery struct {
+	LeaseID          string
+	LeaseChecklistID string
+}
+
+func (r *leaseChecklistRepository) Delete(ctx context.Context, query DeleteLeaseChecklistQuery) error {
 	db := lib.ResolveDB(ctx, r.db)
 
-	return db.WithContext(ctx).Delete(&models.LeaseChecklist{}, "id = ?", leaseChecklistID).Error
+	return db.WithContext(ctx).
+		Delete(&models.LeaseChecklist{}, "id = ? AND lease_id = ?", query.LeaseChecklistID, query.LeaseID).
+		Error
 }
 
 type ListLeaseChecklistsFilter struct {
 	lib.FilterQuery
 	IDs     *[]string
-	LeaseId *string
+	LeaseId string
 	Type    *string
 }
 
@@ -89,7 +97,7 @@ func (r *leaseChecklistRepository) List(
 
 	db := r.db.WithContext(ctx).Scopes(
 		IDsFilterScope("lease_checklists", filters.IDs),
-		leaseChecklistFilterScope("lease_id", filters.LeaseId),
+		leaseChecklistFilterScope("lease_id", &filters.LeaseId),
 		leaseChecklistFilterScope("type", filters.Type),
 		DateRangeScope("lease_checklists", filters.DateRange),
 		SearchScope("lease_checklists", filters.Search),
@@ -120,7 +128,7 @@ func (r *leaseChecklistRepository) Count(
 
 	result := r.db.WithContext(ctx).Model(&models.LeaseChecklist{}).Scopes(
 		IDsFilterScope("lease_checklists", filters.IDs),
-		leaseChecklistFilterScope("lease_id", filters.LeaseId),
+		leaseChecklistFilterScope("lease_id", &filters.LeaseId),
 		leaseChecklistFilterScope("type", filters.Type),
 		DateRangeScope("lease_checklists", filters.DateRange),
 		SearchScope("lease_checklists", filters.Search),

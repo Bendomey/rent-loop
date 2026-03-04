@@ -476,9 +476,6 @@ definitions:
     type: object
   handlers.CreateLeaseChecklistRequest:
     properties:
-      lease_id:
-        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
-        type: string
       type:
         enum:
         - CHECK_IN
@@ -487,7 +484,6 @@ definitions:
         example: CHECK_IN
         type: string
     required:
-    - lease_id
     - type
     type: object
   handlers.CreateOfflinePaymentRequest:
@@ -4994,294 +4990,6 @@ paths:
       summary: Void invoice (Admin)
       tags:
       - Invoice
-  /api/v1/admin/lease-checklists:
-    get:
-      consumes:
-      - application/json
-      description: List lease checklists
-      parameters:
-      - in: query
-        name: end_date
-        type: string
-      - collectionFormat: multi
-        example:
-        - a8098c1a-f86e-11da-bd1a-00112444be1e
-        in: query
-        items:
-          type: string
-        name: ids
-        type: array
-      - example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
-        in: query
-        name: lease_id
-        type: string
-      - enum:
-        - asc
-        - desc
-        in: query
-        name: order
-        type: string
-      - in: query
-        name: order_by
-        type: string
-      - in: query
-        minimum: 0
-        name: page
-        type: integer
-      - in: query
-        minimum: 0
-        name: page_size
-        type: integer
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      - in: query
-        name: query
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        minItems: 1
-        name: search_fields
-        type: array
-      - in: query
-        name: start_date
-        type: string
-      - enum:
-        - CHECK_IN
-        - CHECK_OUT
-        - ROUTINE
-        example: CHECK_IN
-        in: query
-        name: type
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                properties:
-                  meta:
-                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
-                  rows:
-                    items:
-                      $ref: '#/definitions/transformations.OutputLeaseChecklist'
-                    type: array
-                type: object
-            type: object
-        "400":
-          description: An error occurred while filtering lease checklists
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Absent or invalid authentication token
-          schema:
-            type: string
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: List lease checklists
-      tags:
-      - LeaseChecklist
-    post:
-      consumes:
-      - application/json
-      description: Create lease checklist
-      parameters:
-      - description: Create lease checklist request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.CreateLeaseChecklistRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Lease checklist Created Successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputLeaseChecklist'
-            type: object
-        "400":
-          description: Error occurred when creating lease checklist
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Create lease checklist
-      tags:
-      - LeaseChecklist
-  /api/v1/admin/lease-checklists/{lease_checklist_id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete lease checklist
-      parameters:
-      - description: Lease checklist ID
-        in: path
-        name: lease_checklist_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Lease checklist deleted successfully
-        "400":
-          description: Error occurred when deleting lease checklist
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "404":
-          description: Lease checklist not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Delete lease checklist
-      tags:
-      - LeaseChecklist
-    get:
-      consumes:
-      - application/json
-      description: Get lease checklist
-      parameters:
-      - description: Lease checklist ID
-        in: path
-        name: lease_checklist_id
-        required: true
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Lease Checklist retrieved successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputLeaseChecklist'
-            type: object
-        "400":
-          description: Error occurred when fetching lease checklist
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Lease checklist not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Get lease checklist
-      tags:
-      - LeaseChecklist
-    patch:
-      consumes:
-      - application/json
-      description: Update lease checklist
-      parameters:
-      - description: Lease checklist ID
-        in: path
-        name: lease_checklist_id
-        required: true
-        type: string
-      - description: Update lease checklist request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateLeaseChecklistRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Lease checklist updated successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputLeaseChecklist'
-            type: object
-        "400":
-          description: Error occurred when updating lease checklist
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "404":
-          description: Lease checklist not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Update lease checklist
-      tags:
-      - LeaseChecklist
   /api/v1/admin/leases/{lease_id}:
     get:
       consumes:
@@ -5381,6 +5089,315 @@ paths:
       summary: Update lease (Admin)
       tags:
       - Lease
+  /api/v1/admin/leases/{lease_id}/checklists:
+    get:
+      consumes:
+      - application/json
+      description: List lease checklists
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - CHECK_IN
+        - CHECK_OUT
+        - ROUTINE
+        example: CHECK_IN
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputLeaseChecklist'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: An error occurred while filtering lease checklists
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Absent or invalid authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List lease checklists
+      tags:
+      - LeaseChecklist
+    post:
+      consumes:
+      - application/json
+      description: Create lease checklist
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Create lease checklist request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateLeaseChecklistRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Lease checklist Created Successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputLeaseChecklist'
+            type: object
+        "400":
+          description: Error occurred when creating lease checklist
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create lease checklist
+      tags:
+      - LeaseChecklist
+  /api/v1/admin/leases/{lease_id}/checklists/{checklist_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete lease checklist
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Lease checklist ID
+        in: path
+        name: checklist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Lease checklist deleted successfully
+        "400":
+          description: Error occurred when deleting lease checklist
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Lease checklist not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete lease checklist
+      tags:
+      - LeaseChecklist
+    get:
+      consumes:
+      - application/json
+      description: Get lease checklist
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Lease checklist ID
+        in: path
+        name: checklist_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lease Checklist retrieved successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputLeaseChecklist'
+            type: object
+        "400":
+          description: Error occurred when fetching lease checklist
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Lease checklist not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get lease checklist
+      tags:
+      - LeaseChecklist
+    patch:
+      consumes:
+      - application/json
+      description: Update lease checklist
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Lease checklist ID
+        in: path
+        name: checklist_id
+        required: true
+        type: string
+      - description: Update lease checklist request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateLeaseChecklistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lease checklist updated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputLeaseChecklist'
+            type: object
+        "400":
+          description: Error occurred when updating lease checklist
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Lease checklist not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update lease checklist
+      tags:
+      - LeaseChecklist
   /api/v1/admin/leases/{lease_id}/status:active:
     patch:
       consumes:

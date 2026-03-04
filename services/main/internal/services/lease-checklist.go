@@ -14,7 +14,7 @@ type LeaseChecklistService interface {
 	CreateLeaseChecklist(ctx context.Context, input CreateLeaseChecklistInput) (*models.LeaseChecklist, error)
 	GetOneLeaseChecklist(ctx context.Context, query repository.GetLeaseCheckListQuery) (*models.LeaseChecklist, error)
 	UpdateLeaseChecklist(ctx context.Context, input UpdateLeaseChecklistInput) (*models.LeaseChecklist, error)
-	DeleteLeaseChecklist(ctx context.Context, leaseChecklistID string) error
+	DeleteLeaseChecklist(ctx context.Context, query repository.DeleteLeaseChecklistQuery) error
 	ListLeaseChecklists(
 		ctx context.Context,
 		filters repository.ListLeaseChecklistsFilter,
@@ -86,6 +86,7 @@ func (s *leaseChecklistService) GetOneLeaseChecklist(
 
 type UpdateLeaseChecklistInput struct {
 	LeaseChecklistID string
+	LeaseID          string
 	Type             *string
 }
 
@@ -94,7 +95,8 @@ func (s *leaseChecklistService) UpdateLeaseChecklist(
 	input UpdateLeaseChecklistInput,
 ) (*models.LeaseChecklist, error) {
 	leaseChecklist, err := s.repo.GetOneWithPopulate(ctx, repository.GetLeaseCheckListQuery{
-		ID: input.LeaseChecklistID,
+		ID:      input.LeaseChecklistID,
+		LeaseID: input.LeaseID,
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -131,10 +133,11 @@ func (s *leaseChecklistService) UpdateLeaseChecklist(
 
 func (s *leaseChecklistService) DeleteLeaseChecklist(
 	ctx context.Context,
-	leaseChecklistID string,
+	query repository.DeleteLeaseChecklistQuery,
 ) error {
 	_, err := s.repo.GetOneWithPopulate(ctx, repository.GetLeaseCheckListQuery{
-		ID: leaseChecklistID,
+		ID:      query.LeaseChecklistID,
+		LeaseID: query.LeaseID,
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -151,7 +154,7 @@ func (s *leaseChecklistService) DeleteLeaseChecklist(
 		})
 	}
 
-	err = s.repo.Delete(ctx, leaseChecklistID)
+	err = s.repo.Delete(ctx, query)
 	if err != nil {
 		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
