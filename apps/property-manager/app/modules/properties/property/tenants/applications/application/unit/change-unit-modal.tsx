@@ -17,7 +17,7 @@ import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Spinner } from '~/components/ui/spinner'
 import { QUERY_KEYS } from '~/lib/constants'
-import { formatAmount } from '~/lib/format-amount'
+import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { getPropertyUnitStatusLabel } from '~/lib/properties.utils'
 import { cn } from '~/lib/utils'
 
@@ -169,7 +169,7 @@ export function ChangeUnitModal({
 											)}
 										</div>
 										<p className="text-muted-foreground text-sm">
-											{formatAmount(unit.rent_fee)}/
+											{formatAmount(convertPesewasToCedis(unit.rent_fee))}/
 											{unit.payment_frequency?.toLowerCase()}
 										</p>
 									</div>

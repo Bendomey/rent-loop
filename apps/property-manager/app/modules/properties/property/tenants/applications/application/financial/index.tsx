@@ -157,7 +157,7 @@ export function PropertyTenantApplicationFinancial() {
 								value={
 									savedSecurityDepositEnabled
 										? formatAmount(savedSecurityDepositFee)
-										: 'Not required'
+										: '-'
 								}
 							/>
 						</div>
