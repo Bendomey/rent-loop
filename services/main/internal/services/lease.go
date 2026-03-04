@@ -34,30 +34,23 @@ func NewLeaseService(appCtx pkg.AppContext, repo repository.LeaseRepository) Lea
 }
 
 type CreateLeaseInput struct {
-	Status                                                string
-	UnitId                                                string
-	TenantId                                              string
-	TenantApplicationId                                   string
-	RentFee                                               int64
-	RentFeeCurrency                                       string
-	PaymentFrequency                                      *string
-	Meta                                                  map[string]any
-	MoveInDate                                            time.Time
-	StayDurationFrequency                                 string
-	StayDuration                                          int64
-	KeyHandoverDate                                       *time.Time
-	UtilityTransfersDate                                  *time.Time
-	PropertyInspectionDate                                *time.Time
-	LeaseAgreementDocumentMode                            *string
-	LeaseAgreementDocumentUrl                             string
-	LeaseAgreementDocumentPropertyManagerSignedById       *string
-	LeaseAgreementDocumentPropertyManagerSignedAt         *time.Time
-	LeaseAgreementDocumentTenantSignedAt                  *time.Time
-	TerminationAgreementDocumentUrl                       *string
-	TerminationAgreementDocumentPropertyManagerSignedAt   *time.Time
-	TerminationAgreementDocumentPropertyManagerSignedByID *string
-	TerminationAgreementDocumentTenantSignedAt            *time.Time
-	ParentLeaseId                                         *string
+	Status                          string
+	UnitId                          string
+	TenantId                        string
+	TenantApplicationId             string
+	RentFee                         int64
+	RentFeeCurrency                 string
+	PaymentFrequency                *string
+	Meta                            map[string]any
+	MoveInDate                      time.Time
+	StayDurationFrequency           string
+	StayDuration                    int64
+	KeyHandoverDate                 *time.Time
+	UtilityTransfersDate            *time.Time
+	PropertyInspectionDate          *time.Time
+	LeaseAgreementDocumentUrl       string
+	TerminationAgreementDocumentUrl *string
+	ParentLeaseId                   *string
 }
 
 func (s *leaseService) CreateLease(ctx context.Context, input CreateLeaseInput) (*models.Lease, error) {
@@ -89,7 +82,6 @@ func (s *leaseService) CreateLease(ctx context.Context, input CreateLeaseInput) 
 		PropertyInspectionDate:          input.PropertyInspectionDate,
 		LeaseAgreementDocumentUrl:       input.LeaseAgreementDocumentUrl,
 		TerminationAgreementDocumentUrl: input.TerminationAgreementDocumentUrl,
-		TerminationAgreementDocumentPropertyManagerSignedAt: input.TerminationAgreementDocumentPropertyManagerSignedAt,
 	}
 
 	err := s.repo.Create(ctx, &lease)
@@ -216,18 +208,6 @@ func (s *leaseService) UpdateLease(ctx context.Context, input UpdateLeaseInput) 
 
 	if input.TerminationAgreementDocumentUrl.IsSet {
 		lease.TerminationAgreementDocumentUrl = input.TerminationAgreementDocumentUrl.Ptr()
-	}
-
-	if input.TerminationAgreementDocumentPropertyManagerSignedAt.IsSet {
-		lease.TerminationAgreementDocumentPropertyManagerSignedAt = input.TerminationAgreementDocumentPropertyManagerSignedAt.Ptr()
-	}
-
-	if input.TerminationAgreementDocumentPropertyManagerSignedByID.IsSet {
-		lease.TerminationAgreementDocumentPropertyManagerSignedByID = input.TerminationAgreementDocumentPropertyManagerSignedByID.Ptr()
-	}
-
-	if input.TerminationAgreementDocumentTenantSignedAt.IsSet {
-		lease.TerminationAgreementDocumentTenantSignedAt = input.TerminationAgreementDocumentTenantSignedAt.Ptr()
 	}
 
 	if input.ParentLeaseId.IsSet {

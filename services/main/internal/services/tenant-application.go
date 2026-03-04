@@ -695,7 +695,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		return pkg.InternalServerError(getTenantApplicationErr.Error(), &pkg.RentLoopErrorParams{
 			Err: getTenantApplicationErr,
 			Metadata: map[string]string{
-				"function": "CancelTenantApplication",
+				"function": "ApproveTenantApplication",
 				"action":   "fetching tenant application",
 			},
 		})
@@ -709,9 +709,41 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		return pkg.BadRequestError("TenantApplicationAlreadyCompleted", nil)
 	}
 
+	// validate fields required for lease creation are all set
+	if tenantApplication.DesiredMoveInDate == nil {
+		return pkg.BadRequestError("ApplicationMissingMoveInDate", nil)
+	}
+	if tenantApplication.StayDurationFrequency == nil {
+		return pkg.BadRequestError("ApplicationMissingStayDurationFrequency", nil)
+	}
+	if tenantApplication.StayDuration == nil {
+		return pkg.BadRequestError("ApplicationMissingStayDuration", nil)
+	}
+	if tenantApplication.LeaseAgreementDocumentUrl == nil {
+		return pkg.BadRequestError("ApplicationMissingLeaseAgreementDocument", nil)
+	}
+
 	unit, getUnitErr := s.unitService.GetUnitByID(ctx, tenantApplication.DesiredUnitId)
 	if getUnitErr != nil {
 		return getUnitErr
+	}
+
+	if unit.Status != "Unit.Status.Available" {
+		return pkg.BadRequestError("UnitNoLongerAvailable", nil)
+	}
+
+	_, getInvoiceErr := s.invoiceService.GetByQuery(ctx, repository.GetInvoiceQuery{
+		Query: map[string]any{
+			"context_type":                  "TENANT_APPLICATION",
+			"context_tenant_application_id": input.TenantApplicationID,
+			"status":                        "PAID",
+		},
+	})
+
+	if getInvoiceErr != nil {
+		if errors.Is(getInvoiceErr, gorm.ErrRecordNotFound) {
+			return pkg.BadRequestError("TenantApplicationInvoiceNotPaid", nil)
+		}
 	}
 
 	// update tenant application status
@@ -775,19 +807,18 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		"security_deposit_fee_currency": tenantApplication.SecurityDepositFeeCurrency,
 	}
 	leaseInput := CreateLeaseInput{
-		Status:                     "Lease.Status.Pending",
-		UnitId:                     tenantApplication.DesiredUnitId,
-		TenantId:                   tenant.ID.String(),
-		TenantApplicationId:        tenantApplication.ID.String(),
-		RentFee:                    tenantApplication.RentFee,
-		RentFeeCurrency:            tenantApplication.RentFeeCurrency,
-		PaymentFrequency:           tenantApplication.PaymentFrequency,
-		Meta:                       meta,
-		MoveInDate:                 *tenantApplication.DesiredMoveInDate,
-		StayDurationFrequency:      *tenantApplication.StayDurationFrequency,
-		StayDuration:               *tenantApplication.StayDuration,
-		LeaseAgreementDocumentMode: tenantApplication.LeaseAgreementDocumentMode,
-		LeaseAgreementDocumentUrl:  *tenantApplication.LeaseAgreementDocumentUrl,
+		Status:                    "Lease.Status.Pending",
+		UnitId:                    tenantApplication.DesiredUnitId,
+		TenantId:                  tenant.ID.String(),
+		TenantApplicationId:       tenantApplication.ID.String(),
+		RentFee:                   tenantApplication.RentFee,
+		RentFeeCurrency:           tenantApplication.RentFeeCurrency,
+		PaymentFrequency:          tenantApplication.PaymentFrequency,
+		Meta:                      meta,
+		MoveInDate:                *tenantApplication.DesiredMoveInDate,
+		StayDurationFrequency:     *tenantApplication.StayDurationFrequency,
+		StayDuration:              *tenantApplication.StayDuration,
+		LeaseAgreementDocumentUrl: *tenantApplication.LeaseAgreementDocumentUrl,
 	}
 	_, createLeaseErr := s.leaseService.CreateLease(transCtx, leaseInput)
 	if createLeaseErr != nil {
@@ -815,6 +846,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		UnitID:     unit.ID.String(),
 		Status:     unit.Status,
 	})
+
 	if updateUnitErr != nil {
 		transaction.Rollback()
 		return updateUnitErr
