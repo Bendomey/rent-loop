@@ -102,6 +102,7 @@ func NewServices(params INewServicesParams) Services {
 		Repo:                  params.Repository.PaymentRepository,
 		PaymentAccountService: paymentAccountService,
 		InvoiceService:        invoiceService,
+		AccountingService:     accountingService,
 	})
 
 	leaseChecklistService := NewLeaseChecklistService(params.AppCtx, params.Repository.LeaseChecklistRepository)

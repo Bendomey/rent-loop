@@ -35,6 +35,11 @@ import {
 	SelectContent,
 } from '~/components/ui/select'
 import { Spinner } from '~/components/ui/spinner'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '~/components/ui/tooltip'
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
 
@@ -74,6 +79,14 @@ function FieldDisplay({ label, value }: FieldDisplayProps) {
 
 export function PropertyTenantApplicationIdentity() {
 	const { tenantApplication: application } = useTenantApplicationContext()
+
+	const isDocLocked = ['SIGNED', 'SIGNING'].includes(
+		application?.lease_agreement_document_status ?? '',
+	)
+	const docLockedMessage =
+		application?.lease_agreement_document_status === 'SIGNED'
+			? 'Cannot edit after the lease has been signed'
+			: 'Cannot edit while the lease is being signed'
 
 	const revalidator = useRevalidator()
 	const [isEditing, setIsEditing] = useState(false)
@@ -152,14 +165,24 @@ export function PropertyTenantApplicationIdentity() {
 					<CardTitle className="flex items-center justify-between">
 						Identity Verification
 						{application?.status !== 'TenantApplication.Status.Cancelled' && (
-							<Button
-								variant="ghost"
-								size="sm"
-								onClick={() => setIsEditing(true)}
-							>
-								<Pencil className="mr-1 h-4 w-4" />
-								Edit
-							</Button>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<span>
+										<Button
+											variant="ghost"
+											size="sm"
+											disabled={isDocLocked}
+											onClick={() => setIsEditing(true)}
+										>
+											<Pencil className="mr-1 h-4 w-4" />
+											Edit
+										</Button>
+									</span>
+								</TooltipTrigger>
+								{isDocLocked && (
+									<TooltipContent>{docLockedMessage}</TooltipContent>
+								)}
+							</Tooltip>
 						)}
 					</CardTitle>
 					<CardDescription>

@@ -23,10 +23,9 @@ export const handle = {
 	breadcrumb: 'New Tenant Application',
 }
 
-export async function action({ request, context }: Route.ActionArgs) {
+export async function action({ request }: Route.ActionArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
-	const clientUserProperty = context.get(propertyContext)
 
 	let formData = await request.formData()
 	const property_id = formData.get('property_id') as string
@@ -69,7 +68,6 @@ export async function action({ request, context }: Route.ActionArgs) {
 	const proof_of_income_url = formData.get('proof_of_income_url') as
 		| string
 		| null
-	const created_by_id = clientUserProperty?.client_user_id as ClientUser['id']
 
 	try {
 		const tenantApplication = await createTenantApplication(
@@ -100,7 +98,6 @@ export async function action({ request, context }: Route.ActionArgs) {
 				employer,
 				occupation_address,
 				proof_of_income_url,
-				created_by_id,
 			}),
 			{
 				baseUrl,

@@ -6,16 +6,12 @@ import {
 	Clock,
 	CreditCard,
 	Receipt,
-	Send,
 } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
-import {
-	useDeleteInvoice,
-	useNotifyTenantForInvoice,
-	useVoidInvoice,
-} from '~/api/invoices'
+import { useDeleteInvoice, useVoidInvoice } from '~/api/invoices'
+import { useGetPaymentAccounts } from '~/api/payment-accounts'
 import { usePayApplicationInvoice } from '~/api/tenant-applications'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 import {
@@ -46,6 +42,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '~/components/ui/dialog'
+import { Input } from '~/components/ui/input'
 import {
 	Select,
 	SelectContent,
@@ -56,8 +53,6 @@ import {
 import { Separator } from '~/components/ui/separator'
 import { Spinner } from '~/components/ui/spinner'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
-
-const COOLDOWN_SECONDS = 60
 
 const STATUS_CONFIG: Record<
 	Invoice['status'],
@@ -107,48 +102,26 @@ export function InvoiceDetails({
 	applicationId,
 }: InvoiceDetailsProps) {
 	const revalidator = useRevalidator()
-	const [countdown, setCountdown] = useState(COOLDOWN_SECONDS)
-	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 	const [showReconfigureAlert, setShowReconfigureAlert] = useState(false)
 	const [showPayDialog, setShowPayDialog] = useState(false)
-	const [selectedRail, setSelectedRail] = useState<PAYMENT_RAIL>(
-		invoice.allowed_payment_rails[0] ?? 'OFFLINE',
+	const [selectedAccountId, setSelectedAccountId] = useState<string>('')
+	const [reference, setReference] = useState('')
+
+	const { data: accountsData } = useGetPaymentAccounts({
+		filters: { owner_types: ['PROPERTY_OWNER', 'SYSTEM'], status: 'ACTIVE' },
+	})
+	const accounts = (accountsData?.rows ?? [])?.filter((a) =>
+		invoice.allowed_payment_rails.includes(a.rail),
+	)
+
+	const selectedAccount = accounts.find(
+		(a: PaymentAccount) => a.id === selectedAccountId,
 	)
 
 	const { isPending: isVoiding, mutate: voidInvoiceMutation } = useVoidInvoice()
 	const { mutate: deleteInvoiceMutation } = useDeleteInvoice()
-	const { mutate: notifyMutation } = useNotifyTenantForInvoice()
 	const { isPending: isRecordingPayment, mutate: payInvoiceMutation } =
 		usePayApplicationInvoice()
-
-	const isOnCooldown = countdown < COOLDOWN_SECONDS && countdown > 0
-
-	useEffect(() => {
-		return () => {
-			if (intervalRef.current) clearInterval(intervalRef.current)
-		}
-	}, [])
-
-	const handleNotify = useCallback(() => {
-		notifyMutation(invoice.id, {
-			onError: () => {
-				toast.error('Failed to send payment notification.')
-			},
-			onSuccess: () => {
-				toast.success('Payment notification sent to tenant.')
-			},
-		})
-		setCountdown(COOLDOWN_SECONDS - 1)
-		intervalRef.current = setInterval(() => {
-			setCountdown((prev) => {
-				if (prev <= 1) {
-					if (intervalRef.current) clearInterval(intervalRef.current)
-					return COOLDOWN_SECONDS
-				}
-				return prev - 1
-			})
-		}, 1000)
-	}, [invoice.id, notifyMutation])
 
 	const handleVoidConfirm = () => {
 		voidInvoiceMutation(invoice.id, {
@@ -174,10 +147,17 @@ export function InvoiceDetails({
 	}
 
 	const handleRecordPayment = () => {
+		if (!selectedAccount) return
 		payInvoiceMutation(
 			{
 				tenant_application_id: applicationId,
 				invoice_id: invoice.id,
+				body: {
+					amount: invoice.total_amount,
+					payment_account_id: selectedAccount.id,
+					provider: 'CASH', // We only support recording cash payments for now
+					...(reference ? { reference } : {}),
+				},
 			},
 			{
 				onError: () => {
@@ -318,27 +298,6 @@ export function InvoiceDetails({
 							</div>
 						</div>
 					</div>
-
-					{isActive && (
-						<div className="flex items-center gap-3">
-							<Button
-								size="sm"
-								variant="outline"
-								disabled={isOnCooldown}
-								onClick={handleNotify}
-							>
-								<Send className="size-4" />
-								{isOnCooldown
-									? `Resend in ${countdown}s`
-									: 'Notify Tenant to Pay'}
-							</Button>
-							{isOnCooldown && (
-								<p className="text-xs text-zinc-400">
-									A payment notification has been sent to the tenant.
-								</p>
-							)}
-						</div>
-					)}
 				</CardContent>
 
 				<CardFooter className="flex justify-between">
@@ -417,22 +376,36 @@ export function InvoiceDetails({
 						</Alert>
 
 						<div className="space-y-1.5">
-							<label className="text-sm font-medium">Payment Method</label>
+							<label className="text-sm font-medium">Payment Account</label>
 							<Select
-								value={selectedRail}
-								onValueChange={(v) => setSelectedRail(v as PAYMENT_RAIL)}
+								value={selectedAccountId}
+								onValueChange={setSelectedAccountId}
 							>
 								<SelectTrigger className="w-full">
-									<SelectValue />
+									<SelectValue placeholder="Select an account" />
 								</SelectTrigger>
 								<SelectContent>
-									{invoice.allowed_payment_rails.map((rail) => (
-										<SelectItem key={rail} value={rail}>
-											{RAIL_LABELS[rail]}
+									{accounts.map((account: PaymentAccount) => (
+										<SelectItem key={account.id} value={account.id}>
+											{RAIL_LABELS[account.rail]}
+											{account.identifier ? ` · ${account.identifier}` : null}
 										</SelectItem>
 									))}
 								</SelectContent>
 							</Select>
+						</div>
+						<div className="space-y-1.5">
+							<label className="text-sm font-medium">
+								Reference{' '}
+								<span className="text-muted-foreground font-normal">
+									(optional)
+								</span>
+							</label>
+							<Input
+								placeholder="e.g. RCP-2024-001"
+								value={reference}
+								onChange={(e) => setReference(e.target.value)}
+							/>
 						</div>
 					</div>
 
@@ -444,7 +417,10 @@ export function InvoiceDetails({
 						>
 							Cancel
 						</Button>
-						<Button onClick={handleRecordPayment} disabled={isRecordingPayment}>
+						<Button
+							onClick={handleRecordPayment}
+							disabled={isRecordingPayment || !selectedAccount}
+						>
 							{isRecordingPayment ? <Spinner /> : null}
 							Confirm Payment
 						</Button>

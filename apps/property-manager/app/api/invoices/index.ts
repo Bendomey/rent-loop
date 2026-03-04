@@ -77,24 +77,3 @@ const deleteInvoice = async (id: string) => {
 }
 
 export const useDeleteInvoice = () => useMutation({ mutationFn: deleteInvoice })
-
-/**
- * Notify tenant to pay invoice
- * TODO: Backend endpoint POST /v1/admin/invoices/{id}/notify not yet implemented.
- */
-const notifyTenantForInvoice = async (id: string) => {
-	try {
-		await fetchClient(`/v1/admin/invoices/${id}/notify`, { method: 'POST' })
-	} catch (error: unknown) {
-		if (error instanceof Response) {
-			const response = await error.json()
-			throw new Error(response.errors?.message || 'Unknown error')
-		}
-		if (error instanceof Error) {
-			throw error
-		}
-	}
-}
-
-export const useNotifyTenantForInvoice = () =>
-	useMutation({ mutationFn: notifyTenantForInvoice })

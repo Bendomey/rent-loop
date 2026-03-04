@@ -36,7 +36,6 @@ export function PropertyTenantApplicationChecklist({ application }: Props) {
 	const financialItems = getFinancialItems(application)
 	const docsItems = getDocsItems(application)
 
-
 	const checklistSections = [
 		unitItems,
 		tenantDetailItems,

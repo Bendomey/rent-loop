@@ -127,7 +127,6 @@ func (s *tenantService) GetOrCreateTenant(ctx context.Context, input CreateTenan
 				return nil, createTenantErr
 			}
 			return createTenant, nil
-
 		}
 		return nil, pkg.InternalServerError(getTenantErr.Error(), &pkg.RentLoopErrorParams{
 			Err: getTenantErr,

@@ -12,6 +12,11 @@ import {
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '~/components/ui/tooltip'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { getPropertyUnitStatusLabel } from '~/lib/properties.utils'
 import { safeString } from '~/lib/strings'
@@ -27,6 +32,14 @@ export function PropertyTenantApplicationUnitSetup() {
 	const coverImage = unit?.images?.[0]
 	const propertyId = safeString(clientUserProperty?.property_id)
 	const isSingleProperty = clientUserProperty?.property?.type === 'SINGLE'
+
+	const isInvoicePaid = ['PAID', 'PARTIALLY_PAID'].includes(
+		safeString(application?.application_payment_invoice?.status),
+	)
+	const isDocSigned = ['SIGNED', 'SIGNING'].includes(
+		safeString(application?.lease_agreement_document_status),
+	)
+	const isChangeLocked = isInvoicePaid || isDocSigned
 
 	const statusLabel = unit ? getPropertyUnitStatusLabel(unit.status) : ''
 	const statusColor =
@@ -85,13 +98,27 @@ export function PropertyTenantApplicationUnitSetup() {
 							<Button className="w-full">View Unit</Button>
 						</ExternalLink>
 						{!isSingleProperty && (
-							<Button
-								className="w-2/4"
-								variant="secondary"
-								onClick={() => setChangeUnitOpen(true)}
-							>
-								Change
-							</Button>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<span className="w-2/4">
+										<Button
+											className="w-full"
+											variant="secondary"
+											disabled={isChangeLocked}
+											onClick={() => setChangeUnitOpen(true)}
+										>
+											Change
+										</Button>
+									</span>
+								</TooltipTrigger>
+								{isChangeLocked && (
+									<TooltipContent>
+										{isInvoicePaid
+											? 'Cannot change unit after initial payments has been paid'
+											: 'Cannot change unit after lease has been signed'}
+									</TooltipContent>
+								)}
+							</Tooltip>
 						)}
 					</CardFooter>
 				</Card>

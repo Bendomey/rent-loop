@@ -15,6 +15,7 @@ type LeaseRepository interface {
 	Update(context context.Context, lease *models.Lease) error
 	List(context context.Context, filterQuery ListLeasesFilter) (*[]models.Lease, error)
 	Count(context context.Context, filterQuery ListLeasesFilter) (int64, error)
+	CountActiveByUnitID(context context.Context, unitID string) (int64, error)
 }
 
 type leaseRepository struct {
@@ -125,6 +126,24 @@ func (r *leaseRepository) Count(ctx context.Context, filterQuery ListLeasesFilte
 
 	if result.Error != nil {
 		return 0, result.Error
+	}
+
+	return count, nil
+}
+
+func (r *leaseRepository) CountActiveByUnitID(ctx context.Context, unitID string) (int64, error) {
+	db := lib.ResolveDB(ctx, r.DB)
+
+	var count int64
+	err := db.Model(&models.Lease{}).
+		Where("unit_id = ?", unitID).
+		Where("status IN ?", []string{
+			"Lease.Status.Pending",
+			"Lease.Status.Active",
+		}).
+		Count(&count).Error
+	if err != nil {
+		return 0, err
 	}
 
 	return count, nil

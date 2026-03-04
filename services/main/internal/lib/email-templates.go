@@ -189,6 +189,7 @@ Application Details:
 Unit: {{unit_name}}
 Application Code: {{application_code}}
 Submitted on: {{submission_date}}
+Application Tracking Page: {{website_url}}/tenant-applications/{{application_code}}
 
 Our team will review your application and contact you if additional information is needed. You will be notified once a decision has been made.
 Thank you for your interest.

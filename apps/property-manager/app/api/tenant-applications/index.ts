@@ -132,8 +132,6 @@ export interface CreatePropertyTenantApplicationInput {
 	employer: string
 	occupation_address: string
 	proof_of_income_url: Nullable<string>
-
-	created_by_id: ClientUser['id']
 }
 
 export const createTenantApplication = async (
@@ -159,6 +157,7 @@ export const createTenantApplication = async (
 		if (error instanceof Error) {
 			throw error
 		}
+
 	}
 }
 
@@ -389,19 +388,38 @@ export const useGenerateApplicationPaymentInvoice = () =>
 /**
  * Pay (record an offline payment for) an application invoice.
  */
+type PaymentProvider =
+	| 'MTN'
+	| 'VODAFONE'
+	| 'AIRTELTIGO'
+	| 'PAYSTACK'
+	| 'BANK_API'
+	| 'CASH'
+
 interface PayApplicationInvoiceInput {
 	tenant_application_id: string
 	invoice_id: string
+	body: {
+		amount: number
+		payment_account_id: string
+		provider: PaymentProvider
+		reference?: string
+		metadata?: Record<string, unknown>
+	}
 }
 
 const payApplicationInvoice = async ({
 	tenant_application_id,
 	invoice_id,
+	body,
 }: PayApplicationInvoiceInput) => {
 	try {
 		await fetchClient(
 			`/v1/admin/tenant-applications/${tenant_application_id}/invoice/${invoice_id}/pay`,
-			{ method: 'POST' },
+			{
+				method: 'POST',
+				body: JSON.stringify(body),
+			},
 		)
 	} catch (error) {
 		if (error instanceof Response) {

@@ -25,6 +25,10 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			r.Get("/v1/signing/{token}/verify", handlers.SigningHandler.VerifyToken)
 			r.Post("/v1/signing/{token}/sign", handlers.SigningHandler.SignDocument)
 
+			r.Post(
+				"/v1/tenant-applications",
+				handlers.TenantApplicationHandler.CreateTenantApplication,
+			)
 			r.Patch(
 				"/v1/tenant-applications/{tenant_application_id}",
 				handlers.TenantApplicationHandler.UpdateTenantApplication,
@@ -156,6 +160,8 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			r.Route("/v1/admin/tenant-applications", func(r chi.Router) {
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Post("/invite", handlers.TenantApplicationHandler.SendTenantInvite)
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Post("/", handlers.TenantApplicationHandler.AdminCreateTenantApplication)
 				r.Get("/", handlers.TenantApplicationHandler.ListTenantApplications)
 				r.Get("/{tenant_application_id}", handlers.TenantApplicationHandler.AdminGetTenantApplication)
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
