@@ -9262,12 +9262,41 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.CreateLeaseChecklistItemRequest": {
+            "type": "object",
+            "required": [
+                "description",
+                "status"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Checked in"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "FUNCTIONAL",
+                        "DAMAGED",
+                        "MISSING"
+                    ],
+                    "example": "FUNCTIONAL"
+                }
+            }
+        },
         "handlers.CreateLeaseChecklistRequest": {
             "type": "object",
             "required": [
+                "checklist_items",
                 "type"
             ],
             "properties": {
+                "checklist_items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.CreateLeaseChecklistItemRequest"
+                    }
+                },
                 "type": {
                     "type": "string",
                     "enum": [
@@ -12032,6 +12061,12 @@ const docTemplate = `{
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
                 },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/transformations.OutputLeaseChecklistItem"
+                    }
+                },
                 "lease": {
                     "$ref": "#/definitions/transformations.OutputAdminLease"
                 },
@@ -12042,6 +12077,31 @@ const docTemplate = `{
                 "type": {
                     "type": "string",
                     "example": "CHECK_IN"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-06-10T09:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputLeaseChecklistItem": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Checked in"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "FUNCTIONAL"
                 },
                 "updated_at": {
                     "type": "string",

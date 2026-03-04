@@ -474,8 +474,28 @@ definitions:
     - title
     - type
     type: object
+  handlers.CreateLeaseChecklistItemRequest:
+    properties:
+      description:
+        example: Checked in
+        type: string
+      status:
+        enum:
+        - FUNCTIONAL
+        - DAMAGED
+        - MISSING
+        example: FUNCTIONAL
+        type: string
+    required:
+    - description
+    - status
+    type: object
   handlers.CreateLeaseChecklistRequest:
     properties:
+      checklist_items:
+        items:
+          $ref: '#/definitions/handlers.CreateLeaseChecklistItemRequest'
+        type: array
       type:
         enum:
         - CHECK_IN
@@ -484,6 +504,7 @@ definitions:
         example: CHECK_IN
         type: string
     required:
+    - checklist_items
     - type
     type: object
   handlers.CreateOfflinePaymentRequest:
@@ -2509,6 +2530,10 @@ definitions:
       id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
+      items:
+        items:
+          $ref: '#/definitions/transformations.OutputLeaseChecklistItem'
+        type: array
       lease:
         $ref: '#/definitions/transformations.OutputAdminLease'
       lease_id:
@@ -2516,6 +2541,24 @@ definitions:
         type: string
       type:
         example: CHECK_IN
+        type: string
+      updated_at:
+        example: "2024-06-10T09:00:00Z"
+        type: string
+    type: object
+  transformations.OutputLeaseChecklistItem:
+    properties:
+      created_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      description:
+        example: Checked in
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      status:
+        example: FUNCTIONAL
         type: string
       updated_at:
         example: "2024-06-10T09:00:00Z"

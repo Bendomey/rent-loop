@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -23,18 +24,26 @@ type LeaseChecklistService interface {
 }
 
 type leaseChecklistService struct {
-	appCtx pkg.AppContext
-	repo   repository.LeaseChecklistRepository
+	appCtx               pkg.AppContext
+	repo                 repository.LeaseChecklistRepository
+	checklistItemService LeaseChecklistItemService
 }
 
-func NewLeaseChecklistService(appCtx pkg.AppContext, repo repository.LeaseChecklistRepository) LeaseChecklistService {
-	return &leaseChecklistService{appCtx: appCtx, repo: repo}
+type LeaseChecklistServiceDeps struct {
+	AppCtx               pkg.AppContext
+	Repo                 repository.LeaseChecklistRepository
+	ChecklistItemService LeaseChecklistItemService
+}
+
+func NewLeaseChecklistService(deps LeaseChecklistServiceDeps) LeaseChecklistService {
+	return &leaseChecklistService{appCtx: deps.AppCtx, repo: deps.Repo, checklistItemService: deps.ChecklistItemService}
 }
 
 type CreateLeaseChecklistInput struct {
-	LeaseId     string
-	Type        string
-	CreatedById string
+	LeaseId        string
+	Type           string
+	CreatedById    string
+	ChecklistItems []CreateLeaseChecklistItemInput
 }
 
 func (s *leaseChecklistService) CreateLeaseChecklist(
@@ -47,13 +56,49 @@ func (s *leaseChecklistService) CreateLeaseChecklist(
 		CreatedById: input.CreatedById,
 	}
 
-	err := s.repo.Create(ctx, &leaseChecklist)
+	transaction := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, transaction)
+
+	err := s.repo.Create(transCtx, &leaseChecklist)
 	if err != nil {
+		transaction.Rollback()
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
 			Metadata: map[string]string{
 				"function": "CreateLeaseChecklist",
 				"action":   "creating lease checklist",
+			},
+		})
+	}
+
+	checklistItems := make([]models.LeaseChecklistItem, 0)
+	for _, item := range input.ChecklistItems {
+		checklistItems = append(checklistItems, models.LeaseChecklistItem{
+			LeaseChecklistId: leaseChecklist.ID.String(),
+			Description:      item.Description,
+			Status:           item.Status,
+		})
+	}
+
+	err = s.checklistItemService.BulkCreateLeaseChecklistItems(transCtx, &checklistItems)
+	if err != nil {
+		transaction.Rollback()
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CreateLeaseChecklist",
+				"action":   "creating lease checklist items",
+			},
+		})
+	}
+
+	if err := transaction.Commit().Error; err != nil {
+		transaction.Rollback()
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CreateLeaseChecklist",
+				"action":   "committing transaction",
 			},
 		})
 	}

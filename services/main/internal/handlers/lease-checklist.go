@@ -21,8 +21,14 @@ func NewLeaseChecklistHandler(appCtx pkg.AppContext, service services.LeaseCheck
 	return LeaseChecklistHandler{appCtx: appCtx, service: service}
 }
 
+type CreateLeaseChecklistItemRequest struct {
+	Description string `json:"description" validate:"required"                                  example:"Checked in"`
+	Status      string `json:"status"      validate:"required,oneof=FUNCTIONAL DAMAGED MISSING" example:"FUNCTIONAL"`
+}
+
 type CreateLeaseChecklistRequest struct {
-	Type string `json:"type" example:"CHECK_IN" validate:"required,oneof=CHECK_IN CHECK_OUT ROUTINE"`
+	Type           string                            `json:"type"            example:"CHECK_IN" validate:"required,oneof=CHECK_IN CHECK_OUT ROUTINE"`
+	ChecklistItems []CreateLeaseChecklistItemRequest `json:"checklist_items"                    validate:"required,dive,required"`
 }
 
 // CreateLeaseChecklist godoc
@@ -62,10 +68,19 @@ func (h *LeaseChecklistHandler) CreateLeaseChecklist(w http.ResponseWriter, r *h
 		return
 	}
 
+	checklistItems := make([]services.CreateLeaseChecklistItemInput, 0)
+	for _, item := range body.ChecklistItems {
+		checklistItems = append(checklistItems, services.CreateLeaseChecklistItemInput{
+			Description: item.Description,
+			Status:      item.Status,
+		})
+	}
+
 	input := services.CreateLeaseChecklistInput{
-		LeaseId:     leaseID,
-		Type:        body.Type,
-		CreatedById: currentClientUser.ID,
+		LeaseId:        leaseID,
+		Type:           body.Type,
+		CreatedById:    currentClientUser.ID,
+		ChecklistItems: checklistItems,
 	}
 
 	leaseChecklist, createErr := h.service.CreateLeaseChecklist(r.Context(), input)

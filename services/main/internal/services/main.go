@@ -25,6 +25,7 @@ type Services struct {
 	PaymentService            PaymentService
 	SigningService            SigningService
 	LeaseChecklistService     LeaseChecklistService
+	LeaseChecklistItemService LeaseChecklistItemService
 }
 
 type INewServicesParams struct {
@@ -105,7 +106,15 @@ func NewServices(params INewServicesParams) Services {
 		AccountingService:     accountingService,
 	})
 
-	leaseChecklistService := NewLeaseChecklistService(params.AppCtx, params.Repository.LeaseChecklistRepository)
+	leaseChecklistItemService := NewLeaseChecklistItemService(
+		params.AppCtx,
+		params.Repository.LeaseChecklistItemRepository,
+	)
+	leaseChecklistService := NewLeaseChecklistService(LeaseChecklistServiceDeps{
+		AppCtx:               params.AppCtx,
+		Repo:                 params.Repository.LeaseChecklistRepository,
+		ChecklistItemService: leaseChecklistItemService,
+	})
 
 	return Services{
 		AccountingService: accountingService,
@@ -128,5 +137,6 @@ func NewServices(params INewServicesParams) Services {
 		PaymentService:            paymentService,
 		SigningService:            signingService,
 		LeaseChecklistService:     leaseChecklistService,
+		LeaseChecklistItemService: leaseChecklistItemService,
 	}
 }
