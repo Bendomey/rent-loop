@@ -74,6 +74,7 @@ export * from './properties/property/activities/maintenance-requests'
 export * from './properties/property/activities/polls'
 
 export * from './properties/property/financials/payments'
+export * from './properties/property/financials/payments/payment'
 
 export * from './properties/property/settings/members'
 export * from './properties/property/settings/general'
