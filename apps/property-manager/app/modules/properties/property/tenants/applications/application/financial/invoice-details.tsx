@@ -11,6 +11,7 @@ import { useState } from 'react'
 import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { useDeleteInvoice, useVoidInvoice } from '~/api/invoices'
+import { useGetPaymentAccounts } from '~/api/payment-accounts'
 import { usePayApplicationInvoice } from '~/api/tenant-applications'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 import {
@@ -41,6 +42,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '~/components/ui/dialog'
+import { Input } from '~/components/ui/input'
 import {
 	Select,
 	SelectContent,
@@ -102,8 +104,18 @@ export function InvoiceDetails({
 	const revalidator = useRevalidator()
 	const [showReconfigureAlert, setShowReconfigureAlert] = useState(false)
 	const [showPayDialog, setShowPayDialog] = useState(false)
-	const [selectedRail, setSelectedRail] = useState<PAYMENT_RAIL>(
-		invoice.allowed_payment_rails[0] ?? 'OFFLINE',
+	const [selectedAccountId, setSelectedAccountId] = useState<string>('')
+	const [reference, setReference] = useState('')
+
+	const { data: accountsData } = useGetPaymentAccounts({
+		filters: { owner_types: ['PROPERTY_OWNER', 'SYSTEM'], status: 'ACTIVE' },
+	})
+	const accounts = (accountsData?.rows ?? [])?.filter((a) =>
+		invoice.allowed_payment_rails.includes(a.rail),
+	)
+
+	const selectedAccount = accounts.find(
+		(a: PaymentAccount) => a.id === selectedAccountId,
 	)
 
 	const { isPending: isVoiding, mutate: voidInvoiceMutation } = useVoidInvoice()
@@ -135,10 +147,17 @@ export function InvoiceDetails({
 	}
 
 	const handleRecordPayment = () => {
+		if (!selectedAccount) return
 		payInvoiceMutation(
 			{
 				tenant_application_id: applicationId,
 				invoice_id: invoice.id,
+				body: {
+					amount: invoice.total_amount,
+					payment_account_id: selectedAccount.id,
+					provider: 'CASH', // We only support recording cash payments for now
+					...(reference ? { reference } : {}),
+				},
 			},
 			{
 				onError: () => {
@@ -279,7 +298,6 @@ export function InvoiceDetails({
 							</div>
 						</div>
 					</div>
-
 				</CardContent>
 
 				<CardFooter className="flex justify-between">
@@ -358,22 +376,36 @@ export function InvoiceDetails({
 						</Alert>
 
 						<div className="space-y-1.5">
-							<label className="text-sm font-medium">Payment Method</label>
+							<label className="text-sm font-medium">Payment Account</label>
 							<Select
-								value={selectedRail}
-								onValueChange={(v) => setSelectedRail(v as PAYMENT_RAIL)}
+								value={selectedAccountId}
+								onValueChange={setSelectedAccountId}
 							>
 								<SelectTrigger className="w-full">
-									<SelectValue />
+									<SelectValue placeholder="Select an account" />
 								</SelectTrigger>
 								<SelectContent>
-									{invoice.allowed_payment_rails.map((rail) => (
-										<SelectItem key={rail} value={rail}>
-											{RAIL_LABELS[rail]}
+									{accounts.map((account: PaymentAccount) => (
+										<SelectItem key={account.id} value={account.id}>
+											{RAIL_LABELS[account.rail]}
+											{account.identifier ? ` · ${account.identifier}` : null}
 										</SelectItem>
 									))}
 								</SelectContent>
 							</Select>
+						</div>
+						<div className="space-y-1.5">
+							<label className="text-sm font-medium">
+								Reference{' '}
+								<span className="text-muted-foreground font-normal">
+									(optional)
+								</span>
+							</label>
+							<Input
+								placeholder="e.g. RCP-2024-001"
+								value={reference}
+								onChange={(e) => setReference(e.target.value)}
+							/>
 						</div>
 					</div>
 
@@ -385,7 +417,10 @@ export function InvoiceDetails({
 						>
 							Cancel
 						</Button>
-						<Button onClick={handleRecordPayment} disabled={isRecordingPayment}>
+						<Button
+							onClick={handleRecordPayment}
+							disabled={isRecordingPayment || !selectedAccount}
+						>
 							{isRecordingPayment ? <Spinner /> : null}
 							Confirm Payment
 						</Button>

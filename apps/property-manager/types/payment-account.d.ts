@@ -5,7 +5,7 @@ interface PaymentAccount {
 	status: 'ACTIVE' | 'INACTIVE'
 	rail: 'MOMO' | 'BANK_TRANSFER' | 'CARD' | 'OFFLINE'
 	owner_type: 'PROPERTY_OWNER' | 'SYSTEM'
-	provider: 'MTN' | 'VODAFONE' | 'AIRTELTIGO' | 'PAYSTACK' | 'BANK_API'
+	provider: 'MTN' | 'VODAFONE' | 'AIRTELTIGO' | 'PAYSTACK' | 'BANK_API' | 'CASH'
 	identifier: string
 	is_default: boolean
 	created_at: Date
