@@ -39,9 +39,12 @@ import type { loader } from '~/routes/_auth._dashboard.settings.payment-accounts
 
 const ValidationSchema = z.object({
 	identifier: z.string().optional(),
-	provider: z.enum(['MTN', 'VODAFONE', 'AIRTELTIGO', 'PAYSTACK', 'BANK_API', 'CASH'], {
-		error: 'Please select a provider',
-	}),
+	provider: z.enum(
+		['MTN', 'VODAFONE', 'AIRTELTIGO', 'PAYSTACK', 'BANK_API', 'CASH'],
+		{
+			error: 'Please select a provider',
+		},
+	),
 	status: z.enum(['ACTIVE', 'INACTIVE'], { error: 'Please select a status' }),
 })
 

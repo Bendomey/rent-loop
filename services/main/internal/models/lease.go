@@ -51,11 +51,7 @@ type Lease struct {
 	// docs setup
 	LeaseAgreementDocumentUrl string
 
-	TerminationAgreementDocumentUrl                       *string
-	TerminationAgreementDocumentPropertyManagerSignedAt   *time.Time
-	TerminationAgreementDocumentPropertyManagerSignedByID *string
-	TerminationAgreementDocumentPropertyManagerSignedBy   *ClientUser
-	TerminationAgreementDocumentTenantSignedAt            *time.Time
+	TerminationAgreementDocumentUrl *string
 
 	ActivatedAt   *time.Time
 	ActivatedById *string

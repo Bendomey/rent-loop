@@ -1,5 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import {
+	Circle,
 	CircleCheck,
 	CircleX,
 	EllipsisVertical,
@@ -141,6 +142,8 @@ export function PropertyTenantApplicationsModule() {
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
 						{getValue<string>() === 'TenantApplication.Status.InProgress' ? (
+							<Circle className="size-4 shrink-0 text-zinc-300" />
+						) : getValue<string>() === 'TenantApplication.Status.Completed' ? (
 							<CircleCheck className="fill-green-600 text-white" />
 						) : (
 							<CircleX className="fill-red-500 text-white" />
