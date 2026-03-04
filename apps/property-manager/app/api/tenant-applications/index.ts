@@ -132,8 +132,6 @@ export interface CreatePropertyTenantApplicationInput {
 	employer: string
 	occupation_address: string
 	proof_of_income_url: Nullable<string>
-
-	created_by_id: ClientUser['id']
 }
 
 export const createTenantApplication = async (
@@ -159,6 +157,7 @@ export const createTenantApplication = async (
 		if (error instanceof Error) {
 			throw error
 		}
+
 	}
 }
 

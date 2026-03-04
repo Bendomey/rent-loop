@@ -40,6 +40,116 @@ definitions:
     - total_amount
     - unit_amount
     type: object
+  handlers.AdminCreateTenantApplicationRequest:
+    properties:
+      current_address:
+        example: 123 Main St, Accra
+        type: string
+      date_of_birth:
+        example: "1990-01-01T00:00:00Z"
+        type: string
+      desired_unit_id:
+        example: b4d0243c-6581-4104-8185-d83a45ebe41b
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+      emergency_contact_name:
+        example: Jane Doe
+        type: string
+      emergency_contact_phone:
+        example: "+233281434579"
+        type: string
+      employer:
+        example: Acme Corp
+        type: string
+      employer_type:
+        enum:
+        - WORKER
+        - STUDENT
+        example: WORKER
+        type: string
+      first_name:
+        example: John
+        type: string
+      gender:
+        enum:
+        - MALE
+        - FEMALE
+        example: MALE
+        type: string
+      id_back_url:
+        example: https://example.com/id_back.jpg
+        type: string
+      id_front_url:
+        example: https://example.com/id_front.jpg
+        type: string
+      id_number:
+        example: GHA-123456789
+        type: string
+      id_type:
+        enum:
+        - GHANA_CARD
+        - NATIONAL_ID
+        - PASSPORT
+        - DRIVER_LICENSE
+        example: GHANA_CARD
+        type: string
+      last_name:
+        example: Doe
+        type: string
+      marital_status:
+        enum:
+        - SINGLE
+        - MARRIED
+        - DIVORCED
+        - WIDOWED
+        example: SINGLE
+        type: string
+      nationality:
+        example: Ghanaian
+        type: string
+      occupation:
+        example: Software Engineer
+        type: string
+      occupation_address:
+        example: 456 Tech Ave, Accra
+        type: string
+      other_names:
+        example: Michael
+        type: string
+      phone:
+        example: "+233281234569"
+        type: string
+      profile_photo_url:
+        example: https://example.com/photo.jpg
+        type: string
+      proof_of_income_url:
+        example: https://example.com/proof_of_income.jpg
+        type: string
+      relationship_to_emergency_contact:
+        example: Sister
+        type: string
+    required:
+    - current_address
+    - date_of_birth
+    - desired_unit_id
+    - emergency_contact_name
+    - emergency_contact_phone
+    - employer
+    - employer_type
+    - first_name
+    - gender
+    - id_number
+    - id_type
+    - last_name
+    - marital_status
+    - nationality
+    - occupation
+    - occupation_address
+    - phone
+    - relationship_to_emergency_contact
+    type: object
   handlers.AdminUpdateDocumentRequest:
     properties:
       content:
@@ -7165,7 +7275,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/handlers.CreateTenantApplicationRequest'
+          $ref: '#/definitions/handlers.AdminCreateTenantApplicationRequest'
       produces:
       - application/json
       responses:
@@ -7943,6 +8053,43 @@ paths:
       summary: Verify a signing token
       tags:
       - Signing
+  /api/v1/tenant-applications:
+    post:
+      consumes:
+      - application/json
+      description: Create a new tenant application
+      parameters:
+      - description: Create Tenant Application Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateTenantApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Tenant application created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputTenantApplication'
+            type: object
+        "400":
+          description: Error occurred when creating a tenant application
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Create a new tenant application
+      tags:
+      - TenantApplication
   /api/v1/tenant-applications/{tenant_application_id}:
     get:
       consumes:
