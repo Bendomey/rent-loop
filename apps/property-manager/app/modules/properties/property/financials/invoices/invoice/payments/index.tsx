@@ -44,7 +44,7 @@ export function PropertyFinancialsPaymentItemsModule({
 				cell: ({ row }) => {
 					return (
 						<div className="">
-							<span className="truncate text-xs text-blue-600 hover:underline">
+							<span className="truncate text-xs text-blue-600">
 								{row.original.reference}
 							</span>
 						</div>
@@ -66,14 +66,12 @@ export function PropertyFinancialsPaymentItemsModule({
 				header: 'Status',
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
-						{getValue<string>() === 'Payment.Status.Pending' ? (
+						{getValue<string>() === 'PENDING' ? (
 							<Clock className="text-gray-500" />
-						) : getValue<string>() === 'Payment.Status.Successful' ? (
+						) : getValue<string>() === 'SUCCESSFUL' ? (
 							<CircleCheck className="text-green-600" />
-						) : getValue<string>() === 'Payment.Status.Failed' ? (
+						) : getValue<string>() === 'FAILED' ? (
 							<CircleX className="text-red-600" />
-						) : getValue<string>() === 'Payment.Status.Expired' ? (
-							<CircleAlert className="text-amber-600" />
 						) : (
 							<CircleHelp className="text-gray-400" />
 						)}

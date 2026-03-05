@@ -3,11 +3,7 @@ interface Payment {
 	amount: number
 	reference: string
 	payment_method: 'CHECK' | 'MOMO' | 'CARD' | 'BANK_DIRECT' | 'OFFLINE'
-	status:
-		| 'Payment.Status.Pending'
-		| 'Payment.Status.Successful'
-		| 'Payment.Status.Failed'
-		| 'Payment.Status.Expired'
+	status: 'PENDING' | 'SUCCESSFUL' | 'FAILED'
 	email: string
 	tenant_id: string
 	tenant: Partial<Tenant>
