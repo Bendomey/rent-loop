@@ -11,13 +11,13 @@ export function TenantPaymentSectionCards({ data }: Props) {
 			<StatCard
 				title="Tax & Fees"
 				value={formatAmount(data?.taxes || 0)}
-				description="Due on 1 Feb 2025"
+				description="Includes all applicable taxes and fees"
 			/>
 
 			<StatCard
 				title="Sub Total"
 				value={formatAmount(data?.sub_total || 0)}
-				description="Overdue balance"
+				description="Subtotal before taxes and fees"
 			/>
 
 			<StatCard
