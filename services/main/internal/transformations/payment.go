@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
-	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/gofrs/uuid"
 )
 
@@ -56,7 +55,7 @@ func DBPaymentToRest(p *models.Payment) any {
 	return data
 }
 
-func DBPaymentsToRest(services services.Services, payments *[]models.Payment) []interface{} {
+func DBPaymentsToRest(payments *[]models.Payment) []interface{} {
 	if payments == nil {
 		return []interface{}{}
 	}

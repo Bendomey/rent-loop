@@ -49,6 +49,7 @@ type OutputInvoice struct {
 	AllowedPaymentRails []string `json:"allowed_payment_rails" example:"MOMO,BANK"`
 
 	LineItems []OutputInvoiceLineItem `json:"line_items"`
+	Payment []OutputPayment `json:"payments"`
 
 	CreatedAt time.Time `json:"created_at" example:"2024-06-01T09:00:00Z"`
 	UpdatedAt time.Time `json:"updated_at" example:"2024-06-10T09:00:00Z"`
@@ -89,6 +90,7 @@ func DBInvoiceToRest(i *models.Invoice) any {
 		"voided_at":                      i.VoidedAt,
 		"allowed_payment_rails":          []string(i.AllowedPaymentRails),
 		"line_items":                     DBInvoiceLineItemsToRest(i.LineItems),
+		"payments": 					 DBPaymentsToRest(&i.Payments),
 		"created_at":                     i.CreatedAt,
 		"updated_at":                     i.UpdatedAt,
 	}
