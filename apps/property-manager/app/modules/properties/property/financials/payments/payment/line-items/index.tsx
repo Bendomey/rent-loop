@@ -19,7 +19,7 @@ import { formatAmount } from '~/lib/format-amount'
 import { useProperty } from '~/providers/property-provider'
 
 interface Props {
-	data: InvoiceLineItem[]
+	data: Invoice
 	isLoading?: boolean
 	error?: string
 	refetch?: () => void
@@ -142,7 +142,7 @@ export function PropertyFinancialsPaymentLineItemsModule({
 				</TypographyMuted>
 			</div>
 
-			<TenantPaymentSectionCards />
+			<TenantPaymentSectionCards data={data} />
 
 			<div className="bg-background space-y-5 rounded-lg border p-3 sm:p-5">
 				<div className="h-full w-full">
@@ -152,8 +152,8 @@ export function PropertyFinancialsPaymentLineItemsModule({
 						refetch={refetch}
 						error={error ? 'Failed to load payments.' : undefined}
 						dataResponse={{
-							rows: data?.length ? data : [],
-							total: data?.length ?? 0,
+							rows: data?.line_items || [],
+							total: data?.line_items?.length ?? 0,
 							page: 1,
 							page_size: 1000, // show all since pagination is done
 							order: 'desc',
@@ -162,9 +162,9 @@ export function PropertyFinancialsPaymentLineItemsModule({
 							has_next_page: false,
 						}}
 						empty={{
-							message: 'No payments found',
+							message: 'No invoice items found',
 							description:
-								"Try adjusting your search to find what you're looking for.",
+								"There is currently no data to display.",
 						}}
 					/>
 				</div>

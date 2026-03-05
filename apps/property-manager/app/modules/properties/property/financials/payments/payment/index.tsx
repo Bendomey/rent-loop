@@ -5,84 +5,53 @@ import {
 	Pencil,
 	Send,
 } from 'lucide-react'
-import { useLocation, useParams } from 'react-router'
+import { useLoaderData } from 'react-router'
+import { PropertyFinancialsPaymentLineItemsModule } from './line-items'
 import { Badge } from '~/components/ui/badge'
 import { Card, CardContent, CardHeader } from '~/components/ui/card'
 import { Separator } from '~/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
-import { useProperty } from '~/providers/property-provider'
-import { formatAmount } from '~/lib/format-amount'
-import { PropertyFinancialsPaymentLineItemsModule } from './line-items'
 import { TypographyH3, TypographyMuted } from '~/components/ui/typography'
+import { formatAmount } from '~/lib/format-amount'
 import {
-	getInvoicePayeeTypeLabel,
+	getInvoiceAllowedRailsLabel,
 	getInvoicePayerTypeLabel,
 	getInvoiceStatusLabel,
 } from '~/lib/invoice'
+import type { loader } from '~/routes/_auth.properties.$propertyId.financials.payments.$paymentId'
 
-// TODO: fetch real payment data from API
-const payment: any = {
-	allowed_payment_rails: ['MOMO', 'BANK'],
-	code: 'INV-2024-0001',
-	context_type: 'LEASE_RENT',
-	created_at: '2024-06-01T09:00:00Z',
-	currency: 'GHS',
-	due_date: '2024-07-01T00:00:00Z',
-	id: '4fce5dc8-8114-4ab2-a94b-b4536c27f43b',
-	issued_at: '2024-06-15T00:00:00Z',
-	line_items: [
-		{
-			category: 'RENT',
-			id: '4fce5dc8-8114-4ab2-a94b-b4536c27f43b',
-			label: 'January Rent',
-			quantity: 1,
-			total_amount: 100000,
-			created_at: '2024-06-01T09:00:00Z',
-			unit_amount: 100000,
-			updated_at: '2024-06-01T09:00:00Z',
-			currency: 'GHS',
-			invoice_id: '4fce5dc8-8114-4ab2-a94b-b4536c27f43b',
-		},
-	],
-	paid_at: '2024-06-20T00:00:00Z',
-	payee_type: 'PROPERTY_OWNER',
-	payer_type: 'TENANT',
-	status: 'DRAFT',
-	sub_total: 100000,
-	taxes: 0,
-	total_amount: 100000,
-	voided_at: '2024-06-25T00:00:00Z',
-}
+
 
 export function PropertyFinancialsPaymentModule() {
+		const { payment: data } = useLoaderData<typeof loader>()
 	return (
 		<div className="m-6 grid grid-cols-12 gap-10">
 			<div className="col-span-3">
 				<Card className="shadow-sm">
-					<CardHeader>
+					<CardHeader >
 						<Badge
 							variant="outline"
 							className="w-fit gap-1 px-2 py-1 text-xs font-medium"
 						>
-							{payment.status === 'DRAFT' ? (
+							{data?.status === 'DRAFT' ? (
 								<Pencil className="text-slate-600" size={14} />
-							) : payment.status === 'ISSUED' ? (
+							) : data?.status === 'ISSUED' ? (
 								<Send className="text-blue-600" size={14} />
-							) : payment.status === 'PAID' ? (
+							) : data?.status === 'PAID' ? (
 								<CircleCheck className="fill-green-600 text-white" size={14} />
-							) : payment.status === 'PARTIALLY_PAID' ? (
+							) : data?.status === 'PARTIALLY_PAID' ? (
 								<CircleDollarSign className="text-yellow-600" size={14} />
 							) : (
 								<CircleX className="fill-red-500 text-white" size={14} />
 							)}
-							{getInvoiceStatusLabel(payment.status)}
+							{getInvoiceStatusLabel(data?.status || 'DRAFT')}
 						</Badge>
 						<div className="pt-2">
 							<h2 className="text-xl font-semibold tracking-tight">
-								Invoice {payment.code}
+								Invoice {data?.code}
 							</h2>
 							<p className="text-muted-foreground text-sm">
-								{payment.context_type?.replace('_', ' ')}
+								{data?.context_type?.replace('_', ' ')}
 							</p>
 						</div>
 					</CardHeader>
@@ -91,7 +60,7 @@ export function PropertyFinancialsPaymentModule() {
 						{/* totals */}
 						<div>
 							<div className="space-y-1 pt-4 pb-2">
-								<TypographyMuted className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+								<TypographyMuted className="text-muted-foreground text-xs font-semibold tracking-wide">
 									Payment Summary
 								</TypographyMuted>
 								<Separator />
@@ -99,16 +68,16 @@ export function PropertyFinancialsPaymentModule() {
 							<div className="bg-muted/40 space-y-2 rounded-lg p-4">
 								<div className="text-muted-foreground flex justify-between">
 									<span>Tax</span>
-									<span>{formatAmount(payment.taxes || 0)}</span>
+									<span>{formatAmount(data?.taxes || 0)}</span>
 								</div>
 								<div className="text-muted-foreground flex justify-between">
 									<span>Sub total</span>
-									<span>{formatAmount(payment.sub_total || 0)}</span>
+									<span>{formatAmount(data?.sub_total || 0)}</span>
 								</div>
 								<div className="flex justify-between">
 									<span className="text-muted-foreground">Total</span>
 									<span className="font-semibold">
-										{formatAmount(payment.total_amount || 0)}
+										{formatAmount(data?.total_amount || 0)}
 									</span>
 								</div>
 							</div>
@@ -116,36 +85,32 @@ export function PropertyFinancialsPaymentModule() {
 
 						{/* metadata */}
 						<div className="grid grid-cols-1 gap-4 text-sm">
-							<div className="space-y-1 pt-4">
-								<TypographyMuted className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+							<div className="space-y-1 pt-2">
+								<TypographyMuted className="text-muted-foreground text-xs font-semibold tracking-wide">
 									Payment Details
 								</TypographyMuted>
 								<Separator />
 							</div>
+							<div className="grid grid-cols-2 gap-6">
 							<div>
 								<TypographyMuted>Rails</TypographyMuted>
 								<p className="font-medium text-zinc-600">
-									{payment.allowed_payment_rails?.join(', ')}
+									{data?.allowed_payment_rails
+  ?.map((rail: Invoice["allowed_payment_rails"][number]) => getInvoiceAllowedRailsLabel(rail))
+  .join(', ')}
 								</p>
 							</div>
 
-							<div className="grid grid-cols-2 gap-4">
 								<div>
 									<TypographyMuted>Payer Type</TypographyMuted>
 									<p className="font-medium text-zinc-600">
-										{getInvoicePayerTypeLabel(payment.payer_type)}
-									</p>
-								</div>
-								<div>
-									<TypographyMuted>Payee Type</TypographyMuted>
-									<p className="font-medium text-zinc-600">
-										{getInvoicePayeeTypeLabel(payment.payee_type)}
+										{getInvoicePayerTypeLabel(data?.payer_type || 'TENANT')}
 									</p>
 								</div>
 							</div>
 
 							<div className="space-y-1 pt-4">
-								<TypographyMuted className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+								<TypographyMuted className="text-muted-foreground text-xs font-semibold tracking-wide">
 									Dates
 								</TypographyMuted>
 								<Separator />
@@ -153,33 +118,29 @@ export function PropertyFinancialsPaymentModule() {
 							<div className="flex justify-between">
 								<TypographyMuted>Issued</TypographyMuted>
 								<p className="font-medium">
-									{payment.issued_at &&
-										new Date(payment.issued_at).toLocaleDateString()}
+									{data?.issued_at ?
+										new Date(data?.issued_at).toLocaleDateString() : 'N/A'}
 								</p>
 							</div>
 							<div className="flex justify-between">
 								<TypographyMuted>Due</TypographyMuted>
 								<p className="font-medium">
-									{payment.due_date &&
-										new Date(payment.due_date).toLocaleDateString()}
+									{data?.due_date ?
+										new Date(data?.due_date).toLocaleDateString() : 'N/A'}
 								</p>
 							</div>
-							{payment.paid_at && (
 								<div className="flex justify-between">
 									<TypographyMuted>Paid</TypographyMuted>
 									<p className="font-medium">
-										{new Date(payment.paid_at).toLocaleDateString()}
+										{data?.paid_at ? new Date(data?.paid_at).toLocaleDateString() : 'Not paid'}
 									</p>
 								</div>
-							)}
-							{payment.voided_at && (
 								<div className="flex justify-between">
 									<TypographyMuted>Voided</TypographyMuted>
 									<p className="font-medium">
-										{new Date(payment.voided_at).toLocaleDateString()}
+										{data?.voided_at ? new Date(data?.voided_at).toLocaleDateString() : 'N/A'}
 									</p>
 								</div>
-							)}
 						</div>
 					</CardContent>
 				</Card>
@@ -187,20 +148,18 @@ export function PropertyFinancialsPaymentModule() {
 			<div className="col-span-9">
 				<Tabs defaultValue="payments" className="w-full">
 					<TabsList>
-						<TabsTrigger value="payments">Payments</TabsTrigger>
+						<TabsTrigger value="payments">Invioce Items</TabsTrigger>
 						<TabsTrigger value="payer">Payer</TabsTrigger>
-						<TabsTrigger value="payee">Payee</TabsTrigger>
 					</TabsList>
 					<TabsContent value="payments">
-						<PropertyFinancialsPaymentLineItemsModule
-							data={payment.line_items}
-						/>
+						{data && (
+							<PropertyFinancialsPaymentLineItemsModule
+								data={data}
+							/>
+						)}
 					</TabsContent>
 					<TabsContent value="payer">
 						<TypographyH3 className="pt-4">Payer Details</TypographyH3>
-					</TabsContent>
-					<TabsContent value="payee">
-						<TypographyH3 className="pt-4">Payee Details</TypographyH3>
 					</TabsContent>
 				</Tabs>
 			</div>

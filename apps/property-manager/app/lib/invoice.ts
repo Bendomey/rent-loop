@@ -51,3 +51,17 @@ export function getInvoiceContextTypeLabel(
 
 	return labelMap[context_type] ?? context_type
 }
+
+
+export function getInvoiceAllowedRailsLabel(
+	payment_method: Invoice['allowed_payment_rails'][number],
+): string {
+	const labelMap: Record<Invoice['allowed_payment_rails'][number], string> = {
+		CARD: 'Credit Card',
+		BANK_TRANSFER: 'Bank Transfer',
+		OFFLINE: 'Cash',
+		MOMO: 'Momo',
+	}
+
+	return labelMap[payment_method] ?? payment_method
+}
