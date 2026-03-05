@@ -10,7 +10,7 @@ import { PropertyFinancialsPaymentModule } from '~/modules'
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const clientUserProperty = context.get(propertyContext)
-const baseUrl = environmentVariables().API_ADDRESS
+	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const authToken = authSession.get('authToken')
 	const payment_id = params.paymentId
@@ -26,7 +26,7 @@ const baseUrl = environmentVariables().API_ADDRESS
 		return {
 			origin: getDomainUrl(request),
 			payment: payment,
-			clientUserProperty
+			clientUserProperty,
 		}
 	} catch {
 		throw new Error('Failed to load payment')

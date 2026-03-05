@@ -52,7 +52,6 @@ export function getInvoiceContextTypeLabel(
 	return labelMap[context_type] ?? context_type
 }
 
-
 export function getInvoiceAllowedRailsLabel(
 	payment_method: Invoice['allowed_payment_rails'][number],
 ): string {

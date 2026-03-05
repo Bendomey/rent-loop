@@ -163,8 +163,7 @@ export function PropertyFinancialsPaymentLineItemsModule({
 						}}
 						empty={{
 							message: 'No invoice items found',
-							description:
-								"There is currently no data to display.",
+							description: 'There is currently no data to display.',
 						}}
 					/>
 				</div>

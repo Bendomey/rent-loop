@@ -20,15 +20,13 @@ import {
 } from '~/lib/invoice'
 import type { loader } from '~/routes/_auth.properties.$propertyId.financials.payments.$paymentId'
 
-
-
 export function PropertyFinancialsPaymentModule() {
-		const { payment: data } = useLoaderData<typeof loader>()
+	const { payment: data } = useLoaderData<typeof loader>()
 	return (
 		<div className="m-6 grid grid-cols-12 gap-10">
 			<div className="col-span-3">
 				<Card className="shadow-sm">
-					<CardHeader >
+					<CardHeader>
 						<Badge
 							variant="outline"
 							className="w-fit gap-1 px-2 py-1 text-xs font-medium"
@@ -92,14 +90,16 @@ export function PropertyFinancialsPaymentModule() {
 								<Separator />
 							</div>
 							<div className="grid grid-cols-2 gap-6">
-							<div>
-								<TypographyMuted>Rails</TypographyMuted>
-								<p className="font-medium text-zinc-600">
-									{data?.allowed_payment_rails
-  ?.map((rail: Invoice["allowed_payment_rails"][number]) => getInvoiceAllowedRailsLabel(rail))
-  .join(', ')}
-								</p>
-							</div>
+								<div>
+									<TypographyMuted>Rails</TypographyMuted>
+									<p className="font-medium text-zinc-600">
+										{data?.allowed_payment_rails
+											?.map((rail: Invoice['allowed_payment_rails'][number]) =>
+												getInvoiceAllowedRailsLabel(rail),
+											)
+											.join(', ')}
+									</p>
+								</div>
 
 								<div>
 									<TypographyMuted>Payer Type</TypographyMuted>
@@ -118,29 +118,35 @@ export function PropertyFinancialsPaymentModule() {
 							<div className="flex justify-between">
 								<TypographyMuted>Issued</TypographyMuted>
 								<p className="font-medium">
-									{data?.issued_at ?
-										new Date(data?.issued_at).toLocaleDateString() : 'N/A'}
+									{data?.issued_at
+										? new Date(data?.issued_at).toLocaleDateString()
+										: 'N/A'}
 								</p>
 							</div>
 							<div className="flex justify-between">
 								<TypographyMuted>Due</TypographyMuted>
 								<p className="font-medium">
-									{data?.due_date ?
-										new Date(data?.due_date).toLocaleDateString() : 'N/A'}
+									{data?.due_date
+										? new Date(data?.due_date).toLocaleDateString()
+										: 'N/A'}
 								</p>
 							</div>
-								<div className="flex justify-between">
-									<TypographyMuted>Paid</TypographyMuted>
-									<p className="font-medium">
-										{data?.paid_at ? new Date(data?.paid_at).toLocaleDateString() : 'Not paid'}
-									</p>
-								</div>
-								<div className="flex justify-between">
-									<TypographyMuted>Voided</TypographyMuted>
-									<p className="font-medium">
-										{data?.voided_at ? new Date(data?.voided_at).toLocaleDateString() : 'N/A'}
-									</p>
-								</div>
+							<div className="flex justify-between">
+								<TypographyMuted>Paid</TypographyMuted>
+								<p className="font-medium">
+									{data?.paid_at
+										? new Date(data?.paid_at).toLocaleDateString()
+										: 'Not paid'}
+								</p>
+							</div>
+							<div className="flex justify-between">
+								<TypographyMuted>Voided</TypographyMuted>
+								<p className="font-medium">
+									{data?.voided_at
+										? new Date(data?.voided_at).toLocaleDateString()
+										: 'N/A'}
+								</p>
+							</div>
 						</div>
 					</CardContent>
 				</Card>
@@ -152,11 +158,7 @@ export function PropertyFinancialsPaymentModule() {
 						<TabsTrigger value="payer">Payer</TabsTrigger>
 					</TabsList>
 					<TabsContent value="payments">
-						{data && (
-							<PropertyFinancialsPaymentLineItemsModule
-								data={data}
-							/>
-						)}
+						{data && <PropertyFinancialsPaymentLineItemsModule data={data} />}
 					</TabsContent>
 					<TabsContent value="payer">
 						<TypographyH3 className="pt-4">Payer Details</TypographyH3>
