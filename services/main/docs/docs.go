@@ -11849,6 +11849,12 @@ const docTemplate = `{
                     "type": "string",
                     "example": "TENANT"
                 },
+                "payments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/transformations.OutputPayment"
+                    }
+                },
                 "status": {
                     "type": "string",
                     "example": "DRAFT"

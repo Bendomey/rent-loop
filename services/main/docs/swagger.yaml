@@ -2374,6 +2374,10 @@ definitions:
       payer_type:
         example: TENANT
         type: string
+      payments:
+        items:
+          $ref: '#/definitions/transformations.OutputPayment'
+        type: array
       status:
         example: DRAFT
         type: string
