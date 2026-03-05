@@ -2,7 +2,6 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { Building, EllipsisVertical } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link } from 'react-router'
-import { TenantPaymentSectionCards } from './cards'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -136,13 +135,11 @@ export function PropertyFinancialsPaymentLineItemsModule({
 	return (
 		<div className="mx-auto my-2 flex flex-col gap-4 sm:gap-6">
 			<div className="space-y-1">
-				<TypographyH4>All Payments</TypographyH4>
+				<TypographyH4>All Invoice Items</TypographyH4>
 				<TypographyMuted>
-					Monitor invoice payments, and manage overdue balances efficiently.
+					Monitor invoice items, and manage overdue balances efficiently.
 				</TypographyMuted>
 			</div>
-
-			<TenantPaymentSectionCards data={data} />
 
 			<div className="bg-background space-y-5 rounded-lg border p-3 sm:p-5">
 				<div className="h-full w-full">
@@ -150,7 +147,7 @@ export function PropertyFinancialsPaymentLineItemsModule({
 						columns={columns}
 						isLoading={isLoading}
 						refetch={refetch}
-						error={error ? 'Failed to load payments.' : undefined}
+						error={error ? 'Failed to load invoice items.' : undefined}
 						dataResponse={{
 							rows: data?.line_items || [],
 							total: data?.line_items?.length ?? 0,

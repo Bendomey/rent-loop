@@ -1,6 +1,6 @@
-import type { Route } from './+types/_auth.properties.$propertyId.financials.payments.$paymentId'
-import { getAuthSession } from '~/lib/actions/auth.session.server'
+import type { Route } from './+types/_auth.properties.$propertyId.financials.invoices.$invoiceId'
 import { getInvoiceForServer } from '~/api/invoices/server'
+import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
 
@@ -13,11 +13,11 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const authToken = authSession.get('authToken')
-	const payment_id = params.paymentId
+	const invoice_id = params.invoiceId
 
 	try {
-		const payment = await getInvoiceForServer(
-			{ invoice_id: payment_id },
+		const invoice = await getInvoiceForServer(
+			{ invoice_id: invoice_id },
 			{
 				authToken,
 				baseUrl,
@@ -25,17 +25,17 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 		)
 		return {
 			origin: getDomainUrl(request),
-			payment: payment,
+			invoice: invoice,
 			clientUserProperty,
 		}
 	} catch {
-		throw new Error('Failed to load payment')
+		throw new Error('Failed to load invoice payment')
 	}
 }
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `Payment | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
+		title: `Invoice Payment | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,

@@ -7,21 +7,23 @@ import {
 } from 'lucide-react'
 import { useLoaderData } from 'react-router'
 import { PropertyFinancialsPaymentLineItemsModule } from './line-items'
+import { PropertyFinancialsPaymentPayerModule } from './payer'
+import { PropertyFinancialsPaymentItemsModule } from './payments'
 import { Badge } from '~/components/ui/badge'
 import { Card, CardContent, CardHeader } from '~/components/ui/card'
 import { Separator } from '~/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
-import { TypographyH3, TypographyMuted } from '~/components/ui/typography'
+import { TypographyMuted } from '~/components/ui/typography'
 import { formatAmount } from '~/lib/format-amount'
 import {
 	getInvoiceAllowedRailsLabel,
 	getInvoicePayerTypeLabel,
 	getInvoiceStatusLabel,
 } from '~/lib/invoice'
-import type { loader } from '~/routes/_auth.properties.$propertyId.financials.payments.$paymentId'
+import type { loader } from '~/routes/_auth.properties.$propertyId.financials.invoices.$invoiceId'
 
 export function PropertyFinancialsPaymentModule() {
-	const { payment: data } = useLoaderData<typeof loader>()
+	const { invoice: data } = useLoaderData<typeof loader>()
 	return (
 		<div className="m-6 grid grid-cols-12 gap-10">
 			<div className="col-span-3">
@@ -154,14 +156,21 @@ export function PropertyFinancialsPaymentModule() {
 			<div className="col-span-9">
 				<Tabs defaultValue="payments" className="w-full">
 					<TabsList>
-						<TabsTrigger value="payments">Invioce Items</TabsTrigger>
-						<TabsTrigger value="payer">Payer</TabsTrigger>
+						<TabsTrigger value="payments">Payments</TabsTrigger>
+						<TabsTrigger value="line-items">Invoice Items</TabsTrigger>
+						{data?.payer_type === 'TENANT' ||
+						data?.payer_type === 'TENANT_APPLICATION' ? (
+							<TabsTrigger value="payer">Payer Details</TabsTrigger>
+						) : null}
 					</TabsList>
 					<TabsContent value="payments">
+						{data && <PropertyFinancialsPaymentItemsModule data={data} />}
+					</TabsContent>
+					<TabsContent value="line-items">
 						{data && <PropertyFinancialsPaymentLineItemsModule data={data} />}
 					</TabsContent>
 					<TabsContent value="payer">
-						<TypographyH3 className="pt-4">Payer Details</TypographyH3>
+						{data && <PropertyFinancialsPaymentPayerModule data={data} />}
 					</TabsContent>
 				</Tabs>
 			</div>

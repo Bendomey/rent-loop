@@ -9,7 +9,7 @@ export const getInvoiceForServer = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<Invoice>>(
-			`${apiConfig.baseUrl}/v1/admin/invoices/${props.invoice_id}`,
+			`${apiConfig.baseUrl}/v1/admin/invoices/${props.invoice_id}?populate=ContextTenantApplication`,
 			{
 				...apiConfig,
 			},

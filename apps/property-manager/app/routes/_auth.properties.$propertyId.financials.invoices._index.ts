@@ -1,4 +1,4 @@
-import type { Route } from './+types/_auth.properties.$propertyId.financials.payments._index'
+import type { Route } from './+types/_auth.properties.$propertyId.financials.invoices._index'
 import { propertyContext } from '~/lib/actions/property.context.server'
 
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
@@ -16,7 +16,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `Payments | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
+		title: `Invoice Payments | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,

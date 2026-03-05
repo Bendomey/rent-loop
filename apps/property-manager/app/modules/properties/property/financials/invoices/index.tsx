@@ -74,7 +74,7 @@ export function PropertyFinancialsPaymentsModule() {
 					return (
 						<div className="">
 							<Link
-								to={`/properties/${clientUserProperty?.property_id}/financials/payments/${row.original.id}`}
+								to={`/properties/${clientUserProperty?.property_id}/financials/invoices/${row.original.id}`}
 								aria-label={`View details for application`}
 							>
 								<span className="truncate text-xs text-blue-600 hover:underline">
@@ -168,7 +168,7 @@ export function PropertyFinancialsPaymentsModule() {
 
 							<DropdownMenuContent align="end" className="32">
 								<Link
-									to={`/properties/${clientUserProperty?.property?.id}/financials/payments/${row.original.id}`}
+									to={`/properties/${clientUserProperty?.property?.id}/financials/invoices/${row.original.id}`}
 								>
 									<DropdownMenuItem>View</DropdownMenuItem>
 								</Link>
@@ -184,10 +184,10 @@ export function PropertyFinancialsPaymentsModule() {
 	return (
 		<div className="mx-6 my-6 flex flex-col gap-4 sm:gap-6">
 			<div className="space-y-1">
-				<TypographyH4>Manage Payments</TypographyH4>
+				<TypographyH4>Manage Invoices & Payments</TypographyH4>
 				<TypographyMuted>
-					Monitor tenant payments, track statuses, and manage overdue balances
-					efficiently.
+					View and manage all rent payments, invoice details, and payment
+					history in one place.
 				</TypographyMuted>
 			</div>
 
