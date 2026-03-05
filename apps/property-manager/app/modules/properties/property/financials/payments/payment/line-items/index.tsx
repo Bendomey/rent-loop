@@ -155,7 +155,7 @@ export function PropertyFinancialsPaymentLineItemsModule({
 							rows: data?.line_items || [],
 							total: data?.line_items?.length ?? 0,
 							page: 1,
-							page_size: 1000, // show all since pagination is done
+							page_size: 1000, // show all
 							order: 'desc',
 							order_by: 'created_at',
 							has_prev_page: false,
