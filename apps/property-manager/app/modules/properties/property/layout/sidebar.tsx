@@ -112,8 +112,8 @@ export function PropertySidebar({
 				icon: DollarSign,
 				items: [
 					{
-						title: 'Payments',
-						url: '/payments',
+						title: 'Invoice Payments',
+						url: '/invoices',
 					},
 					{
 						title: 'Expenses',

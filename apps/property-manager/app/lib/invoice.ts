@@ -27,6 +27,17 @@ export function getInvoicePayerTypeLabel(
 	return labelMap[payer_type] ?? payer_type
 }
 
+export function getInvoicePayeeTypeLabel(
+	payee_type: Invoice['payee_type'],
+): string {
+	const labelMap: Record<Invoice['payee_type'], string> = {
+		RENTLOOP: 'System',
+		PROPERTY_OWNER: 'Owner',
+	}
+
+	return labelMap[payee_type] ?? payee_type
+}
+
 export function getInvoiceContextTypeLabel(
 	context_type: Invoice['context_type'],
 ): string {
@@ -39,4 +50,17 @@ export function getInvoiceContextTypeLabel(
 	}
 
 	return labelMap[context_type] ?? context_type
+}
+
+export function getInvoiceAllowedRailsLabel(
+	payment_method: Invoice['allowed_payment_rails'][number],
+): string {
+	const labelMap: Record<Invoice['allowed_payment_rails'][number], string> = {
+		CARD: 'Credit Card',
+		BANK_TRANSFER: 'Bank Transfer',
+		OFFLINE: 'Cash',
+		MOMO: 'Momo',
+	}
+
+	return labelMap[payment_method] ?? payment_method
 }
