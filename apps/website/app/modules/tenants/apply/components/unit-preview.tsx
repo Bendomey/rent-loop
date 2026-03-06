@@ -114,7 +114,9 @@ export function UnitPreview({ unit }: { unit?: PropertyUnit }) {
 						<div className="flex items-center justify-between rounded-lg bg-white p-3">
 							<span className="text-slate-600">Rent Fee:</span>
 							<span className="font-semibold text-slate-900">
-								{formatAmount(convertPesewasToCedis(unit?.rent_fee || 0))}
+								{unit?.rent_fee != null
+									? formatAmount(convertPesewasToCedis(unit.rent_fee))
+									: '—'}
 							</span>
 						</div>
 						<div className="flex items-center justify-between rounded-lg bg-white p-3">
