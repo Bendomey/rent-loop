@@ -209,7 +209,7 @@ export function Step3() {
 								<FormDescription>
 									By clicking submit, you agree to our{' '}
 									<a className='underline hover:text-rose-700' href={`${rentLoopWebsiteUrl}/terms`}>Terms of Service</a> and{' '}
-									<a className='underline hover:text-rose-700' href={`${rentLoopWebsiteUrl}/privacy`}>Privacy Policy</a>.
+									<a className='underline hover:text-rose-700' href={`${rentLoopWebsiteUrl}/privacy-policy`}>Privacy Policy</a>.
 								</FormDescription>
 							</FormItem>
 						)}
