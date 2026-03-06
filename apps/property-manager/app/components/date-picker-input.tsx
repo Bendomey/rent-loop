@@ -8,10 +8,13 @@ import { cn } from '~/lib/utils'
 interface Props {
 	value: Date | undefined
 	onChange: (date: Date | undefined) => void
+	disabled?: (date: Date) => boolean
 	placeholder?: string
+	startMonth?: Date
+	endMonth?: Date
 }
 
-export function DatePickerInput({ value, onChange, placeholder }: Props) {
+export function DatePickerInput({ value, onChange, disabled, placeholder, startMonth, endMonth }: Props) {
 	const { isOpened, setIsOpened } = useDisclosure()
 	return (
 		<Popover open={isOpened} onOpenChange={setIsOpened}>
@@ -33,10 +36,13 @@ export function DatePickerInput({ value, onChange, placeholder }: Props) {
 					mode="single"
 					selected={value}
 					captionLayout="dropdown"
+					startMonth={startMonth}
+					endMonth={endMonth}
 					onSelect={(date) => {
 						onChange(date)
 						setIsOpened(false)
 					}}
+					disabled={disabled}
 				/>
 			</PopoverContent>
 		</Popover>

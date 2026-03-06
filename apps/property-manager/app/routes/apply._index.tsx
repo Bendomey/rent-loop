@@ -11,6 +11,7 @@ import { ApplyModule } from '~/modules'
 export async function loader({ request }: Route.LoaderArgs) {
 	return {
 		origin: getDomainUrl(request),
+		rentLoopWebsiteUrl: environmentVariables().RENTLOOP_WEBSITE_URL,
 	}
 }
 
