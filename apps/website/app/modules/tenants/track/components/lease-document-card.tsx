@@ -63,9 +63,7 @@ export function LeaseDocumentCard({ status, signingUrl, documentUrl }: Props) {
 	if (!status) {
 		return (
 			<div className="rounded-lg border bg-white p-6">
-				<h3 className="text-sm font-semibold text-slate-900">
-					Lease Document
-				</h3>
+				<h3 className="text-sm font-semibold text-slate-900">Lease Document</h3>
 				<p className="mt-3 text-sm text-slate-400">
 					No lease document has been created yet
 				</p>
@@ -78,9 +76,7 @@ export function LeaseDocumentCard({ status, signingUrl, documentUrl }: Props) {
 	return (
 		<div className="rounded-lg border bg-white p-6">
 			<div className="flex items-center justify-between">
-				<h3 className="text-sm font-semibold text-slate-900">
-					Lease Document
-				</h3>
+				<h3 className="text-sm font-semibold text-slate-900">Lease Document</h3>
 				<span
 					className={cn(
 						'rounded-full px-2.5 py-0.5 text-xs font-medium',
@@ -121,19 +117,13 @@ export function LeaseDocumentCard({ status, signingUrl, documentUrl }: Props) {
 						rel="noopener noreferrer"
 						className="flex-1"
 					>
-						<Button
-							variant="outline"
-							className="w-full gap-2"
-						>
+						<Button variant="outline" className="w-full gap-2">
 							<ExternalLink className="h-4 w-4" />
 							View Document
 						</Button>
 					</a>
 					<a href={documentUrl} download className="flex-1">
-						<Button
-							variant="outline"
-							className="w-full gap-2"
-						>
+						<Button variant="outline" className="w-full gap-2">
 							<Download className="h-4 w-4" />
 							Download
 						</Button>

@@ -19,9 +19,7 @@ export function PaymentInfo({ invoice }: Props) {
 	if (!invoice) {
 		return (
 			<div className="rounded-lg border bg-white p-6">
-				<h3 className="text-sm font-semibold text-slate-900">
-					Payment
-				</h3>
+				<h3 className="text-sm font-semibold text-slate-900">Payment</h3>
 				<p className="mt-3 text-sm text-slate-400">
 					No payment information yet
 				</p>
@@ -32,9 +30,7 @@ export function PaymentInfo({ invoice }: Props) {
 	return (
 		<div className="rounded-lg border bg-white p-6">
 			<div className="flex items-center justify-between">
-				<h3 className="text-sm font-semibold text-slate-900">
-					Payment
-				</h3>
+				<h3 className="text-sm font-semibold text-slate-900">Payment</h3>
 				<span
 					className={cn(
 						'rounded-full px-2.5 py-0.5 text-xs font-medium',
@@ -48,9 +44,7 @@ export function PaymentInfo({ invoice }: Props) {
 			<div className="mt-3 space-y-1 text-sm text-slate-500">
 				<p>
 					Invoice:{' '}
-					<span className="font-medium text-slate-700">
-						{invoice.code}
-					</span>
+					<span className="font-medium text-slate-700">{invoice.code}</span>
 				</p>
 				{invoice.due_date && (
 					<p>
@@ -77,17 +71,13 @@ export function PaymentInfo({ invoice }: Props) {
 						<thead>
 							<tr className="border-b text-left text-xs text-slate-400">
 								<th className="pb-2 font-medium">Item</th>
-								<th className="pb-2 text-right font-medium">
-									Amount
-								</th>
+								<th className="pb-2 text-right font-medium">Amount</th>
 							</tr>
 						</thead>
 						<tbody className="divide-y">
 							{invoice.line_items.map((item, idx) => (
 								<tr key={idx}>
-									<td className="py-2 text-slate-600">
-										{item.label}
-									</td>
+									<td className="py-2 text-slate-600">{item.label}</td>
 									<td className="py-2 text-right text-slate-700">
 										{formatAmount(item.total_amount)}
 									</td>
@@ -96,9 +86,7 @@ export function PaymentInfo({ invoice }: Props) {
 						</tbody>
 						<tfoot>
 							<tr className="border-t">
-								<td className="pt-2 font-semibold text-slate-900">
-									Total
-								</td>
+								<td className="pt-2 font-semibold text-slate-900">Total</td>
 								<td className="pt-2 text-right font-semibold text-slate-900">
 									{formatAmount(invoice.total_amount)}
 								</td>

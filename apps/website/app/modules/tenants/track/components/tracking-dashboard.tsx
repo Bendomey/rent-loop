@@ -8,7 +8,6 @@ import { APP_NAME } from '~/lib/constants'
 import { formatAmount } from '~/lib/format-amount'
 import { cn } from '~/lib/utils'
 
-
 interface Props {
 	application: TrackingApplication
 	code: string
@@ -44,13 +43,9 @@ export function TrackingDashboard({ application, code }: Props) {
 						<span className="text-2xl font-extrabold text-rose-700">
 							{APP_NAME.slice(0, 4)}
 						</span>
-						<span className="text-2xl font-extrabold">
-							{APP_NAME.slice(4)}
-						</span>
+						<span className="text-2xl font-extrabold">{APP_NAME.slice(4)}</span>
 					</div>
-					<span className="text-xs text-slate-400">
-						Application Tracker
-					</span>
+					<span className="text-xs text-slate-400">Application Tracker</span>
 				</div>
 			</header>
 
@@ -59,12 +54,8 @@ export function TrackingDashboard({ application, code }: Props) {
 				<div className="rounded-lg border bg-white p-6">
 					<div className="flex items-start justify-between">
 						<div>
-							<p className="text-xs font-medium text-slate-400">
-								Application
-							</p>
-							<p className="mt-0.5 text-lg font-bold text-slate-900">
-								#{code}
-							</p>
+							<p className="text-xs font-medium text-slate-400">Application</p>
+							<p className="mt-0.5 text-lg font-bold text-slate-900">#{code}</p>
 						</div>
 						<span
 							className={cn(
@@ -95,12 +86,7 @@ export function TrackingDashboard({ application, code }: Props) {
 						{application.desired_unit?.property?.address && (
 							<div className="flex items-center gap-2 text-sm text-slate-500">
 								<MapPin className="h-4 w-4" />
-								<span>
-									{
-										application.desired_unit.property
-											.address
-									}
-								</span>
+								<span>{application.desired_unit.property.address}</span>
 							</div>
 						)}
 
@@ -108,10 +94,7 @@ export function TrackingDashboard({ application, code }: Props) {
 							<div className="flex items-center gap-2 text-sm text-slate-500">
 								<Calendar className="h-4 w-4" />
 								<span>
-									Applied{' '}
-									{dayjs(application.created_at).format(
-										'MMM D, YYYY',
-									)}
+									Applied {dayjs(application.created_at).format('MMM D, YYYY')}
 								</span>
 							</div>
 						)}
@@ -119,9 +102,7 @@ export function TrackingDashboard({ application, code }: Props) {
 				</div>
 
 				{/* Progress checklist */}
-				<ApplicationChecklist
-					progress={application.checklist_progress}
-				/>
+				<ApplicationChecklist progress={application.checklist_progress} />
 
 				{/* Financial summary */}
 				<div className="rounded-lg border bg-white p-6">
@@ -140,26 +121,18 @@ export function TrackingDashboard({ application, code }: Props) {
 
 						{application.security_deposit_fee != null && (
 							<div className="flex justify-between">
-								<dt className="text-slate-500">
-									Security Deposit
-								</dt>
+								<dt className="text-slate-500">Security Deposit</dt>
 								<dd className="font-medium text-slate-700">
-									{formatAmount(
-										application.security_deposit_fee,
-									)}
+									{formatAmount(application.security_deposit_fee)}
 								</dd>
 							</div>
 						)}
 
 						{application.initial_deposit_fee != null && (
 							<div className="flex justify-between">
-								<dt className="text-slate-500">
-									Initial Deposit
-								</dt>
+								<dt className="text-slate-500">Initial Deposit</dt>
 								<dd className="font-medium text-slate-700">
-									{formatAmount(
-										application.initial_deposit_fee,
-									)}
+									{formatAmount(application.initial_deposit_fee)}
 								</dd>
 							</div>
 						)}
@@ -168,9 +141,9 @@ export function TrackingDashboard({ application, code }: Props) {
 							<div className="flex justify-between">
 								<dt className="text-slate-500">Move-in Date</dt>
 								<dd className="font-medium text-slate-700">
-									{dayjs(
-										application.desired_move_in_date,
-									).format('MMM D, YYYY')}
+									{dayjs(application.desired_move_in_date).format(
+										'MMM D, YYYY',
+									)}
 								</dd>
 							</div>
 						)}
@@ -185,7 +158,6 @@ export function TrackingDashboard({ application, code }: Props) {
 									</dd>
 								</div>
 							)}
-
 					</dl>
 				</div>
 
@@ -197,9 +169,7 @@ export function TrackingDashboard({ application, code }: Props) {
 				/>
 
 				{/* Payment info */}
-				<PaymentInfo
-					invoice={application.application_payment_invoice}
-				/>
+				<PaymentInfo invoice={application.application_payment_invoice} />
 			</main>
 		</div>
 	)

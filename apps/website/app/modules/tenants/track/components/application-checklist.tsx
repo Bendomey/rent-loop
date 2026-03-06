@@ -21,9 +21,7 @@ export function ApplicationChecklist({ progress }: Props) {
 	const completedCount = CHECKLIST_ITEMS.filter(
 		(item) => progress[item.key],
 	).length
-	const percentage = Math.round(
-		(completedCount / CHECKLIST_ITEMS.length) * 100,
-	)
+	const percentage = Math.round((completedCount / CHECKLIST_ITEMS.length) * 100)
 
 	return (
 		<div className="rounded-lg border bg-white p-6">
@@ -35,9 +33,7 @@ export function ApplicationChecklist({ progress }: Props) {
 					<div
 						className={cn(
 							'h-full rounded-full transition-all',
-							percentage === 100
-								? 'bg-green-500'
-								: 'bg-rose-500',
+							percentage === 100 ? 'bg-green-500' : 'bg-rose-500',
 						)}
 						style={{ width: `${percentage}%` }}
 					/>
@@ -63,9 +59,7 @@ export function ApplicationChecklist({ progress }: Props) {
 							<span
 								className={cn(
 									'text-sm',
-									done
-										? 'text-slate-700'
-										: 'text-slate-400',
+									done ? 'text-slate-700' : 'text-slate-400',
 								)}
 							>
 								{item.label}

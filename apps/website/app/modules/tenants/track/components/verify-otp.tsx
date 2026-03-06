@@ -2,10 +2,7 @@ import { ShieldCheck } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
-import {
-	useSendTrackingOtp,
-	useVerifyTrackingOtp,
-} from '~/api/tracking'
+import { useSendTrackingOtp, useVerifyTrackingOtp } from '~/api/tracking'
 import { Button } from '~/components/ui/button'
 import {
 	InputOTP,
@@ -97,9 +94,7 @@ export function VerifyOtp({ code, onVerified }: Props) {
 						<span className="text-4xl font-extrabold text-rose-700">
 							{APP_NAME.slice(0, 4)}
 						</span>
-						<span className="text-4xl font-extrabold">
-							{APP_NAME.slice(4)}
-						</span>
+						<span className="text-4xl font-extrabold">{APP_NAME.slice(4)}</span>
 					</div>
 				</div>
 
@@ -118,11 +113,9 @@ export function VerifyOtp({ code, onVerified }: Props) {
 								Verify your identity
 							</h1>
 							<p className="text-sm text-slate-600">
-								We&apos;ll send a verification code to the phone
-								number associated with application{' '}
-								<span className="font-semibold text-slate-900">
-									{code}
-								</span>
+								We&apos;ll send a verification code to the phone number
+								associated with application{' '}
+								<span className="font-semibold text-slate-900">{code}</span>
 							</p>
 						</div>
 
