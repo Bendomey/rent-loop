@@ -1,0 +1,18 @@
+---
+id: DRAFT-25
+title: 'Feature: Maintenance Requests'
+status: Draft
+assignee: []
+created_date: '2026-03-05 08:55'
+labels:
+  - frontend
+  - property-manager
+  - feature
+dependencies: []
+---
+
+## Description
+
+<!-- SECTION:DESCRIPTION:BEGIN -->
+Implement the full maintenance requests feature for property managers. Reference documentation and design: https://chatgpt.com/share/697f5257-b9a8-8008-9754-c412075d1833
+<!-- SECTION:DESCRIPTION:END -->
