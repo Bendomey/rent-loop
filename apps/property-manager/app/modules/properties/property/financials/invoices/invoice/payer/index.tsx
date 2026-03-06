@@ -1,9 +1,8 @@
-import { Mail, Phone, MapPin, Briefcase, User, Calendar } from 'lucide-react'
+import { Mail, Phone, MapPin, User, Calendar } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '~/components/ui/card'
 import { Separator } from '~/components/ui/separator'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { localizedDayjs } from '~/lib/date'
-import { formatAmount } from '~/lib/format-amount'
 
 interface Props {
 	data: Invoice
@@ -109,87 +108,6 @@ export function PropertyFinancialsPaymentPayerModule({ data }: Props) {
 				</CardContent>
 			</Card>
 
-			{/* Identity  */}
-			<Card>
-				<CardHeader>
-					<TypographyH4>Identity Details</TypographyH4>
-				</CardHeader>
-				<CardContent className="space-y-4">
-					<Separator />
-					<div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-						<InfoRow label="Nationality" value={tenant.nationality} />
-						<InfoRow label="ID Type" value={tenant.id_type || 'N/A'} />
-						<InfoRow label="ID Number" value={tenant.id_number} />
-					</div>
-				</CardContent>
-			</Card>
-
-			{/* Rental Details */}
-			{isTenantApplication && (
-				<Card>
-					<CardHeader>
-						<TypographyH4>Rental Details</TypographyH4>
-					</CardHeader>
-					<CardContent className="space-y-4">
-						<Separator />
-						<div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-							<InfoRow
-								label="Desired Move-in Date"
-								value={
-									tenantApplication?.desired_move_in_date
-										? localizedDayjs(
-												tenantApplication.desired_move_in_date,
-											).format('DD MMM YYYY')
-										: 'N/A'
-								}
-							/>
-							<InfoRow
-								label="Stay Duration"
-								value={
-									tenantApplication?.stay_duration
-										? `${tenantApplication.stay_duration} ${tenantApplication.stay_duration_frequency}`
-										: 'N/A'
-								}
-							/>
-							<InfoRow
-								label="Monthly Rent"
-								value={
-									formatAmount(tenantApplication?.rent_fee || 0) +
-									' ' +
-									tenantApplication?.rent_fee_currency
-								}
-							/>
-
-							<InfoRow
-								label="Payment Frequency"
-								value={tenantApplication?.payment_frequency || 'N/A'}
-							/>
-
-							{tenantApplication?.initial_deposit_fee && (
-								<InfoRow
-									label="Initial Deposit"
-									value={
-										formatAmount(tenantApplication.initial_deposit_fee) +
-										' ' +
-										tenantApplication.initial_deposit_fee_currency
-									}
-								/>
-							)}
-							{tenantApplication?.security_deposit_fee && (
-								<InfoRow
-									label="Security Deposit"
-									value={
-										formatAmount(tenantApplication.security_deposit_fee) +
-										' ' +
-										tenantApplication.security_deposit_fee_currency
-									}
-								/>
-							)}
-						</div>
-					</CardContent>
-				</Card>
-			)}
-
 			{/* Contact & Address */}
 			<Card>
 				<CardHeader>
@@ -218,32 +136,6 @@ export function PropertyFinancialsPaymentPayerModule({ data }: Props) {
 				</CardContent>
 			</Card>
 
-			{/* Employment Information */}
-			<Card>
-				<CardHeader>
-					<TypographyH4>Employment Information</TypographyH4>
-				</CardHeader>
-				<CardContent className="space-y-4">
-					<Separator />
-					<div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-						<InfoRow
-							icon={<Briefcase size={18} />}
-							label="Employer Type"
-							value={tenant.employer_type}
-						/>
-						<InfoRow
-							icon={<Briefcase size={18} />}
-							label="Employer"
-							value={tenant.employer}
-						/>
-						<InfoRow
-							icon={<MapPin size={18} />}
-							label="Occupation Address"
-							value={tenant.occupation_address}
-						/>
-					</div>
-				</CardContent>
-			</Card>
 		</div>
 	)
 }

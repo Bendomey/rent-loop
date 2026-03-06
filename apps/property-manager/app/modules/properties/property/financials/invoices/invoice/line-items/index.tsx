@@ -14,7 +14,7 @@ import {
 } from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { localizedDayjs } from '~/lib/date'
-import { formatAmount } from '~/lib/format-amount'
+import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { useProperty } from '~/providers/property-provider'
 
 interface Props {
@@ -47,14 +47,9 @@ export function PropertyFinancialsPaymentLineItemsModule({
 				cell: ({ row }) => {
 					return (
 						<div className="">
-							<Link
-								to={`/properties/${clientUserProperty?.property_id}/financials/payments/${row.original.id}`}
-								aria-label={`View details for application`}
-							>
-								<span className="truncate text-xs text-blue-600 hover:underline">
+								<span className="truncate text-xs text-muted-foreground font-bold">
 									{row.original.label}
 								</span>
-							</Link>
 						</div>
 					)
 				},
@@ -65,7 +60,7 @@ export function PropertyFinancialsPaymentLineItemsModule({
 				header: 'Unit Amount x Quantity',
 				cell: ({ row }) => (
 					<span className="truncate text-xs font-semibold text-zinc-600">
-						{formatAmount(row.original.unit_amount)} x {row.original.quantity}
+						{formatAmount(convertPesewasToCedis(row.original.unit_amount))} x {row.original.quantity}
 					</span>
 				),
 			},
@@ -74,7 +69,7 @@ export function PropertyFinancialsPaymentLineItemsModule({
 				header: 'Total Amount',
 				cell: ({ row }) => (
 					<span className="truncate text-xs font-semibold text-zinc-800">
-						{formatAmount(row.original.total_amount) ?? 'N/A'}
+						{formatAmount(convertPesewasToCedis(row.original.total_amount)) ?? 'N/A'}
 					</span>
 				),
 			},

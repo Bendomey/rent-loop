@@ -5,7 +5,7 @@ import {
 	Pencil,
 	Send,
 } from 'lucide-react'
-import { useLoaderData } from 'react-router'
+import { Link, useLoaderData } from 'react-router'
 import { PropertyFinancialsPaymentLineItemsModule } from './line-items'
 import { PropertyFinancialsPaymentPayerModule } from './payer'
 import { PropertyFinancialsPaymentItemsModule } from './payments'
@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader } from '~/components/ui/card'
 import { Separator } from '~/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { TypographyMuted } from '~/components/ui/typography'
-import { formatAmount } from '~/lib/format-amount'
+import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import {
 	getInvoiceAllowedRailsLabel,
 	getInvoicePayerTypeLabel,
@@ -23,7 +23,8 @@ import {
 import type { loader } from '~/routes/_auth.properties.$propertyId.financials.invoices.$invoiceId'
 
 export function PropertyFinancialsPaymentModule() {
-	const { invoice: data } = useLoaderData<typeof loader>()
+	const { invoice: data, clientUserProperty } = useLoaderData<typeof loader>()
+	
 	return (
 		<div className="m-6 grid grid-cols-1 gap-10 lg:grid-cols-12">
 			<div className="lg:col-span-5 xl:col-span-4">
@@ -50,9 +51,20 @@ export function PropertyFinancialsPaymentModule() {
 							<h2 className="text-xl font-semibold tracking-tight">
 								Invoice {data?.code}
 							</h2>
+
+							{data?.context_type === 'TENANT_APPLICATION' ? (
+							<Link to={`/properties/${clientUserProperty?.property_id}/tenants/applications/${data?.context_tenant_application_id}`} className="text-sm text-blue-600 hover:underline">
+								{data?.context_type?.replace('_', ' ')}
+							</Link>
+							) : data?.context_type === 'MAINTENANCE' ? (
+							<Link to={`/properties/${clientUserProperty?.property_id}/activities/maintenance-requests/${data?.context_maintenance_request_id}`} className="text-sm text-blue-600 hover:underline">
+								{data?.context_type?.replace('_', ' ')}
+							</Link>
+							) : ( 
 							<p className="text-muted-foreground text-sm">
 								{data?.context_type?.replace('_', ' ')}
 							</p>
+							 )}
 						</div>
 					</CardHeader>
 
@@ -68,16 +80,16 @@ export function PropertyFinancialsPaymentModule() {
 							<div className="bg-muted/40 space-y-2 rounded-lg p-4">
 								<div className="text-muted-foreground flex justify-between">
 									<span>Tax</span>
-									<span>{formatAmount(data?.taxes || 0)}</span>
+									<span>{formatAmount(convertPesewasToCedis(data?.taxes || 0))}</span>
 								</div>
 								<div className="text-muted-foreground flex justify-between">
 									<span>Sub total</span>
-									<span>{formatAmount(data?.sub_total || 0)}</span>
+									<span>{formatAmount(convertPesewasToCedis(data?.sub_total || 0))}</span>
 								</div>
 								<div className="flex justify-between">
 									<span className="text-muted-foreground">Total</span>
 									<span className="font-semibold">
-										{formatAmount(data?.total_amount || 0)}
+										{formatAmount(convertPesewasToCedis(data?.total_amount || 0))}
 									</span>
 								</div>
 							</div>
@@ -93,7 +105,7 @@ export function PropertyFinancialsPaymentModule() {
 							</div>
 							<div className="grid grid-cols-2 gap-6">
 								<div>
-									<TypographyMuted>Rails</TypographyMuted>
+									<TypographyMuted>Allowed Modes</TypographyMuted>
 									<p className="font-medium text-zinc-600">
 										{data?.allowed_payment_rails
 											?.map((rail: Invoice['allowed_payment_rails'][number]) =>
@@ -117,57 +129,56 @@ export function PropertyFinancialsPaymentModule() {
 								</TypographyMuted>
 								<Separator />
 							</div>
+									{data?.issued_at ? (
 							<div className="flex justify-between">
 								<TypographyMuted>Issued</TypographyMuted>
 								<p className="font-medium">
-									{data?.issued_at
-										? new Date(data?.issued_at).toLocaleDateString()
-										: 'N/A'}
+										{new Date(data?.issued_at).toLocaleDateString()}
 								</p>
-							</div>
+							</div>): null}
+
+									{data?.due_date ? (
 							<div className="flex justify-between">
 								<TypographyMuted>Due</TypographyMuted>
 								<p className="font-medium">
-									{data?.due_date
-										? new Date(data?.due_date).toLocaleDateString()
-										: 'N/A'}
+										{new Date(data?.due_date).toLocaleDateString()}
 								</p>
-							</div>
+							</div>): null}
+
+									{data?.paid_at ? (
 							<div className="flex justify-between">
 								<TypographyMuted>Paid</TypographyMuted>
 								<p className="font-medium">
-									{data?.paid_at
-										? new Date(data?.paid_at).toLocaleDateString()
-										: 'Not paid'}
+										{new Date(data?.paid_at).toLocaleDateString()}
 								</p>
-							</div>
+							</div>) : null}
+
+									{data?.voided_at ? (
 							<div className="flex justify-between">
 								<TypographyMuted>Voided</TypographyMuted>
 								<p className="font-medium">
-									{data?.voided_at
-										? new Date(data?.voided_at).toLocaleDateString()
-										: 'N/A'}
+										{new Date(data?.voided_at).toLocaleDateString()}
 								</p>
-							</div>
+							</div>): null}
 						</div>
 					</CardContent>
 				</Card>
 			</div>
 			<div className="lg:col-span-7 xl:col-span-8">
-				<Tabs defaultValue="payments" className="w-full">
+				<Tabs defaultValue="line-items" className="w-full">
 					<TabsList>
-						<TabsTrigger value="payments">Payments</TabsTrigger>
 						<TabsTrigger value="line-items">Invoice Items</TabsTrigger>
+						<TabsTrigger value="payments">Payments</TabsTrigger>
 						{data?.payer_type === 'TENANT' ||
 						data?.payer_type === 'TENANT_APPLICATION' ? (
 							<TabsTrigger value="payer">Payer Details</TabsTrigger>
 						) : null}
 					</TabsList>
-					<TabsContent value="payments">
-						{data && <PropertyFinancialsPaymentItemsModule data={data} />}
-					</TabsContent>
 					<TabsContent value="line-items">
 						{data && <PropertyFinancialsPaymentLineItemsModule data={data} />}
+					</TabsContent>
+					<TabsContent value="payments">
+						{data && <PropertyFinancialsPaymentItemsModule data={data} />}
 					</TabsContent>
 					<TabsContent value="payer">
 						{data && <PropertyFinancialsPaymentPayerModule data={data} />}

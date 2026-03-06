@@ -6,7 +6,7 @@ import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { localizedDayjs } from '~/lib/date'
-import { formatAmount } from '~/lib/format-amount'
+import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { getPaymentStatusLabel } from '~/lib/payment.utils'
 
 interface Props {
@@ -37,8 +37,8 @@ export function PropertyFinancialsPaymentItemsModule({
 				cell: ({ row }) => {
 					return (
 						<div className="">
-							<span className="truncate text-xs text-blue-600">
-								{row.original.reference}
+							<span className="truncate text-xs text-muted-foreground font-bold">
+								{row.original.reference || 'N/A'}
 							</span>
 						</div>
 					)
@@ -50,7 +50,7 @@ export function PropertyFinancialsPaymentItemsModule({
 				header: 'Amount',
 				cell: ({ row }) => (
 					<span className="truncate text-xs font-semibold text-zinc-600">
-						{formatAmount(row.original.amount)}
+						{formatAmount(convertPesewasToCedis(row.original.amount))}
 					</span>
 				),
 			},
