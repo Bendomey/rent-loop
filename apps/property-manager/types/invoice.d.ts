@@ -49,6 +49,7 @@ interface Invoice {
 	voided_at: Nullable<Date>
 	allowed_payment_rails: Array<PAYMENT_RAIL>
 	line_items: Array<InvoiceLineItem>
+	payments: Array<Payment>
 	created_at: Date
 	updated_at: Date
 }

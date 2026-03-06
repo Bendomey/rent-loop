@@ -1,13 +1,11 @@
 export function getPaymentStatusLabel(paymentStatus: Payment['status']) {
 	switch (paymentStatus) {
-		case 'Payment.Status.Pending':
+		case 'PENDING':
 			return 'Processing'
-		case 'Payment.Status.Successful':
+		case 'SUCCESSFUL':
 			return 'Paid'
-		case 'Payment.Status.Failed':
+		case 'FAILED':
 			return 'Failed'
-		case 'Payment.Status.Expired':
-			return 'Overdue'
 		default:
 			return 'Unknown'
 	}

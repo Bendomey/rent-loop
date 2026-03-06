@@ -34,7 +34,7 @@ export function StatCard({
 			<CardHeader>
 				<CardDescription>{title}</CardDescription>
 
-				<CardTitle className="text-3xl font-semibold tabular-nums @[250px]/card:text-4xl">
+				<CardTitle className="text-3xl font-semibold tabular-nums @[250px]/card:text-3xl">
 					{value}
 				</CardTitle>
 

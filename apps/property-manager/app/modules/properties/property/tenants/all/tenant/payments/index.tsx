@@ -38,7 +38,7 @@ const data = {
 			amount: 2500,
 			reference: 'REF-2025-0001',
 			payment_method: 'MOMO',
-			status: 'Payment.Status.Successful',
+			status: 'SUCCESSFUL',
 			email: 'gideon@example.com',
 			unit: {
 				id: 'unit_101',
@@ -56,7 +56,7 @@ const data = {
 			amount: 1800,
 			reference: 'REF-2025-0002',
 			payment_method: 'CARD',
-			status: 'Payment.Status.Pending',
+			status: 'PENDING',
 			email: 'ama@example.com',
 			unit: {
 				id: 'unit_102',
@@ -74,7 +74,7 @@ const data = {
 			amount: 3000,
 			reference: 'REF-2025-0003',
 			payment_method: 'BANK_DIRECT',
-			status: 'Payment.Status.Failed',
+			status: 'SUCCESSFUL',
 			email: 'kwame@example.com',
 			unit: {
 				id: 'unit_201',
@@ -92,7 +92,7 @@ const data = {
 			amount: 1500,
 			reference: 'REF-2025-0004',
 			payment_method: 'CHECK',
-			status: 'Payment.Status.Expired',
+			status: 'FAILED',
 			email: 'efua@example.com',
 			unit: {
 				id: 'unit_101',
@@ -110,7 +110,7 @@ const data = {
 			amount: 4200,
 			reference: 'REF-2025-0005',
 			payment_method: 'MOMO',
-			status: 'Payment.Status.Successful',
+			status: 'SUCCESSFUL',
 			email: 'john@example.com',
 			unit: {
 				id: 'unit_101',
@@ -128,7 +128,7 @@ const data = {
 			amount: 2000,
 			reference: 'REF-2025-0006',
 			payment_method: 'OFFLINE',
-			status: 'Payment.Status.Pending',
+			status: 'PENDING',
 			email: 'yaw@example.com',
 			tenant_id: 'tenant_006',
 			unit: {

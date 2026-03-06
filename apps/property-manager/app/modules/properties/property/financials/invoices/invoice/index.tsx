@@ -25,8 +25,8 @@ import type { loader } from '~/routes/_auth.properties.$propertyId.financials.in
 export function PropertyFinancialsPaymentModule() {
 	const { invoice: data } = useLoaderData<typeof loader>()
 	return (
-		<div className="m-6 grid grid-cols-12 gap-10">
-			<div className="col-span-3">
+		<div className="m-6 grid grid-cols-1 gap-10 lg:grid-cols-12">
+			<div className="lg:col-span-5 xl:col-span-4">
 				<Card className="shadow-sm">
 					<CardHeader>
 						<Badge
@@ -153,7 +153,7 @@ export function PropertyFinancialsPaymentModule() {
 					</CardContent>
 				</Card>
 			</div>
-			<div className="col-span-9">
+			<div className="lg:col-span-7 xl:col-span-8">
 				<Tabs defaultValue="payments" className="w-full">
 					<TabsList>
 						<TabsTrigger value="payments">Payments</TabsTrigger>

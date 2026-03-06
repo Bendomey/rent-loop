@@ -8,6 +8,7 @@ import {
 import { useState } from 'react'
 import { Button } from '~/components/ui/button'
 import { TypographyH3 } from '~/components/ui/typography'
+import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import {
 	getPropertyUnitStatusColor,
 	getPropertyUnitStatusLabel,
@@ -113,8 +114,9 @@ export function UnitPreview({ unit }: { unit?: PropertyUnit }) {
 						<div className="flex items-center justify-between rounded-lg bg-white p-3">
 							<span className="text-slate-600">Rent Fee:</span>
 							<span className="font-semibold text-slate-900">
-								{unit?.rent_fee_currency || 'GHS'}{' '}
-								{unit?.rent_fee?.toLocaleString() || '—'}
+								{unit?.rent_fee != null
+									? formatAmount(convertPesewasToCedis(unit.rent_fee))
+									: '—'}
 							</span>
 						</div>
 						<div className="flex items-center justify-between rounded-lg bg-white p-3">
