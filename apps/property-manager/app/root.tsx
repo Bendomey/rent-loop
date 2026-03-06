@@ -14,6 +14,8 @@ import {
 } from 'react-router'
 import type { Route } from './+types/root'
 
+import { ThemeProvider } from 'next-themes'
+
 import { TopbarLoader } from './components/top-bar-loader'
 import { Toaster } from './components/ui/sonner'
 import { getAuthSession } from './lib/actions/auth.session.server'
@@ -51,7 +53,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export function Layout({ children }: { children: React.ReactNode }) {
 	return (
-		<html lang="en">
+		<html lang="en" suppressHydrationWarning>
 			<head>
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -59,6 +61,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				<Links />
 			</head>
 			<body>
+				<ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
 				{children}
 				<TopbarLoader />
 				<Toaster position="top-center" />
@@ -77,6 +80,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				</script>
 				<ScrollRestoration />
 				<Scripts />
+				</ThemeProvider>
 			</body>
 		</html>
 	)
