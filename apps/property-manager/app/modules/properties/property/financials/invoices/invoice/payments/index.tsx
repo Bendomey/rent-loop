@@ -1,6 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import {
-	CircleAlert,
 	CircleCheck,
 	CircleHelp,
 	CircleX,
@@ -64,20 +63,23 @@ export function PropertyFinancialsPaymentItemsModule({
 			{
 				accessorKey: 'status',
 				header: 'Status',
-				cell: ({ getValue }) => (
+				cell: ({ getValue }) => {
+					const status = getValue<Payment['status']>()
+					return (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
-						{getValue<string>() === 'PENDING' ? (
+						{status === 'PENDING' ? (
 							<Clock className="text-gray-500" />
-						) : getValue<string>() === 'SUCCESSFUL' ? (
+						) : status === 'SUCCESSFUL' ? (
 							<CircleCheck className="text-green-600" />
-						) : getValue<string>() === 'FAILED' ? (
+						) : status === 'FAILED' ? (
 							<CircleX className="text-red-600" />
 						) : (
 							<CircleHelp className="text-gray-400" />
 						)}
-						{getPaymentStatusLabel(getValue<Payment['status']>())}
+						{getPaymentStatusLabel(status)}
 					</Badge>
-				),
+					)
+				},
 			},
 			{
 				accessorKey: 'provider',
