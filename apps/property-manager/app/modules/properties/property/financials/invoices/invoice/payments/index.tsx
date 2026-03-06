@@ -37,7 +37,7 @@ export function PropertyFinancialsPaymentItemsModule({
 				cell: ({ row }) => {
 					return (
 						<div className="">
-							<span className="truncate text-xs text-muted-foreground font-bold">
+							<span className="text-muted-foreground truncate text-xs font-bold">
 								{row.original.reference || 'N/A'}
 							</span>
 						</div>

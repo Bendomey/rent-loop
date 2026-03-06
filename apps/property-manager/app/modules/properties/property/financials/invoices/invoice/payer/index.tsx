@@ -135,7 +135,6 @@ export function PropertyFinancialsPaymentPayerModule({ data }: Props) {
 					</div>
 				</CardContent>
 			</Card>
-
 		</div>
 	)
 }
