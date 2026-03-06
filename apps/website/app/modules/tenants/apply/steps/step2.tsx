@@ -24,7 +24,7 @@ import { formatPhoneWithCountryCode } from '~/lib/misc'
 export function Step2() {
 	const [otp, setOtp] = useState('')
 	const [otpError, setOtpError] = useState('')
-	const [resendCountdown, setResendCountdown] = useState(30)
+	const [resendCountdown, setResendCountdown] = useState(60)
 	const [resendAttempts, setResendAttempts] = useState(1)
 
 	const { goBack, goNext, goToPage, formData, updateFormData, allowEdit } =
