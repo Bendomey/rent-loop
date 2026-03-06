@@ -30,8 +30,8 @@ import {
 import { Textarea } from '~/components/ui/textarea'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
-import { safeString } from '~/lib/strings'
 import { localizedDayjs } from '~/lib/date'
+import { safeString } from '~/lib/strings'
 
 const ValidationSchema = z
 	.object({
@@ -111,9 +111,12 @@ const ValidationSchema = z
 
 export type FormSchema = z.infer<typeof ValidationSchema>
 
-const maxBirthDate = localizedDayjs().subtract(18, "year").toDate()
-const maxIdExpiryDate = localizedDayjs().add(20, "year").toDate()
-const startIdExpiryDate = localizedDayjs().subtract(2, "month").startOf("day").toDate()
+const maxBirthDate = localizedDayjs().subtract(18, 'year').toDate()
+const maxIdExpiryDate = localizedDayjs().add(20, 'year').toDate()
+const startIdExpiryDate = localizedDayjs()
+	.subtract(2, 'month')
+	.startOf('day')
+	.toDate()
 
 export function Step1() {
 	const { goBack, goNext, formData, updateFormData } = useApplyContext()
@@ -297,7 +300,8 @@ export function Step1() {
 											/>
 										</FormControl>
 										<FormDescription>
-											You must be at least 18 years old to apply as an individual property owner.
+											You must be at least 18 years old to apply as an
+											individual property owner.
 										</FormDescription>
 										<FormMessage />
 									</FormItem>

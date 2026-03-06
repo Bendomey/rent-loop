@@ -2,8 +2,8 @@ import { Mail, Phone, MapPin, Briefcase, User, Calendar } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '~/components/ui/card'
 import { Separator } from '~/components/ui/separator'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
-import { formatAmount } from '~/lib/format-amount'
 import { localizedDayjs } from '~/lib/date'
+import { formatAmount } from '~/lib/format-amount'
 
 interface Props {
 	data: Invoice

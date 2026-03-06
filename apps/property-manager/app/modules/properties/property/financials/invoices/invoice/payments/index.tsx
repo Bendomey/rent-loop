@@ -1,11 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import {
-	CircleCheck,
-	CircleHelp,
-	CircleX,
-	Clock,
-	Wallet,
-} from 'lucide-react'
+import { CircleCheck, CircleHelp, CircleX, Clock, Wallet } from 'lucide-react'
 import { useMemo } from 'react'
 import { TenantPaymentSectionCards } from './cards'
 import { DataTable } from '~/components/datatable'
@@ -66,18 +60,18 @@ export function PropertyFinancialsPaymentItemsModule({
 				cell: ({ getValue }) => {
 					const status = getValue<Payment['status']>()
 					return (
-					<Badge variant="outline" className="text-muted-foreground px-1.5">
-						{status === 'PENDING' ? (
-							<Clock className="text-gray-500" />
-						) : status === 'SUCCESSFUL' ? (
-							<CircleCheck className="text-green-600" />
-						) : status === 'FAILED' ? (
-							<CircleX className="text-red-600" />
-						) : (
-							<CircleHelp className="text-gray-400" />
-						)}
-						{getPaymentStatusLabel(status)}
-					</Badge>
+						<Badge variant="outline" className="text-muted-foreground px-1.5">
+							{status === 'PENDING' ? (
+								<Clock className="text-gray-500" />
+							) : status === 'SUCCESSFUL' ? (
+								<CircleCheck className="text-green-600" />
+							) : status === 'FAILED' ? (
+								<CircleX className="text-red-600" />
+							) : (
+								<CircleHelp className="text-gray-400" />
+							)}
+							{getPaymentStatusLabel(status)}
+						</Badge>
 					)
 				},
 			},

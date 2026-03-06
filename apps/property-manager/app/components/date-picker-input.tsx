@@ -14,7 +14,14 @@ interface Props {
 	endMonth?: Date
 }
 
-export function DatePickerInput({ value, onChange, disabled, placeholder, startMonth, endMonth }: Props) {
+export function DatePickerInput({
+	value,
+	onChange,
+	disabled,
+	placeholder,
+	startMonth,
+	endMonth,
+}: Props) {
 	const { isOpened, setIsOpened } = useDisclosure()
 	return (
 		<Popover open={isOpened} onOpenChange={setIsOpened}>

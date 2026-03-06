@@ -48,7 +48,12 @@ export function PropertyFinancialsPaymentsModule() {
 	const status = searchParams.get('status') ?? undefined
 
 	const { data, isPending, isRefetching, error, refetch } = useGetInvoices({
-		filters: { status: status, payer_type: payer_type, payee_type: payee_type },
+		filters: {
+			status: status,
+			payer_type: payer_type,
+			payee_type: payee_type,
+			property_id: clientUserProperty?.property_id,
+		},
 		pagination: { page, per },
 		sorter: { sort: 'desc', sort_by: 'created_at' },
 		search: {

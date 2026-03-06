@@ -2481,6 +2481,11 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "name": "property_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "query",
                         "in": "query"
                     },

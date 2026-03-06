@@ -81,6 +81,7 @@ type ListInvoicesFilter struct {
 	Status        *string
 	IDs           *[]string
 	Active        *bool
+	PropertyID    *string
 }
 
 func (r *invoiceRepository) List(ctx context.Context, filterQuery ListInvoicesFilter) (*[]models.Invoice, error) {
@@ -98,6 +99,7 @@ func (r *invoiceRepository) List(ctx context.Context, filterQuery ListInvoicesFi
 		DateRangeScope("invoices", filterQuery.DateRange),
 		SearchScope("invoices", filterQuery.Search),
 		invoiceActiveScope(filterQuery.Active),
+		invoicePropertyIDScope(filterQuery.PropertyID),
 
 		PaginationScope(filterQuery.Page, filterQuery.PageSize),
 		OrderScope("invoices", filterQuery.OrderBy, filterQuery.Order),
@@ -132,6 +134,7 @@ func (r *invoiceRepository) Count(ctx context.Context, filterQuery ListInvoicesF
 			invoiceContextTypeScope(filterQuery.ContextType),
 			invoiceStatusScope(filterQuery.Status),
 			invoiceActiveScope(filterQuery.Active),
+			invoicePropertyIDScope(filterQuery.PropertyID),
 
 			DateRangeScope("invoices", filterQuery.DateRange),
 			SearchScope("invoices", filterQuery.Search),
@@ -205,6 +208,35 @@ func invoiceStatusScope(status *string) func(db *gorm.DB) *gorm.DB {
 			return db
 		}
 		return db.Where("invoices.status = ?", *status)
+	}
+}
+
+func invoicePropertyIDScope(propertyID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if propertyID == nil {
+			return db
+		}
+		return db.Where(
+			`(
+				(invoices.context_type = 'TENANT_APPLICATION' AND EXISTS (
+					SELECT 1 FROM tenant_applications ta
+					JOIN units u ON u.id = ta.desired_unit_id
+					WHERE ta.id = invoices.context_tenant_application_id AND u.property_id = ?
+				))
+				OR (invoices.context_type = 'LEASE_RENT' AND EXISTS (
+					SELECT 1 FROM leases l
+					JOIN units u ON u.id = l.unit_id
+					WHERE l.id = invoices.context_lease_id AND u.property_id = ?
+				))
+				OR (invoices.context_type = 'MAINTENANCE' AND EXISTS (
+					SELECT 1 FROM maintenance_requests mr
+					JOIN units u ON u.id = mr.unit_id
+					WHERE mr.id = invoices.context_maintenance_request_id AND u.property_id = ?
+				))
+				OR (invoices.context_type IN ('SAAS_FEE', 'GENERAL_EXPENSE') AND invoices.payer_property_id = ?)
+			)`,
+			*propertyID, *propertyID, *propertyID, *propertyID,
+		)
 	}
 }
 
