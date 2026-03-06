@@ -29,6 +29,8 @@ import {
 	TooltipTrigger,
 } from '~/components/ui/tooltip'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
+import { useLoaderData } from 'react-router'
+import type { loader } from '~/routes/apply._index'
 
 const ValidationSchema = z
 	.object({
@@ -56,6 +58,8 @@ const ValidationSchema = z
 type FormSchema = z.infer<typeof ValidationSchema>
 
 export function Step3() {
+	const { rentLoopWebsiteUrl } =
+			useLoaderData<typeof loader>()
 	const {
 		goBack,
 		formData,
@@ -204,8 +208,8 @@ export function Step3() {
 								<FormMessage />
 								<FormDescription>
 									By clicking submit, you agree to our{' '}
-									<a href="#">Terms of Service</a> and{' '}
-									<a href="#">Privacy Policy</a>.
+									<a className='underline hover:text-rose-700' href={`${rentLoopWebsiteUrl}/terms`}>Terms of Service</a> and{' '}
+									<a className='underline hover:text-rose-700' href={`${rentLoopWebsiteUrl}/privacy`}>Privacy Policy</a>.
 								</FormDescription>
 							</FormItem>
 						)}
