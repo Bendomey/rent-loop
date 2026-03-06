@@ -7,7 +7,6 @@ import { getTrackingApplication } from '~/api/tracking'
 import { Spinner } from '~/components/ui/spinner'
 import type { loader } from '~/routes/tenant-applications.$code'
 
-
 function getStorageKey(code: string) {
 	return `tracking:${code}`
 }
@@ -15,8 +14,9 @@ function getStorageKey(code: string) {
 export function TenantApplicationTrackingModule() {
 	const { code } = useLoaderData<typeof loader>()
 	const [accessToken, setAccessToken] = useState<string | null>(null)
-	const [application, setApplication] =
-		useState<TrackingApplication | null>(null)
+	const [application, setApplication] = useState<TrackingApplication | null>(
+		null,
+	)
 	const [isLoading, setIsLoading] = useState(true)
 
 	useEffect(() => {

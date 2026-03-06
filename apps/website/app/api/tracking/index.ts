@@ -26,8 +26,7 @@ const MOCK_APPLICATION: TrackingApplication = {
 	initial_deposit_fee: 500,
 	security_deposit_fee: 3000,
 	lease_agreement_document_status: 'SIGNING',
-	lease_agreement_document_signing_url:
-		'https://sign.example.com/doc/abc123',
+	lease_agreement_document_signing_url: 'https://sign.example.com/doc/abc123',
 	lease_agreement_document_url: null,
 	application_payment_invoice: {
 		code: 'INV-2501-A3X9F2',

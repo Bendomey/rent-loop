@@ -1,12 +1,15 @@
+import { Link } from 'react-router'
 import { APP_NAME } from '~/lib/constants'
 
 const navigation = {
 	main: [
-		{ name: 'About', href: '#' },
+		// { name: 'About', href: '#' },
 		{ name: 'Blog', href: '#' },
 		{ name: 'Pricing', href: '#' },
 		{ name: 'Features', href: '#' },
-		{ name: 'Partners', href: '#' },
+		// { name: 'Partners', href: '#' },
+		{ name: 'Terms', href: '/terms' },
+		{ name: 'Privacy', href: '/privacy-policy' },
 	],
 	social: [
 		{
@@ -81,15 +84,25 @@ export function Footer() {
 					aria-label="Footer"
 					className="-mb-6 flex flex-wrap justify-center gap-x-12 gap-y-3 text-sm/6"
 				>
-					{navigation.main.map((item) => (
-						<a
-							key={item.name}
-							href={item.href}
-							className="text-gray-400 hover:text-gray-200"
-						>
-							{item.name}
-						</a>
-					))}
+					{navigation.main.map((item) =>
+						item.href.startsWith('/') ? (
+							<Link
+								key={item.name}
+								to={item.href}
+								className="text-gray-400 hover:text-gray-200"
+							>
+								{item.name}
+							</Link>
+						) : (
+							<a
+								key={item.name}
+								href={item.href}
+								className="text-gray-400 hover:text-gray-200"
+							>
+								{item.name}
+							</a>
+						),
+					)}
 				</nav>
 				<div className="mt-16 flex justify-center gap-x-10">
 					{navigation.social.map((item) => (
