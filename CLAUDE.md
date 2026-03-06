@@ -71,6 +71,13 @@ app/
 - Form handling with React Hook Form + Zod validation
 - File uploads via AWS S3 presigned URLs
 
+**Dark Mode:**
+- The property manager portal supports dark/light theme toggling
+- All UI changes MUST support both dark and light modes
+- Use Tailwind's `dark:` variant for dark mode styles — never hardcode colors that only work in one mode
+- Prefer Shadcn/Radix primitives and CSS variables (e.g. `bg-background`, `text-foreground`) as they handle theming automatically
+- Always verify new UI in both modes before considering a change complete
+
 ## Backend Architecture
 
 The Go backend follows a layered architecture: handlers → services → repository → models

@@ -4,7 +4,10 @@ import {
 	ChevronsUpDown,
 	CreditCard,
 	LogOut,
+	Moon,
+	Sun,
 } from 'lucide-react'
+import { useTheme } from 'next-themes'
 import { Form, Link } from 'react-router'
 
 import {
@@ -41,6 +44,7 @@ import { useAuth } from '~/providers/auth-provider'
 export function NavUser() {
 	const { currentUser } = useAuth()
 	const { isMobile } = useSidebar()
+	const { theme, setTheme } = useTheme()
 
 	return (
 		<SidebarMenu>
@@ -112,6 +116,10 @@ export function NavUser() {
 								<DropdownMenuItem disabled>
 									<Bell />
 									Notifications
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+									{theme === 'dark' ? <Sun /> : <Moon />}
+									{theme === 'dark' ? 'Light' : 'Dark'}
 								</DropdownMenuItem>
 							</DropdownMenuGroup>
 							<DropdownMenuSeparator />
