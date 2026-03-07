@@ -27,6 +27,7 @@ import {
 } from '~/components/ui/select'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
+import { localizedDayjs } from '~/lib/date'
 import { safeString } from '~/lib/strings'
 
 const ValidationSchema = z.object({
@@ -54,8 +55,8 @@ const ValidationSchema = z.object({
 		.refine((date) => {
 			const today = new Date()
 			const age = today.getFullYear() - date.getFullYear()
-			return age >= 14
-		}, 'You must be at least 14 years old')
+			return age >= 18
+		}, 'You must be at least 18 years old')
 		.optional(),
 	current_address: z
 		.string({ error: 'Current Address is required' })
@@ -65,6 +66,8 @@ const ValidationSchema = z.object({
 		error: 'Please select a marital status',
 	}),
 })
+
+const maxBirthDate = localizedDayjs().subtract(18, 'year').toDate()
 
 const gender: Array<{ label: string; value: TenantApplication['gender'] }> = [
 	{ label: 'Male', value: 'MALE' },
@@ -332,6 +335,8 @@ export function Step1() {
 										<DatePickerInput
 											value={field.value}
 											onChange={field.onChange}
+											disabled={(date) => date > maxBirthDate}
+											endMonth={maxBirthDate}
 										/>
 									</FormControl>
 									<FormMessage />

@@ -47,9 +47,9 @@ export function PropertyFinancialsPaymentLineItemsModule({
 				cell: ({ row }) => {
 					return (
 						<div className="">
-								<span className="truncate text-xs text-muted-foreground font-bold">
-									{row.original.label}
-								</span>
+							<span className="text-muted-foreground truncate text-xs font-bold">
+								{row.original.label}
+							</span>
 						</div>
 					)
 				},
@@ -60,7 +60,8 @@ export function PropertyFinancialsPaymentLineItemsModule({
 				header: 'Unit Amount x Quantity',
 				cell: ({ row }) => (
 					<span className="truncate text-xs font-semibold text-zinc-600">
-						{formatAmount(convertPesewasToCedis(row.original.unit_amount))} x {row.original.quantity}
+						{formatAmount(convertPesewasToCedis(row.original.unit_amount))} x{' '}
+						{row.original.quantity}
 					</span>
 				),
 			},
@@ -69,7 +70,8 @@ export function PropertyFinancialsPaymentLineItemsModule({
 				header: 'Total Amount',
 				cell: ({ row }) => (
 					<span className="truncate text-xs font-semibold text-zinc-800">
-						{formatAmount(convertPesewasToCedis(row.original.total_amount)) ?? 'N/A'}
+						{formatAmount(convertPesewasToCedis(row.original.total_amount)) ??
+							'N/A'}
 					</span>
 				),
 			},

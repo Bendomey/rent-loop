@@ -24,7 +24,7 @@ import type { loader } from '~/routes/_auth.properties.$propertyId.financials.in
 
 export function PropertyFinancialsPaymentModule() {
 	const { invoice: data, clientUserProperty } = useLoaderData<typeof loader>()
-	
+
 	return (
 		<div className="m-6 grid grid-cols-1 gap-10 lg:grid-cols-12">
 			<div className="lg:col-span-5 xl:col-span-4">
@@ -53,18 +53,24 @@ export function PropertyFinancialsPaymentModule() {
 							</h2>
 
 							{data?.context_type === 'TENANT_APPLICATION' ? (
-							<Link to={`/properties/${clientUserProperty?.property_id}/tenants/applications/${data?.context_tenant_application_id}`} className="text-sm text-blue-600 hover:underline">
-								{data?.context_type?.replace('_', ' ')}
-							</Link>
+								<Link
+									to={`/properties/${clientUserProperty?.property_id}/tenants/applications/${data?.context_tenant_application_id}`}
+									className="text-sm text-blue-600 hover:underline"
+								>
+									{data?.context_type?.replace('_', ' ')}
+								</Link>
 							) : data?.context_type === 'MAINTENANCE' ? (
-							<Link to={`/properties/${clientUserProperty?.property_id}/activities/maintenance-requests/${data?.context_maintenance_request_id}`} className="text-sm text-blue-600 hover:underline">
-								{data?.context_type?.replace('_', ' ')}
-							</Link>
-							) : ( 
-							<p className="text-muted-foreground text-sm">
-								{data?.context_type?.replace('_', ' ')}
-							</p>
-							 )}
+								<Link
+									to={`/properties/${clientUserProperty?.property_id}/activities/maintenance-requests/${data?.context_maintenance_request_id}`}
+									className="text-sm text-blue-600 hover:underline"
+								>
+									{data?.context_type?.replace('_', ' ')}
+								</Link>
+							) : (
+								<p className="text-muted-foreground text-sm">
+									{data?.context_type?.replace('_', ' ')}
+								</p>
+							)}
 						</div>
 					</CardHeader>
 
@@ -80,16 +86,22 @@ export function PropertyFinancialsPaymentModule() {
 							<div className="bg-muted/40 space-y-2 rounded-lg p-4">
 								<div className="text-muted-foreground flex justify-between">
 									<span>Tax</span>
-									<span>{formatAmount(convertPesewasToCedis(data?.taxes || 0))}</span>
+									<span>
+										{formatAmount(convertPesewasToCedis(data?.taxes || 0))}
+									</span>
 								</div>
 								<div className="text-muted-foreground flex justify-between">
 									<span>Sub total</span>
-									<span>{formatAmount(convertPesewasToCedis(data?.sub_total || 0))}</span>
+									<span>
+										{formatAmount(convertPesewasToCedis(data?.sub_total || 0))}
+									</span>
 								</div>
 								<div className="flex justify-between">
 									<span className="text-muted-foreground">Total</span>
 									<span className="font-semibold">
-										{formatAmount(convertPesewasToCedis(data?.total_amount || 0))}
+										{formatAmount(
+											convertPesewasToCedis(data?.total_amount || 0),
+										)}
 									</span>
 								</div>
 							</div>
@@ -129,37 +141,41 @@ export function PropertyFinancialsPaymentModule() {
 								</TypographyMuted>
 								<Separator />
 							</div>
-									{data?.issued_at ? (
-							<div className="flex justify-between">
-								<TypographyMuted>Issued</TypographyMuted>
-								<p className="font-medium">
+							{data?.issued_at ? (
+								<div className="flex justify-between">
+									<TypographyMuted>Issued</TypographyMuted>
+									<p className="font-medium">
 										{new Date(data?.issued_at).toLocaleDateString()}
-								</p>
-							</div>): null}
+									</p>
+								</div>
+							) : null}
 
-									{data?.due_date ? (
-							<div className="flex justify-between">
-								<TypographyMuted>Due</TypographyMuted>
-								<p className="font-medium">
+							{data?.due_date ? (
+								<div className="flex justify-between">
+									<TypographyMuted>Due</TypographyMuted>
+									<p className="font-medium">
 										{new Date(data?.due_date).toLocaleDateString()}
-								</p>
-							</div>): null}
+									</p>
+								</div>
+							) : null}
 
-									{data?.paid_at ? (
-							<div className="flex justify-between">
-								<TypographyMuted>Paid</TypographyMuted>
-								<p className="font-medium">
+							{data?.paid_at ? (
+								<div className="flex justify-between">
+									<TypographyMuted>Paid</TypographyMuted>
+									<p className="font-medium">
 										{new Date(data?.paid_at).toLocaleDateString()}
-								</p>
-							</div>) : null}
+									</p>
+								</div>
+							) : null}
 
-									{data?.voided_at ? (
-							<div className="flex justify-between">
-								<TypographyMuted>Voided</TypographyMuted>
-								<p className="font-medium">
+							{data?.voided_at ? (
+								<div className="flex justify-between">
+									<TypographyMuted>Voided</TypographyMuted>
+									<p className="font-medium">
 										{new Date(data?.voided_at).toLocaleDateString()}
-								</p>
-							</div>): null}
+									</p>
+								</div>
+							) : null}
 						</div>
 					</CardContent>
 				</Card>
