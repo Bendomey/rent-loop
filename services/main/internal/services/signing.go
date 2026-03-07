@@ -123,9 +123,6 @@ func (s *signingService) VerifyToken(
 	}
 
 	if !token.IsValid() {
-		if token.IsUsed() {
-			return nil, pkg.BadRequestError("SigningTokenAlreadyUsed", nil)
-		}
 		return nil, pkg.BadRequestError("SigningTokenExpired", nil)
 	}
 
@@ -173,10 +170,11 @@ func (s *signingService) SignDocument(
 		})
 	}
 
+	if token.IsUsed() {
+		return nil, pkg.BadRequestError("SigningTokenAlreadyUsed", nil)
+	}
+
 	if !token.IsValid() {
-		if token.IsUsed() {
-			return nil, pkg.BadRequestError("SigningTokenAlreadyUsed", nil)
-		}
 		return nil, pkg.BadRequestError("SigningTokenExpired", nil)
 	}
 

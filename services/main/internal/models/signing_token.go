@@ -91,9 +91,14 @@ func (s *SigningToken) IsUsed() bool {
 	return s.SignedAt != nil
 }
 
-// IsValid returns true if the token can still be used for signing.
+// IsValid returns true if the signing link is accessible.
+// A signed token is always accessible (regardless of expiry).
+// An unsigned token is only accessible if it has not expired.
 func (s *SigningToken) IsValid() bool {
-	return !s.IsExpired() && !s.IsUsed()
+	if s.IsUsed() {
+		return true
+	}
+	return !s.IsExpired()
 }
 
 // generateSigningToken creates a unique token in the format "{appCode}-{random}".
