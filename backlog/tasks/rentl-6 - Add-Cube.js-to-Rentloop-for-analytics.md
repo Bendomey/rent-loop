@@ -4,11 +4,11 @@ title: Add Cube.js to Rentloop for analytics
 status: Draft
 assignee: []
 created_date: '2026-03-05 08:48'
-updated_date: '2026-03-07 15:04'
+updated_date: '2026-03-07 20:26'
 labels:
   - analytics
   - infrastructure
-milestone: m-3
+milestone: m-6
 dependencies: []
 ---
 
