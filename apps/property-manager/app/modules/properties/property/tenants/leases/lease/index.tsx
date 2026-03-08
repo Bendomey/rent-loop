@@ -329,6 +329,20 @@ export function LeaseDetailModule() {
 														: '-'
 												}
 											/>
+											{application.application_payment_invoice && (
+												<div className="flex flex-col gap-0.5">
+													<TypographyMuted className="text-xs">
+														Invoice
+													</TypographyMuted>
+													<Link
+														to={`/properties/${propertyId}/financials/invoices/${application.application_payment_invoice.id}`}
+														className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+													>
+														<FileText className="size-3.5" />
+														{application.application_payment_invoice.code}
+													</Link>
+												</div>
+											)}
 										</div>
 									</div>
 								)}
