@@ -1,10 +1,10 @@
 ---
 id: RENTL-7
 title: Add single lease page
-status: Draft
+status: Done
 assignee: []
 created_date: '2026-03-05 09:13'
-updated_date: '2026-03-07 15:22'
+updated_date: '2026-03-08 17:21'
 labels:
   - frontend
   - property-manager
@@ -57,3 +57,22 @@ URL: `/properties/$propertyId/tenants/leases/$leaseId` — canonical lease detai
 - Layout: `app/modules/properties/property/assets/units/unit/index.tsx`
 - Status badge colors: Pending=yellow-500, Active=teal-500, Completed=blue-500, Cancelled=zinc-400, Terminated=rose-500
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implemented the single lease detail page at `/properties/$propertyId/tenants/leases/$leaseId`.
+
+Files created:
+- `app/api/leases/server.ts`: `getLeaseForServer` SSR fetch from `/v1/admin/leases/{id}?populate=Tenant,Unit,TenantApplication`
+- `app/routes/_auth.properties.$propertyId.tenants.leases.$leaseId.tsx`: loader (SSR fetch), breadcrumb = lease.code, meta tags
+- `app/modules/properties/property/tenants/leases/lease/index.tsx`: `LeaseDetailModule` — 12-col grid layout:
+  - Left col-4 card: code, status badge, tenant link, unit link, rent fee + frequency, move-in date, MANAGER-gated "Terminate Lease" button (disabled — no terminate API yet)
+  - Right col-8 Tabs:
+    - Details: payment frequency, duration, move-in, property inspection, utility transfers, activated/cancelled/terminated/completed dates
+    - Documents: lease agreement (URL link + PM/tenant signed dates or N/A), termination agreement (same)
+
+- `app/modules/index.ts`: Added export for `LeaseDetailModule`
+
+Uses `getLeaseStatusClass`/`getLeaseStatusLabel` from `~/lib/lease.utils` and `getPaymentFrequencyLabel`/`getPaymentFrequencyPeriodLabel` from `~/lib/properties.utils`.
+<!-- SECTION:FINAL_SUMMARY:END -->

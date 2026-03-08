@@ -15,7 +15,6 @@ import {
 } from 'react-router'
 import type { Route } from './+types/root'
 
-
 import { TopbarLoader } from './components/top-bar-loader'
 import { Toaster } from './components/ui/sonner'
 import { getAuthSession } from './lib/actions/auth.session.server'
