@@ -1,0 +1,62 @@
+import { PassThrough } from 'node:stream'
+import { createReadableStreamFromReadable } from '@react-router/node'
+import { isbot } from 'isbot'
+import { renderToPipeableStream } from 'react-dom/server'
+import type { EntryContext } from 'react-router'
+import { ServerRouter } from 'react-router'
+import { captureException } from '~/lib/actions/sentry.server'
+
+const ABORT_DELAY = 5_000
+
+export function handleError(error: unknown, { request }: { request: Request }) {
+	// Don't capture aborted requests (cancelled navigations)
+	if (!request.signal.aborted) {
+		captureException(error)
+		console.error(error)
+	}
+}
+
+export default function handleRequest(
+	request: Request,
+	responseStatusCode: number,
+	responseHeaders: Headers,
+	routerContext: EntryContext,
+) {
+	return new Promise<Response>((resolve, reject) => {
+		let shellRendered = false
+		const userAgent = request.headers.get('user-agent')
+
+		const { pipe, abort } = renderToPipeableStream(
+			<ServerRouter context={routerContext} url={request.url} />,
+			{
+				[isbot(userAgent ?? '') ? 'onAllReady' : 'onShellReady']() {
+					shellRendered = true
+					const body = new PassThrough()
+					const stream = createReadableStreamFromReadable(body)
+
+					responseHeaders.set('Content-Type', 'text/html')
+
+					resolve(
+						new Response(stream, {
+							headers: responseHeaders,
+							status: responseStatusCode,
+						}),
+					)
+
+					pipe(body)
+				},
+				onShellError(error: unknown) {
+					reject(error)
+				},
+				onError(error: unknown) {
+					responseStatusCode = 500
+					if (shellRendered) {
+						console.error(error)
+					}
+				},
+			},
+		)
+
+		setTimeout(abort, ABORT_DELAY)
+	})
+}

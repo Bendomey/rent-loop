@@ -1,6 +1,7 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import type { Route } from './+types/api.r2.upload'
 import { environmentVariables } from '~/lib/actions/env.server'
+import { captureException } from '~/lib/actions/sentry.server'
 
 let s3Client: S3Client | null = null
 
@@ -54,7 +55,7 @@ export async function action({ request }: Route.ActionArgs) {
 			},
 		)
 	} catch (error) {
-		// TODO: sentry capture can be added here for better error tracking
+		captureException(error)
 		console.error('Error uploading file to R2:', error)
 		return new Response(JSON.stringify({ error: 'FailedToUploadFileToR2' }), {
 			headers: { 'Content-Type': 'application/json' },

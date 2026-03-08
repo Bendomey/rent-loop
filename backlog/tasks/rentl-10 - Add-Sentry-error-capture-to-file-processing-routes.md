@@ -1,10 +1,10 @@
 ---
 id: RENTL-10
 title: Add Sentry error capture to file processing routes
-status: Draft
+status: Done
 assignee: []
 created_date: '2026-03-04 18:57'
-updated_date: '2026-03-07 20:47'
+updated_date: '2026-03-08 15:46'
 labels:
   - frontend
   - property-manager
@@ -21,15 +21,15 @@ Four route files have TODO comments for adding Sentry error tracking: routes/api
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 @sentry/node installed in apps/property-manager/package.json
-- [ ] #2 app/lib/sentry.server.ts created with lazy init and captureException export
-- [ ] #3 captureException called in api.r2.upload.ts catch block (TODO comment removed)
-- [ ] #4 captureException called in _auth.api.files.pdf.to-lexical.ts catch block (TODO comment removed)
-- [ ] #5 captureException called in _auth.api.files.pdf.to-thumbnail.ts catch block (TODO comment removed)
-- [ ] #6 captureException called in _auth.api.files.docx.to-lexical.ts catch block (TODO comment removed)
-- [ ] #7 SENTRY_DSN from existing env.server.ts used — no new env vars added
-- [ ] #8 yarn types:check passes
-- [ ] #9 yarn lint passes
+- [x] #1 @sentry/node installed in apps/property-manager/package.json
+- [x] #2 app/lib/sentry.server.ts created with lazy init and captureException export
+- [x] #3 captureException called in api.r2.upload.ts catch block (TODO comment removed)
+- [x] #4 captureException called in _auth.api.files.pdf.to-lexical.ts catch block (TODO comment removed)
+- [x] #5 captureException called in _auth.api.files.pdf.to-thumbnail.ts catch block (TODO comment removed)
+- [x] #6 captureException called in _auth.api.files.docx.to-lexical.ts catch block (TODO comment removed)
+- [x] #7 SENTRY_DSN from existing env.server.ts used — no new env vars added
+- [x] #8 yarn types:check passes
+- [x] #9 yarn lint passes
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -138,3 +138,9 @@ Replace `// TODO: sentry capture can be added here for better error tracking` wi
 - `@sentry/node` ships its own TypeScript types — no `@types/` package needed
 - Server-side only: `@sentry/node` is correct (not `@sentry/react-router` which adds client-side overhead)
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Installed `@sentry/node`. Created `app/lib/sentry.server.ts` with lazy init (initialized once on first call) using existing `SENTRY_DSN` and `NODE_ENV` from `env.server.ts`. Added `captureException` import and call in the catch block of all 4 routes: `api.r2.upload.ts`, `_auth.api.files.pdf.to-lexical.ts`, `_auth.api.files.pdf.to-thumbnail.ts`, `_auth.api.files.docx.to-lexical.ts` — TODO comments removed. `yarn types:check` and `yarn lint` pass with no new warnings.
+<!-- SECTION:FINAL_SUMMARY:END -->
