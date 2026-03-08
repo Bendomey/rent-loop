@@ -1,10 +1,10 @@
 ---
 id: RENTL-9
 title: Re-enable property filters when API supports it
-status: Draft
+status: Done
 assignee: []
 created_date: '2026-03-04 18:56'
-updated_date: '2026-03-07 19:55'
+updated_date: '2026-03-08 16:01'
 labels:
   - frontend
   - property-manager
@@ -153,3 +153,18 @@ useGetMyProperties({
 | Type | `property_type` | `property_type` |
 | Search | `query` | `search[query]` + `search[fields]` |
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Re-enabled property filters and search on the My Properties page.
+
+Backend changes:
+- `repository/client-user-property.go`: Added `PropertyStatus` and `PropertyType` to `ListClientUserPropertiesFilter`; added `joinPropertiesScope()` (JOIN properties table), `propertySearchScope()` (searches properties.name/address via ILIKE), `propertyStatusFilterScope()`, `propertyTypeFilterScope()`; replaced broken `SearchScope` with new JOIN-based search in both `List()` and `Count()`
+- `handlers/client-user-property.go`: Parse `property_status` and `property_type` query params in `ListClientUserProperties`
+
+Frontend changes:
+- `types/client-user-property.d.ts`: Added `property_status?` and `property_type?` to `FetchClientUserPropertyFilter`
+- `modules/properties/index.tsx`: Read `property_status`/`property_type` from search params, pass as filters
+- `modules/properties/controller.tsx`: Uncommented `FilterSet` and `SearchInput`, fixed urlParams (`status`→`property_status`, `type`→`property_type`), added `ToggleLeft` import
+<!-- SECTION:FINAL_SUMMARY:END -->

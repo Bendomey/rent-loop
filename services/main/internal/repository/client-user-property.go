@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
@@ -129,10 +130,12 @@ func (r *clientUserPropertyRepository) GetWithPopulate(
 
 type ListClientUserPropertiesFilter struct {
 	lib.FilterQuery
-	ClientUserID *string
-	PropertyID   *string
-	Role         *string
-	IDs          *[]string
+	ClientUserID   *string
+	PropertyID     *string
+	Role           *string
+	IDs            *[]string
+	PropertyStatus *string
+	PropertyType   *string
 }
 
 func (r *clientUserPropertyRepository) List(
@@ -142,13 +145,16 @@ func (r *clientUserPropertyRepository) List(
 	var clientUserproperties []models.ClientUserProperty
 
 	db := r.DB.WithContext(ctx).Scopes(
+		joinPropertiesScope(),
 		IDsFilterScope("client_user_properties", filterQuery.IDs),
 		DateRangeScope("client_user_properties", filterQuery.DateRange),
-		SearchScope("client_user_properties", filterQuery.Search),
+		propertySearchScope(filterQuery.Search),
 
 		clientUserIDScope(filterQuery.ClientUserID),
 		propertyIDScope(filterQuery.PropertyID),
 		roleScope(filterQuery.Role),
+		propertyStatusFilterScope(filterQuery.PropertyStatus),
+		propertyTypeFilterScope(filterQuery.PropertyType),
 
 		PaginationScope(filterQuery.Page, filterQuery.PageSize),
 		OrderScope("client_user_properties", filterQuery.OrderBy, filterQuery.Order),
@@ -176,13 +182,16 @@ func (r *clientUserPropertyRepository) Count(
 	result := r.DB.WithContext(ctx).
 		Model(&models.ClientUserProperty{}).
 		Scopes(
+			joinPropertiesScope(),
 			IDsFilterScope("client_user_properties", filterQuery.IDs),
 			DateRangeScope("client_user_properties", filterQuery.DateRange),
-			SearchScope("client_user_properties", filterQuery.Search),
+			propertySearchScope(filterQuery.Search),
 
 			clientUserIDScope(filterQuery.ClientUserID),
 			propertyIDScope(filterQuery.PropertyID),
 			roleScope(filterQuery.Role),
+			propertyStatusFilterScope(filterQuery.PropertyStatus),
+			propertyTypeFilterScope(filterQuery.PropertyType),
 		).Count(&count)
 
 	if result.Error != nil {
@@ -216,5 +225,41 @@ func roleScope(role *string) func(db *gorm.DB) *gorm.DB {
 			return db
 		}
 		return db.Where("client_user_properties.role = ?", role)
+	}
+}
+
+func joinPropertiesScope() func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Joins(
+			"JOIN properties ON properties.id = client_user_properties.property_id AND properties.deleted_at IS NULL",
+		)
+	}
+}
+
+func propertySearchScope(search *lib.Search) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if search == nil || search.Query == "" {
+			return db
+		}
+		query := fmt.Sprintf("%%%s%%", search.Query)
+		return db.Where("properties.name ILIKE ? OR properties.address ILIKE ?", query, query)
+	}
+}
+
+func propertyStatusFilterScope(status *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if status == nil {
+			return db
+		}
+		return db.Where("properties.status = ?", *status)
+	}
+}
+
+func propertyTypeFilterScope(propertyType *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if propertyType == nil {
+			return db
+		}
+		return db.Where("properties.type = ?", *propertyType)
 	}
 }
