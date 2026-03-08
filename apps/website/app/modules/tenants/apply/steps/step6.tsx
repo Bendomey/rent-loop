@@ -235,8 +235,20 @@ export function Step6() {
 				</div>
 			</PreviewCard>
 
+			<div className="">
+				By clicking submit, you agree to our{' '}
+				<a className="underline hover:text-rose-700" href="/terms">
+					Terms of Service
+				</a>{' '}
+				and{' '}
+				<a className="underline hover:text-rose-700" href="/privacy-policy">
+					Privacy Policy
+				</a>
+				.
+			</div>
+
 			{/* Action Buttons */}
-			<div className="mt-10 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
+			<div className="mt-6 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
 				{!isEditable ? (
 					<Link to={`/`}>
 						<Button
