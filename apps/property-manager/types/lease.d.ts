@@ -28,10 +28,6 @@ interface Lease {
 
 	lease_agreement_document_mode: Nullable<'MANUAL' | 'ONLINE'>
 	lease_agreement_document_url: string
-	lease_agreement_document_property_manager_signed_at: Nullable<Date>
-	lease_agreement_document_property_manager_signed_by_id: Nullable<string>
-	lease_agreement_document_property_manager_signed_by: Nullable<ClientUser>
-	lease_agreement_document_tenant_signed_at: Nullable<Date>
 
 	termination_agreement_document_url: Nullable<string>
 	termination_agreement_document_property_manager_signed_at: Nullable<Date>
