@@ -4,7 +4,7 @@ import {
 	FileText,
 	ScrollText,
 	User,
-	HouseIcon
+	HouseIcon,
 } from 'lucide-react'
 import { Link, useLoaderData } from 'react-router'
 import { Image } from '~/components/Image'
@@ -50,7 +50,7 @@ function DetailRow({
 function SectionHeading({ children }: { children: React.ReactNode }) {
 	return (
 		<>
-			<p className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+			<p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
 				{children}
 			</p>
 			<Separator />
@@ -157,7 +157,9 @@ export function LeaseDetailModule() {
 						<div className="flex items-center gap-2">
 							<CalendarDays className="text-muted-foreground size-4 shrink-0" />
 							<div>
-								<TypographyMuted className="text-xs">Created On</TypographyMuted>
+								<TypographyMuted className="text-xs">
+									Created On
+								</TypographyMuted>
 								<p className="text-sm">
 									{localizedDayjs(lease.created_at).format('LL')}
 								</p>
@@ -168,7 +170,9 @@ export function LeaseDetailModule() {
 						<div className="flex items-center gap-2">
 							<CalendarDays className="text-muted-foreground size-4 shrink-0" />
 							<div>
-								<TypographyMuted className="text-xs">Updated On</TypographyMuted>
+								<TypographyMuted className="text-xs">
+									Updated On
+								</TypographyMuted>
 								<p className="text-sm">
 									{localizedDayjs(lease.updated_at).format('LL')}
 								</p>
@@ -221,7 +225,11 @@ export function LeaseDetailModule() {
 									<div className="grid grid-cols-2 gap-4">
 										<DetailRow
 											label="Payment Frequency"
-											value={getPaymentFrequencyLabel(lease.payment_frequency ?? '') || '—'}
+											value={
+												getPaymentFrequencyLabel(
+													lease.payment_frequency ?? '',
+												) || '—'
+											}
 										/>
 										<DetailRow
 											label="Duration"
@@ -235,7 +243,9 @@ export function LeaseDetailModule() {
 											label="Property Inspection"
 											value={
 												lease.property_inspection_date
-													? localizedDayjs(lease.property_inspection_date).format('LL')
+													? localizedDayjs(
+															lease.property_inspection_date,
+														).format('LL')
 													: '—'
 											}
 										/>
@@ -243,7 +253,9 @@ export function LeaseDetailModule() {
 											label="Utility Transfers"
 											value={
 												lease.utility_transfers_date
-													? localizedDayjs(lease.utility_transfers_date).format('LL')
+													? localizedDayjs(lease.utility_transfers_date).format(
+															'LL',
+														)
 													: '—'
 											}
 										/>
@@ -283,25 +295,40 @@ export function LeaseDetailModule() {
 										<div className="grid grid-cols-2 gap-4">
 											<DetailRow
 												label="Rent Fee"
-												value={formatAmount(convertPesewasToCedis(application.rent_fee))}
+												value={formatAmount(
+													convertPesewasToCedis(application.rent_fee),
+												)}
 											/>
 											{application.initial_deposit_fee != null && (
 												<DetailRow
 													label="Initial Deposit"
-													value={formatAmount(convertPesewasToCedis(application.initial_deposit_fee))}
+													value={formatAmount(
+														convertPesewasToCedis(
+															application.initial_deposit_fee,
+														),
+													)}
 												/>
 											)}
 											{application.payment_frequency && (
 												<DetailRow
 													label="Payment Frequency"
-													value={getPaymentFrequencyLabel(application.payment_frequency)}
+													value={getPaymentFrequencyLabel(
+														application.payment_frequency,
+													)}
 												/>
 											)}
-												<DetailRow
-													label="Security Deposit"
-													value={application.security_deposit_fee ? formatAmount(convertPesewasToCedis(application.security_deposit_fee)) : '-'}
-												/>
-											
+											<DetailRow
+												label="Security Deposit"
+												value={
+													application.security_deposit_fee
+														? formatAmount(
+																convertPesewasToCedis(
+																	application.security_deposit_fee,
+																),
+															)
+														: '-'
+												}
+											/>
 										</div>
 									</div>
 								)}
@@ -331,7 +358,9 @@ export function LeaseDetailModule() {
 												/>
 												<DetailRow
 													label="Date of Birth"
-													value={localizedDayjs(tenant.date_of_birth).format('LL')}
+													value={localizedDayjs(tenant.date_of_birth).format(
+														'LL',
+													)}
 												/>
 												<DetailRow
 													label="Nationality"
@@ -359,7 +388,9 @@ export function LeaseDetailModule() {
 												<DetailRow label="ID Number" value={tenant.id_number} />
 												{tenant.id_front_url && (
 													<div className="flex flex-col gap-0.5">
-														<TypographyMuted className="text-xs">ID Front</TypographyMuted>
+														<TypographyMuted className="text-xs">
+															ID Front
+														</TypographyMuted>
 														<a
 															href={tenant.id_front_url}
 															target="_blank"
@@ -373,7 +404,9 @@ export function LeaseDetailModule() {
 												)}
 												{tenant.id_back_url && (
 													<div className="flex flex-col gap-0.5">
-														<TypographyMuted className="text-xs">ID Back</TypographyMuted>
+														<TypographyMuted className="text-xs">
+															ID Back
+														</TypographyMuted>
 														<a
 															href={tenant.id_back_url}
 															target="_blank"
@@ -397,14 +430,19 @@ export function LeaseDetailModule() {
 													value={toFirstUpperCase(tenant.employer_type)}
 												/>
 												<DetailRow label="Employer" value={tenant.employer} />
-												<DetailRow label="Occupation" value={tenant.occupation} />
+												<DetailRow
+													label="Occupation"
+													value={tenant.occupation}
+												/>
 												<DetailRow
 													label="Occupation Address"
 													value={tenant.occupation_address}
 												/>
 												{tenant.proof_of_income_url && (
 													<div className="flex flex-col gap-0.5">
-														<TypographyMuted className="text-xs">Proof of Income</TypographyMuted>
+														<TypographyMuted className="text-xs">
+															Proof of Income
+														</TypographyMuted>
 														<a
 															href={tenant.proof_of_income_url}
 															target="_blank"
@@ -433,7 +471,9 @@ export function LeaseDetailModule() {
 												/>
 												<DetailRow
 													label="Relationship"
-													value={toFirstUpperCase(tenant.relationship_to_emergency_contact)}
+													value={toFirstUpperCase(
+														tenant.relationship_to_emergency_contact,
+													)}
 												/>
 											</div>
 										</div>
@@ -489,59 +529,65 @@ export function LeaseDetailModule() {
 												View Document
 											</a>
 											{application?.lease_agreement_document_signatures &&
-											application.lease_agreement_document_signatures.length > 0 ? (
+											application.lease_agreement_document_signatures.length >
+												0 ? (
 												<div className="space-y-2">
-													{(['PROPERTY_MANAGER', 'TENANT', 'PM_WITNESS', 'TENANT_WITNESS'] as const).map(
-														(role) => {
-															const sig =
-																application.lease_agreement_document_signatures.find(
-																	(s) => s.role === role,
-																)
-															const roleLabel: Record<typeof role, string> = {
-																PROPERTY_MANAGER: 'Property Manager',
-																TENANT: 'Tenant',
-																PM_WITNESS: 'PM Witness',
-																TENANT_WITNESS: 'Tenant Witness',
-															}
-															return (
-																<div
-																	key={role}
-																	className="flex items-center justify-between rounded-md border px-3 py-2"
-																>
-																	<div>
-																		<p className="text-xs font-medium">
-																			{roleLabel[role]}
+													{(
+														[
+															'PROPERTY_MANAGER',
+															'TENANT',
+															'PM_WITNESS',
+															'TENANT_WITNESS',
+														] as const
+													).map((role) => {
+														const sig =
+															application.lease_agreement_document_signatures.find(
+																(s) => s.role === role,
+															)
+														const roleLabel: Record<typeof role, string> = {
+															PROPERTY_MANAGER: 'Property Manager',
+															TENANT: 'Tenant',
+															PM_WITNESS: 'PM Witness',
+															TENANT_WITNESS: 'Tenant Witness',
+														}
+														return (
+															<div
+																key={role}
+																className="flex items-center justify-between rounded-md border px-3 py-2"
+															>
+																<div>
+																	<p className="text-xs font-medium">
+																		{roleLabel[role]}
+																	</p>
+																	{sig?.signed_by_name && (
+																		<p className="text-muted-foreground text-xs">
+																			{sig.signed_by_name}
 																		</p>
-																		{sig?.signed_by_name && (
-																			<p className="text-muted-foreground text-xs">
-																				{sig.signed_by_name}
-																			</p>
-																		)}
-																	</div>
-																	{sig ? (
-																		<div className="flex items-center gap-2">
-																			<Badge
-																				variant="outline"
-																				className="bg-teal-500 px-1.5 text-white"
-																			>
-																				Signed{' '}
-																				{localizedDayjs(sig.created_at).format(
-																					'LL',
-																				)}
-																			</Badge>
-																		</div>
-																	) : (
-																		<Badge
-																			variant="outline"
-																			className="bg-zinc-400 px-1.5 text-white"
-																		>
-																			Not signed
-																		</Badge>
 																	)}
 																</div>
-															)
-														},
-													)}
+																{sig ? (
+																	<div className="flex items-center gap-2">
+																		<Badge
+																			variant="outline"
+																			className="bg-teal-500 px-1.5 text-white"
+																		>
+																			Signed{' '}
+																			{localizedDayjs(sig.created_at).format(
+																				'LL',
+																			)}
+																		</Badge>
+																	</div>
+																) : (
+																	<Badge
+																		variant="outline"
+																		className="bg-zinc-400 px-1.5 text-white"
+																	>
+																		Not signed
+																	</Badge>
+																)}
+															</div>
+														)
+													})}
 												</div>
 											) : (
 												<p className="text-muted-foreground text-xs">
