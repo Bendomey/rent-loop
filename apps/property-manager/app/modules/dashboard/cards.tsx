@@ -1,4 +1,5 @@
 import { TrendingDown, TrendingUp } from 'lucide-react'
+import { useCubeQuery, useGetAnalyticsToken } from '~/api/analytics'
 import { Badge } from '~/components/ui/badge'
 import {
 	Card,
@@ -8,92 +9,259 @@ import {
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
+import { Skeleton } from '~/components/ui/skeleton'
+import { localizedDayjs } from '~/lib/date'
+import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
+
+// ---------------------------------------------------------------------------
+// Cube query result types
+// ---------------------------------------------------------------------------
+
+interface RevenueRow {
+	'Invoices.paidAmount': string | null
+	'Invoices.paidAt.month'?: string
+}
+
+interface LeaseRow {
+	'Leases.activeCount': string | null
+}
+
+interface UnitRow {
+	'Units.count': string | null
+	'Units.occupiedCount': string | null
+	'Units.availableCount': string | null
+	'Units.maintenanceCount': string | null
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function parseNum(v: string | null | undefined): number {
+	return v ? Number(v) : 0
+}
+
+function pct(a: number, b: number): string {
+	if (b === 0) return '0%'
+	return `${((a / b) * 100).toFixed(1)}%`
+}
+
+function momDelta(thisMonth: number, lastMonth: number): number {
+	if (lastMonth === 0) return 0
+	return ((thisMonth - lastMonth) / lastMonth) * 100
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export function SectionCards() {
+	const { data: token } = useGetAnalyticsToken()
+
+	const thisMonth = localizedDayjs().format('YYYY-MM')
+	const lastMonth = localizedDayjs().subtract(1, 'month').format('YYYY-MM')
+
+	// Revenue for the last 2 months (grouped by month to compute MoM delta)
+	const revenueQuery = useCubeQuery<RevenueRow>(
+		token,
+		['revenue-mom'],
+		{
+			measures: ['Invoices.paidAmount'],
+			timeDimensions: [
+				{
+					dimension: 'Invoices.paidAt',
+					granularity: 'month',
+					dateRange: 'Last 2 months',
+				},
+			],
+		},
+	)
+
+	// Active lease count
+	const leaseQuery = useCubeQuery<LeaseRow>(
+		token,
+		['active-leases'],
+		{
+			measures: ['Leases.activeCount'],
+		},
+	)
+
+	// Units breakdown
+	const unitsQuery = useCubeQuery<UnitRow>(
+		token,
+		['units-kpi'],
+		{
+			measures: [
+				'Units.count',
+				'Units.occupiedCount',
+				'Units.availableCount',
+				'Units.maintenanceCount',
+			],
+		},
+	)
+
+	const isLoading = revenueQuery.isPending || leaseQuery.isPending || unitsQuery.isPending
+
+	// Revenue figures
+	const revenueRows = revenueQuery.data ?? []
+	const thisMonthRow = revenueRows.find((r) =>
+		r['Invoices.paidAt.month']?.startsWith(thisMonth),
+	)
+	const lastMonthRow = revenueRows.find((r) =>
+		r['Invoices.paidAt.month']?.startsWith(lastMonth),
+	)
+	const thisMonthRevPesewas = parseNum(thisMonthRow?.['Invoices.paidAmount'])
+	const lastMonthRevPesewas = parseNum(lastMonthRow?.['Invoices.paidAmount'])
+	const revDelta = momDelta(thisMonthRevPesewas, lastMonthRevPesewas)
+
+	// Active leases
+	const activeLeases = parseNum(leaseQuery.data?.[0]?.['Leases.activeCount'])
+
+	// Units
+	const unitsRow = unitsQuery.data?.[0]
+	const totalUnits = parseNum(unitsRow?.['Units.count'])
+	const occupiedUnits = parseNum(unitsRow?.['Units.occupiedCount'])
+	const occupancyRate = totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0
+
 	return (
 		<div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+			{/* Total Rental Income */}
 			<Card className="@container/card">
 				<CardHeader>
-					<CardDescription>Total Revenue</CardDescription>
+					<CardDescription>Rental Income (this month)</CardDescription>
 					<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-						$1,250.00
+						{isLoading ? (
+							<Skeleton className="h-8 w-32" />
+						) : (
+							formatAmount(convertPesewasToCedis(thisMonthRevPesewas))
+						)}
 					</CardTitle>
 					<CardAction>
-						<Badge variant="outline">
-							<TrendingUp />
-							+12.5%
-						</Badge>
+						{!isLoading && (
+							<Badge variant="outline">
+								{revDelta >= 0 ? <TrendingUp /> : <TrendingDown />}
+								{revDelta >= 0 ? '+' : ''}
+								{revDelta.toFixed(1)}%
+							</Badge>
+						)}
 					</CardAction>
 				</CardHeader>
 				<CardFooter className="flex-col items-start gap-1.5 text-sm">
 					<div className="line-clamp-1 flex gap-2 font-medium">
-						Trending up this month <TrendingUp className="size-4" />
+						{revDelta >= 0 ? (
+							<>
+								Trending up this month <TrendingUp className="size-4" />
+							</>
+						) : (
+							<>
+								Down from last month <TrendingDown className="size-4" />
+							</>
+						)}
 					</div>
 					<div className="text-muted-foreground">
-						Revenue has increased compared to last month
+						Compared to {formatAmount(convertPesewasToCedis(lastMonthRevPesewas))} last month
 					</div>
 				</CardFooter>
 			</Card>
+
+			{/* Active Leases */}
 			<Card className="@container/card">
 				<CardHeader>
-					<CardDescription>New Tenants</CardDescription>
+					<CardDescription>Active Leases</CardDescription>
 					<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-						1,234
+						{isLoading ? (
+							<Skeleton className="h-8 w-16" />
+						) : (
+							activeLeases.toLocaleString()
+						)}
 					</CardTitle>
 					<CardAction>
 						<Badge variant="outline">
-							<TrendingDown />
-							-20%
+							<TrendingUp />
+							Live
 						</Badge>
 					</CardAction>
 				</CardHeader>
 				<CardFooter className="flex-col items-start gap-1.5 text-sm">
 					<div className="line-clamp-1 flex gap-2 font-medium">
-						Down 20% this period <TrendingDown className="size-4" />
+						Currently active tenancy agreements
 					</div>
 					<div className="text-muted-foreground">
-						Acquisition needs attention
+						Across all your properties
 					</div>
 				</CardFooter>
 			</Card>
+
+			{/* Occupancy Rate */}
 			<Card className="@container/card">
 				<CardHeader>
-					<CardDescription>Maintenance Requests</CardDescription>
+					<CardDescription>Occupancy Rate</CardDescription>
 					<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-						45,678
+						{isLoading ? (
+							<Skeleton className="h-8 w-20" />
+						) : (
+							pct(occupiedUnits, totalUnits)
+						)}
 					</CardTitle>
 					<CardAction>
 						<Badge variant="outline">
-							<TrendingUp />
-							+12.5%
+							{occupancyRate >= 80 ? <TrendingUp /> : <TrendingDown />}
+							{occupiedUnits}/{totalUnits} units
 						</Badge>
 					</CardAction>
 				</CardHeader>
 				<CardFooter className="flex-col items-start gap-1.5 text-sm">
 					<div className="line-clamp-1 flex gap-2 font-medium">
-						Strong user retention <TrendingUp className="size-4" />
+						{occupancyRate >= 80 ? (
+							<>
+								High occupancy <TrendingUp className="size-4" />
+							</>
+						) : (
+							<>
+								Room for improvement <TrendingDown className="size-4" />
+							</>
+						)}
 					</div>
-					<div className="text-muted-foreground">Engagement exceed targets</div>
+					<div className="text-muted-foreground">
+						{parseNum(unitsRow?.['Units.availableCount'])} available ·{' '}
+						{parseNum(unitsRow?.['Units.maintenanceCount'])} in maintenance
+					</div>
 				</CardFooter>
 			</Card>
+
+			{/* MoM Revenue Growth */}
 			<Card className="@container/card">
 				<CardHeader>
-					<CardDescription>Growth Rate</CardDescription>
+					<CardDescription>Revenue Growth (MoM)</CardDescription>
 					<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-						4.5%
+						{isLoading ? (
+							<Skeleton className="h-8 w-20" />
+						) : (
+							`${revDelta >= 0 ? '+' : ''}${revDelta.toFixed(1)}%`
+						)}
 					</CardTitle>
 					<CardAction>
 						<Badge variant="outline">
-							<TrendingUp />
-							+4.5%
+							{revDelta >= 0 ? <TrendingUp /> : <TrendingDown />}
+							Month-on-month
 						</Badge>
 					</CardAction>
 				</CardHeader>
 				<CardFooter className="flex-col items-start gap-1.5 text-sm">
 					<div className="line-clamp-1 flex gap-2 font-medium">
-						Steady performance increase <TrendingUp className="size-4" />
+						{revDelta >= 0 ? (
+							<>
+								Positive growth <TrendingUp className="size-4" />
+							</>
+						) : (
+							<>
+								Revenue declined <TrendingDown className="size-4" />
+							</>
+						)}
 					</div>
-					<div className="text-muted-foreground">Meets growth projections</div>
+					<div className="text-muted-foreground">
+						Based on paid invoices this vs last month
+					</div>
 				</CardFooter>
 			</Card>
 		</div>

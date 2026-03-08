@@ -46,6 +46,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 			API_ADDRESS: env.API_ADDRESS,
 			AUTH_TOKEN: authSession.get('authToken'),
 			GOOGLE_MAPS_API_KEY: env.GOOGLE_MAPS_API_KEY,
+			CUBEJS_API_URL: env.CUBEJS_API_URL,
 		},
 	}
 }

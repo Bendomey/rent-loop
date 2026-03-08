@@ -8,6 +8,7 @@ import (
 type Handlers struct {
 	AuthHandler               AuthHandler
 	AdminHandler              AdminHandler
+	AnalyticsHandler          AnalyticsHandler
 	ClientApplicationHandler  ClientApplicationHandler
 	ClientUserHandler         ClientUserHandler
 	PropertyHandler           PropertyHandler
@@ -27,6 +28,7 @@ type Handlers struct {
 
 func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 	authHandler := NewAuthHandler(appCtx, services.AuthService)
+	analyticsHandler := NewAnalyticsHandler(appCtx)
 	adminHandler := NewAdminHandler(appCtx, services.AdminService)
 	clientApplicationHandler := NewClientApplicationHandler(appCtx, services.ClientApplicationService)
 	clientUserHandler := NewClientUserHandler(appCtx, services.ClientUserService)
@@ -50,6 +52,7 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 
 	return Handlers{
 		AuthHandler:               authHandler,
+		AnalyticsHandler:          analyticsHandler,
 		ClientApplicationHandler:  clientApplicationHandler,
 		AdminHandler:              adminHandler,
 		ClientUserHandler:         clientUserHandler,

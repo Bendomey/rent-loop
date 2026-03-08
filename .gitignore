@@ -9,3 +9,6 @@ yarn.lock
 node_modules
 
 .idea
+
+# Cube.js local cache (pre-aggregations, query cache)
+.cubestore

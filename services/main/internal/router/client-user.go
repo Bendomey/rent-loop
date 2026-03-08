@@ -45,6 +45,9 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 		r.Group(func(r chi.Router) {
 			r.Use(middlewares.CheckForClientUserAuthPresenceMiddleware)
 
+			// analytics
+			r.Get("/v1/admin/analytics/token", handlers.AnalyticsHandler.GetToken)
+
 			// client users
 			r.Route("/v1/admin/client-users", func(r chi.Router) {
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).

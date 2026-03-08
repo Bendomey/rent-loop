@@ -4,6 +4,7 @@ declare global {
 			API_ADDRESS: string
 			AUTH_TOKEN?: string
 			GOOGLE_MAPS_API_KEY: string
+			CUBEJS_API_URL: string
 		}
 		Tawk_API: {
 			toggle: () => void

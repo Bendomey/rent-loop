@@ -25,6 +25,7 @@ export const QUERY_KEYS = {
 	INVOICES: 'invoices',
 	SIGNING_TOKENS: 'signing-tokens',
 	LEASES: 'leases',
+	ANALYTICS_TOKEN: 'analytics-token',
 } as const
 
 export const PermissionState = {
