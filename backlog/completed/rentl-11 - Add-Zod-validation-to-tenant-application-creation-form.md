@@ -1,10 +1,10 @@
 ---
 id: RENTL-11
 title: Add Zod validation to tenant application creation form
-status: Draft
+status: Done
 assignee: []
 created_date: '2026-03-04 18:57'
-updated_date: '2026-03-07 20:57'
+updated_date: '2026-03-08 15:36'
 labels:
   - frontend
   - property-manager
@@ -21,12 +21,12 @@ routes/_auth.properties.$propertyId.tenants.applications.new.ts — The action h
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Zod schema defined for all 25 form fields with correct enum values from TenantApplication type
-- [ ] #2 Action handler uses Object.fromEntries(formData) + safeParse instead of 25 individual formData.get() calls
-- [ ] #3 Invalid/missing fields return { error, fieldErrors } without calling the API
-- [ ] #4 Valid data passes through replaceNullUndefinedWithUndefined to createTenantApplication unchanged
-- [ ] #5 yarn types:check passes
-- [ ] #6 yarn lint passes — no unused variable warnings
+- [x] #1 Zod schema defined for all 25 form fields with correct enum values from TenantApplication type
+- [x] #2 Action handler uses Object.fromEntries(formData) + safeParse instead of 25 individual formData.get() calls
+- [x] #3 Invalid/missing fields return { error, fieldErrors } without calling the API
+- [x] #4 Valid data passes through replaceNullUndefinedWithUndefined to createTenantApplication unchanged
+- [x] #5 yarn types:check passes
+- [x] #6 yarn lint passes — no unused variable warnings
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -144,3 +144,9 @@ export async function action({ request }: Route.ActionArgs) {
 4. Submit with invalid email → `fieldErrors.email` contains the validation message
 5. Submit complete valid form → application created, redirected to list
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Replaced 25 individual `formData.get()` type-cast lines in the action handler with a single Zod `safeParse` call. Added `CreateTenantApplicationSchema` with all 25 fields — optional nullable fields use `.nullable().default(null)` to satisfy `Maybe<string>` / `Nullable<string>` required keys in `CreatePropertyTenantApplicationInput`. Invalid submissions return `{ error, fieldErrors }` without hitting the API. `yarn types:check` and `yarn lint` both pass with no new warnings.
+<!-- SECTION:FINAL_SUMMARY:END -->
