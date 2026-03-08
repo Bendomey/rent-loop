@@ -230,7 +230,9 @@ func roleScope(role *string) func(db *gorm.DB) *gorm.DB {
 
 func joinPropertiesScope() func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		return db.Joins("JOIN properties ON properties.id = client_user_properties.property_id AND properties.deleted_at IS NULL")
+		return db.Joins(
+			"JOIN properties ON properties.id = client_user_properties.property_id AND properties.deleted_at IS NULL",
+		)
 	}
 }
 
