@@ -4,11 +4,12 @@ title: duplicate a unit
 status: To Do
 assignee: []
 created_date: '2026-03-07 20:07'
-updated_date: '2026-03-07 20:30'
+updated_date: '2026-03-08 14:29'
 labels: []
 milestone: m-4
 dependencies: []
 priority: high
+ordinal: 1000
 ---
 
 ## Description

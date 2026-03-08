@@ -1,14 +1,15 @@
 ---
 id: RENTL-15
 title: Add suggested feature listings when creating/updating units
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-07 20:03'
-updated_date: '2026-03-07 20:23'
+updated_date: '2026-03-08 14:37'
 labels: []
 milestone: m-4
 dependencies: []
 priority: high
+ordinal: 1000
 ---
 
 ## Description
@@ -26,13 +27,13 @@ Users enter their features listings manually. Problem is they might not think of
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Features section shows both 'Add' and 'Suggestions' buttons
-- [ ] #2 Clicking 'Suggestions' opens a dialog with features grouped by category (Space, Amenities, Building, Policy)
-- [ ] #3 Checking a suggestion pre-fills its default value; the value is editable before adding
-- [ ] #4 Features already added to the form show as disabled/already-added in the dialog
-- [ ] #5 Clicking 'Add X Features' adds all selected suggestions to the form and closes the dialog
-- [ ] #6 Light and dark mode both render correctly (dark mode fix on hover background)
-- [ ] #7 yarn types:check passes
+- [x] #1 Features section shows both 'Add' and 'Suggestions' buttons
+- [x] #2 Clicking 'Suggestions' opens a dialog with features grouped by category (Space, Amenities, Building, Policy)
+- [x] #3 Checking a suggestion pre-fills its default value; the value is editable before adding
+- [x] #4 Features already added to the form show as disabled/already-added in the dialog
+- [x] #5 Clicking 'Add X Features' adds all selected suggestions to the form and closes the dialog
+- [x] #6 Light and dark mode both render correctly (dark mode fix on hover background)
+- [x] #7 yarn types:check passes
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -281,3 +282,9 @@ Also fix the existing "Add" button: add `dark:hover:bg-zinc-900` to it.
 - Features already in the form show as disabled with "(already added)" label
 - Value inputs appear inline when a suggestion is checked — user can edit before adding
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implemented in `apps/property-manager/app/components/feature.tsx`. Added `SUGGESTED_FEATURES` constant with 47 features across 6 categories (Space, Appliances & Furnishing, Building & Facilities, Security & Utilities, Policy & Access, Office / Commercial). Added `suggestionsOpen` and `selectedSuggestions` state. Added a "Suggestions" dashed button alongside the existing "Add" button in the features grid. Added a scrollable Dialog that renders all categories with Checkbox + inline editable Input per feature. Features already added to the form show as disabled with "(already added)" label. "Add X Features" button merges selections into form state and closes dialog. Fixed dark mode hover (`dark:hover:bg-zinc-900`) on both grid buttons. `yarn types:check` passes.
+<!-- SECTION:FINAL_SUMMARY:END -->
