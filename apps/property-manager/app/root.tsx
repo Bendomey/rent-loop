@@ -61,12 +61,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				<Links />
 			</head>
 			<body>
-				<ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-				{children}
-				<TopbarLoader />
-				<Toaster position="top-center" />
-				<script>
-					{`
+				<ThemeProvider
+					attribute="class"
+					defaultTheme="light"
+					enableSystem
+					disableTransitionOnChange
+				>
+					{children}
+					<TopbarLoader />
+					<Toaster position="top-center" />
+					<script>
+						{`
 						var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
 						(function(){
 							var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
@@ -77,9 +82,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 							s0.parentNode.insertBefore(s1,s0);
 						})();
 						`}
-				</script>
-				<ScrollRestoration />
-				<Scripts />
+					</script>
+					<ScrollRestoration />
+					<Scripts />
 				</ThemeProvider>
 			</body>
 		</html>

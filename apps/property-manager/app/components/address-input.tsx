@@ -156,11 +156,15 @@ export function AddressInput() {
 		resetSessionToken()
 	}
 
-	const isOpened = showDropdown && (isPending || isError || Boolean(placePredictions))
+	const isOpened =
+		showDropdown && (isPending || isError || Boolean(placePredictions))
 
 	return (
 		<div className="relative w-full">
-			<Command className="bg-background w-full rounded-lg border" shouldFilter={false}>
+			<Command
+				className="bg-background w-full rounded-lg border"
+				shouldFilter={false}
+			>
 				<CommandInput
 					value={watch('addressSearch') || ''}
 					placeholder="Search by address"

@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { CircleCheck, Eye, Users } from 'lucide-react'
+import { CircleCheck, Copy, EllipsisVertical, Eye, Users } from 'lucide-react'
 import { useMemo } from 'react'
 import { useSearchParams, useNavigate } from 'react-router'
 import { PropertyAssetUnitsController } from './controller'
@@ -16,6 +16,12 @@ import {
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
@@ -108,12 +114,12 @@ export function PropertyAssetUnitsModule() {
 							</div>
 						</CardContent>
 
-						<CardFooter className="flex justify-around border-t-[1px] pt-3">
+						<CardFooter className="flex space-x-2 border-t-[1px] pt-3">
 							<Button
 								type="button"
 								variant="outline"
 								size="icon-sm"
-								className="flex w-full flex-row gap-2 py-5 text-xs text-zinc-500"
+								className="flex w-10/12 flex-row gap-2 py-5 text-xs text-zinc-500"
 								onClick={() => {
 									void navigate(
 										`/properties/${data.property_id}/assets/units/${data.id}`,
@@ -123,6 +129,25 @@ export function PropertyAssetUnitsModule() {
 								<Eye />
 								View
 							</Button>
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button variant="ghost" size="icon">
+										<EllipsisVertical className="size-4" />
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align="end">
+									<DropdownMenuItem
+										onClick={() =>
+											void navigate(
+												`/properties/${data.property_id}/assets/units/new?unit_id=${data.id}`,
+											)
+										}
+									>
+										<Copy className="size-4" />
+										Duplicate
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
 						</CardFooter>
 					</Card>
 				)

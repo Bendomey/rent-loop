@@ -56,11 +56,17 @@ app/
 
 ## Dark Mode
 
-- The portal supports dark/light theme toggling — all UI changes MUST work in both modes
-- Use Tailwind's `dark:` variant for mode-specific styles — never hardcode colors that only work in one mode
-- Prefer Shadcn/Radix primitives and CSS variables (`bg-background`, `text-foreground`, `border`, `muted`, etc.) as they handle theming automatically
-- Avoid raw color classes (e.g. `bg-white`, `text-black`, `bg-gray-100`) without a `dark:` counterpart
-- Always verify new UI in both light and dark modes before considering a change complete
+- The portal supports dark/light theme toggling — all UI changes MUST work in
+  both modes
+- Use Tailwind's `dark:` variant for mode-specific styles — never hardcode
+  colors that only work in one mode
+- Prefer Shadcn/Radix primitives and CSS variables (`bg-background`,
+  `text-foreground`, `border`, `muted`, etc.) as they handle theming
+  automatically
+- Avoid raw color classes (e.g. `bg-white`, `text-black`, `bg-gray-100`) without
+  a `dark:` counterpart
+- Always verify new UI in both light and dark modes before considering a change
+  complete
 
 ## UI Patterns
 

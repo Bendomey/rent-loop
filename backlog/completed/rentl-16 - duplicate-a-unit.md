@@ -1,10 +1,10 @@
 ---
 id: RENTL-16
 title: duplicate a unit
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-07 20:07'
-updated_date: '2026-03-08 14:29'
+updated_date: '2026-03-08 15:12'
 labels: []
 milestone: m-4
 dependencies: []
@@ -23,15 +23,15 @@ ordinal: 1000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Unit listing cards show both 'View' and 'Duplicate' buttons in the footer
-- [ ] #2 Clicking 'Duplicate' navigates to the create unit page with ?unit_id={id} param
-- [ ] #3 Create unit page shows 'Duplicate Unit' heading when unit_id param is present
-- [ ] #4 All fields pre-populated from source unit (type, description, image, features, area, occupants, rent fee, currency, payment frequency, block)
-- [ ] #5 Name field defaults to '{original name} (copy)' and is editable
-- [ ] #6 Status always defaults to Draft regardless of source unit's status
-- [ ] #7 Rent fee is correctly converted from pesewas to cedis in the form
-- [ ] #8 Saving creates a new unit as draft and redirects to units list
-- [ ] #9 yarn types:check passes
+- [x] #1 Unit listing cards show both 'View' and 'Duplicate' buttons in the footer
+- [x] #2 Clicking 'Duplicate' navigates to the create unit page with ?unit_id={id} param
+- [x] #3 Create unit page shows 'Duplicate Unit' heading when unit_id param is present
+- [x] #4 All fields pre-populated from source unit (type, description, image, features, area, occupants, rent fee, currency, payment frequency, block)
+- [x] #5 Name field defaults to '{original name} (copy)' and is editable
+- [x] #6 Status always defaults to Draft regardless of source unit's status
+- [x] #7 Rent fee is correctly converted from pesewas to cedis in the form
+- [x] #8 Saving creates a new unit as draft and redirects to units list
+- [x] #9 yarn types:check passes
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -191,3 +191,13 @@ Update header to show duplicate mode:
 - `image_url` pre-population works because `ImageUpload` reads `imageSrc={safeString(watch('image_url') ?? '')}`
 - `getPropertyUnitForServer` already exists in `app/api/units/server.ts` — no new API functions needed
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Three files modified:
+
+1. `app/modules/.../assets/units/index.tsx` — Added `Copy` icon import; added "Duplicate" button to `CardFooter` alongside "View", navigating to `/new?unit_id={id}`
+2. `app/routes/_auth.properties.$propertyId.assets.units.new.ts` — Loader now reads `unit_id` search param, fetches source unit via `getPropertyUnitForServer`, and returns it as `sourceUnit`
+3. `app/modules/.../assets/units/new/index.tsx` — Added `useEffect` that calls `rhfMethods.reset()` with source unit values when `sourceUnit` is present; name defaults to `{name} (copy)`, status always `Unit.Status.Draft`, rent converted from pesewas via `convertPesewasToCedis`; heading shows "Duplicate Unit" when in duplicate mode. `yarn types:check` passes.
+<!-- SECTION:FINAL_SUMMARY:END -->

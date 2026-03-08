@@ -1,6 +1,7 @@
 import { redirect } from 'react-router'
 import type { Route } from './+types/_auth.properties.$propertyId.assets.units._index'
 import { createPropertyUnit } from '~/api/units'
+import { getPropertyUnitForServer } from '~/api/units/server'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
@@ -18,9 +19,24 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 		return redirect(NOT_FOUND_ROUTE)
 	}
 
+	const url = new URL(request.url)
+	const unitId = url.searchParams.get('unit_id')
+
+	let sourceUnit: PropertyUnit | null = null
+	if (unitId && clientUserProperty?.property?.id) {
+		const baseUrl = environmentVariables().API_ADDRESS
+		const authSession = await getAuthSession(request.headers.get('Cookie'))
+		sourceUnit =
+			(await getPropertyUnitForServer(
+				{ property_id: clientUserProperty.property.id, unit_id: unitId },
+				{ baseUrl, authToken: authSession.get('authToken') },
+			)) ?? null
+	}
+
 	return {
 		origin: getDomainUrl(request),
 		clientUserProperty,
+		sourceUnit,
 	}
 }
 
