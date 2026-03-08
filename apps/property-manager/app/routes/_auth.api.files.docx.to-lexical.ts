@@ -5,6 +5,7 @@ import { createDocumentSSR } from '~/api/documents'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { htmlToLexicalState } from '~/lib/actions/editor-utils.server'
 import { environmentVariables } from '~/lib/actions/env.server'
+import { captureException } from '~/lib/actions/sentry.server'
 import { removeFileExtension } from '~/lib/strings'
 
 export async function action({ request }: Route.ActionArgs) {
@@ -63,7 +64,7 @@ export async function action({ request }: Route.ActionArgs) {
 			headers: { 'Content-Type': 'application/json' },
 		})
 	} catch (error) {
-		// TODO: sentry capture can be added here for better error tracking
+		captureException(error)
 		console.error('Error importing DOCX:', error)
 		return new Response(JSON.stringify({ error: 'FailedToImportDOCX' }), {
 			headers: { 'Content-Type': 'application/json' },

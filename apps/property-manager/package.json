@@ -60,6 +60,7 @@
     "@react-router/fs-routes": "7.9.4",
     "@react-router/node": "7.9.2",
     "@react-router/serve": "7.9.2",
+    "@sentry/node": "^10.42.0",
     "@tanstack/react-query": "5.90.5",
     "@tanstack/react-query-devtools": "5.90.2",
     "@tanstack/react-table": "8.21.3",

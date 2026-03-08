@@ -1,6 +1,7 @@
 import fs from 'fs'
 import pdf2html from 'pdf2html'
 import type { Route } from './+types/_auth.api.files.pdf.to-thumbnail'
+import { captureException } from '~/lib/actions/sentry.server'
 
 export async function action({ request }: Route.ActionArgs) {
 	const form = await request.formData()
@@ -29,7 +30,7 @@ export async function action({ request }: Route.ActionArgs) {
 			headers: { 'Content-Type': 'application/json' },
 		})
 	} catch (error) {
-		// TODO: sentry capture can be added here for better error tracking
+		captureException(error)
 		console.error('Error generating thumbnail:', error)
 		return new Response(
 			JSON.stringify({ error: 'FailedToGenerateThumbnail' }),
