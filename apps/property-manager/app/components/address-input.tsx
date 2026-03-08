@@ -49,10 +49,11 @@ export function AddressInput() {
 	const { setValue, watch } = useFormContext<AddressInputSchema>()
 	const [sessionToken, setSessionToken] =
 		useState<google.maps.places.AutocompleteSessionToken | null>(null)
+	const [showDropdown, setShowDropdown] = useState(false)
 
 	const debouncedSearch = useDebounce({
 		delay: 250,
-		value: watch('addressSearch'),
+		value: watch('addressSearch') ?? '',
 	})
 	const {
 		data: placePredictions,
@@ -60,7 +61,10 @@ export function AddressInput() {
 		isError,
 	} = useGooglePlacesAutocompleteQuery({
 		enabled:
-			sessionToken !== null && watch('addressSearch') !== debouncedSearch,
+			isLoaded &&
+			sessionToken !== null &&
+			debouncedSearch.length > 0 &&
+			showDropdown,
 		query: debouncedSearch,
 		sessionToken,
 		region: 'gh',
@@ -134,6 +138,7 @@ export function AddressInput() {
 	const handleSelectedPlace = async (
 		prediction: google.maps.places.PlacePrediction,
 	) => {
+		setShowDropdown(false)
 		setValue('addressSearch', prediction.text.text, {
 			shouldDirty: true,
 			shouldValidate: true,
@@ -148,45 +153,53 @@ export function AddressInput() {
 			shouldValidate: true,
 		})
 		handleSelectedLocationChange(place)
+		resetSessionToken()
 	}
 
-	const isOpened = isPending || isError || Boolean(placePredictions)
+	const isOpened = showDropdown && (isPending || isError || Boolean(placePredictions))
 
 	return (
-		<Command className="w-full rounded-lg border bg-white" shouldFilter={false}>
-			<CommandInput
-				value={watch('addressSearch') || ''}
-				placeholder="Search by address"
-				onValueChange={(value) => {
-					setValue('addressSearch', value, { shouldDirty: true })
-				}}
-			/>
+		<div className="relative w-full">
+			<Command className="bg-background w-full rounded-lg border" shouldFilter={false}>
+				<CommandInput
+					value={watch('addressSearch') || ''}
+					placeholder="Search by address"
+					onValueChange={(value) => {
+						setValue('addressSearch', value, { shouldDirty: true })
+						setShowDropdown(true)
+					}}
+				/>
+			</Command>
 
 			{isOpened ? (
-				<CommandList>
-					{isPending ? (
-						<div className="text-muted-foreground p-4 text-center text-sm">
-							Loading...
-						</div>
-					) : isError ? (
-						<CommandEmpty>Error fetching results</CommandEmpty>
-					) : placePredictions?.length === 0 ? (
-						<CommandEmpty>No results found.</CommandEmpty>
-					) : (
-						<CommandGroup>
-							{placePredictions?.map((prediction) => (
-								<CommandItem
-									key={prediction.placeId}
-									value={prediction.placeId}
-									onSelect={() => handleSelectedPlace(prediction)}
-								>
-									{prediction.text.text}
-								</CommandItem>
-							))}
-						</CommandGroup>
-					)}
-				</CommandList>
+				<div className="bg-background absolute top-full right-0 left-0 z-50 mt-1 rounded-lg border shadow-md">
+					<Command shouldFilter={false}>
+						<CommandList>
+							{isPending ? (
+								<div className="text-muted-foreground p-4 text-center text-sm">
+									Loading...
+								</div>
+							) : isError ? (
+								<CommandEmpty>Error fetching results</CommandEmpty>
+							) : placePredictions?.length === 0 ? (
+								<CommandEmpty>No results found.</CommandEmpty>
+							) : (
+								<CommandGroup>
+									{placePredictions?.map((prediction) => (
+										<CommandItem
+											key={prediction.placeId}
+											value={prediction.placeId}
+											onSelect={() => void handleSelectedPlace(prediction)}
+										>
+											{prediction.text.text}
+										</CommandItem>
+									))}
+								</CommandGroup>
+							)}
+						</CommandList>
+					</Command>
+				</div>
 			) : null}
-		</Command>
+		</div>
 	)
 }

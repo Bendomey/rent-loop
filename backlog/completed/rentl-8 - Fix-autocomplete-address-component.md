@@ -1,10 +1,10 @@
 ---
 id: RENTL-8
 title: Fix autocomplete address component
-status: Draft
+status: Done
 assignee: []
 created_date: '2026-03-05 09:05'
-updated_date: '2026-03-07 15:17'
+updated_date: '2026-03-08 14:55'
 labels:
   - frontend
   - property-manager
@@ -22,12 +22,12 @@ Fix the autocomplete address component — currently has issues with address sel
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Typing a partial address shows Google suggestions in the dropdown
-- [ ] #2 Selecting a suggestion closes the dropdown and populates city/region/country/lat/lng fields
-- [ ] #3 Typing again after a selection re-opens the dropdown with fresh suggestions
-- [ ] #4 Clearing the input does not show stale suggestions
-- [ ] #5 Dropdown background renders correctly in dark mode (not white-on-dark)
-- [ ] #6 yarn types:check passes
+- [x] #1 Typing a partial address shows Google suggestions in the dropdown
+- [x] #2 Selecting a suggestion closes the dropdown and populates city/region/country/lat/lng fields
+- [x] #3 Typing again after a selection re-opens the dropdown with fresh suggestions
+- [x] #4 Clearing the input does not show stale suggestions
+- [x] #5 Dropdown background renders correctly in dark mode (not white-on-dark)
+- [x] #6 yarn types:check passes
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -63,3 +63,15 @@ Single file: `apps/property-manager/app/components/address-input.tsx`
 - Call `resetSessionToken()` after place selection
 - Change `bg-white` → `bg-background`
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Fixed `apps/property-manager/app/components/address-input.tsx`:
+
+1. **Inverted `enabled` bug** — replaced `watch('addressSearch') !== debouncedSearch` (backwards) with `isLoaded && sessionToken !== null && debouncedSearch.length > 0 && showDropdown`
+2. **Dropdown re-opens after selection** — added `showDropdown` boolean state; set to `false` on selection, `true` on user typing via `onValueChange`
+3. **Session token not reset** — added `resetSessionToken()` call after `place.fetchFields()` completes
+4. **Dark mode** — changed `bg-white` to `bg-background` on the Command container
+5. **`isOpened` gate** — now guarded by `showDropdown` so stale predictions don't re-show
+<!-- SECTION:FINAL_SUMMARY:END -->
