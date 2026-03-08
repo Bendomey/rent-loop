@@ -117,7 +117,9 @@ export function NavUser() {
 									<Bell />
 									Notifications
 								</DropdownMenuItem>
-								<DropdownMenuItem onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+								<DropdownMenuItem
+									onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+								>
 									{theme === 'dark' ? <Sun /> : <Moon />}
 									{theme === 'dark' ? 'Light' : 'Dark'}
 								</DropdownMenuItem>

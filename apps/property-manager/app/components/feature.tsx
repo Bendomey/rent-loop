@@ -111,7 +111,9 @@ export function FeatureInput() {
 	const [featureKey, setFeatureKey] = useState('')
 	const [featureValue, setFeatureValue] = useState('')
 	const [suggestionsOpen, setSuggestionsOpen] = useState(false)
-	const [selectedSuggestions, setSelectedSuggestions] = useState<Record<string, string>>({})
+	const [selectedSuggestions, setSelectedSuggestions] = useState<
+		Record<string, string>
+	>({})
 
 	const features = watch('features') || {}
 	const entries = Object.entries(features)
@@ -254,74 +256,78 @@ export function FeatureInput() {
 					<DialogHeader>
 						<DialogTitle>Feature Suggestions</DialogTitle>
 						<DialogDescription>
-							Select features to add to your unit. You can edit the values before adding.
+							Select features to add to your unit. You can edit the values
+							before adding.
 						</DialogDescription>
 					</DialogHeader>
 
 					<div className="min-h-0 flex-1 overflow-y-auto">
-					<div className="space-y-5">
-						{SUGGESTED_FEATURES.map((group) => (
-							<div key={group.category}>
-								<p className="text-muted-foreground mb-2 text-xs font-semibold uppercase tracking-wide">
-									{group.category}
-								</p>
-								<div className="space-y-2">
-									{group.features.map((suggestion) => {
-										const alreadyAdded = !!features[suggestion.key]
-										const isSelected = suggestion.key in selectedSuggestions
-										return (
-											<div key={suggestion.key} className="flex items-center gap-3">
-												<Checkbox
-													checked={isSelected}
-													disabled={alreadyAdded}
-													onCheckedChange={(checked) => {
-														if (checked) {
-															setSelectedSuggestions((prev) => ({
-																...prev,
-																[suggestion.key]: suggestion.defaultValue,
-															}))
-														} else {
-															setSelectedSuggestions((prev) => {
-																const next = { ...prev }
-																delete next[suggestion.key]
-																return next
-															})
-														}
-													}}
-												/>
-												<span
-													className={cn(
-														'flex-1 text-sm',
-														alreadyAdded && 'text-muted-foreground',
-													)}
+						<div className="space-y-5">
+							{SUGGESTED_FEATURES.map((group) => (
+								<div key={group.category}>
+									<p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
+										{group.category}
+									</p>
+									<div className="space-y-2">
+										{group.features.map((suggestion) => {
+											const alreadyAdded = !!features[suggestion.key]
+											const isSelected = suggestion.key in selectedSuggestions
+											return (
+												<div
+													key={suggestion.key}
+													className="flex items-center gap-3"
 												>
-													{suggestion.key}
-													{alreadyAdded && (
-														<span className="text-muted-foreground ml-1 text-xs">
-															(already added)
-														</span>
-													)}
-												</span>
-												{isSelected && (
-													<Input
-														value={selectedSuggestions[suggestion.key]}
-														onChange={(e) =>
-															setSelectedSuggestions((prev) => ({
-																...prev,
-																[suggestion.key]: e.target.value,
-															}))
-														}
-														className="w-28"
-														placeholder="Value"
+													<Checkbox
+														checked={isSelected}
+														disabled={alreadyAdded}
+														onCheckedChange={(checked) => {
+															if (checked) {
+																setSelectedSuggestions((prev) => ({
+																	...prev,
+																	[suggestion.key]: suggestion.defaultValue,
+																}))
+															} else {
+																setSelectedSuggestions((prev) => {
+																	const next = { ...prev }
+																	delete next[suggestion.key]
+																	return next
+																})
+															}
+														}}
 													/>
-												)}
-											</div>
-										)
-									})}
+													<span
+														className={cn(
+															'flex-1 text-sm',
+															alreadyAdded && 'text-muted-foreground',
+														)}
+													>
+														{suggestion.key}
+														{alreadyAdded && (
+															<span className="text-muted-foreground ml-1 text-xs">
+																(already added)
+															</span>
+														)}
+													</span>
+													{isSelected && (
+														<Input
+															value={selectedSuggestions[suggestion.key]}
+															onChange={(e) =>
+																setSelectedSuggestions((prev) => ({
+																	...prev,
+																	[suggestion.key]: e.target.value,
+																}))
+															}
+															className="w-28"
+															placeholder="Value"
+														/>
+													)}
+												</div>
+											)
+										})}
+									</div>
 								</div>
-							</div>
-						))}
-					</div>
+							))}
+						</div>
 					</div>
 
 					<DialogFooter>

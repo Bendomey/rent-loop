@@ -46,6 +46,7 @@ import {
 } from '~/components/ui/typography'
 import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
 import { useUploadObject } from '~/hooks/use-upload-object'
+import { convertPesewasToCedis } from '~/lib/format-amount'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import type { loader } from '~/routes/_auth.properties.$propertyId.assets.units.new'
@@ -150,7 +151,7 @@ const paymentFrequencies: Array<{
 ]
 
 export function NewPropertyAssetUnitsModule() {
-	const { clientUserProperty } = useLoaderData<typeof loader>()
+	const { clientUserProperty, sourceUnit } = useLoaderData<typeof loader>()
 	const property_id = safeString(clientUserProperty?.property?.id)
 	const createFetcher = useFetcher<{ error: string }>()
 
@@ -187,6 +188,26 @@ export function NewPropertyAssetUnitsModule() {
 			})
 		}
 	}, [objectUrl, rhfMethods])
+
+	useEffect(() => {
+		if (!sourceUnit) return
+		rhfMethods.reset({
+			status: 'Unit.Status.Draft',
+			type: sourceUnit.type,
+			name: `${sourceUnit.name} (copy)`,
+			description: sourceUnit.description ?? '',
+			image_url: sourceUnit.images?.[0] ?? '',
+			features: sourceUnit.features ?? {},
+			tags: [],
+			area: sourceUnit.area ?? undefined,
+			max_occupants_allowed: sourceUnit.max_occupants_allowed ?? 1,
+			rent_fee: convertPesewasToCedis(sourceUnit.rent_fee),
+			rent_fee_currency: sourceUnit.rent_fee_currency,
+			payment_frequency: sourceUnit.payment_frequency,
+			property_block_id: sourceUnit.property_block_id,
+			block: sourceUnit.property_block?.name ?? '',
+		})
+	}, [sourceUnit, rhfMethods])
 
 	useEffect(() => {
 		if (createFetcher?.data?.error) {
@@ -242,10 +263,13 @@ export function NewPropertyAssetUnitsModule() {
 			>
 				{/* Header */}
 				<div className="space-y-2">
-					<TypographyH2>Add New Property Unit</TypographyH2>
+					<TypographyH2>
+						{sourceUnit ? 'Duplicate Unit' : 'Add New Property Unit'}
+					</TypographyH2>
 					<TypographyMuted>
-						We break down properties into units to better organize and manage
-						rental spaces.
+						{sourceUnit
+							? 'Review and adjust the copied details, then save to create the new unit.'
+							: 'We break down properties into units to better organize and manage rental spaces.'}
 					</TypographyMuted>
 				</div>
 
