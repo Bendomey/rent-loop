@@ -3,6 +3,7 @@ import './app.css'
 import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat.js'
 import 'dayjs/locale/en-gb.js'
+import { ThemeProvider } from 'next-themes'
 import {
 	isRouteErrorResponse,
 	Links,
@@ -14,7 +15,6 @@ import {
 } from 'react-router'
 import type { Route } from './+types/root'
 
-import { ThemeProvider } from 'next-themes'
 
 import { TopbarLoader } from './components/top-bar-loader'
 import { Toaster } from './components/ui/sonner'
