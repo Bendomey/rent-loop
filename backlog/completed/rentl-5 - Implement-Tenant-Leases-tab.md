@@ -1,10 +1,10 @@
 ---
 id: RENTL-5
 title: Implement Tenant Leases tab
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-04 18:56'
-updated_date: '2026-03-07 13:17'
+updated_date: '2026-03-08 16:23'
 labels:
   - frontend
   - property-manager
@@ -106,3 +106,22 @@ Add `Leases` item to the Tenants nav group:
 ```
 Added after `Applications` in the existing Tenants items array (line ~80).
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implemented the Tenant Leases tab in three locations plus a new property-wide leases view.
+
+Files created/modified:
+- `app/lib/constants.ts`: Added `LEASES` query key
+- `types/lease.d.ts`: Added `FetchLeaseFilter` interface
+- `app/api/leases/index.ts` (NEW): `useGetPropertyLeases` and `useGetTenantLeases` hooks
+- `app/routes/_auth.properties.$propertyId.tenants.leases.tsx` (NEW): Property-wide leases route
+- `app/modules/properties/property/tenants/leases/index.tsx` (NEW): `PropertyTenantLeasesModule` — DataTable with Tenant link, Unit link, Status badge, Rent, Move-in date, Created date columns
+- `app/modules/properties/property/assets/units/unit/leases/index.tsx` (IMPLEMENTED): `PropertyAssetUnitLeasesModule` — filters by `unit_ids=[unitId]`, shows Tenant link, Status, Rent, Move-in date, Duration columns
+- `app/modules/properties/property/tenants/all/tenant/leases/index.tsx` (IMPLEMENTED): `TenantLeasesModule` — uses `useGetTenantLeases`, shows Unit link, Status, Rent, Move-in date, Duration columns
+- `app/modules/properties/property/layout/sidebar.tsx`: Added Leases item to Tenants nav group
+- `app/modules/index.ts`: Added export for `PropertyTenantLeasesModule`
+
+Status badge colors: Pending=yellow, Active=teal, Completed=blue, Cancelled=zinc, Terminated=rose
+<!-- SECTION:FINAL_SUMMARY:END -->

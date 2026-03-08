@@ -78,6 +78,10 @@ export function PropertySidebar({
 						title: 'Applications',
 						url: '/applications',
 					},
+					{
+						title: 'Leases',
+						url: '/leases',
+					},
 				],
 			},
 			{

@@ -1,5 +1,12 @@
+interface FetchLeaseFilter {
+	status?: string
+	unit_ids?: string[]
+	ids?: string[]
+}
+
 interface Lease {
 	id: string
+	code: string
 	status:
 		| 'Lease.Status.Pending'
 		| 'Lease.Status.Active'
