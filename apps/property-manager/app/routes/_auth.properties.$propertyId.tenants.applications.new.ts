@@ -32,7 +32,9 @@ const CreateTenantApplicationSchema = z.object({
 	id_number: z.string().min(1, 'ID number is required'),
 	id_front_url: z.string().nullable().default(null),
 	id_back_url: z.string().nullable().default(null),
-	emergency_contact_name: z.string().min(1, 'Emergency contact name is required'),
+	emergency_contact_name: z
+		.string()
+		.min(1, 'Emergency contact name is required'),
 	emergency_contact_phone: z
 		.string()
 		.min(1, 'Emergency contact phone is required'),
@@ -89,7 +91,9 @@ export async function action({ request }: Route.ActionArgs) {
 			throw new Error('Tenant application creation returned no data')
 		}
 
-		return redirect(`/properties/${result.data.property_id}/tenants/applications/${tenantApplication.id}`)
+		return redirect(
+			`/properties/${result.data.property_id}/tenants/applications/${tenantApplication.id}`,
+		)
 	} catch {
 		return { error: 'Failed to create tenant application' }
 	}
