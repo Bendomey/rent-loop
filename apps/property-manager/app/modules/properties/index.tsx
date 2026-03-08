@@ -20,8 +20,14 @@ export function PropertiesModule() {
 		? Number(searchParams.get('pageSize'))
 		: PAGINATION_DEFAULTS.PER_PAGE
 
+	const property_status = searchParams.get('property_status') ?? undefined
+	const property_type = searchParams.get('property_type') ?? undefined
+
 	const { data, isPending, isRefetching, error, refetch } = useGetMyProperties({
-		filters: {},
+		filters: {
+			property_status,
+			property_type,
+		},
 		pagination: { page, per },
 		populate: ['Property'],
 		sorter: { sort: 'desc', sort_by: 'created_at' },

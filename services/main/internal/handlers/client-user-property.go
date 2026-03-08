@@ -67,10 +67,12 @@ func (h *ClientUserPropertyHandler) ListClientUserProperties(w http.ResponseWrit
 	}
 
 	input := repository.ListClientUserPropertiesFilter{
-		FilterQuery:  *filterQuery,
-		ClientUserID: &clientUser.ID,
-		Role:         lib.NullOrString(r.URL.Query().Get("role")),
-		IDs:          lib.NullOrStringArray(r.URL.Query()["ids"]),
+		FilterQuery:    *filterQuery,
+		ClientUserID:   &clientUser.ID,
+		Role:           lib.NullOrString(r.URL.Query().Get("role")),
+		IDs:            lib.NullOrStringArray(r.URL.Query()["ids"]),
+		PropertyStatus: lib.NullOrString(r.URL.Query().Get("property_status")),
+		PropertyType:   lib.NullOrString(r.URL.Query().Get("property_type")),
 	}
 
 	properties, propertiesErr := h.service.ListClientUserProperties(r.Context(), input)

@@ -1,45 +1,44 @@
-import { Plus, RotateCw } from 'lucide-react'
+import { Plus, RotateCw, ToggleLeft } from 'lucide-react'
 import { Link } from 'react-router'
-// import { FilterSet } from '~/components/filter-set'
-// import { SearchInput } from '~/components/search'
+import { FilterSet } from '~/components/filter-set'
+import { SearchInput } from '~/components/search'
 import { Button } from '~/components/ui/button'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { cn } from '~/lib/utils'
 
-// TODO: bring this back after API supports it.
-// const filters: Array<Filter> = [
-// 	{
-// 		id: 1,
-// 		type: 'selector',
-// 		selectType: 'single',
-// 		label: 'Status',
-// 		value: {
-// 			options: [
-// 				{ label: 'Active', value: 'Property.Status.Active' },
-// 				{ label: 'Inactive', value: 'Property.Status.Inactive' },
-// 				{ label: 'Maintenance', value: 'Property.Status.Maintenance' },
-// 			],
-// 			urlParam: 'status',
-// 			defaultValues: [],
-// 		},
-// 		Icon: ToggleLeft,
-// 	},
-// 	{
-// 		id: 2,
-// 		type: 'selector',
-// 		selectType: 'single',
-// 		label: 'Type',
-// 		value: {
-// 			options: [
-// 				{ label: 'Single', value: 'SINGLE' },
-// 				{ label: 'Multi', value: 'MULTI' },
-// 			],
-// 			urlParam: 'type',
-// 			defaultValues: [],
-// 		},
-// 		Icon: ToggleLeft,
-// 	},
-// ]
+const filters: Array<Filter> = [
+	{
+		id: 1,
+		type: 'selector',
+		selectType: 'single',
+		label: 'Status',
+		value: {
+			options: [
+				{ label: 'Active', value: 'Property.Status.Active' },
+				{ label: 'Inactive', value: 'Property.Status.Inactive' },
+				{ label: 'Maintenance', value: 'Property.Status.Maintenance' },
+			],
+			urlParam: 'property_status',
+			defaultValues: [],
+		},
+		Icon: ToggleLeft,
+	},
+	{
+		id: 2,
+		type: 'selector',
+		selectType: 'single',
+		label: 'Type',
+		value: {
+			options: [
+				{ label: 'Single', value: 'SINGLE' },
+				{ label: 'Multi', value: 'MULTI' },
+			],
+			urlParam: 'property_type',
+			defaultValues: [],
+		},
+		Icon: ToggleLeft,
+	},
+]
 
 export const PropertiesController = ({
 	isLoading,
@@ -79,17 +78,16 @@ export const PropertiesController = ({
 					</Button>
 				</div>
 			</div>
-			{/* <div className="w-full rounded-md border p-4">
+			<div className="w-full rounded-md border p-4">
 				<div className="flex w-full flex-wrap items-center gap-2 text-sm">
 					<FilterSet label="Filters" urlParam="filters" filters={filters} />
 				</div>
-			</div> */}
-			{/* <div className="flex flex-wrap items-center justify-between gap-4">
+			</div>
+			<div className="flex flex-wrap items-center justify-between gap-4">
 				<div className="flex items-center gap-2 text-sm">
 					<SearchInput placeholder="Search properties..." />
 				</div>
-				
-			</div> */}
+			</div>
 		</div>
 	)
 }
