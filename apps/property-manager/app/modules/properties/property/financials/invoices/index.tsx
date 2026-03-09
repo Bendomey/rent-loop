@@ -198,7 +198,9 @@ export function PropertyFinancialsPaymentsModule() {
 
 			{/* Summary Cards */}
 			<section className="mb-6">
-				<RentPaymentSectionCards />
+				<RentPaymentSectionCards
+					propertyId={clientUserProperty?.property_id ?? ''}
+				/>
 			</section>
 
 			<div className="bg-background space-y-4 rounded-lg border p-3 sm:p-5">

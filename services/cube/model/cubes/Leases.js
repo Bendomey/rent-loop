@@ -39,6 +39,12 @@ cube(`Leases`, {
       primaryKey: true,
     },
 
+    propertyId: {
+      sql: `(SELECT u.property_id::text FROM units u WHERE u.id = ${CUBE}.unit_id LIMIT 1)`,
+      type: `string`,
+      title: `Property ID`,
+    },
+
     status: {
       sql: `status`,
       type: `string`,
