@@ -8,7 +8,9 @@ cube(`Leases`, {
     JOIN units u ON u.id = l.unit_id AND u.deleted_at IS NULL
     JOIN properties p ON p.id = u.property_id AND p.deleted_at IS NULL
     WHERE l.deleted_at IS NULL
-      AND p.client_id = '${COMPILE_CONTEXT.securityContext?.clientId ?? 'NO_ACCESS'}'
+      AND ${COMPILE_CONTEXT.securityContext && COMPILE_CONTEXT.securityContext.clientId
+        ? `p.client_id = '${COMPILE_CONTEXT.securityContext.clientId}'`
+        : '1 = 0'}
   `,
 
   measures: {

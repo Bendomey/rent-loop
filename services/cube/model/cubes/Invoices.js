@@ -4,13 +4,16 @@
  */
 cube(`Invoices`, {
   // Only invoices where the authenticated client is the payee (revenue they receive).
-  // Falls back to 'NO_ACCESS' so unauthenticated requests return zero rows.
+  // Uses 1=0 when clientId is absent so unauthenticated requests return zero rows
+  // without triggering a uuid cast error.
   sql: `
     SELECT *
     FROM invoices
     WHERE deleted_at IS NULL
       AND payee_type = 'PROPERTY_OWNER'
-      AND payee_client_id = '${COMPILE_CONTEXT.securityContext?.clientId ?? 'NO_ACCESS'}'
+      AND ${COMPILE_CONTEXT.securityContext && COMPILE_CONTEXT.securityContext.clientId
+        ? `payee_client_id = '${COMPILE_CONTEXT.securityContext.clientId}'`
+        : '1 = 0'}
   `,
 
   measures: {
