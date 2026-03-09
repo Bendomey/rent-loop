@@ -102,6 +102,7 @@ type Config struct {
 	RedisDB         IRedisDB
 	Clients         IClients
 	ChartOfAccounts IChartOfAccounts
+	CubeApiSecret   string
 }
 
 // Load loads config from environment variables
@@ -161,6 +162,7 @@ func Load() Config {
 				ProjectID: getEnv("GATEKEEPER_PROJECT_ID", "fake-project-id"),
 			},
 		},
+		CubeApiSecret: getEnv("CUBEJS_API_SECRET", "superdupercubeapisecret"),
 		ChartOfAccounts: IChartOfAccounts{
 			// Asset Accounts
 			CashBankAccountID:    getEnv("FINCORE_ACCOUNT_CASH_BANK", ""),

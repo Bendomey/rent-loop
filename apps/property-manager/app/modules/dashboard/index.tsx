@@ -1,5 +1,6 @@
 import { SectionCards } from './cards'
 import { ChartBarDefault } from './chart'
+import { UnitsChart } from './units-chart'
 import { DateRangePicker } from '~/components/ui/date-ranger-picker'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import { localizedDayjs } from '~/lib/date'
@@ -30,8 +31,13 @@ export function DashboardModule() {
 				</div>
 				<div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
 					<SectionCards />
-					<div className="px-4 lg:px-6">
-						<ChartBarDefault />
+					<div className="grid grid-cols-1 gap-4 px-4 lg:grid-cols-3 lg:px-6">
+						<div className="lg:col-span-2">
+							<ChartBarDefault />
+						</div>
+						<div>
+							<UnitsChart />
+						</div>
 					</div>
 				</div>
 			</div>

@@ -1,10 +1,10 @@
 ---
 id: RENTL-6
 title: Add Cube.js to Rentloop for analytics
-status: Draft
+status: Done
 assignee: []
 created_date: '2026-03-05 08:48'
-updated_date: '2026-03-07 20:26'
+updated_date: '2026-03-09 00:53'
 labels:
   - analytics
   - infrastructure

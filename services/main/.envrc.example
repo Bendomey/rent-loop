@@ -54,3 +54,6 @@ export FINCORE_ACCOUNT_PROPERTY_MGMT_EXPENSE=
 export GATEKEEPER_API_BASE_URL=https://api.gatekeeperpro.live/api
 export GATEKEEPER_API_KEY=
 export GATEKEEPER_PROJECT_ID=
+
+# Cube.js — must match the secret in services/cube/.env
+export CUBEJS_API_SECRET=

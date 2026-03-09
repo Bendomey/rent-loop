@@ -1,0 +1,13 @@
+{
+  "name": "rentloop-cube",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "cubejs-server",
+    "start": "cubejs-server"
+  },
+  "dependencies": {
+    "@cubejs-backend/postgres-driver": "^1.2.0",
+    "@cubejs-backend/server": "^1.2.0"
+  }
+}
