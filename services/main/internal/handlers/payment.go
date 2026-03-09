@@ -8,6 +8,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/go-chi/chi/v5"
 )
 
 type PaymentHandler struct {
@@ -71,6 +72,64 @@ func (h *PaymentHandler) CreateOfflinePayment(w http.ResponseWriter, r *http.Req
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBPaymentToRest(payment),
+	})
+}
+
+type VerifyPaymentRequest struct {
+	IsSuccessful bool            `json:"is_successful"      validate:"required" example:"true" description:"Whether the payment was successful"`
+	Metadata     *map[string]any `json:"metadata,omitempty"                                    description:"Additional verification metadata"`
+}
+
+// VerifyPayment godoc
+//
+//	@Summary		Verify an offline payment (Admin)
+//	@Description	Mark a PENDING offline payment as SUCCESSFUL or FAILED. Updates the invoice status accordingly.
+//	@Tags			Payments
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			payment_id	path		string										true	"Payment ID"
+//	@Param			body		body		VerifyPaymentRequest						true	"Verify Payment Request Body"
+//	@Success		200			{object}	object{data=transformations.OutputPayment}	"Payment verified"
+//	@Failure		400			{object}	lib.HTTPError								"Invalid request or payment not verifiable"
+//	@Failure		401			{object}	string										"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError								"Payment not found"
+//	@Failure		422			{object}	lib.HTTPError								"Validation error"
+//	@Failure		500			{object}	string										"An unexpected error occurred"
+//	@Router			/api/v1/admin/payments/{payment_id}/verify [patch]
+func (h *PaymentHandler) VerifyPayment(w http.ResponseWriter, r *http.Request) {
+	clientUser, ok := lib.ClientUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	paymentID := chi.URLParam(r, "payment_id")
+
+	var body VerifyPaymentRequest
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	payment, err := h.service.VerifyOfflinePayment(r.Context(), services.VerifyOfflinePaymentInput{
+		PaymentID:    paymentID,
+		VerifiedByID: clientUser.ID,
+		IsSuccessful: body.IsSuccessful,
+		Metadata:     body.Metadata,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": transformations.DBPaymentToRest(payment),
 	})

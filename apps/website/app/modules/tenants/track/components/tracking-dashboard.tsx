@@ -169,7 +169,7 @@ export function TrackingDashboard({ application, code }: Props) {
 				/>
 
 				{/* Payment info */}
-				<PaymentInfo invoice={application.application_payment_invoice} />
+				<PaymentInfo invoice={application.application_payment_invoice} code={code} />
 			</main>
 		</div>
 	)

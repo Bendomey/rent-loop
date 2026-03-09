@@ -88,6 +88,7 @@ interface TrackingApplication {
 }
 
 interface TrackingInvoice {
+	id: string
 	code: string
 	status: 'DRAFT' | 'ISSUED' | 'PARTIALLY_PAID' | 'PAID' | 'VOID'
 	total_amount: number

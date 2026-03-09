@@ -1,8 +1,8 @@
 import { ShieldCheck } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import type { FetcherWithComponents } from 'react-router'
 import { toast } from 'sonner'
 
-import { useSendTrackingOtp, useVerifyTrackingOtp } from '~/api/tracking'
 import { Button } from '~/components/ui/button'
 import {
 	InputOTP,
@@ -12,19 +12,29 @@ import {
 import { Spinner } from '~/components/ui/spinner'
 import { APP_NAME } from '~/lib/constants'
 
-interface Props {
-	code: string
-	onVerified: (accessToken: string, application: TrackingApplication) => void
+interface SendOtpFetcherData {
+	maskedPhone?: string | null
+	error?: string | null
 }
 
-export function VerifyOtp({ code, onVerified }: Props) {
+interface VerifyOtpFetcherData {
+	application?: TrackingApplication | null
+	error?: string | null
+}
+
+type AnyFetcherData = SendOtpFetcherData & VerifyOtpFetcherData
+
+interface Props {
+	code: string
+	fetcher: FetcherWithComponents<AnyFetcherData>
+}
+
+export function VerifyOtp({ code, fetcher }: Props) {
 	const [maskedPhone, setMaskedPhone] = useState<string | null>(null)
 	const [otpValue, setOtpValue] = useState('')
 	const [cooldown, setCooldown] = useState(0)
 	const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-	const sendOtp = useSendTrackingOtp()
-	const verifyOtp = useVerifyTrackingOtp()
+	const lastIntent = useRef<string | null>(null)
 
 	const startCooldown = useCallback(() => {
 		setCooldown(60)
@@ -45,45 +55,47 @@ export function VerifyOtp({ code, onVerified }: Props) {
 		}
 	}, [])
 
+	// React to fetcher state changes
+	useEffect(() => {
+		if (fetcher.state !== 'idle' || !fetcher.data) return
+
+		const intent = lastIntent.current
+
+		if (intent === 'sendOtp') {
+			if (fetcher.data.error) {
+				toast.error(fetcher.data.error)
+			} else if (fetcher.data.maskedPhone) {
+				setMaskedPhone(fetcher.data.maskedPhone)
+				startCooldown()
+				toast.success('Verification code sent')
+			}
+		}
+
+		if (intent === 'verifyOtp') {
+			if (fetcher.data.error) {
+				toast.error(fetcher.data.error)
+				setOtpValue('')
+			}
+			// success is handled by the parent (application now set in fetcher.data)
+		}
+	}, [fetcher.state, fetcher.data, startCooldown])
+
 	const handleSendCode = () => {
-		sendOtp.mutate(code, {
-			onSuccess: (data) => {
-				if (data) {
-					setMaskedPhone(data.masked_phone)
-					startCooldown()
-					toast.success('Verification code sent')
-				}
-			},
-			onError: (error) => {
-				toast.error(
-					error instanceof Error
-						? error.message
-						: 'Failed to send verification code',
-				)
-			},
-		})
+		lastIntent.current = 'sendOtp'
+		void fetcher.submit({ intent: 'sendOtp' }, { method: 'POST' })
 	}
 
 	const handleVerify = (value: string) => {
-		verifyOtp.mutate(
-			{ code, otpCode: value },
-			{
-				onSuccess: (data) => {
-					if (data) {
-						onVerified(data.access_token, data.application)
-					}
-				},
-				onError: (error) => {
-					toast.error(
-						error instanceof Error
-							? error.message
-							: 'Invalid verification code',
-					)
-					setOtpValue('')
-				},
-			},
+		lastIntent.current = 'verifyOtp'
+		void fetcher.submit(
+			{ intent: 'verifyOtp', otp_code: value },
+			{ method: 'POST' },
 		)
 	}
+
+	const isSending = fetcher.state !== 'idle' && lastIntent.current === 'sendOtp'
+	const isVerifying =
+		fetcher.state !== 'idle' && lastIntent.current === 'verifyOtp'
 
 	return (
 		<div className="flex min-h-dvh flex-col items-center justify-center px-4">
@@ -121,11 +133,11 @@ export function VerifyOtp({ code, onVerified }: Props) {
 
 						<Button
 							onClick={handleSendCode}
-							disabled={sendOtp.isPending}
+							disabled={isSending}
 							className="w-full bg-rose-600 hover:bg-rose-500"
 							size="lg"
 						>
-							{sendOtp.isPending ? (
+							{isSending ? (
 								<>
 									<Spinner className="mr-2" />
 									Sending...
@@ -156,7 +168,7 @@ export function VerifyOtp({ code, onVerified }: Props) {
 								value={otpValue}
 								onChange={setOtpValue}
 								onComplete={handleVerify}
-								disabled={verifyOtp.isPending}
+								disabled={isVerifying}
 							>
 								<InputOTPGroup>
 									<InputOTPSlot index={0} />
@@ -169,7 +181,7 @@ export function VerifyOtp({ code, onVerified }: Props) {
 							</InputOTP>
 						</div>
 
-						{verifyOtp.isPending && (
+						{isVerifying && (
 							<div className="flex items-center justify-center gap-2 text-sm text-slate-500">
 								<Spinner />
 								Verifying...
@@ -183,7 +195,7 @@ export function VerifyOtp({ code, onVerified }: Props) {
 								<button
 									type="button"
 									onClick={handleSendCode}
-									disabled={sendOtp.isPending}
+									disabled={isSending}
 									className="font-medium text-rose-600 hover:text-rose-500"
 								>
 									Resend Code

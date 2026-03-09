@@ -382,6 +382,48 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/analytics/token": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a signed JWT for querying the Cube.js analytics API. The token is scoped to the authenticated client.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Analytics"
+                ],
+                "summary": "Get Cube.js analytics token",
+                "responses": {
+                    "200": {
+                        "description": "Signed Cube.js JWT",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/handlers.analyticsTokenResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to generate token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/client-applications": {
             "get": {
                 "security": [
@@ -4231,6 +4273,87 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Payment account not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/payments/{payment_id}/verify": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mark a PENDING offline payment as SUCCESSFUL or FAILED. Updates the invoice status accordingly.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Verify an offline payment (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Payment ID",
+                        "name": "payment_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Verify Payment Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.VerifyPaymentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment verified",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputPayment"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request or payment not verifiable",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Payment not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -8354,6 +8477,245 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/tenant-applications/code/{code}": {
+            "get": {
+                "description": "Look up a tenant application by its unique code. Returns application data including payment invoice.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TenantApplication"
+                ],
+                "summary": "Get tenant application by code (public)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Application code",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tenant application retrieved",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputTenantApplication"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Application not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tenant-applications/code/{code}/invoice/{invoice_id}/pay": {
+            "post": {
+                "description": "Records an offline payment (PENDING) for an invoice belonging to the given application code.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TenantApplication"
+                ],
+                "summary": "Pay invoice for tracked application (public)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Application code",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Payment body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.PayTrackingInvoiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Payment recorded",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputPayment"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Application or invoice not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tenant-applications/code/{code}/otp:send": {
+            "post": {
+                "description": "Sends a 6-digit OTP to the phone number associated with the given application code.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TenantApplication"
+                ],
+                "summary": "Send OTP to tenant application phone (public)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Application code",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OTP sent",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "masked_phone": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Application not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tenant-applications/code/{code}/otp:verify": {
+            "post": {
+                "description": "Verifies the OTP for the application's phone and returns full application data.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TenantApplication"
+                ],
+                "summary": "Verify OTP and retrieve tenant application (public)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Application code",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "OTP verification body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.VerifyTrackingOtpRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OTP verified, application returned",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputTenantApplication"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid OTP",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Application not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/tenant-applications/{tenant_application_id}": {
             "get": {
                 "security": [
@@ -9966,6 +10328,39 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.PayTrackingInvoiceRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "provider"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "integer",
+                    "example": 100000
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "provider": {
+                    "type": "string",
+                    "enum": [
+                        "MTN",
+                        "VODAFONE",
+                        "AIRTELTIGO",
+                        "PAYSTACK",
+                        "BANK_API",
+                        "CASH"
+                    ],
+                    "example": "CASH"
+                },
+                "reference": {
+                    "type": "string",
+                    "example": "RCP-2024-001"
+                }
+            }
+        },
         "handlers.RejectClientApplicationRequest": {
             "type": "object",
             "required": [
@@ -10463,6 +10858,41 @@ const docTemplate = `{
                 "phone": {
                     "type": "string",
                     "example": "+233281234569"
+                }
+            }
+        },
+        "handlers.VerifyPaymentRequest": {
+            "type": "object",
+            "required": [
+                "is_successful"
+            ],
+            "properties": {
+                "is_successful": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": {}
+                }
+            }
+        },
+        "handlers.VerifyTrackingOtpRequest": {
+            "type": "object",
+            "required": [
+                "otp_code"
+            ],
+            "properties": {
+                "otp_code": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.analyticsTokenResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
                 }
             }
         },
@@ -12570,6 +13000,9 @@ const docTemplate = `{
         "transformations.OutputTenantApplication": {
             "type": "object",
             "properties": {
+                "application_payment_invoice": {
+                    "$ref": "#/definitions/transformations.OutputInvoice"
+                },
                 "cancelled_at": {
                     "type": "string",
                     "example": "2024-06-02T12:00:00Z"

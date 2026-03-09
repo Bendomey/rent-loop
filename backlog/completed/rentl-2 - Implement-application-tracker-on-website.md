@@ -1,11 +1,11 @@
 ---
 id: RENTL-2
 title: Implement application tracker on website
-status: To Do
+status: Done
 assignee:
   - Ben
 created_date: '2026-03-04 18:19'
-updated_date: '2026-03-07 12:44'
+updated_date: '2026-03-09 10:25'
 labels:
   - website
 milestone: m-0
@@ -140,3 +140,23 @@ Server-side functions (called from loaders/actions, never client-exposed):
 ### 13. `apps/website/types/tenant-application.d.ts` (UPDATE)
 - Add `id: string` to `TrackingInvoice` interface (needed for pay endpoint)
 <!-- SECTION:PLAN:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implemented the full application tracker on the public website with OTP verification and payment form.
+
+**Backend:**
+- Added `Code` field to `GetTenantApplicationQuery` for code-based lookups
+- Added `application_payment_invoice` to public `DBTenantApplicationToRest` output
+- New public endpoints: `GET /v1/tenant-applications/code/{code}`, `POST otp:send`, `POST otp:verify`, `POST invoice/{id}/pay`
+- New admin endpoint: `PATCH /v1/admin/payments/{payment_id}/verify`
+- Payment auto-discovers the property's default OFFLINE payment account
+
+**Website:**
+- httpOnly cookie session (`rl_tracking_{code}`) via `createCookieSessionStorage`
+- Route rewritten with server-side loader + actions (sendOtp, verifyOtp, payInvoice)
+- `VerifyOtp` component now uses `useFetcher` with intent-based form submissions
+- `PaymentInfo` component adds "Pay Now" form (provider selector + reference field) for ISSUED/PARTIALLY_PAID invoices
+- `TrackingInvoice` type updated with `id` field
+<!-- SECTION:FINAL_SUMMARY:END -->
