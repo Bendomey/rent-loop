@@ -77,8 +77,8 @@ class _NavigationLoader extends ConsumerState<NavigationLoader> {
     });
 
     try {
-      // Check if user has token
       final token = await ref.read(tokenManagerProvider).get();
+
       if (token == null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           context.go('/auth');
@@ -86,32 +86,14 @@ class _NavigationLoader extends ConsumerState<NavigationLoader> {
         return;
       }
 
-      // Fetch current client data
-      final clientData = null;
+      setState(() {
+        _currentState = SplashState.authSuccess;
+      });
 
-      if (clientData != null) {
-        setState(() {
-          _currentState = SplashState.authSuccess;
-        });
-
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          context.go('/');
-        });
-      } else {
-        setState(() {
-          _currentState = SplashState.apiError;
-          _errorMessage =
-              'Something went wrong. Kindly retry or come back later.';
-        });
-      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.go('/');
+      });
     } catch (e) {
-      if (e.toString() == "Exception: UserNotFound") {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          context.go('/auth');
-        });
-        return;
-      }
-
       setState(() {
         _currentState = SplashState.apiError;
         _errorMessage =
