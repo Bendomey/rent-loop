@@ -8420,6 +8420,113 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/tenant-accounts/auth/codes": {
+            "post": {
+                "description": "Send a 6-digit OTP to the phone number. Phone must belong to an existing tenant account.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Send tenant OTP",
+                "parameters": [
+                    {
+                        "description": "Send tenant code request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SendTenantCodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Tenant not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tenant-accounts/auth/codes/verify": {
+            "post": {
+                "description": "Verify the OTP and return a JWT for the tenant account on success.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Verify tenant OTP",
+                "parameters": [
+                    {
+                        "description": "Verify tenant code request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.VerifyTenantCodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JWT token",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.VerifyTenantCodeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid code",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/tenant-applications": {
             "post": {
                 "description": "Create a new tenant application",
@@ -10397,6 +10504,18 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.SendTenantCodeRequest": {
+            "type": "object",
+            "required": [
+                "phone"
+            ],
+            "properties": {
+                "phone": {
+                    "type": "string",
+                    "example": "+233281234569"
+                }
+            }
+        },
         "handlers.SendTenantInviteRequest": {
             "type": "object",
             "required": [
@@ -10874,6 +10993,36 @@ const docTemplate = `{
                 "metadata": {
                     "type": "object",
                     "additionalProperties": {}
+                }
+            }
+        },
+        "handlers.VerifyTenantCodeRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "phone"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "123456"
+                },
+                "notification_token": {
+                    "type": "string",
+                    "example": "fcm-token-abc"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+233281234569"
+                }
+            }
+        },
+        "handlers.VerifyTenantCodeResponse": {
+            "type": "object",
+            "properties": {
+                "tenant_account": {},
+                "token": {
+                    "type": "string"
                 }
             }
         },

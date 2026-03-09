@@ -11,6 +11,7 @@ import (
 type TenantAccountRepository interface {
 	Create(context context.Context, tenantAccount *models.TenantAccount) error
 	FindOne(context context.Context, query map[string]any) (*models.TenantAccount, error)
+	Update(context context.Context, tenantAccount *models.TenantAccount, updates map[string]any) error
 }
 
 type tenantAccountRepository struct {
@@ -25,6 +26,14 @@ func (r *tenantAccountRepository) Create(ctx context.Context, tenantAccount *mod
 	db := lib.ResolveDB(ctx, r.DB)
 
 	return db.WithContext(ctx).Create(tenantAccount).Error
+}
+
+func (r *tenantAccountRepository) Update(
+	ctx context.Context,
+	tenantAccount *models.TenantAccount,
+	updates map[string]any,
+) error {
+	return r.DB.WithContext(ctx).Model(tenantAccount).Updates(updates).Error
 }
 
 func (r *tenantAccountRepository) FindOne(ctx context.Context, query map[string]any) (*models.TenantAccount, error) {

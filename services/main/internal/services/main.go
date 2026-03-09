@@ -37,7 +37,7 @@ func NewServices(params INewServicesParams) Services {
 	accountingService := NewAccountingService(params.AppCtx)
 	invoiceService := NewInvoiceService(params.AppCtx, params.Repository.InvoiceRepository, accountingService)
 
-	authService := NewAuthService(params.AppCtx)
+	authService := NewAuthService(params.AppCtx, params.Repository.TenantAccountRepository)
 	adminService := NewAdminService(params.AppCtx, params.Repository.AdminRepository)
 	clientApplicationService := NewClientApplicationService(
 		params.AppCtx,
