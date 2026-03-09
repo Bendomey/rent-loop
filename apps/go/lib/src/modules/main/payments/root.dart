@@ -1,8 +1,6 @@
 import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:flutter/material.dart';
 
-
-
 class PaymentsScreen extends ConsumerStatefulWidget {
   const PaymentsScreen({super.key});
 
@@ -73,9 +71,9 @@ class _PaymentsScreen extends ConsumerState<PaymentsScreen> {
         surfaceTintColor: Colors.transparent,
         title: Text(
           'Payment Overview',
-          style: Theme.of(context).textTheme.titleLarge!.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w700),
         ),
         actions: [
           IconButton(
@@ -211,7 +209,9 @@ class _PaymentsScreen extends ConsumerState<PaymentsScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  method.type == 'Card' ? Icons.credit_card : Icons.phone_android,
+                  method.type == 'Card'
+                      ? Icons.credit_card
+                      : Icons.phone_android,
                   color: method.color,
                   size: 28,
                 ),
@@ -227,10 +227,7 @@ class _PaymentsScreen extends ConsumerState<PaymentsScreen> {
                 ),
                 Text(
                   method.detail,
-                  style: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                 ),
               ],
             ),
@@ -241,22 +238,25 @@ class _PaymentsScreen extends ConsumerState<PaymentsScreen> {
   }
 
   Widget _buildAddPaymentMethodCard(BuildContext context) {
-    return Container( 
+    return Container(
       width: 80,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300, style: BorderStyle.none),
+        border: Border.all(
+          color: Colors.grey.shade300,
+          style: BorderStyle.none,
+        ),
       ),
       child: InkWell(
         onTap: () {},
-         borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16),
         child: Center(
           child: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                shape: BoxShape.circle
+              color: Colors.grey.shade100,
+              shape: BoxShape.circle,
             ),
             child: Icon(Icons.add, color: Colors.grey.shade600),
           ),
@@ -265,31 +265,35 @@ class _PaymentsScreen extends ConsumerState<PaymentsScreen> {
     );
   }
 
-
   Widget _buildTransactionsList(BuildContext context) {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: _transactions.length,
-      separatorBuilder: (context, index) => Divider(
-        height: 1,
-        color: Colors.grey.shade100,
-      ),
+      separatorBuilder: (context, index) =>
+          Divider(height: 1, color: Colors.grey.shade100),
       itemBuilder: (context, index) {
         final tx = _transactions[index];
         return Container(
           color: Colors.white,
           child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 8,
+              horizontal: 0,
+            ),
             leading: CircleAvatar(
               backgroundColor: tx.isCredit
                   ? Colors.green.shade50
-                  : (tx.status == 'Failed' ? Colors.red.shade50 : Colors.blue.shade50),
+                  : (tx.status == 'Failed'
+                        ? Colors.red.shade50
+                        : Colors.blue.shade50),
               child: Icon(
                 tx.isCredit
                     ? Icons.arrow_downward
-                    : (tx.status == 'Failed' ? Icons.error_outline : Icons.arrow_upward),
+                    : (tx.status == 'Failed'
+                          ? Icons.error_outline
+                          : Icons.arrow_upward),
                 color: tx.isCredit
                     ? Colors.green
                     : (tx.status == 'Failed' ? Colors.red : Colors.blue),

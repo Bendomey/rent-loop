@@ -1,4 +1,5 @@
 import 'package:rentloop_go/src/architecture/architecture.dart';
+import 'package:rentloop_go/src/repository/notifiers/auth/send_otp_notifier/send_otp_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -13,7 +14,6 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
   String? _errorText;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -24,15 +24,14 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
   Future<void> _handleContinue() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
     await Haptics.vibrate(HapticsType.selection);
 
-    // Simulate API call delay
-    await Future.delayed(const Duration(milliseconds: 500));
+    final phone = '+233${_phoneController.text}';
+    final success = await ref
+        .read(sendOtpNotifierProvider.notifier)
+        .sendOtp(phone);
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-      final phone = '+233${_phoneController.text}';
+    if (mounted && success) {
       context.go('/auth/login/verify/$phone');
     }
   }
@@ -41,6 +40,8 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
+    final sendOtpState = ref.watch(sendOtpNotifierProvider);
+    final isLoading = sendOtpState.status.isLoading();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -104,17 +105,15 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                         ),
                         child: Row(
                           children: [
-                            Text(
-                              '🇬🇭',
-                              style: TextStyle(fontSize: 24),
-                            ),
+                            Text('🇬🇭', style: TextStyle(fontSize: 24)),
                             const SizedBox(width: 8),
                             Text(
                               '+233',
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
                             ),
                           ],
                         ),
@@ -124,10 +123,11 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                         child: TextFormField(
                           controller: _phoneController,
                           keyboardType: TextInputType.phone,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: 1.2,
-                          ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 1.2,
+                              ),
                           decoration: InputDecoration(
                             hintText: '24 XXX XXXX',
                             hintStyle: TextStyle(
@@ -147,17 +147,25 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                           ],
                           validator: (value) {
                             final result = Validatorless.multiple([
-                              Validatorless.required('Phone number is required'),
-                              Validatorless.min(9, 'Enter a valid 9-digit number'),
-                              Validatorless.max(9, 'Enter a valid 9-digit number'),
+                              Validatorless.required(
+                                'Phone number is required',
+                              ),
+                              Validatorless.min(
+                                9,
+                                'Enter a valid 9-digit number',
+                              ),
+                              Validatorless.max(
+                                9,
+                                'Enter a valid 9-digit number',
+                              ),
                             ])(value);
 
                             if (result != _errorText) {
-                               WidgetsBinding.instance.addPostFrameCallback((_) {
-                                 if (mounted) {
-                                   setState(() => _errorText = result);
-                                 }
-                               });
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (mounted) {
+                                  setState(() => _errorText = result);
+                                }
+                              });
                             }
                             return result;
                           },
@@ -165,7 +173,6 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                       ),
                     ],
                   ),
-
                 ),
                 if (_errorText != null) ...[
                   const SizedBox(height: 8),
@@ -183,9 +190,14 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                 ],
                 SizedBox(height: screenHeight * 0.03),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondary.withOpacity(0.08),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.secondary.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -193,22 +205,38 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                       Expanded(
                         child: Text(
                           'By continuing, you agree to our Terms and Conditions.',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey.shade800,
-                            height: 1.2,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Colors.grey.shade800,
+                                height: 1.2,
+                              ),
                         ),
                       ),
                     ],
                   ),
                 ),
+                if (sendOtpState.status.isFailed() &&
+                    sendOtpState.errorMessage != null) ...[
+                  SizedBox(height: screenHeight * 0.02),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Text(
+                      sendOtpState.errorMessage!,
+                      style: TextStyle(
+                        color: Colors.red.shade700,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
                 SizedBox(height: screenHeight * 0.05),
                 // Continue Button
                 SizedBox(
                   width: double.infinity,
                   height: 56,
                   child: FilledButton(
-                    onPressed: _isLoading ? null : _handleContinue,
+                    onPressed: isLoading ? null : _handleContinue,
                     style: FilledButton.styleFrom(
                       backgroundColor: Theme.of(context).primaryColor,
                       foregroundColor: Colors.white,
@@ -217,7 +245,7 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                         borderRadius: BorderRadius.circular(80),
                       ),
                     ),
-                    child: _isLoading
+                    child: isLoading
                         ? SizedBox(
                             height: 24,
                             width: 24,

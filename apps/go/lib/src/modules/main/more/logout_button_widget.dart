@@ -7,12 +7,13 @@ class LogoutButtonWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     Future<void> logout() async {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      await ref.read(tokenManagerProvider).remove();
+      if (context.mounted) {
         context.go('/auth');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('You logged out successfully!')),
         );
-      });
+      }
     }
 
     Future<void> showMyDialog() async {

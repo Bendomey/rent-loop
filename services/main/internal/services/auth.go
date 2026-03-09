@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"net/http"
 	"slices"
 	"time"
 
@@ -135,6 +136,10 @@ func (s *authService) VerifyCode(ctx context.Context, input VerifyCodeInput) err
 		Otp:       input.Code,
 	})
 	if err != nil {
+		var gatekeeperErr *gatekeeper.GatekeeperAPIError
+		if errors.As(err, &gatekeeperErr) && gatekeeperErr.StatusCode == http.StatusBadRequest {
+			return pkg.BadRequestError("CodeIncorrect", nil)
+		}
 		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
 			Metadata: map[string]string{
@@ -243,6 +248,10 @@ func (s *authService) VerifyTenantCode(
 		Otp:       input.Code,
 	})
 	if err != nil {
+		var gatekeeperErr *gatekeeper.GatekeeperAPIError
+		if errors.As(err, &gatekeeperErr) && gatekeeperErr.StatusCode == http.StatusBadRequest {
+			return nil, pkg.BadRequestError("CodeIncorrect", nil)
+		}
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
 			Metadata: map[string]string{

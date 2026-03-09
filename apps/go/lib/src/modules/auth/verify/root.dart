@@ -1,4 +1,6 @@
 import 'package:rentloop_go/src/architecture/architecture.dart';
+import 'package:rentloop_go/src/repository/notifiers/auth/send_otp_notifier/send_otp_notifier.dart';
+import 'package:rentloop_go/src/repository/notifiers/auth/verify_otp_notifier/verify_otp_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
@@ -19,7 +21,6 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
   );
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
-  bool _isLoading = false;
   bool _canResend = false;
   int _resendSeconds = 60;
   Timer? _timer;
@@ -81,15 +82,13 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
     await Haptics.vibrate(HapticsType.success);
 
-    // Simulate API call delay
-    await Future.delayed(const Duration(milliseconds: 800));
+    final success = await ref
+        .read(verifyOtpNotifierProvider.notifier)
+        .verifyOtp(phone: widget.phone, code: _otpCode);
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-      // Navigate to home on successful verification
+    if (mounted && success) {
       context.go('/');
     }
   }
@@ -98,9 +97,15 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
     if (!_canResend) return;
 
     await Haptics.vibrate(HapticsType.selection);
-    _startResendTimer();
 
-    if (mounted) {
+    final success = await ref
+        .read(sendOtpNotifierProvider.notifier)
+        .sendOtp(widget.phone);
+
+    if (!mounted) return;
+
+    if (success) {
+      _startResendTimer();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Verification code sent to ${widget.phone}'),
@@ -114,7 +119,7 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
     if (value.isNotEmpty && index < 5) {
       _focusNodes[index + 1].requestFocus();
     }
-    
+
     // Auto-verify when all digits are entered
     if (_otpCode.length == 6) {
       _handleVerify();
@@ -134,6 +139,8 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
+    final verifyState = ref.watch(verifyOtpNotifierProvider);
+    final isLoading = verifyState.status.isLoading();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -199,9 +206,8 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
                         keyboardType: TextInputType.number,
                         textAlign: TextAlign.center,
                         maxLength: 1,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
                         decoration: InputDecoration(
                           counterText: '',
                           filled: true,
@@ -221,7 +227,9 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
                               width: 2,
                             ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                          ),
                         ),
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
@@ -236,40 +244,108 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
               SizedBox(height: screenHeight * 0.04),
               // Resend Section
               Center(
+                child: TextButton(
+                  onPressed: _canResend ? _handleResend : null,
+                  child: Text(
+                    _canResend
+                        ? 'Resend Code'
+                        : 'Resend in $_resendSeconds seconds',
+                    style: TextStyle(
+                      color: _canResend
+                          ? Theme.of(context).primaryColor
+                          : Colors.grey.shade400,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: screenHeight * 0.03),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
                       'Didn\'t receive the code?',
+                      textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Dial the USSD code below with your account number:',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.grey.shade600,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).primaryColor.withValues(alpha: 0.07),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '*713*882#',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: Theme.of(context).primaryColor,
+                              letterSpacing: 1.5,
+                            ),
                       ),
                     ),
                     const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: _canResend ? _handleResend : null,
-                      child: Text(
-                        _canResend
-                            ? 'Resend Code'
-                            : 'Resend in $_resendSeconds seconds',
-                        style: TextStyle(
-                          color: _canResend
-                              ? Theme.of(context).primaryColor
-                              : Colors.grey.shade400,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
+                    Text(
+                      'Works on all networks in Ghana',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey.shade500,
                       ),
                     ),
                   ],
                 ),
               ),
+              if (verifyState.status.isFailed() &&
+                  verifyState.errorMessage != null) ...[
+                SizedBox(height: screenHeight * 0.02),
+                Center(
+                  child: Text(
+                    verifyState.errorMessage!,
+                    style: TextStyle(
+                      color: Colors.red.shade700,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
               SizedBox(height: screenHeight * 0.05),
               // Verify Button
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: FilledButton(
-                  onPressed: _isLoading ? null : _handleVerify,
+                  onPressed: isLoading ? null : _handleVerify,
                   style: FilledButton.styleFrom(
                     backgroundColor: Theme.of(context).primaryColor,
                     foregroundColor: Colors.white,
@@ -278,7 +354,7 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
                       borderRadius: BorderRadius.circular(50),
                     ),
                   ),
-                  child: _isLoading
+                  child: isLoading
                       ? SizedBox(
                           height: 24,
                           width: 24,
