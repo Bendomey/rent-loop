@@ -36,6 +36,7 @@ func NewTenantAccountRouter(appCtx pkg.AppContext, handlers handlers.Handlers) f
 			r.Use(middlewares.CheckForTenantAuthPresenceMiddleware)
 
 			r.Post("/v1/payments/offline:initiate", handlers.PaymentHandler.CreateOfflinePayment)
+			r.Post("/v1/tenant-accounts/fcm-token", handlers.NotificationHandler.RegisterFcmToken)
 		})
 	}
 }

@@ -6,6 +6,7 @@ import (
 )
 
 type Handlers struct {
+	NotificationHandler       NotificationHandler
 	AuthHandler               AuthHandler
 	AdminHandler              AdminHandler
 	AnalyticsHandler          AnalyticsHandler
@@ -27,6 +28,7 @@ type Handlers struct {
 }
 
 func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
+	notificationHandler := NewNotificationHandler(appCtx, services.NotificationService)
 	authHandler := NewAuthHandler(appCtx, services.AuthService)
 	analyticsHandler := NewAnalyticsHandler(appCtx)
 	adminHandler := NewAdminHandler(appCtx, services.AdminService)
@@ -51,6 +53,7 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 	leaseChecklistHandler := NewLeaseChecklistHandler(appCtx, services.LeaseChecklistService)
 
 	return Handlers{
+		NotificationHandler:       notificationHandler,
 		AuthHandler:               authHandler,
 		AnalyticsHandler:          analyticsHandler,
 		ClientApplicationHandler:  clientApplicationHandler,

@@ -88,7 +88,12 @@ type IClients struct {
 	GatekeeperAPI IGatekeeperAPI
 }
 
+type IFirebase struct {
+	ServiceAccountJSON string
+}
+
 type Config struct {
+	Firebase        IFirebase
 	Port            string
 	Database        IDatabase
 	Env             string // development, staging, production
@@ -163,6 +168,9 @@ func Load() Config {
 			},
 		},
 		CubeApiSecret: getEnv("CUBEJS_API_SECRET", "superdupercubeapisecret"),
+		Firebase: IFirebase{
+			ServiceAccountJSON: getEnv("FIREBASE_SERVICE_ACCOUNT_JSON", ""),
+		},
 		ChartOfAccounts: IChartOfAccounts{
 			// Asset Accounts
 			CashBankAccountID:    getEnv("FINCORE_ACCOUNT_CASH_BANK", ""),

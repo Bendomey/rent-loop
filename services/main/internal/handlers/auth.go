@@ -152,9 +152,8 @@ func (h *AuthHandler) SendTenantCode(w http.ResponseWriter, r *http.Request) {
 }
 
 type VerifyTenantCodeRequest struct {
-	Phone             string  `json:"phone"              validate:"required,e164"  example:"+233281234569" description:"Phone number"`
-	Code              string  `json:"code"               validate:"required,len=6" example:"123456"        description:"Verification code"`
-	NotificationToken *string `json:"notification_token" validate:"omitempty"      example:"fcm-token-abc" description:"FCM/device push notification token"`
+	Phone string `json:"phone" validate:"required,e164"  example:"+233281234569" description:"Phone number"`
+	Code  string `json:"code"  validate:"required,len=6" example:"123456"        description:"Verification code"`
 }
 
 type VerifyTenantCodeResponse struct {
@@ -188,9 +187,8 @@ func (h *AuthHandler) VerifyTenantCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result, err := h.service.VerifyTenantCode(r.Context(), services.VerifyTenantCodeInput{
-		Code:              body.Code,
-		Phone:             body.Phone,
-		NotificationToken: body.NotificationToken,
+		Code:  body.Code,
+		Phone: body.Phone,
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)
