@@ -909,3 +909,242 @@ func (h *TenantApplicationHandler) PayInvoice(w http.ResponseWriter, r *http.Req
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// GetTenantApplicationByCode godoc
+//
+//	@Summary		Get tenant application by code (public)
+//	@Description	Look up a tenant application by its unique code. Returns application data including payment invoice.
+//	@Tags			TenantApplication
+//	@Produce		json
+//	@Param			code	path		string													true	"Application code"
+//	@Success		200		{object}	object{data=transformations.OutputTenantApplication}	"Tenant application retrieved"
+//	@Failure		404		{object}	lib.HTTPError											"Application not found"
+//	@Failure		500		{object}	string													"An unexpected error occurred"
+//	@Router			/api/v1/tenant-applications/code/{code} [get]
+func (h *TenantApplicationHandler) GetTenantApplicationByCode(w http.ResponseWriter, r *http.Request) {
+	code := chi.URLParam(r, "code")
+	populate := []string{
+		"DesiredUnit",
+		"DesiredUnit.Property",
+		"ApplicationPaymentInvoice",
+		"ApplicationPaymentInvoice.LineItems",
+	}
+	query := repository.GetTenantApplicationQuery{
+		Code:     code,
+		Populate: &populate,
+	}
+
+	ta, err := h.service.GetOneTenantApplication(r.Context(), query)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBTenantApplicationToRest(ta),
+	})
+}
+
+// SendTrackingOtp godoc
+//
+//	@Summary		Send OTP to tenant application phone (public)
+//	@Description	Sends a 6-digit OTP to the phone number associated with the given application code.
+//	@Tags			TenantApplication
+//	@Produce		json
+//	@Param			code	path		string						true	"Application code"
+//	@Success		200		{object}	object{masked_phone=string}	"OTP sent"
+//	@Failure		404		{object}	lib.HTTPError				"Application not found"
+//	@Failure		500		{object}	string						"An unexpected error occurred"
+//	@Router			/api/v1/tenant-applications/code/{code}/otp:send [post]
+func (h *TenantApplicationHandler) SendTrackingOtp(w http.ResponseWriter, r *http.Request) {
+	code := chi.URLParam(r, "code")
+
+	ta, err := h.service.GetOneTenantApplication(r.Context(), repository.GetTenantApplicationQuery{Code: code})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	sendErr := h.services.AuthService.SendCode(r.Context(), services.SendCodeInput{
+		Channel: []string{"SMS"},
+		Phone:   &ta.Phone,
+	})
+	if sendErr != nil {
+		HandleErrorResponse(w, sendErr)
+		return
+	}
+
+	maskedPhone := ta.Phone
+	if len(ta.Phone) > 7 {
+		maskedPhone = ta.Phone[:4] + "****" + ta.Phone[len(ta.Phone)-3:]
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"masked_phone": maskedPhone,
+	})
+}
+
+type VerifyTrackingOtpRequest struct {
+	OtpCode string `json:"otp_code" validate:"required,len=6"`
+}
+
+// VerifyTrackingOtp godoc
+//
+//	@Summary		Verify OTP and retrieve tenant application (public)
+//	@Description	Verifies the OTP for the application's phone and returns full application data.
+//	@Tags			TenantApplication
+//	@Accept			json
+//	@Produce		json
+//	@Param			code	path		string													true	"Application code"
+//	@Param			body	body		VerifyTrackingOtpRequest								true	"OTP verification body"
+//	@Success		200		{object}	object{data=transformations.OutputTenantApplication}	"OTP verified, application returned"
+//	@Failure		400		{object}	lib.HTTPError											"Invalid OTP"
+//	@Failure		404		{object}	lib.HTTPError											"Application not found"
+//	@Failure		422		{object}	lib.HTTPError											"Validation error"
+//	@Failure		500		{object}	string													"An unexpected error occurred"
+//	@Router			/api/v1/tenant-applications/code/{code}/otp:verify [post]
+func (h *TenantApplicationHandler) VerifyTrackingOtp(w http.ResponseWriter, r *http.Request) {
+	code := chi.URLParam(r, "code")
+
+	var body VerifyTrackingOtpRequest
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
+		return
+	}
+
+	populate := []string{
+		"DesiredUnit",
+		"DesiredUnit.Property",
+		"ApplicationPaymentInvoice",
+		"ApplicationPaymentInvoice.LineItems",
+	}
+	ta, err := h.service.GetOneTenantApplication(r.Context(), repository.GetTenantApplicationQuery{
+		Code:     code,
+		Populate: &populate,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	if verifyErr := h.services.AuthService.VerifyCode(r.Context(), services.VerifyCodeInput{
+		Code:  body.OtpCode,
+		Phone: &ta.Phone,
+	}); verifyErr != nil {
+		HandleErrorResponse(w, verifyErr)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBTenantApplicationToRest(ta),
+	})
+}
+
+type PayTrackingInvoiceRequest struct {
+	Provider  string          `json:"provider"            validate:"required,oneof=MTN VODAFONE AIRTELTIGO PAYSTACK BANK_API CASH" example:"CASH"         description:"Offline payment provider"`
+	Amount    int64           `json:"amount"              validate:"required,gt=0"                                                 example:"100000"       description:"Payment amount in pesewas"`
+	Reference *string         `json:"reference,omitempty"                                                                          example:"RCP-2024-001" description:"Optional reference number"`
+	Metadata  *map[string]any `json:"metadata,omitempty"                                                                                                  description:"Additional metadata"`
+}
+
+// PayTrackingInvoice godoc
+//
+//	@Summary		Pay invoice for tracked application (public)
+//	@Description	Records an offline payment (PENDING) for an invoice belonging to the given application code.
+//	@Tags			TenantApplication
+//	@Accept			json
+//	@Produce		json
+//	@Param			code		path		string										true	"Application code"
+//	@Param			invoice_id	path		string										true	"Invoice ID"
+//	@Param			body		body		PayTrackingInvoiceRequest					true	"Payment body"
+//	@Success		201			{object}	object{data=transformations.OutputPayment}	"Payment recorded"
+//	@Failure		400			{object}	lib.HTTPError								"Invalid request"
+//	@Failure		404			{object}	lib.HTTPError								"Application or invoice not found"
+//	@Failure		422			{object}	lib.HTTPError								"Validation error"
+//	@Failure		500			{object}	string										"An unexpected error occurred"
+//	@Router			/api/v1/tenant-applications/code/{code}/invoice/{invoice_id}/pay [post]
+func (h *TenantApplicationHandler) PayTrackingInvoice(w http.ResponseWriter, r *http.Request) {
+	code := chi.URLParam(r, "code")
+	invoiceID := chi.URLParam(r, "invoice_id")
+
+	var body PayTrackingInvoiceRequest
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
+		return
+	}
+
+	ta, err := h.service.GetOneTenantApplication(r.Context(), repository.GetTenantApplicationQuery{Code: code})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	// Validate invoice belongs to this application
+	invoice, invoiceErr := h.services.InvoiceService.GetByQuery(r.Context(), repository.GetInvoiceQuery{
+		Query: map[string]any{
+			"id":                            invoiceID,
+			"context_tenant_application_id": ta.ID.String(),
+		},
+	})
+	if invoiceErr != nil {
+		HandleErrorResponse(w, invoiceErr)
+		return
+	}
+
+	if invoice.PayeeClientID == nil {
+		HandleErrorResponse(w, pkg.BadRequestError("InvoiceHasNoPayeeClient", nil))
+		return
+	}
+
+	// Find the property's active offline payment accounts
+	accounts, listErr := h.services.PaymentAccountService.ListPaymentAccounts(
+		r.Context(),
+		repository.ListPaymentAccountsFilter{
+			ClientID: invoice.PayeeClientID,
+			Rail:     lib.StringPointer("OFFLINE"),
+			Status:   lib.StringPointer("ACTIVE"),
+		},
+	)
+	if listErr != nil || len(accounts) == 0 {
+		HandleErrorResponse(w, pkg.BadRequestError("NoOfflinePaymentAccountFound", nil))
+		return
+	}
+
+	// Prefer default account, fallback to first
+	paymentAccount := accounts[0]
+	for _, acc := range accounts {
+		if acc.IsDefault {
+			paymentAccount = acc
+			break
+		}
+	}
+
+	payment, createErr := h.services.PaymentService.CreateOfflinePayment(
+		r.Context(),
+		services.CreateOfflinePaymentInput{
+			PaymentAccountID: paymentAccount.ID.String(),
+			InvoiceID:        invoiceID,
+			Provider:         body.Provider,
+			Amount:           body.Amount,
+			Reference:        body.Reference,
+			Metadata:         body.Metadata,
+		},
+	)
+	if createErr != nil {
+		HandleErrorResponse(w, createErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBPaymentToRest(payment),
+	})
+}

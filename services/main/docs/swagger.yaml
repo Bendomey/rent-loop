@@ -999,6 +999,31 @@ definitions:
     - payment_account_id
     - provider
     type: object
+  handlers.PayTrackingInvoiceRequest:
+    properties:
+      amount:
+        example: 100000
+        type: integer
+      metadata:
+        additionalProperties: {}
+        type: object
+      provider:
+        enum:
+        - MTN
+        - VODAFONE
+        - AIRTELTIGO
+        - PAYSTACK
+        - BANK_API
+        - CASH
+        example: CASH
+        type: string
+      reference:
+        example: RCP-2024-001
+        type: string
+    required:
+    - amount
+    - provider
+    type: object
   handlers.RejectClientApplicationRequest:
     properties:
       reason:
@@ -1355,6 +1380,29 @@ definitions:
         type: string
     required:
     - code
+    type: object
+  handlers.VerifyPaymentRequest:
+    properties:
+      is_successful:
+        example: true
+        type: boolean
+      metadata:
+        additionalProperties: {}
+        type: object
+    required:
+    - is_successful
+    type: object
+  handlers.VerifyTrackingOtpRequest:
+    properties:
+      otp_code:
+        type: string
+    required:
+    - otp_code
+    type: object
+  handlers.analyticsTokenResponse:
+    properties:
+      token:
+        type: string
     type: object
   lib.HTTPError:
     properties:
@@ -2900,6 +2948,8 @@ definitions:
     type: object
   transformations.OutputTenantApplication:
     properties:
+      application_payment_invoice:
+        $ref: '#/definitions/transformations.OutputInvoice'
       cancelled_at:
         example: "2024-06-02T12:00:00Z"
         type: string
@@ -3333,6 +3383,33 @@ paths:
       summary: Get the currently authenticated admin (Admin)
       tags:
       - Admins
+  /api/v1/admin/analytics/token:
+    get:
+      description: Returns a signed JWT for querying the Cube.js analytics API. The
+        token is scoped to the authenticated client.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Signed Cube.js JWT
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/handlers.analyticsTokenResponse'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Failed to generate token
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get Cube.js analytics token
+      tags:
+      - Analytics
   /api/v1/admin/client-applications:
     get:
       consumes:
@@ -5816,6 +5893,59 @@ paths:
       summary: Update an existing payment account (Admin)
       tags:
       - Payment Accounts
+  /api/v1/admin/payments/{payment_id}/verify:
+    patch:
+      consumes:
+      - application/json
+      description: Mark a PENDING offline payment as SUCCESSFUL or FAILED. Updates
+        the invoice status accordingly.
+      parameters:
+      - description: Payment ID
+        in: path
+        name: payment_id
+        required: true
+        type: string
+      - description: Verify Payment Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.VerifyPaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment verified
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputPayment'
+            type: object
+        "400":
+          description: Invalid request or payment not verifiable
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Payment not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Verify an offline payment (Admin)
+      tags:
+      - Payments
   /api/v1/admin/properties:
     get:
       consumes:
@@ -8593,6 +8723,167 @@ paths:
       security:
       - BearerAuth: []
       summary: Update a tenant application
+      tags:
+      - TenantApplication
+  /api/v1/tenant-applications/code/{code}:
+    get:
+      description: Look up a tenant application by its unique code. Returns application
+        data including payment invoice.
+      parameters:
+      - description: Application code
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tenant application retrieved
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputTenantApplication'
+            type: object
+        "404":
+          description: Application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Get tenant application by code (public)
+      tags:
+      - TenantApplication
+  /api/v1/tenant-applications/code/{code}/invoice/{invoice_id}/pay:
+    post:
+      consumes:
+      - application/json
+      description: Records an offline payment (PENDING) for an invoice belonging to
+        the given application code.
+      parameters:
+      - description: Application code
+        in: path
+        name: code
+        required: true
+        type: string
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      - description: Payment body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.PayTrackingInvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Payment recorded
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputPayment'
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Application or invoice not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Pay invoice for tracked application (public)
+      tags:
+      - TenantApplication
+  /api/v1/tenant-applications/code/{code}/otp:send:
+    post:
+      description: Sends a 6-digit OTP to the phone number associated with the given
+        application code.
+      parameters:
+      - description: Application code
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OTP sent
+          schema:
+            properties:
+              masked_phone:
+                type: string
+            type: object
+        "404":
+          description: Application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Send OTP to tenant application phone (public)
+      tags:
+      - TenantApplication
+  /api/v1/tenant-applications/code/{code}/otp:verify:
+    post:
+      consumes:
+      - application/json
+      description: Verifies the OTP for the application's phone and returns full application
+        data.
+      parameters:
+      - description: Application code
+        in: path
+        name: code
+        required: true
+        type: string
+      - description: OTP verification body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.VerifyTrackingOtpRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OTP verified, application returned
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputTenantApplication'
+            type: object
+        "400":
+          description: Invalid OTP
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Verify OTP and retrieve tenant application (public)
       tags:
       - TenantApplication
   /api/v1/tenants/phone/{phone}:

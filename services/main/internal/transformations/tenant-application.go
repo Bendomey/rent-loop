@@ -180,6 +180,8 @@ type OutputTenantApplication struct {
 	SecurityDepositFee         *int64  `json:"security_deposit_fee,omitempty"          example:"1000"`
 	SecurityDepositFeeCurrency *string `json:"security_deposit_fee_currency,omitempty" example:"USD"`
 
+	ApplicationPaymentInvoice *OutputInvoice `json:"application_payment_invoice,omitempty"`
+
 	LeaseAgreementDocumentUrl        *string                   `json:"lease_agreement_document_url,omitempty"        example:"https://example.com/lease.pdf"`
 	LeaseAgreementDocumentStatus     *string                   `json:"lease_agreement_document_status,omitempty"     example:"DRAFT"`
 	LeaseAgreementDocumentSignatures []OutputDocumentSignature `json:"lease_agreement_document_signatures,omitempty"`
@@ -268,6 +270,7 @@ func DBTenantApplicationToRest(i *models.TenantApplication) any {
 		"employer":                            i.Employer,
 		"occupation_address":                  i.OccupationAddress,
 		"proof_of_income_url":                 i.ProofOfIncomeUrl,
+		"application_payment_invoice":         DBInvoiceToRest(i.ApplicationPaymentInvoice),
 		"created_at":                          i.CreatedAt,
 		"updated_at":                          i.UpdatedAt,
 	}

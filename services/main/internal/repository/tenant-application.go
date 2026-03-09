@@ -154,6 +154,7 @@ func tenantApplicationPropertyIdFilterScope(propertyId *string) func(db *gorm.DB
 
 type GetTenantApplicationQuery struct {
 	TenantApplicationID string
+	Code                string
 	Populate            *[]string
 }
 
@@ -163,7 +164,12 @@ func (r *tenantApplicationRepository) GetOneWithQuery(
 ) (*models.TenantApplication, error) {
 	var tenantApplication models.TenantApplication
 
-	db := r.DB.WithContext(ctx).Where("id = ?", query.TenantApplicationID)
+	db := r.DB.WithContext(ctx)
+	if query.Code != "" {
+		db = db.Where("code = ?", query.Code)
+	} else {
+		db = db.Where("id = ?", query.TenantApplicationID)
+	}
 
 	if query.Populate != nil {
 		for _, field := range *query.Populate {

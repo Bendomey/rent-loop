@@ -256,6 +256,12 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					r.Get("/line-items", handlers.InvoiceHandler.GetLineItems)
 				})
 			})
+
+			// payments
+			r.Route("/v1/admin/payments/{payment_id}", func(r chi.Router) {
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Patch("/verify", handlers.PaymentHandler.VerifyPayment)
+			})
 		})
 	}
 }
