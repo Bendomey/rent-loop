@@ -7,8 +7,8 @@ cube(`Units`, {
     FROM units u
     JOIN properties p ON p.id = u.property_id AND p.deleted_at IS NULL
     WHERE u.deleted_at IS NULL
-      AND ${COMPILE_CONTEXT.securityContext && COMPILE_CONTEXT.securityContext.clientId
-        ? `p.client_id = '${COMPILE_CONTEXT.securityContext.clientId}'`
+      AND ${COMPILE_CONTEXT.securityContext?.clientId
+        ? `p.client_id = '${COMPILE_CONTEXT.securityContext.clientId}'::uuid`
         : '1 = 0'}
   `,
 

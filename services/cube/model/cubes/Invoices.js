@@ -11,8 +11,8 @@ cube(`Invoices`, {
     FROM invoices
     WHERE deleted_at IS NULL
       AND payee_type = 'PROPERTY_OWNER'
-      AND ${COMPILE_CONTEXT.securityContext && COMPILE_CONTEXT.securityContext.clientId
-        ? `payee_client_id = '${COMPILE_CONTEXT.securityContext.clientId}'`
+      AND ${COMPILE_CONTEXT.securityContext?.clientId
+        ? `payee_client_id = '${COMPILE_CONTEXT.securityContext.clientId}'::uuid`
         : '1 = 0'}
   `,
 
