@@ -202,6 +202,22 @@ export function VerifyOtp({ code, fetcher }: Props) {
 								</button>
 							)}
 						</div>
+
+						{/* USSD fallback card */}
+						<div className="mt-4 space-y-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-center">
+							<p className="text-xs font-medium text-slate-600">
+								Didn&apos;t receive the code?
+							</p>
+							<p className="mt-1 text-xs text-slate-500">
+								Dial the USSD code below with your account number:
+							</p>
+							<p className="mt-2 text-center font-mono text-3xl font-bold tracking-widest text-slate-900">
+								*713*882#
+							</p>
+							<p className="mt-1 text-center text-xs text-slate-400">
+								Works on all networks in Ghana
+							</p>
+						</div>
 					</>
 				)}
 			</div>

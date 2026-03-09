@@ -14,7 +14,7 @@ import {
 	SelectValue,
 } from '~/components/ui/select'
 import { Spinner } from '~/components/ui/spinner'
-import { formatAmount } from '~/lib/format-amount'
+import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { cn } from '~/lib/utils'
 
 interface Props {
@@ -33,7 +33,10 @@ const STATUS_STYLES: Record<string, string> = {
 const PROVIDERS = ['MTN', 'VODAFONE', 'AIRTELTIGO', 'CASH', 'BANK_API']
 
 export function PaymentInfo({ invoice }: Props) {
-	const fetcher = useFetcher<{ paymentSuccess?: boolean; error?: string | null }>()
+	const fetcher = useFetcher<{
+		paymentSuccess?: boolean
+		error?: string | null
+	}>()
 	const [showPayForm, setShowPayForm] = useState(false)
 	const [provider, setProvider] = useState<string>('')
 	const [reference, setReference] = useState('')
@@ -94,8 +97,8 @@ export function PaymentInfo({ invoice }: Props) {
 				{invoice.due_date && (
 					<p>
 						Due:{' '}
-						<span className="text-slate-700">
-							{dayjs(invoice.due_date).format('MMM D, YYYY')}
+						<span className={cn('text-slate-700')}>
+							{dayjs(invoice.due_date).format('LL')}
 						</span>
 					</p>
 				)}
@@ -103,7 +106,7 @@ export function PaymentInfo({ invoice }: Props) {
 					<p>
 						Paid:{' '}
 						<span className="text-green-600">
-							{dayjs(invoice.paid_at).format('MMM D, YYYY')}
+							{dayjs(invoice.paid_at).format('LL')}
 						</span>
 					</p>
 				)}
@@ -124,7 +127,7 @@ export function PaymentInfo({ invoice }: Props) {
 								<tr key={idx}>
 									<td className="py-2 text-slate-600">{item.label}</td>
 									<td className="py-2 text-right text-slate-700">
-										{formatAmount(item.total_amount)}
+										{formatAmount(convertPesewasToCedis(item.total_amount))}
 									</td>
 								</tr>
 							))}
@@ -133,7 +136,7 @@ export function PaymentInfo({ invoice }: Props) {
 							<tr className="border-t">
 								<td className="pt-2 font-semibold text-slate-900">Total</td>
 								<td className="pt-2 text-right font-semibold text-slate-900">
-									{formatAmount(invoice.total_amount)}
+									{formatAmount(convertPesewasToCedis(invoice.total_amount))}
 								</td>
 							</tr>
 						</tfoot>
@@ -144,7 +147,8 @@ export function PaymentInfo({ invoice }: Props) {
 			{/* Success banner */}
 			{lastSuccess && (
 				<div className="mt-4 rounded-md bg-green-50 px-4 py-3 text-sm text-green-700">
-					Payment submitted successfully. Your property manager will verify it shortly.
+					Payment submitted successfully. Your property manager will verify it
+					shortly.
 				</div>
 			)}
 
@@ -220,7 +224,7 @@ export function PaymentInfo({ invoice }: Props) {
 											Submitting...
 										</>
 									) : (
-										`Confirm ${formatAmount(invoice.total_amount)}`
+										`Confirm ${formatAmount(convertPesewasToCedis(invoice.total_amount))}`
 									)}
 								</Button>
 							</div>

@@ -8,7 +8,7 @@ const CHECKLIST_ITEMS: Array<{
 }> = [
 	{ key: 'unit_selected', label: 'Unit selected' },
 	{ key: 'personal_details_complete', label: 'Personal details completed' },
-	{ key: 'move_in_setup_complete', label: 'Move-in details configured' },
+	{ key: 'move_in_setup_complete', label: 'Move-in details completed' },
 	{ key: 'financial_setup_complete', label: 'Financial terms set' },
 	{ key: 'lease_document_ready', label: 'Lease document prepared' },
 ]

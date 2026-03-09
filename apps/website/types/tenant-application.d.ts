@@ -54,8 +54,34 @@ interface TenantApplication {
 interface TrackingApplication {
 	code: string
 	status: TenantApplication['status']
+	// Personal info
 	first_name: string
 	last_name: string
+	other_names: Nullable<string>
+	email: Nullable<string>
+	phone: string
+	gender: string
+	date_of_birth: string
+	nationality: string
+	marital_status: string
+	// Identity
+	id_type: Nullable<string>
+	id_number: string
+	// Current residence
+	current_address: string
+	// Employment
+	occupation: string
+	employer: string
+	occupation_address: string
+	// Emergency contact
+	emergency_contact_name: string
+	emergency_contact_phone: string
+	relationship_to_emergency_contact: string
+	// Rental history
+	previous_landlord_name: Nullable<string>
+	previous_landlord_phone: Nullable<string>
+	previous_tenancy_period: Nullable<string>
+	// Desired unit & lease terms
 	desired_unit: Nullable<{
 		name: string
 		type: string
@@ -69,6 +95,7 @@ interface TrackingApplication {
 	payment_frequency: Nullable<string>
 	initial_deposit_fee: Nullable<number>
 	security_deposit_fee: Nullable<number>
+	// Documents & payment
 	lease_agreement_document_status: Nullable<
 		'DRAFT' | 'FINALIZED' | 'SIGNING' | 'SIGNED'
 	>

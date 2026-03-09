@@ -2,10 +2,12 @@ import dayjs from 'dayjs'
 import { Building2, Calendar, MapPin } from 'lucide-react'
 
 import { ApplicationChecklist } from './application-checklist'
+import { ApplicationDetailsCard } from './application-details-card'
 import { LeaseDocumentCard } from './lease-document-card'
 import { PaymentInfo } from './payment-info'
 import { APP_NAME } from '~/lib/constants'
-import { formatAmount } from '~/lib/format-amount'
+import { formatAmount, convertPesewasToCedis } from '~/lib/format-amount'
+import { getPaymentFrequencyPeriodLabel } from '~/lib/properties.utils'
 import { cn } from '~/lib/utils'
 
 interface Props {
@@ -68,10 +70,6 @@ export function TrackingDashboard({ application, code }: Props) {
 					</div>
 
 					<div className="mt-4 space-y-2">
-						<p className="text-sm font-medium text-slate-900">
-							{application.first_name} {application.last_name}
-						</p>
-
 						{application.desired_unit && (
 							<div className="flex items-center gap-2 text-sm text-slate-500">
 								<Building2 className="h-4 w-4" />
@@ -94,12 +92,15 @@ export function TrackingDashboard({ application, code }: Props) {
 							<div className="flex items-center gap-2 text-sm text-slate-500">
 								<Calendar className="h-4 w-4" />
 								<span>
-									Applied {dayjs(application.created_at).format('MMM D, YYYY')}
+									Applied {dayjs(application.created_at).format('LL')}
 								</span>
 							</div>
 						)}
 					</div>
 				</div>
+
+				{/* Application details */}
+				<ApplicationDetailsCard application={application} />
 
 				{/* Progress checklist */}
 				<ApplicationChecklist progress={application.checklist_progress} />
@@ -113,9 +114,12 @@ export function TrackingDashboard({ application, code }: Props) {
 						<div className="flex justify-between">
 							<dt className="text-slate-500">Rent</dt>
 							<dd className="font-medium text-slate-700">
-								{formatAmount(application.rent_fee)}
+								{formatAmount(convertPesewasToCedis(application.rent_fee))}
 								{application.payment_frequency &&
-									` / ${application.payment_frequency.toLowerCase()}`}
+									` / ${getPaymentFrequencyPeriodLabel(
+										application.payment_frequency,
+										1,
+									)}`}
 							</dd>
 						</div>
 
@@ -123,7 +127,9 @@ export function TrackingDashboard({ application, code }: Props) {
 							<div className="flex justify-between">
 								<dt className="text-slate-500">Security Deposit</dt>
 								<dd className="font-medium text-slate-700">
-									{formatAmount(application.security_deposit_fee)}
+									{formatAmount(
+										convertPesewasToCedis(application.security_deposit_fee),
+									)}
 								</dd>
 							</div>
 						)}
@@ -132,7 +138,9 @@ export function TrackingDashboard({ application, code }: Props) {
 							<div className="flex justify-between">
 								<dt className="text-slate-500">Initial Deposit</dt>
 								<dd className="font-medium text-slate-700">
-									{formatAmount(application.initial_deposit_fee)}
+									{formatAmount(
+										convertPesewasToCedis(application.initial_deposit_fee),
+									)}
 								</dd>
 							</div>
 						)}
@@ -141,9 +149,7 @@ export function TrackingDashboard({ application, code }: Props) {
 							<div className="flex justify-between">
 								<dt className="text-slate-500">Move-in Date</dt>
 								<dd className="font-medium text-slate-700">
-									{dayjs(application.desired_move_in_date).format(
-										'MMM D, YYYY',
-									)}
+									{dayjs(application.desired_move_in_date).format('LL')}
 								</dd>
 							</div>
 						)}
@@ -154,7 +160,10 @@ export function TrackingDashboard({ application, code }: Props) {
 									<dt className="text-slate-500">Duration</dt>
 									<dd className="font-medium text-slate-700">
 										{application.stay_duration}{' '}
-										{application.stay_duration_frequency.toLowerCase()}
+										{getPaymentFrequencyPeriodLabel(
+											application.stay_duration_frequency,
+											application.stay_duration,
+										)}
 									</dd>
 								</div>
 							)}
@@ -169,7 +178,10 @@ export function TrackingDashboard({ application, code }: Props) {
 				/>
 
 				{/* Payment info */}
-				<PaymentInfo invoice={application.application_payment_invoice} code={code} />
+				<PaymentInfo
+					invoice={application.application_payment_invoice}
+					code={code}
+				/>
 			</main>
 		</div>
 	)

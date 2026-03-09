@@ -9,8 +9,7 @@ export function TenantApplicationTrackingModule() {
 	const fetcher = useFetcher<{ application?: TrackingApplication | null }>()
 
 	// After a successful verifyOtp action, the fetcher data has the application
-	const verifiedApplication =
-		fetcher.data?.application ?? application ?? null
+	const verifiedApplication = fetcher.data?.application ?? application ?? null
 
 	if (verifiedApplication) {
 		return <TrackingDashboard application={verifiedApplication} code={code} />

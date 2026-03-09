@@ -15,7 +15,10 @@ const environmentSchema = z.object({
 	R2_ACCESS_KEY_ID: z.string().min(1),
 	R2_SECRET_ACCESS_KEY: z.string().min(1),
 	RENTLOOP_IMAGES_BASE_URL: z.url().min(1),
-	TRACKING_COOKIE_SECRET: z.string().min(32).default('changeme-tracking-secret-min-32-chars'),
+	TRACKING_COOKIE_SECRET: z
+		.string()
+		.min(32)
+		.default('changeme-tracking-secret-min-32-chars'),
 })
 
 const environmentVariables = () => environmentSchema.parse(process.env)
