@@ -52,11 +52,18 @@ type TimeRange = '90d' | '30d' | '7d'
 function dateRangeForRange(range: TimeRange): [string, string] {
 	const now = localizedDayjs()
 	const days = range === '90d' ? 90 : range === '30d' ? 30 : 7
-	return [now.subtract(days, 'day').format('YYYY-MM-DD'), now.format('YYYY-MM-DD')]
+	return [
+		now.subtract(days, 'day').format('YYYY-MM-DD'),
+		now.format('YYYY-MM-DD'),
+	]
 }
 
 function granularityForRange(range: TimeRange) {
-	return range === '7d' ? ('day' as const) : range === '30d' ? ('week' as const) : ('month' as const)
+	return range === '7d'
+		? ('day' as const)
+		: range === '30d'
+			? ('week' as const)
+			: ('month' as const)
 }
 
 function formatPeriodLabel(row: RevenueRow, range: TimeRange): string {
@@ -129,7 +136,10 @@ export function ChartBarDefault() {
 						<ToggleGroupItem value="30d">Last 30 days</ToggleGroupItem>
 						<ToggleGroupItem value="7d">Last 7 days</ToggleGroupItem>
 					</ToggleGroup>
-					<Select value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)}>
+					<Select
+						value={timeRange}
+						onValueChange={(v) => setTimeRange(v as TimeRange)}
+					>
 						<SelectTrigger
 							className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"
 							size="sm"
@@ -172,19 +182,17 @@ export function ChartBarDefault() {
 								tickLine={false}
 								axisLine={false}
 								tickFormatter={(v: number) =>
-								v >= 1000
-									? `GH₵\u00A0${(v / 1000).toFixed(0)}k`
-									: formatAmount(v)
-							}
+									v >= 1000
+										? `GH₵\u00A0${(v / 1000).toFixed(0)}k`
+										: formatAmount(v)
+								}
 								width={60}
 							/>
 							<ChartTooltip
 								cursor={false}
 								content={
 									<ChartTooltipContent
-										formatter={(value) =>
-											formatAmount(Number(value))
-										}
+										formatter={(value) => formatAmount(Number(value))}
 									/>
 								}
 							/>
@@ -195,7 +203,8 @@ export function ChartBarDefault() {
 			</CardContent>
 			<CardFooter className="flex-col items-start gap-2 text-sm">
 				<div className="flex gap-2 leading-none font-medium">
-					{formatAmount(totalRevenue)} collected <TrendingUp className="h-4 w-4" />
+					{formatAmount(totalRevenue)} collected{' '}
+					<TrendingUp className="h-4 w-4" />
 				</div>
 				<div className="text-muted-foreground leading-none">
 					Paid invoices only · does not include outstanding balances

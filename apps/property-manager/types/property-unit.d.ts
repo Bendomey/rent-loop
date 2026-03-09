@@ -24,6 +24,7 @@ interface PropertyUnit {
 		| 'Unit.Status.Draft'
 		| 'Unit.Status.Available'
 		| 'Unit.Status.Occupied'
+		| 'Unit.Status.PartiallyOccupied'
 		| 'Unit.Status.Maintenance'
 	created_at: Date
 	updated_at: Date

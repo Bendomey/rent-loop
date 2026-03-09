@@ -48,19 +48,15 @@ const chartConfig = {
 export function UnitsChart() {
 	const { data: token } = useGetAnalyticsToken()
 
-	const unitsQuery = useCubeQuery<UnitRow>(
-		token,
-		['units-distribution'],
-		{
-			measures: [
-				'Units.occupiedCount',
-				'Units.availableCount',
-				'Units.maintenanceCount',
-				'Units.draftCount',
-				'Units.count',
-			],
-		},
-	)
+	const unitsQuery = useCubeQuery<UnitRow>(token, ['units-distribution'], {
+		measures: [
+			'Units.occupiedCount',
+			'Units.availableCount',
+			'Units.maintenanceCount',
+			'Units.draftCount',
+			'Units.count',
+		],
+	})
 
 	const row = unitsQuery.data?.[0]
 
@@ -83,7 +79,9 @@ export function UnitsChart() {
 		<Card className="shadow-none">
 			<CardHeader>
 				<CardTitle>Unit Status Distribution</CardTitle>
-				<CardDescription>Breakdown of all units by current status</CardDescription>
+				<CardDescription>
+					Breakdown of all units by current status
+				</CardDescription>
 			</CardHeader>
 			<CardContent>
 				{unitsQuery.isPending ? (
@@ -95,7 +93,10 @@ export function UnitsChart() {
 						No unit data available
 					</div>
 				) : (
-					<ChartContainer config={chartConfig} className="mx-auto max-h-[250px]">
+					<ChartContainer
+						config={chartConfig}
+						className="mx-auto max-h-[250px]"
+					>
 						<PieChart>
 							<ChartTooltip
 								content={
@@ -103,7 +104,8 @@ export function UnitsChart() {
 										nameKey="name"
 										formatter={(value, name) => [
 											`${value} unit${Number(value) !== 1 ? 's' : ''}`,
-											chartConfig[name as keyof typeof chartConfig]?.label ?? name,
+											chartConfig[name as keyof typeof chartConfig]?.label ??
+												name,
 										]}
 									/>
 								}

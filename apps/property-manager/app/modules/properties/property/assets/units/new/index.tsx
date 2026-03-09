@@ -65,6 +65,7 @@ const ValidationSchema = z.object({
 			'Unit.Status.Draft',
 			'Unit.Status.Available',
 			'Unit.Status.Occupied',
+			'Unit.Status.PartiallyOccupied',
 			'Unit.Status.Maintenance',
 		],
 		{ error: 'Please select a status' },

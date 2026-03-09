@@ -121,7 +121,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 			},
 		})
 	}
-	if unit.Status != "Unit.Status.Available" {
+	if unit.Status != "Unit.Status.Available" && unit.Status != "Unit.Status.PartiallyOccupied" {
 		return nil, pkg.BadRequestError("UnitNotAvailable", nil)
 	}
 
@@ -728,7 +728,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		return getUnitErr
 	}
 
-	if unit.Status != "Unit.Status.Available" {
+	if unit.Status != "Unit.Status.Available" && unit.Status != "Unit.Status.PartiallyOccupied" {
 		return pkg.BadRequestError("UnitNoLongerAvailable", nil)
 	}
 
@@ -845,19 +845,23 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		return err
 	}
 
-	if occupyingLeases >= int64(unit.MaxOccupantsAllowed) && unit.Status != "Unit.Status.Occupied" {
-		unit.Status = "Unit.Status.Occupied"
-		updateUnitErr := s.unitService.UpdateUnitStatus(transCtx, UpdateUnitStatusInput{
+	var newUnitStatus string
+	if occupyingLeases >= int64(unit.MaxOccupantsAllowed) {
+		newUnitStatus = "Unit.Status.Occupied"
+	} else if occupyingLeases > 0 {
+		newUnitStatus = "Unit.Status.PartiallyOccupied"
+	}
+
+	if newUnitStatus != "" && unit.Status != newUnitStatus {
+		updateUnitErr := s.unitService.SetSystemUnitStatus(transCtx, UpdateUnitStatusInput{
 			PropertyID: unit.PropertyID,
 			UnitID:     unit.ID.String(),
-			Status:     unit.Status,
+			Status:     newUnitStatus,
 		})
-
 		if updateUnitErr != nil {
 			transaction.Rollback()
 			return updateUnitErr
 		}
-
 	}
 
 	if commitErr := transaction.Commit().Error; commitErr != nil {

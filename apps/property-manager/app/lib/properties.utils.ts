@@ -67,6 +67,8 @@ export function getPropertyUnitStatusLabel(
 			return 'Available'
 		case 'Unit.Status.Occupied':
 			return 'Occupied'
+		case 'Unit.Status.PartiallyOccupied':
+			return 'Partially Occupied'
 		case 'Unit.Status.Maintenance':
 			return 'Maintenance'
 		default:

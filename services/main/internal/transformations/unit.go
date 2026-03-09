@@ -86,7 +86,7 @@ func DBUnitToRest(i *models.Unit) any {
 	}
 
 	var status string
-	if i.Status == "Unit.Status.Available" {
+	if i.Status == "Unit.Status.Available" || i.Status == "Unit.Status.PartiallyOccupied" {
 		status = "Unit.Status.Available"
 	} else {
 		status = "Unit.Status.Unavailable"

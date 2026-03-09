@@ -1,11 +1,11 @@
 ---
 id: RENTL-3
 title: Introduce a new status for the unit to handle availablity use case
-status: To Do
+status: Done
 assignee:
   - Ben
 created_date: '2026-03-04 18:23'
-updated_date: '2026-03-07 12:10'
+updated_date: '2026-03-09 09:18'
 labels:
   - property-manager-portal
 milestone: m-0

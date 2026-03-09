@@ -50,7 +50,9 @@ export function UnitSelect({
 					item.status === 'Unit.Status.Available'
 						? item.name
 						: `${item.name} (${getPropertyUnitStatusLabel(item.status)})`,
-				isAvailable: item.status === 'Unit.Status.Available',
+				isAvailable:
+					item.status === 'Unit.Status.Available' ||
+					item.status === 'Unit.Status.PartiallyOccupied',
 			}))
 		}
 

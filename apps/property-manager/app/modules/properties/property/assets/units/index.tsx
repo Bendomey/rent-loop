@@ -87,7 +87,9 @@ export function PropertyAssetUnitsModule() {
 												? 'bg-yellow-500 text-white'
 												: data.status === 'Unit.Status.Occupied'
 													? 'bg-rose-500 text-white'
-													: 'bg-zinc-400 text-white'
+													: data.status === 'Unit.Status.PartiallyOccupied'
+														? 'bg-orange-500 text-white'
+														: 'bg-zinc-400 text-white'
 									}
 								>
 									{data.status === 'Unit.Status.Available'
@@ -96,7 +98,9 @@ export function PropertyAssetUnitsModule() {
 											? 'Maintenance'
 											: data.status === 'Unit.Status.Occupied'
 												? 'Occupied'
-												: 'Draft'}
+												: data.status === 'Unit.Status.PartiallyOccupied'
+													? 'Partially Occupied'
+													: 'Draft'}
 								</Badge>
 							</CardAction>
 						</CardHeader>
