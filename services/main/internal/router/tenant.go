@@ -15,7 +15,6 @@ func NewTenantAccountRouter(appCtx pkg.AppContext, handlers handlers.Handlers) f
 			r.Post("/v1/auth/codes", handlers.AuthHandler.SendCode)
 			r.Post("/v1/auth/codes/verify", handlers.AuthHandler.VerifyCode)
 
-
 			// Public tracking routes (no auth required)
 			r.Get("/v1/tenant-applications/code/{code}", handlers.TenantApplicationHandler.GetTenantApplicationByCode)
 			r.Post("/v1/tenant-applications/code/{code}/otp:send", handlers.TenantApplicationHandler.SendTrackingOtp)
