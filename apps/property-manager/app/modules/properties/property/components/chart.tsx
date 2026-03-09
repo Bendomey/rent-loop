@@ -1,9 +1,10 @@
+import { TrendingUp } from 'lucide-react'
 import { useState } from 'react'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
+import { useCubeQuery, useGetAnalyticsToken } from '~/api/analytics'
 import {
+	type ChartConfig,
 	ChartContainer,
-	ChartLegend,
-	ChartLegendContent,
 	ChartTooltip,
 	ChartTooltipContent,
 } from '~/components/ui/chart'
@@ -14,32 +15,98 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '~/components/ui/select'
+import { Skeleton } from '~/components/ui/skeleton'
 import { ToggleGroup, ToggleGroupItem } from '~/components/ui/toggle-group'
+import { localizedDayjs } from '~/lib/date'
+import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 
-const chartData = [
-	{ month: 'January', income: 28186, expenses: 180 },
-	{ month: 'February', income: 53305, expenses: 18200 },
-	{ month: 'March', income: 42037, expenses: 51200 },
-	{ month: 'April', income: 52730, expenses: 21190 },
-	{ month: 'May', income: 42090, expenses: 1130 },
-	{ month: 'June', income: 52140, expenses: 20140 },
-	{ month: 'July', income: 42140, expenses: 3140 },
-	{ month: 'August', income: 31640, expenses: 50140 },
-	{ month: 'September', income: 60000, expenses: 10140 },
-]
-const chartConfig = {
-	income: {
-		label: 'Income',
-		color: '#3b82f6', // Tailwind blue-500
-	},
-	expenses: {
-		label: 'Expenses',
-		color: '#ef4444', // Tailwind red-500
-	},
+interface RevenueRow {
+	'Invoices.paidAmount': string | null
+	'Invoices.paidAt.month'?: string
+	'Invoices.paidAt.week'?: string
+	'Invoices.paidAt.day'?: string
 }
 
-export function PropertyChartBar() {
-	const [timeRange, setTimeRange] = useState('90d')
+const chartConfig = {
+	revenue: {
+		label: 'Revenue',
+		color: 'var(--color-primary)',
+	},
+} satisfies ChartConfig
+
+type TimeRange = '90d' | '30d' | '7d'
+
+function dateRangeForRange(range: TimeRange): [string, string] {
+	const now = localizedDayjs()
+	const days = range === '90d' ? 90 : range === '30d' ? 30 : 7
+	return [
+		now.subtract(days, 'day').format('YYYY-MM-DD'),
+		now.format('YYYY-MM-DD'),
+	]
+}
+
+function granularityForRange(range: TimeRange) {
+	return range === '7d'
+		? ('day' as const)
+		: range === '30d'
+			? ('week' as const)
+			: ('month' as const)
+}
+
+function formatPeriodLabel(row: RevenueRow, range: TimeRange): string {
+	const raw =
+		range === '7d'
+			? row['Invoices.paidAt.day']
+			: range === '30d'
+				? row['Invoices.paidAt.week']
+				: row['Invoices.paidAt.month']
+	if (!raw) return ''
+	const d = localizedDayjs(raw)
+	if (range === '90d') return d.format('MMM')
+	if (range === '30d') return d.format('MMM D')
+	return d.format('D MMM')
+}
+
+interface Props {
+	propertyId: string
+}
+
+export function PropertyChartBar({ propertyId }: Props) {
+	const [timeRange, setTimeRange] = useState<TimeRange>('90d')
+	const { data: token } = useGetAnalyticsToken()
+
+	const granularity = granularityForRange(timeRange)
+	const dateRange = dateRangeForRange(timeRange)
+
+	const revenueQuery = useCubeQuery<RevenueRow>(
+		token,
+		['prop-revenue-chart', propertyId, timeRange],
+		{
+			measures: ['Invoices.paidAmount'],
+			timeDimensions: [
+				{
+					dimension: 'Invoices.paidAt',
+					granularity,
+					dateRange,
+				},
+			],
+			filters: [
+				{
+					member: 'Invoices.propertyId',
+					operator: 'equals',
+					values: [propertyId],
+				},
+			],
+		},
+	)
+
+	const chartData = (revenueQuery.data ?? []).map((row) => ({
+		period: formatPeriodLabel(row, timeRange),
+		revenue: convertPesewasToCedis(Number(row['Invoices.paidAmount'] ?? 0)),
+	}))
+
+	const totalRevenue = chartData.reduce((sum, r) => sum + r.revenue, 0)
+	const hasData = chartData.length > 0 && chartData.some((r) => r.revenue > 0)
 
 	return (
 		<div className="bg-background flex w-full flex-col rounded-2xl p-4 shadow-sm transition-all duration-300 ease-in-out hover:shadow-md">
@@ -47,7 +114,7 @@ export function PropertyChartBar() {
 				<div>
 					<h3 className="text-lg font-semibold">Total Revenue</h3>
 					<p className="text-muted-foreground text-sm">
-						January – September 2025
+						Paid invoice revenue for the selected period
 					</p>
 				</div>
 
@@ -55,7 +122,7 @@ export function PropertyChartBar() {
 					<ToggleGroup
 						type="single"
 						value={timeRange}
-						onValueChange={setTimeRange}
+						onValueChange={(v) => v && setTimeRange(v as TimeRange)}
 						variant="outline"
 						className="hidden md:flex"
 					>
@@ -64,7 +131,10 @@ export function PropertyChartBar() {
 						<ToggleGroupItem value="7d">Last 7 days</ToggleGroupItem>
 					</ToggleGroup>
 
-					<Select value={timeRange} onValueChange={setTimeRange}>
+					<Select
+						value={timeRange}
+						onValueChange={(v) => setTimeRange(v as TimeRange)}
+					>
 						<SelectTrigger
 							className="w-36 md:hidden"
 							size="sm"
@@ -82,36 +152,57 @@ export function PropertyChartBar() {
 			</div>
 
 			<div className="mt-4 h-[250px] sm:h-[280px] lg:h-[300px]">
-				<ChartContainer config={chartConfig} className="h-full w-full">
-					<BarChart accessibilityLayer data={chartData}>
-						<CartesianGrid vertical={false} />
-						<XAxis
-							dataKey="month"
-							tickLine={false}
-							tickMargin={10}
-							axisLine={false}
-							tickFormatter={(value) => value.slice(0, 3)}
-						/>
-						<YAxis
-							tickLine={false}
-							axisLine={false}
-							tickFormatter={(value: number) => `₵${value.toLocaleString()}`}
-						/>
-						<ChartTooltip
-							cursor={false}
-							formatter={(value: unknown) =>
-								typeof value === 'number'
-									? `₵${value.toLocaleString()}`
-									: `₵${String(value)}`
-							}
-							content={<ChartTooltipContent indicator="dashed" />}
-						/>
-						<ChartLegend content={<ChartLegendContent />} />
-						<Bar dataKey="income" fill="#3b82f6" radius={4} barSize={20} />
-						<Bar dataKey="expenses" fill="#ef4444" radius={4} barSize={20} />
-					</BarChart>
-				</ChartContainer>
+				{revenueQuery.isPending ? (
+					<Skeleton className="h-full w-full rounded-lg" />
+				) : !hasData ? (
+					<div className="text-muted-foreground flex h-full items-center justify-center text-sm">
+						No revenue data for this period
+					</div>
+				) : (
+					<ChartContainer config={chartConfig} className="h-full w-full">
+						<BarChart accessibilityLayer data={chartData}>
+							<CartesianGrid vertical={false} />
+							<XAxis
+								dataKey="period"
+								tickLine={false}
+								tickMargin={10}
+								axisLine={false}
+							/>
+							<YAxis
+								tickLine={false}
+								axisLine={false}
+								tickFormatter={(v: number) =>
+									v >= 1000
+										? `GH₵\u00A0${(v / 1000).toFixed(0)}k`
+										: formatAmount(v)
+								}
+								width={60}
+							/>
+							<ChartTooltip
+								cursor={false}
+								content={
+									<ChartTooltipContent
+										formatter={(value) => formatAmount(Number(value))}
+									/>
+								}
+							/>
+							<Bar
+								dataKey="revenue"
+								fill="var(--color-primary)"
+								radius={4}
+								barSize={20}
+							/>
+						</BarChart>
+					</ChartContainer>
+				)}
 			</div>
+
+			{!revenueQuery.isPending && hasData && (
+				<div className="mt-3 flex items-center gap-2 text-sm font-medium">
+					{formatAmount(totalRevenue)} collected{' '}
+					<TrendingUp className="h-4 w-4" />
+				</div>
+			)}
 		</div>
 	)
 }
