@@ -1,10 +1,10 @@
 ---
 id: RENTL-19
 title: Flutter FCM integration — device token + notification handling
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-09 20:38'
-updated_date: '2026-03-09 20:48'
+updated_date: '2026-03-09 21:52'
 labels: []
 dependencies: []
 priority: medium

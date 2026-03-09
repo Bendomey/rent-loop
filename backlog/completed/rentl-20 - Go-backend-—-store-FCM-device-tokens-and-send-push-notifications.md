@@ -1,10 +1,10 @@
 ---
 id: RENTL-20
 title: Go backend — store FCM device tokens and send push notifications
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-09 20:39'
-updated_date: '2026-03-09 20:46'
+updated_date: '2026-03-09 21:52'
 labels: []
 dependencies: []
 priority: medium
