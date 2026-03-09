@@ -105,17 +105,15 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                         ),
                         child: Row(
                           children: [
-                            Text(
-                              '🇬🇭',
-                              style: TextStyle(fontSize: 24),
-                            ),
+                            Text('🇬🇭', style: TextStyle(fontSize: 24)),
                             const SizedBox(width: 8),
                             Text(
                               '+233',
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
                             ),
                           ],
                         ),
@@ -125,10 +123,11 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                         child: TextFormField(
                           controller: _phoneController,
                           keyboardType: TextInputType.phone,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: 1.2,
-                          ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 1.2,
+                              ),
                           decoration: InputDecoration(
                             hintText: '24 XXX XXXX',
                             hintStyle: TextStyle(
@@ -148,17 +147,25 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                           ],
                           validator: (value) {
                             final result = Validatorless.multiple([
-                              Validatorless.required('Phone number is required'),
-                              Validatorless.min(9, 'Enter a valid 9-digit number'),
-                              Validatorless.max(9, 'Enter a valid 9-digit number'),
+                              Validatorless.required(
+                                'Phone number is required',
+                              ),
+                              Validatorless.min(
+                                9,
+                                'Enter a valid 9-digit number',
+                              ),
+                              Validatorless.max(
+                                9,
+                                'Enter a valid 9-digit number',
+                              ),
                             ])(value);
 
                             if (result != _errorText) {
-                               WidgetsBinding.instance.addPostFrameCallback((_) {
-                                 if (mounted) {
-                                   setState(() => _errorText = result);
-                                 }
-                               });
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (mounted) {
+                                  setState(() => _errorText = result);
+                                }
+                              });
                             }
                             return result;
                           },
@@ -166,7 +173,6 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                       ),
                     ],
                   ),
-
                 ),
                 if (_errorText != null) ...[
                   const SizedBox(height: 8),
@@ -184,9 +190,14 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                 ],
                 SizedBox(height: screenHeight * 0.03),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondary.withOpacity(0.08),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.secondary.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -194,10 +205,11 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                       Expanded(
                         child: Text(
                           'By continuing, you agree to our Terms and Conditions.',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey.shade800,
-                            height: 1.2,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Colors.grey.shade800,
+                                height: 1.2,
+                              ),
                         ),
                       ),
                     ],

@@ -119,7 +119,7 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
     if (value.isNotEmpty && index < 5) {
       _focusNodes[index + 1].requestFocus();
     }
-    
+
     // Auto-verify when all digits are entered
     if (_otpCode.length == 6) {
       _handleVerify();
@@ -206,9 +206,8 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
                         keyboardType: TextInputType.number,
                         textAlign: TextAlign.center,
                         maxLength: 1,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
                         decoration: InputDecoration(
                           counterText: '',
                           filled: true,
@@ -228,7 +227,9 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
                               width: 2,
                             ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                          ),
                         ),
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
@@ -262,7 +263,10 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
               SizedBox(height: screenHeight * 0.03),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(12),
@@ -290,18 +294,24 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
                     ),
                     const SizedBox(height: 10),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withValues(alpha: 0.07),
+                        color: Theme.of(
+                          context,
+                        ).primaryColor.withValues(alpha: 0.07),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         '*713*882#',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: Theme.of(context).primaryColor,
-                          letterSpacing: 1.5,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: Theme.of(context).primaryColor,
+                              letterSpacing: 1.5,
+                            ),
                       ),
                     ),
                     const SizedBox(height: 8),

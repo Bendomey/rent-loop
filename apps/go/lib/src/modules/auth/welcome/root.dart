@@ -15,17 +15,20 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen> {
   final List<OnboardingItem> _items = [
     OnboardingItem(
       title: 'Welcome to RentLoop',
-      description: 'Manage your rental experience with ease. Your new home, right at your fingertips.',
+      description:
+          'Manage your rental experience with ease. Your new home, right at your fingertips.',
       image: 'assets/images/welcome_illustration.png',
     ),
     OnboardingItem(
       title: 'Easy Payments',
-      description: 'Pay your rent securely and instantly. Track your payment history and never miss a due date.',
+      description:
+          'Pay your rent securely and instantly. Track your payment history and never miss a due date.',
       image: 'assets/images/payment_illustration.png',
     ),
     OnboardingItem(
       title: 'Quick Maintenance',
-      description: 'Submit maintenance requests in seconds. Track real-time progress as we fix your issues.',
+      description:
+          'Submit maintenance requests in seconds. Track real-time progress as we fix your issues.',
       image: 'assets/images/maintenance_illustration.png',
     ),
   ];
@@ -73,7 +76,9 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen> {
                 itemCount: _items.length,
                 itemBuilder: (context, index) {
                   return Padding(
-                    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.08),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.08,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -88,20 +93,22 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen> {
                         // Title
                         Text(
                           _items[index].title,
-                          style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            color: Colors.black87,
-                          ),
+                          style: Theme.of(context).textTheme.displaySmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: Colors.black87,
+                              ),
                           textAlign: TextAlign.center,
                         ),
                         SizedBox(height: screenHeight * 0.02),
                         // Subtitle
                         Text(
                           _items[index].description,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey.shade600,
-                            height: 1.5,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Colors.grey.shade600,
+                                height: 1.5,
+                              ),
                           textAlign: TextAlign.center,
                         ),
                         const Spacer(flex: 2),
@@ -113,7 +120,10 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen> {
             ),
             // Bottom Controls
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.08, vertical: screenHeight * 0.05),
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.08,
+                vertical: screenHeight * 0.05,
+              ),
               child: Column(
                 children: [
                   // Page Indicators
@@ -141,8 +151,8 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen> {
                     height: 56,
                     child: FilledButton(
                       onPressed: () {
-                         Haptics.vibrate(HapticsType.selection);
-                         _onNext();
+                        Haptics.vibrate(HapticsType.selection);
+                        _onNext();
                       },
                       style: FilledButton.styleFrom(
                         backgroundColor: Theme.of(context).primaryColor,
@@ -152,7 +162,9 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen> {
                         ),
                       ),
                       child: Text(
-                        _currentPage == _items.length - 1 ? 'Get Started' : 'Next',
+                        _currentPage == _items.length - 1
+                            ? 'Get Started'
+                            : 'Next',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,

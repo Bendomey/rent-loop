@@ -13,8 +13,5 @@ class ApiState {
   ApiStatus status;
   String? errorMessage;
 
-  ApiState({
-    this.status = ApiStatus.idle,
-    this.errorMessage,
-  });
+  ApiState({this.status = ApiStatus.idle, this.errorMessage});
 }
