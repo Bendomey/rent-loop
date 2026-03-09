@@ -167,6 +167,8 @@ We are writing to inform you that your tenant application (Application Code: {{a
 Reason for cancellation:
 {{reason}}
 
+Application Tracking Page: {{website_url}}/tenant-applications/{{application_code}}
+
 If you believe this was done in error or if you would like further clarification, please feel free to contact us for assistance.
 
 Thank you for your interest, and we wish you the best in your housing search.
@@ -210,8 +212,8 @@ We’re pleased to inform you that your tenant application has been Approved.
 Application Details:
 
 Unit: {{unit_name}}
-
 Application Code: {{application_code}}
+Application Tracking Page: {{website_url}}/tenant-applications/{{application_code}}
 
 Your lease has been prepared and is currently pending.
 Our team will contact you shortly with next steps, including move-in details and documentation.
