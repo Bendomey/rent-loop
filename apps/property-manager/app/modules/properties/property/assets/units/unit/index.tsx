@@ -71,6 +71,8 @@ function getStatusBadgeClass(status: PropertyUnit['status']) {
 			return 'bg-yellow-500 text-white'
 		case 'Unit.Status.Occupied':
 			return 'bg-rose-500 text-white'
+		case 'Unit.Status.PartiallyOccupied':
+			return 'bg-orange-500 text-white'
 		case 'Unit.Status.Draft':
 		default:
 			return 'bg-zinc-600 text-white'
@@ -150,7 +152,9 @@ export function PropertyAssetUnitModule() {
 	const TypeIcon = unitTypeIcons[unit.type] ?? Building2
 	const baseUrl = `/properties/${unit.property_id}/assets/units/${unit.id}`
 	const property_id = safeString(clientUserProperty?.property?.id)
-	const isOccupied = unit.status === 'Unit.Status.Occupied'
+	const isOccupied =
+		unit.status === 'Unit.Status.Occupied' ||
+		unit.status === 'Unit.Status.PartiallyOccupied'
 	const isEditable =
 		unit.status === 'Unit.Status.Draft' ||
 		unit.status === 'Unit.Status.Maintenance'

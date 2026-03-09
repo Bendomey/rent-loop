@@ -62,45 +62,34 @@ export function SectionCards() {
 	const lastMonth = localizedDayjs().subtract(1, 'month').format('YYYY-MM')
 
 	// Revenue for the last 2 months (grouped by month to compute MoM delta)
-	const revenueQuery = useCubeQuery<RevenueRow>(
-		token,
-		['revenue-mom'],
-		{
-			measures: ['Invoices.paidAmount'],
-			timeDimensions: [
-				{
-					dimension: 'Invoices.paidAt',
-					granularity: 'month',
-					dateRange: 'Last 2 months',
-				},
-			],
-		},
-	)
+	const revenueQuery = useCubeQuery<RevenueRow>(token, ['revenue-mom'], {
+		measures: ['Invoices.paidAmount'],
+		timeDimensions: [
+			{
+				dimension: 'Invoices.paidAt',
+				granularity: 'month',
+				dateRange: 'Last 2 months',
+			},
+		],
+	})
 
 	// Active lease count
-	const leaseQuery = useCubeQuery<LeaseRow>(
-		token,
-		['active-leases'],
-		{
-			measures: ['Leases.activeCount'],
-		},
-	)
+	const leaseQuery = useCubeQuery<LeaseRow>(token, ['active-leases'], {
+		measures: ['Leases.activeCount'],
+	})
 
 	// Units breakdown
-	const unitsQuery = useCubeQuery<UnitRow>(
-		token,
-		['units-kpi'],
-		{
-			measures: [
-				'Units.count',
-				'Units.occupiedCount',
-				'Units.availableCount',
-				'Units.maintenanceCount',
-			],
-		},
-	)
+	const unitsQuery = useCubeQuery<UnitRow>(token, ['units-kpi'], {
+		measures: [
+			'Units.count',
+			'Units.occupiedCount',
+			'Units.availableCount',
+			'Units.maintenanceCount',
+		],
+	})
 
-	const isLoading = revenueQuery.isPending || leaseQuery.isPending || unitsQuery.isPending
+	const isLoading =
+		revenueQuery.isPending || leaseQuery.isPending || unitsQuery.isPending
 
 	// Revenue figures
 	const revenueRows = revenueQuery.data ?? []
@@ -159,7 +148,9 @@ export function SectionCards() {
 						)}
 					</div>
 					<div className="text-muted-foreground">
-						Compared to {formatAmount(convertPesewasToCedis(lastMonthRevPesewas))} last month
+						Compared to{' '}
+						{formatAmount(convertPesewasToCedis(lastMonthRevPesewas))} last
+						month
 					</div>
 				</CardFooter>
 			</Card>

@@ -22,6 +22,7 @@ type UnitService interface {
 	GetUnitByID(context context.Context, id string) (*models.Unit, error)
 	UpdateUnit(context context.Context, input UpdateUnitInput) (*models.Unit, error)
 	UpdateUnitStatus(ctx context.Context, input UpdateUnitStatusInput) error
+	SetSystemUnitStatus(ctx context.Context, input UpdateUnitStatusInput) error
 	DeleteUnit(ctx context.Context, input repository.DeleteUnitInput) error
 	updateUnitCount(ctx context.Context, input UpdateUnitCountInput) error
 }
@@ -321,7 +322,7 @@ func (s *unitService) UpdateUnitStatus(ctx context.Context, input UpdateUnitStat
 		})
 	}
 
-	if unit.Status == "Unit.Status.Occupied" {
+	if unit.Status == "Unit.Status.Occupied" || unit.Status == "Unit.Status.PartiallyOccupied" {
 		return pkg.ForbiddenError("UnitIsOccupied", nil)
 	}
 
@@ -333,6 +334,43 @@ func (s *unitService) UpdateUnitStatus(ctx context.Context, input UpdateUnitStat
 			Err: updateUnitErr,
 			Metadata: map[string]string{
 				"function": "UpdateUnitStatus",
+				"action":   "updating unit",
+			},
+		})
+	}
+	return nil
+}
+
+// SetSystemUnitStatus updates the unit status without the locked-status guard.
+// Used internally by the system (e.g. auto-occupancy logic after lease approval).
+func (s *unitService) SetSystemUnitStatus(ctx context.Context, input UpdateUnitStatusInput) error {
+	unit, getUnitErr := s.repo.GetOne(ctx, map[string]any{
+		"id":          input.UnitID,
+		"property_id": input.PropertyID,
+	})
+	if getUnitErr != nil {
+		if errors.Is(getUnitErr, gorm.ErrRecordNotFound) {
+			return pkg.NotFoundError("UnitNotFound", &pkg.RentLoopErrorParams{
+				Err: getUnitErr,
+			})
+		}
+		return pkg.InternalServerError(getUnitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getUnitErr,
+			Metadata: map[string]string{
+				"function": "SetSystemUnitStatus",
+				"action":   "fetching unit",
+			},
+		})
+	}
+
+	unit.Status = input.Status
+
+	updateUnitErr := s.repo.Update(ctx, unit)
+	if updateUnitErr != nil {
+		return pkg.InternalServerError(updateUnitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateUnitErr,
+			Metadata: map[string]string{
+				"function": "SetSystemUnitStatus",
 				"action":   "updating unit",
 			},
 		})
@@ -360,7 +398,7 @@ func (s *unitService) DeleteUnit(ctx context.Context, input repository.DeleteUni
 		})
 	}
 
-	if unit.Status == "Unit.Status.Occupied" {
+	if unit.Status == "Unit.Status.Occupied" || unit.Status == "Unit.Status.PartiallyOccupied" {
 		return pkg.ForbiddenError("UnitIsOccupied", nil)
 	}
 
