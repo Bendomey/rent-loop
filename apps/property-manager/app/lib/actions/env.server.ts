@@ -17,7 +17,7 @@ const environmentSchema = z.object({
 	R2_ACCESS_KEY_ID: z.string().min(1),
 	R2_SECRET_ACCESS_KEY: z.string().min(1),
 	RENTLOOP_IMAGES_BASE_URL: z.url().min(1),
-	CUBEJS_API_URL: z.string().min(1).default('http://localhost:4000'),
+	CUBEJS_API_URL: z.url().min(1).default('http://localhost:4000'),
 })
 
 const environmentVariables = () => environmentSchema.parse(process.env)
