@@ -1,13 +1,6 @@
-FROM node:20-alpine
+# Use the official Cube image — has @cubejs-backend/native pre-compiled for Linux
+FROM cubejs/cube:v1
 
-WORKDIR /app
-
-COPY package.json ./
-RUN npm install --omit=dev
-
-COPY cube.js ./
-COPY model/ ./model/
-
-EXPOSE 4000
-
-CMD ["npx", "cubejs-server"]
+# Copy config and data models into the expected Cube config directory
+COPY cube.js /cube/conf/cube.js
+COPY model/ /cube/conf/model/
