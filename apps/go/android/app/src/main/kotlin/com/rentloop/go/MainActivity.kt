@@ -1,4 +1,4 @@
-package com.rentloop.rentloop_go
+package com.rentloop.go
 
 import io.flutter.embedding.android.FlutterActivity
 
