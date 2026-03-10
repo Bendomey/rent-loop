@@ -6,6 +6,7 @@ import (
 )
 
 type Services struct {
+	NotificationService       NotificationService
 	AuthService               AuthService
 	AdminService              AdminService
 	ClientApplicationService  ClientApplicationService
@@ -34,6 +35,7 @@ type INewServicesParams struct {
 }
 
 func NewServices(params INewServicesParams) Services {
+	notificationService := NewNotificationService(params.AppCtx, params.Repository.FcmTokenRepository)
 	accountingService := NewAccountingService(params.AppCtx)
 	invoiceService := NewInvoiceService(params.AppCtx, params.Repository.InvoiceRepository, accountingService)
 
@@ -117,8 +119,9 @@ func NewServices(params INewServicesParams) Services {
 	})
 
 	return Services{
-		AccountingService: accountingService,
-		InvoiceService:    invoiceService,
+		NotificationService: notificationService,
+		AccountingService:   accountingService,
+		InvoiceService:      invoiceService,
 
 		AuthService:               authService,
 		AdminService:              adminService,

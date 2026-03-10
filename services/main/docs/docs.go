@@ -8527,6 +8527,61 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/tenant-accounts/fcm-token": {
+            "post": {
+                "description": "Upserts an FCM device token for the authenticated tenant account. Call this after login and on token refresh.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Register FCM device token",
+                "parameters": [
+                    {
+                        "description": "FCM token registration body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RegisterFcmTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/tenant-applications": {
             "post": {
                 "description": "Create a new tenant application",
@@ -10468,6 +10523,27 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.RegisterFcmTokenRequest": {
+            "type": "object",
+            "required": [
+                "platform",
+                "token"
+            ],
+            "properties": {
+                "platform": {
+                    "type": "string",
+                    "enum": [
+                        "ios",
+                        "android"
+                    ],
+                    "example": "ios"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "fcm-device-token"
+                }
+            }
+        },
         "handlers.RejectClientApplicationRequest": {
             "type": "object",
             "required": [
@@ -11006,10 +11082,6 @@ const docTemplate = `{
                 "code": {
                     "type": "string",
                     "example": "123456"
-                },
-                "notification_token": {
-                    "type": "string",
-                    "example": "fcm-token-abc"
                 },
                 "phone": {
                     "type": "string",

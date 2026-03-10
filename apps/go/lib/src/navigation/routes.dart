@@ -31,19 +31,21 @@ GoRouter buildRoutes() {
         path: '/auth',
         name: "WelcomeScreen",
         builder: (context, state) => const WelcomeScreen(),
-      ),
-      GoRoute(
-        path: '/auth/login',
-        name: "LoginScreen",
-        builder: (context, state) => const LoginScreen(),
         routes: [
           GoRoute(
-            path: 'verify/:phone',
-            name: "VerifyScreen",
-            builder: (context, state) {
-              final phone = state.pathParameters['phone']!;
-              return VerifyScreen(phone: phone);
-            },
+            path: 'login',
+            name: "LoginScreen",
+            builder: (context, state) => const LoginScreen(),
+            routes: [
+              GoRoute(
+                path: 'verify/:phone',
+                name: "VerifyScreen",
+                builder: (context, state) {
+                  final phone = state.pathParameters['phone']!;
+                  return VerifyScreen(phone: phone);
+                },
+              ),
+            ],
           ),
         ],
       ),

@@ -1024,6 +1024,21 @@ definitions:
     - amount
     - provider
     type: object
+  handlers.RegisterFcmTokenRequest:
+    properties:
+      platform:
+        enum:
+        - ios
+        - android
+        example: ios
+        type: string
+      token:
+        example: fcm-device-token
+        type: string
+    required:
+    - platform
+    - token
+    type: object
   handlers.RejectClientApplicationRequest:
     properties:
       reason:
@@ -1404,9 +1419,6 @@ definitions:
     properties:
       code:
         example: "123456"
-        type: string
-      notification_token:
-        example: fcm-token-abc
         type: string
       phone:
         example: "+233281234569"
@@ -8689,6 +8701,43 @@ paths:
       summary: Verify tenant OTP
       tags:
       - Auth
+  /api/v1/tenant-accounts/fcm-token:
+    post:
+      consumes:
+      - application/json
+      description: Upserts an FCM device token for the authenticated tenant account.
+        Call this after login and on token refresh.
+      parameters:
+      - description: FCM token registration body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RegisterFcmTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Register FCM device token
+      tags:
+      - Notifications
   /api/v1/tenant-applications:
     post:
       consumes:

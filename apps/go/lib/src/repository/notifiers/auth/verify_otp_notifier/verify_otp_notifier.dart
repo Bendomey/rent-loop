@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:rentloop_go/src/api/auth.dart';
 import 'package:rentloop_go/src/api/root.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';

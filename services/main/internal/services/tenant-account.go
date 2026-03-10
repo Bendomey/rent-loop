@@ -26,9 +26,8 @@ func NewTenantAccountService(appCtx pkg.AppContext, repo repository.TenantAccoun
 }
 
 type CreateTenantAccountInput struct {
-	TenantId          string
-	PhoneNumber       string
-	NotificationToken *string
+	TenantId    string
+	PhoneNumber string
 }
 
 func (s *tenantAccountService) CreateTenantAccount(
@@ -36,9 +35,8 @@ func (s *tenantAccountService) CreateTenantAccount(
 	input CreateTenantAccountInput,
 ) (*models.TenantAccount, error) {
 	tenantAccount := models.TenantAccount{
-		TenantId:          input.TenantId,
-		PhoneNumber:       input.PhoneNumber,
-		NotificationToken: input.NotificationToken,
+		TenantId:    input.TenantId,
+		PhoneNumber: input.PhoneNumber,
 	}
 
 	err := s.repo.Create(ctx, &tenantAccount)

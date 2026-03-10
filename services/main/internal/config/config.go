@@ -88,7 +88,12 @@ type IClients struct {
 	GatekeeperAPI IGatekeeperAPI
 }
 
+type IFirebase struct {
+	ServiceAccountJSON string
+}
+
 type Config struct {
+	Firebase        IFirebase
 	Port            string
 	Database        IDatabase
 	Env             string // development, staging, production
@@ -138,8 +143,8 @@ func Load() Config {
 		},
 		ResendAPIKey: getEnv("RESEND_API_KEY", "fake-api-key"),
 		SupportData: IRentloopSupport{
-			Email: getEnv("SUPPORT_EMAIL", "domeybenjamin1@gmail.com"),
-			Phone: getEnv("SUPPORT_PHONE", "0201080802"),
+			Email: getEnv("SUPPORT_EMAIL", "rentloopapp@gmail.com"),
+			Phone: getEnv("SUPPORT_PHONE", "+233201080802"),
 		},
 		Portals: IRentloopPortals{
 			AdminPortalURL:           getEnv("ADMIN_PORTAL_URL", "http://localhost:3001"),
@@ -163,6 +168,9 @@ func Load() Config {
 			},
 		},
 		CubeApiSecret: getEnv("CUBEJS_API_SECRET", "superdupercubeapisecret"),
+		Firebase: IFirebase{
+			ServiceAccountJSON: getEnv("FIREBASE_SERVICE_ACCOUNT_JSON", ""),
+		},
 		ChartOfAccounts: IChartOfAccounts{
 			// Asset Accounts
 			CashBankAccountID:    getEnv("FINCORE_ACCOUNT_CASH_BANK", ""),

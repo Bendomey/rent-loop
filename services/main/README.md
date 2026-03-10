@@ -63,8 +63,8 @@ Rentloop Engine is a modular property rental management service designed to prov
      export RESEND_API_KEY=fake-api-key
      
      # Support Info
-     export SUPPORT_EMAIL=support@rentloop.com
-     export SUPPORT_PHONE=0201080802
+     export SUPPORT_EMAIL=rentloopapp@gmail.com
+     export SUPPORT_PHONE="+233201080802"
      
      # Portal URLs
      export ADMIN_PORTAL_URL=http://localhost:3001

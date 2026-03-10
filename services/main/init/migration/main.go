@@ -36,6 +36,7 @@ func updateMigration(db *gorm.DB) error {
 		&models.Payment{},
 		&models.DocumentSignature{},
 		&models.SigningToken{},
+		&models.FcmToken{},
 		// &models.MaintenanceRequest{},
 		// &models.MaintenanceRequestActivityLog{},
 		// &models.Announcement{},
@@ -66,6 +67,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 	m = gormigrate.New(db, gormigrate.DefaultOptions, []*gormigrate.Migration{
 		jobs.SeedSuperAdmin(),
 		jobs.SeedSystemOfflinePaymentAccount(),
+		jobs.DropTenantAccountNotificationToken(),
 	})
 	m.Migrate()
 

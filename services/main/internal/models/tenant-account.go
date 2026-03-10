@@ -6,6 +6,5 @@ type TenantAccount struct {
 	TenantId string `gorm:"not null;uniqueIndex;"`
 	Tenant   Tenant
 
-	PhoneNumber       string `gorm:"not null;uniqueIndex;"`
-	NotificationToken *string
+	PhoneNumber string `gorm:"not null;uniqueIndex;"`
 }

@@ -12,6 +12,7 @@ import {
 	useLoaderData,
 } from 'react-router'
 import type { Route } from './+types/root'
+import { GoogleAnalytics } from './components/google-analytics'
 import { TopbarLoader } from './components/top-bar-loader'
 import { environmentVariables } from './lib/actions/env.server'
 import { Providers } from './providers'
@@ -41,6 +42,7 @@ export async function loader() {
 	return {
 		ENV: {
 			API_ADDRESS: env.API_ADDRESS,
+			GOOGLE_ANALYTICS_ID: env.GOOGLE_ANALYTICS_ID,
 		},
 	}
 }
@@ -88,6 +90,7 @@ export default function App() {
 	}
 	return (
 		<Providers>
+			<GoogleAnalytics gaId={ENV.GOOGLE_ANALYTICS_ID} />
 			<Outlet />
 		</Providers>
 	)

@@ -215,9 +215,8 @@ func (s *authService) SendTenantCode(ctx context.Context, phone string) error {
 }
 
 type VerifyTenantCodeInput struct {
-	Code              string
-	Phone             string
-	NotificationToken *string
+	Code  string
+	Phone string
 }
 
 type VerifyTenantCodeResponse struct {
@@ -287,21 +286,6 @@ func (s *authService) VerifyTenantCode(
 				"action":   "fetching tenant account",
 			},
 		})
-	}
-
-	if input.NotificationToken != nil {
-		if updateErr := s.tenantAccountRepo.Update(ctx, tenantAccount, map[string]any{
-			"notification_token": input.NotificationToken,
-		}); updateErr != nil {
-			return nil, pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
-				Err: updateErr,
-				Metadata: map[string]string{
-					"function": "VerifyTenantCode",
-					"action":   "saving notification token",
-				},
-			})
-		}
-		tenantAccount.NotificationToken = input.NotificationToken
 	}
 
 	token, signErr := signjwt.SignJWT(jwt.MapClaims{

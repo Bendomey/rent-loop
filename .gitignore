@@ -13,3 +13,6 @@ node_modules
 
 # Cube.js local cache (pre-aggregations, query cache)
 .cubestore
+
+google-services.json
+GoogleService-Info.plist
