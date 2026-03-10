@@ -19,6 +19,7 @@ const environmentSchema = z.object({
 		.string()
 		.min(32)
 		.default('changeme-tracking-secret-min-32-chars'),
+	GOOGLE_ANALYTICS_ID: z.string().default(''),
 })
 
 const environmentVariables = () => environmentSchema.parse(process.env)

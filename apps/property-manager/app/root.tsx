@@ -15,6 +15,7 @@ import {
 } from 'react-router'
 import type { Route } from './+types/root'
 
+import { GoogleAnalytics } from './components/google-analytics'
 import { TopbarLoader } from './components/top-bar-loader'
 import { Toaster } from './components/ui/sonner'
 import { getAuthSession } from './lib/actions/auth.session.server'
@@ -47,6 +48,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 			AUTH_TOKEN: authSession.get('authToken'),
 			GOOGLE_MAPS_API_KEY: env.GOOGLE_MAPS_API_KEY,
 			CUBEJS_API_URL: env.CUBEJS_API_URL,
+			GOOGLE_ANALYTICS_ID: env.GOOGLE_ANALYTICS_ID,
 		},
 	}
 }
@@ -100,6 +102,7 @@ export default function App() {
 
 	return (
 		<Providers>
+			<GoogleAnalytics gaId={ENV.GOOGLE_ANALYTICS_ID} />
 			<Outlet />
 		</Providers>
 	)

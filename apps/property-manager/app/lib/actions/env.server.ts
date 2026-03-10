@@ -18,6 +18,7 @@ const environmentSchema = z.object({
 	R2_SECRET_ACCESS_KEY: z.string().min(1),
 	RENTLOOP_IMAGES_BASE_URL: z.url().min(1),
 	CUBEJS_API_URL: z.url().min(1).default('http://localhost:4000'),
+	GOOGLE_ANALYTICS_ID: z.string().default(''),
 })
 
 const environmentVariables = () => environmentSchema.parse(process.env)
