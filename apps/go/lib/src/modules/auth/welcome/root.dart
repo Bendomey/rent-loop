@@ -1,4 +1,6 @@
 import 'package:rentloop_go/src/architecture/architecture.dart';
+import 'package:rentloop_go/src/shared/notification_permission_sheet.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
 class WelcomeScreen extends ConsumerStatefulWidget {
@@ -52,9 +54,16 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen> {
 
   Future<void> _finishOnboarding() async {
     await Haptics.vibrate(HapticsType.selection);
-    if (mounted) {
-      context.go('/auth/login');
+    if (!mounted) return;
+
+    final settings = await FirebaseMessaging.instance.getNotificationSettings();
+    if (settings.authorizationStatus == AuthorizationStatus.notDetermined) {
+      if (!mounted) return;
+      final allowed = await showNotificationPermissionSheet(context);
+      if (allowed) await FirebaseMessaging.instance.requestPermission();
     }
+
+    if (mounted) context.go('/auth/login');
   }
 
   @override

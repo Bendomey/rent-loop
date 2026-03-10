@@ -4,10 +4,11 @@ title: Add Google Analytics to website and property-manager apps
 status: Done
 assignee: []
 created_date: '2026-03-10 09:49'
-updated_date: '2026-03-10 09:58'
+updated_date: '2026-03-10 11:32'
 labels: []
 dependencies: []
 priority: medium
+ordinal: 1000
 ---
 
 ## Description

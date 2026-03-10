@@ -2,6 +2,7 @@ import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:rentloop_go/src/repository/notifiers/auth/send_otp_notifier/send_otp_notifier.dart';
 import 'package:rentloop_go/src/repository/notifiers/auth/verify_otp_notifier/verify_otp_notifier.dart';
 import 'package:rentloop_go/src/repository/notifiers/notification/register_fcm_token_notifier/register_fcm_token_notifier.dart';
+import 'package:rentloop_go/src/shared/notification_permission_sheet.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -100,6 +101,17 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
   Future<void> _registerFcmToken() async {
     try {
       final messaging = FirebaseMessaging.instance;
+
+      // Check current permission status — skip the sheet if already granted/denied.
+      final settings = await messaging.getNotificationSettings();
+      if (settings.authorizationStatus == AuthorizationStatus.notDetermined) {
+        if (!mounted) return;
+        final allowed = await showNotificationPermissionSheet(context);
+        if (!allowed) return;
+      } else if (settings.authorizationStatus == AuthorizationStatus.denied) {
+        return;
+      }
+
       await messaging.requestPermission();
       final token = await messaging.getToken();
       if (token == null) return;
@@ -166,10 +178,11 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
           onPressed: () {
-            context.go('/auth');
+            context.go('/auth/login');
           },
         ),
       ),

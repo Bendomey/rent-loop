@@ -1,4 +1,5 @@
 import 'package:rentloop_go/src/architecture/architecture.dart';
+import 'package:rentloop_go/src/constants.dart';
 import 'package:rentloop_go/src/repository/notifiers/auth/send_otp_notifier/send_otp_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -48,10 +49,11 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
           onPressed: () {
-            context.go('/auth/login');
+            context.go('/auth');
           },
         ),
       ),
@@ -203,13 +205,41 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          'By continuing, you agree to our Terms and Conditions.',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Colors.grey.shade800,
-                                height: 1.2,
+                        child: RichText(
+                          text: TextSpan(
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Colors.grey.shade800,
+                                  height: 1.2,
+                                ),
+                            children: [
+                              const TextSpan(
+                                text: 'By continuing, you agree to our ',
                               ),
+                              WidgetSpan(
+                                child: GestureDetector(
+                                  onTap: () => launchUrl(
+                                    Uri.parse('$WEBSITE/terms'),
+                                    mode: LaunchMode.externalApplication,
+                                  ),
+                                  child: Text(
+                                    'Terms and Conditions',
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: Theme.of(context).primaryColor,
+                                          fontWeight: FontWeight.w600,
+                                          height: 1.2,
+                                          decoration: TextDecoration.underline,
+                                          decorationColor: Theme.of(
+                                            context,
+                                          ).primaryColor,
+                                        ),
+                                  ),
+                                ),
+                              ),
+                              const TextSpan(text: '.'),
+                            ],
+                          ),
                         ),
                       ),
                     ],

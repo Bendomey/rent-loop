@@ -1,14 +1,14 @@
 ---
 id: RENTL-18
 title: Firebase project setup for FCM
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-09 20:38'
-updated_date: '2026-03-09 20:41'
+updated_date: '2026-03-10 11:32'
 labels: []
 dependencies: []
 priority: high
-ordinal: 1000
+ordinal: 2000
 ---
 
 ## Description
