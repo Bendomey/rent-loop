@@ -168,11 +168,17 @@ class _NavigationLoader extends ConsumerState<NavigationLoader> {
                     children: [
                       TextSpan(
                         text: 'Rent',
-                        style: TextStyle(color: Colors.black87),
+                        style: TextStyle(
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                       TextSpan(
-                        text: 'Loop',
-                        style: TextStyle(color: Theme.of(context).primaryColor),
+                        text: 'loop',
+                        style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ],
                   ),
