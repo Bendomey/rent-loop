@@ -275,7 +275,7 @@ func (h *LeaseHandler) ListLeasesByProperty(w http.ResponseWriter, r *http.Reque
 //
 //	@Summary		List my leases (Tenant)
 //	@Description	List leases for the authenticated tenant account
-//	@Tags			Tenant
+//	@Tags			TenantAccounts
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json

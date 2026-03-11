@@ -11,3 +11,4 @@ export 'main/maintenance_details/root.dart';
 export 'main/new_maintenance/root.dart';
 
 export 'main/more/root.dart';
+export 'main/more/lease_details/root.dart';

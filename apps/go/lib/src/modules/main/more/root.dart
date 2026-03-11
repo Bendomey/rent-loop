@@ -32,19 +32,19 @@ class _MoreScreen extends ConsumerState<MoreScreen> {
             child: Column(
               children: [
                 const UserCardWidget(),
-                Padding(
-                  padding: const EdgeInsets.only(top: 20),
-                  child: SizedBox(
-                    height: 50,
-                    child: FilledButton(
-                      onPressed: () => context.push('/more/profile'),
-                      child: const Text(
-                        'Edit profile',
-                        style: TextStyle(fontSize: 17),
-                      ),
-                    ),
-                  ),
-                ),
+                // Padding(
+                //   padding: const EdgeInsets.only(top: 20),
+                //   child: SizedBox(
+                //     height: 50,
+                //     child: FilledButton(
+                //       onPressed: () => context.push('/more/profile'),
+                //       child: const Text(
+                //         'Edit profile',
+                //         style: TextStyle(fontSize: 17),
+                //       ),
+                //     ),
+                //   ),
+                // ),
               ],
             ),
           ),
@@ -62,19 +62,11 @@ class _MoreScreen extends ConsumerState<MoreScreen> {
             ),
           ),
           InkWell(
-            onTap: () => context.push('/more/lease-agreement'),
-            child: const ListTile(
-              leading: Icon(Icons.dashboard_customize_outlined),
-              trailing: Icon(Icons.chevron_right, color: Colors.grey),
-              title: Text('Lease Details'),
-            ),
-          ),
-          InkWell(
-            onTap: () => context.push('/more/documents'),
+            onTap: () => context.push('/more/lease-details'),
             child: const ListTile(
               leading: Icon(Icons.document_scanner_outlined),
               trailing: Icon(Icons.chevron_right, color: Colors.grey),
-              title: Text('Documents'),
+              title: Text('Lease Details'),
             ),
           ),
           InkWell(

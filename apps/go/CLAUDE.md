@@ -25,12 +25,58 @@ make release       # flutter build
 
 ### State Management — Riverpod (code-gen style)
 
-Providers use `@riverpod` annotations with generated `.g.dart` part files. The two global providers live in `lib/src/architecture/`:
+Providers use `@riverpod` annotations with generated `.g.dart` part files. The global providers live in `lib/src/architecture/`:
 
 - `tokenManagerProvider` — JWT token read/write (backed by secure storage)
 - `secureStorageProvider` — `FlutterSecureStorage` wrapper
+- `currentUserNotifierProvider` — authenticated `TenantAccountModel?` (keepAlive, in-memory)
+- `currentLeaseNotifierProvider` — currently selected `LeaseModel?` (keepAlive, ID persisted to secure storage)
+- `leaseIdManagerProvider` — reads/writes `'rentloop.current_lease_id'` to secure storage
 
 Most screen state is local (`ConsumerStatefulWidget` + `setState`). There is no global BLoC or Redux layer.
+
+### Using `currentUserNotifierProvider` (the authenticated tenant account)
+
+`currentUserNotifierProvider` holds a `TenantAccountModel?`. It is populated automatically:
+- After a successful OTP verify (login)
+- On app startup via the splash screen (if a stored JWT is found)
+
+**Reading the current user in any screen:**
+```dart
+// In a ConsumerStatefulWidget or ConsumerWidget
+final currentUser = ref.watch(currentUserNotifierProvider); // TenantAccountModel?
+
+// Access nested tenant profile
+final tenant = currentUser?.tenant;
+final fullName = '${tenant?.firstName} ${tenant?.lastName}';
+final phone = currentUser?.phoneNumber;
+```
+
+**Reading the active lease on any screen:**
+```dart
+final activeLease = ref.watch(currentLeaseNotifierProvider); // LeaseModel?
+final unitName = activeLease?.unit?.name ?? activeLease?.unit?.slug;
+final rentFee = activeLease?.rentFee; // int, e.g. 1200
+```
+
+**Switching the active lease (persists across restarts):**
+```dart
+await ref.read(currentLeaseNotifierProvider.notifier).setLease(lease);
+```
+
+**How it is populated:** `leasesProvider` calls `loadFromLeases()` after every fetch. This reads the stored lease ID, finds the matching lease in the list, and sets it as active. If no ID is stored or the stored ID is not in the list, the first lease is used and its ID is saved.
+
+**Clearing on logout:**
+```dart
+ref.read(currentUserNotifierProvider.notifier).clear();
+ref.read(currentLeaseNotifierProvider.notifier).clear();
+await ref.read(tokenManagerProvider).remove();
+await ref.read(leaseIdManagerProvider).remove();
+context.go('/auth');
+```
+
+`TenantAccountModel` fields: `id`, `phoneNumber`, `tenantId`, `createdAt`, `updatedAt`, `tenant`.
+`TenantModel` (nested as `.tenant`) fields: `id`, `firstName`, `lastName`, `otherNames`, `email`, `phone`, `profilePhotoUrl`, `dateOfBirth`, `gender`, `nationality`, `maritalStatus`, `occupation`, `occupationAddress`, `employer`, `idType`, `idNumber`, `idFrontUrl`, `idBackUrl`, `proofOfIncomeUrl`, `emergencyContactName`, `emergencyContactPhone`, `relationshipToEmergencyContact`.
 
 ### Navigation — GoRouter
 
@@ -75,7 +121,8 @@ Haptic feedback (`haptic_feedback` package) is used throughout on button taps an
 `lib/src/navigation/splash.dart` handles startup:
 1. Checks internet connectivity via `connectivity_plus`
 2. Reads stored JWT from `tokenManagerProvider`
-3. Routes to `/auth` (no token) or `/` (valid token)
+3. If token exists: fetches `GET /api/v1/tenant-accounts/me`, saves result to `currentUserNotifierProvider`, then routes to `/`
+4. If no token: routes to `/auth`
 
 ---
 

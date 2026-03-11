@@ -98,6 +98,11 @@ GoRouter buildRoutes() {
         ],
       ),
       GoRoute(
+        path: '/more/lease-details',
+        name: 'LeaseDetails',
+        builder: (context, state) => const LeaseDetailsScreen(),
+      ),
+      GoRoute(
         path: '/maintenance/new',
         name: "NewMaintenanceRequest",
         builder: (context, state) => const NewMaintenanceScreen(),

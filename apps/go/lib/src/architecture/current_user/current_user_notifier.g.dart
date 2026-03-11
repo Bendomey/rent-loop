@@ -1,27 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'register_fcm_token_notifier.dart';
+part of 'current_user_notifier.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$registerFcmTokenNotifierHash() =>
-    r'64a6792a8e4cb81856206ea946c6e77c08168b5b';
+String _$currentUserNotifierHash() =>
+    r'586eb73220bd1e8fb8c680a688c17599e12651d4';
 
-/// See also [RegisterFcmTokenNotifier].
-@ProviderFor(RegisterFcmTokenNotifier)
-final registerFcmTokenNotifierProvider = AutoDisposeNotifierProvider<
-    RegisterFcmTokenNotifier, RegisterFcmTokenState>.internal(
-  RegisterFcmTokenNotifier.new,
-  name: r'registerFcmTokenNotifierProvider',
+/// See also [CurrentUserNotifier].
+@ProviderFor(CurrentUserNotifier)
+final currentUserNotifierProvider =
+    NotifierProvider<CurrentUserNotifier, TenantAccountModel?>.internal(
+  CurrentUserNotifier.new,
+  name: r'currentUserNotifierProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$registerFcmTokenNotifierHash,
+      : _$currentUserNotifierHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$RegisterFcmTokenNotifier = AutoDisposeNotifier<RegisterFcmTokenState>;
+typedef _$CurrentUserNotifier = Notifier<TenantAccountModel?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

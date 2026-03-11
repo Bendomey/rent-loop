@@ -8,6 +8,9 @@ class LogoutButtonWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     Future<void> logout() async {
       await ref.read(tokenManagerProvider).remove();
+      await ref.read(leaseIdManagerProvider).remove();
+      ref.read(currentUserNotifierProvider.notifier).clear();
+      ref.read(currentLeaseNotifierProvider.notifier).clear();
       if (context.mounted) {
         context.go('/auth');
         ScaffoldMessenger.of(context).showSnackBar(

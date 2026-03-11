@@ -1,27 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'register_fcm_token_notifier.dart';
+part of 'lease_id_manager.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$registerFcmTokenNotifierHash() =>
-    r'64a6792a8e4cb81856206ea946c6e77c08168b5b';
+String _$leaseIdManagerHash() => r'6e82ea67cdd4bfb308c42e8227a42b336bf7bb83';
 
-/// See also [RegisterFcmTokenNotifier].
-@ProviderFor(RegisterFcmTokenNotifier)
-final registerFcmTokenNotifierProvider = AutoDisposeNotifierProvider<
-    RegisterFcmTokenNotifier, RegisterFcmTokenState>.internal(
-  RegisterFcmTokenNotifier.new,
-  name: r'registerFcmTokenNotifierProvider',
+/// See also [leaseIdManager].
+@ProviderFor(leaseIdManager)
+final leaseIdManagerProvider = AutoDisposeProvider<LeaseIdManager>.internal(
+  leaseIdManager,
+  name: r'leaseIdManagerProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$registerFcmTokenNotifierHash,
+      : _$leaseIdManagerHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$RegisterFcmTokenNotifier = AutoDisposeNotifier<RegisterFcmTokenState>;
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef LeaseIdManagerRef = AutoDisposeProviderRef<LeaseIdManager>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
