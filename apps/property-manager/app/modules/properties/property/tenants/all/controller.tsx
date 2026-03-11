@@ -1,12 +1,9 @@
-import { Plus, RotateCw, Search, ToggleLeft } from 'lucide-react'
+import { Plus, RotateCw, ToggleLeft } from 'lucide-react'
 import { Link } from 'react-router'
 import { FilterSet } from '~/components/filter-set'
+import { SearchInput } from '~/components/search'
 import { Button } from '~/components/ui/button'
-import {
-	InputGroup,
-	InputGroupAddon,
-	InputGroupInput,
-} from '~/components/ui/input-group'
+import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
 
 const filters: Array<Filter> = [
@@ -17,8 +14,8 @@ const filters: Array<Filter> = [
 		label: 'Status',
 		value: {
 			options: [
-				{ label: 'Active', value: 'Tenant.Status.Active' },
-				{ label: 'Inactive', value: 'Tenant.Status.Inactive' },
+				{ label: 'Active', value: 'ACTIVE' },
+				{ label: 'Expired', value: 'EXPIRED' },
 			],
 			urlParam: 'status',
 			defaultValues: [],
@@ -27,7 +24,13 @@ const filters: Array<Filter> = [
 	},
 ]
 
-export const PropertyTenantsController = () => {
+export const PropertyTenantsController = ({
+	isLoading,
+	refetch,
+}: {
+	isLoading: boolean
+	refetch: VoidFunction
+}) => {
 	const { clientUserProperty } = useProperty()
 
 	return (
@@ -39,12 +42,7 @@ export const PropertyTenantsController = () => {
 			</div>
 			<div className="flex flex-wrap items-center justify-between gap-4">
 				<div className="flex items-center gap-2 text-sm">
-					<InputGroup>
-						<InputGroupInput placeholder="Search tenants ..." />
-						<InputGroupAddon>
-							<Search />
-						</InputGroupAddon>
-					</InputGroup>
+					<SearchInput placeholder="Search tenants..." />
 				</div>
 				<div className="flex items-center justify-end gap-2">
 					<Link
@@ -59,8 +57,13 @@ export const PropertyTenantsController = () => {
 							Add Tenant
 						</Button>
 					</Link>
-					<Button variant="outline" size="sm">
-						<RotateCw className="size-4" />
+					<Button
+						onClick={() => refetch()}
+						disabled={isLoading}
+						variant="outline"
+						size="sm"
+					>
+						<RotateCw className={cn('size-4', { 'animate-spin': isLoading })} />
 						Refresh
 					</Button>
 				</div>

@@ -32,7 +32,9 @@ export function GoogleAnalytics({ gaId }: Props) {
 	// Track page views on every navigation
 	useEffect(() => {
 		if (!gaId || typeof window.gtag !== 'function') return
-		window.gtag('event', 'page_view', { page_path: location.pathname + location.search })
+		window.gtag('event', 'page_view', {
+			page_path: location.pathname + location.search,
+		})
 	}, [gaId, location])
 
 	return null

@@ -72,7 +72,7 @@ export function PropertySidebar({
 				items: [
 					{
 						title: 'All Tenants',
-						url: '/all',
+						url: '/all?filters=status&status=ACTIVE',
 					},
 					{
 						title: 'Applications',
