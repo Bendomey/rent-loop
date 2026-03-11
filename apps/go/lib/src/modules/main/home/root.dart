@@ -3,6 +3,7 @@ import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:rentloop_go/src/repository/models/lease_model.dart';
 import 'package:rentloop_go/src/repository/providers/leases_provider.dart';
 import 'announcements_card.dart';
+import 'home_error_state.dart';
 import 'home_skeleton.dart';
 import 'lease_selector_bar.dart';
 import 'maintenance_stats_card.dart';
@@ -17,11 +18,17 @@ class HomeScreen extends ConsumerWidget {
     final currentUser = ref.watch(currentUserNotifierProvider);
     final activeLease = ref.watch(currentLeaseNotifierProvider);
 
+    ref.listen(leasesProvider, (prev, next) {
+      if (next.hasError) {
+        Haptics.vibrate(HapticsType.error);
+      }
+    });
+
     return Scaffold(
       body: leasesAsync.when(
         skipLoadingOnRefresh: false,
         loading: () => const HomeSkeleton(),
-        error: (_, __) => const HomeSkeleton(),
+        error: (_, __) => const HomeErrorState(),
         data: (leases) => _HomeContent(
           leases: leases,
           activeLease: activeLease,

@@ -12,7 +12,8 @@ class DeleteAccountScreen extends ConsumerStatefulWidget {
 class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
   bool _confirmed = false;
 
-  void _showConfirmDialog() {
+  Future<void> _showConfirmDialog() async {
+    await Haptics.vibrate(HapticsType.heavy);
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -23,12 +24,16 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () async {
+              await Haptics.vibrate(HapticsType.light);
+              Navigator.pop(ctx);
+            },
             child: const Text('Cancel'),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
+            onPressed: () async {
+              await Haptics.vibrate(HapticsType.heavy);
               Navigator.pop(ctx);
               // TODO: call DELETE /api/v1/tenant-accounts/me when endpoint is available,
               // then clear state and navigate to /auth.
@@ -169,13 +174,19 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
           // Confirmation checkbox
           InkWell(
             borderRadius: BorderRadius.circular(8),
-            onTap: () => setState(() => _confirmed = !_confirmed),
+            onTap: () async {
+              await Haptics.vibrate(HapticsType.light);
+              setState(() => _confirmed = !_confirmed);
+            },
             child: Row(
               children: [
                 Checkbox(
                   value: _confirmed,
                   activeColor: Colors.red,
-                  onChanged: (v) => setState(() => _confirmed = v ?? false),
+                  onChanged: (v) async {
+                    await Haptics.vibrate(HapticsType.light);
+                    setState(() => _confirmed = v ?? false);
+                  },
                 ),
                 Expanded(
                   child: Text(

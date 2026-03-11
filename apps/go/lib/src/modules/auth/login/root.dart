@@ -44,6 +44,12 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
     final sendOtpState = ref.watch(sendOtpNotifierProvider);
     final isLoading = sendOtpState.status.isLoading();
 
+    ref.listen(sendOtpNotifierProvider, (prev, next) {
+      if (next.status.isFailed()) {
+        Haptics.vibrate(HapticsType.error);
+      }
+    });
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -52,8 +58,9 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
         systemOverlayStyle: SystemUiOverlayStyle.dark,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () {
-            context.go('/auth');
+          onPressed: () async {
+            await Haptics.vibrate(HapticsType.selection);
+            if (context.mounted) context.go('/auth');
           },
         ),
       ),

@@ -77,6 +77,9 @@ class LeaseSelectorBar extends ConsumerWidget {
                     ),
                     onPressed: () async {
                       await Haptics.vibrate(HapticsType.selection);
+                      if (context.mounted) {
+                        context.push('/more/announcements');
+                      }
                     },
                   ),
                   IconButton(

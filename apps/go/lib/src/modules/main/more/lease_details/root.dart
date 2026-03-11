@@ -107,10 +107,15 @@ class LeaseDetailsScreen extends ConsumerWidget {
                           size: 18,
                           color: Colors.grey,
                         ),
-                        onTap: () => launchExternalSite(
-                          context,
-                          lease.leaseAgreementDocumentUrl!,
-                        ),
+                        onTap: () async {
+                          await Haptics.vibrate(HapticsType.selection);
+                          if (context.mounted) {
+                            launchExternalSite(
+                              context,
+                              lease.leaseAgreementDocumentUrl!,
+                            );
+                          }
+                        },
                       ),
                     ],
                   ),

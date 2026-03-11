@@ -30,6 +30,7 @@ class _NewMaintenanceScreen extends ConsumerState<NewMaintenanceScreen> {
   final priorities = ['Low', 'Medium', 'High'];
 
   Future<void> _selectDate(BuildContext context) async {
+    await Haptics.vibrate(HapticsType.selection);
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: selectedDate ?? DateTime.now(),
@@ -45,6 +46,7 @@ class _NewMaintenanceScreen extends ConsumerState<NewMaintenanceScreen> {
   }
 
   Future<void> _selectTime(BuildContext context) async {
+    await Haptics.vibrate(HapticsType.selection);
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: selectedTime ?? TimeOfDay.now(),
