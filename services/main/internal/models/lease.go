@@ -10,7 +10,7 @@ import (
 )
 
 // Lease Statuses
-// Pending status means it's yet to be activated. Waiting for tenant to sign agreement.
+// Pending status means it's yet to be activated.
 // Active means lease is currently ongoing.
 // Terminated means lease was ended before the agreed duration by either party.
 // Completed means lease ran its full duration and ended.
