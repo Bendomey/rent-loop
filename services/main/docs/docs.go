@@ -8470,7 +8470,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Lease"
+                    "Tenant"
                 ],
                 "summary": "List my leases (Tenant)",
                 "parameters": [
