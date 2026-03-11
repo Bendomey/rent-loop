@@ -8653,6 +8653,146 @@ paths:
       summary: Update an existing document
       tags:
       - Documents
+  /api/v1/leases:
+    get:
+      consumes:
+      - application/json
+      description: List leases for the authenticated tenant account
+      parameters:
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - MANUAL
+        - ONLINE
+        example: MANUAL
+        in: query
+        name: lease_agreement_document_mode
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - example: b4d0243c-6581-4104-8185-d83a45ebe41b
+        in: query
+        name: parent_lease_id
+        type: string
+      - enum:
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
+        example: HOURLY
+        in: query
+        name: payment_frequency
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - example: b4d0243c-6581-4104-8185-d83a45ebe41b
+        in: query
+        name: property_id
+        type: string
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - Lease.Status.Pending
+        - Lease.Status.Active
+        - Lease.Status.Terminated
+        - Lease.Status.Completed
+        - Lease.Status.Cancelled
+        example: Lease.Status.Pending
+        in: query
+        name: status
+        type: string
+      - enum:
+        - HOURS
+        - DAYS
+        - MONTHS
+        example: HOURS
+        in: query
+        name: stay_duration_frequency
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: unit_ids
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputLease'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: An error occurred while filtering leases
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Absent or invalid authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List my leases (Tenant)
+      tags:
+      - Lease
   /api/v1/payments/offline:
     post:
       consumes:
