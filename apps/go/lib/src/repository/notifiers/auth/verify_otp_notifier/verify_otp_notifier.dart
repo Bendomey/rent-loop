@@ -1,5 +1,6 @@
 import 'package:rentloop_go/src/api/auth.dart';
 import 'package:rentloop_go/src/api/root.dart';
+import 'package:rentloop_go/src/api/tenant_account.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:rentloop_go/src/lib/api_error_messages.dart';
 import 'package:rentloop_go/src/repository/api_state.dart';
@@ -23,6 +24,8 @@ class VerifyOtpNotifier extends _$VerifyOtpNotifier {
           .read(authApiProvider)
           .verifyOtp(phone: phone, code: code);
       await ref.read(tokenManagerProvider).save(token);
+      final tenantAccount = await ref.read(tenantAccountApiProvider).getMe();
+      ref.read(currentUserNotifierProvider.notifier).setUser(tenantAccount);
       state = VerifyOtpState(status: ApiStatus.success);
       return true;
     } on ApiException catch (e) {

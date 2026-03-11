@@ -11,5 +11,5 @@ class TokenManager {
 
   Future<void> remove() async => _storage.delete(_tokenKey);
 
-  static const String _tokenKey = 'mylespudo.token';
+  static const String _tokenKey = 'rentloopgo.token';
 }

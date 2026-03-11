@@ -28,9 +28,9 @@ func NewTenantAccountHandler(appCtx pkg.AppContext, service services.TenantAccou
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Success		200	{object}	object{data=transformations.OutputTenantAccount}	"Tenant account retrieved successfully"
-//	@Failure		401	{object}	string														"Invalid or absent authentication token"
-//	@Failure		404	{object}	lib.HTTPError												"Tenant account not found"
-//	@Failure		500	{object}	string														"An unexpected error occurred"
+//	@Failure		401	{object}	string												"Invalid or absent authentication token"
+//	@Failure		404	{object}	lib.HTTPError										"Tenant account not found"
+//	@Failure		500	{object}	string												"An unexpected error occurred"
 //	@Router			/api/v1/tenant-accounts/me [get]
 func (h *TenantAccountHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	tenantAccount, tenantAccountOk := lib.TenantAccountFromContext(r.Context())

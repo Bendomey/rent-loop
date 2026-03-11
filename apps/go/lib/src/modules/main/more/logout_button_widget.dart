@@ -7,8 +7,13 @@ class LogoutButtonWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     Future<void> logout() async {
+      await Haptics.vibrate(HapticsType.medium);
       await ref.read(tokenManagerProvider).remove();
+      await ref.read(leaseIdManagerProvider).remove();
+      ref.read(currentUserNotifierProvider.notifier).clear();
+      ref.read(currentLeaseNotifierProvider.notifier).clear();
       if (context.mounted) {
+        await Haptics.vibrate(HapticsType.success);
         context.go('/auth');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('You logged out successfully!')),
@@ -17,6 +22,7 @@ class LogoutButtonWidget extends ConsumerWidget {
     }
 
     Future<void> showMyDialog() async {
+      await Haptics.vibrate(HapticsType.selection);
       return showDialog<void>(
         context: context,
         barrierDismissible: false,
@@ -28,7 +34,8 @@ class LogoutButtonWidget extends ConsumerWidget {
             actions: <Widget>[
               TextButton(
                 child: const Text('No'),
-                onPressed: () {
+                onPressed: () async {
+                  await Haptics.vibrate(HapticsType.light);
                   Navigator.of(context).pop();
                 },
               ),

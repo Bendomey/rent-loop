@@ -8812,7 +8812,7 @@ paths:
       - BearerAuth: []
       summary: List my leases (Tenant)
       tags:
-      - Tenant
+      - TenantAccounts
   /api/v1/payments/offline:
     post:
       consumes:

@@ -1,5 +1,5 @@
+import 'package:rentloop_go/src/api/tenant_account.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
-// import 'package:rentloop_go/src/repository/repository.dart';
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
@@ -85,6 +85,9 @@ class _NavigationLoader extends ConsumerState<NavigationLoader> {
         });
         return;
       }
+
+      final tenantAccount = await ref.read(tenantAccountApiProvider).getMe();
+      ref.read(currentUserNotifierProvider.notifier).setUser(tenantAccount);
 
       setState(() {
         _currentState = SplashState.authSuccess;

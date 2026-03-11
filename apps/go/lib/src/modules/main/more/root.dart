@@ -32,19 +32,19 @@ class _MoreScreen extends ConsumerState<MoreScreen> {
             child: Column(
               children: [
                 const UserCardWidget(),
-                Padding(
-                  padding: const EdgeInsets.only(top: 20),
-                  child: SizedBox(
-                    height: 50,
-                    child: FilledButton(
-                      onPressed: () => context.push('/more/profile'),
-                      child: const Text(
-                        'Edit profile',
-                        style: TextStyle(fontSize: 17),
-                      ),
-                    ),
-                  ),
-                ),
+                // Padding(
+                //   padding: const EdgeInsets.only(top: 20),
+                //   child: SizedBox(
+                //     height: 50,
+                //     child: FilledButton(
+                //       onPressed: () => context.push('/more/profile'),
+                //       child: const Text(
+                //         'Edit profile',
+                //         style: TextStyle(fontSize: 17),
+                //       ),
+                //     ),
+                //   ),
+                // ),
               ],
             ),
           ),
@@ -62,23 +62,21 @@ class _MoreScreen extends ConsumerState<MoreScreen> {
             ),
           ),
           InkWell(
-            onTap: () => context.push('/more/lease-agreement'),
+            onTap: () async {
+              await Haptics.vibrate(HapticsType.selection);
+              if (context.mounted) context.push('/more/lease-details');
+            },
             child: const ListTile(
-              leading: Icon(Icons.dashboard_customize_outlined),
+              leading: Icon(Icons.document_scanner_outlined),
               trailing: Icon(Icons.chevron_right, color: Colors.grey),
               title: Text('Lease Details'),
             ),
           ),
           InkWell(
-            onTap: () => context.push('/more/documents'),
-            child: const ListTile(
-              leading: Icon(Icons.document_scanner_outlined),
-              trailing: Icon(Icons.chevron_right, color: Colors.grey),
-              title: Text('Documents'),
-            ),
-          ),
-          InkWell(
-            onTap: () => context.push('/more/announcements'),
+            onTap: () async {
+              await Haptics.vibrate(HapticsType.selection);
+              if (context.mounted) context.push('/more/announcements');
+            },
             child: const ListTile(
               leading: Icon(Icons.notifications_outlined),
               trailing: Icon(Icons.chevron_right, color: Colors.grey),
@@ -98,7 +96,10 @@ class _MoreScreen extends ConsumerState<MoreScreen> {
             ),
           ),
           InkWell(
-            onTap: () => launchExternalSite(context, WEBSITE),
+            onTap: () async {
+              await Haptics.vibrate(HapticsType.selection);
+              if (context.mounted) launchExternalSite(context, WEBSITE);
+            },
             child: const ListTile(
               leading: Icon(Icons.call_outlined),
               trailing: Icon(Icons.open_in_new, color: Colors.grey),
@@ -106,7 +107,11 @@ class _MoreScreen extends ConsumerState<MoreScreen> {
             ),
           ),
           InkWell(
-            onTap: () => launchExternalSite(context, '$WEBSITE/privacy'),
+            onTap: () async {
+              await Haptics.vibrate(HapticsType.selection);
+              if (context.mounted)
+                launchExternalSite(context, '$WEBSITE/privacy-policy');
+            },
             child: const ListTile(
               leading: Icon(Icons.file_copy_outlined),
               trailing: Icon(Icons.open_in_new, color: Colors.grey),
@@ -114,7 +119,11 @@ class _MoreScreen extends ConsumerState<MoreScreen> {
             ),
           ),
           InkWell(
-            onTap: () => launchExternalSite(context, '$WEBSITE/faqs'),
+            onTap: () async {
+              await Haptics.vibrate(HapticsType.selection);
+              if (context.mounted)
+                launchExternalSite(context, '$WEBSITE/#faqs');
+            },
             child: const ListTile(
               leading: Icon(Icons.question_mark_sharp),
               trailing: Icon(Icons.open_in_new, color: Colors.grey),
@@ -134,12 +143,15 @@ class _MoreScreen extends ConsumerState<MoreScreen> {
             ),
           ),
           InkWell(
-            onTap: () => SharePlus.instance.share(
-              ShareParams(
-                subject: 'Tell others about Rentloop',
-                uri: Uri.parse(WEBSITE),
-              ),
-            ),
+            onTap: () async {
+              await Haptics.vibrate(HapticsType.selection);
+              SharePlus.instance.share(
+                ShareParams(
+                  subject: 'Tell others about Rentloop',
+                  uri: Uri.parse(WEBSITE),
+                ),
+              );
+            },
             child: const ListTile(
               leading: Icon(Icons.card_giftcard),
               trailing: Icon(Icons.chevron_right, color: Colors.grey),
@@ -159,7 +171,10 @@ class _MoreScreen extends ConsumerState<MoreScreen> {
             ),
           ),
           InkWell(
-            onTap: () => context.push('/more/delete-account'),
+            onTap: () async {
+              await Haptics.vibrate(HapticsType.selection);
+              if (context.mounted) context.push('/more/delete-account');
+            },
             child: const ListTile(
               leading: Icon(Icons.delete, color: Colors.red),
               title: Text(

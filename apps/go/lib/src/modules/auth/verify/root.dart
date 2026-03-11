@@ -77,6 +77,7 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
 
   Future<void> _handleVerify() async {
     if (_otpCode.length != 6) {
+      await Haptics.vibrate(HapticsType.error);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter the complete 6-digit code'),
@@ -86,13 +87,14 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
       return;
     }
 
-    await Haptics.vibrate(HapticsType.success);
+    await Haptics.vibrate(HapticsType.medium);
 
     final success = await ref
         .read(verifyOtpNotifierProvider.notifier)
         .verifyOtp(phone: widget.phone, code: _otpCode);
 
     if (mounted && success) {
+      await Haptics.vibrate(HapticsType.success);
       _registerFcmToken();
       context.go('/');
     }
@@ -173,6 +175,12 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
     final verifyState = ref.watch(verifyOtpNotifierProvider);
     final isLoading = verifyState.status.isLoading();
 
+    ref.listen(verifyOtpNotifierProvider, (prev, next) {
+      if (next.status.isFailed()) {
+        Haptics.vibrate(HapticsType.error);
+      }
+    });
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -181,8 +189,9 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
         systemOverlayStyle: SystemUiOverlayStyle.dark,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () {
-            context.go('/auth/login');
+          onPressed: () async {
+            await Haptics.vibrate(HapticsType.selection);
+            if (context.mounted) context.go('/auth/login');
           },
         ),
       ),
