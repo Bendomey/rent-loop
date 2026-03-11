@@ -17,7 +17,7 @@ interface Tenant {
 	id_number: string
 	id_front_url: Nullable<string>
 	id_back_url: Nullable<string>
-	status: 'Tenant.Status.Active' | 'Tenant.Status.Suspended'
+	status: 'ACTIVE' | 'EXPIRED'
 	current_address: string
 	emergency_contact_name: string
 	emergency_contact_phone: string

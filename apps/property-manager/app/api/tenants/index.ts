@@ -1,5 +1,45 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { QUERY_KEYS } from '~/lib/constants'
+import { getQueryParams } from '~/lib/get-param'
 import { fetchClient } from '~/lib/transport'
+
+/**
+ * GET all tenants based on a query.
+ */
+
+const getPropertyTenants = async (
+	props: FetchMultipleDataInputParams<FetchTenantFilter> & {
+		property_id: string
+	},
+) => {
+	try {
+		const params = getQueryParams<FetchTenantFilter>(props)
+		const response = await fetchClient<
+			ApiResponse<FetchMultipleDataResponse<Tenant>>
+		>(`/v1/admin/properties/${props.property_id}/tenants?${params.toString()}`)
+
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useGetPropertyTenants = (
+	query: FetchMultipleDataInputParams<FetchTenantFilter> & {
+		property_id: string
+	},
+) =>
+	useQuery({
+		queryKey: [QUERY_KEYS.PROPERTY_TENANTS, query],
+		queryFn: () => getPropertyTenants(query),
+	})
 
 /**
  * Get Tenant by Phone
