@@ -27,7 +27,10 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
 
     await Haptics.vibrate(HapticsType.selection);
 
-    final phone = '+233${_phoneController.text}';
+    final digits = _phoneController.text.substring(
+      _phoneController.text.length - 9,
+    );
+    final phone = '+233$digits';
     final success = await ref
         .read(sendOtpNotifierProvider.notifier)
         .sendOtp(phone);
@@ -152,7 +155,7 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                           ),
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(9),
+                            LengthLimitingTextInputFormatter(10),
                           ],
                           validator: (value) {
                             final result = Validatorless.multiple([
@@ -161,11 +164,11 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                               ),
                               Validatorless.min(
                                 9,
-                                'Enter a valid 9-digit number',
+                                'Enter a valid phone number',
                               ),
                               Validatorless.max(
-                                9,
-                                'Enter a valid 9-digit number',
+                                10,
+                                'Enter a valid phone number',
                               ),
                             ])(value);
 

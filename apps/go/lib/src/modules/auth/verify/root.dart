@@ -326,7 +326,7 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Dial the USSD code below with your account number:',
+                      'Dial the USSD code below to retrieve it:',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.grey.shade600,
@@ -334,25 +334,52 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).primaryColor.withValues(alpha: 0.07),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '*713*882#',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: Theme.of(context).primaryColor,
-                              letterSpacing: 1.5,
+                    GestureDetector(
+                      onTap: () async {
+                        await Haptics.vibrate(HapticsType.selection);
+                        await Clipboard.setData(
+                          const ClipboardData(text: '*713*882#'),
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('USSD code copied to clipboard'),
+                              duration: Duration(seconds: 2),
                             ),
+                          );
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).primaryColor.withValues(alpha: 0.07),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '*713*882#',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    color: Theme.of(context).primaryColor,
+                                    letterSpacing: 1.5,
+                                  ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.copy_rounded,
+                              size: 16,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
