@@ -271,6 +271,74 @@ func (h *LeaseHandler) ListLeasesByProperty(w http.ResponseWriter, r *http.Reque
 		Encode(lib.ReturnListResponse(filterQuery, leasesTransformed, leasesCount))
 }
 
+// ListLeasesByTenantAccount godoc
+//
+//	@Summary		List my leases (Tenant)
+//	@Description	List leases for the authenticated tenant account
+//	@Tags			Lease
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			q	query		ListLeasesQuery	true	"Leases"
+//	@Success		200	{object}	object{data=object{rows=[]transformations.OutputLease,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400	{object}	lib.HTTPError	"An error occurred while filtering leases"
+//	@Failure		401	{object}	string			"Absent or invalid authentication token"
+//	@Failure		500	{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/leases [get]
+func (h *LeaseHandler) ListLeasesByTenantAccount(w http.ResponseWriter, r *http.Request) {
+	tenantAccount, tenantAccountOk := lib.TenantAccountFromContext(r.Context())
+	if !tenantAccountOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
+	if filterQueryErr != nil {
+		HandleErrorResponse(w, filterQueryErr)
+		return
+	}
+
+	isFilterQueryPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filterQuery, w)
+	if !isFilterQueryPassedValidation {
+		return
+	}
+
+	input := repository.ListLeasesFilter{
+		FilterQuery:                *filterQuery,
+		TenantAccountID:            &tenantAccount.ID,
+		Status:                     lib.NullOrString(r.URL.Query().Get("status")),
+		ParentLeaseID:              lib.NullOrString(r.URL.Query().Get("parent_lease_id")),
+		PaymentFrequency:           lib.NullOrString(r.URL.Query().Get("payment_frequency")),
+		StayDurationFrequency:      lib.NullOrString(r.URL.Query().Get("stay_duration_frequency")),
+		LeaseAgreementDocumentMode: lib.NullOrString(r.URL.Query().Get("lease_agreement_document_mode")),
+		UnitIds:                    lib.NullOrStringArray(r.URL.Query()["unit_ids"]),
+		IDs:                        lib.NullOrStringArray(r.URL.Query()["ids"]),
+	}
+
+	leases, leasesErr := h.service.ListLeases(r.Context(), input)
+	if leasesErr != nil {
+		HandleErrorResponse(w, leasesErr)
+		return
+	}
+
+	leasesCount, leasesCountErr := h.service.CountLeases(r.Context(), input)
+	if leasesCountErr != nil {
+		HandleErrorResponse(w, leasesCountErr)
+		return
+	}
+
+	leasesTransformed := make([]any, 0)
+	for _, lease := range leases {
+		leasesTransformed = append(
+			leasesTransformed,
+			transformations.DBLeaseToRest(&lease),
+		)
+	}
+
+	json.NewEncoder(w).
+		Encode(lib.ReturnListResponse(filterQuery, leasesTransformed, leasesCount))
+}
+
 // ActivateLease godoc
 //
 //	@Summary		Activate lease (Admin)

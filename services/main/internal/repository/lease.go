@@ -64,6 +64,7 @@ func (r *leaseRepository) Update(ctx context.Context, lease *models.Lease) error
 type ListLeasesFilter struct {
 	lib.FilterQuery
 	TenantID                   *string
+	TenantAccountID            *string
 	PropertyID                 *string
 	Status                     *string
 	ParentLeaseID              *string
@@ -79,6 +80,7 @@ func (r *leaseRepository) List(ctx context.Context, filterQuery ListLeasesFilter
 
 	db := r.DB.WithContext(ctx).Scopes(
 		leaseFilterScope("tenant_id", filterQuery.TenantID),
+		tenantAccountLeasesScope(filterQuery.TenantAccountID),
 		propertyLeasesScope(filterQuery.PropertyID),
 		leaseFilterScope("status", filterQuery.Status),
 		leaseFilterScope("parent_lease_id", filterQuery.ParentLeaseID),
@@ -112,6 +114,7 @@ func (r *leaseRepository) Count(ctx context.Context, filterQuery ListLeasesFilte
 
 	result := r.DB.WithContext(ctx).Model(&models.Lease{}).Scopes(
 		leaseFilterScope("tenant_id", filterQuery.TenantID),
+		tenantAccountLeasesScope(filterQuery.TenantAccountID),
 		propertyLeasesScope(filterQuery.PropertyID),
 		leaseFilterScope("status", filterQuery.Status),
 		leaseFilterScope("parent_lease_id", filterQuery.ParentLeaseID),
@@ -178,5 +181,18 @@ func leaseArrayFilterScope(field string, value *[]string) func(db *gorm.DB) *gor
 
 		query := fmt.Sprintf("leases.%s IN (?)", field)
 		return db.Where(query, *value)
+	}
+}
+
+func tenantAccountLeasesScope(tenantAccountID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if tenantAccountID == nil {
+			return db
+		}
+
+		return db.Where(
+			"leases.tenant_id IN (SELECT tenant_id FROM tenant_accounts WHERE id = ? AND deleted_at IS NULL)",
+			*tenantAccountID,
+		)
 	}
 }
