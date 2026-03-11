@@ -152,7 +152,7 @@ func (s *clientUserService) CreateClientUser(
 	)
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-		ctx,
+		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: input.Phone,
 			Message:   message,
@@ -491,7 +491,7 @@ func (s *clientUserService) ActivateClientUser(
 	)
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-		ctx,
+		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: clientUserToBeActivated.PhoneNumber,
 			Message:   message,
@@ -561,7 +561,7 @@ func (s *clientUserService) DeactivateClientUser(
 	)
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-		ctx,
+		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: clientUserToBeDeactivated.PhoneNumber,
 			Message:   message,
@@ -699,7 +699,7 @@ func (s *clientUserService) UpateClientUserPassword(
 	)
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-		ctx,
+		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: clientUser.PhoneNumber,
 			Message:   message,

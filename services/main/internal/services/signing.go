@@ -327,7 +327,7 @@ func (s *signingService) sendSigningTokenNotification(
 	}
 
 	if token.SignerPhone != nil {
-		go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
+		go s.appCtx.Clients.GatekeeperAPI.SendSMS(context.Background(), gatekeeper.SendSMSInput{
 			Recipient: *token.SignerPhone,
 			Message:   message,
 		})

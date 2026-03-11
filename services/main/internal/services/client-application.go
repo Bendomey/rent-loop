@@ -144,7 +144,7 @@ func (s *clientApplicationService) CreateClientApplication(
 		TextBody:  message,
 	})
 
-	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(context.Background(), gatekeeper.SendSMSInput{
 		Recipient: input.ContactPhoneNumber,
 		Message:   message,
 	})
@@ -203,7 +203,7 @@ func (s *clientApplicationService) RejectClientApplication(
 		TextBody:  message,
 	})
 
-	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(context.Background(), gatekeeper.SendSMSInput{
 		Recipient: clientApplication.ContactPhoneNumber,
 		Message:   message,
 	})
@@ -334,7 +334,7 @@ func (s *clientApplicationService) ApproveClientApplication(
 		TextBody:  message,
 	})
 
-	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(context.Background(), gatekeeper.SendSMSInput{
 		Recipient: clientApplication.ContactPhoneNumber,
 		Message:   message,
 	})

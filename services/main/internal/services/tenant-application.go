@@ -188,7 +188,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 	}
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-		ctx,
+		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: input.Phone,
 			Message:   message,
@@ -242,7 +242,7 @@ func (s *tenantApplicationService) InviteTenant(ctx context.Context, input Invit
 
 	if input.Phone != nil {
 		go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-			ctx,
+			context.Background(),
 			gatekeeper.SendSMSInput{
 				Recipient: *input.Phone,
 				Message:   message,
@@ -663,7 +663,7 @@ func (s *tenantApplicationService) CancelTenantApplication(
 	}
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-		ctx,
+		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: tenantApplication.Phone,
 			Message:   message,
@@ -895,7 +895,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 	}
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-		ctx,
+		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: tenantApplication.Phone,
 			Message:   message,

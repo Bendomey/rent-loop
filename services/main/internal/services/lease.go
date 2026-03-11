@@ -364,7 +364,7 @@ func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInp
 	}
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-		ctx,
+		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: lease.Tenant.Phone,
 			Message:   message,
@@ -442,7 +442,7 @@ func (s *leaseService) CancelLease(ctx context.Context, input CancelLeaseInput) 
 	}
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-		ctx,
+		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: lease.Tenant.Phone,
 			Message:   message,
