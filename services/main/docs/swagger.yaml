@@ -6757,6 +6757,10 @@ paths:
           type: string
         name: populate
         type: array
+      - example: b4d0243c-6581-4104-8185-d83a45ebe41b
+        in: query
+        name: property_id
+        type: string
       - in: query
         name: query
         type: string
@@ -8351,6 +8355,50 @@ paths:
       summary: Sends a tenant invite to a possible tenant (Admin)
       tags:
       - TenantApplication
+  /api/v1/admin/tenants/{tenant_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get tenant by ID (Admin)
+      parameters:
+      - description: Tenant ID
+        in: path
+        name: tenant_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tenant retrieved successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminTenant'
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get tenant by ID (Admin)
+      tags:
+      - Tenants
   /api/v1/admin/tenants/{tenant_id}/leases:
     get:
       consumes:
@@ -8419,6 +8467,10 @@ paths:
           type: string
         name: populate
         type: array
+      - example: b4d0243c-6581-4104-8185-d83a45ebe41b
+        in: query
+        name: property_id
+        type: string
       - in: query
         name: query
         type: string

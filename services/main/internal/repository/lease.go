@@ -155,7 +155,7 @@ func propertyLeasesScope(propertyID *string) func(db *gorm.DB) *gorm.DB {
 			return db
 		}
 
-		return db.Joins("LEFT JOIN units ON leases.unit_id = units.id").Where("units.property_id = ?", propertyID)
+		return db.Joins("INNER JOIN units ON leases.unit_id = units.id").Where("units.property_id = ?", propertyID)
 	}
 }
 

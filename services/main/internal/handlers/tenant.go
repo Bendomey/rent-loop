@@ -55,6 +55,43 @@ func (h *TenantHandler) GetTenantByPhone(w http.ResponseWriter, r *http.Request)
 	})
 }
 
+type GetTenantQuery struct {
+	lib.GetOneQueryInput
+}
+
+// GetTenantByID godoc
+//
+//	@Summary		Get tenant by ID (Admin)
+//	@Description	Get tenant by ID (Admin)
+//	@Tags			Tenants
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			tenant_id	path		string											true	"Tenant ID"
+//	@Param			q			query		GetTenantQuery									true	"Tenant"
+//	@Success		200			{object}	object{data=transformations.OutputAdminTenant}	"Tenant retrieved successfully"
+//	@Failure		401			{object}	string											"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError									"Tenant not found"
+//	@Failure		500			{object}	string											"An unexpected error occurred"
+//	@Router			/api/v1/admin/tenants/{tenant_id} [get]
+func (h *TenantHandler) GetTenantByID(w http.ResponseWriter, r *http.Request) {
+	tenantID := chi.URLParam(r, "tenant_id")
+	populateFields := GetPopulateFields(r)
+
+	tenant, err := h.service.GetTenantByID(r.Context(), repository.GetTenantQuery{
+		ID:       tenantID,
+		Populate: populateFields,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBAdminTenantToRest(tenant),
+	})
+}
+
 type ListTenantsByPropertyQuery struct {
 	lib.FilterQueryInput
 	Status *string `json:"status,omitempty" validate:"omitempty,oneof=ACTIVE EXPIRED" example:"ACTIVE" description:"Tenant lease status in the property: ACTIVE (has at least one active lease) or EXPIRED (has no active leases but has past leases)"`

@@ -202,7 +202,10 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				})
 			})
 
-			r.Get("/v1/admin/tenants/{tenant_id}/leases", handlers.LeaseHandler.ListLeasesByTenant)
+			r.Route("/v1/admin/tenants/{tenant_id}", func(r chi.Router) {
+				r.Get("/", handlers.TenantHandler.GetTenantByID)
+				r.Get("/leases", handlers.LeaseHandler.ListLeasesByTenant)
+			})
 
 			r.Route("/v1/admin/leases/{lease_id}", func(r chi.Router) {
 				r.Get("/", handlers.LeaseHandler.GetLeaseByID)

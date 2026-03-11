@@ -11,6 +11,7 @@ import (
 type TenantRepository interface {
 	Create(context context.Context, tenant *models.Tenant) error
 	FindOne(context context.Context, query map[string]any) (*models.Tenant, error)
+	GetOneWithPopulate(context context.Context, query GetTenantQuery) (*models.Tenant, error)
 	List(context context.Context, filterQuery ListTenantsFilter) (*[]models.Tenant, error)
 	Count(context context.Context, filterQuery ListTenantsFilter) (int64, error)
 }
@@ -32,6 +33,28 @@ func (r *tenantRepository) Create(ctx context.Context, tenant *models.Tenant) er
 func (r *tenantRepository) FindOne(ctx context.Context, query map[string]any) (*models.Tenant, error) {
 	var tenant models.Tenant
 	result := r.DB.WithContext(ctx).Where(query).First(&tenant)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &tenant, nil
+}
+
+type GetTenantQuery struct {
+	ID       string
+	Populate *[]string
+}
+
+func (r *tenantRepository) GetOneWithPopulate(ctx context.Context, query GetTenantQuery) (*models.Tenant, error) {
+	var tenant models.Tenant
+	db := r.DB.WithContext(ctx).Where("id = ?", query.ID)
+
+	if query.Populate != nil {
+		for _, field := range *query.Populate {
+			db = db.Preload(field)
+		}
+	}
+
+	result := db.First(&tenant)
 	if result.Error != nil {
 		return nil, result.Error
 	}

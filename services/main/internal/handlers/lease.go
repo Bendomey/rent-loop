@@ -131,6 +131,7 @@ func (h *LeaseHandler) GetLeaseByID(w http.ResponseWriter, r *http.Request) {
 type ListLeasesQuery struct {
 	lib.FilterQueryInput
 	Status                     *string   `json:"status,omitempty"                        validate:"omitempty,oneof=Lease.Status.Pending Lease.Status.Active Lease.Status.Terminated Lease.Status.Completed Lease.Status.Cancelled" example:"Lease.Status.Pending"                 description:"Lease status"`
+	PropertyID                 *string   `json:"property_id,omitempty"                   validate:"omitempty,uuid"                                                                                                                 example:"b4d0243c-6581-4104-8185-d83a45ebe41b" description:"Property ID"`
 	ParentLeaseId              *string   `json:"parent_lease_id,omitempty"               validate:"omitempty,uuid"                                                                                                                 example:"b4d0243c-6581-4104-8185-d83a45ebe41b" description:"Parent lease ID"`
 	PaymentFrequency           *string   `json:"payment_frequency,omitempty"             validate:"omitempty,oneof=HOURLY DAILY MONTHLY QUARTERLY BIANNUALLY ANNUALLY ONETIME"                                                     example:"HOURLY"                               description:"Frequency of rent payments"`
 	StayDurationFrequency      *string   `json:"stay_duration_frequency,omitempty"       validate:"omitempty,oneof=HOURS DAYS MONTHS"                                                                                              example:"HOURS"                                description:"Unit of stay duration (e.g., months, years)"`
@@ -171,6 +172,7 @@ func (h *LeaseHandler) ListLeasesByTenant(w http.ResponseWriter, r *http.Request
 	input := repository.ListLeasesFilter{
 		FilterQuery:                *filterQuery,
 		TenantID:                   &tenantID,
+		PropertyID:                 lib.NullOrString(r.URL.Query().Get("property_id")),
 		Status:                     lib.NullOrString(r.URL.Query().Get("status")),
 		ParentLeaseID:              lib.NullOrString(r.URL.Query().Get("parent_lease_id")),
 		PaymentFrequency:           lib.NullOrString(r.URL.Query().Get("payment_frequency")),

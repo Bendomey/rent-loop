@@ -16,6 +16,7 @@ type TenantService interface {
 	CreateTenant(context context.Context, input CreateTenantInput) (*models.Tenant, error)
 	GetOrCreateTenant(context context.Context, input CreateTenantInput) (*models.Tenant, error)
 	GetTenantByPhone(context context.Context, phone string) (*models.Tenant, error)
+	GetTenantByID(context context.Context, query repository.GetTenantQuery) (*models.Tenant, error)
 	ListTenantsByProperty(context context.Context, filter repository.ListTenantsFilter) (*[]models.Tenant, error)
 	CountTenantsByProperty(context context.Context, filter repository.ListTenantsFilter) (int64, error)
 }
@@ -139,6 +140,25 @@ func (s *tenantService) GetOrCreateTenant(ctx context.Context, input CreateTenan
 		})
 	}
 	return getTenant, nil
+}
+
+func (s *tenantService) GetTenantByID(ctx context.Context, query repository.GetTenantQuery) (*models.Tenant, error) {
+	tenant, err := s.repo.GetOneWithPopulate(ctx, query)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("Tenant not found", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "GetTenantByID",
+				"action":   "fetching tenant",
+			},
+		})
+	}
+	return tenant, nil
 }
 
 func (s *tenantService) ListTenantsByProperty(

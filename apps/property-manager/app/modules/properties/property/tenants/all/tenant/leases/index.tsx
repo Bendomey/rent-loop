@@ -10,6 +10,7 @@ import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { getLeaseStatusClass, getLeaseStatusLabel } from '~/lib/lease.utils'
 import { getPaymentFrequencyPeriodLabel } from '~/lib/properties.utils'
+import { safeString } from '~/lib/strings'
 import { useProperty } from '~/providers/property-provider'
 
 export function TenantLeasesModule() {
@@ -17,7 +18,7 @@ export function TenantLeasesModule() {
 	const { clientUserProperty } = useProperty()
 	const { tenantId } = useParams<{ tenantId: string }>()
 
-	const propertyId = clientUserProperty?.property_id ?? ''
+	const propertyId = safeString(clientUserProperty?.property_id)
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -28,9 +29,9 @@ export function TenantLeasesModule() {
 	const status = searchParams.get('status') ?? undefined
 
 	const { data, isPending, isRefetching, error, refetch } = useGetTenantLeases(
-		tenantId ?? '',
+		safeString(tenantId),
 		{
-			filters: { status },
+			filters: { status, property_id: propertyId },
 			pagination: { page, per },
 			populate: ['Unit'],
 			sorter: { sort: 'desc', sort_by: 'created_at' },

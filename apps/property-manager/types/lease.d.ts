@@ -2,6 +2,7 @@ interface FetchLeaseFilter {
 	status?: string
 	unit_ids?: string[]
 	ids?: string[]
+	property_id?: string
 }
 
 interface Lease {

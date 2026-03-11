@@ -5778,6 +5778,12 @@
                     },
                     {
                         "type": "string",
+                        "example": "b4d0243c-6581-4104-8185-d83a45ebe41b",
+                        "name": "property_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "query",
                         "in": "query"
                     },
@@ -7988,6 +7994,75 @@
                 }
             }
         },
+        "/api/v1/admin/tenants/{tenant_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get tenant by ID (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tenants"
+                ],
+                "summary": "Get tenant by ID (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tenant ID",
+                        "name": "tenant_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tenant retrieved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAdminTenant"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Tenant not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/tenants/{tenant_id}/leases": {
             "get": {
                 "security": [
@@ -8095,6 +8170,12 @@
                         },
                         "collectionFormat": "csv",
                         "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "b4d0243c-6581-4104-8185-d83a45ebe41b",
+                        "name": "property_id",
                         "in": "query"
                     },
                     {
