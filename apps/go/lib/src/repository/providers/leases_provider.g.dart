@@ -13,8 +13,9 @@ String _$leasesHash() => r'41e55128feec27f3ce483958d3ff2389bf98959c';
 final leasesProvider = AutoDisposeFutureProvider<List<LeaseModel>>.internal(
   leases,
   name: r'leasesProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$leasesHash,
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$leasesHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );

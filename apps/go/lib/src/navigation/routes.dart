@@ -103,6 +103,16 @@ GoRouter buildRoutes() {
         builder: (context, state) => const LeaseDetailsScreen(),
       ),
       GoRoute(
+        path: '/more/announcements',
+        name: 'Announcements',
+        builder: (context, state) => const AnnouncementsScreen(),
+      ),
+      GoRoute(
+        path: '/more/delete-account',
+        name: 'DeleteAccount',
+        builder: (context, state) => const DeleteAccountScreen(),
+      ),
+      GoRoute(
         path: '/maintenance/new',
         name: "NewMaintenanceRequest",
         builder: (context, state) => const NewMaintenanceScreen(),

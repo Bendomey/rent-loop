@@ -12,11 +12,31 @@ class _FrequencyLabel {
 
 const _frequencyLabels = <String, _FrequencyLabel>{
   'DAILY': _FrequencyLabel(singular: 'day', plural: 'days', frequency: 'Daily'),
-  'WEEKLY': _FrequencyLabel(singular: 'week', plural: 'weeks', frequency: 'Weekly'),
-  'MONTHLY': _FrequencyLabel(singular: 'month', plural: 'months', frequency: 'Monthly'),
-  'QUARTERLY': _FrequencyLabel(singular: 'quarter', plural: 'quarters', frequency: 'Quarterly'),
-  'BIANNUALLY': _FrequencyLabel(singular: '6-month period', plural: '6-month periods', frequency: 'Biannually'),
-  'ANNUALLY': _FrequencyLabel(singular: 'year', plural: 'years', frequency: 'Annually'),
+  'WEEKLY': _FrequencyLabel(
+    singular: 'week',
+    plural: 'weeks',
+    frequency: 'Weekly',
+  ),
+  'MONTHLY': _FrequencyLabel(
+    singular: 'month',
+    plural: 'months',
+    frequency: 'Monthly',
+  ),
+  'QUARTERLY': _FrequencyLabel(
+    singular: 'quarter',
+    plural: 'quarters',
+    frequency: 'Quarterly',
+  ),
+  'BIANNUALLY': _FrequencyLabel(
+    singular: '6-month period',
+    plural: '6-month periods',
+    frequency: 'Biannually',
+  ),
+  'ANNUALLY': _FrequencyLabel(
+    singular: 'year',
+    plural: 'years',
+    frequency: 'Annually',
+  ),
 };
 
 /// Returns the human-readable frequency label, e.g. "Monthly", "Weekly"

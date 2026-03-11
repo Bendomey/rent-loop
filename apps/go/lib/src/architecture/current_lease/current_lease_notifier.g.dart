@@ -13,14 +13,14 @@ String _$currentLeaseNotifierHash() =>
 @ProviderFor(CurrentLeaseNotifier)
 final currentLeaseNotifierProvider =
     NotifierProvider<CurrentLeaseNotifier, LeaseModel?>.internal(
-  CurrentLeaseNotifier.new,
-  name: r'currentLeaseNotifierProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$currentLeaseNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+      CurrentLeaseNotifier.new,
+      name: r'currentLeaseNotifierProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$currentLeaseNotifierHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
 typedef _$CurrentLeaseNotifier = Notifier<LeaseModel?>;
 // ignore_for_file: type=lint

@@ -44,7 +44,7 @@ class AnnouncementsCard extends StatelessWidget {
                       onPressed: () async {
                         await Haptics.vibrate(HapticsType.selection);
                         if (context.mounted) {
-                          context.push('/more/annoucements');
+                          context.push('/more/announcements');
                         }
                       },
                       child: const Text('VIEW'),

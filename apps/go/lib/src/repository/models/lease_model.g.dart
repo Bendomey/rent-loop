@@ -21,25 +21,24 @@ Map<String, dynamic> _$LeaseUnitModelToJson(LeaseUnitModel instance) =>
     };
 
 LeaseModel _$LeaseModelFromJson(Map<String, dynamic> json) => LeaseModel(
-      id: json['id'] as String,
-      code: json['code'] as String,
-      status: json['status'] as String,
-      rentFee: (json['rent_fee'] as num).toInt(),
-      rentFeeCurrency: json['rent_fee_currency'] as String,
-      paymentFrequency: json['payment_frequency'] as String?,
-      moveInDate: json['move_in_date'] as String?,
-      activatedAt: json['activated_at'] as String?,
-      stayDuration: (json['stay_duration'] as num?)?.toInt(),
-      stayDurationFrequency: json['stay_duration_frequency'] as String?,
-      keyHandoverDate: json['key_handover_date'] as String?,
-      propertyInspectionDate: json['property_inspection_date'] as String?,
-      leaseAgreementDocumentUrl:
-          json['lease_agreement_document_url'] as String?,
-      createdAt: json['created_at'] as String?,
-      unit: json['unit'] == null
-          ? null
-          : LeaseUnitModel.fromJson(json['unit'] as Map<String, dynamic>),
-    );
+  id: json['id'] as String,
+  code: json['code'] as String,
+  status: json['status'] as String,
+  rentFee: (json['rent_fee'] as num).toInt(),
+  rentFeeCurrency: json['rent_fee_currency'] as String,
+  paymentFrequency: json['payment_frequency'] as String?,
+  moveInDate: json['move_in_date'] as String?,
+  activatedAt: json['activated_at'] as String?,
+  stayDuration: (json['stay_duration'] as num?)?.toInt(),
+  stayDurationFrequency: json['stay_duration_frequency'] as String?,
+  keyHandoverDate: json['key_handover_date'] as String?,
+  propertyInspectionDate: json['property_inspection_date'] as String?,
+  leaseAgreementDocumentUrl: json['lease_agreement_document_url'] as String?,
+  createdAt: json['created_at'] as String?,
+  unit: json['unit'] == null
+      ? null
+      : LeaseUnitModel.fromJson(json['unit'] as Map<String, dynamic>),
+);
 
 Map<String, dynamic> _$LeaseModelToJson(LeaseModel instance) =>
     <String, dynamic>{

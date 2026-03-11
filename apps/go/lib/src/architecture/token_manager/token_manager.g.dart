@@ -13,8 +13,9 @@ String _$tokenManagerHash() => r'e972c6042ae31602af15cae471e894cc349aa0c7';
 final tokenManagerProvider = AutoDisposeProvider<TokenManager>.internal(
   tokenManager,
   name: r'tokenManagerProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$tokenManagerHash,
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$tokenManagerHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );

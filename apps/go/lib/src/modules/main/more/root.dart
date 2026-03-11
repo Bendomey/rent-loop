@@ -98,7 +98,7 @@ class _MoreScreen extends ConsumerState<MoreScreen> {
             ),
           ),
           InkWell(
-            onTap: () => launchExternalSite(context, '$WEBSITE/privacy'),
+            onTap: () => launchExternalSite(context, '$WEBSITE/privacy-policy'),
             child: const ListTile(
               leading: Icon(Icons.file_copy_outlined),
               trailing: Icon(Icons.open_in_new, color: Colors.grey),
@@ -106,7 +106,7 @@ class _MoreScreen extends ConsumerState<MoreScreen> {
             ),
           ),
           InkWell(
-            onTap: () => launchExternalSite(context, '$WEBSITE/faqs'),
+            onTap: () => launchExternalSite(context, '$WEBSITE/#faqs'),
             child: const ListTile(
               leading: Icon(Icons.question_mark_sharp),
               trailing: Icon(Icons.open_in_new, color: Colors.grey),
