@@ -840,7 +840,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		return createTenantAccountErr
 	}
 
-	occupyingLeases, err := s.leaseService.CountOccupyingByUnitID(ctx, unit.ID.String())
+	occupyingLeases, err := s.leaseService.CountOccupyingByUnitID(transCtx, unit.ID.String())
 	if err != nil {
 		return err
 	}

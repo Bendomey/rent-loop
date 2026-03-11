@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -51,4 +53,64 @@ func (h *TenantHandler) GetTenantByPhone(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": transformations.DBTenantToRest(tenant),
 	})
+}
+
+type ListTenantsByPropertyQuery struct {
+	lib.FilterQueryInput
+	Status *string `json:"status,omitempty" validate:"omitempty,oneof=ACTIVE EXPIRED" example:"ACTIVE" description:"Tenant lease status in the property: ACTIVE (has at least one active lease) or EXPIRED (has no active leases but has past leases)"`
+}
+
+// ListTenantsByProperty godoc
+//
+//	@Summary		List tenants by property (Admin)
+//	@Description	List unique tenants for a property with optional status filtering. status=ACTIVE means tenant has at least one active lease; status=EXPIRED means tenant has no active leases but has terminated/completed/cancelled leases.
+//	@Tags			Tenants
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string						true	"Property ID"
+//	@Param			q			query		ListTenantsByPropertyQuery	true	"Filter options"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.OutputAdminTenant,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400			{object}	lib.HTTPError	"An error occurred while filtering tenants"
+//	@Failure		401			{object}	string			"Absent or invalid authentication token"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/admin/properties/{property_id}/tenants [get]
+func (h *TenantHandler) ListTenantsByProperty(w http.ResponseWriter, r *http.Request) {
+	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
+	if filterQueryErr != nil {
+		HandleErrorResponse(w, filterQueryErr)
+		return
+	}
+
+	isFilterQueryPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filterQuery, w)
+	if !isFilterQueryPassedValidation {
+		return
+	}
+
+	propertyID := chi.URLParam(r, "property_id")
+
+	input := repository.ListTenantsFilter{
+		FilterQuery: *filterQuery,
+		PropertyID:  &propertyID,
+		Status:      lib.NullOrString(r.URL.Query().Get("status")),
+	}
+
+	tenants, tenantsErr := h.service.ListTenantsByProperty(r.Context(), input)
+	if tenantsErr != nil {
+		HandleErrorResponse(w, tenantsErr)
+		return
+	}
+
+	tenantsCount, tenantsCountErr := h.service.CountTenantsByProperty(r.Context(), input)
+	if tenantsCountErr != nil {
+		HandleErrorResponse(w, tenantsCountErr)
+		return
+	}
+
+	tenantsTransformed := make([]any, 0)
+	for _, tenant := range *tenants {
+		tenantsTransformed = append(tenantsTransformed, transformations.DBAdminTenantToRest(&tenant))
+	}
+
+	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, tenantsTransformed, tenantsCount))
 }

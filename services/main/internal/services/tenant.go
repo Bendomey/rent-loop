@@ -16,6 +16,8 @@ type TenantService interface {
 	CreateTenant(context context.Context, input CreateTenantInput) (*models.Tenant, error)
 	GetOrCreateTenant(context context.Context, input CreateTenantInput) (*models.Tenant, error)
 	GetTenantByPhone(context context.Context, phone string) (*models.Tenant, error)
+	ListTenantsByProperty(context context.Context, filter repository.ListTenantsFilter) (*[]models.Tenant, error)
+	CountTenantsByProperty(context context.Context, filter repository.ListTenantsFilter) (int64, error)
 }
 
 type tenantService struct {
@@ -137,4 +139,38 @@ func (s *tenantService) GetOrCreateTenant(ctx context.Context, input CreateTenan
 		})
 	}
 	return getTenant, nil
+}
+
+func (s *tenantService) ListTenantsByProperty(
+	ctx context.Context,
+	filter repository.ListTenantsFilter,
+) (*[]models.Tenant, error) {
+	tenants, err := s.repo.List(ctx, filter)
+	if err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ListTenantsByProperty",
+				"action":   "listing tenants",
+			},
+		})
+	}
+	return tenants, nil
+}
+
+func (s *tenantService) CountTenantsByProperty(
+	ctx context.Context,
+	filter repository.ListTenantsFilter,
+) (int64, error) {
+	count, err := s.repo.Count(ctx, filter)
+	if err != nil {
+		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CountTenantsByProperty",
+				"action":   "counting tenants",
+			},
+		})
+	}
+	return count, nil
 }

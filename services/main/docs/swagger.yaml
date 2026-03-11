@@ -6830,6 +6830,99 @@ paths:
       summary: List leases by property (Admin)
       tags:
       - Lease
+  /api/v1/admin/properties/{property_id}/tenants:
+    get:
+      consumes:
+      - application/json
+      description: List unique tenants for a property with optional status filtering.
+        status=ACTIVE means tenant has at least one active lease; status=EXPIRED means
+        tenant has no active leases but has terminated/completed/cancelled leases.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - ACTIVE
+        - EXPIRED
+        example: ACTIVE
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputAdminTenant'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: An error occurred while filtering tenants
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Absent or invalid authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List tenants by property (Admin)
+      tags:
+      - Tenants
   /api/v1/admin/properties/{property_id}/units:
     get:
       consumes:

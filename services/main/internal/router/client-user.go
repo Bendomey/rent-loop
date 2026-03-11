@@ -91,6 +91,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 
 				r.Route("/{property_id}", func(r chi.Router) {
 					r.Get("/leases", handlers.LeaseHandler.ListLeasesByProperty)
+					r.Get("/tenants", handlers.TenantHandler.ListTenantsByProperty)
 					r.Get("/", handlers.PropertyHandler.GetPropertyById)
 					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 						Patch("/", handlers.PropertyHandler.UpdateProperty)
