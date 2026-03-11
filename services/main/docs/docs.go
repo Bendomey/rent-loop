@@ -9013,6 +9013,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/tenant-accounts/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the authenticated tenant's account with their profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TenantAccount"
+                ],
+                "summary": "Get my tenant account (Tenant)",
+                "responses": {
+                    "200": {
+                        "description": "Tenant account retrieved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputTenantAccount"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Tenant account not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/tenant-applications": {
             "post": {
                 "description": "Create a new tenant application",
@@ -13646,6 +13697,34 @@ const docTemplate = `{
                 "relationship_to_emergency_contact": {
                     "type": "string",
                     "example": "sister"
+                }
+            }
+        },
+        "transformations.OutputTenantAccount": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "phone_number": {
+                    "type": "string",
+                    "example": "+233281234569"
+                },
+                "tenant": {
+                    "$ref": "#/definitions/transformations.OutputTenant"
+                },
+                "tenant_id": {
+                    "type": "string",
+                    "example": "7ace5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-06-10T09:00:00Z"
                 }
             }
         },

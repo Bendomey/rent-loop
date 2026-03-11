@@ -19,6 +19,7 @@ type Handlers struct {
 	UnitHandler               UnitHandler
 	TenantApplicationHandler  TenantApplicationHandler
 	TenantHandler             TenantHandler
+	TenantAccountHandler      TenantAccountHandler
 	LeaseHandler              LeaseHandler
 	PaymentAccountHandler     PaymentAccountHandler
 	InvoiceHandler            InvoiceHandler
@@ -48,6 +49,7 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 		services,
 	)
 	tenantHandler := NewTenantHandler(appCtx, services.TenantService)
+	tenantAccountHandler := NewTenantAccountHandler(appCtx, services.TenantAccountService)
 	leaseHandler := NewLeaseHandler(appCtx, services)
 	paymentAccountHandler := NewPaymentAccountHandler(appCtx, services.PaymentAccountService)
 	leaseChecklistHandler := NewLeaseChecklistHandler(appCtx, services.LeaseChecklistService)
@@ -66,6 +68,7 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 		UnitHandler:               unitHandler,
 		TenantApplicationHandler:  tenantApplicationHandler,
 		TenantHandler:             tenantHandler,
+		TenantAccountHandler:      tenantAccountHandler,
 		LeaseHandler:              leaseHandler,
 		PaymentAccountHandler:     paymentAccountHandler,
 		InvoiceHandler:            invoiceHandler,

@@ -14,6 +14,7 @@ import (
 type TenantAccountService interface {
 	CreateTenantAccount(context context.Context, input CreateTenantAccountInput) (*models.TenantAccount, error)
 	GetOrCreateTenantAccount(context context.Context, input CreateTenantAccountInput) (*models.TenantAccount, error)
+	GetMe(context context.Context, id string) (*models.TenantAccount, error)
 }
 
 type tenantAccountService struct {
@@ -57,6 +58,28 @@ func (s *tenantAccountService) CreateTenantAccount(
 	}
 
 	return &tenantAccount, nil
+}
+
+func (s *tenantAccountService) GetMe(ctx context.Context, id string) (*models.TenantAccount, error) {
+	tenantAccount, err := s.repo.GetOneWithPopulate(ctx, repository.GetTenantAccountQuery{
+		ID:       id,
+		Populate: &[]string{"Tenant"},
+	})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("TenantAccount not found", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "GetMe",
+				"action":   "fetching tenant account",
+			},
+		})
+	}
+	return tenantAccount, nil
 }
 
 func (s *tenantAccountService) GetOrCreateTenantAccount(

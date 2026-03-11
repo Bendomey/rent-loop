@@ -275,8 +275,9 @@ func (s *authService) VerifyTenantCode(
 		})
 	}
 
-	tenantAccount, findErr := s.tenantAccountRepo.FindOne(ctx, map[string]any{
-		"phone_number": input.Phone,
+	tenantAccount, findErr := s.tenantAccountRepo.GetOneWithPopulate(ctx, repository.GetTenantAccountQuery{
+		PhoneNumber: input.Phone,
+		Populate:    &[]string{"Tenant"},
 	})
 	if findErr != nil {
 		return nil, pkg.InternalServerError(findErr.Error(), &pkg.RentLoopErrorParams{
