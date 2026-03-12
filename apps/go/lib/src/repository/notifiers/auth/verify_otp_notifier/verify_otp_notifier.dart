@@ -25,7 +25,9 @@ class VerifyOtpNotifier extends _$VerifyOtpNotifier {
           .verifyOtp(phone: phone, code: code);
       await ref.read(tokenManagerProvider).save(token);
       final tenantAccount = await ref.read(tenantAccountApiProvider).getMe();
-      ref.read(currentUserNotifierProvider.notifier).setUser(tenantAccount);
+      await ref
+          .read(appStartupNotifierProvider.notifier)
+          .completeLogin(tenantAccount);
       state = VerifyOtpState(status: ApiStatus.success);
       return true;
     } on ApiException catch (e) {

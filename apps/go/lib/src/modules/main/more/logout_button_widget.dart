@@ -8,13 +8,11 @@ class LogoutButtonWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     Future<void> logout() async {
       await Haptics.vibrate(HapticsType.medium);
-      await ref.read(tokenManagerProvider).remove();
-      await ref.read(leaseIdManagerProvider).remove();
-      ref.read(currentUserNotifierProvider.notifier).clear();
-      ref.read(currentLeaseNotifierProvider.notifier).clear();
+      await ref.read(appStartupNotifierProvider.notifier).logout();
+      // GoRouter redirect guard navigates to /auth when status becomes
+      // unauthenticated — no context.go() needed here.
       if (context.mounted) {
         await Haptics.vibrate(HapticsType.success);
-        context.go('/auth');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('You logged out successfully!')),
         );
@@ -48,14 +46,6 @@ class LogoutButtonWidget extends ConsumerWidget {
 
     return IconButton(
       onPressed: showMyDialog,
-      // child: const Text(
-      //   'Logout',
-      //   style: TextStyle(
-      //     fontSize: 18,
-      //     color: Colors.black87,
-      //     // fontWeight: FontWeight.normal
-      //   ),
-      // ),
       icon: const Icon(Icons.logout, color: Colors.black87),
     );
   }

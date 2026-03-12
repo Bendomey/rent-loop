@@ -3,8 +3,6 @@ import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:rentloop_go/src/repository/models/lease_model.dart';
 import 'package:rentloop_go/src/repository/providers/leases_provider.dart';
 import 'announcements_card.dart';
-import 'home_error_state.dart';
-import 'home_skeleton.dart';
 import 'lease_selector_bar.dart';
 import 'maintenance_stats_card.dart';
 import 'upcoming_payment_card.dart';
@@ -14,26 +12,20 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Leases are guaranteed loaded by AppStartupNotifier before any
+    // authenticated screen renders. leasesProvider is keepAlive so this
+    // returns immediately from cache; it also supports pull-to-refresh.
     final leasesAsync = ref.watch(leasesProvider);
     final currentUser = ref.watch(currentUserNotifierProvider);
     final activeLease = ref.watch(currentLeaseNotifierProvider);
 
-    ref.listen(leasesProvider, (prev, next) {
-      if (next.hasError) {
-        Haptics.vibrate(HapticsType.error);
-      }
-    });
+    final leases = leasesAsync.valueOrNull ?? [];
 
     return Scaffold(
-      body: leasesAsync.when(
-        skipLoadingOnRefresh: false,
-        loading: () => const HomeSkeleton(),
-        error: (_, __) => const HomeErrorState(),
-        data: (leases) => _HomeContent(
-          leases: leases,
-          activeLease: activeLease,
-          currentUser: currentUser,
-        ),
+      body: _HomeContent(
+        leases: leases,
+        activeLease: activeLease,
+        currentUser: currentUser,
       ),
     );
   }
@@ -52,12 +44,6 @@ class _HomeContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (activeLease == null && leases.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(currentLeaseNotifierProvider.notifier).setLease(leases.first);
-      });
-    }
-
     return ListView(
       children: [
         LeaseSelectorBar(leases: leases),

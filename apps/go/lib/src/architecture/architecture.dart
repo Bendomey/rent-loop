@@ -9,6 +9,7 @@ export 'secure_storage/secure_storage.dart';
 export 'current_user/current_user_notifier.dart';
 export 'lease_id_manager/lease_id_manager.dart';
 export 'current_lease/current_lease_notifier.dart';
+export 'app_startup/app_startup_notifier.dart';
 
 export 'package:validatorless/validatorless.dart';
 
