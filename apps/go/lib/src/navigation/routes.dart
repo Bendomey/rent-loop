@@ -6,11 +6,12 @@ import 'splash.dart';
 import 'main_navigator.dart';
 
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 late GlobalKey<NavigatorState> navigatorKey;
 late GlobalKey<NavigatorState> shellNavigatorKey;
 
-GoRouter buildRoutes() {
+GoRouter buildRoutes(WidgetRef ref, Listenable refreshListenable) {
   navigatorKey = GlobalKey();
 
   return GoRouter(
@@ -21,6 +22,27 @@ GoRouter buildRoutes() {
     navigatorKey: navigatorKey,
     restorationScopeId: 'rentloop-router',
     initialLocation: '/splash',
+    refreshListenable: refreshListenable,
+    redirect: (context, state) {
+      final startup = ref.read(appStartupNotifierProvider);
+      final loc = state.matchedLocation;
+
+      switch (startup.status) {
+        case AppStartupStatus.loading:
+        case AppStartupStatus.error:
+          // Hold at splash; don't interrupt an active auth flow.
+          if (loc == '/splash' || loc.startsWith('/auth')) return null;
+          return '/splash';
+
+        case AppStartupStatus.unauthenticated:
+          if (loc.startsWith('/auth')) return null;
+          return '/auth';
+
+        case AppStartupStatus.ready:
+          if (loc == '/splash' || loc.startsWith('/auth')) return '/';
+          return null;
+      }
+    },
     routes: [
       GoRoute(
         path: '/splash',

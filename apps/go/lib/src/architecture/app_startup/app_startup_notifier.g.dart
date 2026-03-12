@@ -1,26 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'verify_otp_notifier.dart';
+part of 'app_startup_notifier.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$verifyOtpNotifierHash() => r'c7ccc3a6aad900d6018b27f661226e4eddef1adb';
+String _$appStartupNotifierHash() =>
+    r'ce63864dff1d948d605de4119de9af5f4af96d4a';
 
-/// See also [VerifyOtpNotifier].
-@ProviderFor(VerifyOtpNotifier)
-final verifyOtpNotifierProvider =
-    AutoDisposeNotifierProvider<VerifyOtpNotifier, VerifyOtpState>.internal(
-      VerifyOtpNotifier.new,
-      name: r'verifyOtpNotifierProvider',
+/// See also [AppStartupNotifier].
+@ProviderFor(AppStartupNotifier)
+final appStartupNotifierProvider =
+    NotifierProvider<AppStartupNotifier, AppStartupState>.internal(
+      AppStartupNotifier.new,
+      name: r'appStartupNotifierProvider',
       debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
           ? null
-          : _$verifyOtpNotifierHash,
+          : _$appStartupNotifierHash,
       dependencies: null,
       allTransitiveDependencies: null,
     );
 
-typedef _$VerifyOtpNotifier = AutoDisposeNotifier<VerifyOtpState>;
+typedef _$AppStartupNotifier = Notifier<AppStartupState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

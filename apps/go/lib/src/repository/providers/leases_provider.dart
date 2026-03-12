@@ -4,7 +4,7 @@ import 'package:rentloop_go/src/repository/models/lease_model.dart';
 
 part 'leases_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<List<LeaseModel>> leases(LeasesRef ref) async {
   final list = await ref.read(leaseApiProvider).getLeases();
   await ref.read(currentLeaseNotifierProvider.notifier).loadFromLeases(list);

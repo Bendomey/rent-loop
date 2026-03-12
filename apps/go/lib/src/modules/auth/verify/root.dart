@@ -96,7 +96,8 @@ class _VerifyScreen extends ConsumerState<VerifyScreen> {
     if (mounted && success) {
       await Haptics.vibrate(HapticsType.success);
       _registerFcmToken();
-      context.go('/');
+      // Navigation is handled by the GoRouter redirect guard reacting to
+      // AppStartupNotifier transitioning to AppStartupStatus.ready.
     }
   }
 
