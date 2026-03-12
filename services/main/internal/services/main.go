@@ -27,11 +27,13 @@ type Services struct {
 	SigningService            SigningService
 	LeaseChecklistService     LeaseChecklistService
 	LeaseChecklistItemService LeaseChecklistItemService
+	AnnouncementService       AnnouncementService
 }
 
 type INewServicesParams struct {
-	AppCtx     pkg.AppContext
-	Repository repository.Repository
+	AppCtx        pkg.AppContext
+	Repository    repository.Repository
+	RentloopQueue RentloopQueue
 }
 
 func NewServices(params INewServicesParams) Services {
@@ -118,6 +120,14 @@ func NewServices(params INewServicesParams) Services {
 		ChecklistItemService: leaseChecklistItemService,
 	})
 
+	announcementService := NewAnnouncementService(AnnouncementServiceDeps{
+		AppCtx:              params.AppCtx,
+		Repo:                params.Repository.AnnouncementRepository,
+		TenantAccountRepo:   params.Repository.TenantAccountRepository,
+		NotificationService: notificationService,
+		RentloopQueue:       params.RentloopQueue,
+	})
+
 	return Services{
 		NotificationService: notificationService,
 		AccountingService:   accountingService,
@@ -141,5 +151,6 @@ func NewServices(params INewServicesParams) Services {
 		SigningService:            signingService,
 		LeaseChecklistService:     leaseChecklistService,
 		LeaseChecklistItemService: leaseChecklistItemService,
+		AnnouncementService:       announcementService,
 	}
 }

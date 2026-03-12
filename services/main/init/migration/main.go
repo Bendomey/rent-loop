@@ -37,9 +37,10 @@ func updateMigration(db *gorm.DB) error {
 		&models.DocumentSignature{},
 		&models.SigningToken{},
 		&models.FcmToken{},
+		&models.Announcement{},
+		&models.AnnouncementRead{},
 		// &models.MaintenanceRequest{},
 		// &models.MaintenanceRequestActivityLog{},
-		// &models.Announcement{},
 	)
 	return err
 }

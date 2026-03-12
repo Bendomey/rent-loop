@@ -341,6 +341,49 @@ definitions:
     - email
     - name
     type: object
+  handlers.CreateAnnouncementRequest:
+    properties:
+      content:
+        example: Water will be unavailable on Monday from 8am-12pm.
+        type: string
+      expires_at:
+        type: string
+      priority:
+        enum:
+        - NORMAL
+        - IMPORTANT
+        - URGENT
+        example: IMPORTANT
+        type: string
+      property_block_id:
+        example: 660e8400-e29b-41d4-a716-446655440001
+        type: string
+      property_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      scheduled_at:
+        type: string
+      target_unit_ids:
+        items:
+          type: string
+        type: array
+      title:
+        example: Water Outage Notice
+        type: string
+      type:
+        enum:
+        - MAINTENANCE
+        - COMMUNITY
+        - POLICY_CHANGE
+        - EMERGENCY
+        example: MAINTENANCE
+        type: string
+    required:
+    - content
+    - priority
+    - title
+    - type
+    type: object
   handlers.CreateClientApplicationRequest:
     properties:
       address:
@@ -883,6 +926,14 @@ definitions:
     required:
     - token
     type: object
+  handlers.ExtendAnnouncementExpiryRequest:
+    properties:
+      expires_at:
+        example: "2026-06-01T00:00:00Z"
+        type: string
+    required:
+    - expires_at
+    type: object
   handlers.GenerateInvoiceRequest:
     properties:
       due_date:
@@ -1063,6 +1114,14 @@ definitions:
     required:
     - newPassword
     type: object
+  handlers.ScheduleAnnouncementRequest:
+    properties:
+      scheduled_at:
+        example: "2026-04-01T09:00:00Z"
+        type: string
+    required:
+    - scheduled_at
+    type: object
   handlers.SendForgotPasswordResetLinkRequest:
     properties:
       email:
@@ -1139,6 +1198,42 @@ definitions:
         type: array
     required:
     - client_user_ids
+    type: object
+  handlers.UpdateAnnouncementRequest:
+    properties:
+      content:
+        example: Updated content.
+        type: string
+      expires_at:
+        type: string
+      priority:
+        enum:
+        - NORMAL
+        - IMPORTANT
+        - URGENT
+        example: NORMAL
+        type: string
+      property_block_id:
+        type: string
+      property_id:
+        type: string
+      scheduled_at:
+        type: string
+      target_unit_ids:
+        items:
+          type: string
+        type: array
+      title:
+        example: Updated Notice
+        type: string
+      type:
+        enum:
+        - MAINTENANCE
+        - COMMUNITY
+        - POLICY_CHANGE
+        - EMERGENCY
+        example: COMMUNITY
+        type: string
     type: object
   handlers.UpdateClientUserPasswordRequest:
     properties:
@@ -1484,6 +1579,59 @@ definitions:
       total:
         example: 100
         type: integer
+    type: object
+  transformations.AdminOutputAnnouncement:
+    properties:
+      client_id:
+        example: 770e8400-e29b-41d4-a716-446655440002
+        type: string
+      content:
+        example: Water will be unavailable on Monday from 8am-12pm.
+        type: string
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      created_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      created_by_id:
+        example: d290f1ee-6c54-4b01-90e6-d701748f0851
+        type: string
+      expires_at:
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      priority:
+        example: IMPORTANT
+        type: string
+      property:
+        $ref: '#/definitions/transformations.OutputProperty'
+      property_block_id:
+        example: 660e8400-e29b-41d4-a716-446655440001
+        type: string
+      property_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      published_at:
+        type: string
+      scheduled_at:
+        type: string
+      status:
+        example: PUBLISHED
+        type: string
+      target_unit_ids:
+        items:
+          type: string
+        type: array
+      title:
+        example: Water Outage Notice
+        type: string
+      type:
+        example: MAINTENANCE
+        type: string
+      updated_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
     type: object
   transformations.AdminOutputUnit:
     properties:
@@ -2100,6 +2248,34 @@ definitions:
         $ref: '#/definitions/transformations.OutputAdmin'
       token:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw
+        type: string
+    type: object
+  transformations.OutputAnnouncement:
+    properties:
+      content:
+        example: Water will be unavailable on Monday from 8am-12pm.
+        type: string
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      expires_at:
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      priority:
+        example: IMPORTANT
+        type: string
+      published_at:
+        type: string
+      status:
+        example: PUBLISHED
+        type: string
+      title:
+        example: Water Outage Notice
+        type: string
+      type:
+        example: MAINTENANCE
         type: string
     type: object
   transformations.OutputClient:
@@ -3479,6 +3655,408 @@ paths:
       summary: Get Cube.js analytics token
       tags:
       - Analytics
+  /api/v1/admin/announcements:
+    get:
+      description: List announcements for the current client
+      parameters:
+      - in: query
+        name: end_date
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - DRAFT
+        - SCHEDULED
+        - PUBLISHED
+        - EXPIRED
+        example: PUBLISHED
+        in: query
+        name: status
+        type: string
+      - enum:
+        - MAINTENANCE
+        - COMMUNITY
+        - POLICY_CHANGE
+        - EMERGENCY
+        example: MAINTENANCE
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.AdminOutputAnnouncement'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List announcements (Admin)
+      tags:
+      - Announcements
+    post:
+      consumes:
+      - application/json
+      description: Create a new announcement in DRAFT status
+      parameters:
+      - description: Announcement details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateAnnouncementRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputAnnouncement'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a new announcement (Admin)
+      tags:
+      - Announcements
+  /api/v1/admin/announcements/{announcement_id}:
+    delete:
+      description: Delete a DRAFT announcement
+      parameters:
+      - description: Announcement ID
+        in: path
+        name: announcement_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete an announcement (Admin)
+      tags:
+      - Announcements
+    get:
+      description: Get a single announcement by ID
+      parameters:
+      - description: Announcement ID
+        in: path
+        name: announcement_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputAnnouncement'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get announcement by ID (Admin)
+      tags:
+      - Announcements
+    patch:
+      consumes:
+      - application/json
+      description: Update a DRAFT announcement
+      parameters:
+      - description: Announcement ID
+        in: path
+        name: announcement_id
+        required: true
+        type: string
+      - description: Announcement updates
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateAnnouncementRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputAnnouncement'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update an announcement (Admin)
+      tags:
+      - Announcements
+  /api/v1/admin/announcements/{announcement_id}/expiry:
+    patch:
+      consumes:
+      - application/json
+      description: Update the expiry time of a PUBLISHED announcement; cancels the
+        existing expire job and enqueues a new one
+      parameters:
+      - description: Announcement ID
+        in: path
+        name: announcement_id
+        required: true
+        type: string
+      - description: New expiry
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ExtendAnnouncementExpiryRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Extend announcement expiry (Admin)
+      tags:
+      - Announcements
+  /api/v1/admin/announcements/{announcement_id}/publish:
+    post:
+      description: Publish a DRAFT or SCHEDULED announcement immediately
+      parameters:
+      - description: Announcement ID
+        in: path
+        name: announcement_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Publish an announcement (Admin)
+      tags:
+      - Announcements
+  /api/v1/admin/announcements/{announcement_id}/schedule:
+    delete:
+      description: Cancels the queued publish job and reverts the announcement back
+        to DRAFT
+      parameters:
+      - description: Announcement ID
+        in: path
+        name: announcement_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Cancel a scheduled announcement (Admin)
+      tags:
+      - Announcements
+    post:
+      consumes:
+      - application/json
+      description: Schedule a DRAFT announcement for future publishing
+      parameters:
+      - description: Announcement ID
+        in: path
+        name: announcement_id
+        required: true
+        type: string
+      - description: Schedule details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ScheduleAnnouncementRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputAnnouncement'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Schedule an announcement (Admin)
+      tags:
+      - Announcements
   /api/v1/admin/client-applications:
     get:
       consumes:
@@ -8572,6 +9150,69 @@ paths:
       summary: List leases by tenant (Admin)
       tags:
       - Lease
+  /api/v1/announcements/{announcement_id}:
+    get:
+      description: Get a PUBLISHED announcement by ID
+      parameters:
+      - description: Announcement ID
+        in: path
+        name: announcement_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAnnouncement'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get announcement by ID (Tenant)
+      tags:
+      - Announcements
+  /api/v1/announcements/{announcement_id}/read:
+    post:
+      description: Mark an announcement as read — idempotent
+      parameters:
+      - description: Announcement ID
+        in: path
+        name: announcement_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Mark announcement as read (Tenant)
+      tags:
+      - Announcements
   /api/v1/auth/codes:
     post:
       consumes:
@@ -8821,6 +9462,107 @@ paths:
       summary: List my leases (Tenant)
       tags:
       - TenantAccounts
+  /api/v1/leases/{lease_id}/announcements:
+    get:
+      description: List PUBLISHED announcements relevant to the tenant's lease unit
+        (directly targeted, block, property, or broadcast)
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - DRAFT
+        - SCHEDULED
+        - PUBLISHED
+        - EXPIRED
+        example: PUBLISHED
+        in: query
+        name: status
+        type: string
+      - enum:
+        - MAINTENANCE
+        - COMMUNITY
+        - POLICY_CHANGE
+        - EMERGENCY
+        example: MAINTENANCE
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputAnnouncement'
+                    type: array
+                type: object
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List announcements (Tenant)
+      tags:
+      - Announcements
   /api/v1/payments/offline:
     post:
       consumes:
