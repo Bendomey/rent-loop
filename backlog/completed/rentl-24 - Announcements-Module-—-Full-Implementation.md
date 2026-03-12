@@ -1,10 +1,10 @@
 ---
 id: RENTL-24
 title: Announcements Module — Full Implementation
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-11 18:50'
-updated_date: '2026-03-11 19:05'
+updated_date: '2026-03-12 12:57'
 labels:
   - backend
   - announcements
@@ -305,3 +305,46 @@ POST   /v1/properties/{property_id}/announcements/{announcement_id}/schedule
 
 The handler reads `chi.URLParam(r, "property_id")` when present and passes it as `PropertyID` in the service input. The list endpoint auto-filters by `PropertyID` when called via this route.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+## What was done
+
+Full Announcements module implementation across all layers:
+
+**Model** (`internal/models/announcement.go`)
+- `Announcement` with title, content, type, priority, status, scheduling fields, targeting fields (`PropertyID`, `PropertyBlockID`, `TargetUnitIDs pq.StringArray`), and `ClientID`/`CreatedByID`
+- `AnnouncementRead` (idempotent read tracking per tenant account)
+
+**Migration** — added both models to `updateMigration` AutoMigrate list
+
+**Repository** (`internal/repository/announcement.go`)
+- Full CRUD + `ListScheduledDue`, `ListExpiredDue`, `CreateRead`, `HasRead`
+- `TenantAnnouncementFilter` with OR-based PostgreSQL scope using `@>` array containment and `cardinality()` to match directly targeted, block-targeted, property-targeted, and broadcast announcements
+
+**Repository** (`internal/repository/tenant-account.go`)
+- Added `GetByPropertyID`, `GetByBlockID`, `GetByUnitIDs`, `GetByClientID` for fan-out notification targeting
+
+**Service** (`internal/services/announcement.go`)
+- `Create`, `GetByIDWithPopulate`, `List`, `Count`, `Update`, `Delete`, `Publish`, `Schedule`, `MarkAsRead`, `PublishDueScheduled`, `ExpireDuePublished`
+- `Publish` triggers async `fanOutNotifications` goroutine resolving target tenant accounts and sending push/email/SMS per priority channel (NORMAL=push, IMPORTANT=push+email, URGENT=push+email+SMS)
+
+**Handlers** (`internal/handlers/announcement.go`)
+- PM handlers: Create, Update, Delete, GetByID, List, Publish, Schedule
+- Tenant handlers: `GET /v1/leases/{lease_id}/announcements`, `GET /v1/announcements/{announcement_id}`, `POST /v1/announcements/{announcement_id}/read`
+- `resolveLeaseUnitContext` verifies lease ownership and fetches full unit targeting context (unit_id, block_id, property_id, client_id) in one query
+
+**Router**
+- Client user: global `/v1/admin/announcements` + property-scoped `/v1/properties/{property_id}/announcements`
+- Tenant: lease-scoped list + individual get + mark read
+
+**Cron job** (`internal/jobs/announcements.go`)
+- `AnnouncementJob.Run()` — runs hourly, publishes due SCHEDULED announcements and expires due PUBLISHED announcements
+
+**Email templates** (`internal/lib/email-templates.go`)
+- `ANNOUNCEMENT_EMAIL_SUBJECT/BODY` and `ANNOUNCEMENT_SMS_BODY`
+
+**Asynqmon web UI** (`internal/router/main.go`)
+- Mounted at `/asynqmon` (non-production), registered outside the API middleware group to avoid CleanPath redirect loop
+<!-- SECTION:FINAL_SUMMARY:END -->
