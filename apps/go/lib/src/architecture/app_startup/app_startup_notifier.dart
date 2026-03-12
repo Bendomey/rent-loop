@@ -1,5 +1,7 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:rentloop_go/src/api/lease.dart';
+import 'package:rentloop_go/src/api/notification.dart';
 import 'package:rentloop_go/src/api/tenant_account.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:rentloop_go/src/repository/models/tenant_account_model.dart';
@@ -64,6 +66,15 @@ class AppStartupNotifier extends _$AppStartupNotifier {
 
   /// Called on logout — clears all state. GoRouter guard handles navigation.
   Future<void> logout() async {
+    // Fire-and-forget: delete this device's FCM token from the server so
+    // the user stops receiving notifications after logout.
+    try {
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+      if (fcmToken != null) {
+        await ref.read(notificationApiProvider).deleteFcmToken(token: fcmToken);
+      }
+    } catch (_) {}
+
     await ref.read(tokenManagerProvider).remove();
     await ref.read(leaseIdManagerProvider).remove();
     ref.read(currentUserNotifierProvider.notifier).clear();

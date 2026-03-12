@@ -1,9 +1,10 @@
 ---
 id: RENTL-29
 title: Delete FCM Token on Logout
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-12 08:04'
+updated_date: '2026-03-12 08:53'
 labels:
   - flutter
   - backend
@@ -123,10 +124,25 @@ Future<void> logout() async {
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 After logout, the device's FCM token is removed from the server
-- [ ] #2 The user no longer receives push notifications on the device after logging out
-- [ ] #3 Logout is not blocked if the FCM token delete API call fails (fire-and-forget)
-- [ ] #4 The backend verifies the token belongs to the authenticated tenant account before deleting
-- [ ] #5 Re-login re-registers the FCM token via the existing registerFcmToken flow
-- [ ] #6 On a shared device, logging out as user A and in as user B does not deliver user A notifications to user B's session
+- [x] #1 After logout, the device's FCM token is removed from the server
+- [x] #2 The user no longer receives push notifications on the device after logging out
+- [x] #3 Logout is not blocked if the FCM token delete API call fails (fire-and-forget)
+- [x] #4 The backend verifies the token belongs to the authenticated tenant account before deleting
+- [x] #5 Re-login re-registers the FCM token via the existing registerFcmToken flow
+- [x] #6 On a shared device, logging out as user A and in as user B does not deliver user A notifications to user B's session
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+## Implementation
+
+**Backend:**
+- Added `DeleteToken(ctx, tenantAccountID, token string) error` to `NotificationService` interface and implementation. Ownership check: fetches all tokens for the account and only deletes if the token belongs to the calling tenant — prevents cross-account token deletion.
+- Added `DeleteFcmToken` handler in `handlers/notification.go` with Swagger docs.
+- Registered `DELETE /v1/tenant-accounts/fcm-token` in `router/tenant.go` under the authenticated tenant group.
+
+**Flutter:**
+- Added `deleteFcmToken({required String token})` to `NotificationApi`.
+- `AppStartupNotifier.logout()` now fire-and-forgets the FCM token deletion (wrapped in try/catch) before clearing local state and setting status to `unauthenticated`. Logout is never blocked by network failure.
+<!-- SECTION:FINAL_SUMMARY:END -->

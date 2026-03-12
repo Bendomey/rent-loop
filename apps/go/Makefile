@@ -11,7 +11,7 @@ install:
 	flutter pub get
 
 format:
-	dart format .
+	find lib -name "*.dart" ! -name "*.g.dart" | xargs dart format
 
 release:
 # by default builds release version and not debug.
