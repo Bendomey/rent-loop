@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import {
 	useCancelScheduledAnnouncement,
 	useDeleteAnnouncement,
-	useGetPropertyAnnouncements,
+	useGetAnnouncements,
 	usePublishAnnouncement,
 } from '~/api/announcements'
 import { AnnouncementForm } from '~/components/blocks/announcements/announcement-form'
@@ -29,7 +29,6 @@ import { Spinner } from '~/components/ui/spinner'
 import { TypographyH2 } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS, QUERY_KEYS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
-import { useProperty } from '~/providers/property-provider'
 
 function getStatusBadge(status: Announcement['status']) {
 	const map: Record<
@@ -87,9 +86,7 @@ function getTypeLabel(type: Announcement['type']) {
 	return map[type] ?? type
 }
 
-export function PropertyActivitiesAnnouncementsModule() {
-	const { clientUserProperty } = useProperty()
-	const propertyId = clientUserProperty?.property?.id
+export function AnnouncementsModule() {
 	const queryClient = useQueryClient()
 	const [searchParams] = useSearchParams()
 
@@ -105,11 +102,13 @@ export function PropertyActivitiesAnnouncementsModule() {
 		? Number(searchParams.get('pageSize'))
 		: PAGINATION_DEFAULTS.PER_PAGE
 
-	const { data, isPending, isRefetching, error, refetch } =
-		useGetPropertyAnnouncements(propertyId, {
+	const { data, isPending, isRefetching, error, refetch } = useGetAnnouncements(
+		{
 			pagination: { page, per },
 			sorter: { sort: 'desc', sort_by: 'created_at' },
-		})
+			populate: ['Property'],
+		},
+	)
 
 	const { mutate: deleteAnnouncement, isPending: isDeleting } =
 		useDeleteAnnouncement()
@@ -126,6 +125,15 @@ export function PropertyActivitiesAnnouncementsModule() {
 				cell: ({ row }) => (
 					<span className="min-w-40 text-sm font-medium">
 						{row.original.title}
+					</span>
+				),
+			},
+			{
+				accessorKey: 'property',
+				header: 'Property',
+				cell: ({ row }) => (
+					<span className="text-muted-foreground min-w-32 text-xs">
+						{row.original.property?.name ?? '—'}
 					</span>
 				),
 			},
@@ -274,7 +282,7 @@ export function PropertyActivitiesAnnouncementsModule() {
 		<div className="mx-6 my-6 flex flex-col gap-4 sm:gap-6">
 			<div className="flex flex-row items-center justify-between">
 				<TypographyH2>Announcements</TypographyH2>
-				<AnnouncementForm propertyId={propertyId} />
+				<AnnouncementForm />
 			</div>
 
 			<DataTable
