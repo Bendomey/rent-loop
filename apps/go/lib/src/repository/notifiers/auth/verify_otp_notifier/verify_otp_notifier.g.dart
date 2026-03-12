@@ -12,14 +12,14 @@ String _$verifyOtpNotifierHash() => r'c7ccc3a6aad900d6018b27f661226e4eddef1adb';
 @ProviderFor(VerifyOtpNotifier)
 final verifyOtpNotifierProvider =
     AutoDisposeNotifierProvider<VerifyOtpNotifier, VerifyOtpState>.internal(
-  VerifyOtpNotifier.new,
-  name: r'verifyOtpNotifierProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$verifyOtpNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+      VerifyOtpNotifier.new,
+      name: r'verifyOtpNotifierProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$verifyOtpNotifierHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
 typedef _$VerifyOtpNotifier = AutoDisposeNotifier<VerifyOtpState>;
 // ignore_for_file: type=lint

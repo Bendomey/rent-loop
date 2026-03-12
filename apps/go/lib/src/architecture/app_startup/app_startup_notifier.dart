@@ -71,9 +71,7 @@ class AppStartupNotifier extends _$AppStartupNotifier {
     try {
       final fcmToken = await FirebaseMessaging.instance.getToken();
       if (fcmToken != null) {
-        await ref
-            .read(notificationApiProvider)
-            .deleteFcmToken(token: fcmToken);
+        await ref.read(notificationApiProvider).deleteFcmToken(token: fcmToken);
       }
     } catch (_) {}
 
