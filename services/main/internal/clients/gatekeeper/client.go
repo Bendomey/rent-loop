@@ -59,6 +59,9 @@ type Client interface {
 	//
 	// )
 	SendSMS(ctx context.Context, req SendSMSInput) error
+	// SendBulkSMS sends the same SMS to multiple recipients in a single API call.
+	// Chunks into batches of 1000 (API limit).
+	SendBulkSMS(ctx context.Context, req SendBulkSMSInput) error
 	doRequest(ctx context.Context, method, path string, body, result interface{}) error
 }
 
@@ -138,6 +141,59 @@ func (c *gatekeeperClient) SendSMS(ctx context.Context, input SendSMSInput) erro
 	err := c.doRequest(ctx, http.MethodPost, "/send_sms", req, &response)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (c *gatekeeperClient) SendBulkSMS(ctx context.Context, input SendBulkSMSInput) error {
+	if len(input.Recipients) == 0 {
+		return nil
+	}
+
+	if c.config.Env == "" || c.config.Env == "development" {
+		logrus.Info("Skipping bulk sms send in development, count=", len(input.Recipients))
+		return nil
+	}
+
+	// Normalize all phone numbers, skip any that fail.
+	normalized := make([]string, 0, len(input.Recipients))
+	for _, r := range input.Recipients {
+		phone, err := lib.NormalizePhoneNumber(r)
+		if err != nil {
+			logrus.WithError(err).WithField("phone", r).Warn("[Gatekeeper] skipping invalid phone in bulk SMS")
+			continue
+		}
+		normalized = append(normalized, phone)
+	}
+
+	if len(normalized) == 0 {
+		return nil
+	}
+
+	message := lib.ApplyGlobalVariableTemplate(c.config, input.Message)
+	const batchSize = 500
+
+	for i := 0; i < len(normalized); i += batchSize {
+		end := i + batchSize
+		if end > len(normalized) {
+			end = len(normalized)
+		}
+
+		req := GatekeeperSendBulkSMSRequest{
+			PhoneNumbers: normalized[i:end],
+			Message:      message,
+		}
+
+		var response GatekeeperSendBulkSMSResponse
+		if err := c.doRequest(ctx, http.MethodPost, "/send_bulk_sms", req, &response); err != nil {
+			return err
+		}
+
+		logrus.WithFields(logrus.Fields{
+			"sent":   response.SentCount,
+			"failed": response.FailedCount,
+		}).Info("[Gatekeeper] bulk SMS batch sent")
 	}
 
 	return nil

@@ -363,11 +363,16 @@ func (s *announcementService) Publish(ctx context.Context, id string) error {
 func (s *announcementService) fanOutNotifications(ctx context.Context, a *models.Announcement) {
 	accounts, err := s.resolveTargetAccounts(ctx, a)
 	if err != nil {
-		// log to local logger with more context
 		log.WithError(err).WithField("announcementID", a.ID.String()).
 			Error("[Announcement] failed to resolve target tenant accounts")
 		return
 	}
+
+	if len(*accounts) == 0 {
+		return
+	}
+
+	tenantsByID := s.bulkFetchTenants(ctx, *accounts)
 
 	title := a.Title
 	body := a.Content
@@ -381,8 +386,19 @@ func (s *announcementService) fanOutNotifications(ctx context.Context, a *models
 		"priority":        a.Priority,
 	}
 
+	emailBody := strings.ReplaceAll(lib.ANNOUNCEMENT_EMAIL_BODY, "{{announcement_title}}", a.Title)
+	emailBody = strings.ReplaceAll(emailBody, "{{announcement_content}}", a.Content)
+	emailBody = strings.ReplaceAll(emailBody, "{{announcement_type}}", a.Type)
+
+	var emailRecipients []pkg.BulkEmailRecipient
+	var smsRecipients []string
+
+	smsMsg := strings.ReplaceAll(lib.ANNOUNCEMENT_SMS_BODY, "{{announcement_title}}", a.Title)
+	smsMsg = strings.ReplaceAll(smsMsg, "{{announcement_content}}", a.Content)
+
 	for _, account := range *accounts {
 		accountID := account.ID.String()
+		tenant := tenantsByID[account.TenantId]
 
 		// All priorities → push notification
 		go func(id string) {
@@ -392,37 +408,44 @@ func (s *announcementService) fanOutNotifications(ctx context.Context, a *models
 			}
 		}(accountID)
 
-		// IMPORTANT / URGENT → also email
-		if a.Priority == "IMPORTANT" || a.Priority == "URGENT" {
-			tenantEmail := s.resolveTenantEmail(ctx, account)
-			if tenantEmail != nil {
-				go func(email string) {
-					emailBody := strings.ReplaceAll(lib.ANNOUNCEMENT_EMAIL_BODY, "{{announcement_title}}", a.Title)
-					emailBody = strings.ReplaceAll(emailBody, "{{announcement_content}}", a.Content)
-					emailBody = strings.ReplaceAll(emailBody, "{{announcement_type}}", a.Type)
-					_ = pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-						Recipient: email,
-						Subject:   lib.ANNOUNCEMENT_EMAIL_SUBJECT,
-						TextBody:  emailBody,
-					})
-				}(*tenantEmail)
-			}
+		if tenant == nil {
+			continue
 		}
 
-		// URGENT → also SMS
-		if a.Priority == "URGENT" {
-			tenantPhone := s.resolveTenantPhone(ctx, account)
-			if tenantPhone != nil {
-				go func(phone string) {
-					smsMsg := strings.ReplaceAll(lib.ANNOUNCEMENT_SMS_BODY, "{{announcement_title}}", a.Title)
-					smsMsg = strings.ReplaceAll(smsMsg, "{{announcement_content}}", a.Content)
-					go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
-						Recipient: phone,
-						Message:   smsMsg,
-					})
-				}(*tenantPhone)
-			}
+		// URGENT → collect for bulk email
+		if a.Priority == "URGENT" && tenant.Email != nil {
+			emailRecipients = append(emailRecipients, pkg.BulkEmailRecipient{
+				To:       *tenant.Email,
+				Subject:  lib.ANNOUNCEMENT_EMAIL_SUBJECT,
+				TextBody: emailBody,
+			})
 		}
+
+		// IMPORTANT / URGENT → collect for bulk SMS
+		if a.Priority == "IMPORTANT" || a.Priority == "URGENT" {
+			smsRecipients = append(smsRecipients, tenant.Phone)
+		}
+	}
+
+	if len(emailRecipients) > 0 {
+		go func() {
+			if sendErr := pkg.SendBulkEmail(ctx, s.appCtx.Config, emailRecipients); sendErr != nil {
+				log.WithError(sendErr).WithField("announcementID", a.ID.String()).
+					Warn("[Announcement] bulk email send failed")
+			}
+		}()
+	}
+
+	if len(smsRecipients) > 0 {
+		go func() {
+			if sendErr := s.appCtx.Clients.GatekeeperAPI.SendBulkSMS(ctx, gatekeeper.SendBulkSMSInput{
+				Recipients: smsRecipients,
+				Message:    smsMsg,
+			}); sendErr != nil {
+				log.WithError(sendErr).WithField("announcementID", a.ID.String()).
+					Warn("[Announcement] bulk SMS send failed")
+			}
+		}()
 	}
 }
 
@@ -446,27 +469,26 @@ func (s *announcementService) resolveTargetAccounts(
 	return s.tenantAccountRepo.GetByClientID(ctx, a.ClientID)
 }
 
-func (s *announcementService) resolveTenantEmail(ctx context.Context, account models.TenantAccount) *string {
-	var fullAccount models.TenantAccount
-	if err := s.appCtx.DB.WithContext(ctx).
-		Preload("Tenant").
-		Where("id = ?", account.ID.String()).
-		First(&fullAccount).Error; err != nil {
+func (s *announcementService) bulkFetchTenants(
+	ctx context.Context,
+	accounts []models.TenantAccount,
+) map[string]*models.Tenant {
+	tenantIDs := make([]string, 0, len(accounts))
+	for _, a := range accounts {
+		tenantIDs = append(tenantIDs, a.TenantId)
+	}
+
+	var tenants []models.Tenant
+	if err := s.appCtx.DB.WithContext(ctx).Where("id IN ?", tenantIDs).Find(&tenants).Error; err != nil {
+		log.WithError(err).Error("[Announcement] failed to bulk fetch tenants")
 		return nil
 	}
 
-	return fullAccount.Tenant.Email
-}
-
-func (s *announcementService) resolveTenantPhone(ctx context.Context, account models.TenantAccount) *string {
-	var fullAccount models.TenantAccount
-	if err := s.appCtx.DB.WithContext(ctx).
-		Preload("Tenant").
-		Where("id = ?", account.ID.String()).
-		First(&fullAccount).Error; err != nil {
-		return nil
+	m := make(map[string]*models.Tenant, len(tenants))
+	for i := range tenants {
+		m[tenants[i].ID.String()] = &tenants[i]
 	}
-	return &fullAccount.Tenant.Phone
+	return m
 }
 
 func (s *announcementService) CancelSchedule(ctx context.Context, id string) error {
