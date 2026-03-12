@@ -35,7 +35,7 @@ abstract class AbstractApi {
       case 'PATCH':
         response = await http.patch(uri, headers: headers, body: encodedBody);
       case 'DELETE':
-        response = await http.delete(uri, headers: headers);
+        response = await http.delete(uri, headers: headers, body: encodedBody);
       default:
         throw Exception('Unsupported HTTP method: $method');
     }
