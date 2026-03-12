@@ -875,6 +875,14 @@ definitions:
     required:
     - reason
     type: object
+  handlers.DeleteFcmTokenRequest:
+    properties:
+      token:
+        example: fcm-device-token
+        type: string
+    required:
+    - token
+    type: object
   handlers.GenerateInvoiceRequest:
     properties:
       due_date:
@@ -9007,6 +9015,42 @@ paths:
       tags:
       - Auth
   /api/v1/tenant-accounts/fcm-token:
+    delete:
+      consumes:
+      - application/json
+      description: Removes an FCM device token for the authenticated tenant account.
+        Call this on logout.
+      parameters:
+      - description: FCM token deletion body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.DeleteFcmTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Delete FCM device token
+      tags:
+      - Notifications
     post:
       consumes:
       - application/json

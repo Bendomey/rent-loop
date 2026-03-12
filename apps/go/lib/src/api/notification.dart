@@ -16,6 +16,14 @@ class NotificationApi extends AbstractApi {
       body: {'token': token, 'platform': platform},
     );
   }
+
+  Future<void> deleteFcmToken({required String token}) async {
+    await execute(
+      method: 'DELETE',
+      path: '/api/v1/tenant-accounts/fcm-token',
+      body: {'token': token},
+    );
+  }
 }
 
 @riverpod

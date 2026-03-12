@@ -14,6 +14,8 @@ import (
 type NotificationService interface {
 	// RegisterToken upserts an FCM device token for the given tenant account.
 	RegisterToken(ctx context.Context, input RegisterFcmTokenInput) error
+	// DeleteToken removes a specific FCM token, verifying it belongs to the given tenant account.
+	DeleteToken(ctx context.Context, tenantAccountID, token string) error
 	// SendToTenantAccount fans out a push notification to all tokens for the account.
 	// Invalid tokens reported by FCM are automatically deleted.
 	SendToTenantAccount(ctx context.Context, tenantAccountID, title, body string, data map[string]string) error
@@ -52,6 +54,28 @@ func (s *notificationService) RegisterToken(ctx context.Context, input RegisterF
 			},
 		})
 	}
+	return nil
+}
+
+func (s *notificationService) DeleteToken(ctx context.Context, tenantAccountID, token string) error {
+	tokens, err := s.fcmTokenRepo.FindAllByTenantAccountID(ctx, tenantAccountID)
+	if err != nil {
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "DeleteToken",
+				"action":   "fetching FCM tokens for ownership check",
+			},
+		})
+	}
+
+	for _, t := range tokens {
+		if t.Token == token {
+			return s.fcmTokenRepo.Delete(ctx, token)
+		}
+	}
+
+	// Token not found for this account — treat as a no-op (already removed or never registered).
 	return nil
 }
 

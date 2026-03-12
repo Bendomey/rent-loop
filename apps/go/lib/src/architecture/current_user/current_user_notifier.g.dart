@@ -13,14 +13,14 @@ String _$currentUserNotifierHash() =>
 @ProviderFor(CurrentUserNotifier)
 final currentUserNotifierProvider =
     NotifierProvider<CurrentUserNotifier, TenantAccountModel?>.internal(
-      CurrentUserNotifier.new,
-      name: r'currentUserNotifierProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$currentUserNotifierHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+  CurrentUserNotifier.new,
+  name: r'currentUserNotifierProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$currentUserNotifierHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
 typedef _$CurrentUserNotifier = Notifier<TenantAccountModel?>;
 // ignore_for_file: type=lint
