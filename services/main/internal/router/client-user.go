@@ -137,6 +137,50 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 								Patch("/status:available", handlers.UnitHandler.UpdateUnitToAvailableStatus)
 						})
 					})
+
+					// property-scoped announcements
+					r.Route("/announcements", func(r chi.Router) {
+						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+							Post("/", handlers.AnnouncementHandler.CreateAnnouncement)
+						r.Get("/", handlers.AnnouncementHandler.ListAnnouncements)
+						r.Route("/{announcement_id}", func(r chi.Router) {
+							r.Get("/", handlers.AnnouncementHandler.GetAnnouncementById)
+							r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+								Patch("/", handlers.AnnouncementHandler.UpdateAnnouncement)
+							r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+								Delete("/", handlers.AnnouncementHandler.DeleteAnnouncement)
+							r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+								Post("/publish", handlers.AnnouncementHandler.PublishAnnouncement)
+							r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+								Post("/schedule", handlers.AnnouncementHandler.ScheduleAnnouncement)
+							r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+								Delete("/schedule", handlers.AnnouncementHandler.CancelScheduleAnnouncement)
+							r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+								Patch("/expiry", handlers.AnnouncementHandler.ExtendAnnouncementExpiry)
+						})
+					})
+				})
+			})
+
+			// global announcements
+			r.Route("/v1/admin/announcements", func(r chi.Router) {
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Post("/", handlers.AnnouncementHandler.CreateAnnouncement)
+				r.Get("/", handlers.AnnouncementHandler.ListAnnouncements)
+				r.Route("/{announcement_id}", func(r chi.Router) {
+					r.Get("/", handlers.AnnouncementHandler.GetAnnouncementById)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Patch("/", handlers.AnnouncementHandler.UpdateAnnouncement)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Delete("/", handlers.AnnouncementHandler.DeleteAnnouncement)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Post("/publish", handlers.AnnouncementHandler.PublishAnnouncement)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Post("/schedule", handlers.AnnouncementHandler.ScheduleAnnouncement)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Delete("/schedule", handlers.AnnouncementHandler.CancelScheduleAnnouncement)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Patch("/expiry", handlers.AnnouncementHandler.ExtendAnnouncementExpiry)
 				})
 			})
 

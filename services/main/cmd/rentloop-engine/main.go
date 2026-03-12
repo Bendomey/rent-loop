@@ -8,6 +8,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/db"
 	"github.com/Bendomey/rent-loop/services/main/internal/handlers"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/queue"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/internal/router"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
@@ -37,6 +38,13 @@ func main() {
 		log.Fatal("failed to connect redis:", err)
 	}
 
+	queueClient, err := queue.NewClient(cfg.RedisDB.Url)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Fatal("failed to create queue client:", err)
+	}
+	defer queueClient.Close()
+
 	clients := clients.NewClients(cfg)
 
 	appCtx := pkg.AppContext{
@@ -49,10 +57,13 @@ func main() {
 
 	repository := repository.NewRepository(database)
 	services := services.NewServices(services.INewServicesParams{
-		AppCtx:     appCtx,
-		Repository: repository,
+		AppCtx:        appCtx,
+		Repository:    repository,
+		RentloopQueue: queueClient,
 	})
 	handlers := handlers.NewHandlers(appCtx, services)
+
+	queue.RegisterWorkers(cfg.RedisDB.Url, services)
 
 	r := router.New(appCtx, handlers)
 

@@ -40,6 +40,11 @@ func NewTenantAccountRouter(appCtx pkg.AppContext, handlers handlers.Handlers) f
 			r.Post("/v1/payments/offline:initiate", handlers.PaymentHandler.CreateOfflinePayment)
 			r.Post("/v1/tenant-accounts/fcm-token", handlers.NotificationHandler.RegisterFcmToken)
 			r.Delete("/v1/tenant-accounts/fcm-token", handlers.NotificationHandler.DeleteFcmToken)
+
+			// tenant announcements
+			r.Get("/v1/leases/{lease_id}/announcements", handlers.AnnouncementHandler.ListTenantAnnouncements)
+			r.Get("/v1/announcements/{announcement_id}", handlers.AnnouncementHandler.GetTenantAnnouncement)
+			r.Post("/v1/announcements/{announcement_id}/read", handlers.AnnouncementHandler.MarkAnnouncementRead)
 		})
 	}
 }

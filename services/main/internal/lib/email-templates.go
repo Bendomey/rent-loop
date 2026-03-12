@@ -310,6 +310,27 @@ The Rentloop Team
 )
 
 const (
+	ANNOUNCEMENT_EMAIL_SUBJECT = "New Announcement from Your Property Manager"
+	ANNOUNCEMENT_EMAIL_BODY    = `Hello,
+
+You have a new announcement from your property manager.
+
+{{announcement_type}}: {{announcement_title}}
+
+{{announcement_content}}
+
+You can also view this announcement in the Rentloop Go app for more details.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop Team
+`
+
+	ANNOUNCEMENT_SMS_BODY = `[Rentloop] {{announcement_title}}: {{announcement_content}}`
+)
+
+const (
 	LEASE_CANCELLED_SUBJECT = "Your Rentloop Lease Was Cancelled"
 	LEASE_CANCELLED_BODY    = `Hi {{tenant_name}},
 

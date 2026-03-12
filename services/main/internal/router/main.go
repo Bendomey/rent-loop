@@ -14,6 +14,8 @@ import (
 
 	_ "github.com/Bendomey/rent-loop/services/main/docs"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/hibiken/asynq"
+	"github.com/hibiken/asynqmon"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -36,60 +38,9 @@ import (
 func New(appCtx pkg.AppContext, handlers handlers.Handlers) *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Use(middleware.CleanPath)
-	r.Use(middleware.StripSlashes)
-
-	// for more ideas, see: https://developer.github.com/v3/#cross-origin-resource-sharing
-	r.Use(cors.Handler(cors.Options{
-		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
-		AllowedOrigins: []string{"https://*", "http://*"},
-		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
-		AllowedMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders: []string{
-			"User-Agent",
-			"Content-Type",
-			"Accept",
-			"Accept-Encoding",
-			"Accept-Language",
-			"Cache-Control",
-			"Connection",
-			"DNT",
-			"Host",
-			"Origin",
-			"Pragma",
-			"Referer",
-			"Authorization",
-		},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: false,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
-	}))
-
-	// Rate limit: max 100 requests per minute per IP.
-	r.Use(httprate.LimitByIP(100, 1*time.Minute))
-
-	r.Use(middleware.AllowContentEncoding("deflate", "gzip"))
-	r.Use(middleware.AllowContentType("application/json"))
-	r.Use(middleware.RequestID)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Use(appMiddleware.EnforceContentType("application/json"))
-
-	// health check
-	r.Use(middleware.Heartbeat("/"))
-
-	r.Route("/api", func(r chi.Router) {
-		// for admins
-		r.Group(NewAdminRouter(appCtx, handlers))
-
-		// for client user
-		r.Group(NewClientUserRouter(appCtx, handlers))
-
-		// for tenant account
-		r.Group(NewTenantAccountRouter(appCtx, handlers))
-	})
-
-	// serve openapi.yaml + docs
+	// Dev tools are mounted at the root level without the API middleware stack so
+	// that CleanPath/StripSlashes don't cause redirect loops with their own
+	// internal path handling (e.g. asynqmon redirects / → /asynqmon/).
 	if appCtx.Config.Env != "production" {
 		r.Get("/swagger/*", func(w http.ResponseWriter, r *http.Request) {
 			scheme := "https"
@@ -102,7 +53,77 @@ func New(appCtx pkg.AppContext, handlers handlers.Handlers) *chi.Mux {
 				httpSwagger.URL(fmt.Sprintf("%s/swagger/doc.json", origin)),
 			)(w, r)
 		})
+
+		if redisConnOpt, parseErr := asynq.ParseRedisURI(appCtx.Config.RedisDB.Url); parseErr == nil {
+			mon := asynqmon.New(asynqmon.Options{
+				RootPath:     "/asynqmon",
+				RedisConnOpt: redisConnOpt,
+			})
+			r.Mount("/asynqmon", mon)
+		}
 	}
+
+	// API routes — all requests here go through the full middleware stack.
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.CleanPath)
+		r.Use(middleware.StripSlashes)
+
+		// for more ideas, see: https://developer.github.com/v3/#cross-origin-resource-sharing
+		r.Use(cors.Handler(cors.Options{
+			// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
+			AllowedOrigins: []string{
+				"http://localhost:*",
+				"https://rentloopapp.com",
+				"https://www.rentloopapp.com",
+				"https://rentloop.fly.dev",
+				"https://rentloop-property-manager-staging.fly.dev",
+			},
+			// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+			AllowedMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+			AllowedHeaders: []string{
+				"User-Agent",
+				"Content-Type",
+				"Accept",
+				"Accept-Encoding",
+				"Accept-Language",
+				"Cache-Control",
+				"Connection",
+				"DNT",
+				"Host",
+				"Origin",
+				"Pragma",
+				"Referer",
+				"Authorization",
+			},
+			ExposedHeaders:   []string{"Link"},
+			AllowCredentials: false,
+			MaxAge:           300, // Maximum value not ignored by any of major browsers
+		}))
+
+		// Rate limit: max 100 requests per minute per IP.
+		r.Use(httprate.LimitByIP(100, 1*time.Minute))
+
+		r.Use(middleware.AllowContentEncoding("deflate", "gzip"))
+		r.Use(middleware.AllowContentType("application/json"))
+		r.Use(middleware.RequestID)
+		r.Use(middleware.Logger)
+		r.Use(middleware.Recoverer)
+		r.Use(appMiddleware.EnforceContentType("application/json"))
+
+		// health check
+		r.Use(middleware.Heartbeat("/"))
+
+		r.Route("/api", func(r chi.Router) {
+			// for admins
+			r.Group(NewAdminRouter(appCtx, handlers))
+
+			// for client user
+			r.Group(NewClientUserRouter(appCtx, handlers))
+
+			// for tenant account
+			r.Group(NewTenantAccountRouter(appCtx, handlers))
+		})
+	})
 
 	return r
 }

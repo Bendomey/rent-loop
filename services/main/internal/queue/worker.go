@@ -1,0 +1,64 @@
+package queue
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/Bendomey/rent-loop/services/main/internal/services"
+	"github.com/getsentry/raven-go"
+	"github.com/hibiken/asynq"
+	log "github.com/sirupsen/logrus"
+)
+
+// HandlerRegistrar registers task handlers onto an asynq.ServeMux.
+// Each feature module (e.g. announcements.go) exposes a function of this type.
+type HandlerRegistrar func(*asynq.ServeMux)
+
+func NewServer(redisURL string) (*asynq.Server, error) {
+	opt, err := asynq.ParseRedisURI(redisURL)
+	if err != nil {
+		return nil, fmt.Errorf("queue: parse redis URI: %w", err)
+	}
+	return asynq.NewServer(opt, asynq.Config{
+		Concurrency: 10,
+		Queues:      map[string]int{"default": 1},
+		ErrorHandler: asynq.ErrorHandlerFunc(func(ctx context.Context, task *asynq.Task, err error) {
+			log.WithError(err).WithField("task_type", task.Type()).Error("[Queue] task failed")
+		}),
+	}), nil
+}
+
+// NewServeMux builds an asynq.ServeMux from one or more HandlerRegistrar functions.
+// Add a new registrar for each feature module:
+//
+//	queue.NewServeMux(
+//	    queue.AnnouncementHandlers(svc),
+//	    queue.SomeOtherHandlers(otherSvc),
+//	)
+func NewServeMux(registrars ...HandlerRegistrar) *asynq.ServeMux {
+	mux := asynq.NewServeMux()
+	for _, register := range registrars {
+		register(mux)
+	}
+	return mux
+}
+
+func RegisterWorkers(redisURL string, services services.Services) {
+	queueServer, err := NewServer(redisURL)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Fatal("failed to create queue server:", err)
+	}
+
+	go func() {
+		mux := NewServeMux(
+			AnnouncementHandlers(services.AnnouncementService),
+		)
+		if err := queueServer.Run(mux); err != nil {
+			raven.CaptureError(err, nil)
+			log.Fatal("queue server error:", err)
+		}
+	}()
+
+	log.Info("Queue worker started")
+}

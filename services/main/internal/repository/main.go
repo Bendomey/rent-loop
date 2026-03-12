@@ -23,6 +23,7 @@ type Repository struct {
 	LeaseChecklistRepository     LeaseChecklistRepository
 	LeaseChecklistItemRepository LeaseChecklistItemRepository
 	FcmTokenRepository           FcmTokenRepository
+	AnnouncementRepository       AnnouncementRepository
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -46,6 +47,7 @@ func NewRepository(db *gorm.DB) Repository {
 	leaseChecklistRepository := NewLeaseChecklistRepository(db)
 	leaseChecklistItemRepository := NewLeaseChecklistItemRepository(db)
 	fcmTokenRepository := NewFcmTokenRepository(db)
+	announcementRepository := NewAnnouncementRepository(db)
 
 	return Repository{
 		AdminRepository:              adminRepository,
@@ -68,5 +70,6 @@ func NewRepository(db *gorm.DB) Repository {
 		LeaseChecklistRepository:     leaseChecklistRepository,
 		LeaseChecklistItemRepository: leaseChecklistItemRepository,
 		FcmTokenRepository:           fcmTokenRepository,
+		AnnouncementRepository:       announcementRepository,
 	}
 }
