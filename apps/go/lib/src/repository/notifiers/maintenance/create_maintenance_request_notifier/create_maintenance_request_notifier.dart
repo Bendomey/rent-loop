@@ -1,0 +1,55 @@
+import 'package:rentloop_go/src/api/maintenance.dart';
+import 'package:rentloop_go/src/api/root.dart';
+import 'package:rentloop_go/src/architecture/architecture.dart';
+import 'package:rentloop_go/src/lib/api_error_messages.dart';
+import 'package:rentloop_go/src/repository/api_state.dart';
+import 'package:rentloop_go/src/repository/notifiers/maintenance/maintenance_requests_notifier/maintenance_requests_notifier.dart';
+
+part 'create_maintenance_request_notifier.g.dart';
+
+class CreateMaintenanceRequestState extends ApiState {
+  CreateMaintenanceRequestState({super.status, super.errorMessage});
+}
+
+@riverpod
+class CreateMaintenanceRequestNotifier
+    extends _$CreateMaintenanceRequestNotifier {
+  @override
+  CreateMaintenanceRequestState build() => CreateMaintenanceRequestState();
+
+  Future<bool> submit({
+    required String leaseId,
+    required String title,
+    required String description,
+    required String category,
+    required String priority,
+    List<String> attachments = const [],
+  }) async {
+    state = CreateMaintenanceRequestState(status: ApiStatus.pending);
+    try {
+      await ref.read(maintenanceApiProvider).createMaintenanceRequest(leaseId, {
+        'title': title,
+        'description': description,
+        'category': category,
+        'priority': priority,
+        if (attachments.isNotEmpty) 'attachments': attachments,
+      });
+      // Refresh the list from the first page.
+      ref.read(maintenanceRequestsNotifierProvider.notifier).loadFirstPage();
+      state = CreateMaintenanceRequestState(status: ApiStatus.success);
+      return true;
+    } on ApiException catch (e) {
+      state = CreateMaintenanceRequestState(
+        status: ApiStatus.failed,
+        errorMessage: translateApiErrorMessage(errorMessage: e.message),
+      );
+      return false;
+    } catch (_) {
+      state = CreateMaintenanceRequestState(
+        status: ApiStatus.failed,
+        errorMessage: translateApiErrorMessage(),
+      );
+      return false;
+    }
+  }
+}

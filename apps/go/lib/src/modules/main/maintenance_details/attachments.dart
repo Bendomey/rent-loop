@@ -1,12 +1,11 @@
 import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'root.dart';
 
 class ViewAttachmentsWidget extends ConsumerStatefulWidget {
-  const ViewAttachmentsWidget({super.key, required this.attachments});
+  const ViewAttachmentsWidget({super.key, required this.urls});
 
-  final List<AttachmentItemUrl> attachments;
+  final List<String> urls;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
@@ -20,10 +19,8 @@ class _ViewAttachmentsWidget extends ConsumerState<ViewAttachmentsWidget> {
       PageRouteBuilder(
         opaque: false,
         barrierColor: Colors.black,
-        pageBuilder: (_, __, ___) => _PhotoViewerScreen(
-          attachments: widget.attachments,
-          initialIndex: initialIndex,
-        ),
+        pageBuilder: (_, __, ___) =>
+            _PhotoViewerScreen(urls: widget.urls, initialIndex: initialIndex),
         transitionsBuilder: (_, animation, __, child) =>
             FadeTransition(opacity: animation, child: child),
       ),
@@ -32,6 +29,7 @@ class _ViewAttachmentsWidget extends ConsumerState<ViewAttachmentsWidget> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.urls.isEmpty) return const SizedBox.shrink();
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -41,18 +39,21 @@ class _ViewAttachmentsWidget extends ConsumerState<ViewAttachmentsWidget> {
         mainAxisSpacing: 7,
         childAspectRatio: 0.8,
       ),
-      itemCount: widget.attachments.length,
+      itemCount: widget.urls.length,
       itemBuilder: (context, index) {
-        final attachment = widget.attachments[index];
         return GestureDetector(
           onTap: () => _openViewer(index),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: Image.network(
-              attachment.url,
+              widget.urls[index],
               fit: BoxFit.cover,
               width: double.infinity,
               height: double.infinity,
+              errorBuilder: (_, __, ___) => Container(
+                color: Colors.grey.shade200,
+                child: const Icon(Icons.broken_image, color: Colors.grey),
+              ),
             ),
           ),
         );
@@ -62,13 +63,10 @@ class _ViewAttachmentsWidget extends ConsumerState<ViewAttachmentsWidget> {
 }
 
 class _PhotoViewerScreen extends StatefulWidget {
-  final List<AttachmentItemUrl> attachments;
+  final List<String> urls;
   final int initialIndex;
 
-  const _PhotoViewerScreen({
-    required this.attachments,
-    required this.initialIndex,
-  });
+  const _PhotoViewerScreen({required this.urls, required this.initialIndex});
 
   @override
   State<_PhotoViewerScreen> createState() => _PhotoViewerScreenState();
@@ -110,14 +108,14 @@ class _PhotoViewerScreenState extends State<_PhotoViewerScreen> {
           },
         ),
         title: Text(
-          '${_currentIndex + 1} / ${widget.attachments.length}',
+          '${_currentIndex + 1} / ${widget.urls.length}',
           style: const TextStyle(color: Colors.white, fontSize: 15),
         ),
         centerTitle: true,
       ),
       body: PageView.builder(
         controller: _pageController,
-        itemCount: widget.attachments.length,
+        itemCount: widget.urls.length,
         onPageChanged: (i) {
           Haptics.vibrate(HapticsType.light);
           setState(() => _currentIndex = i);
@@ -128,7 +126,7 @@ class _PhotoViewerScreenState extends State<_PhotoViewerScreen> {
             maxScale: 4.0,
             child: Center(
               child: Image.network(
-                widget.attachments[index].url,
+                widget.urls[index],
                 fit: BoxFit.contain,
                 loadingBuilder: (_, child, progress) {
                   if (progress == null) return child;
@@ -148,14 +146,14 @@ class _PhotoViewerScreenState extends State<_PhotoViewerScreen> {
           );
         },
       ),
-      bottomNavigationBar: widget.attachments.length > 1
+      bottomNavigationBar: widget.urls.length > 1
           ? Container(
               color: Colors.black,
               padding: const EdgeInsets.only(bottom: 24, top: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
-                  widget.attachments.length,
+                  widget.urls.length,
                   (i) => AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     margin: const EdgeInsets.symmetric(horizontal: 4),

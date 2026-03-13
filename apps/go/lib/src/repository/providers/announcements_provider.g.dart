@@ -160,7 +160,7 @@ class _AnnouncementsProviderElement
 }
 
 String _$latestAnnouncementHash() =>
-    r'6f70871f92e1c438f02511ec4cf826eb7a54c52a';
+    r'b7700d5acdddd7e5354713b1475bb77cede61083';
 
 /// Fetches limit:1 for the home card and caches the meta total for the badge.
 ///

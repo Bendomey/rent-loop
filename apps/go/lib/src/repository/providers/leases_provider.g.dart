@@ -13,9 +13,8 @@ String _$leasesHash() => r'd194a7796afa22bba691804498c18049d059775e';
 final leasesProvider = FutureProvider<List<LeaseModel>>.internal(
   leases,
   name: r'leasesProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$leasesHash,
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$leasesHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );

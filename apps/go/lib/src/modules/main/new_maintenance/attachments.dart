@@ -1,95 +1,164 @@
 import 'dart:io';
 
 import 'package:image_picker/image_picker.dart';
+import 'package:rentloop_go/src/api/r2_upload.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:rentloop_go/src/shared/adaptive/menu.dart';
-import 'root.dart';
+
+enum UploadStatus { idle, uploading, done, failed }
+
+class UploadableAttachment {
+  final File file;
+  UploadStatus status;
+  String? uploadedUrl;
+  String? error;
+
+  UploadableAttachment({
+    required this.file,
+    this.status = UploadStatus.idle,
+    this.uploadedUrl,
+    this.error,
+  });
+
+  bool get isUploading => status == UploadStatus.uploading;
+  bool get isDone => status == UploadStatus.done;
+  bool get isFailed => status == UploadStatus.failed;
+}
+
+typedef UploadStateCallback =
+    void Function({
+      required bool hasOngoingUploads,
+      required List<String> uploadedUrls,
+    });
 
 class ManageAttachmentsWidget extends ConsumerStatefulWidget {
   const ManageAttachmentsWidget({
     super.key,
-    required this.attachments,
-    required this.setAttachments,
+    required this.onUploadStateChanged,
   });
 
-  final List<AttachmentItem> attachments;
-  final Function(List<AttachmentItem>) setAttachments;
+  final UploadStateCallback onUploadStateChanged;
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() =>
-      _ManageAttachmentsWidget();
+  ConsumerState<ManageAttachmentsWidget> createState() =>
+      _ManageAttachmentsWidgetState();
 }
 
-class _ManageAttachmentsWidget extends ConsumerState<ManageAttachmentsWidget> {
+class _ManageAttachmentsWidgetState
+    extends ConsumerState<ManageAttachmentsWidget> {
   final ImagePicker _picker = ImagePicker();
-  String? imageType;
+  final List<UploadableAttachment> _attachments = [];
 
-  // Pick image from gallery
-  Future<void> _pickImageFromGallery() async {
+  void _notifyParent() {
+    final hasOngoing = _attachments.any((a) => a.isUploading);
+    final urls = _attachments
+        .where((a) => a.isDone && a.uploadedUrl != null)
+        .map((a) => a.uploadedUrl!)
+        .toList();
+    widget.onUploadStateChanged(
+      hasOngoingUploads: hasOngoing,
+      uploadedUrls: urls,
+    );
+  }
+
+  Future<void> _uploadAttachment(UploadableAttachment attachment) async {
+    setState(() {
+      attachment.status = UploadStatus.uploading;
+      attachment.error = null;
+    });
+    _notifyParent();
     try {
-      final List<XFile> pickedFiles = await _picker.pickMultiImage(
+      final url = await ref
+          .read(r2UploadServiceProvider)
+          .uploadFile(attachment.file);
+      if (mounted) {
+        setState(() {
+          attachment.status = UploadStatus.done;
+          attachment.uploadedUrl = url;
+        });
+        _notifyParent();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          attachment.status = UploadStatus.failed;
+          attachment.error = e.toString();
+        });
+        _notifyParent();
+      }
+    }
+  }
+
+  void _addFiles(List<File> files) {
+    for (final file in files) {
+      final attachment = UploadableAttachment(file: file);
+      setState(() => _attachments.add(attachment));
+      _uploadAttachment(attachment);
+    }
+  }
+
+  Future<void> _pickFromGallery() async {
+    try {
+      final picked = await _picker.pickMultiImage(
         maxWidth: 1800,
         maxHeight: 1800,
         imageQuality: 85,
       );
-
-      final copyAttachments = List<AttachmentItem>.from(widget.attachments);
-
-      for (var pickedFile in pickedFiles) {
-        copyAttachments.add(
-          AttachmentItem(file: File(pickedFile.path), type: 'image'),
+      _addFiles(picked.map((x) => File(x.path)).toList());
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error picking image: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
-
-      widget.setAttachments(copyAttachments);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error picking image: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
   }
 
-  // Pick image from camera
-  Future<void> _pickImageFromCamera() async {
+  Future<void> _pickFromCamera() async {
     try {
-      final XFile? pickedFile = await _picker.pickImage(
+      final picked = await _picker.pickImage(
         source: ImageSource.camera,
         maxWidth: 1800,
         maxHeight: 1800,
         imageQuality: 85,
       );
-
-      if (pickedFile != null) {
-        final copyAttachments = List<AttachmentItem>.from(widget.attachments);
-        copyAttachments.add(
-          AttachmentItem(file: File(pickedFile.path), type: 'image'),
-        );
-        widget.setAttachments(copyAttachments);
-      }
+      if (picked != null) _addFiles([File(picked.path)]);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error capturing image: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error capturing image: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
-  void _openViewer(int attachmentIndex) {
+  void _removeAttachment(int index) async {
+    await Haptics.vibrate(HapticsType.selection);
+    setState(() => _attachments.removeAt(index));
+    _notifyParent();
+  }
+
+  void _retryUpload(UploadableAttachment attachment) {
+    _uploadAttachment(attachment);
+  }
+
+  void _openViewer(int index) {
     Haptics.vibrate(HapticsType.selection);
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
         barrierColor: Colors.black,
         pageBuilder: (_, __, ___) => _LocalPhotoViewerScreen(
-          attachments: widget.attachments,
-          initialIndex: attachmentIndex,
+          files: _attachments.map((a) => a.file).toList(),
+          initialIndex: index,
         ),
         transitionsBuilder: (_, animation, __, child) =>
             FadeTransition(opacity: animation, child: child),
@@ -108,7 +177,7 @@ class _ManageAttachmentsWidget extends ConsumerState<ManageAttachmentsWidget> {
         mainAxisSpacing: 7,
         childAspectRatio: 1,
       ),
-      itemCount: widget.attachments.length + 1,
+      itemCount: _attachments.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
           return AdaptiveMenu(
@@ -121,9 +190,9 @@ class _ManageAttachmentsWidget extends ConsumerState<ManageAttachmentsWidget> {
             onSelected: (value) async {
               await Haptics.vibrate(HapticsType.selection);
               if (value == 'camera') {
-                await _pickImageFromCamera();
+                await _pickFromCamera();
               } else if (value == 'picker') {
-                await _pickImageFromGallery();
+                await _pickFromGallery();
               }
             },
             icon: Card(
@@ -135,11 +204,15 @@ class _ManageAttachmentsWidget extends ConsumerState<ManageAttachmentsWidget> {
           );
         }
 
-        final attachment = widget.attachments[index - 1];
+        final attachment = _attachments[index - 1];
         final attachmentIndex = index - 1;
+
         return GestureDetector(
-          onTap: () => _openViewer(attachmentIndex),
+          onTap: attachment.isFailed
+              ? null
+              : () => _openViewer(attachmentIndex),
           child: Stack(
+            fit: StackFit.expand,
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
@@ -150,32 +223,104 @@ class _ManageAttachmentsWidget extends ConsumerState<ManageAttachmentsWidget> {
                   height: double.infinity,
                 ),
               ),
-              Positioned(
-                top: 4,
-                right: 4,
-                child: GestureDetector(
-                  onTap: () async {
-                    await Haptics.vibrate(HapticsType.selection);
-                    final copyAttachments = List<AttachmentItem>.from(
-                      widget.attachments,
-                    );
-                    copyAttachments.removeAt(attachmentIndex);
-                    widget.setAttachments(copyAttachments);
-                  },
+              // Upload progress overlay
+              if (attachment.isUploading)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
                   child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.black54,
-                      shape: BoxShape.circle,
-                    ),
-                    padding: const EdgeInsets.all(4),
-                    child: const Icon(
-                      Icons.close,
-                      color: Colors.white,
-                      size: 20,
+                    color: Colors.black45,
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.5,
+                      ),
                     ),
                   ),
                 ),
-              ),
+              // Failed state overlay
+              if (attachment.isFailed)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    color: Colors.black54,
+                    padding: const EdgeInsets.all(6),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 24,
+                          ),
+                          const SizedBox(height: 4),
+                          if (attachment.error != null)
+                            Text(
+                              attachment.error!,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 9,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          const SizedBox(height: 4),
+                          GestureDetector(
+                            onTap: () => _retryUpload(attachment),
+                            child: const Text(
+                              'Retry',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              // Done checkmark badge
+              if (attachment.isDone)
+                Positioned(
+                  bottom: 4,
+                  left: 4,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(2),
+                    child: const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 12,
+                    ),
+                  ),
+                ),
+              // Remove button
+              if (!attachment.isUploading)
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: GestureDetector(
+                    onTap: () => _removeAttachment(attachmentIndex),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         );
@@ -185,11 +330,11 @@ class _ManageAttachmentsWidget extends ConsumerState<ManageAttachmentsWidget> {
 }
 
 class _LocalPhotoViewerScreen extends StatefulWidget {
-  final List<AttachmentItem> attachments;
+  final List<File> files;
   final int initialIndex;
 
   const _LocalPhotoViewerScreen({
-    required this.attachments,
+    required this.files,
     required this.initialIndex,
   });
 
@@ -234,14 +379,14 @@ class _LocalPhotoViewerScreenState extends State<_LocalPhotoViewerScreen> {
           },
         ),
         title: Text(
-          '${_currentIndex + 1} / ${widget.attachments.length}',
+          '${_currentIndex + 1} / ${widget.files.length}',
           style: const TextStyle(color: Colors.white, fontSize: 15),
         ),
         centerTitle: true,
       ),
       body: PageView.builder(
         controller: _pageController,
-        itemCount: widget.attachments.length,
+        itemCount: widget.files.length,
         onPageChanged: (i) {
           Haptics.vibrate(HapticsType.light);
           setState(() => _currentIndex = i);
@@ -252,7 +397,7 @@ class _LocalPhotoViewerScreenState extends State<_LocalPhotoViewerScreen> {
             maxScale: 4.0,
             child: Center(
               child: Image.file(
-                widget.attachments[index].file,
+                widget.files[index],
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => const Center(
                   child: Icon(
@@ -266,14 +411,14 @@ class _LocalPhotoViewerScreenState extends State<_LocalPhotoViewerScreen> {
           );
         },
       ),
-      bottomNavigationBar: widget.attachments.length > 1
+      bottomNavigationBar: widget.files.length > 1
           ? Container(
               color: Colors.black,
               padding: const EdgeInsets.only(bottom: 24, top: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
-                  widget.attachments.length,
+                  widget.files.length,
                   (i) => AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     margin: const EdgeInsets.symmetric(horizontal: 4),
