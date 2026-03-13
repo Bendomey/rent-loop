@@ -77,6 +77,7 @@ func New(appCtx pkg.AppContext, handlers handlers.Handlers) *chi.Mux {
 				"https://www.rentloopapp.com",
 				"https://rentloop.fly.dev",
 				"https://rentloop-property-manager-staging.fly.dev",
+				"https://property-manager.rentloopapp.com",
 			},
 			// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
 			AllowedMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
