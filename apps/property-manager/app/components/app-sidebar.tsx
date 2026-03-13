@@ -38,9 +38,15 @@ const data = {
 			icon: House,
 		},
 		{
-			title: 'Announcements',
-			url: '/announcements',
+			title: 'Activities',
+			url: '/activities',
 			icon: Megaphone,
+			items: [
+				{
+					title: 'Announcements',
+					url: '/announcements',
+				},
+			],
 		},
 		{
 			title: 'Settings',
