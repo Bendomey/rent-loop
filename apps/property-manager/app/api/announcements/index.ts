@@ -88,11 +88,12 @@ const getAnnouncement = async (id: string) => {
 	}
 }
 
-export const useGetAnnouncement = (id: string) =>
+export const useGetAnnouncement = (id: string, initialData?: Announcement) =>
 	useQuery({
 		queryKey: [QUERY_KEYS.ANNOUNCEMENTS, id],
 		queryFn: () => getAnnouncement(id),
 		enabled: !!id,
+		initialData,
 	})
 
 /**
