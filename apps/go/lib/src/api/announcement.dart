@@ -32,7 +32,7 @@ class AnnouncementQuery {
     if (type != null) params['type'] = type!;
     if (priority != null) params['priority'] = priority!;
     if (status != null) params['status'] = status!;
-    if (isUnread != null) params['isUnread'] = isUnread.toString();
+    if (isUnread != null) params['is_unread'] = isUnread.toString();
     return params.entries.map((e) => '${e.key}=${e.value}').join('&');
   }
 

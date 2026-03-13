@@ -1,7 +1,7 @@
 ---
 id: RENTL-26
 title: Flutter Tenant App — Announcements & Invoices UI
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-11 19:05'
 labels:

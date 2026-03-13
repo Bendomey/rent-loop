@@ -10,7 +10,7 @@ class AnnouncementsCard extends ConsumerWidget {
     final latestAsync = ref.watch(latestAnnouncementProvider);
 
     return latestAsync.when(
-      loading: () => _buildSkeleton(context),
+      loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
       data: (announcement) {
         if (announcement == null) return const SizedBox.shrink();
@@ -72,67 +72,6 @@ class AnnouncementsCard extends ConsumerWidget {
                 Icon(Icons.chevron_right, color: Colors.orange.shade400),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSkeleton(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(10),
-      child: Card(
-        elevation: 0,
-        color: Colors.orange.shade50,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: BorderSide(color: Colors.orange.shade100),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(15),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.lightbulb, color: Colors.orange.shade200),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Shimmer.fromColors(
-                  baseColor: Colors.orange.shade100,
-                  highlightColor: Colors.orange.shade50,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        height: 14,
-                        width: 160,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        height: 11,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        height: 11,
-                        width: 220,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
           ),
         ),
       ),

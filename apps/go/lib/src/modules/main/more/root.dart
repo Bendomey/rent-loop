@@ -3,6 +3,7 @@ import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:flutter/material.dart';
 import 'package:rentloop_go/src/constants.dart';
 import 'package:rentloop_go/src/lib/launch_external_site.dart';
+import 'package:rentloop_go/src/repository/providers/announcements_provider.dart';
 import './logout_button_widget.dart';
 import 'package:share_plus/share_plus.dart';
 import './user_card_widget.dart';
@@ -77,10 +78,22 @@ class _MoreScreen extends ConsumerState<MoreScreen> {
               await Haptics.vibrate(HapticsType.selection);
               if (context.mounted) context.push('/more/announcements');
             },
-            child: const ListTile(
-              leading: Icon(Icons.notifications_outlined),
-              trailing: Icon(Icons.chevron_right, color: Colors.grey),
-              title: Text('Announcements'),
+            child: ListTile(
+              leading: const Icon(Icons.notifications_outlined),
+              trailing: ref.watch(announcementTotalNotifierProvider) > 0
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Badge.count(
+                          count: ref.watch(announcementTotalNotifierProvider),
+                          backgroundColor: Colors.red,
+                        ),
+                        const SizedBox(width: 6),
+                        const Icon(Icons.chevron_right, color: Colors.grey),
+                      ],
+                    )
+                  : const Icon(Icons.chevron_right, color: Colors.grey),
+              title: const Text('Announcements'),
             ),
           ),
           Divider(color: Colors.grey.shade300),
