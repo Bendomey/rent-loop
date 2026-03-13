@@ -9416,6 +9416,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "boolean",
+                        "example": true,
+                        "name": "is_unread",
+                        "in": "query"
+                    },
+                    {
                         "enum": [
                             "asc",
                             "desc"

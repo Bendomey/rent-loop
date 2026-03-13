@@ -10,11 +10,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 late GlobalKey<NavigatorState> navigatorKey;
 late GlobalKey<NavigatorState> shellNavigatorKey;
+GoRouter? appRouter;
 
 GoRouter buildRoutes(WidgetRef ref, Listenable refreshListenable) {
   navigatorKey = GlobalKey();
 
-  return GoRouter(
+  final router = GoRouter(
     observers: [
       // Track page views with Firebase Analytics
       // AnalyticsService.observer,
@@ -149,4 +150,6 @@ GoRouter buildRoutes(WidgetRef ref, Listenable refreshListenable) {
       ),
     ],
   );
+  appRouter = router;
+  return router;
 }

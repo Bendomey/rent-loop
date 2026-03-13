@@ -440,6 +440,11 @@ func (h *AnnouncementHandler) ExtendAnnouncementExpiry(w http.ResponseWriter, r 
 
 // ─── Tenant Handlers ──────────────────────────────────────────────────────────
 
+type TenantListAnnouncementsFilterRequest struct {
+	ListAnnouncementsFilterRequest
+	IsUnread *bool `json:"is_unread,omitempty" example:"true"`
+}
+
 // ListTenantAnnouncements godoc
 //
 //	@Summary		List announcements (Tenant)
@@ -447,8 +452,8 @@ func (h *AnnouncementHandler) ExtendAnnouncementExpiry(w http.ResponseWriter, r 
 //	@Tags			Announcements
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			lease_id	path		string							true	"Lease ID"
-//	@Param			q			query		ListAnnouncementsFilterRequest	false	"Filters"
+//	@Param			lease_id	path		string									true	"Lease ID"
+//	@Param			q			query		TenantListAnnouncementsFilterRequest	false	"Filters"
 //	@Success		200			{object}	object{data=object{rows=[]transformations.OutputAnnouncement,meta=lib.HTTPReturnPaginatedMetaResponse}}
 //	@Failure		401			{object}	string
 //	@Failure		404			{object}	lib.HTTPError
@@ -477,8 +482,15 @@ func (h *AnnouncementHandler) ListTenantAnnouncements(w http.ResponseWriter, r *
 
 	published := "PUBLISHED"
 	input := repository.ListAnnouncementsFilter{
-		Status:       &published,
-		TenantFilter: tenantFilter,
+		Status: &published,
+		TenantFilter: &repository.TenantAnnouncementFilter{
+			UnitID:          tenantFilter.UnitID,
+			BlockID:         tenantFilter.BlockID,
+			PropertyID:      tenantFilter.PropertyID,
+			ClientID:        tenantFilter.ClientID,
+			TenantAccountID: tenantAccount.ID,
+			IsUnread:        lib.NullOrBool(r.URL.Query().Get("is_unread")),
+		},
 	}
 
 	announcements, announcementsErr := h.service.List(r.Context(), *filterQuery, input)

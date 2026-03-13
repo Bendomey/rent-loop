@@ -9475,6 +9475,10 @@ paths:
       - in: query
         name: end_date
         type: string
+      - example: true
+        in: query
+        name: is_unread
+        type: boolean
       - enum:
         - asc
         - desc
