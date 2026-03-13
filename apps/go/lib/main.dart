@@ -22,6 +22,15 @@ void _handleNotificationTap(RemoteMessage message) {
   switch (type) {
     case 'ANNOUNCEMENT':
       appRouter?.push('/more/announcements');
+    case 'MAINTENANCE':
+      final mrId = message.data['maintenance_request_id'] as String?;
+      if (mrId != null) {
+        appRouter?.push(
+          '/maintenance/${message.data['maintenance_request_id']}',
+        );
+      } else {
+        appRouter?.push('/maintenance');
+      }
     case 'INVOICE':
       appRouter?.push('/payments');
     case 'LEASE':

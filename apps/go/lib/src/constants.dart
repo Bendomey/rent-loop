@@ -14,3 +14,7 @@ const WEBSITE = isStaging
 
 const SENTRY_DSN = '';
 //TODO: paste rentloop_go sentry dsn
+
+const R2_UPLOAD_URL = isStaging
+    ? 'https://rentloop-property-manager-staging.fly.dev/api/r2/upload'
+    : 'https://rentloop-property-manager-staging.fly.dev/api/r2/upload';
