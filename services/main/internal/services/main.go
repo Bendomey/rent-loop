@@ -28,6 +28,7 @@ type Services struct {
 	LeaseChecklistService     LeaseChecklistService
 	LeaseChecklistItemService LeaseChecklistItemService
 	AnnouncementService       AnnouncementService
+	MaintenanceRequestService MaintenanceRequestService
 }
 
 type INewServicesParams struct {
@@ -128,6 +129,14 @@ func NewServices(params INewServicesParams) Services {
 		RentloopQueue:       params.RentloopQueue,
 	})
 
+	maintenanceRequestService := NewMaintenanceRequestService(MaintenanceRequestServiceDeps{
+		AppCtx:              params.AppCtx,
+		Repo:                params.Repository.MaintenanceRequestRepository,
+		TenantAccountRepo:   params.Repository.TenantAccountRepository,
+		NotificationService: notificationService,
+		InvoiceService:      invoiceService,
+	})
+
 	return Services{
 		NotificationService: notificationService,
 		AccountingService:   accountingService,
@@ -152,5 +161,6 @@ func NewServices(params INewServicesParams) Services {
 		LeaseChecklistService:     leaseChecklistService,
 		LeaseChecklistItemService: leaseChecklistItemService,
 		AnnouncementService:       announcementService,
+		MaintenanceRequestService: maintenanceRequestService,
 	}
 }

@@ -1,4 +1,25 @@
 definitions:
+  handlers.AddExpenseBody:
+    properties:
+      amount:
+        type: integer
+      billable_to_tenant:
+        type: boolean
+      currency:
+        type: string
+      description:
+        type: string
+      paid_by:
+        enum:
+        - BUSINESS
+        - TENANT
+        - OWNER
+        type: string
+    required:
+    - amount
+    - description
+    - paid_by
+    type: object
   handlers.AddLineItemRequest:
     properties:
       category:
@@ -295,6 +316,20 @@ definitions:
       stay_duration_frequency:
         type: string
     type: object
+  handlers.AssignManagerBody:
+    properties:
+      manager_id:
+        type: string
+    required:
+    - manager_id
+    type: object
+  handlers.AssignWorkerBody:
+    properties:
+      worker_id:
+        type: string
+    required:
+    - worker_id
+    type: object
   handlers.AuthCodeRequest:
     properties:
       channel:
@@ -549,6 +584,46 @@ definitions:
     required:
     - checklist_items
     - type
+    type: object
+  handlers.CreateMaintenanceRequestBody:
+    properties:
+      attachments:
+        items:
+          type: string
+        type: array
+      category:
+        enum:
+        - PLUMBING
+        - ELECTRICAL
+        - HVAC
+        - OTHER
+        type: string
+      description:
+        type: string
+      lease_id:
+        type: string
+      priority:
+        enum:
+        - LOW
+        - MEDIUM
+        - HIGH
+        - EMERGENCY
+        type: string
+      title:
+        type: string
+      unit_id:
+        type: string
+      visibility:
+        enum:
+        - TENANT_VISIBLE
+        - INTERNAL_ONLY
+        type: string
+    required:
+    - category
+    - description
+    - priority
+    - title
+    - unit_id
     type: object
   handlers.CreateOfflinePaymentRequest:
     properties:
@@ -1175,6 +1250,39 @@ definitions:
     required:
     - signature_url
     type: object
+  handlers.TenantCreateMaintenanceRequestBody:
+    properties:
+      attachments:
+        items:
+          type: string
+        type: array
+      category:
+        enum:
+        - PLUMBING
+        - ELECTRICAL
+        - HVAC
+        - OTHER
+        type: string
+      description:
+        type: string
+      priority:
+        enum:
+        - LOW
+        - MEDIUM
+        - HIGH
+        - EMERGENCY
+        type: string
+      title:
+        type: string
+      unit_id:
+        type: string
+    required:
+    - category
+    - description
+    - priority
+    - title
+    - unit_id
+    type: object
   handlers.UnlinkClientUserFromPropertyRequest:
     properties:
       property_ids:
@@ -1321,6 +1429,36 @@ definitions:
       utility_transfers_date:
         type: string
     type: object
+  handlers.UpdateMaintenanceRequestBody:
+    properties:
+      attachments:
+        items:
+          type: string
+        type: array
+      category:
+        enum:
+        - PLUMBING
+        - ELECTRICAL
+        - HVAC
+        - OTHER
+        type: string
+      description:
+        type: string
+      priority:
+        enum:
+        - LOW
+        - MEDIUM
+        - HIGH
+        - EMERGENCY
+        type: string
+      title:
+        type: string
+      visibility:
+        enum:
+        - TENANT_VISIBLE
+        - INTERNAL_ONLY
+        type: string
+    type: object
   handlers.UpdatePaymentAccountRequest:
     properties:
       identifier:
@@ -1431,6 +1569,21 @@ definitions:
       signer_phone:
         example: "+233201234567"
         type: string
+    type: object
+  handlers.UpdateStatusBody:
+    properties:
+      cancellation_reason:
+        type: string
+      status:
+        enum:
+        - NEW
+        - IN_PROGRESS
+        - IN_REVIEW
+        - RESOLVED
+        - CANCELED
+        type: string
+    required:
+    - status
     type: object
   handlers.UpdateTenantApplicationRequest:
     properties:
@@ -1631,6 +1784,65 @@ definitions:
         type: string
       updated_at:
         example: "2023-01-01T00:00:00Z"
+        type: string
+    type: object
+  transformations.AdminOutputMaintenanceRequest:
+    properties:
+      activity_logs:
+        items:
+          $ref: '#/definitions/transformations.OutputMaintenanceActivityLog'
+        type: array
+      assigned_manager_id:
+        type: string
+      assigned_worker_id:
+        type: string
+      attachments:
+        items:
+          type: string
+        type: array
+      canceled_at:
+        type: string
+      cancellation_reason:
+        type: string
+      category:
+        type: string
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by_client_user_id:
+        type: string
+      created_by_tenant_id:
+        type: string
+      description:
+        type: string
+      expenses:
+        items:
+          $ref: '#/definitions/transformations.OutputExpense'
+        type: array
+      id:
+        type: string
+      lease_id:
+        type: string
+      priority:
+        type: string
+      resolved_at:
+        type: string
+      reviewed_at:
+        type: string
+      started_at:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+      unit:
+        $ref: '#/definitions/transformations.AdminOutputUnit'
+      unit_id:
+        type: string
+      updated_at:
+        type: string
+      visibility:
         type: string
     type: object
   transformations.AdminOutputUnit:
@@ -2570,6 +2782,35 @@ definitions:
         example: "2024-06-10T09:00:00Z"
         type: string
     type: object
+  transformations.OutputExpense:
+    properties:
+      amount:
+        type: number
+      billable_to_tenant:
+        type: boolean
+      context_maintenance_request_id:
+        type: string
+      context_type:
+        type: string
+      created_at:
+        type: string
+      created_by_client_user_id:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      invoice:
+        $ref: '#/definitions/transformations.OutputInvoice'
+      invoice_id:
+        type: string
+      paid_by:
+        type: string
+      updated_at:
+        type: string
+    type: object
   transformations.OutputInvoice:
     properties:
       allowed_payment_rails:
@@ -2839,6 +3080,71 @@ definitions:
         type: string
       updated_at:
         example: "2024-06-10T09:00:00Z"
+        type: string
+    type: object
+  transformations.OutputMaintenanceActivityLog:
+    properties:
+      action:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      maintenance_request_id:
+        type: string
+      metadata: {}
+      performed_by_client_user_id:
+        type: string
+      performed_by_tenant_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  transformations.OutputMaintenanceRequest:
+    properties:
+      activity_logs:
+        items:
+          $ref: '#/definitions/transformations.OutputMaintenanceActivityLog'
+        type: array
+      attachments:
+        items:
+          type: string
+        type: array
+      canceled_at:
+        type: string
+      cancellation_reason:
+        type: string
+      category:
+        type: string
+      code:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      expenses:
+        items:
+          $ref: '#/definitions/transformations.OutputExpense'
+        type: array
+      id:
+        type: string
+      priority:
+        type: string
+      resolved_at:
+        type: string
+      started_at:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+      unit:
+        $ref: '#/definitions/transformations.OutputUnit'
+      unit_id:
+        type: string
+      updated_at:
         type: string
     type: object
   transformations.OutputPayment:
@@ -6256,6 +6562,573 @@ paths:
       summary: Cancel lease (Admin)
       tags:
       - Lease
+  /api/v1/admin/maintenance-requests:
+    get:
+      consumes:
+      - application/json
+      description: List maintenance requests with optional filters (Admin)
+      parameters:
+      - in: query
+        name: assigned_worker_id
+        type: string
+      - in: query
+        name: category
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - in: query
+        name: lease_id
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: priority
+        type: string
+      - in: query
+        name: property_id
+        type: string
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - in: query
+        name: status
+        type: string
+      - in: query
+        name: unit_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Maintenance requests
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.AdminOutputMaintenanceRequest'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Error occurred when listing maintenance requests
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List maintenance requests (Admin)
+      tags:
+      - MaintenanceRequests
+    post:
+      consumes:
+      - application/json
+      description: Create a new maintenance request (Admin)
+      parameters:
+      - description: Request details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateMaintenanceRequestBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Maintenance request created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputMaintenanceRequest'
+            type: object
+        "400":
+          description: Error occurred when creating maintenance request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a maintenance request (Admin)
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/maintenance-requests/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing maintenance request (Admin)
+      parameters:
+      - description: Maintenance Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateMaintenanceRequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Maintenance request updated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputMaintenanceRequest'
+            type: object
+        "400":
+          description: Error occurred when updating maintenance request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update a maintenance request (Admin)
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/maintenance-requests/{id}/activity:
+    get:
+      consumes:
+      - application/json
+      description: List all activity logs for a maintenance request (Admin)
+      parameters:
+      - description: Maintenance Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Activity logs
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/transformations.OutputMaintenanceActivityLog'
+                type: array
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List activity logs for a maintenance request
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/maintenance-requests/{id}/assign-manager:
+    post:
+      consumes:
+      - application/json
+      description: Assign a manager to an existing maintenance request (Admin)
+      parameters:
+      - description: Maintenance Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Manager ID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AssignManagerBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Manager assigned successfully
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "400":
+          description: Error occurred when assigning manager
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Assign a manager to a maintenance request
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/maintenance-requests/{id}/assign-worker:
+    post:
+      consumes:
+      - application/json
+      description: Assign a worker to an existing maintenance request (Admin)
+      parameters:
+      - description: Maintenance Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Worker ID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AssignWorkerBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Worker assigned successfully
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "400":
+          description: Error occurred when assigning worker
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Assign a worker to a maintenance request
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/maintenance-requests/{id}/expenses:
+    get:
+      consumes:
+      - application/json
+      description: List all expenses recorded against a maintenance request (Admin)
+      parameters:
+      - description: Maintenance Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Expenses
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/transformations.OutputExpense'
+                type: array
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List expenses for a maintenance request
+      tags:
+      - MaintenanceRequests
+    post:
+      consumes:
+      - application/json
+      description: Record a new expense against a maintenance request (Admin)
+      parameters:
+      - description: Maintenance Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Expense details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AddExpenseBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Expense added successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputExpense'
+            type: object
+        "400":
+          description: Error occurred when adding expense
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Add an expense to a maintenance request
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/maintenance-requests/{id}/expenses/{expense_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove an expense record from a maintenance request (Admin)
+      parameters:
+      - description: Maintenance Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Expense ID
+        in: path
+        name: expense_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Expense deleted successfully
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Expense not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete an expense from a maintenance request
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/maintenance-requests/{id}/expenses:invoice:
+    post:
+      consumes:
+      - application/json
+      description: Create a draft invoice from all unbilled, billable expenses on
+        a maintenance request (Admin)
+      parameters:
+      - description: Maintenance Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Invoice ID of the generated draft invoice
+          schema:
+            properties:
+              data:
+                type: string
+            type: object
+        "400":
+          description: No billable expenses found or error generating invoice
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Generate a draft invoice from billable expenses
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/maintenance-requests/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Transition a maintenance request to a new status (Admin)
+      parameters:
+      - description: Maintenance Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New status
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateStatusBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Status updated successfully
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "400":
+          description: Error occurred when updating status
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update the status of a maintenance request
+      tags:
+      - MaintenanceRequests
   /api/v1/admin/payment-accounts:
     get:
       consumes:
@@ -9567,6 +10440,147 @@ paths:
       summary: List announcements (Tenant)
       tags:
       - Announcements
+  /api/v1/leases/{lease_id}/maintenance-requests:
+    get:
+      consumes:
+      - application/json
+      description: List all maintenance requests for a lease (Tenant)
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Maintenance requests
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputMaintenanceRequest'
+                    type: array
+                type: object
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List maintenance requests (Tenant)
+      tags:
+      - MaintenanceRequests
+    post:
+      consumes:
+      - application/json
+      description: Submit a new maintenance request for a lease (Tenant)
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Request details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.TenantCreateMaintenanceRequestBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Maintenance request created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputMaintenanceRequest'
+            type: object
+        "400":
+          description: Error occurred when creating maintenance request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a maintenance request (Tenant)
+      tags:
+      - MaintenanceRequests
+  /api/v1/leases/{lease_id}/maintenance-requests/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a maintenance request by ID for a lease (Tenant)
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Maintenance Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Maintenance request
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputMaintenanceRequest'
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Forbidden — request belongs to another tenant or is internal-only
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get a single maintenance request (Tenant)
+      tags:
+      - MaintenanceRequests
   /api/v1/payments/offline:
     post:
       consumes:
