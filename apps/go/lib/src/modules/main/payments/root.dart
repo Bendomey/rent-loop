@@ -1,69 +1,15 @@
-import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:flutter/material.dart';
+import 'package:rentloop_go/src/architecture/architecture.dart';
+import 'package:rentloop_go/src/repository/models/invoice_model.dart';
+import 'package:rentloop_go/src/repository/providers/invoices_provider.dart';
 
-class PaymentsScreen extends ConsumerStatefulWidget {
+class PaymentsScreen extends ConsumerWidget {
   const PaymentsScreen({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _PaymentsScreen();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final invoicesAsync = ref.watch(invoicesProvider);
 
-class _PaymentsScreen extends ConsumerState<PaymentsScreen> {
-  // Dummy Data
-  final List<Transaction> _transactions = [
-    Transaction(
-      id: '1',
-      title: 'Monthly Rent - Apt 4B',
-      date: DateTime.now().subtract(const Duration(days: 2)),
-      amount: 1200.00,
-      status: 'Completed',
-      isCredit: false,
-    ),
-    Transaction(
-      id: '2',
-      title: 'Utility Bill - Water',
-      date: DateTime.now().subtract(const Duration(days: 5)),
-      amount: 45.50,
-      status: 'Completed',
-      isCredit: false,
-    ),
-    Transaction(
-      id: '3',
-      title: 'Mobile Money Deposit',
-      date: DateTime.now().subtract(const Duration(days: 10)),
-      amount: 500.00,
-      status: 'Failed',
-      isCredit: true,
-    ),
-    Transaction(
-      id: '4',
-      title: 'Service Charge',
-      date: DateTime.now().subtract(const Duration(days: 12)),
-      amount: 150.00,
-      status: 'Completed',
-      isCredit: false,
-    ),
-  ];
-
-  final List<PaymentMethod> _paymentMethods = [
-    PaymentMethod(
-      id: '1',
-      name: 'MTN Mobile Money',
-      detail: '024 ••• 1234',
-      type: 'Momo',
-      color: Colors.yellow.shade700,
-    ),
-    PaymentMethod(
-      id: '2',
-      name: 'Visa Card',
-      detail: '•••• 4242',
-      type: 'Card',
-      color: Colors.blue.shade800,
-    ),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
@@ -77,55 +23,154 @@ class _PaymentsScreen extends ConsumerState<PaymentsScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.history),
-            tooltip: 'History',
+            onPressed: () => ref.invalidate(invoicesProvider),
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: invoicesAsync.when(
+        loading: () => _buildShimmer(),
+        error: (_, __) => _buildError(context, ref),
+        data: (invoices) => _buildContent(context, ref, invoices),
+      ),
+    );
+  }
+
+  Widget _buildContent(
+    BuildContext context,
+    WidgetRef ref,
+    List<InvoiceModel> invoices,
+  ) {
+    final outstanding = invoices
+        .where((i) => i.status == 'ISSUED' || i.status == 'PARTIALLY_PAID')
+        .toList();
+    final paid = invoices.where((i) => i.status == 'PAID').toList();
+
+    final totalOutstanding = outstanding.fold<int>(
+      0,
+      (sum, i) => sum + i.totalAmount,
+    );
+    final currency = outstanding.isNotEmpty
+        ? outstanding.first.currency
+        : (invoices.isNotEmpty ? invoices.first.currency : 'GHS');
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _BalanceCard(
+            totalOutstanding: totalOutstanding,
+            currency: currency,
+            outstandingCount: outstanding.length,
+          ),
+          const SizedBox(height: 24),
+          _SectionTitle(title: 'Outstanding (${outstanding.length})'),
+          const SizedBox(height: 8),
+          if (outstanding.isEmpty)
+            _EmptySection(
+              icon: Icons.check_circle_outline,
+              message: 'No outstanding invoices',
+              color: Colors.green,
+            )
+          else
+            ...outstanding.map((invoice) => _InvoiceCard(invoice: invoice)),
+          const SizedBox(height: 24),
+          _PaidSection(invoices: paid),
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShimmer() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade200,
+      highlightColor: Colors.grey.shade100,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildBalanceCard(context),
+            Container(
+              height: 160,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
             const SizedBox(height: 24),
-            _buildSectionTitle(context, 'Payment Methods'),
-            const SizedBox(height: 12),
-            _buildPaymentMethodsList(context),
-            const SizedBox(height: 24),
-            _buildSectionTitle(context, 'Recent Transactions'),
-            const SizedBox(height: 12),
-            _buildTransactionsList(context),
-            const SizedBox(height: 24),
+            ...List.generate(
+              3,
+              (_) => Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                height: 90,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleMedium!.copyWith(
-          fontWeight: FontWeight.w700,
-          color: Colors.black87,
+  Widget _buildError(BuildContext context, WidgetRef ref) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.wifi_off_outlined,
+              size: 64,
+              color: Colors.grey.shade300,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load invoices',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: () => ref.invalidate(invoicesProvider),
+              child: const Text('Retry'),
+            ),
+          ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildBalanceCard(BuildContext context) {
+class _BalanceCard extends StatelessWidget {
+  final int totalOutstanding;
+  final String currency;
+  final int outstandingCount;
+
+  const _BalanceCard({
+    required this.totalOutstanding,
+    required this.currency,
+    required this.outstandingCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final formatted = NumberFormat('#,##0.00').format(totalOutstanding / 100);
+
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).primaryColor.withOpacity(0.3),
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -150,224 +195,224 @@ class _PaymentsScreen extends ConsumerState<PaymentsScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'GHS 1,245.50',
-            style: TextStyle(
+          Text(
+            '$currency $formatted',
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 32,
               fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Theme.of(context).primaryColor,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          if (outstandingCount > 0) ...[
+            const SizedBox(height: 4),
+            Text(
+              '$outstandingCount invoice${outstandingCount > 1 ? 's' : ''} pending',
+              style: const TextStyle(color: Colors.white70, fontSize: 13),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String title;
+  const _SectionTitle({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleMedium!.copyWith(
+          fontWeight: FontWeight.w700,
+          color: Colors.black87,
+        ),
+      ),
+    );
+  }
+}
+
+class _InvoiceCard extends StatelessWidget {
+  final InvoiceModel invoice;
+  const _InvoiceCard({required this.invoice});
+
+  @override
+  Widget build(BuildContext context) {
+    final formatted = NumberFormat(
+      '#,##0.00',
+    ).format(invoice.totalAmount / 100);
+    final (statusColor, statusLabel) = _statusStyle(invoice.status);
+
+    String? dueDateLabel;
+    if (invoice.dueDate != null) {
+      final due = DateTime.tryParse(invoice.dueDate!)?.toLocal();
+      if (due != null) {
+        dueDateLabel = 'Due ${DateFormat('MMM d, yyyy').format(due)}';
+      }
+    }
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  invoice.code,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+                if (dueDateLabel != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    dueDateLabel,
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${invoice.currency} $formatted',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
                 ),
               ),
-              child: const Text(
-                'Pay Now',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  statusLabel,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: statusColor,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPaymentMethodsList(BuildContext context) {
-    return SizedBox(
-      height: 100, // Reduced height for compact look
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        scrollDirection: Axis.horizontal,
-        itemCount: _paymentMethods.length + 1,
-        separatorBuilder: (context, index) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          if (index == _paymentMethods.length) {
-            return _buildAddPaymentMethodCard(context);
-          }
-          final method = _paymentMethods[index];
-          return Container(
-            width: 150,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  method.type == 'Card'
-                      ? Icons.credit_card
-                      : Icons.phone_android,
-                  color: method.color,
-                  size: 28,
-                ),
-                const Spacer(),
-                Text(
-                  method.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  method.detail,
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
+  (Color, String) _statusStyle(String status) {
+    return switch (status) {
+      'PARTIALLY_PAID' => (Colors.orange.shade700, 'PARTIAL'),
+      'PAID' => (Colors.green.shade700, 'PAID'),
+      'VOID' => (Colors.grey.shade500, 'VOID'),
+      _ => (Colors.red.shade700, 'UNPAID'),
+    };
   }
+}
 
-  Widget _buildAddPaymentMethodCard(BuildContext context) {
-    return Container(
-      width: 80,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.grey.shade300,
-          style: BorderStyle.none,
-        ),
-      ),
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(16),
-        child: Center(
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.add, color: Colors.grey.shade600),
-          ),
-        ),
-      ),
-    );
-  }
+class _PaidSection extends StatefulWidget {
+  final List<InvoiceModel> invoices;
+  const _PaidSection({required this.invoices});
 
-  Widget _buildTransactionsList(BuildContext context) {
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: _transactions.length,
-      separatorBuilder: (context, index) =>
-          Divider(height: 1, color: Colors.grey.shade100),
-      itemBuilder: (context, index) {
-        final tx = _transactions[index];
-        return Container(
-          color: Colors.white,
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              vertical: 8,
-              horizontal: 0,
-            ),
-            leading: CircleAvatar(
-              backgroundColor: tx.isCredit
-                  ? Colors.green.shade50
-                  : (tx.status == 'Failed'
-                        ? Colors.red.shade50
-                        : Colors.blue.shade50),
-              child: Icon(
-                tx.isCredit
-                    ? Icons.arrow_downward
-                    : (tx.status == 'Failed'
-                          ? Icons.error_outline
-                          : Icons.arrow_upward),
-                color: tx.isCredit
-                    ? Colors.green
-                    : (tx.status == 'Failed' ? Colors.red : Colors.blue),
-                size: 20,
-              ),
-            ),
-            title: Text(
-              tx.title,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-            ),
-            subtitle: Text(
-              "${tx.date.day}/${tx.date.month}/${tx.date.year}",
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-            ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
+  @override
+  State<_PaidSection> createState() => _PaidSectionState();
+}
+
+class _PaidSectionState extends State<_PaidSection> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: widget.invoices.isNotEmpty
+              ? () => setState(() => _expanded = !_expanded)
+              : null,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
               children: [
                 Text(
-                  '${tx.isCredit ? "+" : "-"} GHS ${tx.amount.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: tx.isCredit ? Colors.green : Colors.black87,
+                  'Paid (${widget.invoices.length})',
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
                   ),
                 ),
-                if (tx.status != 'Completed')
-                  Text(
-                    tx.status,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: tx.status == 'Failed' ? Colors.red : Colors.orange,
-                      fontWeight: FontWeight.w500,
-                    ),
+                if (widget.invoices.isNotEmpty) ...[
+                  const Spacer(),
+                  Icon(
+                    _expanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    color: Colors.grey.shade500,
                   ),
+                ],
               ],
             ),
           ),
-        );
-      },
+        ),
+        const SizedBox(height: 8),
+        if (widget.invoices.isEmpty)
+          _EmptySection(
+            icon: Icons.receipt_long_outlined,
+            message: 'No paid invoices yet',
+            color: Colors.grey,
+          )
+        else if (_expanded)
+          ...widget.invoices.map((invoice) => _InvoiceCard(invoice: invoice)),
+      ],
     );
   }
 }
 
-class Transaction {
-  final String id;
-  final String title;
-  final DateTime date;
-  final double amount;
-  final String status;
-  final bool isCredit;
-
-  Transaction({
-    required this.id,
-    required this.title,
-    required this.date,
-    required this.amount,
-    required this.status,
-    required this.isCredit,
-  });
-}
-
-class PaymentMethod {
-  final String id;
-  final String name;
-  final String detail;
-  final String type;
+class _EmptySection extends StatelessWidget {
+  final IconData icon;
+  final String message;
   final Color color;
 
-  PaymentMethod({
-    required this.id,
-    required this.name,
-    required this.detail,
-    required this.type,
+  const _EmptySection({
+    required this.icon,
+    required this.message,
     required this.color,
   });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: color.withValues(alpha: 0.5)),
+          const SizedBox(width: 8),
+          Text(
+            message,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade500),
+          ),
+        ],
+      ),
+    );
+  }
 }

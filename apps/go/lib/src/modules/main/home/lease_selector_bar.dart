@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:rentloop_go/src/repository/models/lease_model.dart';
+import 'package:rentloop_go/src/repository/providers/announcements_provider.dart';
 import 'package:rentloop_go/src/repository/providers/leases_provider.dart';
 import 'lease_switcher_modal.dart';
 
@@ -14,6 +15,7 @@ class LeaseSelectorBar extends ConsumerWidget {
     final activeLease = ref.watch(currentLeaseNotifierProvider);
     final currentUser = ref.watch(currentUserNotifierProvider);
     final unitLabel = activeLease?.unit?.name ?? activeLease?.unit?.slug ?? '—';
+    final announcementTotal = ref.watch(announcementTotalNotifierProvider);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -70,11 +72,13 @@ class LeaseSelectorBar extends ConsumerWidget {
                 children: [
                   IconButton(
                     padding: EdgeInsets.zero,
-                    icon: Badge.count(
-                      count: 4,
-                      backgroundColor: Colors.red,
-                      child: const Icon(Icons.notifications_outlined),
-                    ),
+                    icon: announcementTotal > 0
+                        ? Badge.count(
+                            count: announcementTotal,
+                            backgroundColor: Colors.red,
+                            child: const Icon(Icons.notifications_outlined),
+                          )
+                        : const Icon(Icons.notifications_outlined),
                     onPressed: () async {
                       await Haptics.vibrate(HapticsType.selection);
                       if (context.mounted) {

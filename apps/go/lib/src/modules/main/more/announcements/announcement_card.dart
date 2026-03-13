@@ -1,26 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-enum AnnouncementType { general, payment, maintenance, urgent }
-
-class AnnouncementItem {
-  final String id;
-  final String title;
-  final String body;
-  final DateTime createdAt;
-  final AnnouncementType type;
-
-  const AnnouncementItem({
-    required this.id,
-    required this.title,
-    required this.body,
-    required this.createdAt,
-    this.type = AnnouncementType.general,
-  });
-}
+import 'package:rentloop_go/src/repository/models/announcement_model.dart';
 
 class AnnouncementCard extends StatelessWidget {
-  final AnnouncementItem announcement;
+  final AnnouncementModel announcement;
 
   const AnnouncementCard({super.key, required this.announcement});
 
@@ -38,7 +21,6 @@ class AnnouncementCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Colored top bar + icon
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
@@ -60,48 +42,36 @@ class AnnouncementCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    _typeLabel(announcement.type),
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: accentColor,
-                    ),
-                  ),
-                ),
+                _PriorityBadge(priority: announcement.priority),
               ],
             ),
           ),
-          // Body
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  announcement.body,
+                  announcement.content,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.grey.shade700,
                     height: 1.5,
                   ),
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  DateFormat(
-                    'MMM d, yyyy · h:mm a',
-                  ).format(announcement.createdAt.toLocal()),
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade400),
+                Row(
+                  children: [
+                    _TypeChip(type: announcement.type, color: accentColor),
+                    const Spacer(),
+                    Text(
+                      _relativeTime(
+                        announcement.publishedAt ?? announcement.createdAt,
+                      ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -111,27 +81,33 @@ class AnnouncementCard extends StatelessWidget {
     );
   }
 
-  (Color, Color, IconData) _typeStyle(AnnouncementType type) {
-    switch (type) {
-      case AnnouncementType.payment:
-        return (
-          Colors.green.shade50,
-          Colors.green.shade700,
-          Icons.payments_outlined,
-        );
-      case AnnouncementType.maintenance:
+  (Color, Color, IconData) _typeStyle(String type) {
+    switch (type.toUpperCase()) {
+      case 'MAINTENANCE':
         return (
           Colors.blue.shade50,
           Colors.blue.shade700,
           Icons.build_outlined,
         );
-      case AnnouncementType.urgent:
+      case 'COMMUNITY':
+        return (
+          Colors.green.shade50,
+          Colors.green.shade700,
+          Icons.people_outlined,
+        );
+      case 'POLICY_CHANGE':
+        return (
+          Colors.orange.shade50,
+          Colors.orange.shade700,
+          Icons.policy_outlined,
+        );
+      case 'EMERGENCY':
         return (
           Colors.red.shade50,
           Colors.red.shade700,
           Icons.warning_amber_outlined,
         );
-      case AnnouncementType.general:
+      default:
         return (
           Colors.orange.shade50,
           Colors.orange.shade700,
@@ -140,16 +116,68 @@ class AnnouncementCard extends StatelessWidget {
     }
   }
 
-  String _typeLabel(AnnouncementType type) {
-    switch (type) {
-      case AnnouncementType.payment:
-        return 'Payment';
-      case AnnouncementType.maintenance:
-        return 'Maintenance';
-      case AnnouncementType.urgent:
-        return 'Urgent';
-      case AnnouncementType.general:
-        return 'General';
-    }
+  String _relativeTime(String? isoDate) {
+    if (isoDate == null) return '';
+    final date = DateTime.tryParse(isoDate)?.toLocal();
+    if (date == null) return '';
+    final diff = DateTime.now().difference(date);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return DateFormat('MMM d, yyyy').format(date);
+  }
+}
+
+class _PriorityBadge extends StatelessWidget {
+  final String priority;
+  const _PriorityBadge({required this.priority});
+
+  @override
+  Widget build(BuildContext context) {
+    final (color, label) = switch (priority.toUpperCase()) {
+      'URGENT' => (Colors.red, 'URGENT'),
+      'IMPORTANT' => (Colors.amber.shade700, 'IMPORTANT'),
+      _ => (Colors.grey.shade500, 'NORMAL'),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+class _TypeChip extends StatelessWidget {
+  final String type;
+  final Color color;
+  const _TypeChip({required this.type, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        type.replaceAll('_', ' '),
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
   }
 }

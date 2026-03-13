@@ -64,10 +64,12 @@ func (r *announcementRepository) GetByIDWithPopulate(
 }
 
 type TenantAnnouncementFilter struct {
-	UnitID     string
-	BlockID    string
-	PropertyID string
-	ClientID   string
+	UnitID          string
+	BlockID         string
+	PropertyID      string
+	ClientID        string
+	TenantAccountID string
+	IsUnread        *bool
 }
 
 type ListAnnouncementsFilter struct {
@@ -231,12 +233,14 @@ func announcementTypeScope(announcementType *string) func(db *gorm.DB) *gorm.DB 
 // All cases are also scoped to the same client_id.
 // Expired announcements (expires_at <= NOW()) are always excluded regardless of status,
 // so tenants never see stale content even if the expiry cron hasn't run yet.
+// When IsUnread is set to true, only announcements without a matching announcement_reads record
+// for the tenant account are returned. When false, only read announcements are returned.
 func announcementTenantScope(f *TenantAnnouncementFilter) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if f == nil {
 			return db
 		}
-		return db.Where(
+		db = db.Where(
 			"announcements.client_id = ? AND (announcements.expires_at IS NULL OR announcements.expires_at > NOW()) AND ("+
 				"announcements.target_unit_ids @> ARRAY[?]::text[] OR "+
 				"(announcements.property_block_id = ? AND cardinality(announcements.target_unit_ids) = 0) OR "+
@@ -248,5 +252,19 @@ func announcementTenantScope(f *TenantAnnouncementFilter) func(db *gorm.DB) *gor
 			f.BlockID,
 			f.PropertyID,
 		)
+		if f.IsUnread != nil && f.TenantAccountID != "" {
+			if *f.IsUnread {
+				db = db.Where(
+					"NOT EXISTS (SELECT 1 FROM announcement_reads ar WHERE ar.announcement_id = announcements.id AND ar.tenant_account_id = ? AND ar.deleted_at IS NULL)",
+					f.TenantAccountID,
+				)
+			} else {
+				db = db.Where(
+					"EXISTS (SELECT 1 FROM announcement_reads ar WHERE ar.announcement_id = announcements.id AND ar.tenant_account_id = ? AND ar.deleted_at IS NULL)",
+					f.TenantAccountID,
+				)
+			}
+		}
+		return db
 	}
 }
