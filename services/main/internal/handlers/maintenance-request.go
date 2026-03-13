@@ -29,7 +29,7 @@ func NewMaintenanceRequestHandler(
 // ─── Request Bodies ───────────────────────────────────────────────────────────
 
 type CreateMaintenanceRequestBody struct {
-	UnitID      string   `json:"unit_id"     validate:"required,uuid4"`
+	UnitID      *string  `json:"unit_id"     validate:"omitempty,uuid4"`
 	LeaseID     *string  `json:"lease_id"    validate:"omitempty,uuid4"`
 	Title       string   `json:"title"       validate:"required"`
 	Description string   `json:"description" validate:"required"`
@@ -74,7 +74,6 @@ type TenantCreateMaintenanceRequestBody struct {
 	Description string   `json:"description" validate:"required"`
 	Priority    string   `json:"priority"    validate:"required,oneof=LOW MEDIUM HIGH EMERGENCY"`
 	Category    string   `json:"category"    validate:"required,oneof=PLUMBING ELECTRICAL HVAC OTHER"`
-	UnitID      string   `json:"unit_id"     validate:"required,uuid4"`
 	Attachments []string `json:"attachments" validate:"omitempty"`
 }
 
@@ -111,6 +110,16 @@ func (h *MaintenanceRequestHandler) Create(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// Require exactly one of unit_id or lease_id (XOR).
+	if body.UnitID == nil && body.LeaseID == nil {
+		HandleErrorResponse(w, pkg.BadRequestError("either unit_id or lease_id must be provided", nil))
+		return
+	}
+	if body.UnitID != nil && body.LeaseID != nil {
+		HandleErrorResponse(w, pkg.BadRequestError("only one of unit_id or lease_id may be provided, not both", nil))
+		return
+	}
+
 	mr, err := h.service.CreateByAdmin(r.Context(), services.CreateMaintenanceRequestByAdminInput{
 		UnitID:       body.UnitID,
 		LeaseID:      body.LeaseID,
@@ -135,13 +144,13 @@ func (h *MaintenanceRequestHandler) Create(w http.ResponseWriter, r *http.Reques
 
 type ListMaintenanceRequestsQuery struct {
 	lib.FilterQueryInput
-	Status           *string `json:"status"             query:"status"             description:"Filter by status (OPEN, IN_PROGRESS, RESOLVED, CANCELED)"`
+	Status           *string `json:"status"             query:"status"             description:"Filter by status (NEW, IN_PROGRESS, IN_REVIEW, RESOLVED, CANCELED)"`
 	Priority         *string `json:"priority"           query:"priority"           description:"Filter by priority (LOW, MEDIUM, HIGH, EMERGENCY)"`
 	Category         *string `json:"category"           query:"category"           description:"Filter by category (PLUMBING, ELECTRICAL, HVAC, OTHER)"`
 	AssignedWorkerID *string `json:"assigned_worker_id" query:"assigned_worker_id" description:"Filter by assigned worker UUID"`
-	PropertyID       *string `json:"property_id"        query:"property_id"        description:"Filter by property UUID"                                  validate:"omitempty,uuid4"`
-	UnitID           *string `json:"unit_id"            query:"unit_id"            description:"Filter by unit UUID"                                      validate:"omitempty,uuid4"`
-	LeaseID          *string `json:"lease_id"           query:"lease_id"           description:"Filter by lease UUID"                                     validate:"omitempty,uuid4"`
+	PropertyID       *string `json:"property_id"        query:"property_id"        description:"Filter by property UUID"                                            validate:"omitempty,uuid4"`
+	UnitID           *string `json:"unit_id"            query:"unit_id"            description:"Filter by unit UUID"                                                validate:"omitempty,uuid4"`
+	LeaseID          *string `json:"lease_id"           query:"lease_id"           description:"Filter by lease UUID"                                               validate:"omitempty,uuid4"`
 }
 
 // List godoc
@@ -659,7 +668,6 @@ func (h *MaintenanceRequestHandler) TenantCreate(w http.ResponseWriter, r *http.
 	}
 
 	mr, err := h.service.CreateByTenant(r.Context(), services.CreateMaintenanceRequestByTenantInput{
-		UnitID:      body.UnitID,
 		LeaseID:     leaseID,
 		TenantID:    account.TenantId,
 		Title:       body.Title,

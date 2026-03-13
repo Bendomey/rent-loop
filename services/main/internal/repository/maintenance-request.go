@@ -54,7 +54,7 @@ type ListMaintenanceRequestsFilter struct {
 }
 
 func (r *maintenanceRequestRepository) Create(ctx context.Context, mr *models.MaintenanceRequest) error {
-	return r.DB.WithContext(ctx).Create(mr).Error
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Create(mr).Error
 }
 
 func (r *maintenanceRequestRepository) GetOneWithPopulate(
@@ -62,7 +62,7 @@ func (r *maintenanceRequestRepository) GetOneWithPopulate(
 	query GetMaintenanceRequestQuery,
 ) (*models.MaintenanceRequest, error) {
 	var mr models.MaintenanceRequest
-	db := r.DB.WithContext(ctx).Where("maintenance_requests.id = ?", query.ID)
+	db := lib.ResolveDB(ctx, r.DB).WithContext(ctx).Where("maintenance_requests.id = ?", query.ID)
 
 	if query.Populate != nil {
 		for _, field := range *query.Populate {
@@ -84,7 +84,7 @@ func (r *maintenanceRequestRepository) List(
 ) (*[]models.MaintenanceRequest, error) {
 	var mrs []models.MaintenanceRequest
 
-	db := r.DB.WithContext(ctx).
+	db := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
 		Scopes(
 			DateRangeScope("maintenance_requests", filterQuery.DateRange),
 			SearchScope("maintenance_requests", filterQuery.Search),
@@ -121,7 +121,7 @@ func (r *maintenanceRequestRepository) Count(
 ) (int64, error) {
 	var count int64
 
-	result := r.DB.WithContext(ctx).
+	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
 		Model(&models.MaintenanceRequest{}).
 		Scopes(
 			DateRangeScope("maintenance_requests", filterQuery.DateRange),
@@ -145,18 +145,18 @@ func (r *maintenanceRequestRepository) Count(
 }
 
 func (r *maintenanceRequestRepository) Update(ctx context.Context, mr *models.MaintenanceRequest) error {
-	return r.DB.WithContext(ctx).Save(mr).Error
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Save(mr).Error
 }
 
 func (r *maintenanceRequestRepository) Delete(ctx context.Context, id string) error {
-	return r.DB.WithContext(ctx).Where("id = ?", id).Delete(&models.MaintenanceRequest{}).Error
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Where("id = ?", id).Delete(&models.MaintenanceRequest{}).Error
 }
 
 func (r *maintenanceRequestRepository) CreateActivityLog(
 	ctx context.Context,
 	log *models.MaintenanceRequestActivityLog,
 ) error {
-	return r.DB.WithContext(ctx).Create(log).Error
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Create(log).Error
 }
 
 func (r *maintenanceRequestRepository) ListActivityLogs(
@@ -164,9 +164,9 @@ func (r *maintenanceRequestRepository) ListActivityLogs(
 	maintenanceRequestID string,
 ) (*[]models.MaintenanceRequestActivityLog, error) {
 	var logs []models.MaintenanceRequestActivityLog
-	result := r.DB.WithContext(ctx).
+	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
 		Where("maintenance_request_id = ?", maintenanceRequestID).
-		Order("timestamp asc").
+		Order("created_at asc").
 		Find(&logs)
 	if result.Error != nil {
 		return nil, result.Error
@@ -175,7 +175,7 @@ func (r *maintenanceRequestRepository) ListActivityLogs(
 }
 
 func (r *maintenanceRequestRepository) CreateExpense(ctx context.Context, expense *models.Expense) error {
-	return r.DB.WithContext(ctx).Create(expense).Error
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Create(expense).Error
 }
 
 func (r *maintenanceRequestRepository) ListExpenses(
@@ -183,7 +183,7 @@ func (r *maintenanceRequestRepository) ListExpenses(
 	maintenanceRequestID string,
 ) (*[]models.Expense, error) {
 	var expenses []models.Expense
-	result := r.DB.WithContext(ctx).
+	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
 		Where("context_type = ? AND context_maintenance_request_id = ?", "MAINTENANCE", maintenanceRequestID).
 		Order("created_at asc").
 		Find(&expenses)
@@ -198,7 +198,7 @@ func (r *maintenanceRequestRepository) DeleteExpense(ctx context.Context, expens
 }
 
 func (r *maintenanceRequestRepository) UpdateExpense(ctx context.Context, expense *models.Expense) error {
-	return r.DB.WithContext(ctx).Save(expense).Error
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Save(expense).Error
 }
 
 func (r *maintenanceRequestRepository) GetUnbilledExpenses(
@@ -206,7 +206,7 @@ func (r *maintenanceRequestRepository) GetUnbilledExpenses(
 	maintenanceRequestID string,
 ) (*[]models.Expense, error) {
 	var expenses []models.Expense
-	result := r.DB.WithContext(ctx).
+	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
 		Where(
 			"context_type = ? AND context_maintenance_request_id = ? AND billable_to_tenant = true AND invoice_id IS NULL",
 			"MAINTENANCE",
@@ -238,8 +238,10 @@ func mrPropertyIDScope(propertyID *string) func(db *gorm.DB) *gorm.DB {
 		if propertyID == nil {
 			return db
 		}
-		return db.Joins("JOIN units ON units.id = maintenance_requests.unit_id").
-			Where("units.property_id = ?", *propertyID)
+		subQuery := db.Model(&models.Unit{}).
+			Select("id").
+			Where("property_id = ?", *propertyID)
+		return db.Where("maintenance_requests.unit_id IN (?)", subQuery)
 	}
 }
 

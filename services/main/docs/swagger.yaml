@@ -623,7 +623,6 @@ definitions:
     - description
     - priority
     - title
-    - unit_id
     type: object
   handlers.CreateOfflinePaymentRequest:
     properties:
@@ -1274,14 +1273,11 @@ definitions:
         type: string
       title:
         type: string
-      unit_id:
-        type: string
     required:
     - category
     - description
     - priority
     - title
-    - unit_id
     type: object
   handlers.UnlinkClientUserFromPropertyRequest:
     properties:

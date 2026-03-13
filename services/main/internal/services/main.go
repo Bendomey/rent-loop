@@ -132,6 +132,7 @@ func NewServices(params INewServicesParams) Services {
 	maintenanceRequestService := NewMaintenanceRequestService(MaintenanceRequestServiceDeps{
 		AppCtx:              params.AppCtx,
 		Repo:                params.Repository.MaintenanceRequestRepository,
+		LeaseRepo:           params.Repository.LeaseRepository,
 		TenantAccountRepo:   params.Repository.TenantAccountRepository,
 		NotificationService: notificationService,
 		InvoiceService:      invoiceService,

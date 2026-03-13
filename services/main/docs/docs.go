@@ -12476,8 +12476,7 @@ const docTemplate = `{
                 "category",
                 "description",
                 "priority",
-                "title",
-                "unit_id"
+                "title"
             ],
             "properties": {
                 "attachments": {
@@ -13377,8 +13376,7 @@ const docTemplate = `{
                 "category",
                 "description",
                 "priority",
-                "title",
-                "unit_id"
+                "title"
             ],
             "properties": {
                 "attachments": {
@@ -13409,9 +13407,6 @@ const docTemplate = `{
                     ]
                 },
                 "title": {
-                    "type": "string"
-                },
-                "unit_id": {
                     "type": "string"
                 }
             }

@@ -55,7 +55,7 @@ type MaintenanceRequest struct {
 	Visibility string `gorm:"not null;default:'TENANT_VISIBLE'"` // TENANT_VISIBLE | INTERNAL_ONLY
 
 	ActivityLogs []MaintenanceRequestActivityLog
-	Expenses     []Expense
+	Expenses     []Expense `gorm:"foreignKey:ContextMaintenanceRequestID"`
 }
 
 func (mr *MaintenanceRequest) BeforeCreate(tx *gorm.DB) error {

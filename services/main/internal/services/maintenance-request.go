@@ -52,6 +52,7 @@ type MaintenanceRequestService interface {
 type maintenanceRequestService struct {
 	appCtx              pkg.AppContext
 	repo                repository.MaintenanceRequestRepository
+	leaseRepo           repository.LeaseRepository
 	tenantAccountRepo   repository.TenantAccountRepository
 	notificationService NotificationService
 	invoiceService      InvoiceService
@@ -60,6 +61,7 @@ type maintenanceRequestService struct {
 type MaintenanceRequestServiceDeps struct {
 	AppCtx              pkg.AppContext
 	Repo                repository.MaintenanceRequestRepository
+	LeaseRepo           repository.LeaseRepository
 	TenantAccountRepo   repository.TenantAccountRepository
 	NotificationService NotificationService
 	InvoiceService      InvoiceService
@@ -69,6 +71,7 @@ func NewMaintenanceRequestService(deps MaintenanceRequestServiceDeps) Maintenanc
 	return &maintenanceRequestService{
 		appCtx:              deps.AppCtx,
 		repo:                deps.Repo,
+		leaseRepo:           deps.LeaseRepo,
 		tenantAccountRepo:   deps.TenantAccountRepo,
 		notificationService: deps.NotificationService,
 		invoiceService:      deps.InvoiceService,
@@ -78,7 +81,6 @@ func NewMaintenanceRequestService(deps MaintenanceRequestServiceDeps) Maintenanc
 // --- Input types ---
 
 type CreateMaintenanceRequestByTenantInput struct {
-	UnitID      string
 	LeaseID     string
 	TenantID    string
 	Title       string
@@ -89,14 +91,14 @@ type CreateMaintenanceRequestByTenantInput struct {
 }
 
 type CreateMaintenanceRequestByAdminInput struct {
-	UnitID       string
+	UnitID       *string // nil when LeaseID is provided; derived from lease in service
 	LeaseID      *string
 	ClientUserID string
 	Title        string
 	Desc         string
 	Priority     string
 	Category     string
-	Visibility   string // defaults to TENANT_VISIBLE if empty
+	Visibility   string
 	Attachments  []string
 }
 
@@ -146,8 +148,22 @@ func (s *maintenanceRequestService) CreateByTenant(
 	ctx context.Context,
 	input CreateMaintenanceRequestByTenantInput,
 ) (*models.MaintenanceRequest, error) {
+	lease, err := s.leaseRepo.GetOneWithPopulate(ctx, repository.GetLeaseQuery{ID: input.LeaseID})
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, pkg.NotFoundError("lease not found", nil)
+		}
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CreateByTenant",
+				"action":   "fetching lease to resolve tenant and unit",
+			},
+		})
+	}
+
 	mr := &models.MaintenanceRequest{
-		UnitID:            input.UnitID,
+		UnitID:            lease.UnitId,
 		LeaseID:           &input.LeaseID,
 		CreatedByTenantID: &input.TenantID,
 		Title:             input.Title,
@@ -157,20 +173,23 @@ func (s *maintenanceRequestService) CreateByTenant(
 		Attachments:       input.Attachments,
 		Status:            "NEW",
 		Visibility:        "TENANT_VISIBLE",
+		ActivityLogs: []models.MaintenanceRequestActivityLog{
+			{
+				Action:              "CREATED",
+				PerformedByTenantID: &input.TenantID,
+			},
+		},
 	}
 
 	if err := s.repo.Create(ctx, mr); err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err:      err,
-			Metadata: map[string]string{"function": "CreateMaintenanceRequestByTenant"},
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CreateByTenant",
+				"action":   "creating maintenance request",
+			},
 		})
 	}
-
-	_ = s.repo.CreateActivityLog(ctx, &models.MaintenanceRequestActivityLog{
-		MaintenanceRequestID: mr.ID.String(),
-		Action:               "CREATED",
-		PerformedByTenantID:  &input.TenantID,
-	})
 
 	return mr, nil
 }
@@ -179,36 +198,59 @@ func (s *maintenanceRequestService) CreateByAdmin(
 	ctx context.Context,
 	input CreateMaintenanceRequestByAdminInput,
 ) (*models.MaintenanceRequest, error) {
-	visibility := "TENANT_VISIBLE"
-	if input.Visibility != "" {
-		visibility = input.Visibility
+	var createdByTenantID *string
+	unitID := ""
+	if input.UnitID != nil {
+		unitID = *input.UnitID
+	}
+
+	if input.LeaseID != nil {
+		lease, err := s.leaseRepo.GetOneWithPopulate(ctx, repository.GetLeaseQuery{ID: *input.LeaseID})
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return nil, pkg.NotFoundError("lease not found", nil)
+			}
+			return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+				Err: err,
+				Metadata: map[string]string{
+					"function": "CreateByAdmin",
+					"action":   "fetching lease to resolve tenant and unit",
+				},
+			})
+		}
+		unitID = lease.UnitId
+		createdByTenantID = &lease.TenantId
 	}
 
 	mr := &models.MaintenanceRequest{
-		UnitID:                input.UnitID,
+		UnitID:                unitID,
 		LeaseID:               input.LeaseID,
 		CreatedByClientUserID: &input.ClientUserID,
+		CreatedByTenantID:     createdByTenantID,
 		Title:                 input.Title,
 		Description:           input.Desc,
 		Priority:              input.Priority,
 		Category:              input.Category,
 		Attachments:           input.Attachments,
 		Status:                "NEW",
-		Visibility:            visibility,
+		Visibility:            input.Visibility,
+		ActivityLogs: []models.MaintenanceRequestActivityLog{
+			{
+				Action:                  "CREATED",
+				PerformedByClientUserID: &input.ClientUserID,
+			},
+		},
 	}
 
 	if err := s.repo.Create(ctx, mr); err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err:      err,
-			Metadata: map[string]string{"function": "CreateMaintenanceRequestByAdmin"},
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CreateByAdmin",
+				"action":   "creating maintenance request",
+			},
 		})
 	}
-
-	_ = s.repo.CreateActivityLog(ctx, &models.MaintenanceRequestActivityLog{
-		MaintenanceRequestID:    mr.ID.String(),
-		Action:                  "CREATED",
-		PerformedByClientUserID: &input.ClientUserID,
-	})
 
 	return mr, nil
 }
@@ -224,7 +266,13 @@ func (s *maintenanceRequestService) GetMaintenanceRequest(
 		if err == gorm.ErrRecordNotFound {
 			return nil, pkg.NotFoundError("maintenance request not found", nil)
 		}
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "GetMaintenanceRequest",
+				"action":   "fetching maintenance request",
+			},
+		})
 	}
 	return mr, nil
 }
@@ -236,7 +284,13 @@ func (s *maintenanceRequestService) ListMaintenanceRequests(
 ) ([]models.MaintenanceRequest, error) {
 	mrs, err := s.repo.List(ctx, filterQuery, filters)
 	if err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ListMaintenanceRequests",
+				"action":   "listing maintenance requests",
+			},
+		})
 	}
 	return *mrs, nil
 }
@@ -248,7 +302,13 @@ func (s *maintenanceRequestService) CountMaintenanceRequests(
 ) (int64, error) {
 	count, err := s.repo.Count(ctx, filterQuery, filters)
 	if err != nil {
-		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CountMaintenanceRequests",
+				"action":   "counting maintenance requests",
+			},
+		})
 	}
 	return count, nil
 }
@@ -264,7 +324,13 @@ func (s *maintenanceRequestService) UpdateMaintenanceRequest(
 		if err == gorm.ErrRecordNotFound {
 			return nil, pkg.NotFoundError("maintenance request not found", nil)
 		}
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "UpdateMaintenanceRequest",
+				"action":   "fetching maintenance request",
+			},
+		})
 	}
 
 	if input.Title != nil {
@@ -287,7 +353,13 @@ func (s *maintenanceRequestService) UpdateMaintenanceRequest(
 	}
 
 	if err := s.repo.Update(ctx, mr); err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "UpdateMaintenanceRequest",
+				"action":   "updating maintenance request",
+			},
+		})
 	}
 	return mr, nil
 }
@@ -300,13 +372,25 @@ func (s *maintenanceRequestService) AssignWorker(ctx context.Context, input Assi
 		if err == gorm.ErrRecordNotFound {
 			return pkg.NotFoundError("maintenance request not found", nil)
 		}
-		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "AssignWorker",
+				"action":   "fetching maintenance request",
+			},
+		})
 	}
 
 	mr.AssignedWorkerID = &input.WorkerID
 
 	if err := s.repo.Update(ctx, mr); err != nil {
-		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "AssignWorker",
+				"action":   "updating maintenance request",
+			},
+		})
 	}
 
 	_ = s.repo.CreateActivityLog(ctx, &models.MaintenanceRequestActivityLog{
@@ -324,13 +408,25 @@ func (s *maintenanceRequestService) AssignManager(ctx context.Context, input Ass
 		if err == gorm.ErrRecordNotFound {
 			return pkg.NotFoundError("maintenance request not found", nil)
 		}
-		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "AssignManager",
+				"action":   "fetching maintenance request",
+			},
+		})
 	}
 
 	mr.AssignedManagerID = &input.ManagerID
 
 	if err := s.repo.Update(ctx, mr); err != nil {
-		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "AssignManager",
+				"action":   "updating maintenance request",
+			},
+		})
 	}
 
 	_ = s.repo.CreateActivityLog(ctx, &models.MaintenanceRequestActivityLog{
@@ -354,7 +450,13 @@ func (s *maintenanceRequestService) UpdateStatus(ctx context.Context, input Upda
 		if err == gorm.ErrRecordNotFound {
 			return pkg.NotFoundError("maintenance request not found", nil)
 		}
-		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "UpdateStatus",
+				"action":   "fetching maintenance request",
+			},
+		})
 	}
 
 	oldStatus := mr.Status
@@ -381,7 +483,13 @@ func (s *maintenanceRequestService) UpdateStatus(ctx context.Context, input Upda
 	}
 
 	if err := s.repo.Update(ctx, mr); err != nil {
-		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "UpdateStatus",
+				"action":   "updating maintenance request status",
+			},
+		})
 	}
 
 	// Build metadata with old/new status
@@ -443,7 +551,7 @@ func (s *maintenanceRequestService) fireStatusNotifications(
 	}
 
 	if err := s.notificationService.SendToTenantAccount(ctx, tenantAccountID, title, body, map[string]string{
-		"type":                   "MAINTENANCE_REQUEST_STATUS_CHANGED",
+		"type":                   "MAINTENANCE",
 		"maintenance_request_id": mr.ID.String(),
 		"status":                 newStatus,
 	}); err != nil {
@@ -460,7 +568,13 @@ func (s *maintenanceRequestService) ListActivityLogs(
 ) ([]models.MaintenanceRequestActivityLog, error) {
 	logs, err := s.repo.ListActivityLogs(ctx, maintenanceRequestID)
 	if err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ListActivityLogs",
+				"action":   "listing activity logs",
+			},
+		})
 	}
 	return *logs, nil
 }
@@ -476,7 +590,13 @@ func (s *maintenanceRequestService) AddExpense(
 		if err == gorm.ErrRecordNotFound {
 			return nil, pkg.NotFoundError("maintenance request not found", nil)
 		}
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "AddExpense",
+				"action":   "fetching maintenance request",
+			},
+		})
 	}
 
 	currency := input.Currency
@@ -496,7 +616,13 @@ func (s *maintenanceRequestService) AddExpense(
 	}
 
 	if err := s.repo.CreateExpense(ctx, expense); err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "AddExpense",
+				"action":   "creating expense",
+			},
+		})
 	}
 	return expense, nil
 }
@@ -507,14 +633,26 @@ func (s *maintenanceRequestService) ListExpenses(
 ) ([]models.Expense, error) {
 	expenses, err := s.repo.ListExpenses(ctx, maintenanceRequestID)
 	if err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ListExpenses",
+				"action":   "listing expenses",
+			},
+		})
 	}
 	return *expenses, nil
 }
 
 func (s *maintenanceRequestService) DeleteExpense(ctx context.Context, expenseID string) error {
 	if err := s.repo.DeleteExpense(ctx, expenseID); err != nil {
-		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "DeleteExpense",
+				"action":   "deleting expense",
+			},
+		})
 	}
 	return nil
 }
@@ -534,12 +672,24 @@ func (s *maintenanceRequestService) GenerateExpenseInvoice(
 		if err == gorm.ErrRecordNotFound {
 			return nil, pkg.NotFoundError("maintenance request not found", nil)
 		}
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "GenerateExpenseInvoice",
+				"action":   "fetching maintenance request",
+			},
+		})
 	}
 
 	expenses, err := s.repo.GetUnbilledExpenses(ctx, maintenanceRequestID)
 	if err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "GenerateExpenseInvoice",
+				"action":   "fetching unbilled expenses",
+			},
+		})
 	}
 
 	if len(*expenses) == 0 {
@@ -560,13 +710,26 @@ func (s *maintenanceRequestService) GenerateExpenseInvoice(
 		totalAmount += exp.Amount
 	}
 
-	tenantID := ""
-	if mr.CreatedByTenantID != nil {
+	// Resolve payer tenant: prefer preloaded Lease.Tenant, fall back to CreatedByTenantID.
+	// Reject invoice generation when no tenant can be resolved.
+	var tenantID string
+	if mr.Lease != nil && mr.Lease.TenantId != "" {
+		tenantID = mr.Lease.TenantId
+	} else if mr.CreatedByTenantID != nil {
 		tenantID = *mr.CreatedByTenantID
+	} else {
+		return nil, pkg.BadRequestError(
+			"cannot generate invoice: no tenant associated with this maintenance request",
+			nil,
+		)
 	}
 
+	// Single transaction: invoice creation + expense linking are fully atomic
+	tx := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, tx)
+
 	mrID := mr.ID.String()
-	invoice, err := s.invoiceService.CreateInvoice(ctx, CreateInvoiceInput{
+	invoice, err := s.invoiceService.CreateInvoice(transCtx, CreateInvoiceInput{
 		PayerType:                   "TENANT",
 		PayerTenantID:               &tenantID,
 		PayeeType:                   "PROPERTY_OWNER",
@@ -578,15 +741,35 @@ func (s *maintenanceRequestService) GenerateExpenseInvoice(
 		LineItems:                   lineItems,
 	})
 	if err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
-	// Link each expense to the generated invoice
 	invoiceID := invoice.ID.String()
 	for i := range *expenses {
 		exp := &(*expenses)[i]
 		exp.InvoiceID = &invoiceID
-		_ = s.repo.UpdateExpense(ctx, exp)
+		if updateErr := s.repo.UpdateExpense(transCtx, exp); updateErr != nil {
+			tx.Rollback()
+			return nil, pkg.InternalServerError("failed to link expenses to invoice", &pkg.RentLoopErrorParams{
+				Err: updateErr,
+				Metadata: map[string]string{
+					"function": "GenerateExpenseInvoice",
+					"action":   "linking expense to invoice",
+				},
+			})
+		}
+	}
+
+	if commitErr := tx.Commit().Error; commitErr != nil {
+		tx.Rollback()
+		return nil, pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: commitErr,
+			Metadata: map[string]string{
+				"function": "GenerateExpenseInvoice",
+				"action":   "committing transaction",
+			},
+		})
 	}
 
 	return invoice, nil

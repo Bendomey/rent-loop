@@ -12468,8 +12468,7 @@
                 "category",
                 "description",
                 "priority",
-                "title",
-                "unit_id"
+                "title"
             ],
             "properties": {
                 "attachments": {
@@ -13369,8 +13368,7 @@
                 "category",
                 "description",
                 "priority",
-                "title",
-                "unit_id"
+                "title"
             ],
             "properties": {
                 "attachments": {
@@ -13401,9 +13399,6 @@
                     ]
                 },
                 "title": {
-                    "type": "string"
-                },
-                "unit_id": {
                     "type": "string"
                 }
             }

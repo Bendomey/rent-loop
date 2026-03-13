@@ -150,12 +150,21 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 		invoice.IssuedAt = &now
 	}
 
-	transaction := s.appCtx.DB.Begin()
+	// Use an existing outer transaction if provided, otherwise start our own
+	outerTx, hasOuterTx := lib.TransactionFromContext(ctx)
+	var transaction *gorm.DB
+	if hasOuterTx && outerTx != nil {
+		transaction = outerTx
+	} else {
+		transaction = s.appCtx.DB.Begin()
+	}
 	transCtx := lib.WithTransaction(ctx, transaction)
 
 	createErr := s.repo.Create(transCtx, &invoice)
 	if createErr != nil {
-		transaction.Rollback()
+		if !hasOuterTx {
+			transaction.Rollback()
+		}
 		return nil, pkg.BadRequestError(createErr.Error(), &pkg.RentLoopErrorParams{
 			Err: createErr,
 			Metadata: map[string]string{
@@ -186,7 +195,9 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 				Lines: journalLines,
 			})
 			if journalErr != nil {
-				transaction.Rollback()
+				if !hasOuterTx {
+					transaction.Rollback()
+				}
 				return nil, pkg.InternalServerError(
 					"Failed to create journal entry for invoice",
 					&pkg.RentLoopErrorParams{
@@ -202,15 +213,17 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 		}
 	}
 
-	if commitErr := transaction.Commit().Error; commitErr != nil {
-		transaction.Rollback()
-		return nil, pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
-			Err: commitErr,
-			Metadata: map[string]string{
-				"function": "CreateInvoice",
-				"action":   "committing transaction",
-			},
-		})
+	if !hasOuterTx {
+		if commitErr := transaction.Commit().Error; commitErr != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+				Err: commitErr,
+				Metadata: map[string]string{
+					"function": "CreateInvoice",
+					"action":   "committing transaction",
+				},
+			})
+		}
 	}
 
 	return &invoice, nil
