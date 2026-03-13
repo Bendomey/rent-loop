@@ -3,8 +3,11 @@ package models
 import (
 	"time"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/getsentry/raven-go"
 	"github.com/lib/pq"
 	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 // MaintenanceRequest represents a maintenance request made by a tenant.
@@ -29,8 +32,8 @@ type MaintenanceRequest struct {
 	Description string         `gorm:"not null;"`
 	Attachments pq.StringArray `gorm:"type:text[]"`
 
-	Priority string `gorm:"not null;"` // low | medium | high | emergency
-	Category string `gorm:"not null;"` // plumbing | electrical | hvac  | other
+	Priority string `gorm:"not null;"` // LOW | MEDIUM | HIGH | EMERGENCY
+	Category string `gorm:"not null;"` // PLUMBING | ELECTRICAL | HVAC | OTHER
 
 	Status string `gorm:"not null;"` // NEW | IN_PROGRESS | IN_REVIEW | RESOLVED | CANCELED
 
@@ -42,9 +45,30 @@ type MaintenanceRequest struct {
 
 	StartedAt *time.Time // when work actually started
 
+	ReviewedAt *time.Time // when work was marked in review
+
 	ResolvedAt *time.Time // when work was marked resolved
 
-	CanceledAt *time.Time // when work was marked canceled
+	CanceledAt         *time.Time // when work was marked canceled
+	CancellationReason *string
+
+	Visibility string `gorm:"not null;default:'TENANT_VISIBLE'"` // TENANT_VISIBLE | INTERNAL_ONLY
+
+	ActivityLogs []MaintenanceRequestActivityLog
+	Expenses     []Expense
+}
+
+func (mr *MaintenanceRequest) BeforeCreate(tx *gorm.DB) error {
+	uniqueCode, genErr := lib.GenerateCode(tx, &MaintenanceRequest{})
+	if genErr != nil {
+		raven.CaptureError(genErr, map[string]string{
+			"function": "BeforeCreateMaintenanceRequestHook",
+			"action":   "Generating a unique code",
+		})
+		return genErr
+	}
+	mr.Code = *uniqueCode
+	return nil
 }
 
 type MaintenanceRequestActivityLog struct {
@@ -62,6 +86,4 @@ type MaintenanceRequestActivityLog struct {
 	PerformedByTenant   *Tenant
 
 	Metadata *datatypes.JSON `gorm:"type:jsonb"` // any additional data
-
-	Timestamp time.Time `gorm:"not null;default:current_timestamp;"`
 }

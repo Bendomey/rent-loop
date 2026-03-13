@@ -1,10 +1,10 @@
 ---
 id: RENTL-27
 title: Maintenance Requests — Full Backend Implementation
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-03-11 20:42'
-updated_date: '2026-03-11 21:17'
+updated_date: '2026-03-13 11:08'
 labels:
   - backend
   - maintenance

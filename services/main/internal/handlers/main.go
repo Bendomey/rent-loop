@@ -27,6 +27,7 @@ type Handlers struct {
 	SigningHandler            SigningHandler
 	LeaseChecklistHandler     LeaseChecklistHandler
 	AnnouncementHandler       AnnouncementHandler
+	MaintenanceRequestHandler MaintenanceRequestHandler
 }
 
 func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
@@ -55,6 +56,11 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 	paymentAccountHandler := NewPaymentAccountHandler(appCtx, services.PaymentAccountService)
 	leaseChecklistHandler := NewLeaseChecklistHandler(appCtx, services.LeaseChecklistService)
 	announcementHandler := NewAnnouncementHandler(appCtx, services.AnnouncementService)
+	maintenanceRequestHandler := NewMaintenanceRequestHandler(
+		appCtx,
+		services.MaintenanceRequestService,
+		services.TenantAccountService,
+	)
 
 	return Handlers{
 		NotificationHandler:       notificationHandler,
@@ -78,5 +84,6 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 		SigningHandler:            signingHandler,
 		LeaseChecklistHandler:     leaseChecklistHandler,
 		AnnouncementHandler:       announcementHandler,
+		MaintenanceRequestHandler: maintenanceRequestHandler,
 	}
 }

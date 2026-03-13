@@ -274,6 +274,32 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				})
 			})
 
+			// maintenance requests
+			r.Route("/v1/admin/maintenance-requests", func(r chi.Router) {
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
+					Post("/", handlers.MaintenanceRequestHandler.Create)
+				r.Get("/", handlers.MaintenanceRequestHandler.List)
+				r.Route("/{id}", func(r chi.Router) {
+					r.Get("/", handlers.MaintenanceRequestHandler.Get)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
+						Patch("/", handlers.MaintenanceRequestHandler.Update)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
+						Post("/assign-worker", handlers.MaintenanceRequestHandler.AssignWorker)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
+						Post("/assign-manager", handlers.MaintenanceRequestHandler.AssignManager)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
+						Patch("/status", handlers.MaintenanceRequestHandler.UpdateStatus)
+					r.Get("/activity", handlers.MaintenanceRequestHandler.ListActivityLogs)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Post("/expenses", handlers.MaintenanceRequestHandler.AddExpense)
+					r.Get("/expenses", handlers.MaintenanceRequestHandler.ListExpenses)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Delete("/expenses/{expense_id}", handlers.MaintenanceRequestHandler.DeleteExpense)
+					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						Post("/expenses:invoice", handlers.MaintenanceRequestHandler.GenerateExpenseInvoice)
+				})
+			})
+
 			r.Route("/v1/admin/payment-accounts", func(r chi.Router) {
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 					Post("/", handlers.PaymentAccountHandler.CreatePaymentAccount)
