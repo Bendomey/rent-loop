@@ -210,7 +210,13 @@ export function DataTable<T extends { id: string }>({
 							className="relative z-0"
 						>
 							{row.getVisibleCells().map((cell) => (
-								<TableCell key={cell.id}>
+								<TableCell
+									key={cell.id}
+									className={
+										(cell.column.columnDef.meta as { className?: string })
+											?.className
+									}
+								>
 									{flexRender(cell.column.columnDef.cell, cell.getContext())}
 								</TableCell>
 							))}
@@ -230,7 +236,14 @@ export function DataTable<T extends { id: string }>({
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => {
 									return (
-										<TableHead key={header.id} colSpan={header.colSpan}>
+										<TableHead
+											key={header.id}
+											colSpan={header.colSpan}
+											className={
+												(header.column.columnDef.meta as { className?: string })
+													?.className
+											}
+										>
 											{header.isPlaceholder
 												? null
 												: flexRender(

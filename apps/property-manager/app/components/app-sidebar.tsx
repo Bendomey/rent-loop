@@ -2,6 +2,7 @@ import {
 	GalleryVerticalEnd,
 	Settings2,
 	LifeBuoy,
+	Megaphone,
 	PieChart,
 	House,
 	BookOpenText,
@@ -35,6 +36,17 @@ const data = {
 			title: 'My Properties',
 			url: '/properties',
 			icon: House,
+		},
+		{
+			title: 'Activities',
+			url: '/activities',
+			icon: Megaphone,
+			items: [
+				{
+					title: 'Announcements',
+					url: '/announcements',
+				},
+			],
 		},
 		{
 			title: 'Settings',

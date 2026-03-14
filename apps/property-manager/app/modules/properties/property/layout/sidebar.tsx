@@ -96,7 +96,6 @@ export function PropertySidebar({
 					{
 						title: 'Announcements',
 						url: '/announcements',
-						isComingSoon: true,
 					},
 					{
 						title: 'Inspections',

@@ -19,10 +19,10 @@ import {
 	TypographyMuted,
 	TypographyP,
 } from '~/components/ui/typography'
+import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { getNameInitials } from '~/lib/misc'
 import { safeString } from '~/lib/strings'
 import { useProperty } from '~/providers/property-provider'
-import { PAGINATION_DEFAULTS } from '~/lib/constants'
 
 export function PropertyTenantsModule() {
 	const { clientUserProperty } = useProperty()

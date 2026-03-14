@@ -78,3 +78,21 @@ type SendSMSInput struct {
 	Recipient string
 	Message   string
 }
+
+type SendBulkSMSInput struct {
+	Recipients []string
+	Message    string
+}
+
+type GatekeeperSendBulkSMSRequest struct {
+	PhoneNumbers []string `json:"phoneNumbers"`
+	Message      string   `json:"message"`
+}
+
+type GatekeeperSendBulkSMSResponse struct {
+	Success     bool   `json:"success"`
+	Message     string `json:"message"`
+	SentCount   int    `json:"sentCount"`
+	FailedCount int    `json:"failedCount"`
+	CreditsUsed int    `json:"creditsUsed"`
+}
