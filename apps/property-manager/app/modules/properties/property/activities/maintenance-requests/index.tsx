@@ -1,5 +1,12 @@
-import { Plus } from 'lucide-react'
-import { useState } from 'react'
+import type { DragEndEvent } from '~/components/kanban'
+import { useQueryClient } from '@tanstack/react-query'
+import { Loader2, Plus } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { toast } from 'sonner'
+import {
+	useGetMaintenanceRequestsByStatus,
+	useUpdateMaintenanceRequestStatus,
+} from '~/api/maintenance-requests'
 import {
 	KanbanBoard,
 	KanbanCard,
@@ -7,125 +14,214 @@ import {
 	KanbanHeader,
 	KanbanProvider,
 } from '~/components/kanban'
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
 import { TypographyH3 } from '~/components/ui/typography'
-const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
-const columns = [
-	{ id: '1', name: 'New', color: '#6B7280' },
-	{ id: '2', name: 'In Progress', color: '#F59E0B' },
-	{ id: '3', name: 'In Review', color: '#3B82F6' },
-	{ id: '4', name: 'Resolved', color: '#10B981' },
-	{ id: '5', name: 'Canceled', color: '#EF4444' },
+import { QUERY_KEYS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
+import { useProperty } from '~/providers/property-provider'
+import { CreateRequestDialog } from './create-request-dialog'
+import { RequestCard } from './request-card'
+
+type MaintenanceKanbanItem = MaintenanceRequest & {
+	column: MaintenanceRequestStatus
+	name: string
+	[key: string]: unknown
+}
+
+const COLUMNS: Array<{
+	id: MaintenanceRequestStatus
+	name: string
+	color: string
+}> = [
+	{ id: 'NEW', name: 'New', color: '#6B7280' },
+	{ id: 'IN_PROGRESS', name: 'In Progress', color: '#F59E0B' },
+	{ id: 'IN_REVIEW', name: 'In Review', color: '#3B82F6' },
+	{ id: 'RESOLVED', name: 'Resolved', color: '#10B981' },
+	{ id: 'CANCELED', name: 'Canceled', color: '#EF4444' },
 ]
-const users = Array.from({ length: 4 })
-	.fill(null)
-	.map(() => ({
-		id: '' + Math.random().toString(36).substr(2, 9),
-		name: capitalize(
-			['Alice', 'Bob', 'Charlie', 'David', 'Eve', 'Frank'][
-				Math.floor(Math.random() * 6)
-			]!,
-		),
-		image: `https://i.pravatar.cc/150?u=${Math.random().toString(36).substr(2, 9)}`,
-	}))
-const exampleFeatures = Array.from({ length: 20 })
-	.fill(null)
-	.map(() => ({
-		id: '' + Math.random().toString(36).substr(2, 9),
-		name: [
-			'Fix leaky faucet',
-			'Replace broken window',
-			'Repair HVAC system',
-			'Paint living room',
-			'Clean gutters',
-			'Service lawn mower',
-			'Inspect roof',
-			'Upgrade insulation',
-			'Install new lighting',
-			'Fix door lock',
-		][Math.floor(Math.random() * 10)]!,
-		startAt: new Date(),
-		endAt: new Date(new Date().setMonth(new Date().getMonth() + 6)),
-		column: columns[Math.floor(Math.random() * columns.length)]?.id!,
-		owner: users[Math.floor(Math.random() * users.length)],
-	}))
-const dateFormatter = new Intl.DateTimeFormat('en-US', {
-	month: 'short',
-	day: 'numeric',
-	year: 'numeric',
-})
-const shortDateFormatter = new Intl.DateTimeFormat('en-US', {
-	month: 'short',
-	day: 'numeric',
+
+const toKanbanItem = (req: MaintenanceRequest): MaintenanceKanbanItem => ({
+	...req,
+	name: req.title,
+	column: req.status,
 })
 
+const flattenPages = (
+	pages: Array<{ rows: MaintenanceRequest[] } | undefined> | undefined,
+): MaintenanceRequest[] => (pages ?? []).flatMap((p) => p?.rows ?? [])
+
 export function PropertyActivitiesMaintenanceRequestsModule() {
-	const [features, setFeatures] = useState(exampleFeatures)
+	const { clientUserProperty } = useProperty()
+	const queryClient = useQueryClient()
+	const propertyId = safeString(clientUserProperty?.property?.id)
+
+	const [createOpen, setCreateOpen] = useState(false)
+	const isDraggingRef = useRef(false)
+
+	const newQuery = useGetMaintenanceRequestsByStatus({
+		property_id: propertyId,
+		status: 'NEW',
+	})
+	const inProgressQuery = useGetMaintenanceRequestsByStatus({
+		property_id: propertyId,
+		status: 'IN_PROGRESS',
+	})
+	const inReviewQuery = useGetMaintenanceRequestsByStatus({
+		property_id: propertyId,
+		status: 'IN_REVIEW',
+	})
+	const resolvedQuery = useGetMaintenanceRequestsByStatus({
+		property_id: propertyId,
+		status: 'RESOLVED',
+	})
+	const canceledQuery = useGetMaintenanceRequestsByStatus({
+		property_id: propertyId,
+		status: 'CANCELED',
+	})
+
+	const columnQueries: Record<
+		MaintenanceRequestStatus,
+		ReturnType<typeof useGetMaintenanceRequestsByStatus>
+	> = {
+		NEW: newQuery,
+		IN_PROGRESS: inProgressQuery,
+		IN_REVIEW: inReviewQuery,
+		RESOLVED: resolvedQuery,
+		CANCELED: canceledQuery,
+	}
+
+	const serverData = useMemo(
+		() => [
+			...flattenPages(newQuery.data?.pages).map(toKanbanItem),
+			...flattenPages(inProgressQuery.data?.pages).map(toKanbanItem),
+			...flattenPages(inReviewQuery.data?.pages).map(toKanbanItem),
+			...flattenPages(resolvedQuery.data?.pages).map(toKanbanItem),
+			...flattenPages(canceledQuery.data?.pages).map(toKanbanItem),
+		],
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[
+			newQuery.data,
+			inProgressQuery.data,
+			inReviewQuery.data,
+			resolvedQuery.data,
+			canceledQuery.data,
+		],
+	)
+
+	const [localData, setLocalData] = useState<MaintenanceKanbanItem[]>(serverData)
+
+	useEffect(() => {
+		if (!isDraggingRef.current) {
+			setLocalData(serverData)
+		}
+	}, [serverData])
+
+	const updateStatus = useUpdateMaintenanceRequestStatus()
+
+	const handleDragStart = () => {
+		isDraggingRef.current = true
+	}
+
+	const handleDragEnd = (event: DragEndEvent) => {
+		isDraggingRef.current = false
+
+		const { active, over } = event
+		if (!over) return
+
+		const draggedItem = localData.find((item) => item.id === active.id)
+		if (!draggedItem) return
+
+		const targetColumn =
+			localData.find((item) => item.id === over.id)?.column ??
+			(over.id as MaintenanceRequestStatus)
+
+		if (draggedItem.status === targetColumn) return
+
+		updateStatus.mutate(
+			{ id: draggedItem.id, status: targetColumn },
+			{
+				onError: (err) => {
+					toast.error(
+						err instanceof Error ? err.message : 'Failed to update status',
+					)
+					void queryClient.invalidateQueries({
+						queryKey: [QUERY_KEYS.MAINTENANCE_REQUESTS],
+					})
+				},
+				onSuccess: () => {
+					void queryClient.invalidateQueries({
+						queryKey: [QUERY_KEYS.MAINTENANCE_REQUESTS],
+					})
+				},
+			},
+		)
+	}
+
+	const handleScrollEnd = (status: MaintenanceRequestStatus) => {
+		const query = columnQueries[status]
+		if (query.hasNextPage && !query.isFetchingNextPage) {
+			void query.fetchNextPage()
+		}
+	}
+
 	return (
 		<div className="flex h-full flex-col overflow-hidden p-5">
 			<div className="mb-5 flex shrink-0 items-center justify-between">
-				<div>
-					<TypographyH3>Maintenance Requests</TypographyH3>
-				</div>
-				<div>
-					<Button>
-						<Plus className="size-4" />
-						Add Request
-					</Button>
-				</div>
+				<TypographyH3>Maintenance Requests</TypographyH3>
+				<Button onClick={() => setCreateOpen(true)}>
+					<Plus className="size-4" />
+					Add Request
+				</Button>
 			</div>
+
 			<div className="min-h-0 flex-1 overflow-x-auto">
 				<KanbanProvider
-					columns={columns}
-					data={features}
-					onDataChange={setFeatures}
+					columns={COLUMNS}
+					data={localData}
+					onDataChange={setLocalData}
+					onDragStart={handleDragStart}
+					onDragEnd={handleDragEnd}
 				>
-					{(column) => (
-						<KanbanBoard id={column.id} key={column.id}>
-							<KanbanHeader>
-								<div className="flex items-center gap-2">
-									<div
-										className="h-2 w-2 rounded-full"
-										style={{ backgroundColor: column.color }}
-									/>
-									<span>{column.name}</span>
-								</div>
-							</KanbanHeader>
-							<KanbanCards id={column.id}>
-								{(feature: (typeof features)[number]) => (
-									<KanbanCard
-										column={column.id}
-										id={feature.id}
-										key={feature.id}
-										name={feature.name}
-									>
-										<div className="flex items-start justify-between gap-2">
-											<div className="flex flex-col gap-1">
-												<p className="m-0 flex-1 text-sm font-medium">
-													{feature.name}
-												</p>
-											</div>
-											{feature.owner && (
-												<Avatar className="h-4 w-4 shrink-0">
-													<AvatarImage src={feature.owner.image} />
-													<AvatarFallback>
-														{feature.owner.name?.slice(0, 2)}
-													</AvatarFallback>
-												</Avatar>
-											)}
-										</div>
-										<p className="text-muted-foreground m-0 text-xs">
-											{shortDateFormatter.format(feature.startAt)} -{' '}
-											{dateFormatter.format(feature.endAt)}
-										</p>
-									</KanbanCard>
+					{(column) => {
+						const query = columnQueries[column.id]
+						return (
+							<KanbanBoard id={column.id} key={column.id}>
+								<KanbanHeader>
+									<div className="flex items-center gap-2">
+										<div
+											className="h-2 w-2 rounded-full"
+											style={{ backgroundColor: column.color }}
+										/>
+										<span>{column.name}</span>
+										<span className="text-muted-foreground ml-auto text-xs font-normal">
+											{query.data?.pages[0]?.meta?.total ?? 0}
+										</span>
+									</div>
+								</KanbanHeader>
+								<KanbanCards
+									id={column.id}
+									onScrollEnd={() => handleScrollEnd(column.id)}
+								>
+									{(item: MaintenanceKanbanItem) => (
+										<RequestCard key={item.id} item={item} />
+									)}
+								</KanbanCards>
+								{query.isFetchingNextPage && (
+									<div className="flex justify-center py-2">
+										<Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
+									</div>
 								)}
-							</KanbanCards>
-						</KanbanBoard>
-					)}
+							</KanbanBoard>
+						)
+					}}
 				</KanbanProvider>
 			</div>
+
+			<CreateRequestDialog
+				open={createOpen}
+				onOpenChange={setCreateOpen}
+				propertyId={propertyId}
+			/>
 		</div>
 	)
 }

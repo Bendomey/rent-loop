@@ -5,8 +5,17 @@ import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 
+interface LegacyMaintenanceRow {
+	id: string
+	name: string
+	unit_number: string
+	status: string
+	created_at: Date
+	updated_at: Date
+}
+
 export function PropertyMaintenanceRequest() {
-	const columns: ColumnDef<Maintenance>[] = useMemo(() => {
+	const columns: ColumnDef<LegacyMaintenanceRow>[] = useMemo(() => {
 		return [
 			{
 				id: 'drag',
@@ -106,7 +115,7 @@ export function PropertyMaintenanceRequest() {
 								updated_at: new Date(),
 								status: 'Maintenance.Status.Approved',
 							},
-						] as Maintenance[],
+						] as LegacyMaintenanceRow[],
 						total: 150,
 						page: 1,
 						page_size: 50,

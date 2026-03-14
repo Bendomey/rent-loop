@@ -26,6 +26,7 @@ export const QUERY_KEYS = {
 	SIGNING_TOKENS: 'signing-tokens',
 	LEASES: 'leases',
 	ANALYTICS_TOKEN: 'analytics-token',
+	MAINTENANCE_REQUESTS: 'maintenance-requests',
 } as const
 
 export const PermissionState = {

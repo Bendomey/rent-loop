@@ -23,6 +23,8 @@ import {
 	type HTMLAttributes,
 	type ReactNode,
 	useContext,
+	useEffect,
+	useRef,
 	useState,
 } from 'react'
 import { createPortal } from 'react-dom'
@@ -148,16 +150,33 @@ export type KanbanCardsProps<T extends KanbanItemProps = KanbanItemProps> =
 	Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'id'> & {
 		children: (item: T) => ReactNode
 		id: string
+		onScrollEnd?: () => void
 	}
 
 export const KanbanCards = <T extends KanbanItemProps = KanbanItemProps>({
 	children,
 	className,
+	onScrollEnd,
 	...props
 }: KanbanCardsProps<T>) => {
 	const { data } = useContext(KanbanContext) as KanbanContextProps<T>
 	const filteredData = data.filter((item) => item.column === props.id)
 	const items = filteredData.map((item) => item.id)
+	const sentinelRef = useRef<HTMLDivElement>(null)
+
+	useEffect(() => {
+		if (!onScrollEnd) return
+		const sentinel = sentinelRef.current
+		if (!sentinel) return
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				if (entry?.isIntersecting) onScrollEnd()
+			},
+			{ threshold: 0.1 },
+		)
+		observer.observe(sentinel)
+		return () => observer.disconnect()
+	}, [onScrollEnd])
 
 	return (
 		<ScrollArea className="min-h-0 flex-1">
@@ -169,6 +188,7 @@ export const KanbanCards = <T extends KanbanItemProps = KanbanItemProps>({
 					{filteredData.map(children)}
 				</div>
 			</SortableContext>
+			{onScrollEnd && <div ref={sentinelRef} className="h-1" />}
 			<ScrollBar orientation="vertical" />
 		</ScrollArea>
 	)
