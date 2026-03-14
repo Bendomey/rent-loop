@@ -98,7 +98,7 @@ export default function PropertyDashboard({ matches }: Route.ComponentProps) {
 							</div>
 						</div>
 					</header>
-					<div className="h-full">
+					<div className="min-h-0 flex-1 overflow-auto">
 						<Outlet />
 					</div>
 				</SidebarInset>

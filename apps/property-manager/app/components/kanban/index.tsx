@@ -160,7 +160,7 @@ export const KanbanCards = <T extends KanbanItemProps = KanbanItemProps>({
 	const items = filteredData.map((item) => item.id)
 
 	return (
-		<ScrollArea className="overflow-hidden">
+		<ScrollArea className="min-h-0 flex-1">
 			<SortableContext items={items}>
 				<div
 					className={cn('flex flex-grow flex-col gap-2 p-2', className)}

@@ -63,8 +63,8 @@ const shortDateFormatter = new Intl.DateTimeFormat('en-US', {
 export function PropertyActivitiesMaintenanceRequestsModule() {
 	const [features, setFeatures] = useState(exampleFeatures)
 	return (
-		<div className="w-full overflow-auto p-5">
-			<div className="mb-5 flex items-center justify-between">
+		<div className="flex h-full flex-col overflow-hidden p-5">
+			<div className="mb-5 flex shrink-0 items-center justify-between">
 				<div>
 					<TypographyH3>Maintenance Requests</TypographyH3>
 				</div>
@@ -75,55 +75,57 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 					</Button>
 				</div>
 			</div>
-			<KanbanProvider
-				columns={columns}
-				data={features}
-				onDataChange={setFeatures}
-			>
-				{(column) => (
-					<KanbanBoard id={column.id} key={column.id}>
-						<KanbanHeader>
-							<div className="flex items-center gap-2">
-								<div
-									className="h-2 w-2 rounded-full"
-									style={{ backgroundColor: column.color }}
-								/>
-								<span>{column.name}</span>
-							</div>
-						</KanbanHeader>
-						<KanbanCards id={column.id}>
-							{(feature: (typeof features)[number]) => (
-								<KanbanCard
-									column={column.id}
-									id={feature.id}
-									key={feature.id}
-									name={feature.name}
-								>
-									<div className="flex items-start justify-between gap-2">
-										<div className="flex flex-col gap-1">
-											<p className="m-0 flex-1 text-sm font-medium">
-												{feature.name}
-											</p>
+			<div className="min-h-0 flex-1 overflow-x-auto">
+				<KanbanProvider
+					columns={columns}
+					data={features}
+					onDataChange={setFeatures}
+				>
+					{(column) => (
+						<KanbanBoard id={column.id} key={column.id}>
+							<KanbanHeader>
+								<div className="flex items-center gap-2">
+									<div
+										className="h-2 w-2 rounded-full"
+										style={{ backgroundColor: column.color }}
+									/>
+									<span>{column.name}</span>
+								</div>
+							</KanbanHeader>
+							<KanbanCards id={column.id}>
+								{(feature: (typeof features)[number]) => (
+									<KanbanCard
+										column={column.id}
+										id={feature.id}
+										key={feature.id}
+										name={feature.name}
+									>
+										<div className="flex items-start justify-between gap-2">
+											<div className="flex flex-col gap-1">
+												<p className="m-0 flex-1 text-sm font-medium">
+													{feature.name}
+												</p>
+											</div>
+											{feature.owner && (
+												<Avatar className="h-4 w-4 shrink-0">
+													<AvatarImage src={feature.owner.image} />
+													<AvatarFallback>
+														{feature.owner.name?.slice(0, 2)}
+													</AvatarFallback>
+												</Avatar>
+											)}
 										</div>
-										{feature.owner && (
-											<Avatar className="h-4 w-4 shrink-0">
-												<AvatarImage src={feature.owner.image} />
-												<AvatarFallback>
-													{feature.owner.name?.slice(0, 2)}
-												</AvatarFallback>
-											</Avatar>
-										)}
-									</div>
-									<p className="text-muted-foreground m-0 text-xs">
-										{shortDateFormatter.format(feature.startAt)} -{' '}
-										{dateFormatter.format(feature.endAt)}
-									</p>
-								</KanbanCard>
-							)}
-						</KanbanCards>
-					</KanbanBoard>
-				)}
-			</KanbanProvider>
+										<p className="text-muted-foreground m-0 text-xs">
+											{shortDateFormatter.format(feature.startAt)} -{' '}
+											{dateFormatter.format(feature.endAt)}
+										</p>
+									</KanbanCard>
+								)}
+							</KanbanCards>
+						</KanbanBoard>
+					)}
+				</KanbanProvider>
+			</div>
 		</div>
 	)
 }
