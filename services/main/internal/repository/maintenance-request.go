@@ -220,16 +220,23 @@ func (r *maintenanceRequestRepository) GetUnbilledExpenses(
 }
 
 // Scopes
+//
+// All cross-table filters use subqueries on fresh DB sessions to avoid
+// polluting the main query with joins that could conflict with GORM preloads,
+// produce duplicate rows, or bleed accumulated conditions into sub-selects.
+// Soft-deleted units and properties are explicitly excluded in every subquery.
 
 func mrClientIDScope(clientID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if clientID == nil {
 			return db
 		}
-		// Join through unit → property to filter by client
-		return db.Joins("JOIN units ON units.id = maintenance_requests.unit_id").
+		subQuery := db.Session(&gorm.Session{NewDB: true}).
+			Table("units").
+			Select("units.id").
 			Joins("JOIN properties ON properties.id = units.property_id").
-			Where("properties.client_id = ?", *clientID)
+			Where("properties.client_id = ? AND units.deleted_at IS NULL AND properties.deleted_at IS NULL", *clientID)
+		return db.Where("maintenance_requests.unit_id IN (?)", subQuery)
 	}
 }
 
@@ -238,9 +245,10 @@ func mrPropertyIDScope(propertyID *string) func(db *gorm.DB) *gorm.DB {
 		if propertyID == nil {
 			return db
 		}
-		subQuery := db.Model(&models.Unit{}).
+		subQuery := db.Session(&gorm.Session{NewDB: true}).
+			Table("units").
 			Select("id").
-			Where("property_id = ?", *propertyID)
+			Where("property_id = ? AND deleted_at IS NULL", *propertyID)
 		return db.Where("maintenance_requests.unit_id IN (?)", subQuery)
 	}
 }
