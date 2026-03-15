@@ -67,6 +67,8 @@ interface Props
 	name?: string
 	/** Function to run on input onBlur. */
 	onBlur?: FocusEventHandler<HTMLInputElement>
+	/** Callback when an image is added to the grid (after validation). */
+	onImageAdded?: (image: UploadedImage) => void
 	/** Callback when an image is removed. */
 	onRemove?: (image: UploadedImage) => void
 	/** Function that does any desired preProcessing of a file. */
@@ -98,6 +100,7 @@ export function ImageUploadBulk({
 	maxImages,
 	name = 'imageUploadBulk',
 	onBlur,
+	onImageAdded,
 	onRemove,
 	preProcessing,
 	validation,
@@ -206,6 +209,7 @@ export function ImageUploadBulk({
 					}
 
 					setImages((prev) => [...prev, newImage])
+					onImageAdded?.(newImage)
 				} catch (validationError) {
 					URL.revokeObjectURL(imageUrl)
 					if (typeof validationError === 'string') {

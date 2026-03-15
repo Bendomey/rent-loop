@@ -1,15 +1,16 @@
-import type { DragEndEvent } from '~/components/kanban'
 import { useQueryClient } from '@tanstack/react-query'
 import { Loader2, Plus } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router'
 import { toast } from 'sonner'
+import { RequestCard } from './request-card'
 import {
 	useGetMaintenanceRequestsByStatus,
 	useUpdateMaintenanceRequestStatus,
 } from '~/api/maintenance-requests'
+import type { DragEndEvent } from '~/components/kanban'
 import {
 	KanbanBoard,
-	KanbanCard,
 	KanbanCards,
 	KanbanHeader,
 	KanbanProvider,
@@ -19,8 +20,6 @@ import { TypographyH3 } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
 import { useProperty } from '~/providers/property-provider'
-import { CreateRequestDialog } from './create-request-dialog'
-import { RequestCard } from './request-card'
 
 type MaintenanceKanbanItem = MaintenanceRequest & {
 	column: MaintenanceRequestStatus
@@ -55,7 +54,6 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 	const queryClient = useQueryClient()
 	const propertyId = safeString(clientUserProperty?.property?.id)
 
-	const [createOpen, setCreateOpen] = useState(false)
 	const isDraggingRef = useRef(false)
 
 	const newQuery = useGetMaintenanceRequestsByStatus({
@@ -98,7 +96,7 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 			...flattenPages(resolvedQuery.data?.pages).map(toKanbanItem),
 			...flattenPages(canceledQuery.data?.pages).map(toKanbanItem),
 		],
-		// eslint-disable-next-line react-hooks/exhaustive-deps
+
 		[
 			newQuery.data,
 			inProgressQuery.data,
@@ -108,7 +106,8 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 		],
 	)
 
-	const [localData, setLocalData] = useState<MaintenanceKanbanItem[]>(serverData)
+	const [localData, setLocalData] =
+		useState<MaintenanceKanbanItem[]>(serverData)
 
 	useEffect(() => {
 		if (!isDraggingRef.current) {
@@ -168,9 +167,13 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 		<div className="flex h-full flex-col overflow-hidden p-5">
 			<div className="mb-5 flex shrink-0 items-center justify-between">
 				<TypographyH3>Maintenance Requests</TypographyH3>
-				<Button onClick={() => setCreateOpen(true)}>
-					<Plus className="size-4" />
-					Add Request
+				<Button asChild>
+					<Link
+						to={`/properties/${propertyId}/activities/maintenance-requests/new`}
+					>
+						<Plus className="size-4" />
+						Add Request
+					</Link>
 				</Button>
 			</div>
 
@@ -216,12 +219,6 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 					}}
 				</KanbanProvider>
 			</div>
-
-			<CreateRequestDialog
-				open={createOpen}
-				onOpenChange={setCreateOpen}
-				propertyId={propertyId}
-			/>
 		</div>
 	)
 }

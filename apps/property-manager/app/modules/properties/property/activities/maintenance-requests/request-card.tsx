@@ -1,5 +1,6 @@
 import { MoreHorizontal } from 'lucide-react'
 import { useState } from 'react'
+import { AssignDialog } from './assign-dialog'
 import { KanbanCard } from '~/components/kanban'
 import { Avatar, AvatarFallback } from '~/components/ui/avatar'
 import { Badge } from '~/components/ui/badge'
@@ -11,7 +12,6 @@ import {
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import { cn } from '~/lib/utils'
-import { AssignDialog } from './assign-dialog'
 
 type MaintenanceKanbanItem = MaintenanceRequest & {
 	column: MaintenanceRequestStatus
@@ -21,7 +21,8 @@ type MaintenanceKanbanItem = MaintenanceRequest & {
 
 const PRIORITY_STYLES: Record<MaintenanceRequestPriority, string> = {
 	LOW: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
-	MEDIUM: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+	MEDIUM:
+		'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
 	HIGH: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
 	EMERGENCY: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
 }
@@ -61,7 +62,7 @@ export function RequestCard({ item }: RequestCardProps) {
 			<KanbanCard column={item.column} id={item.id} name={item.name}>
 				<div className="flex flex-col gap-2">
 					<div className="flex items-start justify-between gap-1">
-						<p className="line-clamp-2 flex-1 text-sm font-medium leading-snug">
+						<p className="line-clamp-2 flex-1 text-sm leading-snug font-medium">
 							{item.title}
 						</p>
 						<DropdownMenu>
@@ -69,7 +70,7 @@ export function RequestCard({ item }: RequestCardProps) {
 								<Button
 									variant="ghost"
 									size="icon"
-									className="h-5 w-5 shrink-0 -mr-1"
+									className="-mr-1 h-5 w-5 shrink-0"
 								>
 									<MoreHorizontal className="h-3 w-3" />
 								</Button>
@@ -85,7 +86,7 @@ export function RequestCard({ item }: RequestCardProps) {
 						</DropdownMenu>
 					</div>
 
-					<div className="flex items-center gap-1 flex-wrap">
+					<div className="flex flex-wrap items-center gap-1">
 						<Badge
 							variant="outline"
 							className={cn(
@@ -106,15 +107,21 @@ export function RequestCard({ item }: RequestCardProps) {
 					{(workerInitials || managerInitials) && (
 						<div className="flex items-center gap-1">
 							{workerInitials && (
-								<Avatar className="h-5 w-5" title={`Worker: ${item.assigned_worker?.name}`}>
+								<Avatar
+									className="h-5 w-5"
+									title={`Worker: ${item.assigned_worker?.name}`}
+								>
 									<AvatarFallback className="text-[9px]">
 										{workerInitials}
 									</AvatarFallback>
 								</Avatar>
 							)}
 							{managerInitials && (
-								<Avatar className="h-5 w-5" title={`Manager: ${item.assigned_manager?.name}`}>
-									<AvatarFallback className="text-[9px] bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+								<Avatar
+									className="h-5 w-5"
+									title={`Manager: ${item.assigned_manager?.name}`}
+								>
+									<AvatarFallback className="bg-blue-100 text-[9px] text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
 										{managerInitials}
 									</AvatarFallback>
 								</Avatar>

@@ -57,9 +57,9 @@ export interface CreateMaintenanceRequestInput {
 	description: string
 	priority: MaintenanceRequestPriority
 	category: MaintenanceRequestCategory
-	unit_id?: string
-	lease_id?: string
-	visibility?: MaintenanceRequest['visibility']
+	unit_id: string
+	visibility: MaintenanceRequest['visibility']
+	attachments: Array<string>
 }
 
 const createMaintenanceRequest = async (
