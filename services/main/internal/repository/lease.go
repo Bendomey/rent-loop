@@ -12,6 +12,7 @@ import (
 type LeaseRepository interface {
 	Create(context context.Context, lease *models.Lease) error
 	GetOneWithPopulate(context context.Context, query GetLeaseQuery) (*models.Lease, error)
+	GetActiveLeaseByUnitID(context context.Context, unitID string) (*models.Lease, error)
 	Update(context context.Context, lease *models.Lease) error
 	List(context context.Context, filterQuery ListLeasesFilter) (*[]models.Lease, error)
 	Count(context context.Context, filterQuery ListLeasesFilter) (int64, error)
@@ -48,6 +49,23 @@ func (r *leaseRepository) GetOneWithPopulate(ctx context.Context, query GetLease
 	}
 
 	result := db.First(&lease)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &lease, nil
+}
+
+func (r *leaseRepository) GetActiveLeaseByUnitID(ctx context.Context, unitID string) (*models.Lease, error) {
+	var lease models.Lease
+	result := r.DB.WithContext(ctx).
+		Where("unit_id = ?", unitID).
+		Where("status IN ?", []string{
+			"Lease.Status.Pending",
+			"Lease.Status.Active",
+		}).
+		First(&lease)
+
 	if result.Error != nil {
 		return nil, result.Error
 	}

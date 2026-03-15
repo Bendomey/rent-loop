@@ -29,8 +29,7 @@ func NewMaintenanceRequestHandler(
 // ─── Request Bodies ───────────────────────────────────────────────────────────
 
 type CreateMaintenanceRequestBody struct {
-	UnitID      *string  `json:"unit_id"     validate:"omitempty,uuid4"`
-	LeaseID     *string  `json:"lease_id"    validate:"omitempty,uuid4"`
+	UnitID      string   `json:"unit_id"     validate:"omitempty,uuid4"`
 	Title       string   `json:"title"       validate:"required"`
 	Description string   `json:"description" validate:"required"`
 	Priority    string   `json:"priority"    validate:"required,oneof=LOW MEDIUM HIGH EMERGENCY"`
@@ -110,19 +109,8 @@ func (h *MaintenanceRequestHandler) Create(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Require exactly one of unit_id or lease_id (XOR).
-	if body.UnitID == nil && body.LeaseID == nil {
-		HandleErrorResponse(w, pkg.BadRequestError("either unit_id or lease_id must be provided", nil))
-		return
-	}
-	if body.UnitID != nil && body.LeaseID != nil {
-		HandleErrorResponse(w, pkg.BadRequestError("only one of unit_id or lease_id may be provided, not both", nil))
-		return
-	}
-
 	mr, err := h.service.CreateByAdmin(r.Context(), services.CreateMaintenanceRequestByAdminInput{
 		UnitID:       body.UnitID,
-		LeaseID:      body.LeaseID,
 		ClientUserID: currentUser.ID,
 		Title:        body.Title,
 		Desc:         body.Description,

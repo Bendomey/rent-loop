@@ -12497,9 +12497,6 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "lease_id": {
-                    "type": "string"
-                },
                 "priority": {
                     "type": "string",
                     "enum": [

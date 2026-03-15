@@ -91,8 +91,7 @@ type CreateMaintenanceRequestByTenantInput struct {
 }
 
 type CreateMaintenanceRequestByAdminInput struct {
-	UnitID       *string // nil when LeaseID is provided; derived from lease in service
-	LeaseID      *string
+	UnitID       string
 	ClientUserID string
 	Title        string
 	Desc         string
@@ -198,14 +197,14 @@ func (s *maintenanceRequestService) CreateByAdmin(
 	ctx context.Context,
 	input CreateMaintenanceRequestByAdminInput,
 ) (*models.MaintenanceRequest, error) {
-	var createdByTenantID *string
-	unitID := ""
-	if input.UnitID != nil {
-		unitID = *input.UnitID
-	}
+	var createdByTenantID *string = nil
+	unitID := input.UnitID
 
-	if input.LeaseID != nil {
-		lease, err := s.leaseRepo.GetOneWithPopulate(ctx, repository.GetLeaseQuery{ID: *input.LeaseID})
+	var leaseID *string = nil
+
+	if input.Visibility == "TENANT_VISIBLE" {
+		// try to find an active lease connected to unitId
+		lease, err := s.leaseRepo.GetActiveLeaseByUnitID(ctx, input.UnitID)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return nil, pkg.NotFoundError("lease not found", nil)
@@ -218,13 +217,15 @@ func (s *maintenanceRequestService) CreateByAdmin(
 				},
 			})
 		}
-		unitID = lease.UnitId
+
+		leaseIDString := lease.ID.String()
+		leaseID = &leaseIDString
 		createdByTenantID = &lease.TenantId
 	}
 
 	mr := &models.MaintenanceRequest{
 		UnitID:                unitID,
-		LeaseID:               input.LeaseID,
+		LeaseID:               leaseID,
 		CreatedByClientUserID: &input.ClientUserID,
 		CreatedByTenantID:     createdByTenantID,
 		Title:                 input.Title,
