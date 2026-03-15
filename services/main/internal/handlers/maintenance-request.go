@@ -29,12 +29,12 @@ func NewMaintenanceRequestHandler(
 // ─── Request Bodies ───────────────────────────────────────────────────────────
 
 type CreateMaintenanceRequestBody struct {
-	UnitID      string   `json:"unit_id"     validate:"omitempty,uuid4"`
+	UnitID      string   `json:"unit_id"     validate:"required,uuid4"`
 	Title       string   `json:"title"       validate:"required"`
 	Description string   `json:"description" validate:"required"`
 	Priority    string   `json:"priority"    validate:"required,oneof=LOW MEDIUM HIGH EMERGENCY"`
 	Category    string   `json:"category"    validate:"required,oneof=PLUMBING ELECTRICAL HVAC OTHER"`
-	Visibility  string   `json:"visibility"  validate:"omitempty,oneof=TENANT_VISIBLE INTERNAL_ONLY"`
+	Visibility  string   `json:"visibility"  validate:"required,oneof=TENANT_VISIBLE INTERNAL_ONLY"`
 	Attachments []string `json:"attachments" validate:"omitempty"`
 }
 

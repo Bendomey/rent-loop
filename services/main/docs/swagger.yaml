@@ -621,6 +621,8 @@ definitions:
     - description
     - priority
     - title
+    - unit_id
+    - visibility
     type: object
   handlers.CreateOfflinePaymentRequest:
     properties:

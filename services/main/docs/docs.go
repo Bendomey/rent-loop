@@ -12476,7 +12476,9 @@ const docTemplate = `{
                 "category",
                 "description",
                 "priority",
-                "title"
+                "title",
+                "unit_id",
+                "visibility"
             ],
             "properties": {
                 "attachments": {
