@@ -55,6 +55,7 @@ export * from './properties/property/tenants/all/tenant/leases'
 
 export * from './properties/property/tenants/leases'
 export * from './properties/property/tenants/leases/lease'
+export * from './properties/property/tenants/all/tenant/activity-logs'
 export * from './properties/property/tenants/all/tenant/payments'
 export * from './properties/property/tenants/all/tenant/maintenance-requests'
 
