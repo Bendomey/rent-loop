@@ -9,6 +9,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/getsentry/raven-go"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -207,7 +208,8 @@ func (s *maintenanceRequestService) CreateByAdmin(
 		lease, err := s.leaseRepo.GetActiveLeaseByUnitID(ctx, input.UnitID)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
-				return nil, pkg.NotFoundError("lease not found", nil)
+				// if there is no lease, then we should allow only internal admins to see it.
+				input.Visibility = "INTERNAL_ONLY"
 			}
 			return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 				Err: err,
@@ -216,11 +218,12 @@ func (s *maintenanceRequestService) CreateByAdmin(
 					"action":   "fetching lease to resolve tenant and unit",
 				},
 			})
+		} else {
+			leaseIDString := lease.ID.String()
+			leaseID = &leaseIDString
+			createdByTenantID = &lease.TenantId
 		}
 
-		leaseIDString := lease.ID.String()
-		leaseID = &leaseIDString
-		createdByTenantID = &lease.TenantId
 	}
 
 	mr := &models.MaintenanceRequest{
@@ -251,6 +254,40 @@ func (s *maintenanceRequestService) CreateByAdmin(
 				"action":   "creating maintenance request",
 			},
 		})
+	}
+
+	// lets send push notification to tenant that an MR was created on their behalf
+	if createdByTenantID != nil {
+		tenantAccount, err := s.tenantAccountRepo.FindOne(ctx, map[string]any{
+			"tenant_id": *createdByTenantID,
+		})
+
+		if err != nil || tenantAccount == nil {
+			log.WithError(err).WithField("tenantID", *createdByTenantID).
+				Warn("[MaintenanceRequest] could not resolve tenant account for notification")
+			raven.CaptureError(err, map[string]string{
+				"function":               "CreateByAdmin",
+				"action":                 "resolving tenant account for notification",
+				"tenant_id":              *createdByTenantID,
+				"maintenance_request_id": mr.ID.String(),
+			})
+		} else {
+			tenantAccountID := tenantAccount.ID.String()
+			if err := s.notificationService.SendToTenantAccount(ctx, tenantAccountID, "New maintenance request", "A new maintenance request has been created on your behalf: "+input.Title, map[string]string{
+				"type":                   "MAINTENANCE",
+				"maintenance_request_id": mr.ID.String(),
+				"status":                 "NEW",
+			}); err != nil {
+				log.WithError(err).WithField("tenantAccountID", tenantAccountID).
+					Warn("[MaintenanceRequest] push notification failed")
+				raven.CaptureError(err, map[string]string{
+					"function":               "CreateByAdmin",
+					"action":                 "sending push notification",
+					"tenant_id":              *createdByTenantID,
+					"maintenance_request_id": mr.ID.String(),
+				})
+			}
+		}
 	}
 
 	return mr, nil
