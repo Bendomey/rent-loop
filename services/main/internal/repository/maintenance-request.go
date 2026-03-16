@@ -78,7 +78,7 @@ type ListMaintenanceRequestsFilter struct {
 	PropertyID        *string
 	UnitID            *string
 	LeaseID           *string
-	Status            *string
+	Statuses          []string
 	Priority          *string
 	Category          *string
 	AssignedWorkerID  *string
@@ -142,7 +142,7 @@ func (r *maintenanceRequestRepository) List(
 			mrPropertyIDScope(filters.PropertyID),
 			mrUnitIDScope(filters.UnitID),
 			mrLeaseIDScope(filters.LeaseID),
-			mrStatusScope(filters.Status),
+			mrStatusScope(filters.Statuses),
 			mrPriorityScope(filters.Priority),
 			mrCategoryScope(filters.Category),
 			mrAssignedWorkerScope(filters.AssignedWorkerID),
@@ -181,7 +181,7 @@ func (r *maintenanceRequestRepository) Count(
 			mrPropertyIDScope(filters.PropertyID),
 			mrUnitIDScope(filters.UnitID),
 			mrLeaseIDScope(filters.LeaseID),
-			mrStatusScope(filters.Status),
+			mrStatusScope(filters.Statuses),
 			mrPriorityScope(filters.Priority),
 			mrCategoryScope(filters.Category),
 			mrAssignedWorkerScope(filters.AssignedWorkerID),
@@ -462,12 +462,12 @@ func mrLeaseIDScope(leaseID *string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func mrStatusScope(status *string) func(db *gorm.DB) *gorm.DB {
+func mrStatusScope(statuses []string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if status == nil {
+		if len(statuses) == 0 {
 			return db
 		}
-		return db.Where("maintenance_requests.status = ?", *status)
+		return db.Where("maintenance_requests.status IN ?", statuses)
 	}
 }
 

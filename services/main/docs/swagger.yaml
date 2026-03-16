@@ -6635,9 +6635,12 @@ paths:
       - in: query
         name: start_date
         type: string
-      - in: query
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
         name: status
-        type: string
+        type: array
       - in: query
         name: unit_id
         type: string
@@ -10799,15 +10802,12 @@ paths:
       - in: query
         name: start_date
         type: string
-      - enum:
-        - NEW
-        - IN_PROGRESS
-        - IN_REVIEW
-        - RESOLVED
-        - CANCELED
+      - collectionFormat: csv
         in: query
+        items:
+          type: string
         name: status
-        type: string
+        type: array
       produces:
       - application/json
       responses:

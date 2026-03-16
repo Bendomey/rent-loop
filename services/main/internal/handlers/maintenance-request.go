@@ -152,14 +152,14 @@ func (h *MaintenanceRequestHandler) Create(w http.ResponseWriter, r *http.Reques
 
 type ListMaintenanceRequestsQuery struct {
 	lib.FilterQueryInput
-	Status            *string `json:"status"              query:"status"              description:"Filter by status (NEW, IN_PROGRESS, IN_REVIEW, RESOLVED, CANCELED)"`
-	Priority          *string `json:"priority"            query:"priority"            description:"Filter by priority (LOW, MEDIUM, HIGH, EMERGENCY)"`
-	Category          *string `json:"category"            query:"category"            description:"Filter by category (PLUMBING, ELECTRICAL, HVAC, OTHER)"`
-	AssignedWorkerID  *string `json:"assigned_worker_id"  query:"assigned_worker_id"  description:"Filter by assigned worker UUID"`
-	AssignedManagerID *string `json:"assigned_manager_id" query:"assigned_manager_id" description:"Filter by assigned manager UUID"`
-	PropertyID        *string `json:"property_id"         query:"property_id"         description:"Filter by property UUID"                                            validate:"omitempty,uuid4"`
-	UnitID            *string `json:"unit_id"             query:"unit_id"             description:"Filter by unit UUID"                                                validate:"omitempty,uuid4"`
-	LeaseID           *string `json:"lease_id"            query:"lease_id"            description:"Filter by lease UUID"                                               validate:"omitempty,uuid4"`
+	Status            []string `json:"status"              query:"status"              description:"Filter by status (NEW, IN_PROGRESS, IN_REVIEW, RESOLVED, CANCELED)"`
+	Priority          *string  `json:"priority"            query:"priority"            description:"Filter by priority (LOW, MEDIUM, HIGH, EMERGENCY)"`
+	Category          *string  `json:"category"            query:"category"            description:"Filter by category (PLUMBING, ELECTRICAL, HVAC, OTHER)"`
+	AssignedWorkerID  *string  `json:"assigned_worker_id"  query:"assigned_worker_id"  description:"Filter by assigned worker UUID"`
+	AssignedManagerID *string  `json:"assigned_manager_id" query:"assigned_manager_id" description:"Filter by assigned manager UUID"`
+	PropertyID        *string  `json:"property_id"         query:"property_id"         description:"Filter by property UUID"                                            validate:"omitempty,uuid4"`
+	UnitID            *string  `json:"unit_id"             query:"unit_id"             description:"Filter by unit UUID"                                                validate:"omitempty,uuid4"`
+	LeaseID           *string  `json:"lease_id"            query:"lease_id"            description:"Filter by lease UUID"                                               validate:"omitempty,uuid4"`
 }
 
 // List godoc
@@ -192,7 +192,7 @@ func (h *MaintenanceRequestHandler) List(w http.ResponseWriter, r *http.Request)
 	clientID := currentUser.ClientID
 	filters := repository.ListMaintenanceRequestsFilter{
 		ClientID:          &clientID,
-		Status:            lib.NullOrString(r.URL.Query().Get("status")),
+		Statuses:          r.URL.Query()["status"],
 		Priority:          lib.NullOrString(r.URL.Query().Get("priority")),
 		Category:          lib.NullOrString(r.URL.Query().Get("category")),
 		AssignedWorkerID:  lib.NullOrString(r.URL.Query().Get("assigned_worker_id")),
@@ -914,9 +914,9 @@ func (h *MaintenanceRequestHandler) TenantCreate(w http.ResponseWriter, r *http.
 
 type TenantListMaintenanceRequestsQuery struct {
 	lib.FilterQueryInput
-	Status   *string `json:"status"   query:"status"   validate:"omitempty,oneof=NEW IN_PROGRESS IN_REVIEW RESOLVED CANCELED"`
-	Priority *string `json:"priority" query:"priority" validate:"omitempty,oneof=LOW MEDIUM HIGH EMERGENCY"`
-	Category *string `json:"category" query:"category" validate:"omitempty,oneof=PLUMBING ELECTRICAL HVAC OTHER"`
+	Status   []string `json:"status"   query:"status"   validate:"omitempty,dive,oneof=NEW IN_PROGRESS IN_REVIEW RESOLVED CANCELED"`
+	Priority *string  `json:"priority" query:"priority" validate:"omitempty,oneof=LOW MEDIUM HIGH EMERGENCY"`
+	Category *string  `json:"category" query:"category" validate:"omitempty,oneof=PLUMBING ELECTRICAL HVAC OTHER"`
 }
 
 // TenantList godoc
@@ -948,7 +948,7 @@ func (h *MaintenanceRequestHandler) TenantList(w http.ResponseWriter, r *http.Re
 	}
 
 	query := TenantListMaintenanceRequestsQuery{
-		Status:   lib.NullOrString(r.URL.Query().Get("status")),
+		Status:   r.URL.Query()["status"],
 		Priority: lib.NullOrString(r.URL.Query().Get("priority")),
 		Category: lib.NullOrString(r.URL.Query().Get("category")),
 	}
@@ -968,7 +968,7 @@ func (h *MaintenanceRequestHandler) TenantList(w http.ResponseWriter, r *http.Re
 	filters := repository.ListMaintenanceRequestsFilter{
 		TenantID: &tenantID,
 		LeaseID:  &leaseID,
-		Status:   query.Status,
+		Statuses: query.Status,
 		Priority: query.Priority,
 		Category: query.Category,
 	}

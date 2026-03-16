@@ -4579,7 +4579,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
                         "name": "status",
                         "in": "query"
                     },
@@ -10981,14 +10985,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "NEW",
-                            "IN_PROGRESS",
-                            "IN_REVIEW",
-                            "RESOLVED",
-                            "CANCELED"
-                        ],
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
                         "name": "status",
                         "in": "query"
                     }
