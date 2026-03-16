@@ -219,7 +219,11 @@ func (h *ClientApplicationHandler) ApproveClientApplication(w http.ResponseWrite
 	}
 	applicationId := chi.URLParam(r, "application_id")
 
-	clientApplication, err := h.service.ApproveClientApplication(r.Context(), applicationId, currentAdmin.ID)
+	input := services.ApproveClientApplicationInput{
+		ID:      applicationId,
+		AdminID: currentAdmin.ID,
+	}
+	clientApplication, err := h.service.ApproveClientApplication(r.Context(), input)
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return
@@ -278,20 +282,19 @@ func (h *ClientApplicationHandler) ListClientApplications(w http.ResponseWriter,
 	}
 
 	input := repository.ListClientApplicationsFilter{
-		Status:  filters.Status,
-		Type:    filters.Type,
-		SubType: filters.SubType,
-		IDs:     lib.NullOrStringArray(filters.IDs),
+		FilterQuery: *filterQuery,
+		Status:      filters.Status,
+		Type:        filters.Type,
+		SubType:     filters.SubType,
+		IDs:         lib.NullOrStringArray(filters.IDs),
 	}
-	clientApplications, clientApplicationsErr := h.service.ListClientApplications(r.Context(), *filterQuery, input)
-
+	clientApplications, clientApplicationsErr := h.service.ListClientApplications(r.Context(), input)
 	if clientApplicationsErr != nil {
 		HandleErrorResponse(w, clientApplicationsErr)
 		return
 	}
 
-	count, countsErr := h.service.CountClientApplications(r.Context(), *filterQuery, input)
-
+	count, countsErr := h.service.CountClientApplications(r.Context(), input)
 	if countsErr != nil {
 		HandleErrorResponse(w, countsErr)
 		return

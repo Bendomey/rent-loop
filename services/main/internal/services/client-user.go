@@ -47,6 +47,7 @@ type ClientUserService interface {
 	DeactivateClientUser(ctx context.Context, input DeactivateClientUserInput) (*models.ClientUser, error)
 	UpdateClientUser(ctx context.Context, input UpdateClientUserInput) (*models.ClientUser, error)
 	UpateClientUserPassword(ctx context.Context, input UpdateClientUserPasswordInput) (*models.ClientUser, error)
+	InsertClientUser(ctx context.Context, clientUser *models.ClientUser) error
 }
 
 type clientUserService struct {
@@ -61,6 +62,19 @@ func NewClientUserService(
 	clientRepo repository.ClientRepository,
 ) ClientUserService {
 	return &clientUserService{appCtx, repo, clientRepo}
+}
+
+func (s *clientUserService) InsertClientUser(ctx context.Context, clientUser *models.ClientUser) error {
+	if err := s.repo.Create(ctx, clientUser); err != nil {
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CreateClientUser",
+				"action":   "creating new client user",
+			},
+		})
+	}
+	return nil
 }
 
 type CreateClientUserInput struct {
@@ -113,14 +127,9 @@ func (s *clientUserService) CreateClientUser(
 		CreatedByID: &input.CreatedByID,
 	}
 
-	if err := s.repo.Create(ctx, &clientUser); err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "CreateClientUser",
-				"action":   "creating new client user",
-			},
-		})
+	insertClientUserErr := s.InsertClientUser(ctx, &clientUser)
+	if insertClientUserErr != nil {
+		return nil, insertClientUserErr
 	}
 
 	client, clientErr := s.clientRepo.GetByID(ctx, input.ClientID)
