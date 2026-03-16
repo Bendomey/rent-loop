@@ -5,6 +5,7 @@ import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { RequestCard } from './request-card'
 import {
+	useCreateMaintenanceRequestComment,
 	useGetMaintenanceRequestsInfinite,
 	useUpdateMaintenanceRequestStatus,
 } from '~/api/maintenance-requests'
@@ -16,9 +17,18 @@ import {
 	KanbanProvider,
 } from '~/components/kanban'
 import { Button } from '~/components/ui/button'
-import { TypographyH3 } from '~/components/ui/typography'
+import {
+	Dialog,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '~/components/ui/dialog'
+import { Textarea } from '~/components/ui/textarea'
+import { TypographyH3, TypographyMuted } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
+import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
 
 type MaintenanceKanbanItem = MaintenanceRequest & {
@@ -50,6 +60,11 @@ const flattenPages = (
 		| Array<FetchMultipleDataResponse<MaintenanceRequest> | undefined>
 		| undefined,
 ): MaintenanceRequest[] => (pages ?? []).flatMap((p) => p?.rows ?? [])
+
+interface PendingStatusChange {
+	item: MaintenanceKanbanItem
+	targetColumn: MaintenanceRequestStatus
+}
 
 export function PropertyActivitiesMaintenanceRequestsModule() {
 	const { clientUserProperty } = useProperty()
@@ -116,7 +131,20 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 		}
 	}, [serverData])
 
+	const [pendingChange, setPendingChange] =
+		useState<PendingStatusChange | null>(null)
+	const [statusNote, setStatusNote] = useState('')
+
 	const updateStatus = useUpdateMaintenanceRequestStatus()
+	const createComment = useCreateMaintenanceRequestComment()
+
+	const invalidateColumns = (...statuses: MaintenanceRequestStatus[]) => {
+		for (const status of statuses) {
+			void queryClient.invalidateQueries({
+				queryKey: [QUERY_KEYS.MAINTENANCE_REQUESTS, columnParams(status)],
+			})
+		}
+	}
 
 	const handleDragStart = () => {
 		isDraggingRef.current = true
@@ -137,6 +165,12 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 
 		if (draggedItem.status === targetColumn) return
 
+		if (targetColumn === 'RESOLVED' || targetColumn === 'CANCELED') {
+			setPendingChange({ item: draggedItem, targetColumn })
+			setStatusNote('')
+			return
+		}
+
 		updateStatus.mutate(
 			{ id: draggedItem.id, status: targetColumn },
 			{
@@ -144,17 +178,57 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 					toast.error(
 						err instanceof Error ? err.message : 'Failed to update status',
 					)
-					void queryClient.invalidateQueries({
-						queryKey: [QUERY_KEYS.MAINTENANCE_REQUESTS],
-					})
+					invalidateColumns(draggedItem.status, targetColumn)
 				},
-				onSuccess: () => {
-					void queryClient.invalidateQueries({
-						queryKey: [QUERY_KEYS.MAINTENANCE_REQUESTS],
-					})
-				},
+				onSuccess: () => invalidateColumns(draggedItem.status, targetColumn),
 			},
 		)
+	}
+
+	const handleConfirm = async () => {
+		if (!pendingChange) return
+		const { item, targetColumn } = pendingChange
+		const isCanceled = targetColumn === 'CANCELED'
+		const note = statusNote.trim()
+
+		if (isCanceled && !note) {
+			toast.error('Please provide a cancellation reason')
+			return
+		}
+
+		try {
+			await updateStatus.mutateAsync({
+				id: item.id,
+				status: targetColumn,
+				cancellation_reason: isCanceled ? note || undefined : undefined,
+			})
+			if (note) {
+				await createComment.mutateAsync({ id: item.id, content: note })
+			}
+			invalidateColumns(item.status, targetColumn)
+			setPendingChange(null)
+			setStatusNote('')
+			toast.success('Status updated')
+		} catch (err) {
+			toast.error(
+				err instanceof Error ? err.message : 'Failed to update status',
+			)
+		}
+	}
+
+	const handleDialogClose = (open: boolean) => {
+		if (!open && pendingChange) {
+			// Revert the optimistic kanban move
+			setLocalData((prev) =>
+				prev.map((it) =>
+					it.id === pendingChange.item.id
+						? { ...it, column: pendingChange.item.status }
+						: it,
+				),
+			)
+			setPendingChange(null)
+			setStatusNote('')
+		}
 	}
 
 	const handleScrollEnd = (status: MaintenanceRequestStatus) => {
@@ -164,68 +238,125 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 		}
 	}
 
-	return (
-		<div className="flex h-full flex-col">
-			<div className="m-5 flex shrink-0 items-center justify-between">
-				<TypographyH3>Maintenance Requests</TypographyH3>
-				<Button asChild>
-					<Link
-						to={`/properties/${propertyId}/activities/maintenance-requests/new`}
-					>
-						<Plus className="size-4" />
-						Add Request
-					</Link>
-				</Button>
-			</div>
+	const isCanceled = pendingChange?.targetColumn === 'CANCELED'
+	const isConfirming = updateStatus.isPending || createComment.isPending
 
-			<div className="relative min-h-0 flex-1">
-				<div className="absolute inset-0 mb-5 overflow-x-auto px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-					<KanbanProvider
-						columns={COLUMNS}
-						data={localData}
-						onDataChange={setLocalData}
-						onDragStart={handleDragStart}
-						onDragEnd={handleDragEnd}
-					>
-						{(column) => {
-							const query = columnQueries[column.id]
-							return (
-								<KanbanBoard id={column.id} key={column.id}>
-									<KanbanHeader>
-										<div className="flex items-center gap-2">
-											<div
-												className="h-2 w-2 rounded-full"
-												style={{ backgroundColor: column.color }}
-											/>
-											<span>{column.name}</span>
-											<span className="text-muted-foreground ml-auto text-xs font-normal">
-												{query.data?.pages[0]?.meta?.total ?? 0}
-											</span>
-										</div>
-									</KanbanHeader>
-									<KanbanCards
-										id={column.id}
-										onScrollEnd={() => handleScrollEnd(column.id)}
-									>
-										{(item: MaintenanceKanbanItem) => (
-											<RequestCard
-												key={item.id}
-												item={item}
-												propertyId={propertyId}
-											/>
+	return (
+		<>
+			<Dialog open={!!pendingChange} onOpenChange={handleDialogClose}>
+				<DialogContent className="sm:max-w-md">
+					<DialogHeader>
+						<DialogTitle>
+							{isCanceled ? 'Cancel request' : 'Resolve request'}
+						</DialogTitle>
+					</DialogHeader>
+					<div className="flex flex-col gap-2">
+						<TypographyMuted className="text-sm">
+							{isCanceled
+								? 'Provide a reason for cancellation.'
+								: 'Add an optional note about the resolution.'}
+						</TypographyMuted>
+						<Textarea
+							placeholder={
+								isCanceled
+									? 'Cancellation reason...'
+									: 'Resolution notes (optional)...'
+							}
+							value={statusNote}
+							onChange={(e) => setStatusNote(e.target.value)}
+							rows={3}
+							className="min-h-44 resize-none"
+							autoFocus
+						/>
+					</div>
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => handleDialogClose(false)}
+							disabled={isConfirming}
+						>
+							Cancel
+						</Button>
+						<Button
+							variant={isCanceled ? 'destructive' : 'default'}
+							onClick={handleConfirm}
+							disabled={isConfirming || (isCanceled && !statusNote.trim())}
+							className={cn({
+								'bg-green-600 text-white hover:bg-green-700': !isCanceled,
+							})}
+						>
+							{isConfirming
+								? 'Saving...'
+								: isCanceled
+									? 'Cancel request'
+									: 'Mark as resolved'}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			<div className="flex h-full flex-col">
+				<div className="m-5 flex shrink-0 items-center justify-between">
+					<TypographyH3>Maintenance Requests</TypographyH3>
+					<Button asChild>
+						<Link
+							to={`/properties/${propertyId}/activities/maintenance-requests/new`}
+						>
+							<Plus className="size-4" />
+							Add Request
+						</Link>
+					</Button>
+				</div>
+
+				<div className="relative min-h-0 flex-1">
+					<div className="absolute inset-0 mb-5 overflow-x-auto px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+						<KanbanProvider
+							columns={COLUMNS}
+							data={localData}
+							onDataChange={setLocalData}
+							onDragStart={handleDragStart}
+							onDragEnd={handleDragEnd}
+						>
+							{(column) => {
+								const query = columnQueries[column.id]
+								return (
+									<KanbanBoard id={column.id} key={column.id}>
+										<KanbanHeader>
+											<div className="flex items-center gap-2">
+												<div
+													className="h-2 w-2 rounded-full"
+													style={{ backgroundColor: column.color }}
+												/>
+												<span>{column.name}</span>
+												<span className="text-muted-foreground ml-auto text-xs font-normal">
+													{query.data?.pages[0]?.meta?.total ?? 0}
+												</span>
+											</div>
+										</KanbanHeader>
+										<KanbanCards
+											id={column.id}
+											onScrollEnd={() => handleScrollEnd(column.id)}
+										>
+											{(item: MaintenanceKanbanItem) => (
+												<RequestCard
+													key={item.id}
+													item={item}
+													propertyId={propertyId}
+												/>
+											)}
+										</KanbanCards>
+										{query.isFetchingNextPage && (
+											<div className="flex justify-center py-2">
+												<Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
+											</div>
 										)}
-									</KanbanCards>
-									{query.isFetchingNextPage && (
-										<div className="flex justify-center py-2">
-											<Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
-										</div>
-									)}
-								</KanbanBoard>
-							)
-						}}
-					</KanbanProvider>
+									</KanbanBoard>
+								)
+							}}
+						</KanbanProvider>
+					</div>
 				</div>
 			</div>
-		</div>
+		</>
 	)
 }

@@ -910,6 +910,13 @@ func (h *MaintenanceRequestHandler) TenantCreate(w http.ResponseWriter, r *http.
 	})
 }
 
+type TenantListMaintenanceRequestsQuery struct {
+	lib.FilterQueryInput
+	Status   *string `json:"status"   query:"status"   validate:"omitempty,oneof=NEW IN_PROGRESS IN_REVIEW RESOLVED CANCELED"`
+	Priority *string `json:"priority" query:"priority" validate:"omitempty,oneof=LOW MEDIUM HIGH EMERGENCY"`
+	Category *string `json:"category" query:"category" validate:"omitempty,oneof=PLUMBING ELECTRICAL HVAC OTHER"`
+}
+
 // TenantList godoc
 //
 //	@Summary		List maintenance requests (Tenant)
@@ -919,7 +926,9 @@ func (h *MaintenanceRequestHandler) TenantCreate(w http.ResponseWriter, r *http.
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			lease_id	path		string																											true	"Lease ID"
+//	@Param			q			query		TenantListMaintenanceRequestsQuery																				true	"Query parameters"
 //	@Success		200			{object}	object{data=object{rows=[]transformations.OutputMaintenanceRequest,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Maintenance requests"
+//	@Failure		400			{object}	lib.HTTPError																									"Invalid query parameters"
 //	@Failure		401			{object}	string																											"Invalid or absent authentication token"
 //	@Failure		500			{object}	string																											"An unexpected error occurred"
 //	@Router			/api/v1/leases/{lease_id}/maintenance-requests [get]
@@ -936,6 +945,16 @@ func (h *MaintenanceRequestHandler) TenantList(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	query := TenantListMaintenanceRequestsQuery{
+		Status:   lib.NullOrString(r.URL.Query().Get("status")),
+		Priority: lib.NullOrString(r.URL.Query().Get("priority")),
+		Category: lib.NullOrString(r.URL.Query().Get("category")),
+	}
+
+	if !lib.ValidateRequest(h.appCtx.Validator, query, w) {
+		return
+	}
+
 	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
 	if filterErr != nil {
 		HandleErrorResponse(w, filterErr)
@@ -947,6 +966,9 @@ func (h *MaintenanceRequestHandler) TenantList(w http.ResponseWriter, r *http.Re
 	filters := repository.ListMaintenanceRequestsFilter{
 		TenantID: &tenantID,
 		LeaseID:  &leaseID,
+		Status:   query.Status,
+		Priority: query.Priority,
+		Category: query.Category,
 	}
 
 	mrs, listErr := h.service.ListMaintenanceRequests(r.Context(), *filterQuery, filters)

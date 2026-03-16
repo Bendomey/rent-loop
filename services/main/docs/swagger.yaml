@@ -10741,6 +10741,70 @@ paths:
         name: lease_id
         required: true
         type: string
+      - enum:
+        - PLUMBING
+        - ELECTRICAL
+        - HVAC
+        - OTHER
+        in: query
+        name: category
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - enum:
+        - LOW
+        - MEDIUM
+        - HIGH
+        - EMERGENCY
+        in: query
+        name: priority
+        type: string
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - NEW
+        - IN_PROGRESS
+        - IN_REVIEW
+        - RESOLVED
+        - CANCELED
+        in: query
+        name: status
+        type: string
       produces:
       - application/json
       responses:
@@ -10758,6 +10822,10 @@ paths:
                     type: array
                 type: object
             type: object
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
         "401":
           description: Invalid or absent authentication token
           schema:
