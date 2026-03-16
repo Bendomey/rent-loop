@@ -1,12 +1,10 @@
 import 'package:rentloop_go/src/architecture/architecture.dart';
-// import 'package:rentloop_go/src/lib/analytics_service.dart';
 import 'package:rentloop_go/src/modules/modules.dart';
-// import 'package:rentloop_go/src/repository/repository.dart';
 import 'splash.dart';
 import 'main_navigator.dart';
+import 'notification_handler.dart';
 
 import 'package:flutter/widgets.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 late GlobalKey<NavigatorState> navigatorKey;
 late GlobalKey<NavigatorState> shellNavigatorKey;
@@ -24,7 +22,7 @@ GoRouter buildRoutes(WidgetRef ref, Listenable refreshListenable) {
     restorationScopeId: 'rentloop-router',
     initialLocation: '/splash',
     refreshListenable: refreshListenable,
-    redirect: (context, state) {
+    redirect: (context, state) async {
       final startup = ref.read(appStartupNotifierProvider);
       final loc = state.matchedLocation;
 
@@ -40,7 +38,30 @@ GoRouter buildRoutes(WidgetRef ref, Listenable refreshListenable) {
           return '/auth';
 
         case AppStartupStatus.ready:
-          if (loc == '/splash' || loc.startsWith('/auth')) return '/';
+          if (loc == '/splash' || loc.startsWith('/auth')) {
+            // If the app was cold-started via a notification, switch to the
+            // notified lease then navigate directly to the target screen.
+            final pending = pendingNotificationMessage;
+            if (pending != null) {
+              pendingNotificationMessage = null;
+              final leaseId = pending.data['lease_id'] as String?;
+              if (leaseId != null) {
+                final activeLease = ref.read(currentLeaseNotifierProvider);
+                if (activeLease?.id != leaseId) {
+                  final leases = ref.read(allLeasesProvider);
+                  final match = leases
+                      .where((l) => l.id == leaseId)
+                      .firstOrNull;
+                  if (match == null) return '/';
+                  await ref
+                      .read(currentLeaseNotifierProvider.notifier)
+                      .setLease(match);
+                }
+              }
+              return notificationMessageToPath(pending) ?? '/';
+            }
+            return '/';
+          }
           return null;
       }
     },

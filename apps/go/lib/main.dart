@@ -8,6 +8,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:rentloop_go/src/lib/sentry_config.dart';
 
 import 'src/app.dart';
+import 'src/navigation/notification_handler.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -17,25 +18,29 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   }
 }
 
-void _handleNotificationTap(RemoteMessage message) {
-  final type = message.data['type'] as String?;
-  switch (type) {
-    case 'ANNOUNCEMENT':
-      appRouter?.push('/more/announcements');
-    case 'MAINTENANCE':
-      final mrId = message.data['maintenance_request_id'] as String?;
-      if (mrId != null) {
-        appRouter?.push(
-          '/maintenance/${message.data['maintenance_request_id']}',
-        );
-      } else {
-        appRouter?.push('/maintenance');
+Future<void> _handleNotificationTap(RemoteMessage message) async {
+  final context = navigatorKey.currentContext;
+  if (context == null || !context.mounted) return;
+
+  final leaseId = message.data['lease_id'] as String?;
+  if (leaseId != null) {
+    final container = ProviderScope.containerOf(context);
+    final activeLease = container.read(currentLeaseNotifierProvider);
+    if (activeLease?.id != leaseId) {
+      final leases = container.read(allLeasesProvider);
+      final match = leases.where((l) => l.id == leaseId).firstOrNull;
+      if (match == null) {
+        appRouter?.go('/');
+        return;
       }
-    case 'INVOICE':
-      appRouter?.push('/payments');
-    case 'LEASE':
-      appRouter?.push('/more/lease-details');
+      await container
+          .read(currentLeaseNotifierProvider.notifier)
+          .setLease(match);
+    }
   }
+
+  final path = notificationMessageToPath(message);
+  if (path != null) appRouter?.push(path);
 }
 
 void main() async {
@@ -58,6 +63,11 @@ void main() async {
   });
 
   FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
+
+  // Handle notification tap when app was fully terminated (cold start).
+  // Store the message and navigate once auth completes (see routes.dart redirect).
+  pendingNotificationMessage = await FirebaseMessaging.instance
+      .getInitialMessage();
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

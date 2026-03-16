@@ -299,7 +299,7 @@ func (s *maintenanceRequestService) CreateByAdmin(
 	}
 
 	// lets send push notification to tenant that an MR was created on their behalf
-	if createdByTenantID != nil {
+	if createdByTenantID != nil && mr.LeaseID != nil {
 		tenantAccount, err := s.tenantAccountRepo.FindOne(ctx, map[string]any{
 			"tenant_id": *createdByTenantID,
 		})
@@ -319,6 +319,7 @@ func (s *maintenanceRequestService) CreateByAdmin(
 				"type":                   "MAINTENANCE",
 				"maintenance_request_id": mr.ID.String(),
 				"status":                 "NEW",
+				"lease_id":               *mr.LeaseID,
 			}); err != nil {
 				log.WithError(err).WithField("tenantAccountID", tenantAccountID).
 					Warn("[MaintenanceRequest] push notification failed")
@@ -600,7 +601,7 @@ func (s *maintenanceRequestService) fireStatusNotifications(
 	mr *models.MaintenanceRequest,
 	newStatus string,
 ) {
-	if mr.Visibility != "TENANT_VISIBLE" || mr.CreatedByTenantID == nil {
+	if mr.Visibility != "TENANT_VISIBLE" || mr.CreatedByTenantID == nil || mr.LeaseID == nil {
 		return
 	}
 
@@ -634,6 +635,7 @@ func (s *maintenanceRequestService) fireStatusNotifications(
 		"type":                   "MAINTENANCE",
 		"maintenance_request_id": mr.ID.String(),
 		"status":                 newStatus,
+		"lease_id":               *mr.LeaseID,
 	}); err != nil {
 		log.WithError(err).WithField("tenantAccountID", tenantAccountID).
 			Warn("[MaintenanceRequest] push notification failed")

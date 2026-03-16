@@ -3,6 +3,10 @@ import 'package:rentloop_go/src/repository/models/lease_model.dart';
 
 part 'current_lease_notifier.g.dart';
 
+/// All leases loaded for the current account. Populated by [CurrentLeaseNotifier.loadFromLeases].
+/// Use this to look up a lease by ID (e.g. when handling notification deep links).
+final allLeasesProvider = StateProvider<List<LeaseModel>>((_) => const []);
+
 @Riverpod(keepAlive: true)
 class CurrentLeaseNotifier extends _$CurrentLeaseNotifier {
   @override
@@ -11,6 +15,7 @@ class CurrentLeaseNotifier extends _$CurrentLeaseNotifier {
   /// Called after leases are fetched. Restores the persisted lease or
   /// falls back to the first in the list, persisting that choice.
   Future<void> loadFromLeases(List<LeaseModel> leases) async {
+    ref.read(allLeasesProvider.notifier).state = leases;
     if (leases.isEmpty) return;
 
     final manager = ref.read(leaseIdManagerProvider);
@@ -43,6 +48,7 @@ class CurrentLeaseNotifier extends _$CurrentLeaseNotifier {
   }
 
   void clear() {
+    ref.read(allLeasesProvider.notifier).state = const [];
     state = null;
   }
 }
