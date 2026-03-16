@@ -49,7 +49,10 @@ func NewTenantAccountRouter(appCtx pkg.AppContext, handlers handlers.Handlers) f
 			// tenant maintenance requests
 			r.Post("/v1/leases/{lease_id}/maintenance-requests", handlers.MaintenanceRequestHandler.TenantCreate)
 			r.Get("/v1/leases/{lease_id}/maintenance-requests", handlers.MaintenanceRequestHandler.TenantList)
-			r.Get("/v1/leases/{lease_id}/maintenance-requests/{id}", handlers.MaintenanceRequestHandler.TenantGet)
+			r.Get(
+				"/v1/leases/{lease_id}/maintenance-requests/{maintenance_request_id}",
+				handlers.MaintenanceRequestHandler.TenantGet,
+			)
 		})
 	}
 }
