@@ -231,8 +231,8 @@ export const KanbanProvider = <
 	const [activeCardId, setActiveCardId] = useState<string | null>(null)
 
 	const sensors = useSensors(
-		useSensor(MouseSensor),
-		useSensor(TouchSensor),
+		useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+		useSensor(TouchSensor, { activationConstraint: { distance: 8 } }),
 		useSensor(KeyboardSensor),
 	)
 
@@ -342,7 +342,7 @@ export const KanbanProvider = <
 			>
 				<div
 					className={cn(
-						'grid size-full auto-cols-fr grid-flow-col gap-4',
+						'grid h-full auto-cols-[250px] grid-flow-col gap-4',
 						className,
 					)}
 				>

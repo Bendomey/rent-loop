@@ -1,5 +1,6 @@
 import { MoreHorizontal } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { AssignDialog } from './assign-dialog'
 import { KanbanCard } from '~/components/kanban'
 import { Avatar, AvatarFallback } from '~/components/ui/avatar'
@@ -43,9 +44,10 @@ const CATEGORY_LABELS: Record<MaintenanceRequestCategory, string> = {
 
 interface RequestCardProps {
 	item: MaintenanceKanbanItem
+	propertyId: string
 }
 
-export function RequestCard({ item }: RequestCardProps) {
+export function RequestCard({ item, propertyId }: RequestCardProps) {
 	const [assignDialogOpen, setAssignDialogOpen] = useState(false)
 	const [assignType, setAssignType] = useState<'worker' | 'manager'>('worker')
 
@@ -62,9 +64,18 @@ export function RequestCard({ item }: RequestCardProps) {
 			<KanbanCard column={item.column} id={item.id} name={item.name}>
 				<div className="flex flex-col gap-2">
 					<div className="flex items-start justify-between gap-1">
-						<p className="line-clamp-2 flex-1 text-sm leading-snug font-medium">
-							{item.title}
-						</p>
+						<Link
+							to={`/properties/${propertyId}/activities/maintenance-requests/${item.id}`}
+							className="flex min-w-0 flex-col gap-0.5"
+							onClick={(e) => e.stopPropagation()}
+						>
+							<p className="text-muted-foreground text-[10px] font-medium">
+								#{item.code}
+							</p>
+							<p className="line-clamp-2 text-sm leading-snug font-medium hover:underline">
+								{item.title}
+							</p>
+						</Link>
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button

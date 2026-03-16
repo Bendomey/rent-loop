@@ -5,7 +5,7 @@ import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { RequestCard } from './request-card'
 import {
-	useGetMaintenanceRequestsByStatus,
+	useGetMaintenanceRequestsInfinite,
 	useUpdateMaintenanceRequestStatus,
 } from '~/api/maintenance-requests'
 import type { DragEndEvent } from '~/components/kanban'
@@ -46,7 +46,9 @@ const toKanbanItem = (req: MaintenanceRequest): MaintenanceKanbanItem => ({
 })
 
 const flattenPages = (
-	pages: Array<{ rows: MaintenanceRequest[] } | undefined> | undefined,
+	pages:
+		| Array<FetchMultipleDataResponse<MaintenanceRequest> | undefined>
+		| undefined,
 ): MaintenanceRequest[] => (pages ?? []).flatMap((p) => p?.rows ?? [])
 
 export function PropertyActivitiesMaintenanceRequestsModule() {
@@ -56,30 +58,29 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 
 	const isDraggingRef = useRef(false)
 
-	const newQuery = useGetMaintenanceRequestsByStatus({
-		property_id: propertyId,
-		status: 'NEW',
+	const columnParams = (status: MaintenanceRequestStatus) => ({
+		filters: { property_id: propertyId, status },
+		pagination: { page: 1, per: 50 },
+		populate: ['Unit', 'AssignedWorker', 'AssignedManager'],
 	})
-	const inProgressQuery = useGetMaintenanceRequestsByStatus({
-		property_id: propertyId,
-		status: 'IN_PROGRESS',
-	})
-	const inReviewQuery = useGetMaintenanceRequestsByStatus({
-		property_id: propertyId,
-		status: 'IN_REVIEW',
-	})
-	const resolvedQuery = useGetMaintenanceRequestsByStatus({
-		property_id: propertyId,
-		status: 'RESOLVED',
-	})
-	const canceledQuery = useGetMaintenanceRequestsByStatus({
-		property_id: propertyId,
-		status: 'CANCELED',
-	})
+
+	const newQuery = useGetMaintenanceRequestsInfinite(columnParams('NEW'))
+	const inProgressQuery = useGetMaintenanceRequestsInfinite(
+		columnParams('IN_PROGRESS'),
+	)
+	const inReviewQuery = useGetMaintenanceRequestsInfinite(
+		columnParams('IN_REVIEW'),
+	)
+	const resolvedQuery = useGetMaintenanceRequestsInfinite(
+		columnParams('RESOLVED'),
+	)
+	const canceledQuery = useGetMaintenanceRequestsInfinite(
+		columnParams('CANCELED'),
+	)
 
 	const columnQueries: Record<
 		MaintenanceRequestStatus,
-		ReturnType<typeof useGetMaintenanceRequestsByStatus>
+		ReturnType<typeof useGetMaintenanceRequestsInfinite>
 	> = {
 		NEW: newQuery,
 		IN_PROGRESS: inProgressQuery,
@@ -164,8 +165,8 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 	}
 
 	return (
-		<div className="flex h-full flex-col overflow-hidden p-5">
-			<div className="mb-5 flex shrink-0 items-center justify-between">
+		<div className="flex h-full flex-col">
+			<div className="m-5 flex shrink-0 items-center justify-between">
 				<TypographyH3>Maintenance Requests</TypographyH3>
 				<Button asChild>
 					<Link
@@ -177,47 +178,53 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 				</Button>
 			</div>
 
-			<div className="min-h-0 flex-1 overflow-x-auto">
-				<KanbanProvider
-					columns={COLUMNS}
-					data={localData}
-					onDataChange={setLocalData}
-					onDragStart={handleDragStart}
-					onDragEnd={handleDragEnd}
-				>
-					{(column) => {
-						const query = columnQueries[column.id]
-						return (
-							<KanbanBoard id={column.id} key={column.id}>
-								<KanbanHeader>
-									<div className="flex items-center gap-2">
-										<div
-											className="h-2 w-2 rounded-full"
-											style={{ backgroundColor: column.color }}
-										/>
-										<span>{column.name}</span>
-										<span className="text-muted-foreground ml-auto text-xs font-normal">
-											{query.data?.pages[0]?.meta?.total ?? 0}
-										</span>
-									</div>
-								</KanbanHeader>
-								<KanbanCards
-									id={column.id}
-									onScrollEnd={() => handleScrollEnd(column.id)}
-								>
-									{(item: MaintenanceKanbanItem) => (
-										<RequestCard key={item.id} item={item} />
+			<div className="relative min-h-0 flex-1">
+				<div className="absolute inset-0 mb-5 overflow-x-auto px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+					<KanbanProvider
+						columns={COLUMNS}
+						data={localData}
+						onDataChange={setLocalData}
+						onDragStart={handleDragStart}
+						onDragEnd={handleDragEnd}
+					>
+						{(column) => {
+							const query = columnQueries[column.id]
+							return (
+								<KanbanBoard id={column.id} key={column.id}>
+									<KanbanHeader>
+										<div className="flex items-center gap-2">
+											<div
+												className="h-2 w-2 rounded-full"
+												style={{ backgroundColor: column.color }}
+											/>
+											<span>{column.name}</span>
+											<span className="text-muted-foreground ml-auto text-xs font-normal">
+												{query.data?.pages[0]?.meta?.total ?? 0}
+											</span>
+										</div>
+									</KanbanHeader>
+									<KanbanCards
+										id={column.id}
+										onScrollEnd={() => handleScrollEnd(column.id)}
+									>
+										{(item: MaintenanceKanbanItem) => (
+											<RequestCard
+												key={item.id}
+												item={item}
+												propertyId={propertyId}
+											/>
+										)}
+									</KanbanCards>
+									{query.isFetchingNextPage && (
+										<div className="flex justify-center py-2">
+											<Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
+										</div>
 									)}
-								</KanbanCards>
-								{query.isFetchingNextPage && (
-									<div className="flex justify-center py-2">
-										<Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
-									</div>
-								)}
-							</KanbanBoard>
-						)
-					}}
-				</KanbanProvider>
+								</KanbanBoard>
+							)
+						}}
+					</KanbanProvider>
+				</div>
 			</div>
 		</div>
 	)

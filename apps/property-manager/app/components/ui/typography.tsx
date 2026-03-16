@@ -72,6 +72,24 @@ export function TypographyH4({
 	)
 }
 
+export function TypographyH5({
+	className,
+	children,
+	...props
+}: React.ComponentProps<'h5'>) {
+	return (
+		<h5
+			className={cn(
+				'scroll-m-20 text-lg font-semibold tracking-tight',
+				className,
+			)}
+			{...props}
+		>
+			{children}
+		</h5>
+	)
+}
+
 export function TypographyP({
 	className,
 	children,

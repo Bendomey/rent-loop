@@ -56,6 +56,7 @@ type MaintenanceRequest struct {
 
 	ActivityLogs []MaintenanceRequestActivityLog
 	Expenses     []Expense `gorm:"foreignKey:ContextMaintenanceRequestID"`
+	Comments     []MaintenanceRequestComment
 }
 
 func (mr *MaintenanceRequest) BeforeCreate(tx *gorm.DB) error {
@@ -69,6 +70,15 @@ func (mr *MaintenanceRequest) BeforeCreate(tx *gorm.DB) error {
 	}
 	mr.Code = *uniqueCode
 	return nil
+}
+
+type MaintenanceRequestComment struct {
+	BaseModelSoftDelete
+	MaintenanceRequestID  string `gorm:"not null;index"`
+	MaintenanceRequest    MaintenanceRequest
+	Content               string `gorm:"not null"`
+	CreatedByClientUserID string `gorm:"not null"`
+	CreatedByClientUser   *ClientUser
 }
 
 type MaintenanceRequestActivityLog struct {

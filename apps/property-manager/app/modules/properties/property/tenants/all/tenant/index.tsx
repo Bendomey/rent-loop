@@ -1,5 +1,12 @@
 import { Building, Mail, Phone } from 'lucide-react'
-import { Link, Outlet, useLoaderData, useLocation, useParams } from 'react-router'
+import {
+	Link,
+	Outlet,
+	useLoaderData,
+	useLocation,
+	useParams,
+} from 'react-router'
+import { TenantProfileModule } from './profile'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Badge } from '~/components/ui/badge'
 import {
@@ -14,10 +21,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { TypographyMuted, TypographyP } from '~/components/ui/typography'
 import { getNameInitials } from '~/lib/misc'
 import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.all.$tenantId'
-import { TenantProfileModule } from './profile'
 
 export function TenantModule() {
-		const { clientUserProperty, tenant } = useLoaderData<typeof loader>()
+	const { clientUserProperty, tenant } = useLoaderData<typeof loader>()
 
 	const { pathname } = useLocation()
 	const { tenantId } = useParams()
@@ -43,19 +49,19 @@ export function TenantModule() {
 						<div className="flex flex-col items-center gap-3">
 							<Avatar className="h-16 w-16">
 								{tenant?.profile_photo_url ? (
-									<AvatarImage src={tenant.profile_photo_url} alt={name} className="object-cover"/>
+									<AvatarImage
+										src={tenant.profile_photo_url}
+										alt={name}
+										className="object-cover"
+									/>
 								) : (
-									<AvatarFallback>
-										{getNameInitials(name)}
-									</AvatarFallback>
+									<AvatarFallback>{getNameInitials(name)}</AvatarFallback>
 								)}
 							</Avatar>
 							<div className="text-center">
-								<CardTitle className="text-sm font-semibold">
-									{name}
-								</CardTitle>
+								<CardTitle className="text-sm font-semibold">{name}</CardTitle>
 								<TypographyMuted className="text-xs">
-										{tenant?.gender === 'MALE' ? 'Male' : 'Female'}
+									{tenant?.gender === 'MALE' ? 'Male' : 'Female'}
 								</TypographyMuted>
 							</div>
 						</div>
@@ -65,7 +71,9 @@ export function TenantModule() {
 						<div>
 							<div className="flex items-center gap-2 text-sm">
 								<Building size={14} className="text-zinc-500" />
-								<TypographyP className="!mt-0">{tenant?.occupation}</TypographyP>
+								<TypographyP className="!mt-0">
+									{tenant?.occupation}
+								</TypographyP>
 							</div>
 
 							<div className="flex items-center gap-2 text-sm">
@@ -90,7 +98,9 @@ export function TenantModule() {
 							<TabsTrigger value={baseUrl}>Profile</TabsTrigger>
 						</Link>
 						<Link to={`${baseUrl}/activity-logs`}>
-							<TabsTrigger value={`${baseUrl}/activity-logs`}>Activity Logs</TabsTrigger>
+							<TabsTrigger value={`${baseUrl}/activity-logs`}>
+								Activity Logs
+							</TabsTrigger>
 						</Link>
 						<Link to={`${baseUrl}/leases`}>
 							<TabsTrigger value={`${baseUrl}/leases`}>Leases</TabsTrigger>
@@ -105,7 +115,11 @@ export function TenantModule() {
 						</Link>
 					</TabsList>
 					<TabsContent value={pathname}>
-						{ pathname === baseUrl ? (tenant && <TenantProfileModule tenant={tenant} />) : <Outlet /> }
+						{pathname === baseUrl ? (
+							tenant && <TenantProfileModule tenant={tenant} />
+						) : (
+							<Outlet />
+						)}
 					</TabsContent>
 				</Tabs>
 			</div>

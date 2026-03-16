@@ -4694,7 +4694,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/maintenance-requests/{id}": {
+        "/api/v1/admin/maintenance-requests/{maintenance_request_id}": {
             "patch": {
                 "security": [
                     {
@@ -4775,14 +4775,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/maintenance-requests/{id}/activity": {
+        "/api/v1/admin/maintenance-requests/{maintenance_request_id}/activity_logs": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "List all activity logs for a maintenance request (Admin)",
+                "description": "List all activity logs for a maintenance request with pagination (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -4797,9 +4797,79 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Maintenance Request ID",
-                        "name": "id",
+                        "name": "maintenance_request_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "action",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "performed_by_client_user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -4809,9 +4879,17 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/transformations.OutputMaintenanceActivityLog"
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputMaintenanceActivityLog"
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -4823,12 +4901,6 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
-                    "404": {
-                        "description": "Maintenance request not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
                     "500": {
                         "description": "An unexpected error occurred",
                         "schema": {
@@ -4838,7 +4910,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/maintenance-requests/{id}/assign-manager": {
+        "/api/v1/admin/maintenance-requests/{maintenance_request_id}/assign-manager": {
             "post": {
                 "security": [
                     {
@@ -4919,7 +4991,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/maintenance-requests/{id}/assign-worker": {
+        "/api/v1/admin/maintenance-requests/{maintenance_request_id}/assign-worker": {
             "post": {
                 "security": [
                     {
@@ -5000,14 +5072,305 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/maintenance-requests/{id}/expenses": {
+        "/api/v1/admin/maintenance-requests/{maintenance_request_id}/comments": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "List all expenses recorded against a maintenance request (Admin)",
+                "description": "List all comments for a maintenance request with pagination (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MaintenanceRequests"
+                ],
+                "summary": "List comments for a maintenance request",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Maintenance Request ID",
+                        "name": "maintenance_request_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Comments",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "boolean"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Add a new comment to a maintenance request (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MaintenanceRequests"
+                ],
+                "summary": "Create a comment on a maintenance request",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Maintenance Request ID",
+                        "name": "maintenance_request_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Comment content",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateCommentBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Comment created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Maintenance request not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/maintenance-requests/{maintenance_request_id}/comments/{comment_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove a comment from a maintenance request (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MaintenanceRequests"
+                ],
+                "summary": "Delete a comment from a maintenance request",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Maintenance Request ID",
+                        "name": "maintenance_request_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comment ID",
+                        "name": "comment_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Comment deleted",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update an existing comment (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MaintenanceRequests"
+                ],
+                "summary": "Update a comment on a maintenance request",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Maintenance Request ID",
+                        "name": "maintenance_request_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comment ID",
+                        "name": "comment_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated content",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateCommentBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Comment updated",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Comment not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/maintenance-requests/{maintenance_request_id}/expenses": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List expenses with pagination and optional filters (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -5022,9 +5385,79 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Maintenance Request ID",
-                        "name": "id",
+                        "name": "maintenance_request_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "billable_to_tenant",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "paid_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -5034,9 +5467,17 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/transformations.OutputExpense"
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputExpense"
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -5046,12 +5487,6 @@ const docTemplate = `{
                         "description": "Invalid or absent authentication token",
                         "schema": {
                             "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Maintenance request not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "500": {
@@ -5142,7 +5577,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/maintenance-requests/{id}/expenses/{expense_id}": {
+        "/api/v1/admin/maintenance-requests/{maintenance_request_id}/expenses/{expense_id}": {
             "delete": {
                 "security": [
                     {
@@ -5209,7 +5644,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/maintenance-requests/{id}/expenses:invoice": {
+        "/api/v1/admin/maintenance-requests/{maintenance_request_id}/expenses:invoice": {
             "post": {
                 "security": [
                     {
@@ -5275,7 +5710,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/maintenance-requests/{id}/status": {
+        "/api/v1/admin/maintenance-requests/{maintenance_request_id}/status": {
             "patch": {
                 "security": [
                     {
@@ -10570,7 +11005,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/leases/{lease_id}/maintenance-requests/{id}": {
+        "/api/v1/leases/{lease_id}/maintenance-requests/{maintenance_request_id}": {
             "get": {
                 "security": [
                     {
@@ -12380,6 +12815,17 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.CreateCommentBody": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.CreateDocumentRequest": {
             "type": "object",
             "required": [
@@ -13526,6 +13972,17 @@ const docTemplate = `{
                 "phoneNumber": {
                     "type": "string",
                     "example": "+233281234569"
+                }
+            }
+        },
+        "handlers.UpdateCommentBody": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
                 }
             }
         },

@@ -39,10 +39,41 @@ type MaintenanceRequestService interface {
 	AssignWorker(ctx context.Context, input AssignMaintenanceWorkerInput) error
 	AssignManager(ctx context.Context, input AssignMaintenanceManagerInput) error
 	UpdateStatus(ctx context.Context, input UpdateMaintenanceStatusInput) error
-	ListActivityLogs(ctx context.Context, maintenanceRequestID string) ([]models.MaintenanceRequestActivityLog, error)
+	ListActivityLogs(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters repository.ListMaintenanceRequestActivityLogsFilter,
+	) ([]models.MaintenanceRequestActivityLog, error)
+	CountActivityLogs(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters repository.ListMaintenanceRequestActivityLogsFilter,
+	) (int64, error)
 	AddExpense(ctx context.Context, input AddMaintenanceExpenseInput) (*models.Expense, error)
-	ListExpenses(ctx context.Context, maintenanceRequestID string) ([]models.Expense, error)
+	ListExpenses(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters repository.ListMaintenanceExpensesFilter,
+	) ([]models.Expense, error)
+	CountExpenses(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters repository.ListMaintenanceExpensesFilter,
+	) (int64, error)
 	DeleteExpense(ctx context.Context, expenseID string) error
+	CreateComment(ctx context.Context, input CreateMaintenanceCommentInput) (*models.MaintenanceRequestComment, error)
+	ListComments(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters repository.ListMaintenanceRequestCommentsFilter,
+	) ([]models.MaintenanceRequestComment, error)
+	CountComments(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters repository.ListMaintenanceRequestCommentsFilter,
+	) (int64, error)
+	UpdateComment(ctx context.Context, input UpdateMaintenanceCommentInput) (*models.MaintenanceRequestComment, error)
+	DeleteComment(ctx context.Context, id string) error
 	GenerateExpenseInvoice(
 		ctx context.Context,
 		maintenanceRequestID string,
@@ -130,6 +161,17 @@ type UpdateMaintenanceStatusInput struct {
 	ActorType          string // CLIENT_USER | TENANT
 	ActorID            string
 	CancellationReason *string
+}
+
+type CreateMaintenanceCommentInput struct {
+	RequestID    string
+	Content      string
+	ClientUserID string
+}
+
+type UpdateMaintenanceCommentInput struct {
+	ID      string
+	Content string
 }
 
 type AddMaintenanceExpenseInput struct {
@@ -602,9 +644,10 @@ func (s *maintenanceRequestService) fireStatusNotifications(
 
 func (s *maintenanceRequestService) ListActivityLogs(
 	ctx context.Context,
-	maintenanceRequestID string,
+	filterQuery lib.FilterQuery,
+	filters repository.ListMaintenanceRequestActivityLogsFilter,
 ) ([]models.MaintenanceRequestActivityLog, error) {
-	logs, err := s.repo.ListActivityLogs(ctx, maintenanceRequestID)
+	logs, err := s.repo.ListActivityLogs(ctx, filterQuery, filters)
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
@@ -615,6 +658,24 @@ func (s *maintenanceRequestService) ListActivityLogs(
 		})
 	}
 	return *logs, nil
+}
+
+func (s *maintenanceRequestService) CountActivityLogs(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters repository.ListMaintenanceRequestActivityLogsFilter,
+) (int64, error) {
+	count, err := s.repo.CountActivityLogs(ctx, filterQuery, filters)
+	if err != nil {
+		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CountActivityLogs",
+				"action":   "counting activity logs",
+			},
+		})
+	}
+	return count, nil
 }
 
 // --- Expenses ---
@@ -667,9 +728,10 @@ func (s *maintenanceRequestService) AddExpense(
 
 func (s *maintenanceRequestService) ListExpenses(
 	ctx context.Context,
-	maintenanceRequestID string,
+	filterQuery lib.FilterQuery,
+	filters repository.ListMaintenanceExpensesFilter,
 ) ([]models.Expense, error) {
-	expenses, err := s.repo.ListExpenses(ctx, maintenanceRequestID)
+	expenses, err := s.repo.ListExpenses(ctx, filterQuery, filters)
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
@@ -682,6 +744,24 @@ func (s *maintenanceRequestService) ListExpenses(
 	return *expenses, nil
 }
 
+func (s *maintenanceRequestService) CountExpenses(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters repository.ListMaintenanceExpensesFilter,
+) (int64, error) {
+	count, err := s.repo.CountExpenses(ctx, filterQuery, filters)
+	if err != nil {
+		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CountExpenses",
+				"action":   "counting expenses",
+			},
+		})
+	}
+	return count, nil
+}
+
 func (s *maintenanceRequestService) DeleteExpense(ctx context.Context, expenseID string) error {
 	if err := s.repo.DeleteExpense(ctx, expenseID); err != nil {
 		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
@@ -689,6 +769,124 @@ func (s *maintenanceRequestService) DeleteExpense(ctx context.Context, expenseID
 			Metadata: map[string]string{
 				"function": "DeleteExpense",
 				"action":   "deleting expense",
+			},
+		})
+	}
+	return nil
+}
+
+// --- Comments ---
+
+func (s *maintenanceRequestService) CreateComment(
+	ctx context.Context,
+	input CreateMaintenanceCommentInput,
+) (*models.MaintenanceRequestComment, error) {
+	if _, err := s.repo.GetOneWithPopulate(ctx, repository.GetMaintenanceRequestQuery{ID: input.RequestID}); err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, pkg.NotFoundError("maintenance request not found", nil)
+		}
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CreateComment",
+				"action":   "fetching maintenance request",
+			},
+		})
+	}
+
+	comment := &models.MaintenanceRequestComment{
+		MaintenanceRequestID:  input.RequestID,
+		Content:               input.Content,
+		CreatedByClientUserID: input.ClientUserID,
+	}
+
+	if err := s.repo.CreateComment(ctx, comment); err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CreateComment",
+				"action":   "creating comment",
+			},
+		})
+	}
+	return comment, nil
+}
+
+func (s *maintenanceRequestService) ListComments(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters repository.ListMaintenanceRequestCommentsFilter,
+) ([]models.MaintenanceRequestComment, error) {
+	comments, err := s.repo.ListComments(ctx, filterQuery, filters)
+	if err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "ListComments",
+				"action":   "listing comments",
+			},
+		})
+	}
+	return *comments, nil
+}
+
+func (s *maintenanceRequestService) CountComments(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters repository.ListMaintenanceRequestCommentsFilter,
+) (int64, error) {
+	count, err := s.repo.CountComments(ctx, filterQuery, filters)
+	if err != nil {
+		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CountComments",
+				"action":   "counting comments",
+			},
+		})
+	}
+	return count, nil
+}
+
+func (s *maintenanceRequestService) UpdateComment(
+	ctx context.Context,
+	input UpdateMaintenanceCommentInput,
+) (*models.MaintenanceRequestComment, error) {
+	comment, err := s.repo.GetComment(ctx, input.ID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, pkg.NotFoundError("comment not found", nil)
+		}
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "UpdateComment",
+				"action":   "fetching comment",
+			},
+		})
+	}
+
+	comment.Content = input.Content
+
+	if err := s.repo.UpdateComment(ctx, comment); err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "UpdateComment",
+				"action":   "updating comment",
+			},
+		})
+	}
+	return comment, nil
+}
+
+func (s *maintenanceRequestService) DeleteComment(ctx context.Context, id string) error {
+	if err := s.repo.DeleteComment(ctx, id); err != nil {
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "DeleteComment",
+				"action":   "deleting comment",
 			},
 		})
 	}

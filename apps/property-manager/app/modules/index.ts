@@ -76,6 +76,7 @@ export * from './properties/property/activities/announcements'
 export * from './properties/property/activities/inspections'
 export * from './properties/property/activities/maintenance-requests'
 export * from './properties/property/activities/maintenance-requests/new'
+export * from './properties/property/activities/maintenance-requests/request'
 export * from './properties/property/activities/polls'
 
 export * from './properties/property/financials/invoices'

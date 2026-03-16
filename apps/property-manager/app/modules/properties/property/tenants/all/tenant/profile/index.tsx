@@ -12,7 +12,6 @@ import { Separator } from '~/components/ui/separator'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { localizedDayjs } from '~/lib/date'
 
-
 function InfoRow({
 	icon,
 	label,
@@ -35,8 +34,7 @@ function InfoRow({
 	)
 }
 
-export function TenantProfileModule({tenant} : {tenant: Tenant}) {
-
+export function TenantProfileModule({ tenant }: { tenant: Tenant }) {
 	return (
 		<div className="mt-3 space-y-3">
 			<div className="grid grid-cols-3 gap-2">
@@ -145,7 +143,7 @@ export function TenantProfileModule({tenant} : {tenant: Tenant}) {
 								) : (
 									'N/A'
 								)
-						}
+							}
 						/>
 						<InfoRow
 							label="ID Back"
@@ -162,7 +160,7 @@ export function TenantProfileModule({tenant} : {tenant: Tenant}) {
 								) : (
 									'N/A'
 								)
-						}
+							}
 						/>
 					</div>
 				</CardContent>
@@ -193,12 +191,11 @@ export function TenantProfileModule({tenant} : {tenant: Tenant}) {
 								) : (
 									'N/A'
 								)
-						}
+							}
 						/>
 					</div>
 				</CardContent>
 			</Card>
-
 
 			{/* Contact & Address */}
 			<Card>
@@ -207,7 +204,7 @@ export function TenantProfileModule({tenant} : {tenant: Tenant}) {
 				</CardHeader>
 				<CardContent className="space-y-4">
 					<Separator />
-					
+
 					<div className="pt-2">
 						<TypographyMuted>Emergency Contact</TypographyMuted>
 						<div className="mt-2 space-y-2">

@@ -60,6 +60,26 @@ type UpdateStatusBody struct {
 	CancellationReason *string `json:"cancellation_reason" validate:"omitempty"`
 }
 
+type CreateCommentBody struct {
+	Content string `json:"content" validate:"required"`
+}
+
+type UpdateCommentBody struct {
+	Content string `json:"content" validate:"required"`
+}
+
+type ListActivityLogsQuery struct {
+	lib.FilterQueryInput
+	Action                  *string `json:"action"                      query:"action"`
+	PerformedByClientUserID *string `json:"performed_by_client_user_id" query:"performed_by_client_user_id"`
+}
+
+type ListExpensesQuery struct {
+	lib.FilterQueryInput
+	PaidBy           *string `json:"paid_by"            query:"paid_by"`
+	BillableToTenant *bool   `json:"billable_to_tenant" query:"billable_to_tenant"`
+}
+
 type AddExpenseBody struct {
 	Description      string `json:"description"        validate:"required"`
 	Amount           int64  `json:"amount"             validate:"required,gt=0"`
@@ -213,7 +233,7 @@ func (h *MaintenanceRequestHandler) List(w http.ResponseWriter, r *http.Request)
 //	@Failure		401	{object}	string														"Invalid or absent authentication token"
 //	@Failure		404	{object}	lib.HTTPError												"Maintenance request not found"
 //	@Failure		500	{object}	string														"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{id} [get]
+//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id} [get]
 type GetMaintenanceRequestQuery struct {
 	lib.GetOneQueryInput
 }
@@ -226,7 +246,7 @@ func (h *MaintenanceRequestHandler) Get(w http.ResponseWriter, r *http.Request) 
 	}
 
 	mr, err := h.service.GetMaintenanceRequest(r.Context(), repository.GetMaintenanceRequestQuery{
-		ID:       chi.URLParam(r, "id"),
+		ID:       chi.URLParam(r, "maintenance_request_id"),
 		Populate: GetPopulateFields(r),
 	})
 	if err != nil {
@@ -255,7 +275,7 @@ func (h *MaintenanceRequestHandler) Get(w http.ResponseWriter, r *http.Request) 
 //	@Failure		404		{object}	lib.HTTPError												"Maintenance request not found"
 //	@Failure		422		{object}	lib.HTTPError												"Validation error"
 //	@Failure		500		{object}	string														"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{id} [patch]
+//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id} [patch]
 func (h *MaintenanceRequestHandler) Update(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -273,7 +293,7 @@ func (h *MaintenanceRequestHandler) Update(w http.ResponseWriter, r *http.Reques
 	}
 
 	mr, err := h.service.UpdateMaintenanceRequest(r.Context(), services.UpdateMaintenanceRequestInput{
-		ID:          chi.URLParam(r, "id"),
+		ID:          chi.URLParam(r, "maintenance_request_id"),
 		Title:       body.Title,
 		Desc:        body.Description,
 		Priority:    body.Priority,
@@ -307,7 +327,7 @@ func (h *MaintenanceRequestHandler) Update(w http.ResponseWriter, r *http.Reques
 //	@Failure		404		{object}	lib.HTTPError		"Maintenance request not found"
 //	@Failure		422		{object}	lib.HTTPError		"Validation error"
 //	@Failure		500		{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{id}/assign-worker [post]
+//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/assign-worker [post]
 func (h *MaintenanceRequestHandler) AssignWorker(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -325,7 +345,7 @@ func (h *MaintenanceRequestHandler) AssignWorker(w http.ResponseWriter, r *http.
 	}
 
 	if err := h.service.AssignWorker(r.Context(), services.AssignMaintenanceWorkerInput{
-		RequestID: chi.URLParam(r, "id"),
+		RequestID: chi.URLParam(r, "maintenance_request_id"),
 		WorkerID:  body.WorkerID,
 		ActorID:   currentUser.ID,
 	}); err != nil {
@@ -352,7 +372,7 @@ func (h *MaintenanceRequestHandler) AssignWorker(w http.ResponseWriter, r *http.
 //	@Failure		404		{object}	lib.HTTPError		"Maintenance request not found"
 //	@Failure		422		{object}	lib.HTTPError		"Validation error"
 //	@Failure		500		{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{id}/assign-manager [post]
+//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/assign-manager [post]
 func (h *MaintenanceRequestHandler) AssignManager(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -370,7 +390,7 @@ func (h *MaintenanceRequestHandler) AssignManager(w http.ResponseWriter, r *http
 	}
 
 	if err := h.service.AssignManager(r.Context(), services.AssignMaintenanceManagerInput{
-		RequestID: chi.URLParam(r, "id"),
+		RequestID: chi.URLParam(r, "maintenance_request_id"),
 		ManagerID: body.ManagerID,
 		ActorID:   currentUser.ID,
 	}); err != nil {
@@ -397,7 +417,7 @@ func (h *MaintenanceRequestHandler) AssignManager(w http.ResponseWriter, r *http
 //	@Failure		404		{object}	lib.HTTPError		"Maintenance request not found"
 //	@Failure		422		{object}	lib.HTTPError		"Validation error"
 //	@Failure		500		{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{id}/status [patch]
+//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/status [patch]
 func (h *MaintenanceRequestHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -415,7 +435,7 @@ func (h *MaintenanceRequestHandler) UpdateStatus(w http.ResponseWriter, r *http.
 	}
 
 	if err := h.service.UpdateStatus(r.Context(), services.UpdateMaintenanceStatusInput{
-		RequestID:          chi.URLParam(r, "id"),
+		RequestID:          chi.URLParam(r, "maintenance_request_id"),
 		NewStatus:          body.Status,
 		ActorType:          "CLIENT_USER",
 		ActorID:            currentUser.ID,
@@ -431,17 +451,17 @@ func (h *MaintenanceRequestHandler) UpdateStatus(w http.ResponseWriter, r *http.
 // ListActivityLogs godoc
 //
 //	@Summary		List activity logs for a maintenance request
-//	@Description	List all activity logs for a maintenance request (Admin)
+//	@Description	List all activity logs for a maintenance request with pagination (Admin)
 //	@Tags			MaintenanceRequests
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			id	path		string														true	"Maintenance Request ID"
-//	@Success		200	{object}	object{data=[]transformations.OutputMaintenanceActivityLog}	"Activity logs"
-//	@Failure		401	{object}	string														"Invalid or absent authentication token"
-//	@Failure		404	{object}	lib.HTTPError												"Maintenance request not found"
-//	@Failure		500	{object}	string														"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{id}/activity [get]
+//	@Param			maintenance_request_id	path		string																												true	"Maintenance Request ID"
+//	@Param			q						query		ListActivityLogsQuery																								true	"Query parameters"
+//	@Success		200						{object}	object{data=object{rows=[]transformations.OutputMaintenanceActivityLog,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Activity logs"
+//	@Failure		401						{object}	string																												"Invalid or absent authentication token"
+//	@Failure		500						{object}	string																												"An unexpected error occurred"
+//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/activity_logs [get]
 func (h *MaintenanceRequestHandler) ListActivityLogs(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -449,9 +469,27 @@ func (h *MaintenanceRequestHandler) ListActivityLogs(w http.ResponseWriter, r *h
 		return
 	}
 
-	logs, err := h.service.ListActivityLogs(r.Context(), chi.URLParam(r, "id"))
+	filterQuery, err := lib.GenerateQuery(r.URL.Query())
 	if err != nil {
 		HandleErrorResponse(w, err)
+		return
+	}
+
+	filters := repository.ListMaintenanceRequestActivityLogsFilter{
+		MaintenanceRequestID:    chi.URLParam(r, "maintenance_request_id"),
+		Action:                  lib.NullOrString(r.URL.Query().Get("action")),
+		PerformedByClientUserID: lib.NullOrString(r.URL.Query().Get("performed_by_client_user_id")),
+	}
+
+	logs, listErr := h.service.ListActivityLogs(r.Context(), *filterQuery, filters)
+	if listErr != nil {
+		HandleErrorResponse(w, listErr)
+		return
+	}
+
+	count, countErr := h.service.CountActivityLogs(r.Context(), *filterQuery, filters)
+	if countErr != nil {
+		HandleErrorResponse(w, countErr)
 		return
 	}
 
@@ -460,7 +498,183 @@ func (h *MaintenanceRequestHandler) ListActivityLogs(w http.ResponseWriter, r *h
 		rows[i] = transformations.DBMaintenanceActivityLogToRest(&logs[i])
 	}
 
-	json.NewEncoder(w).Encode(map[string]any{"data": rows})
+	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, rows, count))
+}
+
+// CreateComment godoc
+//
+//	@Summary		Create a comment on a maintenance request
+//	@Description	Add a new comment to a maintenance request (Admin)
+//	@Tags			MaintenanceRequests
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			maintenance_request_id	path		string				true	"Maintenance Request ID"
+//	@Param			body					body		CreateCommentBody	true	"Comment content"
+//	@Success		201						{object}	object{data=bool}	"Comment created"
+//	@Failure		400						{object}	lib.HTTPError		"Invalid request"
+//	@Failure		401						{object}	string				"Unauthorized"
+//	@Failure		404						{object}	lib.HTTPError		"Maintenance request not found"
+//	@Failure		422						{object}	lib.HTTPError		"Validation error"
+//	@Failure		500						{object}	string				"An unexpected error occurred"
+//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/comments [post]
+func (h *MaintenanceRequestHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
+	currentUser, ok := lib.ClientUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body CreateCommentBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
+		return
+	}
+
+	comment, err := h.service.CreateComment(r.Context(), services.CreateMaintenanceCommentInput{
+		RequestID:    chi.URLParam(r, "maintenance_request_id"),
+		Content:      body.Content,
+		ClientUserID: currentUser.ID,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBMaintenanceRequestCommentToRest(comment),
+	})
+}
+
+// ListComments godoc
+//
+//	@Summary		List comments for a maintenance request
+//	@Description	List all comments for a maintenance request with pagination (Admin)
+//	@Tags			MaintenanceRequests
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			maintenance_request_id	path		string																		true	"Maintenance Request ID"
+//	@Success		200						{object}	object{data=object{rows=[]bool,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Comments"
+//	@Failure		401						{object}	string																		"Invalid or absent authentication token"
+//	@Failure		500						{object}	string																		"An unexpected error occurred"
+//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/comments [get]
+func (h *MaintenanceRequestHandler) ListComments(w http.ResponseWriter, r *http.Request) {
+	_, ok := lib.ClientUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	filterQuery, err := lib.GenerateQuery(r.URL.Query())
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	filters := repository.ListMaintenanceRequestCommentsFilter{
+		MaintenanceRequestID:  chi.URLParam(r, "maintenance_request_id"),
+		CreatedByClientUserID: lib.NullOrString(r.URL.Query().Get("created_by_client_user_id")),
+	}
+
+	comments, listErr := h.service.ListComments(r.Context(), *filterQuery, filters)
+	count, countErr := h.service.CountComments(r.Context(), *filterQuery, filters)
+	if listErr != nil {
+		HandleErrorResponse(w, listErr)
+		return
+	}
+	if countErr != nil {
+		HandleErrorResponse(w, countErr)
+		return
+	}
+
+	rows := make([]any, len(comments))
+	for i := range comments {
+		rows[i] = transformations.DBMaintenanceRequestCommentToRest(&comments[i])
+	}
+
+	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, rows, count))
+}
+
+// UpdateComment godoc
+//
+//	@Summary		Update a comment on a maintenance request
+//	@Description	Update an existing comment (Admin)
+//	@Tags			MaintenanceRequests
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			maintenance_request_id	path		string				true	"Maintenance Request ID"
+//	@Param			comment_id				path		string				true	"Comment ID"
+//	@Param			body					body		UpdateCommentBody	true	"Updated content"
+//	@Success		200						{object}	object{data=bool}	"Comment updated"
+//	@Failure		400						{object}	lib.HTTPError		"Invalid request"
+//	@Failure		401						{object}	string				"Unauthorized"
+//	@Failure		404						{object}	lib.HTTPError		"Comment not found"
+//	@Failure		422						{object}	lib.HTTPError		"Validation error"
+//	@Failure		500						{object}	string				"An unexpected error occurred"
+//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/comments/{comment_id} [patch]
+func (h *MaintenanceRequestHandler) UpdateComment(w http.ResponseWriter, r *http.Request) {
+	_, ok := lib.ClientUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var body UpdateCommentBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
+		return
+	}
+
+	comment, err := h.service.UpdateComment(r.Context(), services.UpdateMaintenanceCommentInput{
+		ID:      chi.URLParam(r, "comment_id"),
+		Content: body.Content,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBMaintenanceRequestCommentToRest(comment),
+	})
+}
+
+// DeleteComment godoc
+//
+//	@Summary		Delete a comment from a maintenance request
+//	@Description	Remove a comment from a maintenance request (Admin)
+//	@Tags			MaintenanceRequests
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			maintenance_request_id	path		string				true	"Maintenance Request ID"
+//	@Param			comment_id				path		string				true	"Comment ID"
+//	@Success		200						{object}	object{data=bool}	"Comment deleted"
+//	@Failure		401						{object}	string				"Unauthorized"
+//	@Failure		500						{object}	string				"An unexpected error occurred"
+//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/comments/{comment_id} [delete]
+func (h *MaintenanceRequestHandler) DeleteComment(w http.ResponseWriter, r *http.Request) {
+	_, ok := lib.ClientUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if err := h.service.DeleteComment(r.Context(), chi.URLParam(r, "comment_id")); err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{"data": true})
 }
 
 // AddExpense godoc
@@ -479,7 +693,7 @@ func (h *MaintenanceRequestHandler) ListActivityLogs(w http.ResponseWriter, r *h
 //	@Failure		404		{object}	lib.HTTPError								"Maintenance request not found"
 //	@Failure		422		{object}	lib.HTTPError								"Validation error"
 //	@Failure		500		{object}	string										"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{id}/expenses [post]
+//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/expenses [post]
 func (h *MaintenanceRequestHandler) AddExpense(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -497,7 +711,7 @@ func (h *MaintenanceRequestHandler) AddExpense(w http.ResponseWriter, r *http.Re
 	}
 
 	expense, err := h.service.AddExpense(r.Context(), services.AddMaintenanceExpenseInput{
-		RequestID:        chi.URLParam(r, "id"),
+		RequestID:        chi.URLParam(r, "maintenance_request_id"),
 		Description:      body.Description,
 		Amount:           body.Amount,
 		Currency:         body.Currency,
@@ -519,17 +733,17 @@ func (h *MaintenanceRequestHandler) AddExpense(w http.ResponseWriter, r *http.Re
 // ListExpenses godoc
 //
 //	@Summary		List expenses for a maintenance request
-//	@Description	List all expenses recorded against a maintenance request (Admin)
+//	@Description	List expenses with pagination and optional filters (Admin)
 //	@Tags			MaintenanceRequests
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			id	path		string											true	"Maintenance Request ID"
-//	@Success		200	{object}	object{data=[]transformations.OutputExpense}	"Expenses"
-//	@Failure		401	{object}	string											"Invalid or absent authentication token"
-//	@Failure		404	{object}	lib.HTTPError									"Maintenance request not found"
-//	@Failure		500	{object}	string											"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{id}/expenses [get]
+//	@Param			maintenance_request_id	path		string																								true	"Maintenance Request ID"
+//	@Param			q						query		ListExpensesQuery																					true	"Query parameters"
+//	@Success		200						{object}	object{data=object{rows=[]transformations.OutputExpense,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Expenses"
+//	@Failure		401						{object}	string																								"Invalid or absent authentication token"
+//	@Failure		500						{object}	string																								"An unexpected error occurred"
+//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/expenses [get]
 func (h *MaintenanceRequestHandler) ListExpenses(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -537,9 +751,26 @@ func (h *MaintenanceRequestHandler) ListExpenses(w http.ResponseWriter, r *http.
 		return
 	}
 
-	expenses, err := h.service.ListExpenses(r.Context(), chi.URLParam(r, "id"))
+	filterQuery, err := lib.GenerateQuery(r.URL.Query())
 	if err != nil {
 		HandleErrorResponse(w, err)
+		return
+	}
+
+	filters := repository.ListMaintenanceExpensesFilter{
+		MaintenanceRequestID: chi.URLParam(r, "maintenance_request_id"),
+		PaidBy:               lib.NullOrString(r.URL.Query().Get("paid_by")),
+		BillableToTenant:     lib.NullOrBool(r.URL.Query().Get("billable_to_tenant")),
+	}
+
+	expenses, listErr := h.service.ListExpenses(r.Context(), *filterQuery, filters)
+	count, countErr := h.service.CountExpenses(r.Context(), *filterQuery, filters)
+	if listErr != nil {
+		HandleErrorResponse(w, listErr)
+		return
+	}
+	if countErr != nil {
+		HandleErrorResponse(w, countErr)
 		return
 	}
 
@@ -548,7 +779,7 @@ func (h *MaintenanceRequestHandler) ListExpenses(w http.ResponseWriter, r *http.
 		rows[i] = transformations.DBExpenseToRest(&expenses[i])
 	}
 
-	json.NewEncoder(w).Encode(map[string]any{"data": rows})
+	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, rows, count))
 }
 
 // DeleteExpense godoc
@@ -565,7 +796,7 @@ func (h *MaintenanceRequestHandler) ListExpenses(w http.ResponseWriter, r *http.
 //	@Failure		401			{object}	string				"Invalid or absent authentication token"
 //	@Failure		404			{object}	lib.HTTPError		"Expense not found"
 //	@Failure		500			{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{id}/expenses/{expense_id} [delete]
+//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/expenses/{expense_id} [delete]
 func (h *MaintenanceRequestHandler) DeleteExpense(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -595,7 +826,7 @@ func (h *MaintenanceRequestHandler) DeleteExpense(w http.ResponseWriter, r *http
 //	@Failure		401	{object}	string				"Invalid or absent authentication token"
 //	@Failure		404	{object}	lib.HTTPError		"Maintenance request not found"
 //	@Failure		500	{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{id}/expenses:invoice [post]
+//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/expenses:invoice [post]
 func (h *MaintenanceRequestHandler) GenerateExpenseInvoice(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -603,7 +834,11 @@ func (h *MaintenanceRequestHandler) GenerateExpenseInvoice(w http.ResponseWriter
 		return
 	}
 
-	invoice, err := h.service.GenerateExpenseInvoice(r.Context(), chi.URLParam(r, "id"), currentUser.ClientID)
+	invoice, err := h.service.GenerateExpenseInvoice(
+		r.Context(),
+		chi.URLParam(r, "maintenance_request_id"),
+		currentUser.ClientID,
+	)
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return
@@ -749,7 +984,7 @@ func (h *MaintenanceRequestHandler) TenantList(w http.ResponseWriter, r *http.Re
 //	@Failure		403			{object}	string													"Forbidden — request belongs to another tenant or is internal-only"
 //	@Failure		404			{object}	lib.HTTPError											"Maintenance request not found"
 //	@Failure		500			{object}	string													"An unexpected error occurred"
-//	@Router			/api/v1/leases/{lease_id}/maintenance-requests/{id} [get]
+//	@Router			/api/v1/leases/{lease_id}/maintenance-requests/{maintenance_request_id} [get]
 func (h *MaintenanceRequestHandler) TenantGet(w http.ResponseWriter, r *http.Request) {
 	tenantAccount, ok := lib.TenantAccountFromContext(r.Context())
 	if !ok {
@@ -764,7 +999,7 @@ func (h *MaintenanceRequestHandler) TenantGet(w http.ResponseWriter, r *http.Req
 	}
 
 	mr, err := h.service.GetMaintenanceRequest(r.Context(), repository.GetMaintenanceRequestQuery{
-		ID:       chi.URLParam(r, "id"),
+		ID:       chi.URLParam(r, "maintenance_request_id"),
 		Populate: GetPopulateFields(r),
 	})
 	if err != nil {

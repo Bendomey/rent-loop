@@ -41,6 +41,7 @@ func updateMigration(db *gorm.DB) error {
 		&models.AnnouncementRead{},
 		&models.MaintenanceRequest{},
 		&models.MaintenanceRequestActivityLog{},
+		&models.MaintenanceRequestComment{},
 		&models.Expense{},
 	)
 	return err

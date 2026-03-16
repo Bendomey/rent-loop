@@ -20,12 +20,44 @@ type MaintenanceRequestRepository interface {
 	Update(ctx context.Context, mr *models.MaintenanceRequest) error
 	Delete(ctx context.Context, id string) error
 	CreateActivityLog(ctx context.Context, log *models.MaintenanceRequestActivityLog) error
-	ListActivityLogs(ctx context.Context, maintenanceRequestID string) (*[]models.MaintenanceRequestActivityLog, error)
+	ListActivityLogs(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters ListMaintenanceRequestActivityLogsFilter,
+	) (*[]models.MaintenanceRequestActivityLog, error)
+	CountActivityLogs(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters ListMaintenanceRequestActivityLogsFilter,
+	) (int64, error)
 	CreateExpense(ctx context.Context, expense *models.Expense) error
-	ListExpenses(ctx context.Context, maintenanceRequestID string) (*[]models.Expense, error)
+	ListExpenses(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters ListMaintenanceExpensesFilter,
+	) (*[]models.Expense, error)
+	CountExpenses(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters ListMaintenanceExpensesFilter,
+	) (int64, error)
 	DeleteExpense(ctx context.Context, expenseID string) error
 	UpdateExpense(ctx context.Context, expense *models.Expense) error
 	GetUnbilledExpenses(ctx context.Context, maintenanceRequestID string) (*[]models.Expense, error)
+	CreateComment(ctx context.Context, comment *models.MaintenanceRequestComment) error
+	GetComment(ctx context.Context, id string) (*models.MaintenanceRequestComment, error)
+	ListComments(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters ListMaintenanceRequestCommentsFilter,
+	) (*[]models.MaintenanceRequestComment, error)
+	CountComments(
+		ctx context.Context,
+		filterQuery lib.FilterQuery,
+		filters ListMaintenanceRequestCommentsFilter,
+	) (int64, error)
+	UpdateComment(ctx context.Context, comment *models.MaintenanceRequestComment) error
+	DeleteComment(ctx context.Context, id string) error
 }
 
 type maintenanceRequestRepository struct {
@@ -51,6 +83,23 @@ type ListMaintenanceRequestsFilter struct {
 	Category         *string
 	AssignedWorkerID *string
 	TenantID         *string // when set, enforces visibility = TENANT_VISIBLE
+}
+
+type ListMaintenanceRequestActivityLogsFilter struct {
+	MaintenanceRequestID    string
+	Action                  *string
+	PerformedByClientUserID *string
+}
+
+type ListMaintenanceExpensesFilter struct {
+	MaintenanceRequestID string
+	PaidBy               *string
+	BillableToTenant     *bool
+}
+
+type ListMaintenanceRequestCommentsFilter struct {
+	MaintenanceRequestID  string
+	CreatedByClientUserID *string
 }
 
 func (r *maintenanceRequestRepository) Create(ctx context.Context, mr *models.MaintenanceRequest) error {
@@ -161,17 +210,47 @@ func (r *maintenanceRequestRepository) CreateActivityLog(
 
 func (r *maintenanceRequestRepository) ListActivityLogs(
 	ctx context.Context,
-	maintenanceRequestID string,
+	filterQuery lib.FilterQuery,
+	filters ListMaintenanceRequestActivityLogsFilter,
 ) (*[]models.MaintenanceRequestActivityLog, error) {
 	var logs []models.MaintenanceRequestActivityLog
 	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
-		Where("maintenance_request_id = ?", maintenanceRequestID).
-		Order("created_at asc").
+		Scopes(
+			DateRangeScope("maintenance_request_activity_logs", filterQuery.DateRange),
+			SearchScope("maintenance_request_activity_logs", filterQuery.Search),
+			mrActivityLogRequestScope(filters.MaintenanceRequestID),
+			mrActivityLogActionScope(filters.Action),
+			mrActivityLogPerformedByScope(filters.PerformedByClientUserID),
+			PaginationScope(filterQuery.Page, filterQuery.PageSize),
+			OrderScope("maintenance_request_activity_logs", filterQuery.OrderBy, filterQuery.Order),
+		).
 		Find(&logs)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return &logs, nil
+}
+
+func (r *maintenanceRequestRepository) CountActivityLogs(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters ListMaintenanceRequestActivityLogsFilter,
+) (int64, error) {
+	var count int64
+	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Model(&models.MaintenanceRequestActivityLog{}).
+		Scopes(
+			DateRangeScope("maintenance_request_activity_logs", filterQuery.DateRange),
+			SearchScope("maintenance_request_activity_logs", filterQuery.Search),
+			mrActivityLogRequestScope(filters.MaintenanceRequestID),
+			mrActivityLogActionScope(filters.Action),
+			mrActivityLogPerformedByScope(filters.PerformedByClientUserID),
+		).
+		Count(&count)
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	return count, nil
 }
 
 func (r *maintenanceRequestRepository) CreateExpense(ctx context.Context, expense *models.Expense) error {
@@ -180,17 +259,47 @@ func (r *maintenanceRequestRepository) CreateExpense(ctx context.Context, expens
 
 func (r *maintenanceRequestRepository) ListExpenses(
 	ctx context.Context,
-	maintenanceRequestID string,
+	filterQuery lib.FilterQuery,
+	filters ListMaintenanceExpensesFilter,
 ) (*[]models.Expense, error) {
 	var expenses []models.Expense
 	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
-		Where("context_type = ? AND context_maintenance_request_id = ?", "MAINTENANCE", maintenanceRequestID).
-		Order("created_at asc").
+		Scopes(
+			DateRangeScope("expenses", filterQuery.DateRange),
+			SearchScope("expenses", filterQuery.Search),
+			expenseRequestScope(filters.MaintenanceRequestID),
+			expensePaidByScope(filters.PaidBy),
+			expenseBillableScope(filters.BillableToTenant),
+			PaginationScope(filterQuery.Page, filterQuery.PageSize),
+			OrderScope("expenses", filterQuery.OrderBy, filterQuery.Order),
+		).
 		Find(&expenses)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return &expenses, nil
+}
+
+func (r *maintenanceRequestRepository) CountExpenses(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters ListMaintenanceExpensesFilter,
+) (int64, error) {
+	var count int64
+	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Model(&models.Expense{}).
+		Scopes(
+			DateRangeScope("expenses", filterQuery.DateRange),
+			SearchScope("expenses", filterQuery.Search),
+			expenseRequestScope(filters.MaintenanceRequestID),
+			expensePaidByScope(filters.PaidBy),
+			expenseBillableScope(filters.BillableToTenant),
+		).
+		Count(&count)
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	return count, nil
 }
 
 func (r *maintenanceRequestRepository) DeleteExpense(ctx context.Context, expenseID string) error {
@@ -217,6 +326,85 @@ func (r *maintenanceRequestRepository) GetUnbilledExpenses(
 		return nil, result.Error
 	}
 	return &expenses, nil
+}
+
+func (r *maintenanceRequestRepository) CreateComment(
+	ctx context.Context,
+	comment *models.MaintenanceRequestComment,
+) error {
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Create(comment).Error
+}
+
+func (r *maintenanceRequestRepository) GetComment(
+	ctx context.Context,
+	id string,
+) (*models.MaintenanceRequestComment, error) {
+	var comment models.MaintenanceRequestComment
+	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Where("id = ?", id).
+		First(&comment)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &comment, nil
+}
+
+func (r *maintenanceRequestRepository) ListComments(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters ListMaintenanceRequestCommentsFilter,
+) (*[]models.MaintenanceRequestComment, error) {
+	var comments []models.MaintenanceRequestComment
+	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Scopes(
+			DateRangeScope("maintenance_request_comments", filterQuery.DateRange),
+			SearchScope("maintenance_request_comments", filterQuery.Search),
+			mrCommentRequestScope(filters.MaintenanceRequestID),
+			mrCommentCreatedByScope(filters.CreatedByClientUserID),
+			PaginationScope(filterQuery.Page, filterQuery.PageSize),
+			OrderScope("maintenance_request_comments", filterQuery.OrderBy, filterQuery.Order),
+		).
+		Find(&comments)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &comments, nil
+}
+
+func (r *maintenanceRequestRepository) CountComments(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters ListMaintenanceRequestCommentsFilter,
+) (int64, error) {
+	var count int64
+	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Model(&models.MaintenanceRequestComment{}).
+		Scopes(
+			DateRangeScope("maintenance_request_comments", filterQuery.DateRange),
+			SearchScope("maintenance_request_comments", filterQuery.Search),
+			mrCommentRequestScope(filters.MaintenanceRequestID),
+			mrCommentCreatedByScope(filters.CreatedByClientUserID),
+		).
+		Count(&count)
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	return count, nil
+}
+
+func (r *maintenanceRequestRepository) UpdateComment(
+	ctx context.Context,
+	comment *models.MaintenanceRequestComment,
+) error {
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Save(comment).Error
+}
+
+func (r *maintenanceRequestRepository) DeleteComment(ctx context.Context, id string) error {
+	return lib.ResolveDB(ctx, r.DB).
+		WithContext(ctx).
+		Where("id = ?", id).
+		Delete(&models.MaintenanceRequestComment{}).
+		Error
 }
 
 // Scopes
@@ -318,5 +506,72 @@ func mrTenantScope(tenantID *string) func(db *gorm.DB) *gorm.DB {
 			*tenantID,
 			"TENANT_VISIBLE",
 		)
+	}
+}
+
+func mrActivityLogRequestScope(maintenanceRequestID string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Where("maintenance_request_activity_logs.maintenance_request_id = ?", maintenanceRequestID)
+	}
+}
+
+func mrActivityLogActionScope(action *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if action == nil {
+			return db
+		}
+		return db.Where("maintenance_request_activity_logs.action = ?", *action)
+	}
+}
+
+func mrActivityLogPerformedByScope(clientUserID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if clientUserID == nil {
+			return db
+		}
+		return db.Where("maintenance_request_activity_logs.performed_by_client_user_id = ?", *clientUserID)
+	}
+}
+
+func expenseRequestScope(maintenanceRequestID string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Where(
+			"expenses.context_type = ? AND expenses.context_maintenance_request_id = ?",
+			"MAINTENANCE",
+			maintenanceRequestID,
+		)
+	}
+}
+
+func expensePaidByScope(paidBy *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if paidBy == nil {
+			return db
+		}
+		return db.Where("expenses.paid_by = ?", *paidBy)
+	}
+}
+
+func expenseBillableScope(billable *bool) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if billable == nil {
+			return db
+		}
+		return db.Where("expenses.billable_to_tenant = ?", *billable)
+	}
+}
+
+func mrCommentRequestScope(maintenanceRequestID string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Where("maintenance_request_comments.maintenance_request_id = ?", maintenanceRequestID)
+	}
+}
+
+func mrCommentCreatedByScope(clientUserID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if clientUserID == nil {
+			return db
+		}
+		return db.Where("maintenance_request_comments.created_by_client_user_id = ?", *clientUserID)
 	}
 }

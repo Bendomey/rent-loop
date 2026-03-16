@@ -279,7 +279,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
 					Post("/", handlers.MaintenanceRequestHandler.Create)
 				r.Get("/", handlers.MaintenanceRequestHandler.List)
-				r.Route("/{id}", func(r chi.Router) {
+				r.Route("/{maintenance_request_id}", func(r chi.Router) {
 					r.Get("/", handlers.MaintenanceRequestHandler.Get)
 					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
 						Patch("/", handlers.MaintenanceRequestHandler.Update)
@@ -289,7 +289,18 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 						Post("/assign-manager", handlers.MaintenanceRequestHandler.AssignManager)
 					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
 						Patch("/status", handlers.MaintenanceRequestHandler.UpdateStatus)
-					r.Get("/activity", handlers.MaintenanceRequestHandler.ListActivityLogs)
+					r.Get("/activity_logs", handlers.MaintenanceRequestHandler.ListActivityLogs)
+					r.Route("/comments", func(r chi.Router) {
+						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
+							Post("/", handlers.MaintenanceRequestHandler.CreateComment)
+						r.Get("/", handlers.MaintenanceRequestHandler.ListComments)
+						r.Route("/{comment_id}", func(r chi.Router) {
+							r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
+								Patch("/", handlers.MaintenanceRequestHandler.UpdateComment)
+							r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
+								Delete("/", handlers.MaintenanceRequestHandler.DeleteComment)
+						})
+					})
 					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 						Post("/expenses", handlers.MaintenanceRequestHandler.AddExpense)
 					r.Get("/expenses", handlers.MaintenanceRequestHandler.ListExpenses)

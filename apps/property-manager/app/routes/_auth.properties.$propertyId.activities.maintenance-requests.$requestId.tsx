@@ -1,11 +1,11 @@
-import type { Route } from './+types/_auth.properties.$propertyId.tenants.all.$tenantId'
-import { getPropertyTenantForServer } from '~/api/tenants/server'
+import type { Route } from './+types/_auth.properties.$propertyId.activities.maintenance-requests.$requestId'
+import { getMaintenanceRequestForServer } from '~/api/maintenance-requests/server'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { TenantModule } from '~/modules'
+import { MaintenanceRequestDetailModule } from '~/modules'
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const clientUserProperty = context.get(propertyContext)
@@ -13,38 +13,32 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const authToken = authSession.get('authToken')
 
-	const tenant = await getPropertyTenantForServer(
-		{
-			tenant_id: params.tenantId,
-		},
-		{
-			authToken,
-			baseUrl,
-		},
+	const mr = await getMaintenanceRequestForServer(
+		{ request_id: params.requestId },
+		{ authToken, baseUrl },
 	)
 
 	return {
 		origin: getDomainUrl(request),
 		clientUserProperty,
-		tenant,
+		mr,
 	}
 }
 
 export const handle = {
-	breadcrumb: 'Domey Benjamin',
+	breadcrumb: (data: Awaited<ReturnType<typeof loader>>) =>
+		data?.mr?.code ?? 'Request',
 }
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
-	const meta = getSocialMetas({
-		title: `Tenant Name | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
+	return getSocialMetas({
+		title: `${loaderData?.mr?.code ?? 'Request'} | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,
 		}),
 		origin: loaderData.origin,
 	})
-
-	return meta
 }
 
-export default TenantModule
+export default MaintenanceRequestDetailModule

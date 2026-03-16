@@ -176,3 +176,29 @@ func DBMaintenanceActivityLogToRest(log *models.MaintenanceRequestActivityLog) a
 		"updated_at":                  log.UpdatedAt,
 	}
 }
+
+type OutputMaintenanceRequestComment struct {
+	ID                    string           `json:"id"`
+	MaintenanceRequestID  string           `json:"maintenance_request_id"`
+	Content               string           `json:"content"`
+	CreatedByClientUserID *string          `json:"created_by_client_user_id,omitempty"`
+	CreatedByClientUser   OutputClientUser `json:"created_by_client_user,omitempty"`
+	CreatedAt             time.Time        `json:"created_at"`
+	UpdatedAt             time.Time        `json:"updated_at"`
+}
+
+// DBMaintenanceRequestCommentToRest transforms a MaintenanceRequestComment to REST.
+func DBMaintenanceRequestCommentToRest(c *models.MaintenanceRequestComment) any {
+	if c == nil {
+		return nil
+	}
+	return map[string]any{
+		"id":                        c.ID.String(),
+		"maintenance_request_id":    c.MaintenanceRequestID,
+		"content":                   c.Content,
+		"created_by_client_user_id": c.CreatedByClientUserID,
+		"created_by_client_user":    DBClientUserToRest(c.CreatedByClientUser),
+		"created_at":                c.CreatedAt,
+		"updated_at":                c.UpdatedAt,
+	}
+}

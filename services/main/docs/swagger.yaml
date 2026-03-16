@@ -520,6 +520,13 @@ definitions:
     - phone
     - role
     type: object
+  handlers.CreateCommentBody:
+    properties:
+      content:
+        type: string
+    required:
+    - content
+    type: object
   handlers.CreateDocumentRequest:
     properties:
       content:
@@ -1362,6 +1369,13 @@ definitions:
       phoneNumber:
         example: "+233281234569"
         type: string
+    type: object
+  handlers.UpdateCommentBody:
+    properties:
+      content:
+        type: string
+    required:
+    - content
     type: object
   handlers.UpdateDocumentRequest:
     properties:
@@ -6700,7 +6714,7 @@ paths:
       summary: Create a maintenance request (Admin)
       tags:
       - MaintenanceRequests
-  /api/v1/admin/maintenance-requests/{id}:
+  /api/v1/admin/maintenance-requests/{maintenance_request_id}:
     patch:
       consumes:
       - application/json
@@ -6752,16 +6766,62 @@ paths:
       summary: Update a maintenance request (Admin)
       tags:
       - MaintenanceRequests
-  /api/v1/admin/maintenance-requests/{id}/activity:
+  /api/v1/admin/maintenance-requests/{maintenance_request_id}/activity_logs:
     get:
       consumes:
       - application/json
-      description: List all activity logs for a maintenance request (Admin)
+      description: List all activity logs for a maintenance request with pagination
+        (Admin)
       parameters:
       - description: Maintenance Request ID
         in: path
-        name: id
+        name: maintenance_request_id
         required: true
+        type: string
+      - in: query
+        name: action
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - in: query
+        name: performed_by_client_user_id
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
         type: string
       produces:
       - application/json
@@ -6771,18 +6831,19 @@ paths:
           schema:
             properties:
               data:
-                items:
-                  $ref: '#/definitions/transformations.OutputMaintenanceActivityLog'
-                type: array
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputMaintenanceActivityLog'
+                    type: array
+                type: object
             type: object
         "401":
           description: Invalid or absent authentication token
           schema:
             type: string
-        "404":
-          description: Maintenance request not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
         "500":
           description: An unexpected error occurred
           schema:
@@ -6792,7 +6853,7 @@ paths:
       summary: List activity logs for a maintenance request
       tags:
       - MaintenanceRequests
-  /api/v1/admin/maintenance-requests/{id}/assign-manager:
+  /api/v1/admin/maintenance-requests/{maintenance_request_id}/assign-manager:
     post:
       consumes:
       - application/json
@@ -6844,7 +6905,7 @@ paths:
       summary: Assign a manager to a maintenance request
       tags:
       - MaintenanceRequests
-  /api/v1/admin/maintenance-requests/{id}/assign-worker:
+  /api/v1/admin/maintenance-requests/{maintenance_request_id}/assign-worker:
     post:
       consumes:
       - application/json
@@ -6896,16 +6957,248 @@ paths:
       summary: Assign a worker to a maintenance request
       tags:
       - MaintenanceRequests
-  /api/v1/admin/maintenance-requests/{id}/expenses:
+  /api/v1/admin/maintenance-requests/{maintenance_request_id}/comments:
     get:
       consumes:
       - application/json
-      description: List all expenses recorded against a maintenance request (Admin)
+      description: List all comments for a maintenance request with pagination (Admin)
       parameters:
       - description: Maintenance Request ID
         in: path
-        name: id
+        name: maintenance_request_id
         required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Comments
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      type: boolean
+                    type: array
+                type: object
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List comments for a maintenance request
+      tags:
+      - MaintenanceRequests
+    post:
+      consumes:
+      - application/json
+      description: Add a new comment to a maintenance request (Admin)
+      parameters:
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - description: Comment content
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateCommentBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Comment created
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a comment on a maintenance request
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/maintenance-requests/{maintenance_request_id}/comments/{comment_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a comment from a maintenance request (Admin)
+      parameters:
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - description: Comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Comment deleted
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete a comment from a maintenance request
+      tags:
+      - MaintenanceRequests
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing comment (Admin)
+      parameters:
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - description: Comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      - description: Updated content
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateCommentBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Comment updated
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Comment not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update a comment on a maintenance request
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/maintenance-requests/{maintenance_request_id}/expenses:
+    get:
+      consumes:
+      - application/json
+      description: List expenses with pagination and optional filters (Admin)
+      parameters:
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - in: query
+        name: billable_to_tenant
+        type: boolean
+      - in: query
+        name: end_date
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - in: query
+        name: paid_by
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
         type: string
       produces:
       - application/json
@@ -6915,18 +7208,19 @@ paths:
           schema:
             properties:
               data:
-                items:
-                  $ref: '#/definitions/transformations.OutputExpense'
-                type: array
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputExpense'
+                    type: array
+                type: object
             type: object
         "401":
           description: Invalid or absent authentication token
           schema:
             type: string
-        "404":
-          description: Maintenance request not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
         "500":
           description: An unexpected error occurred
           schema:
@@ -6987,7 +7281,7 @@ paths:
       summary: Add an expense to a maintenance request
       tags:
       - MaintenanceRequests
-  /api/v1/admin/maintenance-requests/{id}/expenses/{expense_id}:
+  /api/v1/admin/maintenance-requests/{maintenance_request_id}/expenses/{expense_id}:
     delete:
       consumes:
       - application/json
@@ -7030,7 +7324,7 @@ paths:
       summary: Delete an expense from a maintenance request
       tags:
       - MaintenanceRequests
-  /api/v1/admin/maintenance-requests/{id}/expenses:invoice:
+  /api/v1/admin/maintenance-requests/{maintenance_request_id}/expenses:invoice:
     post:
       consumes:
       - application/json
@@ -7073,7 +7367,7 @@ paths:
       summary: Generate a draft invoice from billable expenses
       tags:
       - MaintenanceRequests
-  /api/v1/admin/maintenance-requests/{id}/status:
+  /api/v1/admin/maintenance-requests/{maintenance_request_id}/status:
     patch:
       consumes:
       - application/json
@@ -10524,7 +10818,7 @@ paths:
       summary: Create a maintenance request (Tenant)
       tags:
       - MaintenanceRequests
-  /api/v1/leases/{lease_id}/maintenance-requests/{id}:
+  /api/v1/leases/{lease_id}/maintenance-requests/{maintenance_request_id}:
     get:
       consumes:
       - application/json
