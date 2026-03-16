@@ -6579,6 +6579,9 @@ paths:
       description: List maintenance requests with optional filters (Admin)
       parameters:
       - in: query
+        name: assigned_manager_id
+        type: string
+      - in: query
         name: assigned_worker_id
         type: string
       - in: query

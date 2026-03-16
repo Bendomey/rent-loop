@@ -1,8 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { Loader2, Plus } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
+import { PropertyActivitiesMaintenanceRequestsController } from './controller'
 import { RequestCard } from './request-card'
 import {
 	useCreateMaintenanceRequestComment,
@@ -70,11 +71,27 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 	const { clientUserProperty } = useProperty()
 	const queryClient = useQueryClient()
 	const propertyId = safeString(clientUserProperty?.property?.id)
+	const [searchParams] = useSearchParams()
 
 	const isDraggingRef = useRef(false)
 
+	// Read active filter values from URL
+	const priority = searchParams.get('priority') ?? undefined
+	const category = searchParams.get('category') ?? undefined
+	const assignedWorkerId = searchParams.get('assigned_worker') ?? undefined
+	const assignedManagerId = searchParams.get('assigned_manager') ?? undefined
+	const unitId = searchParams.get('unit') ?? undefined
+
 	const columnParams = (status: MaintenanceRequestStatus) => ({
-		filters: { property_id: propertyId, status },
+		filters: {
+			property_id: propertyId,
+			status,
+			priority: priority as MaintenanceRequestPriority | undefined,
+			category: category as MaintenanceRequestCategory | undefined,
+			assigned_worker_id: assignedWorkerId,
+			assigned_manager_id: assignedManagerId,
+			unit_id: unitId,
+		},
 		pagination: { page: 1, per: 50 },
 		populate: ['Unit', 'AssignedWorker', 'AssignedManager'],
 	})
@@ -218,7 +235,6 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 
 	const handleDialogClose = (open: boolean) => {
 		if (!open && pendingChange) {
-			// Revert the optimistic kanban move
 			setLocalData((prev) =>
 				prev.map((it) =>
 					it.id === pendingChange.item.id
@@ -296,16 +312,19 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 			</Dialog>
 
 			<div className="flex h-full flex-col">
-				<div className="m-5 flex shrink-0 items-center justify-between">
-					<TypographyH3>Maintenance Requests</TypographyH3>
-					<Button asChild>
-						<Link
-							to={`/properties/${propertyId}/activities/maintenance-requests/new`}
-						>
-							<Plus className="size-4" />
-							Add Request
-						</Link>
-					</Button>
+				<div className="m-5 flex shrink-0 flex-col gap-3">
+					<div className="flex items-center justify-between">
+						<TypographyH3>Maintenance Requests</TypographyH3>
+						<Button asChild>
+							<Link
+								to={`/properties/${propertyId}/activities/maintenance-requests/new`}
+							>
+								<Plus className="size-4" />
+								Add Request
+							</Link>
+						</Button>
+					</div>
+					<PropertyActivitiesMaintenanceRequestsController />
 				</div>
 
 				<div className="relative min-h-0 flex-1">

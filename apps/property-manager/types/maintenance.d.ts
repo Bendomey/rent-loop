@@ -81,6 +81,7 @@ interface FetchMaintenanceRequestFilter {
 	property_id?: string
 	unit_id?: string
 	assigned_worker_id?: string
+	assigned_manager_id?: string
 }
 
 interface FetchMaintenanceRequestActivityLogFilter {

@@ -152,13 +152,14 @@ func (h *MaintenanceRequestHandler) Create(w http.ResponseWriter, r *http.Reques
 
 type ListMaintenanceRequestsQuery struct {
 	lib.FilterQueryInput
-	Status           *string `json:"status"             query:"status"             description:"Filter by status (NEW, IN_PROGRESS, IN_REVIEW, RESOLVED, CANCELED)"`
-	Priority         *string `json:"priority"           query:"priority"           description:"Filter by priority (LOW, MEDIUM, HIGH, EMERGENCY)"`
-	Category         *string `json:"category"           query:"category"           description:"Filter by category (PLUMBING, ELECTRICAL, HVAC, OTHER)"`
-	AssignedWorkerID *string `json:"assigned_worker_id" query:"assigned_worker_id" description:"Filter by assigned worker UUID"`
-	PropertyID       *string `json:"property_id"        query:"property_id"        description:"Filter by property UUID"                                            validate:"omitempty,uuid4"`
-	UnitID           *string `json:"unit_id"            query:"unit_id"            description:"Filter by unit UUID"                                                validate:"omitempty,uuid4"`
-	LeaseID          *string `json:"lease_id"           query:"lease_id"           description:"Filter by lease UUID"                                               validate:"omitempty,uuid4"`
+	Status            *string `json:"status"              query:"status"              description:"Filter by status (NEW, IN_PROGRESS, IN_REVIEW, RESOLVED, CANCELED)"`
+	Priority          *string `json:"priority"            query:"priority"            description:"Filter by priority (LOW, MEDIUM, HIGH, EMERGENCY)"`
+	Category          *string `json:"category"            query:"category"            description:"Filter by category (PLUMBING, ELECTRICAL, HVAC, OTHER)"`
+	AssignedWorkerID  *string `json:"assigned_worker_id"  query:"assigned_worker_id"  description:"Filter by assigned worker UUID"`
+	AssignedManagerID *string `json:"assigned_manager_id" query:"assigned_manager_id" description:"Filter by assigned manager UUID"`
+	PropertyID        *string `json:"property_id"         query:"property_id"         description:"Filter by property UUID"                                            validate:"omitempty,uuid4"`
+	UnitID            *string `json:"unit_id"             query:"unit_id"             description:"Filter by unit UUID"                                                validate:"omitempty,uuid4"`
+	LeaseID           *string `json:"lease_id"            query:"lease_id"            description:"Filter by lease UUID"                                               validate:"omitempty,uuid4"`
 }
 
 // List godoc
@@ -190,14 +191,15 @@ func (h *MaintenanceRequestHandler) List(w http.ResponseWriter, r *http.Request)
 
 	clientID := currentUser.ClientID
 	filters := repository.ListMaintenanceRequestsFilter{
-		ClientID:         &clientID,
-		Status:           lib.NullOrString(r.URL.Query().Get("status")),
-		Priority:         lib.NullOrString(r.URL.Query().Get("priority")),
-		Category:         lib.NullOrString(r.URL.Query().Get("category")),
-		AssignedWorkerID: lib.NullOrString(r.URL.Query().Get("assigned_worker_id")),
-		PropertyID:       lib.NullOrString(r.URL.Query().Get("property_id")),
-		UnitID:           lib.NullOrString(r.URL.Query().Get("unit_id")),
-		LeaseID:          lib.NullOrString(r.URL.Query().Get("lease_id")),
+		ClientID:          &clientID,
+		Status:            lib.NullOrString(r.URL.Query().Get("status")),
+		Priority:          lib.NullOrString(r.URL.Query().Get("priority")),
+		Category:          lib.NullOrString(r.URL.Query().Get("category")),
+		AssignedWorkerID:  lib.NullOrString(r.URL.Query().Get("assigned_worker_id")),
+		AssignedManagerID: lib.NullOrString(r.URL.Query().Get("assigned_manager_id")),
+		PropertyID:        lib.NullOrString(r.URL.Query().Get("property_id")),
+		UnitID:            lib.NullOrString(r.URL.Query().Get("unit_id")),
+		LeaseID:           lib.NullOrString(r.URL.Query().Get("lease_id")),
 	}
 
 	mrs, listErr := h.service.ListMaintenanceRequests(r.Context(), *filterQuery, filters)

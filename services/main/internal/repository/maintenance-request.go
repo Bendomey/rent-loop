@@ -74,15 +74,16 @@ type GetMaintenanceRequestQuery struct {
 }
 
 type ListMaintenanceRequestsFilter struct {
-	ClientID         *string
-	PropertyID       *string
-	UnitID           *string
-	LeaseID          *string
-	Status           *string
-	Priority         *string
-	Category         *string
-	AssignedWorkerID *string
-	TenantID         *string // when set, enforces visibility = TENANT_VISIBLE
+	ClientID          *string
+	PropertyID        *string
+	UnitID            *string
+	LeaseID           *string
+	Status            *string
+	Priority          *string
+	Category          *string
+	AssignedWorkerID  *string
+	AssignedManagerID *string
+	TenantID          *string // when set, enforces visibility = TENANT_VISIBLE
 }
 
 type ListMaintenanceRequestActivityLogsFilter struct {
@@ -145,6 +146,7 @@ func (r *maintenanceRequestRepository) List(
 			mrPriorityScope(filters.Priority),
 			mrCategoryScope(filters.Category),
 			mrAssignedWorkerScope(filters.AssignedWorkerID),
+			mrAssignedManagerScope(filters.AssignedManagerID),
 			mrTenantScope(filters.TenantID),
 			PaginationScope(filterQuery.Page, filterQuery.PageSize),
 			OrderScope("maintenance_requests", filterQuery.OrderBy, filterQuery.Order),
@@ -183,6 +185,7 @@ func (r *maintenanceRequestRepository) Count(
 			mrPriorityScope(filters.Priority),
 			mrCategoryScope(filters.Category),
 			mrAssignedWorkerScope(filters.AssignedWorkerID),
+			mrAssignedManagerScope(filters.AssignedManagerID),
 			mrTenantScope(filters.TenantID),
 		).
 		Count(&count)
@@ -492,6 +495,15 @@ func mrAssignedWorkerScope(workerID *string) func(db *gorm.DB) *gorm.DB {
 			return db
 		}
 		return db.Where("maintenance_requests.assigned_worker_id = ?", *workerID)
+	}
+}
+
+func mrAssignedManagerScope(managerID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if managerID == nil {
+			return db
+		}
+		return db.Where("maintenance_requests.assigned_manager_id = ?", *managerID)
 	}
 }
 

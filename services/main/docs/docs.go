@@ -4490,6 +4490,11 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "name": "assigned_manager_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "assigned_worker_id",
                         "in": "query"
                     },
