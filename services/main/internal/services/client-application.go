@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
@@ -20,39 +19,61 @@ type ClientApplicationService interface {
 	CreateClientApplication(ctx context.Context, input CreateClientApplicationInput) (*models.ClientApplication, error)
 	ListClientApplications(
 		ctx context.Context,
-		filterQuery lib.FilterQuery,
 		filters repository.ListClientApplicationsFilter,
 	) ([]models.ClientApplication, error)
-	CountClientApplications(
-		ctx context.Context,
-		filterQuery lib.FilterQuery,
-		filters repository.ListClientApplicationsFilter,
-	) (int64, error)
+	CountClientApplications(ctx context.Context, filters repository.ListClientApplicationsFilter) (int64, error)
 	ApproveClientApplication(
 		ctx context.Context,
-		clientApplicationId string,
-		adminId string,
+		input ApproveClientApplicationInput,
 	) (*models.ClientApplication, error)
 	RejectClientApplication(ctx context.Context, input RejectClientApplicationInput) (*models.ClientApplication, error)
 }
 
 type clientApplicationService struct {
-	appCtx pkg.AppContext
-	repo   repository.ClientApplicationRepository
+	appCtx            pkg.AppContext
+	repo              repository.ClientApplicationRepository
+	clientService     ClientService
+	clientUserService ClientUserService
 }
 
-func NewClientApplicationService(
-	appCtx pkg.AppContext,
-	repo repository.ClientApplicationRepository,
-) ClientApplicationService {
-	return &clientApplicationService{appCtx, repo}
+type ClientApplicationServiceDeps struct {
+	AppCtx            pkg.AppContext
+	Repo              repository.ClientApplicationRepository
+	ClientService     ClientService
+	ClientUserService ClientUserService
+}
+
+func NewClientApplicationService(deps ClientApplicationServiceDeps) ClientApplicationService {
+	return &clientApplicationService{
+		appCtx:            deps.AppCtx,
+		repo:              deps.Repo,
+		clientService:     deps.ClientService,
+		clientUserService: deps.ClientUserService,
+	}
 }
 
 func (s *clientApplicationService) GetClientApplication(
 	ctx context.Context,
 	clientApplicationId string,
 ) (*models.ClientApplication, error) {
-	return s.repo.GetByID(ctx, clientApplicationId)
+	clientApplication, err := s.repo.GetByID(ctx, clientApplicationId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("ClientApplicationNotFound", &pkg.RentLoopErrorParams{
+				Err: err,
+			})
+		}
+
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "GetClientApplication",
+				"action":   "fetching client application by ID",
+			},
+		})
+	}
+
+	return clientApplication, nil
 }
 
 type CreateClientApplicationInput struct {
@@ -82,19 +103,6 @@ type CreateClientApplicationInput struct {
 	SupportPhone       *string
 }
 
-type CreateClientRequest struct {
-	Type                string
-	SubType             string
-	Name                string
-	Address             string
-	Country             string
-	Region              string
-	City                string
-	Latitude            float64
-	Longitude           float64
-	ClientApplicationId string
-}
-
 func (s *clientApplicationService) CreateClientApplication(
 	ctx context.Context,
 	input CreateClientApplicationInput,
@@ -113,7 +121,7 @@ func (s *clientApplicationService) CreateClientApplication(
 		ContactPhoneNumber: input.ContactPhoneNumber,
 		ContactEmail:       input.ContactEmail,
 		DateOfBirth:        input.DateOfBirth,
-		IDType:             (input.IDType),
+		IDType:             input.IDType,
 		IDNumber:           input.IDNumber,
 		IDExpiry:           input.IDExpiry,
 		IDDocumentURL:      input.IDDocumentURL,
@@ -144,7 +152,7 @@ func (s *clientApplicationService) CreateClientApplication(
 		TextBody:  message,
 	})
 
-	go s.appCtx.Clients.GatekeeperAPI.SendSMS(context.Background(), gatekeeper.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
 		Recipient: input.ContactPhoneNumber,
 		Message:   message,
 	})
@@ -180,8 +188,8 @@ func (s *clientApplicationService) RejectClientApplication(
 	}
 
 	clientApplication.Status = "ClientApplication.Status.Rejected"
-	clientApplication.RejectedBecause = lib.StringPointer(input.Reason)
-	clientApplication.RejectedById = lib.StringPointer(input.AdminId)
+	clientApplication.RejectedBecause = &input.Reason
+	clientApplication.RejectedById = &input.AdminId
 
 	if err := s.repo.UpdateClientApplication(ctx, clientApplication); err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
@@ -193,9 +201,10 @@ func (s *clientApplicationService) RejectClientApplication(
 		})
 	}
 
-	message := lib.CLIENT_APPLICATION_REJECTED_BODY
-	message = strings.ReplaceAll(message, "{{owner_name}}", clientApplication.ContactName)
-	message = strings.ReplaceAll(message, "{{rejection_reason}}", input.Reason)
+	message := strings.NewReplacer(
+		"{{owner_name}}", clientApplication.ContactName,
+		"{{rejection_reason}}", input.Reason,
+	).Replace(lib.CLIENT_APPLICATION_REJECTED_BODY)
 
 	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 		Recipient: clientApplication.ContactEmail,
@@ -203,7 +212,7 @@ func (s *clientApplicationService) RejectClientApplication(
 		TextBody:  message,
 	})
 
-	go s.appCtx.Clients.GatekeeperAPI.SendSMS(context.Background(), gatekeeper.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
 		Recipient: clientApplication.ContactPhoneNumber,
 		Message:   message,
 	})
@@ -211,12 +220,16 @@ func (s *clientApplicationService) RejectClientApplication(
 	return clientApplication, nil
 }
 
+type ApproveClientApplicationInput struct {
+	ID      string
+	AdminID string
+}
+
 func (s *clientApplicationService) ApproveClientApplication(
 	ctx context.Context,
-	id string,
-	adminId string,
+	input ApproveClientApplicationInput,
 ) (*models.ClientApplication, error) {
-	clientApplication, err := s.repo.GetByID(ctx, id)
+	clientApplication, err := s.repo.GetByID(ctx, input.ID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, pkg.NotFoundError("ClientApplicationNotFound", &pkg.RentLoopErrorParams{
@@ -234,16 +247,17 @@ func (s *clientApplicationService) ApproveClientApplication(
 	}
 
 	if clientApplication.Status != "ClientApplication.Status.Pending" {
-		return nil, fmt.Errorf("application is already approved")
+		return nil, pkg.BadRequestError("ApplicationAlreadyApproved", nil)
 	}
 
 	transaction := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, transaction)
+	defer transaction.Rollback()
 
 	clientApplication.Status = "ClientApplication.Status.Approved"
-	clientApplication.ApprovedById = &adminId
+	clientApplication.ApprovedById = &input.AdminID
 
-	if err := s.repo.UpdateClientApplication(ctx, clientApplication); err != nil {
-		transaction.Rollback()
+	if err := s.repo.UpdateClientApplication(transCtx, clientApplication); err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
 			Metadata: map[string]string{
@@ -269,15 +283,8 @@ func (s *clientApplicationService) ApproveClientApplication(
 		ClientApplicationId: clientApplication.ID.String(),
 	}
 
-	if err := transaction.WithContext(ctx).Create(&client).Error; err != nil {
-		transaction.Rollback()
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "ApproveClientApplication",
-				"action":   "creating client after approving application",
-			},
-		})
+	if err := s.clientService.CreateClient(transCtx, &client); err != nil {
+		return nil, err
 	}
 
 	// generate password
@@ -301,19 +308,11 @@ func (s *clientApplicationService) ApproveClientApplication(
 		Role:        "OWNER",
 	}
 
-	if err := transaction.Create(&user).Error; err != nil {
-		transaction.Rollback()
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "ApproveClientApplication",
-				"action":   "creating OWNER client user after approving application",
-			},
-		})
+	if err := s.clientUserService.InsertClientUser(transCtx, &user); err != nil {
+		return nil, err
 	}
 
 	if err := transaction.Commit().Error; err != nil {
-		transaction.Rollback()
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
 			Metadata: map[string]string{
@@ -323,10 +322,11 @@ func (s *clientApplicationService) ApproveClientApplication(
 		})
 	}
 
-	message := lib.CLIENT_APPLICATION_ACCEPTED_BODY
-	message = strings.ReplaceAll(message, "{{owner_name}}", clientApplication.ContactName)
-	message = strings.ReplaceAll(message, "{{email}}", clientApplication.ContactEmail)
-	message = strings.ReplaceAll(message, "{{password}}", password)
+	message := strings.NewReplacer(
+		"{{owner_name}}", clientApplication.ContactName,
+		"{{email}}", clientApplication.ContactEmail,
+		"{{password}}", password,
+	).Replace(lib.CLIENT_APPLICATION_ACCEPTED_BODY)
 
 	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 		Recipient: clientApplication.ContactEmail,
@@ -334,7 +334,7 @@ func (s *clientApplicationService) ApproveClientApplication(
 		TextBody:  message,
 	})
 
-	go s.appCtx.Clients.GatekeeperAPI.SendSMS(context.Background(), gatekeeper.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
 		Recipient: clientApplication.ContactPhoneNumber,
 		Message:   message,
 	})
@@ -344,10 +344,9 @@ func (s *clientApplicationService) ApproveClientApplication(
 
 func (s *clientApplicationService) ListClientApplications(
 	ctx context.Context,
-	filterQuery lib.FilterQuery,
 	filters repository.ListClientApplicationsFilter,
 ) ([]models.ClientApplication, error) {
-	clientApplications, err := s.repo.List(ctx, filterQuery, filters)
+	clientApplications, err := s.repo.List(ctx, filters)
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
@@ -363,10 +362,9 @@ func (s *clientApplicationService) ListClientApplications(
 
 func (s *clientApplicationService) CountClientApplications(
 	ctx context.Context,
-	filterQuery lib.FilterQuery,
 	filters repository.ListClientApplicationsFilter,
 ) (int64, error) {
-	count, err := s.repo.Count(ctx, filterQuery, filters)
+	count, err := s.repo.Count(ctx, filters)
 	if err != nil {
 		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,

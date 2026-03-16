@@ -3,12 +3,14 @@ package repository
 import (
 	"context"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"gorm.io/gorm"
 )
 
 type ClientRepository interface {
 	GetByID(context context.Context, id string) (*models.Client, error)
+	Create(context context.Context, client *models.Client) error
 }
 
 type clientRepository struct {
@@ -17,6 +19,11 @@ type clientRepository struct {
 
 func NewClientRepository(DB *gorm.DB) ClientRepository {
 	return &clientRepository{DB}
+}
+
+func (r *clientRepository) Create(ctx context.Context, client *models.Client) error {
+	db := lib.ResolveDB(ctx, r.DB)
+	return db.WithContext(ctx).Create(client).Error
 }
 
 func (r *clientRepository) GetByID(ctx context.Context, id string) (*models.Client, error) {

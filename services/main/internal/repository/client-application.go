@@ -11,12 +11,8 @@ import (
 type ClientApplicationRepository interface {
 	GetByID(ctx context.Context, id string) (*models.ClientApplication, error)
 	Create(ctx context.Context, clientApp *models.ClientApplication) error
-	List(
-		ctx context.Context,
-		filterQuery lib.FilterQuery,
-		filters ListClientApplicationsFilter,
-	) (*[]models.ClientApplication, error)
-	Count(ctx context.Context, filterQuery lib.FilterQuery, filters ListClientApplicationsFilter) (int64, error)
+	List(ctx context.Context, filters ListClientApplicationsFilter) (*[]models.ClientApplication, error)
+	Count(ctx context.Context, filters ListClientApplicationsFilter) (int64, error)
 	UpdateClientApplication(ctx context.Context, clientApp *models.ClientApplication) error
 }
 
@@ -37,12 +33,20 @@ func (r *clientApplicationRepository) GetByID(ctx context.Context, id string) (*
 }
 
 func (r *clientApplicationRepository) Create(ctx context.Context, clientApp *models.ClientApplication) error {
-	return r.db.WithContext(ctx).Create(clientApp).Error
+	db := lib.ResolveDB(ctx, r.db)
+	return db.WithContext(ctx).Create(clientApp).Error
+}
+
+type ListClientApplicationsFilter struct {
+	lib.FilterQuery
+	Status  *string
+	Type    *string
+	SubType *string
+	IDs     *[]string
 }
 
 func (r *clientApplicationRepository) List(
 	ctx context.Context,
-	filterQuery lib.FilterQuery,
 	filters ListClientApplicationsFilter,
 ) (*[]models.ClientApplication, error) {
 	var clientApplications []models.ClientApplication
@@ -50,18 +54,18 @@ func (r *clientApplicationRepository) List(
 	db := r.db.WithContext(ctx).
 		Scopes(
 			IDsFilterScope("client_applications", filters.IDs),
-			DateRangeScope("client_applications", filterQuery.DateRange),
-			SearchScope("client_applications", filterQuery.Search),
-			StatusFilterScope(filters.Status),
-			TypeFilterScope(filters.Type),
-			SubTypeFilterScope(filters.SubType),
+			DateRangeScope("client_applications", filters.DateRange),
+			SearchScope("client_applications", filters.Search),
+			clientApplicationStatusFilterScope(filters.Status),
+			clientApplicationTypeFilterScope(filters.Type),
+			clientApplicationSubtypeFilterScope(filters.SubType),
 
-			PaginationScope(filterQuery.Page, filterQuery.PageSize),
-			OrderScope("client_applications", filterQuery.OrderBy, filterQuery.Order),
+			PaginationScope(filters.Page, filters.PageSize),
+			OrderScope("client_applications", filters.OrderBy, filters.Order),
 		)
 
-	if filterQuery.Populate != nil {
-		for _, field := range *filterQuery.Populate {
+	if filters.Populate != nil {
+		for _, field := range *filters.Populate {
 			db = db.Preload(field)
 		}
 	}
@@ -77,7 +81,6 @@ func (r *clientApplicationRepository) List(
 
 func (r *clientApplicationRepository) Count(
 	ctx context.Context,
-	filterQuery lib.FilterQuery,
 	filters ListClientApplicationsFilter,
 ) (int64, error) {
 	var count int64
@@ -87,14 +90,11 @@ func (r *clientApplicationRepository) Count(
 		Model(&models.ClientApplication{}).
 		Scopes(
 			IDsFilterScope("client_applications", filters.IDs),
-			DateRangeScope("client_applications", filterQuery.DateRange),
-			SearchScope("client_applications", filterQuery.Search),
-			StatusFilterScope(filters.Status),
-			TypeFilterScope(filters.Type),
-			SubTypeFilterScope(filters.SubType),
-
-			PaginationScope(filterQuery.Page, filterQuery.PageSize),
-			OrderScope("client_applications", filterQuery.OrderBy, filterQuery.Order),
+			DateRangeScope("client_applications", filters.DateRange),
+			SearchScope("client_applications", filters.Search),
+			clientApplicationStatusFilterScope(filters.Status),
+			clientApplicationTypeFilterScope(filters.Type),
+			clientApplicationSubtypeFilterScope(filters.SubType),
 		).
 		Count(&count)
 
@@ -105,22 +105,16 @@ func (r *clientApplicationRepository) Count(
 	return count, nil
 }
 
-type ListClientApplicationsFilter struct {
-	Status  *string
-	Type    *string
-	SubType *string
-	IDs     *[]string
-}
-
 func (r *clientApplicationRepository) UpdateClientApplication(
 	ctx context.Context,
 	clientApplication *models.ClientApplication,
 ) error {
-	return r.db.WithContext(ctx).Save(clientApplication).Error
+	db := lib.ResolveDB(ctx, r.db)
+	return db.WithContext(ctx).Save(clientApplication).Error
 }
 
 // Private methods
-func StatusFilterScope(status *string) func(db *gorm.DB) *gorm.DB {
+func clientApplicationStatusFilterScope(status *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if status == nil {
 			return db
@@ -130,7 +124,7 @@ func StatusFilterScope(status *string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func TypeFilterScope(input *string) func(db *gorm.DB) *gorm.DB {
+func clientApplicationTypeFilterScope(input *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if input == nil {
 			return db
@@ -140,7 +134,7 @@ func TypeFilterScope(input *string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func SubTypeFilterScope(subType *string) func(db *gorm.DB) *gorm.DB {
+func clientApplicationSubtypeFilterScope(subType *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if subType == nil {
 			return db

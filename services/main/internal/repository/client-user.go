@@ -31,7 +31,8 @@ func NewClientUserRepository(DB *gorm.DB) ClientUserRepository {
 }
 
 func (r *clientUserRepository) Create(ctx context.Context, clientUser *models.ClientUser) error {
-	return r.DB.WithContext(ctx).Create(clientUser).Error
+	db := lib.ResolveDB(ctx, r.DB)
+	return db.WithContext(ctx).Create(clientUser).Error
 }
 
 func (r *clientUserRepository) GetByID(ctx context.Context, id string) (*models.ClientUser, error) {
