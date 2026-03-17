@@ -4,15 +4,16 @@ import 'package:rentloop_go/src/api/maintenance.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:flutter/material.dart';
 import 'package:rentloop_go/src/repository/notifiers/maintenance/maintenance_requests_notifier/maintenance_requests_notifier.dart';
+import 'package:rentloop_go/src/repository/providers/maintenance_badge_provider.dart';
 import 'package:rentloop_go/src/shared/adaptive/menu.dart';
 import 'package:rentloop_go/src/shared/adaptive/search_input.dart';
 import 'package:rentloop_go/src/shared/screen_states.dart';
 import './request_card.dart';
 
 class MaintenanceScreen extends ConsumerStatefulWidget {
-  const MaintenanceScreen({super.key, this.statusFilter});
+  const MaintenanceScreen({super.key, this.statusesFilter});
 
-  final String? statusFilter;
+  final List<String>? statusesFilter;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _MaintenanceScreen();
@@ -29,17 +30,10 @@ class _MaintenanceScreen extends ConsumerState<MaintenanceScreen> {
   @override
   void initState() {
     super.initState();
-    _query = MaintenanceRequestQuery(
-      status: widget.statusFilter,
-      sort: '-createdAt',
-    );
+    _query = MaintenanceRequestQuery(statuses: widget.statusesFilter);
     _searchController = TextEditingController();
     _scrollController = ScrollController()..addListener(_onScroll);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref
-          .read(maintenanceRequestsNotifierProvider.notifier)
-          .loadFirstPage(_query);
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refresh(_query));
   }
 
   @override
@@ -57,10 +51,14 @@ class _MaintenanceScreen extends ConsumerState<MaintenanceScreen> {
     }
   }
 
-  void _applyQuery(MaintenanceRequestQuery query) {
-    setState(() => _query = query);
-    ref.read(maintenanceRequestsNotifierProvider.notifier).loadFirstPage(query);
+  void _refresh([MaintenanceRequestQuery? query]) {
+    final q = query ?? _query;
+    if (query != null) setState(() => _query = q);
+    ref.read(maintenanceRequestsNotifierProvider.notifier).loadFirstPage(q);
+    ref.invalidate(mrStatsProvider);
   }
+
+  void _applyQuery(MaintenanceRequestQuery query) => _refresh(query);
 
   void _onSearchChanged(String value) {
     _searchDebounce?.cancel();
@@ -70,7 +68,7 @@ class _MaintenanceScreen extends ConsumerState<MaintenanceScreen> {
   }
 
   bool get _hasActiveFilters =>
-      _query.status != null ||
+      (_query.statuses?.isNotEmpty ?? false) ||
       _query.priority != null ||
       _query.category != null ||
       (_query.search?.isNotEmpty ?? false);
@@ -109,19 +107,21 @@ class _MaintenanceScreen extends ConsumerState<MaintenanceScreen> {
             // Status filter menu
             AdaptiveMenu(
               title: 'Filter by Status',
-              selected: _query.status ?? 'all',
+              selected: _query.statuses?.firstOrNull ?? 'all',
               items: [
                 MenuItem(value: 'all', label: 'All', isDefaultAction: true),
-                MenuItem(value: 'PENDING', label: 'Pending'),
+                MenuItem(value: 'NEW', label: 'Pending'),
                 MenuItem(value: 'IN_PROGRESS', label: 'In Progress'),
+                MenuItem(value: 'IN_REVIEW', label: 'In Review'),
                 MenuItem(value: 'RESOLVED', label: 'Resolved'),
+                MenuItem(value: 'CANCELED', label: 'Cancelled'),
               ],
               onSelected: (value) async {
                 await Haptics.vibrate(HapticsType.selection);
                 _applyQuery(
                   _query.copyWith(
                     clearStatus: value == 'all',
-                    status: value == 'all' ? null : value,
+                    statuses: value == 'all' ? null : [value],
                   ),
                 );
               },
@@ -157,9 +157,7 @@ class _MaintenanceScreen extends ConsumerState<MaintenanceScreen> {
               tooltip: 'Refresh',
               onPressed: () async {
                 await Haptics.vibrate(HapticsType.selection);
-                ref
-                    .read(maintenanceRequestsNotifierProvider.notifier)
-                    .loadFirstPage(_query);
+                _refresh();
               },
             ),
         ],
@@ -170,6 +168,7 @@ class _MaintenanceScreen extends ConsumerState<MaintenanceScreen> {
           await ref
               .read(maintenanceRequestsNotifierProvider.notifier)
               .loadFirstPage(_query);
+          ref.invalidate(mrStatsProvider);
           if (mounted) setState(() => _isPullRefreshing = false);
         },
         child: Container(
@@ -193,9 +192,7 @@ class _MaintenanceScreen extends ConsumerState<MaintenanceScreen> {
                     title: 'Failed to load requests',
                     subtitle:
                         'Check your connection and pull down to try again.',
-                    onRetry: () => ref
-                        .read(maintenanceRequestsNotifierProvider.notifier)
-                        .loadFirstPage(_query),
+                    onRetry: _refresh,
                   ),
                 )
               else

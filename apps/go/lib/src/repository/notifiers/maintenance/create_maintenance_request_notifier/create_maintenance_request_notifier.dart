@@ -4,6 +4,7 @@ import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:rentloop_go/src/lib/api_error_messages.dart';
 import 'package:rentloop_go/src/repository/api_state.dart';
 import 'package:rentloop_go/src/repository/notifiers/maintenance/maintenance_requests_notifier/maintenance_requests_notifier.dart';
+import 'package:rentloop_go/src/repository/providers/maintenance_badge_provider.dart';
 
 part 'create_maintenance_request_notifier.g.dart';
 
@@ -17,7 +18,8 @@ class CreateMaintenanceRequestNotifier
   @override
   CreateMaintenanceRequestState build() => CreateMaintenanceRequestState();
 
-  Future<bool> submit({
+  /// Returns the new MR's ID on success, null on failure.
+  Future<String?> submit({
     required String leaseId,
     required String title,
     required String description,
@@ -27,29 +29,32 @@ class CreateMaintenanceRequestNotifier
   }) async {
     state = CreateMaintenanceRequestState(status: ApiStatus.pending);
     try {
-      await ref.read(maintenanceApiProvider).createMaintenanceRequest(leaseId, {
-        'title': title,
-        'description': description,
-        'category': category,
-        'priority': priority,
-        if (attachments.isNotEmpty) 'attachments': attachments,
-      });
-      // Refresh the list from the first page.
+      final mr = await ref
+          .read(maintenanceApiProvider)
+          .createMaintenanceRequest(leaseId, {
+            'title': title,
+            'description': description,
+            'category': category,
+            'priority': priority,
+            if (attachments.isNotEmpty) 'attachments': attachments,
+          });
+      // Refresh the list from the first page and update the badge count.
       ref.read(maintenanceRequestsNotifierProvider.notifier).loadFirstPage();
+      ref.invalidate(mrStatsProvider);
       state = CreateMaintenanceRequestState(status: ApiStatus.success);
-      return true;
+      return mr.id;
     } on ApiException catch (e) {
       state = CreateMaintenanceRequestState(
         status: ApiStatus.failed,
         errorMessage: translateApiErrorMessage(errorMessage: e.message),
       );
-      return false;
+      return null;
     } catch (_) {
       state = CreateMaintenanceRequestState(
         status: ApiStatus.failed,
         errorMessage: translateApiErrorMessage(),
       );
-      return false;
+      return null;
     }
   }
 }

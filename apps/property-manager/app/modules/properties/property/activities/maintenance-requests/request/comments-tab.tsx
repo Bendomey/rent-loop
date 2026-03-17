@@ -19,12 +19,37 @@ import { Textarea } from '~/components/ui/textarea'
 import { TypographyMuted } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
+import { useAuth } from '~/providers/auth-provider'
+
+function UserChip({ name, isMe }: { name: string; isMe: boolean }) {
+	const initials = name
+		.split(' ')
+		.map((p) => p[0])
+		.join('')
+		.slice(0, 2)
+		.toUpperCase()
+
+	return (
+		<span className="inline-flex items-center gap-1.5">
+			<span className="bg-muted text-foreground flex items-center justify-center rounded-full p-1.5 text-xs font-medium">
+				{initials}
+			</span>
+			<span className="text-sm font-medium">
+				{name}
+				{isMe && (
+					<span className="text-muted-foreground font-normal"> (Me)</span>
+				)}
+			</span>
+		</span>
+	)
+}
 
 interface CommentsTabProps {
 	requestId: string
 }
 
 export function CommentsTab({ requestId }: CommentsTabProps) {
+	const { currentUser } = useAuth()
 	const queryClient = useQueryClient()
 	const [content, setContent] = useState('')
 	const [editingId, setEditingId] = useState<string | null>(null)
@@ -34,6 +59,7 @@ export function CommentsTab({ requestId }: CommentsTabProps) {
 		useGetMaintenanceRequestComments(requestId, {
 			pagination: { page: 1, per: 50 },
 			filters: {},
+			populate: ['CreatedByClientUser'],
 		})
 
 	const comments = data?.rows ?? []
@@ -108,6 +134,7 @@ export function CommentsTab({ requestId }: CommentsTabProps) {
 		)
 	}
 
+	console.log(comments)
 	return (
 		<div className="flex flex-col gap-4 py-2">
 			<form onSubmit={handleSubmit} className="flex flex-col gap-2">
@@ -196,6 +223,16 @@ export function CommentsTab({ requestId }: CommentsTabProps) {
 								</form>
 							) : (
 								<>
+									{comment.created_by_client_user && (
+										<div className="mb-2">
+											<UserChip
+												name={comment.created_by_client_user.name}
+												isMe={
+													comment.created_by_client_user.id === currentUser?.id
+												}
+											/>
+										</div>
+									)}
 									<p className="leading-relaxed whitespace-pre-wrap">
 										{comment.content}
 									</p>

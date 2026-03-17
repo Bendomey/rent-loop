@@ -50,6 +50,14 @@ class _ViewAttachmentsWidget extends ConsumerState<ViewAttachmentsWidget> {
               fit: BoxFit.cover,
               width: double.infinity,
               height: double.infinity,
+              loadingBuilder: (_, child, progress) {
+                if (progress == null) return child;
+                return Shimmer.fromColors(
+                  baseColor: Colors.grey.shade200,
+                  highlightColor: Colors.grey.shade100,
+                  child: Container(color: Colors.white),
+                );
+              },
               errorBuilder: (_, __, ___) => Container(
                 color: Colors.grey.shade200,
                 child: const Icon(Icons.broken_image, color: Colors.grey),

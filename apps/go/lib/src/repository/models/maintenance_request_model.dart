@@ -2,48 +2,6 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'maintenance_request_model.g.dart';
 
-String maintenanceStatusLabel(String status) {
-  return switch (status.toUpperCase()) {
-    'PENDING' => 'Pending',
-    'IN_PROGRESS' => 'In Progress',
-    'RESOLVED' => 'Resolved',
-    'CANCELLED' => 'Cancelled',
-    _ => status,
-  };
-}
-
-String maintenancePriorityLabel(String priority) {
-  return switch (priority.toUpperCase()) {
-    'LOW' => 'Low',
-    'MEDIUM' => 'Medium',
-    'HIGH' => 'High',
-    'EMERGENCY' => 'Emergency',
-    _ => priority,
-  };
-}
-
-String maintenanceCategoryLabel(String category) {
-  return switch (category.toUpperCase()) {
-    'PLUMBING' => 'Plumbing',
-    'ELECTRICAL' => 'Electrical',
-    'HVAC' => 'HVAC',
-    'OTHER' => 'Other',
-    _ => category,
-  };
-}
-
-String maintenanceActivityActionLabel(String? action) {
-  return switch (action?.toUpperCase()) {
-    'CREATED' => 'Request Submitted',
-    'STATUS_CHANGED' => 'Status Updated',
-    'WORKER_ASSIGNED' => 'Worker Assigned',
-    'MANAGER_ASSIGNED' => 'Manager Assigned',
-    'RESOLVED' => 'Resolved',
-    'CANCELED' => 'Cancelled',
-    _ => action ?? 'Update',
-  };
-}
-
 @JsonSerializable()
 class MaintenanceUnitModel {
   final String id;
@@ -99,6 +57,7 @@ class MaintenanceActivityLogModel {
   final String id;
   final String? action;
   final String? description;
+  final Map<String, dynamic>? metadata;
   @JsonKey(name: 'created_at')
   final String? createdAt;
   @JsonKey(name: 'maintenance_request_id')
@@ -110,6 +69,7 @@ class MaintenanceActivityLogModel {
     required this.id,
     this.action,
     this.description,
+    this.metadata,
     this.createdAt,
     this.maintenanceRequestId,
     this.performedByTenantId,

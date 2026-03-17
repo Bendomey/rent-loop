@@ -49,7 +49,7 @@ class _NewMaintenanceScreen extends ConsumerState<NewMaintenanceScreen> {
     final leaseId = ref.read(currentLeaseNotifierProvider)?.id;
     if (leaseId == null) return;
 
-    final success = await ref
+    final newId = await ref
         .read(createMaintenanceRequestNotifierProvider.notifier)
         .submit(
           leaseId: leaseId,
@@ -60,11 +60,8 @@ class _NewMaintenanceScreen extends ConsumerState<NewMaintenanceScreen> {
           attachments: _uploadedUrls,
         );
 
-    if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Request submitted successfully.')),
-      );
-      context.pop();
+    if (newId != null && mounted) {
+      context.pushReplacement('/maintenance/$newId');
     }
   }
 

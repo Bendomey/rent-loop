@@ -1,3 +1,4 @@
+import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar'
 import {
 	AlertCircle,
 	CheckCircle2,
@@ -52,15 +53,169 @@ const ACTION_CONFIG: Record<
 	},
 }
 
-interface ActivityTabProps {
-	requestId: string
+const STATUS_LABELS: Record<string, string> = {
+	NEW: 'New',
+	IN_PROGRESS: 'In Progress',
+	IN_REVIEW: 'In Review',
+	RESOLVED: 'Resolved',
+	CANCELED: 'Canceled',
 }
 
-export function ActivityTab({ requestId }: ActivityTabProps) {
+function UserChip({ name, photoUrl }: { name: string; photoUrl?: string }) {
+	const initials = name
+		.split(' ')
+		.map((p) => p[0])
+		.join('')
+		.slice(0, 2)
+		.toUpperCase()
+
+	return (
+		<span className="inline-flex items-center gap-1.5">
+			{photoUrl ? (
+				<Avatar>
+					<AvatarImage
+						src={photoUrl}
+						alt={name}
+						className="h-4 w-auto rounded-full"
+					/>
+					<AvatarFallback>{initials}</AvatarFallback>
+				</Avatar>
+			) : (
+				<span className="bg-muted text-foreground flex items-center justify-center rounded-full p-1.5 text-xs font-medium">
+					{initials}
+				</span>
+			)}
+			<span className="font-medium">{name}</span>
+		</span>
+	)
+}
+
+function ActivityDetail({
+	log,
+	mr,
+}: {
+	log: MaintenanceRequestActivityLog
+	mr: MaintenanceRequest
+}) {
+	if (log.action === 'CREATED') {
+		const byTenant = !!mr.created_by_tenant_id
+		const byManager = !!mr.created_by_client_user_id
+
+		if (byTenant && byManager) {
+			return (
+				<p className="text-muted-foreground text-sm">
+					Created by{' '}
+					{log.performed_by_client_user ? (
+						<UserChip name={log.performed_by_client_user?.name} />
+					) : (
+						'a manager'
+					)}{' '}
+					on behalf of the tenant
+				</p>
+			)
+		}
+		if (byManager) {
+			return (
+				<p className="text-muted-foreground flex flex-wrap items-center gap-1 text-sm">
+					Created by{' '}
+					{log.performed_by_client_user ? (
+						<UserChip name={log.performed_by_client_user?.name} />
+					) : (
+						'a manager'
+					)}
+				</p>
+			)
+		}
+
+		return (
+			<p className="text-muted-foreground text-sm">
+				Submitted by{' '}
+				{mr.created_by_tenant ? (
+					<UserChip
+						name={`${mr.created_by_tenant?.first_name} ${mr.created_by_tenant?.last_name}`}
+						photoUrl={mr.created_by_tenant?.profile_photo_url ?? undefined}
+					/>
+				) : (
+					'a tenant'
+				)}
+			</p>
+		)
+	}
+
+	if (log.action === 'STATUS_CHANGED') {
+		const meta = log.metadata as { from?: string; to?: string } | null
+		if (meta?.from && meta?.to) {
+			return (
+				<p className="text-muted-foreground text-sm">
+					Changed from{' '}
+					<span className="text-foreground font-medium">
+						{STATUS_LABELS[meta.from] ?? meta.from}
+					</span>{' '}
+					to{' '}
+					<span className="text-foreground font-medium">
+						{STATUS_LABELS[meta.to] ?? meta.to}
+					</span>
+				</p>
+			)
+		}
+		if (log.description) {
+			return <p className="text-muted-foreground text-sm">{log.description}</p>
+		}
+		return null
+	}
+
+	if (log.action === 'WORKER_ASSIGNED') {
+		const worker = mr.assigned_worker
+		const assignedToSelf =
+			!!log.performed_by_client_user_id &&
+			log.performed_by_client_user_id === mr.assigned_worker_id
+		return (
+			<p className="text-muted-foreground flex flex-wrap items-center gap-1 text-sm">
+				Assigned to {worker ? <UserChip name={worker?.name} /> : 'a worker'}
+				{assignedToSelf && (
+					<span className="text-muted-foreground italic">
+						(assigned to themselves)
+					</span>
+				)}
+			</p>
+		)
+	}
+
+	if (log.action === 'MANAGER_ASSIGNED') {
+		const manager = mr.assigned_manager
+		const assignedToSelf =
+			!!log.performed_by_client_user_id &&
+			log.performed_by_client_user_id === mr.assigned_manager_id
+		return (
+			<p className="text-muted-foreground flex flex-wrap items-center gap-1 text-sm">
+				Assigned to {manager ? <UserChip name={manager?.name} /> : 'a manager'}
+				{assignedToSelf && (
+					<span className="text-muted-foreground italic">
+						(assigned to themselves)
+					</span>
+				)}
+			</p>
+		)
+	}
+
+	if (log.description) {
+		return <p className="text-muted-foreground text-sm">{log.description}</p>
+	}
+
+	return null
+}
+
+interface ActivityTabProps {
+	requestId: string
+	mr: MaintenanceRequest
+}
+
+export function ActivityTab({ requestId, mr }: ActivityTabProps) {
 	const { data, isLoading, isError, refetch } =
 		useGetMaintenanceRequestActivityLogs(requestId, {
 			pagination: { page: 1, per: 100 },
 			filters: {},
+			populate: ['PerformedByClientUser', 'PerformedByTenant'],
 		})
 
 	const logs = data?.rows ?? []
@@ -130,11 +285,7 @@ export function ActivityTab({ requestId }: ActivityTabProps) {
 						</div>
 						<div className="flex flex-col gap-0.5 pb-4">
 							<p className="text-sm font-medium">{config.label}</p>
-							{log.description && (
-								<p className="text-muted-foreground text-sm">
-									{log.description}
-								</p>
-							)}
+							<ActivityDetail log={log} mr={mr} />
 							<TypographyMuted className="text-xs">
 								{localizedDayjs(log.created_at).format(
 									'MMM D, YYYY [at] h:mm A',

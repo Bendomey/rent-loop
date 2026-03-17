@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
+import 'package:rentloop_go/src/repository/providers/maintenance_badge_provider.dart';
 
-class StatItem {
+class _StatItem {
   final String title;
-  final String value;
+  final List<String> value;
   final String count;
   final IconData icon;
   final Color bgColor;
   final Color color;
 
-  StatItem({
+  _StatItem({
     required this.title,
     required this.value,
     required this.count,
@@ -19,32 +20,48 @@ class StatItem {
   });
 }
 
-class MaintenanceStatsCard extends StatelessWidget {
+class MaintenanceStatsCard extends ConsumerWidget {
   const MaintenanceStatsCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final List<StatItem> stats = [
-      StatItem(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(mrStatsProvider);
+
+    return statsAsync.when(
+      loading: () => _buildCard(context, null),
+      error: (_, __) => _buildCard(context, {}),
+      data: (stats) => _buildCard(context, stats),
+    );
+  }
+
+  Widget _buildCard(BuildContext context, Map<String, int>? stats) {
+    final openCount = stats == null ? null : (stats['new'] ?? 0);
+    final inProgressCount = stats == null
+        ? null
+        : (stats['in_progress'] ?? 0) + (stats['in_review'] ?? 0);
+    final resolvedCount = stats == null ? null : (stats['resolved'] ?? 0);
+
+    final List<_StatItem> items = [
+      _StatItem(
         title: 'Open Issues',
-        count: '2',
-        value: 'pending',
+        count: openCount == null ? '—' : '$openCount',
+        value: ['NEW'],
         icon: Icons.report_problem,
         bgColor: Color.fromARGB(180, 239, 108, 0),
         color: Color.fromARGB(180, 239, 108, 0),
       ),
-      StatItem(
+      _StatItem(
         title: 'Resolved Issues',
-        count: '5',
-        value: 'completed',
+        count: resolvedCount == null ? '—' : '$resolvedCount',
+        value: ['RESOLVED'],
         icon: Icons.build,
         bgColor: Color.fromARGB(255, 3, 117, 119),
         color: Color.fromARGB(255, 5, 133, 136),
       ),
-      StatItem(
+      _StatItem(
         title: 'In Progress',
-        count: '1',
-        value: 'in_progress',
+        count: inProgressCount == null ? '—' : '$inProgressCount',
+        value: ['IN_PROGRESS', 'IN_REVIEW'],
         icon: Icons.pending_actions,
         bgColor: Colors.indigo,
         color: Colors.indigo.shade400,
@@ -85,20 +102,22 @@ class MaintenanceStatsCard extends StatelessWidget {
                 mainAxisSpacing: 7,
                 childAspectRatio: 0.65,
               ),
-              itemCount: stats.length,
+              itemCount: items.length,
               itemBuilder: (context, index) {
-                final stat = stats[index];
+                final stat = items[index];
 
                 return InkWell(
                   onTap: () async {
                     await Haptics.vibrate(HapticsType.selection);
                     if (context.mounted) {
-                      context.push('/maintenance?status=${stat.value}');
+                      final statusQuery = stat.value
+                          .map((v) => 'status=$v')
+                          .join('&');
+                      context.push('/maintenance?$statusQuery');
                     }
                   },
                   child: Container(
                     height: 300,
-                    // border raduis
                     decoration: BoxDecoration(
                       color: stat.bgColor,
                       borderRadius: BorderRadius.circular(15),

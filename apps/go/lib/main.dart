@@ -9,6 +9,7 @@ import 'package:rentloop_go/src/lib/sentry_config.dart';
 
 import 'src/app.dart';
 import 'src/navigation/notification_handler.dart';
+import 'src/repository/providers/maintenance_badge_provider.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -22,9 +23,10 @@ Future<void> _handleNotificationTap(RemoteMessage message) async {
   final context = navigatorKey.currentContext;
   if (context == null || !context.mounted) return;
 
+  final container = ProviderScope.containerOf(context);
+
   final leaseId = message.data['lease_id'] as String?;
   if (leaseId != null) {
-    final container = ProviderScope.containerOf(context);
     final activeLease = container.read(currentLeaseNotifierProvider);
     if (activeLease?.id != leaseId) {
       final leases = container.read(allLeasesProvider);
@@ -37,6 +39,11 @@ Future<void> _handleNotificationTap(RemoteMessage message) async {
           .read(currentLeaseNotifierProvider.notifier)
           .setLease(match);
     }
+  }
+
+  // Refresh the MR badge count in the background for any MAINTENANCE notification.
+  if (message.data['type'] == 'MAINTENANCE') {
+    container.invalidate(mrStatsProvider);
   }
 
   final path = notificationMessageToPath(message);

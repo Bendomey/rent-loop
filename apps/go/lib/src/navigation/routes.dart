@@ -122,8 +122,11 @@ GoRouter buildRoutes(WidgetRef ref, Listenable refreshListenable) {
                 path: '/maintenance',
                 name: "Maintenance",
                 builder: (context, state) {
+                  final statuses = state.uri.queryParametersAll['status'];
                   return MaintenanceScreen(
-                    statusFilter: state.uri.queryParameters['status'],
+                    statusesFilter: statuses?.isNotEmpty == true
+                        ? statuses
+                        : null,
                   );
                 },
                 routes: [],

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:rentloop_go/src/api/root.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:rentloop_go/src/repository/models/maintenance_request_model.dart';
@@ -9,7 +10,7 @@ part 'maintenance.g.dart';
 class MaintenanceRequestQuery {
   final int page;
   final int pageSize;
-  final String? status;
+  final List<String>? statuses;
   final String? search;
   final String? sort;
   final String? priority;
@@ -18,7 +19,7 @@ class MaintenanceRequestQuery {
   const MaintenanceRequestQuery({
     this.page = 1,
     this.pageSize = 20,
-    this.status,
+    this.statuses,
     this.search,
     this.sort,
     this.priority,
@@ -26,28 +27,35 @@ class MaintenanceRequestQuery {
   });
 
   String toQueryString() {
-    final params = <String, String>{
-      'page': '$page',
-      'page_size': '$pageSize',
-      'populate': 'ActivityLogs',
-    };
-    if (status != null) params['status'] = status!;
-    if (search != null && search!.isNotEmpty) {
-      params['search'] = search!;
-      params['search_fields'] = 'title,description';
+    final parts = <String>[
+      'page=${Uri.encodeComponent('$page')}',
+      'page_size=${Uri.encodeComponent('$pageSize')}',
+      'populate=${Uri.encodeComponent('ActivityLogs')}',
+      'order=${Uri.encodeComponent('desc')}',
+      'order_by=${Uri.encodeComponent('created_at')}',
+    ];
+    if (statuses != null && statuses!.isNotEmpty) {
+      for (final s in statuses!) {
+        parts.add('status=${Uri.encodeComponent(s)}');
+      }
     }
-    if (sort != null) params['sort'] = sort!;
-    if (priority != null) params['priority'] = priority!;
-    if (category != null) params['category'] = category!;
-    return params.entries
-        .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
-        .join('&');
+    if (search != null && search!.isNotEmpty) {
+      parts.add('query=${Uri.encodeComponent(search!)}');
+      parts.add('search_fields=${Uri.encodeComponent('title,description')}');
+    }
+    if (priority != null) {
+      parts.add('priority=${Uri.encodeComponent(priority!)}');
+    }
+    if (category != null) {
+      parts.add('category=${Uri.encodeComponent(category!)}');
+    }
+    return parts.join('&');
   }
 
   MaintenanceRequestQuery copyWith({
     int? page,
     int? pageSize,
-    String? status,
+    List<String>? statuses,
     String? search,
     String? sort,
     String? priority,
@@ -60,7 +68,7 @@ class MaintenanceRequestQuery {
     return MaintenanceRequestQuery(
       page: page ?? this.page,
       pageSize: pageSize ?? this.pageSize,
-      status: clearStatus ? null : (status ?? this.status),
+      statuses: clearStatus ? null : (statuses ?? this.statuses),
       search: clearSearch ? null : (search ?? this.search),
       sort: sort ?? this.sort,
       priority: clearPriority ? null : (priority ?? this.priority),
@@ -73,21 +81,28 @@ class MaintenanceRequestQuery {
       other is MaintenanceRequestQuery &&
       page == other.page &&
       pageSize == other.pageSize &&
-      status == other.status &&
+      listEquals(statuses, other.statuses) &&
       search == other.search &&
       sort == other.sort &&
       priority == other.priority &&
       category == other.category;
 
   @override
-  int get hashCode =>
-      Object.hash(page, pageSize, status, search, sort, priority, category);
+  int get hashCode => Object.hash(
+    page,
+    pageSize,
+    Object.hashAll(statuses ?? []),
+    search,
+    sort,
+    priority,
+    category,
+  );
 }
 
 class MaintenanceApi extends AbstractApi {
   MaintenanceApi({required super.tokenManager});
 
-  Future<({List<MaintenanceRequestModel> rows, bool hasNextPage})>
+  Future<({List<MaintenanceRequestModel> rows, bool hasNextPage, int total})>
   getMaintenanceRequests(String leaseId, MaintenanceRequestQuery query) async {
     final response = await execute(
       method: 'GET',
@@ -101,7 +116,8 @@ class MaintenanceApi extends AbstractApi {
         .toList();
     final meta = data['meta'] as Map<String, dynamic>?;
     final hasNextPage = (meta?['has_next_page'] as bool?) ?? false;
-    return (rows: rows, hasNextPage: hasNextPage);
+    final total = (meta?['total'] as int?) ?? 0;
+    return (rows: rows, hasNextPage: hasNextPage, total: total);
   }
 
   Future<MaintenanceRequestModel> getMaintenanceRequest(
@@ -117,6 +133,16 @@ class MaintenanceApi extends AbstractApi {
     return MaintenanceRequestModel.fromJson(
       json['data'] as Map<String, dynamic>,
     );
+  }
+
+  Future<Map<String, int>> getMaintenanceRequestStats(String leaseId) async {
+    final response = await execute(
+      method: 'GET',
+      path: '/api/v1/leases/$leaseId/maintenance-requests/stats',
+    );
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = json['data'] as Map<String, dynamic>;
+    return data.map((k, v) => MapEntry(k, (v as num).toInt()));
   }
 
   Future<MaintenanceRequestModel> createMaintenanceRequest(

@@ -1,62 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:rentloop_go/src/repository/models/maintenance_request_model.dart';
-
-Color _statusBgColor(String? status) => switch (status?.toUpperCase()) {
-  'PENDING' => Colors.orange.shade50,
-  'IN_PROGRESS' => Colors.blue.shade50,
-  'RESOLVED' => Colors.green.shade50,
-  'CANCELLED' => Colors.grey.shade100,
-  _ => Colors.grey.shade100,
-};
-
-Color _statusTextColor(String? status) => switch (status?.toUpperCase()) {
-  'PENDING' => Colors.orange.shade900,
-  'IN_PROGRESS' => Colors.blue.shade900,
-  'RESOLVED' => Colors.green.shade900,
-  'CANCELLED' => Colors.grey.shade700,
-  _ => Colors.grey.shade700,
-};
-
-({IconData icon, Color bg, Color fg}) _logActionStyle(String? action) {
-  return switch (action?.toUpperCase()) {
-    'CREATED' => (
-      icon: Icons.add_task_rounded,
-      bg: Colors.blue.shade50,
-      fg: Colors.blue.shade700,
-    ),
-    'STATUS_CHANGED' => (
-      icon: Icons.swap_horiz_rounded,
-      bg: Colors.purple.shade50,
-      fg: Colors.purple.shade700,
-    ),
-    'WORKER_ASSIGNED' => (
-      icon: Icons.engineering_rounded,
-      bg: Colors.orange.shade50,
-      fg: Colors.orange.shade700,
-    ),
-    'MANAGER_ASSIGNED' => (
-      icon: Icons.manage_accounts_rounded,
-      bg: Colors.teal.shade50,
-      fg: Colors.teal.shade700,
-    ),
-    'RESOLVED' => (
-      icon: Icons.check_circle_rounded,
-      bg: Colors.green.shade50,
-      fg: Colors.green.shade700,
-    ),
-    'CANCELED' => (
-      icon: Icons.cancel_rounded,
-      bg: Colors.grey.shade100,
-      fg: Colors.grey.shade600,
-    ),
-    _ => (
-      icon: Icons.info_outline_rounded,
-      bg: Colors.grey.shade100,
-      fg: Colors.grey.shade600,
-    ),
-  };
-}
+import 'package:rentloop_go/src/shared/maintenance_utils.dart';
 
 class RequestCard extends StatelessWidget {
   const RequestCard({super.key, required this.request});
@@ -106,24 +51,9 @@ class RequestCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    margin: const EdgeInsets.only(left: 8),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5),
-                      color: _statusBgColor(request.status),
-                    ),
-                    child: Text(
-                      maintenanceStatusLabel(request.status ?? ''),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        color: _statusTextColor(request.status),
-                        fontSize: 11,
-                      ),
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: MrStatusChip(status: request.status),
                   ),
                 ],
               ),
@@ -175,7 +105,7 @@ class RequestCard extends StatelessWidget {
                   children: [
                     Builder(
                       builder: (_) {
-                        final style = _logActionStyle(latestLog.action);
+                        final style = mrActivityActionStyle(latestLog.action);
                         return Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -192,11 +122,36 @@ class RequestCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            maintenanceActivityActionLabel(latestLog.action),
+                            mrActivityActionLabel(latestLog.action),
                             style: Theme.of(context).textTheme.labelLarge!
                                 .copyWith(fontWeight: FontWeight.bold),
                           ),
-                          if (latestLog.description?.isNotEmpty == true) ...[
+                          if (latestLog.action?.toUpperCase() ==
+                                  'STATUS_CHANGED' &&
+                              latestLog.metadata?['from'] != null &&
+                              latestLog.metadata?['to'] != null) ...[
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                MrStatusChip(
+                                  status:
+                                      latestLog.metadata!['from'] as String?,
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 6),
+                                  child: Icon(
+                                    Icons.arrow_forward,
+                                    size: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                MrStatusChip(
+                                  status: latestLog.metadata!['to'] as String?,
+                                ),
+                              ],
+                            ),
+                          ] else if (latestLog.description?.isNotEmpty ==
+                              true) ...[
                             const SizedBox(height: 2),
                             Text(
                               latestLog.description!,

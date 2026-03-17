@@ -1,7 +1,9 @@
 import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:flutter/material.dart';
 import 'package:rentloop_go/src/repository/models/maintenance_request_model.dart';
+import 'package:rentloop_go/src/repository/providers/maintenance_badge_provider.dart';
 import 'package:rentloop_go/src/repository/providers/maintenance_request_provider.dart';
+import 'package:rentloop_go/src/shared/maintenance_utils.dart';
 import 'package:rentloop_go/src/shared/screen_states.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'attachments.dart';
@@ -41,33 +43,22 @@ class _MaintenanceDetailsScreen
           ),
         ),
       ),
-      data: (request) => _DetailsView(request: request),
+      data: (request) => _DetailsView(
+        request: request,
+        onRefresh: () async {
+          ref.invalidate(maintenanceRequestProvider(leaseId, widget.requestId));
+          ref.invalidate(mrStatsProvider);
+        },
+      ),
     );
   }
 }
 
-// Action label lives in MaintenanceRequestModel file as maintenanceActivityActionLabel
-
 class _DetailsView extends StatelessWidget {
-  const _DetailsView({required this.request});
+  const _DetailsView({required this.request, required this.onRefresh});
 
   final MaintenanceRequestModel request;
-
-  Color _statusBgColor() => switch (request.status?.toUpperCase()) {
-    'PENDING' => Colors.orange.shade50,
-    'IN_PROGRESS' => Colors.blue.shade50,
-    'RESOLVED' => Colors.green.shade50,
-    'CANCELLED' => Colors.grey.shade100,
-    _ => Colors.grey.shade100,
-  };
-
-  Color _statusTextColor() => switch (request.status?.toUpperCase()) {
-    'PENDING' => Colors.orange.shade900,
-    'IN_PROGRESS' => Colors.blue.shade900,
-    'RESOLVED' => Colors.green.shade900,
-    'CANCELLED' => Colors.grey.shade700,
-    _ => Colors.grey.shade700,
-  };
+  final Future<void> Function() onRefresh;
 
   List<MaintenanceActivityLogModel> _sortedLogs() {
     final logs = [...(request.activityLogs ?? <MaintenanceActivityLogModel>[])];
@@ -104,211 +95,271 @@ class _DetailsView extends StatelessWidget {
           style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 20),
         ),
       ),
-      body: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              Text(
-                'General Information',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge!.copyWith(fontSize: 20),
-              ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  submittedDate != null
-                      ? 'Submitted: ${submittedDate.format('MMM dd, yyyy')}'
-                      : 'Submitted: —',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                leading: const Icon(Icons.calendar_today_rounded, size: 22),
-                trailing: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(5),
-                    color: _statusBgColor(),
-                  ),
-                  child: Text(
-                    maintenanceStatusLabel(request.status ?? ''),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      color: _statusTextColor(),
-                      fontSize: 11,
-                    ),
-                  ),
-                ),
-              ),
-              if (updatedDate != null)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    const Icon(Icons.alarm, size: 22),
-                    const SizedBox(width: 20),
-                    Text(
-                      'Last update: ${updatedDate.format('MMM dd, yyyy')}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              const SizedBox(height: 30),
-              Text(
-                'Title',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge!.copyWith(fontSize: 18),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                request.title ?? '—',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: 20),
-              if (request.description?.isNotEmpty == true) ...[
+      body: RefreshIndicator(
+        onRefresh: onRefresh,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 20),
                 Text(
-                  'Description',
+                  'General Information',
                   style: Theme.of(
                     context,
-                  ).textTheme.titleLarge!.copyWith(fontSize: 18),
+                  ).textTheme.titleLarge!.copyWith(fontSize: 20),
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  request.description!,
-                  style: Theme.of(context).textTheme.bodySmall,
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    submittedDate != null
+                        ? 'Submitted: ${submittedDate.format('MMM dd, yyyy')}'
+                        : 'Submitted: —',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  leading: const Icon(Icons.calendar_today_rounded, size: 22),
+                  trailing: MrStatusChip(status: request.status),
                 ),
-                const SizedBox(height: 20),
-              ],
-              Row(
-                children: [
-                  if (request.priority != null)
-                    _InfoChip(
-                      label: 'Priority',
-                      value: maintenancePriorityLabel(request.priority!),
+                if (updatedDate != null)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.alarm, size: 22),
+                      const SizedBox(width: 20),
+                      Text(
+                        'Last update: ${updatedDate.format('MMM dd, yyyy')}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                if (request.status == 'CANCELED' &&
+                    request.cancellationReason?.isNotEmpty == true) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red.shade200),
                     ),
-                  if (request.category != null) ...[
-                    const SizedBox(width: 12),
-                    _InfoChip(
-                      label: 'Category',
-                      value: maintenanceCategoryLabel(request.category!),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.cancel_outlined,
+                          color: Colors.red.shade700,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Cancellation Reason',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red.shade800,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                request.cancellationReason!,
+                                style: TextStyle(
+                                  color: Colors.red.shade700,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ],
-              ),
-              const SizedBox(height: 30),
-              if (attachmentUrls.isNotEmpty) ...[
+                const SizedBox(height: 30),
                 Text(
-                  'Photos & Videos',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge!.copyWith(fontSize: 18),
-                ),
-                const SizedBox(height: 12),
-                ViewAttachmentsWidget(urls: attachmentUrls),
-                const SizedBox(height: 20),
-              ],
-              if (expenses.isNotEmpty) ...[
-                Text(
-                  'Expenses',
+                  'Title',
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge!.copyWith(fontSize: 18),
                 ),
                 const SizedBox(height: 10),
-                ...expenses.map((e) => _ExpenseCard(expense: e)),
+                Text(
+                  request.title ?? '—',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
                 const SizedBox(height: 20),
-              ],
-              Text(
-                'Repair Progress',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge!.copyWith(fontSize: 18),
-              ),
-              const SizedBox(height: 10),
-              if (logs.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Text(
-                    'No updates yet.',
+                if (request.description?.isNotEmpty == true) ...[
+                  Text(
+                    'Description',
                     style: Theme.of(
                       context,
-                    ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                    ).textTheme.titleLarge!.copyWith(fontSize: 18),
                   ),
-                )
-              else
-                Card(
-                  elevation: 0,
-                  color: Colors.grey.shade100,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 10,
-                      horizontal: 20,
-                    ),
-                    child: Column(
-                      children: List.generate(logs.length, (index) {
-                        final log = logs[index];
-                        final isLast = index == logs.length - 1;
-                        final date = log.createdAt != null
-                            ? (DateTime.tryParse(
-                                    log.createdAt!,
-                                  )?.format('MMM dd, yyyy – hh:mm a') ??
-                                  log.createdAt!)
-                            : '—';
-                        return TimelineTile(
-                          alignment: TimelineAlign.start,
-                          lineXY: 0.1,
-                          isFirst: index == 0,
-                          isLast: isLast,
-                          indicatorStyle: IndicatorStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          beforeLineStyle: LineStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          endChild: Container(
-                            margin: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  maintenanceActivityActionLabel(log.action),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  date,
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                if (log.description?.isNotEmpty == true) ...[
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    log.description!,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall,
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
+                  const SizedBox(height: 10),
+                  Text(
+                    request.description!,
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
+                  const SizedBox(height: 20),
+                ],
+                Row(
+                  children: [
+                    if (request.priority != null)
+                      _InfoChip(
+                        label: 'Priority',
+                        value: mrPriorityLabel(request.priority!),
+                      ),
+                    if (request.category != null) ...[
+                      const SizedBox(width: 12),
+                      _InfoChip(
+                        label: 'Category',
+                        value: mrCategoryLabel(request.category!),
+                      ),
+                    ],
+                  ],
                 ),
-              const SizedBox(height: 50),
-            ],
+                const SizedBox(height: 30),
+                if (attachmentUrls.isNotEmpty) ...[
+                  Text(
+                    'Photos & Videos',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleLarge!.copyWith(fontSize: 18),
+                  ),
+                  const SizedBox(height: 12),
+                  ViewAttachmentsWidget(urls: attachmentUrls),
+                  const SizedBox(height: 20),
+                ],
+                if (expenses.isNotEmpty) ...[
+                  Text(
+                    'Expenses',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleLarge!.copyWith(fontSize: 18),
+                  ),
+                  const SizedBox(height: 10),
+                  ...expenses.map((e) => _ExpenseCard(expense: e)),
+                  const SizedBox(height: 20),
+                ],
+                Text(
+                  'Repair Progress',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge!.copyWith(fontSize: 18),
+                ),
+                const SizedBox(height: 10),
+                if (logs.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      'No updates yet.',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                    ),
+                  )
+                else
+                  Card(
+                    elevation: 0,
+                    color: Colors.grey.shade100,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 20,
+                      ),
+                      child: Column(
+                        children: List.generate(logs.length, (index) {
+                          final log = logs[index];
+                          final isLast = index == logs.length - 1;
+                          final date = log.createdAt != null
+                              ? (DateTime.tryParse(
+                                      log.createdAt!,
+                                    )?.format('MMM dd, yyyy – hh:mm a') ??
+                                    log.createdAt!)
+                              : '—';
+                          final fromStatus = log.metadata?['from'] as String?;
+                          final toStatus = log.metadata?['to'] as String?;
+                          final isStatusChange =
+                              log.action?.toUpperCase() == 'STATUS_CHANGED' &&
+                              fromStatus != null &&
+                              toStatus != null;
+
+                          return TimelineTile(
+                            alignment: TimelineAlign.start,
+                            lineXY: 0.1,
+                            isFirst: index == 0,
+                            isLast: isLast,
+                            indicatorStyle: IndicatorStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            beforeLineStyle: LineStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            endChild: Container(
+                              margin: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    mrActivityActionLabel(log.action),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  if (isStatusChange) ...[
+                                    Row(
+                                      children: [
+                                        MrStatusChip(status: fromStatus),
+                                        const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                          ),
+                                          child: Icon(
+                                            Icons.arrow_forward,
+                                            size: 14,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        MrStatusChip(status: toStatus),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                  ],
+                                  Text(
+                                    date,
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  if (log.description?.isNotEmpty == true) ...[
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      log.description!,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 50),
+              ],
+            ),
           ),
         ),
       ),

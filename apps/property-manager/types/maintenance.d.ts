@@ -5,7 +5,9 @@ interface MaintenanceRequest {
 	unit?: PropertyUnit
 	lease_id: Nullable<string>
 	created_by_tenant_id: Nullable<string>
+	created_by_tenant?: Nullable<Tenant>
 	created_by_client_user_id: Nullable<string>
+	created_by_client_user?: Nullable<ClientUser>
 	title: string
 	description: string
 	attachments: string[]
@@ -14,9 +16,9 @@ interface MaintenanceRequest {
 	status: 'NEW' | 'IN_PROGRESS' | 'IN_REVIEW' | 'RESOLVED' | 'CANCELED'
 	visibility: 'TENANT_VISIBLE' | 'INTERNAL_ONLY'
 	assigned_worker_id: Nullable<string>
-	assigned_worker?: ClientUser
+	assigned_worker?: Nullable<ClientUser>
 	assigned_manager_id: Nullable<string>
-	assigned_manager?: ClientUser
+	assigned_manager?: Nullable<ClientUser>
 	started_at: Nullable<string>
 	reviewed_at: Nullable<string>
 	resolved_at: Nullable<string>
@@ -43,7 +45,10 @@ interface MaintenanceRequestActivityLog {
 		| 'NOTE'
 	description: Nullable<string>
 	performed_by_client_user_id: Nullable<string>
+	performed_by_client_user: Nullable<ClientUser>
 	performed_by_tenant_id: Nullable<string>
+	performed_by_tenant: Nullable<Tenant>
+	metadata: Nullable<Record<string, unknown>>
 	metadata: Nullable<Record<string, unknown>>
 	created_at: string
 	updated_at: string
@@ -69,7 +74,7 @@ interface MaintenanceRequestComment {
 	maintenance_request_id: string
 	content: string
 	created_by_client_user_id: string
-	created_by_client_user?: ClientUser
+	created_by_client_user?: Nullable<ClientUser>
 	created_at: string
 	updated_at: string
 }

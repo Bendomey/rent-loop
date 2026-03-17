@@ -7,7 +7,7 @@ part of 'current_lease_notifier.dart';
 // **************************************************************************
 
 String _$currentLeaseNotifierHash() =>
-    r'758bcc5da3e5b3e80824942536e016ea94c2c611';
+    r'a8aff1c95dd7af3edaf1cddc39544101f2c43e4a';
 
 /// See also [CurrentLeaseNotifier].
 @ProviderFor(CurrentLeaseNotifier)

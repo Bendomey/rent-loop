@@ -256,7 +256,7 @@ export function MaintenanceRequestDetailModule() {
 						<TabsTrigger value="expenses">Expenses</TabsTrigger>
 					</TabsList>
 					<TabsContent value="history" className="mt-4">
-						<ActivityTab requestId={request.id} />
+						<ActivityTab requestId={request.id} mr={request} />
 					</TabsContent>
 					<TabsContent value="comments" className="mt-4">
 						<CommentsTab requestId={request.id} />
