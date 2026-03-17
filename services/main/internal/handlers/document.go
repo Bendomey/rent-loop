@@ -297,7 +297,6 @@ type ListDocumentsFilterRequest struct {
 	OnlyGlobalDocuments    *bool     `json:"only_global_documents"    validate:"omitempty"                         example:"true"                                 description:"Filter for documents without a property"`
 	IncludeGlobalDocuments *bool     `json:"include_global_documents" validate:"omitempty"                         example:"true"                                 description:"Include global documents along with property-specific documents"`
 	Tags                   *[]string `json:"tags"                     validate:"omitempty,dive"                    example:"LEASE_AGREEMENT,INSPECTION_REPORT"`
-	IDs                    []string  `json:"ids"                      validate:"omitempty,dive,uuid4"              example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of document IDs to filter by"                               collectionFormat:"multi"`
 }
 
 // GetDocuments godoc
@@ -329,7 +328,6 @@ func (h *DocumentHandler) ListDocuments(w http.ResponseWriter, r *http.Request) 
 		OnlyGlobalDocuments:    lib.NullOrBool(r.URL.Query().Get("only_global_documents")),
 		IncludeGlobalDocuments: lib.NullOrBool(r.URL.Query().Get("include_global_documents")),
 		Tags:                   lib.NullOrStringArray(r.URL.Query()["tags"]),
-		IDs:                    r.URL.Query()["ids"],
 	}
 
 	isFiltersPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filters, w)
@@ -356,7 +354,6 @@ func (h *DocumentHandler) ListDocuments(w http.ResponseWriter, r *http.Request) 
 		ClientID:               currentUser.ClientID,
 		Type:                   filters.Type,
 		Tags:                   filters.Tags,
-		IDs:                    lib.NullOrStringArray(filters.IDs),
 	}
 
 	documents, documentsErr := h.service.List(r.Context(), *filterQuery, input)

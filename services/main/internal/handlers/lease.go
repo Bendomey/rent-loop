@@ -137,7 +137,6 @@ type ListLeasesQuery struct {
 	StayDurationFrequency      *string   `json:"stay_duration_frequency,omitempty"       validate:"omitempty,oneof=HOURS DAYS MONTHS"                                                                                              example:"HOURS"                                description:"Unit of stay duration (e.g., months, years)"`
 	LeaseAgreementDocumentMode *string   `json:"lease_agreement_document_mode,omitempty" validate:"omitempty,oneof=MANUAL ONLINE"                                                                                                  example:"MANUAL"                               description:"Mode of lease agreement document (e.g., digital, paper)"`
 	UnitIds                    *[]string `json:"unit_ids,omitempty"                      validate:"omitempty,dive,uuid4"                                                                                                           example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of unit IDs to filter by"                           collectionFormat:"multi"`
-	IDs                        *[]string `json:"ids,omitempty"                           validate:"omitempty,dive,uuid4"                                                                                                           example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of lease IDs to filter by"                          collectionFormat:"multi"`
 }
 
 // ListLeasesByTenant godoc
@@ -179,7 +178,6 @@ func (h *LeaseHandler) ListLeasesByTenant(w http.ResponseWriter, r *http.Request
 		StayDurationFrequency:      lib.NullOrString(r.URL.Query().Get("stay_duration_frequency")),
 		LeaseAgreementDocumentMode: lib.NullOrString(r.URL.Query().Get("lease_agreement_document_mode")),
 		UnitIds:                    lib.NullOrStringArray(r.URL.Query()["unit_ids"]),
-		IDs:                        lib.NullOrStringArray(r.URL.Query()["ids"]),
 	}
 
 	leases, leasesErr := h.service.ListLeases(r.Context(), input)
@@ -244,7 +242,6 @@ func (h *LeaseHandler) ListLeasesByProperty(w http.ResponseWriter, r *http.Reque
 		StayDurationFrequency:      lib.NullOrString(r.URL.Query().Get("stay_duration_frequency")),
 		LeaseAgreementDocumentMode: lib.NullOrString(r.URL.Query().Get("lease_agreement_document_mode")),
 		UnitIds:                    lib.NullOrStringArray(r.URL.Query()["unit_ids"]),
-		IDs:                        lib.NullOrStringArray(r.URL.Query()["ids"]),
 	}
 
 	leases, leasesErr := h.service.ListLeases(r.Context(), input)
@@ -312,7 +309,6 @@ func (h *LeaseHandler) ListLeasesByTenantAccount(w http.ResponseWriter, r *http.
 		StayDurationFrequency:      lib.NullOrString(r.URL.Query().Get("stay_duration_frequency")),
 		LeaseAgreementDocumentMode: lib.NullOrString(r.URL.Query().Get("lease_agreement_document_mode")),
 		UnitIds:                    lib.NullOrStringArray(r.URL.Query()["unit_ids"]),
-		IDs:                        lib.NullOrStringArray(r.URL.Query()["ids"]),
 	}
 
 	leases, leasesErr := h.service.ListLeases(r.Context(), input)

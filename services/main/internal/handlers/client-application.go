@@ -237,10 +237,9 @@ func (h *ClientApplicationHandler) ApproveClientApplication(w http.ResponseWrite
 
 type ListClientApplicationsFilterRequest struct {
 	lib.FilterQueryInput
-	Status  *string  `json:"status"   validate:"omitempty,oneof=ClientApplication.Status.Pending ClientApplication.Status.Approved ClientApplication.Status.Rejected"`
-	Type    *string  `json:"type"     validate:"omitempty,oneof=INDIVIDUAL COMPANY"`
-	SubType *string  `json:"sub_type" validate:"omitempty,oneof=LANDLORD PROPERTY_MANAGER DEVELOPER AGENCY"`
-	IDs     []string `json:"ids"      validate:"omitempty,dive,uuid4"                                                                                                 example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of client application IDs to filter by" collectionFormat:"multi"`
+	Status  *string `json:"status"   validate:"omitempty,oneof=ClientApplication.Status.Pending ClientApplication.Status.Approved ClientApplication.Status.Rejected"`
+	Type    *string `json:"type"     validate:"omitempty,oneof=INDIVIDUAL COMPANY"`
+	SubType *string `json:"sub_type" validate:"omitempty,oneof=LANDLORD PROPERTY_MANAGER DEVELOPER AGENCY"`
 }
 
 // GetClientApplications godoc
@@ -262,7 +261,6 @@ func (h *ClientApplicationHandler) ListClientApplications(w http.ResponseWriter,
 		Status:  lib.NullOrString(r.URL.Query().Get("status")),
 		Type:    lib.NullOrString(r.URL.Query().Get("type")),
 		SubType: lib.NullOrString(r.URL.Query().Get("sub_type")),
-		IDs:     r.URL.Query()["ids"],
 	}
 
 	isFiltersPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filters, w)
@@ -286,7 +284,6 @@ func (h *ClientApplicationHandler) ListClientApplications(w http.ResponseWriter,
 		Status:      filters.Status,
 		Type:        filters.Type,
 		SubType:     filters.SubType,
-		IDs:         lib.NullOrStringArray(filters.IDs),
 	}
 	clientApplications, clientApplicationsErr := h.service.ListClientApplications(r.Context(), input)
 	if clientApplicationsErr != nil {

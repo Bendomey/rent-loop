@@ -42,7 +42,6 @@ type ListClientApplicationsFilter struct {
 	Status  *string
 	Type    *string
 	SubType *string
-	IDs     *[]string
 }
 
 func (r *clientApplicationRepository) List(

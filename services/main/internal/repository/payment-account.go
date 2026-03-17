@@ -69,7 +69,6 @@ type ListPaymentAccountsFilter struct {
 	Status     *string
 	Provider   *string
 	IsDefault  *bool
-	IDs        *[]string
 }
 
 func (r *paymentAccountRepository) List(

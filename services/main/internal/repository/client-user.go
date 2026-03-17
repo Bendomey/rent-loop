@@ -110,7 +110,6 @@ type ListClientUsersFilter struct {
 	Role            *string
 	Status          *string
 	NotInPropertyID *string
-	IDs             *[]string
 }
 
 func (r *clientUserRepository) List(

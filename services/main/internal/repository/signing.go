@@ -120,7 +120,6 @@ type ListSigningTokensFilter struct {
 	LeaseID             *string
 	Role                *string
 	CreatedByID         *string
-	IDs                 *[]string
 }
 
 func SigningTokenDocumentIDScope(documentID *string) func(db *gorm.DB) *gorm.DB {
@@ -177,7 +176,7 @@ func (r *signingRepository) ListSigningTokens(
 
 	db := r.DB.WithContext(ctx).
 		Scopes(
-			IDsFilterScope("signing_tokens", filters.IDs),
+			IDsFilterScope("signing_tokens", filterQuery.IDs),
 			DateRangeScope("signing_tokens", filterQuery.DateRange),
 			SigningTokenDocumentIDScope(filters.DocumentID),
 			SigningTokenTenantApplicationIDScope(filters.TenantApplicationID),
@@ -213,7 +212,7 @@ func (r *signingRepository) CountSigningTokens(
 		WithContext(ctx).
 		Model(&models.SigningToken{}).
 		Scopes(
-			IDsFilterScope("signing_tokens", filters.IDs),
+			IDsFilterScope("signing_tokens", filterQuery.IDs),
 			DateRangeScope("signing_tokens", filterQuery.DateRange),
 			SigningTokenDocumentIDScope(filters.DocumentID),
 			SigningTokenTenantApplicationIDScope(filters.TenantApplicationID),

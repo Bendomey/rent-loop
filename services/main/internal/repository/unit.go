@@ -96,7 +96,6 @@ type ListUnitsFilter struct {
 	Type             *string
 	PaymentFrequency *string
 	BlockIDs         *[]string
-	IDs              *[]string
 }
 
 func (r *unitRepository) List(ctx context.Context, filterQuery ListUnitsFilter) (*[]models.Unit, error) {

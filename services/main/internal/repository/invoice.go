@@ -79,7 +79,6 @@ type ListInvoicesFilter struct {
 	PayeeClientID *string
 	ContextType   *string
 	Status        *string
-	IDs           *[]string
 	Active        *bool
 	PropertyID    *string
 }

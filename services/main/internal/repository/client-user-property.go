@@ -133,7 +133,6 @@ type ListClientUserPropertiesFilter struct {
 	ClientUserID   *string
 	PropertyID     *string
 	Role           *string
-	IDs            *[]string
 	PropertyStatus *string
 	PropertyType   *string
 }

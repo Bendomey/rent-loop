@@ -72,6 +72,7 @@ func (r *tenantRepository) List(ctx context.Context, filterQuery ListTenantsFilt
 
 	db := r.DB.WithContext(ctx).Scopes(
 		propertyTenantsWithStatusScope(filterQuery.PropertyID, filterQuery.Status),
+		IDsFilterScope("tenants", filterQuery.IDs),
 		DateRangeScope("tenants", filterQuery.DateRange),
 		SearchScope("tenants", filterQuery.Search),
 		PaginationScope(filterQuery.Page, filterQuery.PageSize),

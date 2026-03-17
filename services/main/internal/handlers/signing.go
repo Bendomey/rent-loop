@@ -178,12 +178,11 @@ func (h *SigningHandler) SignDocument(w http.ResponseWriter, r *http.Request) {
 
 type ListSigningTokensFilterRequest struct {
 	lib.FilterQueryInput
-	DocumentID          *string  `json:"document_id"           validate:"omitempty,uuid4"`
-	TenantApplicationID *string  `json:"tenant_application_id" validate:"omitempty,uuid4"`
-	LeaseID             *string  `json:"lease_id"              validate:"omitempty,uuid4"`
-	Role                *string  `json:"role"                  validate:"omitempty,oneof=TENANT PM_WITNESS TENANT_WITNESS"`
-	CreatedByID         *string  `json:"created_by_id"         validate:"omitempty,uuid4"`
-	IDs                 []string `json:"ids"                   validate:"omitempty,dive,uuid4"`
+	DocumentID          *string `json:"document_id"           validate:"omitempty,uuid4"`
+	TenantApplicationID *string `json:"tenant_application_id" validate:"omitempty,uuid4"`
+	LeaseID             *string `json:"lease_id"              validate:"omitempty,uuid4"`
+	Role                *string `json:"role"                  validate:"omitempty,oneof=TENANT PM_WITNESS TENANT_WITNESS"`
+	CreatedByID         *string `json:"created_by_id"         validate:"omitempty,uuid4"`
 }
 
 // ListSigningTokens godoc
@@ -213,9 +212,7 @@ func (h *SigningHandler) ListSigningTokens(w http.ResponseWriter, r *http.Reques
 	role := q.Get("role")
 	createdByID := q.Get("created_by_id")
 
-	filters := ListSigningTokensFilterRequest{
-		IDs: q["ids"],
-	}
+	filters := ListSigningTokensFilterRequest{}
 	if documentID != "" {
 		filters.DocumentID = &documentID
 	}
@@ -252,7 +249,6 @@ func (h *SigningHandler) ListSigningTokens(w http.ResponseWriter, r *http.Reques
 		LeaseID:             filters.LeaseID,
 		Role:                filters.Role,
 		CreatedByID:         filters.CreatedByID,
-		IDs:                 lib.NullOrStringArray(filters.IDs),
 	}
 
 	tokens, tokensErr := h.service.ListSigningTokens(r.Context(), *filterQuery, input)

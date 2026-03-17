@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
-	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/Bendomey/rent-loop/services/main/internal/transformations"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -185,7 +184,6 @@ func (h *AdminHandler) GetAdminById(w http.ResponseWriter, r *http.Request) {
 
 type ListAdminsFilterRequest struct {
 	lib.FilterQueryInput
-	IDs []string `json:"ids" validate:"omitempty,dive,uuid4" example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of admin IDs to filter by" collectionFormat:"multi"`
 }
 
 // GetAdmins godoc
@@ -210,9 +208,7 @@ func (h *AdminHandler) ListAdmins(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filters := ListAdminsFilterRequest{
-		IDs: r.URL.Query()["ids"],
-	}
+	filters := ListAdminsFilterRequest{}
 
 	isFiltersPassedValidation := lib.ValidateRequest(h.appCtx.Validator, filters, w)
 	if !isFiltersPassedValidation {
@@ -230,26 +226,14 @@ func (h *AdminHandler) ListAdmins(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	input := repository.ListAdminsFilter{
-		IDs: lib.NullOrStringArray(filters.IDs),
-	}
-
-	admins, adminsErr := h.service.ListAdmins(
-		r.Context(),
-		*filterQuery,
-		input,
-	)
+	admins, adminsErr := h.service.ListAdmins(r.Context(), *filterQuery)
 
 	if adminsErr != nil {
 		HandleErrorResponse(w, adminsErr)
 		return
 	}
 
-	count, countsErr := h.service.CountAdmins(
-		r.Context(),
-		*filterQuery,
-		input,
-	)
+	count, countsErr := h.service.CountAdmins(r.Context(), *filterQuery)
 
 	if countsErr != nil {
 		w.WriteHeader(http.StatusNotFound)
