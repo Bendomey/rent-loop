@@ -10,7 +10,6 @@ import {
 	usePublishAnnouncement,
 } from '~/api/announcements'
 import { AnnouncementForm } from '~/components/blocks/announcements/announcement-form'
-import { ExtendExpiryModal } from '~/components/blocks/announcements/extend-expiry-modal'
 import { ScheduleAnnouncementModal } from '~/components/blocks/announcements/schedule-announcement-modal'
 import { DataTable } from '~/components/datatable'
 import {
@@ -95,7 +94,6 @@ export function PropertyActivitiesAnnouncementsModule() {
 
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 	const [scheduleModalOpen, setScheduleModalOpen] = useState(false)
-	const [extendExpiryModalOpen, setExtendExpiryModalOpen] = useState(false)
 	const [activeId, setActiveId] = useState<string | null>(null)
 
 	const page = searchParams.get('page')
@@ -249,19 +247,6 @@ export function PropertyActivitiesAnnouncementsModule() {
 									</Button>
 								</>
 							)}
-
-							{announcement.status === 'PUBLISHED' && (
-								<Button
-									size="sm"
-									variant="outline"
-									onClick={() => {
-										setActiveId(announcement.id)
-										setExtendExpiryModalOpen(true)
-									}}
-								>
-									Extend Expiry
-								</Button>
-							)}
 						</div>
 					)
 				},
@@ -302,12 +287,6 @@ export function PropertyActivitiesAnnouncementsModule() {
 				announcementId={activeId}
 				opened={scheduleModalOpen}
 				setOpened={setScheduleModalOpen}
-			/>
-
-			<ExtendExpiryModal
-				announcementId={activeId}
-				opened={extendExpiryModalOpen}
-				setOpened={setExtendExpiryModalOpen}
 			/>
 
 			<AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
