@@ -6,6 +6,11 @@ import { useGetAnnouncements } from '~/api/announcements'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '~/components/ui/tooltip'
 import { TypographyH2 } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
@@ -91,17 +96,22 @@ export function AnnouncementsModule() {
 					const announcement = row.original
 					return (
 						<div className="flex items-center justify-end gap-1">
-							<Button
-								size="icon"
-								variant="ghost"
-								onClick={() =>
-									void navigate(
-										`/activities/announcements/new?announcement_id=${announcement.id}`,
-									)
-								}
-							>
-								<Copy className="h-4 w-4" />
-							</Button>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										size="icon"
+										variant="ghost"
+										onClick={() =>
+											void navigate(
+												`/activities/announcements/new?announcement_id=${announcement.id}`,
+											)
+										}
+									>
+										<Copy className="h-4 w-4" />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>Duplicate</TooltipContent>
+							</Tooltip>
 							<Button
 								size="icon"
 								variant="ghost"

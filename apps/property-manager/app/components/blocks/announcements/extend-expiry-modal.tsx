@@ -2,7 +2,10 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { Dispatch, SetStateAction } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { useExtendAnnouncementExpiry } from '~/api/announcements'
+import {
+	useExtendAnnouncementExpiry,
+	useExtendPropertyAnnouncementExpiry,
+} from '~/api/announcements'
 import { DateTimePickerInput } from '~/components/date-time-picker-input'
 import {
 	AlertDialog,
@@ -21,12 +24,22 @@ interface Props {
 	announcement: Announcement | null
 	opened: boolean
 	setOpened: Dispatch<SetStateAction<boolean>>
+	propertyId?: string
 }
 
-export function ExtendExpiryModal({ announcement, opened, setOpened }: Props) {
+export function ExtendExpiryModal({
+	announcement,
+	opened,
+	setOpened,
+	propertyId,
+}: Props) {
 	const queryClient = useQueryClient()
 	const [expiresAt, setExpiresAt] = useState<Date | undefined>(undefined)
-	const { mutate, isPending } = useExtendAnnouncementExpiry()
+	const { mutate: mutateGlobal, isPending: isPendingGlobal } =
+		useExtendAnnouncementExpiry()
+	const { mutate: mutateProperty, isPending: isPendingProperty } =
+		useExtendPropertyAnnouncementExpiry()
+	const isPending = propertyId ? isPendingProperty : isPendingGlobal
 
 	const handleClose = () => {
 		setExpiresAt(undefined)
@@ -35,19 +48,31 @@ export function ExtendExpiryModal({ announcement, opened, setOpened }: Props) {
 
 	const handleSubmit = () => {
 		if (!announcement || !expiresAt) return
-		mutate(
-			{ id: announcement.id, expires_at: expiresAt.toISOString() },
-			{
-				onError: () => toast.error('Failed to extend expiry. Try again later.'),
-				onSuccess: () => {
-					toast.success('Announcement expiry extended.')
-					void queryClient.invalidateQueries({
-						queryKey: [QUERY_KEYS.ANNOUNCEMENTS],
-					})
-					handleClose()
-				},
+		const callbacks = {
+			onError: () => toast.error('Failed to extend expiry. Try again later.'),
+			onSuccess: () => {
+				toast.success('Announcement expiry extended.')
+				void queryClient.invalidateQueries({
+					queryKey: [QUERY_KEYS.ANNOUNCEMENTS],
+				})
+				handleClose()
 			},
-		)
+		}
+		if (propertyId) {
+			mutateProperty(
+				{
+					propertyId,
+					id: announcement.id,
+					expires_at: expiresAt.toISOString(),
+				},
+				callbacks,
+			)
+		} else {
+			mutateGlobal(
+				{ id: announcement.id, expires_at: expiresAt.toISOString() },
+				callbacks,
+			)
+		}
 	}
 
 	return (

@@ -1,10 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
-import { Trash } from 'lucide-react'
+import { Info, Trash } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useNavigate, useSearchParams } from 'react-router'
+import { useLoaderData, useNavigate, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import {
@@ -42,6 +42,7 @@ import {
 	TypographyMuted,
 } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
+import type { loader } from '~/routes/_auth._dashboard.activities.announcements.new._index'
 
 const ValidationSchema = z.object({
 	title: z
@@ -68,6 +69,7 @@ export function NewAnnouncementModule() {
 	const queryClient = useQueryClient()
 	const [searchParams] = useSearchParams()
 	const announcementId = searchParams.get('announcement_id') ?? ''
+	const loaderData = useLoaderData<typeof loader>()
 
 	const [scheduledAt, setScheduledAt] = useState<Date>(new Date())
 	const [expiresAt, setExpiresAt] = useState<Date | undefined>(undefined)
@@ -82,7 +84,10 @@ export function NewAnnouncementModule() {
 
 	const isPending = isCreating || isPublishing || isScheduling
 
-	const { data: sourceAnnouncement } = useGetAnnouncement(announcementId)
+	const { data: sourceAnnouncement } = useGetAnnouncement(
+		announcementId,
+		loaderData.sourceAnnouncement ?? undefined,
+	)
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
@@ -275,7 +280,22 @@ export function NewAnnouncementModule() {
 						/>
 					</div>
 
-					<Separator className="my-8" />
+					<Separator className="my-2" />
+
+					<div className="space-y-1">
+						<TypographyH4>Audience</TypographyH4>
+					</div>
+
+					<div className="bg-muted/50 border-border flex items-start gap-3 rounded-lg border p-4">
+						<Info className="text-muted-foreground mt-0.5 size-4 shrink-0" />
+						<p className="text-muted-foreground text-sm">
+							This announcement will be broadcast to{' '}
+							<span className="text-foreground font-medium">all tenants</span>{' '}
+							across all your properties.
+						</p>
+					</div>
+
+					<Separator className="my-2" />
 
 					<div className="space-y-1">
 						<TypographyH4>Post Now or Schedule for Later</TypographyH4>

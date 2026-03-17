@@ -5,7 +5,10 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import { useUpdateAnnouncement } from '~/api/announcements'
+import {
+	useUpdateAnnouncement,
+	useUpdatePropertyAnnouncement,
+} from '~/api/announcements'
 import { Button } from '~/components/ui/button'
 import {
 	Dialog,
@@ -58,11 +61,21 @@ interface Props {
 	announcement: Announcement
 	opened: boolean
 	setOpened: Dispatch<SetStateAction<boolean>>
+	propertyId?: string
 }
 
-export function EditDraftModal({ announcement, opened, setOpened }: Props) {
+export function EditDraftModal({
+	announcement,
+	opened,
+	setOpened,
+	propertyId,
+}: Props) {
 	const queryClient = useQueryClient()
-	const { mutate, isPending } = useUpdateAnnouncement()
+	const { mutate: mutateGlobal, isPending: isPendingGlobal } =
+		useUpdateAnnouncement()
+	const { mutate: mutateProperty, isPending: isPendingProperty } =
+		useUpdatePropertyAnnouncement()
+	const isPending = propertyId ? isPendingProperty : isPendingGlobal
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
@@ -88,19 +101,24 @@ export function EditDraftModal({ announcement, opened, setOpened }: Props) {
 	const handleClose = () => setOpened(false)
 
 	const onSubmit = (formData: FormSchema) => {
-		mutate(
-			{ id: announcement.id, data: formData },
-			{
-				onError: () => toast.error('Failed to save changes. Try again.'),
-				onSuccess: () => {
-					toast.success('Draft updated.')
-					void queryClient.invalidateQueries({
-						queryKey: [QUERY_KEYS.ANNOUNCEMENTS],
-					})
-					handleClose()
-				},
+		const callbacks = {
+			onError: () => toast.error('Failed to save changes. Try again.'),
+			onSuccess: () => {
+				toast.success('Draft updated.')
+				void queryClient.invalidateQueries({
+					queryKey: [QUERY_KEYS.ANNOUNCEMENTS],
+				})
+				handleClose()
 			},
-		)
+		}
+		if (propertyId) {
+			mutateProperty(
+				{ propertyId, id: announcement.id, data: formData },
+				callbacks,
+			)
+		} else {
+			mutateGlobal({ id: announcement.id, data: formData }, callbacks)
+		}
 	}
 
 	const contentLength = rhfMethods.watch('content')?.length ?? 0

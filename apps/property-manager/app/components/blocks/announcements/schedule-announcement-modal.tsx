@@ -2,7 +2,10 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { Dispatch, SetStateAction } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { useScheduleAnnouncement } from '~/api/announcements'
+import {
+	useScheduleAnnouncement,
+	useSchedulePropertyAnnouncement,
+} from '~/api/announcements'
 import { DateTimePickerInput } from '~/components/date-time-picker-input'
 import {
 	AlertDialog,
@@ -21,16 +24,22 @@ interface Props {
 	announcementId: string | null
 	opened: boolean
 	setOpened: Dispatch<SetStateAction<boolean>>
+	propertyId?: string
 }
 
 export function ScheduleAnnouncementModal({
 	announcementId,
 	opened,
 	setOpened,
+	propertyId,
 }: Props) {
 	const queryClient = useQueryClient()
 	const [scheduledAt, setScheduledAt] = useState<Date | undefined>(undefined)
-	const { mutate, isPending } = useScheduleAnnouncement()
+	const { mutate: mutateGlobal, isPending: isPendingGlobal } =
+		useScheduleAnnouncement()
+	const { mutate: mutateProperty, isPending: isPendingProperty } =
+		useSchedulePropertyAnnouncement()
+	const isPending = propertyId ? isPendingProperty : isPendingGlobal
 
 	const handleClose = () => {
 		setScheduledAt(undefined)
@@ -39,20 +48,32 @@ export function ScheduleAnnouncementModal({
 
 	const handleSubmit = () => {
 		if (!announcementId || !scheduledAt) return
-		mutate(
-			{ id: announcementId, scheduled_at: scheduledAt.toISOString() },
-			{
-				onError: () =>
-					toast.error('Failed to schedule announcement. Try again later.'),
-				onSuccess: () => {
-					toast.success('Announcement scheduled.')
-					void queryClient.invalidateQueries({
-						queryKey: [QUERY_KEYS.ANNOUNCEMENTS],
-					})
-					handleClose()
-				},
+		const callbacks = {
+			onError: () =>
+				toast.error('Failed to schedule announcement. Try again later.'),
+			onSuccess: () => {
+				toast.success('Announcement scheduled.')
+				void queryClient.invalidateQueries({
+					queryKey: [QUERY_KEYS.ANNOUNCEMENTS],
+				})
+				handleClose()
 			},
-		)
+		}
+		if (propertyId) {
+			mutateProperty(
+				{
+					propertyId,
+					id: announcementId,
+					scheduled_at: scheduledAt.toISOString(),
+				},
+				callbacks,
+			)
+		} else {
+			mutateGlobal(
+				{ id: announcementId, scheduled_at: scheduledAt.toISOString() },
+				callbacks,
+			)
+		}
 	}
 
 	return (

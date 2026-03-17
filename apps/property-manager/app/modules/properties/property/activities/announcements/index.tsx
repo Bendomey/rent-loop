@@ -1,32 +1,18 @@
-import { useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
-import { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router'
-import { toast } from 'sonner'
-import {
-	useCancelScheduledAnnouncement,
-	useDeleteAnnouncement,
-	useGetPropertyAnnouncements,
-	usePublishAnnouncement,
-} from '~/api/announcements'
-import { AnnouncementForm } from '~/components/blocks/announcements/announcement-form'
-import { ScheduleAnnouncementModal } from '~/components/blocks/announcements/schedule-announcement-modal'
+import { ChevronRight, Copy, Plus } from 'lucide-react'
+import { useMemo } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router'
+import { useGetPropertyAnnouncements } from '~/api/announcements'
 import { DataTable } from '~/components/datatable'
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from '~/components/ui/alert-dialog'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
-import { Spinner } from '~/components/ui/spinner'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '~/components/ui/tooltip'
 import { TypographyH2 } from '~/components/ui/typography'
-import { PAGINATION_DEFAULTS, QUERY_KEYS } from '~/lib/constants'
+import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { useProperty } from '~/providers/property-provider'
 
@@ -35,66 +21,36 @@ function getStatusBadge(status: Announcement['status']) {
 		Announcement['status'],
 		{ label: string; className: string }
 	> = {
-		DRAFT: { label: 'Draft', className: 'bg-zinc-400 text-white' },
-		SCHEDULED: { label: 'Scheduled', className: 'bg-blue-500 text-white' },
-		PUBLISHED: { label: 'Published', className: 'bg-green-500 text-white' },
-		EXPIRED: { label: 'Expired', className: 'bg-gray-400 text-white' },
+		DRAFT: {
+			label: 'Draft',
+			className: 'bg-zinc-200 dark:bg-zinc-700 text-black dark:text-white',
+		},
+		SCHEDULED: {
+			label: 'Scheduled',
+			className: 'bg-blue-500 dark:bg-blue-700 text-white',
+		},
+		PUBLISHED: {
+			label: 'Published',
+			className: 'bg-green-500 dark:bg-green-700 text-white',
+		},
+		EXPIRED: {
+			label: 'Expired',
+			className: 'bg-gray-400 dark:bg-gray-700 text-white',
+		},
 	}
 	const config = map[status] ?? map.DRAFT
 	return (
-		<Badge variant="outline" className={config.className}>
+		<Badge variant="secondary" className={config.className}>
 			{config.label}
 		</Badge>
 	)
-}
-
-function getPriorityBadge(priority: Announcement['priority']) {
-	const map: Record<
-		Announcement['priority'],
-		{ label: string; className: string }
-	> = {
-		NORMAL: {
-			label: 'Normal',
-			className:
-				'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200',
-		},
-		IMPORTANT: {
-			label: 'Important',
-			className:
-				'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200',
-		},
-		URGENT: {
-			label: 'Urgent',
-			className: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200',
-		},
-	}
-	const config = map[priority] ?? map.NORMAL
-	return (
-		<Badge variant="outline" className={config.className}>
-			{config.label}
-		</Badge>
-	)
-}
-
-function getTypeLabel(type: Announcement['type']) {
-	const map: Record<Announcement['type'], string> = {
-		COMMUNITY: 'Community',
-		MAINTENANCE: 'Maintenance',
-		POLICY_CHANGE: 'Policy Change',
-		EMERGENCY: 'Emergency',
-	}
-	return map[type] ?? type
 }
 
 export function PropertyActivitiesAnnouncementsModule() {
 	const { clientUserProperty } = useProperty()
 	const propertyId = clientUserProperty?.property?.id
-	const queryClient = useQueryClient()
+	const navigate = useNavigate()
 	const [searchParams] = useSearchParams()
-
-	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-	const [scheduleModalOpen, setScheduleModalOpen] = useState(false)
-	const [activeId, setActiveId] = useState<string | null>(null)
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -109,11 +65,6 @@ export function PropertyActivitiesAnnouncementsModule() {
 			sorter: { sort: 'desc', sort_by: 'created_at' },
 		})
 
-	const { mutate: deleteAnnouncement, isPending: isDeleting } =
-		useDeleteAnnouncement()
-	const { mutate: publishAnnouncement } = usePublishAnnouncement()
-	const { mutate: cancelScheduled } = useCancelScheduledAnnouncement()
-
 	const isLoading = isPending || isRefetching
 
 	const columns: ColumnDef<Announcement>[] = useMemo(
@@ -121,39 +72,22 @@ export function PropertyActivitiesAnnouncementsModule() {
 			{
 				accessorKey: 'title',
 				header: 'Title',
+				meta: { className: 'w-full' },
 				cell: ({ row }) => (
-					<span className="min-w-40 text-sm font-medium">
-						{row.original.title}
-					</span>
+					<div className="flex items-center gap-2">
+						<span className="text-sm font-medium">{row.original.title}</span>
+						{getStatusBadge(row.original.status)}
+					</div>
 				),
-			},
-			{
-				accessorKey: 'type',
-				header: 'Type',
-				cell: ({ row }) => (
-					<span className="text-muted-foreground text-xs">
-						{getTypeLabel(row.original.type)}
-					</span>
-				),
-			},
-			{
-				accessorKey: 'priority',
-				header: 'Priority',
-				cell: ({ row }) => getPriorityBadge(row.original.priority),
-			},
-			{
-				accessorKey: 'status',
-				header: 'Status',
-				cell: ({ row }) => getStatusBadge(row.original.status),
 			},
 			{
 				accessorKey: 'published_at',
-				header: 'Published At',
+				header: 'Publish Date',
 				cell: ({ row }) => (
 					<span className="text-muted-foreground min-w-32 text-xs">
 						{row.original.published_at
 							? localizedDayjs(row.original.published_at).format('MMM D, YYYY')
-							: '—'}
+							: ''}
 					</span>
 				),
 			},
@@ -162,104 +96,57 @@ export function PropertyActivitiesAnnouncementsModule() {
 				cell: ({ row }) => {
 					const announcement = row.original
 					return (
-						<div className="flex items-center gap-2">
-							{announcement.status === 'DRAFT' && (
-								<>
+						<div className="flex items-center justify-end gap-1">
+							<Tooltip>
+								<TooltipTrigger asChild>
 									<Button
-										size="sm"
-										variant="outline"
-										onClick={() => {
-											publishAnnouncement(announcement.id, {
-												onError: () =>
-													toast.error('Failed to publish. Try again.'),
-												onSuccess: () => {
-													toast.success('Announcement published.')
-													void queryClient.invalidateQueries({
-														queryKey: [QUERY_KEYS.ANNOUNCEMENTS],
-													})
-												},
-											})
-										}}
+										size="icon"
+										variant="ghost"
+										onClick={() =>
+											void navigate(
+												`/properties/${propertyId}/activities/announcements/new?announcement_id=${announcement.id}`,
+											)
+										}
 									>
-										Publish
+										<Copy className="h-4 w-4" />
 									</Button>
-									<Button
-										size="sm"
-										variant="outline"
-										onClick={() => {
-											setActiveId(announcement.id)
-											setScheduleModalOpen(true)
-										}}
-									>
-										Schedule
-									</Button>
-									<Button
-										size="sm"
-										variant="outline"
-										className="text-destructive hover:text-destructive"
-										onClick={() => {
-											setActiveId(announcement.id)
-											setDeleteDialogOpen(true)
-										}}
-									>
-										Delete
-									</Button>
-								</>
-							)}
-
-							{announcement.status === 'SCHEDULED' && (
-								<>
-									<Button
-										size="sm"
-										variant="outline"
-										onClick={() => {
-											publishAnnouncement(announcement.id, {
-												onError: () =>
-													toast.error('Failed to publish. Try again.'),
-												onSuccess: () => {
-													toast.success('Announcement published.')
-													void queryClient.invalidateQueries({
-														queryKey: [QUERY_KEYS.ANNOUNCEMENTS],
-													})
-												},
-											})
-										}}
-									>
-										Publish Now
-									</Button>
-									<Button
-										size="sm"
-										variant="outline"
-										onClick={() => {
-											cancelScheduled(announcement.id, {
-												onError: () =>
-													toast.error('Failed to cancel schedule. Try again.'),
-												onSuccess: () => {
-													toast.success('Schedule cancelled.')
-													void queryClient.invalidateQueries({
-														queryKey: [QUERY_KEYS.ANNOUNCEMENTS],
-													})
-												},
-											})
-										}}
-									>
-										Cancel Schedule
-									</Button>
-								</>
-							)}
+								</TooltipTrigger>
+								<TooltipContent>Duplicate</TooltipContent>
+							</Tooltip>
+							<Button
+								size="icon"
+								variant="ghost"
+								onClick={() =>
+									void navigate(
+										`/properties/${propertyId}/activities/announcements/${announcement.id}`,
+									)
+								}
+							>
+								<ChevronRight className="h-4 w-4" />
+							</Button>
 						</div>
 					)
 				},
 			},
 		],
-		[cancelScheduled, publishAnnouncement, queryClient],
+		[navigate, propertyId],
 	)
 
 	return (
 		<div className="mx-6 my-6 flex flex-col gap-4 sm:gap-6">
 			<div className="flex flex-row items-center justify-between">
-				<TypographyH2>Announcements</TypographyH2>
-				<AnnouncementForm propertyId={propertyId} />
+				<div>
+					<TypographyH2>Announcements</TypographyH2>
+					<p className="text-muted-foreground mt-1 text-sm">
+						Manage announcements for your tenants.
+					</p>
+				</div>
+				<Link to={`/properties/${propertyId}/activities/announcements/new`}>
+					<Button size="sm">
+						<Plus className="size-4" />
+						New Announcement
+					</Button>
+				</Link>
 			</div>
 
 			<DataTable
@@ -282,50 +169,6 @@ export function PropertyActivitiesAnnouncementsModule() {
 					description: 'Create one to notify tenants.',
 				}}
 			/>
-
-			<ScheduleAnnouncementModal
-				announcementId={activeId}
-				opened={scheduleModalOpen}
-				setOpened={setScheduleModalOpen}
-			/>
-
-			<AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-				<AlertDialogContent className="sm:max-w-[425px]">
-					<AlertDialogHeader>
-						<AlertDialogTitle>Are you sure?</AlertDialogTitle>
-						<AlertDialogDescription>
-							This will permanently delete the announcement.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter className="mt-5">
-						<AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-						<AlertDialogAction
-							disabled={isDeleting}
-							onClick={(e) => {
-								e.preventDefault()
-								if (!activeId || isDeleting) return
-								deleteAnnouncement(activeId, {
-									onError: () =>
-										toast.error(
-											'Failed to delete announcement. Try again later.',
-										),
-									onSuccess: () => {
-										void queryClient.invalidateQueries({
-											queryKey: [QUERY_KEYS.ANNOUNCEMENTS],
-										})
-										setDeleteDialogOpen(false)
-										setActiveId(null)
-									},
-								})
-							}}
-							className="bg-destructive hover:bg-destructive/90 text-white"
-						>
-							{isDeleting ? <Spinner /> : null}
-							Delete
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
 		</div>
 	)
 }

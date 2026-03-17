@@ -282,3 +282,219 @@ const extendAnnouncementExpiry = async (props: {
 
 export const useExtendAnnouncementExpiry = () =>
 	useMutation({ mutationFn: extendAnnouncementExpiry })
+
+// ─── Property-scoped mutations ───────────────────────────────────────────────
+
+/**
+ * GET single announcement by ID (property-scoped)
+ */
+const getPropertyAnnouncement = async (propertyId: string, id: string) => {
+	try {
+		const response = await fetchClient<ApiResponse<Announcement>>(
+			`/v1/properties/${propertyId}/announcements/${id}`,
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useGetPropertyAnnouncement = (
+	propertyId: string | undefined,
+	id: string | undefined,
+	initialData?: Announcement,
+) =>
+	useQuery({
+		queryKey: [QUERY_KEYS.ANNOUNCEMENTS, propertyId, id],
+		queryFn: () => getPropertyAnnouncement(propertyId!, id!),
+		enabled: !!propertyId && !!id,
+		initialData,
+	})
+
+/**
+ * CREATE announcement under a specific property
+ */
+const createPropertyAnnouncement = async (
+	props: Omit<CreateAnnouncementInput, 'property_id'> & { propertyId: string },
+) => {
+	const { propertyId, ...body } = props
+	try {
+		const response = await fetchClient<ApiResponse<Announcement>>(
+			`/v1/properties/${propertyId}/announcements`,
+			{ method: 'POST', body: JSON.stringify(body) },
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+
+export const useCreatePropertyAnnouncement = () =>
+	useMutation({ mutationFn: createPropertyAnnouncement })
+
+/**
+ * UPDATE announcement (DRAFT only, property-scoped)
+ */
+const updatePropertyAnnouncement = async (props: {
+	propertyId: string
+	id: string
+	data: Partial<Omit<CreateAnnouncementInput, 'property_id'>>
+}) => {
+	try {
+		const response = await fetchClient<ApiResponse<Announcement>>(
+			`/v1/properties/${props.propertyId}/announcements/${props.id}`,
+			{ method: 'PATCH', body: JSON.stringify(props.data) },
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+
+export const useUpdatePropertyAnnouncement = () =>
+	useMutation({ mutationFn: updatePropertyAnnouncement })
+
+/**
+ * DELETE announcement (DRAFT only, property-scoped)
+ */
+const deletePropertyAnnouncement = async (props: {
+	propertyId: string
+	id: string
+}) => {
+	try {
+		await fetchClient(
+			`/v1/properties/${props.propertyId}/announcements/${props.id}`,
+			{ method: 'DELETE', body: JSON.stringify({}) },
+		)
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+
+export const useDeletePropertyAnnouncement = () =>
+	useMutation({ mutationFn: deletePropertyAnnouncement })
+
+/**
+ * PUBLISH announcement (property-scoped)
+ */
+const publishPropertyAnnouncement = async (props: {
+	propertyId: string
+	id: string
+}) => {
+	try {
+		const response = await fetchClient<ApiResponse<Announcement>>(
+			`/v1/properties/${props.propertyId}/announcements/${props.id}/publish`,
+			{ method: 'POST' },
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+
+export const usePublishPropertyAnnouncement = () =>
+	useMutation({ mutationFn: publishPropertyAnnouncement })
+
+/**
+ * SCHEDULE announcement (property-scoped)
+ */
+const schedulePropertyAnnouncement = async (props: {
+	propertyId: string
+	id: string
+	scheduled_at: string
+}) => {
+	try {
+		const response = await fetchClient<ApiResponse<Announcement>>(
+			`/v1/properties/${props.propertyId}/announcements/${props.id}/schedule`,
+			{
+				method: 'POST',
+				body: JSON.stringify({ scheduled_at: props.scheduled_at }),
+			},
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+
+export const useSchedulePropertyAnnouncement = () =>
+	useMutation({ mutationFn: schedulePropertyAnnouncement })
+
+/**
+ * CANCEL SCHEDULED announcement (property-scoped)
+ */
+const cancelScheduledPropertyAnnouncement = async (props: {
+	propertyId: string
+	id: string
+}) => {
+	try {
+		await fetchClient(
+			`/v1/properties/${props.propertyId}/announcements/${props.id}/schedule`,
+			{ method: 'DELETE', body: JSON.stringify({}) },
+		)
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+
+export const useCancelScheduledPropertyAnnouncement = () =>
+	useMutation({ mutationFn: cancelScheduledPropertyAnnouncement })
+
+/**
+ * EXTEND EXPIRY of a published announcement (property-scoped)
+ */
+const extendPropertyAnnouncementExpiry = async (props: {
+	propertyId: string
+	id: string
+	expires_at: string
+}) => {
+	try {
+		const response = await fetchClient<ApiResponse<Announcement>>(
+			`/v1/properties/${props.propertyId}/announcements/${props.id}/expiry`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify({ expires_at: props.expires_at }),
+			},
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+
+export const useExtendPropertyAnnouncementExpiry = () =>
+	useMutation({ mutationFn: extendPropertyAnnouncementExpiry })
