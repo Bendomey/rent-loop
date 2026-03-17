@@ -287,6 +287,109 @@ The Rentloop Team
 )
 
 const (
+	INVOICE_PRE_DUE_1D_SUBJECT = "Reminder: your rent is due tomorrow"
+	INVOICE_PRE_DUE_1D_BODY    = `Hi {{tenant_name}},
+
+This is a friendly reminder that your rent invoice ({{invoice_code}}) for {{unit_name}} is due tomorrow.
+
+Amount: {{currency}} {{amount}}
+Due Date: {{due_date}}
+
+Please ensure your payment is made on time to avoid any late fees.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop Team
+`
+)
+
+const (
+	INVOICE_OVERDUE_1D_SUBJECT = "Payment reminder: your rent is 1 day overdue"
+	INVOICE_OVERDUE_1D_BODY    = `Hi {{tenant_name}},
+
+Your rent invoice ({{invoice_code}}) for {{unit_name}} was due on {{due_date}} and remains unpaid.
+
+Amount: {{currency}} {{amount}}
+
+Please make your payment as soon as possible to avoid further notices.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop Team
+`
+)
+
+const (
+	INVOICE_OVERDUE_3D_SUBJECT = "Payment reminder: your rent is 3 days overdue"
+	INVOICE_OVERDUE_3D_BODY    = `Hi {{tenant_name}},
+
+Your rent invoice ({{invoice_code}}) for {{unit_name}} is now 3 days overdue. The payment of {{currency}} {{amount}} was due on {{due_date}}.
+
+Please settle your balance promptly to avoid further action.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop Team
+`
+)
+
+const (
+	INVOICE_OVERDUE_7D_SUBJECT = "Urgent: your rent is 7 days overdue"
+	INVOICE_OVERDUE_7D_BODY    = `Hi {{tenant_name}},
+
+Your rent invoice ({{invoice_code}}) for {{unit_name}} is now 7 days overdue.
+
+Outstanding amount: {{currency}} {{amount}}
+Original due date: {{due_date}}
+
+Please make your payment immediately or contact us to discuss your situation.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop Team
+`
+)
+
+const (
+	INVOICE_OVERDUE_14D_SUBJECT = "Final notice: your rent is 14 days overdue"
+	INVOICE_OVERDUE_14D_BODY    = `Hi {{tenant_name}},
+
+This is a final notice. Your rent invoice ({{invoice_code}}) for {{unit_name}} is now 14 days overdue.
+
+Outstanding amount: {{currency}} {{amount}}
+Original due date: {{due_date}}
+
+Please make your payment immediately. Continued non-payment may result in further action under the terms of your lease agreement.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop Team
+`
+)
+
+const (
+	INVOICE_PAID_SUBJECT = "Payment confirmed \u2014 thank you!"
+	INVOICE_PAID_BODY    = `Hi {{tenant_name}},
+
+We've received your payment for invoice ({{invoice_code}}) for {{unit_name}}.
+
+Amount paid: {{currency}} {{amount}}
+
+Thank you for keeping your account up to date.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop Team
+`
+)
+
+const (
 	SIGNING_TOKEN_INVITE_SUBJECT = "You have a document to sign on Rentloop"
 	SIGNING_TOKEN_INVITE_BODY    = `Hi {{signer_name}},
 

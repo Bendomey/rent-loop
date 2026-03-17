@@ -119,6 +119,7 @@ func NewServices(params INewServicesParams) Services {
 		PaymentAccountService: paymentAccountService,
 		InvoiceService:        invoiceService,
 		AccountingService:     accountingService,
+		NotificationService:   notificationService,
 	})
 
 	leaseChecklistItemService := NewLeaseChecklistItemService(

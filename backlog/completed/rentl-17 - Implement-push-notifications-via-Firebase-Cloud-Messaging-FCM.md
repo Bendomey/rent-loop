@@ -1,14 +1,14 @@
 ---
 id: RENTL-17
 title: Implement push notifications via Firebase Cloud Messaging (FCM)
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-03-09 20:38'
-updated_date: '2026-03-11 19:05'
+updated_date: '2026-03-17 13:54'
 labels: []
 dependencies: []
 priority: medium
-ordinal: 2000
+ordinal: 1000
 ---
 
 ## Description

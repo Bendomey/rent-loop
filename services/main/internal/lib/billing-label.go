@@ -53,3 +53,22 @@ func RentInvoiceLabel(frequency string, billingDate time.Time) string {
 		return fmt.Sprintf("Rent \u2013 %s", d.Format("January 2006"))
 	}
 }
+
+// RentInvoiceGracePeriod returns the grace period duration for a given payment
+// frequency. The DueDate is set to BillingDate + grace period.
+func RentInvoiceGracePeriod(frequency string) time.Duration {
+	switch frequency {
+	case "Hourly", "HOURLY", "Daily", "DAILY":
+		return 0
+	case "Weekly", "WEEKLY":
+		return 3 * 24 * time.Hour
+	case "Monthly", "MONTHLY":
+		return 7 * 24 * time.Hour
+	case "Quarterly", "QUARTERLY", "BiAnnually", "BIANNUALLY":
+		return 14 * 24 * time.Hour
+	case "Annually", "ANNUALLY":
+		return 30 * 24 * time.Hour
+	default:
+		return 7 * 24 * time.Hour
+	}
+}

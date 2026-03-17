@@ -53,6 +53,7 @@ type Invoice struct {
 
 	// for now let's default to what we support
 	AllowedPaymentRails pq.StringArray `gorm:"type:text[];not null;default:'{OFFLINE}'"` // ['MOMO', 'BANK_TRANSFER', 'OFFLINE', 'CARD']. Based on the payment accounts for the payee type, filter and fetch for UI
+	RemindersSent       pq.StringArray `gorm:"type:text[];not null;default:'{}'"`        // tracks which reminders have been sent, e.g. ["pre_due_1d", "overdue_1d"]
 
 	LineItems []InvoiceLineItem
 
