@@ -47,6 +47,73 @@ app/
 - **Server-side fetching:** Functions in `app/api/<resource>/server.ts`
 - **Populating relations:** Pass `populate: ['Property', 'PropertyBlock']` etc.
 
+### Server-side Fetch Pattern (detail pages)
+
+For detail pages that need SSR data, follow this pattern:
+
+**1. `app/api/<resource>/server.ts`** — server-only fetch function:
+
+```ts
+import { fetchServer } from '~/lib/transport'
+
+export const getThingForServer = async (
+	id: string,
+	apiConfig: ApiConfigForServerConfig,
+) => {
+	try {
+		const response = await fetchServer<ApiResponse<Thing>>(
+			`${apiConfig.baseUrl}/v1/admin/things/${id}`,
+			{ ...apiConfig },
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+```
+
+**2. Route loader** — fetch and return data:
+
+```ts
+export async function loader({ request, params }: Route.LoaderArgs) {
+	const baseUrl = environmentVariables().API_ADDRESS
+	const authSession = await getAuthSession(request.headers.get('Cookie'))
+	const authToken = authSession.get('authToken')
+	try {
+		const thing = await getThingForServer(params.thingId, {
+			authToken,
+			baseUrl,
+		})
+		return { origin: getDomainUrl(request), thing }
+	} catch {
+		throw new Error('Failed to load thing')
+	}
+}
+```
+
+**3. Module** — use loader data as `initialData` for the TanStack Query hook:
+
+```ts
+import type { loader } from '~/routes/the-route-file'
+
+export function ThingDetailModule() {
+	const loaderData = useLoaderData<typeof loader>()
+	const { data: thing } = useGetThing(
+		params.thingId,
+		loaderData.thing ?? undefined,
+	)
+	// ...
+}
+```
+
+This pre-populates the query cache from SSR so the page renders immediately,
+while still refetching client-side after mutations via
+`queryClient.invalidateQueries`.
+
 ## Component Naming
 
 - Module components: named export with `Module` suffix (e.g.,

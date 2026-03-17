@@ -55,9 +55,9 @@ export function PropertyFinancialsPaymentModule() {
 							{data?.context_type === 'TENANT_APPLICATION' ? (
 								<Link
 									to={`/properties/${clientUserProperty?.property_id}/tenants/applications/${data?.context_tenant_application_id}`}
-									className="text-sm text-blue-600 hover:underline"
+									className="text-sm text-blue-600 capitalize hover:underline dark:text-blue-500"
 								>
-									{data?.context_type?.replace('_', ' ')}
+									{data?.context_type?.replace('_', ' ').toLowerCase()}
 								</Link>
 							) : data?.context_type === 'MAINTENANCE' ? (
 								<Link
@@ -78,7 +78,7 @@ export function PropertyFinancialsPaymentModule() {
 						{/* totals */}
 						<div>
 							<div className="space-y-1 pt-4 pb-2">
-								<TypographyMuted className="text-muted-foreground text-xs font-semibold tracking-wide">
+								<TypographyMuted className="text-muted-foreground text-xs font-semibold tracking-wide dark:text-white">
 									Payment Summary
 								</TypographyMuted>
 								<Separator />
@@ -110,7 +110,7 @@ export function PropertyFinancialsPaymentModule() {
 						{/* metadata */}
 						<div className="grid grid-cols-1 gap-4 text-sm">
 							<div className="space-y-1 pt-2">
-								<TypographyMuted className="text-muted-foreground text-xs font-semibold tracking-wide">
+								<TypographyMuted className="text-muted-foreground text-xs font-semibold tracking-wide dark:text-white">
 									Payment Details
 								</TypographyMuted>
 								<Separator />

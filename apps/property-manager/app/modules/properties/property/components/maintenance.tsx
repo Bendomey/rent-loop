@@ -41,7 +41,7 @@ export function PropertyMaintenanceRequest() {
 				header: 'Unit Number',
 				cell: ({ getValue }) => (
 					<div className="min-w-0">
-						<span className="truncate text-sm text-zinc-600">
+						<span className="truncate text-sm text-zinc-600 dark:text-white">
 							{getValue<string>()}
 						</span>
 					</div>

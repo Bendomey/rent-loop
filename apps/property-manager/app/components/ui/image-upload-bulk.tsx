@@ -248,7 +248,7 @@ export function ImageUploadBulk({
 				className={cn(
 					'relative rounded-sm border border-solid p-4',
 					inputContainerClassName,
-					displayError ? 'border-red-400' : 'border-gray-200',
+					displayError ? 'border-red-400' : 'border-gray-200 dark:border-zinc-700',
 					disabled ? 'pointer-events-none bg-gray-50 select-none' : '',
 				)}
 			>
@@ -292,7 +292,7 @@ export function ImageUploadBulk({
 						<button
 							type="button"
 							className={cn(
-								'flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-sm border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-gray-400 hover:bg-gray-100',
+								'flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-sm border-2 border-dashed border-gray-300 bg-gray-50 dark:bg-zinc-900 transition-colors hover:border-gray-400 hover:bg-gray-100',
 							)}
 							onClick={handleButtonClick}
 						>

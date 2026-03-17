@@ -2,6 +2,7 @@ import {
 	GalleryVerticalEnd,
 	Settings2,
 	LifeBuoy,
+	Megaphone,
 	PieChart,
 	House,
 	BookOpenText,
@@ -37,6 +38,17 @@ const data = {
 			icon: House,
 		},
 		{
+			title: 'Activities',
+			url: '/activities',
+			icon: Megaphone,
+			items: [
+				{
+					title: 'Announcements',
+					url: '/announcements',
+				},
+			],
+		},
+		{
 			title: 'Settings',
 			url: '/settings',
 			icon: Settings2,
@@ -66,7 +78,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 					{sidebarState.open ? (
 						<>
 							<div className="flex flex-row items-end">
-								<span className="text-4xl font-extrabold text-rose-700">
+								<span className="text-4xl font-extrabold text-rose-700 dark:text-rose-500">
 									{APP_NAME.slice(0, 4)}
 								</span>
 								<span className="text-4xl font-extrabold">

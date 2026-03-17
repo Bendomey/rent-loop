@@ -72,7 +72,12 @@ export * from './properties/property/tenants/applications/application/docs/lease
 
 export * from './public-signing'
 
+export * from './announcements'
+export * from './announcements/new'
+export * from './announcements/announcement'
 export * from './properties/property/activities/announcements'
+export * from './properties/property/activities/announcements/new'
+export * from './properties/property/activities/announcements/announcement'
 export * from './properties/property/activities/inspections'
 export * from './properties/property/activities/maintenance-requests'
 export * from './properties/property/activities/maintenance-requests/new'

@@ -75,14 +75,16 @@ export function AddDocumentButton({
 	const docs = documentTemplates.map((docTemplate) => {
 		let header = <></>
 		if (docTemplate.id === 'empty') {
-			header = <div className="h-24 w-full rounded-md bg-zinc-100" />
+			header = (
+				<div className="h-24 w-full rounded-md bg-zinc-100 dark:bg-zinc-800" />
+			)
 		} else if (docTemplate.id === 'basic-lease-agreement') {
 			header = (
-				<div className="flex h-24 w-full flex-col justify-center space-y-2 rounded-md bg-zinc-100 px-5">
-					<div className="h-2 w-full bg-zinc-200" />
-					<div className="h-2 w-full bg-zinc-200" />
-					<div className="h-2 w-full bg-zinc-200" />
-					<div className="h-2 w-full bg-zinc-200" />
+				<div className="flex h-24 w-full flex-col justify-center space-y-2 rounded-md bg-zinc-100 px-5 dark:bg-zinc-800">
+					<div className="h-2 w-full bg-zinc-200 dark:bg-zinc-700" />
+					<div className="h-2 w-full bg-zinc-200 dark:bg-zinc-700" />
+					<div className="h-2 w-full bg-zinc-200 dark:bg-zinc-700" />
+					<div className="h-2 w-full bg-zinc-200 dark:bg-zinc-700" />
 				</div>
 			)
 		}

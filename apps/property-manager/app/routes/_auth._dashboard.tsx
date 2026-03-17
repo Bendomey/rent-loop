@@ -93,8 +93,12 @@ export default function AuthDashboard({
 	const breadcrumbs = matches
 		.filter((m) => m?.handle)
 		.map((m) => {
-			const breadcrumb = (m?.handle as { breadcrumb: string }).breadcrumb
-			return { name: breadcrumb, pathname: m?.pathname, id: m?.id }
+			const breadcrumb = (
+				m?.handle as { breadcrumb: (data: unknown) => string | string }
+			).breadcrumb
+			const name =
+				typeof breadcrumb === 'string' ? breadcrumb : breadcrumb(m?.loaderData)
+			return { name, pathname: m?.pathname, id: m?.id }
 		})
 
 	return (
@@ -149,7 +153,7 @@ export default function AuthDashboard({
 						</div>
 					</div>
 				</header>
-				<div className="h-full">
+				<div className="h-full w-full">
 					<Outlet />
 				</div>
 			</SidebarInset>

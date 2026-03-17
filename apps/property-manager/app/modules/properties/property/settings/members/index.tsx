@@ -54,7 +54,7 @@ export function PropertyMembersModule() {
 				cell: ({ getValue }) => {
 					return (
 						<div className="min-w-32">
-							<span className="truncate text-xs text-zinc-600">
+							<span className="truncate text-xs text-zinc-600 dark:text-white">
 								{getValue<string>()}
 							</span>
 						</div>
@@ -66,8 +66,8 @@ export function PropertyMembersModule() {
 				accessorKey: 'role',
 				header: 'Role',
 				cell: ({ getValue }) => (
-					<Badge variant="outline" className="text-muted-foreground px-1.5">
-						<span className="truncate text-xs text-zinc-600">
+					<Badge variant="outline" className="px-1.5">
+						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
 							{getValue<string>()}
 						</span>
 					</Badge>
@@ -78,10 +78,10 @@ export function PropertyMembersModule() {
 				header: 'Contact',
 				cell: ({ row }) => (
 					<div className="flex min-w-32 flex-col items-start gap-1">
-						<span className="truncate text-xs text-zinc-600">
+						<span className="truncate text-xs text-zinc-600 dark:text-white">
 							{row.original.client_user?.email}
 						</span>
-						<span className="truncate text-xs text-zinc-600">
+						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
 							{row.original.client_user?.phone_number}
 						</span>
 					</div>

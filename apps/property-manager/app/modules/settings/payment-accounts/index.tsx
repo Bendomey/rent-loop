@@ -78,7 +78,9 @@ export function PaymentAccountsModule() {
 					const value = getValue<PaymentAccount['rail']>()
 					const Icon = paymentIcons[value]
 
-					return Icon ? <Icon className="size-5 text-zinc-500" /> : null
+					return Icon ? (
+						<Icon className="size-5 text-zinc-500 dark:text-white" />
+					) : null
 				},
 			},
 			{
@@ -87,7 +89,7 @@ export function PaymentAccountsModule() {
 				cell: ({ getValue }) => {
 					return (
 						<div className="min-w-32">
-							<span className="truncate text-xs text-zinc-600">
+							<span className="truncate text-xs text-zinc-600 dark:text-white">
 								{getValue<string>() ?? 'N/A'}
 							</span>
 						</div>
@@ -98,7 +100,7 @@ export function PaymentAccountsModule() {
 				accessorKey: 'rail',
 				header: 'Account Type',
 				cell: ({ getValue }) => (
-					<span className="truncate text-xs text-zinc-600">
+					<span className="truncate text-xs text-zinc-600 dark:text-white">
 						{getPaymentAccountTypeLabel(getValue<PaymentAccount['rail']>())}
 					</span>
 				),

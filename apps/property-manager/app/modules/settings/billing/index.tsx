@@ -27,7 +27,9 @@ export function BillingModule() {
 			{
 				id: 'drag',
 				header: () => null,
-				cell: () => <FileText className="size-5 text-zinc-500" />,
+				cell: () => (
+					<FileText className="size-5 text-zinc-500 dark:text-white" />
+				),
 			},
 			{
 				accessorKey: 'created_at',
@@ -35,7 +37,7 @@ export function BillingModule() {
 				cell: ({ getValue }) => {
 					return (
 						<div className="min-w-32">
-							<span className="truncate text-xs text-zinc-600">
+							<span className="truncate text-xs text-zinc-600 dark:text-white">
 								{dayjs(getValue<Date>()).format('MMMM, YYYY')}
 							</span>
 						</div>
@@ -66,10 +68,10 @@ export function BillingModule() {
 				cell: ({ getValue }) => {
 					return (
 						<div className="flex min-w-32 flex-col items-start gap-1">
-							<span className="truncate text-xs text-zinc-600">
+							<span className="truncate text-xs text-zinc-600 dark:text-white">
 								{getValue<Property>().name}
 							</span>
-							<span className="truncate text-xs text-zinc-600">
+							<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
 								{getValue<Property>().address}
 							</span>
 						</div>
@@ -81,7 +83,7 @@ export function BillingModule() {
 				accessorKey: 'amount',
 				header: 'Amount',
 				cell: ({ getValue }) => (
-					<span className="truncate text-xs text-zinc-600">
+					<span className="truncate text-xs text-zinc-600 dark:text-white">
 						{formatAmount(convertPesewasToCedis(getValue<number>()))}
 					</span>
 				),
