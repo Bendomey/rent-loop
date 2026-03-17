@@ -1,9 +1,10 @@
 ---
-id: DRAFT-40
+id: RENTL-38
 title: Add announcements module in main property owner view
-status: Draft
+status: Done
 assignee: []
 created_date: '2026-03-05 09:17'
+updated_date: '2026-03-17 11:29'
 labels:
   - frontend
   - property-manager

@@ -270,6 +270,23 @@ The Rentloop Team
 )
 
 const (
+	RENT_INVOICE_GENERATED_SUBJECT = "Your Rent Invoice is Ready"
+	RENT_INVOICE_GENERATED_BODY    = `Hi {{tenant_name}},
+
+Your rent invoice ({{invoice_code}}) for {{unit_name}} has been generated and is now due for payment.
+
+Amount: {{currency}} {{amount}}
+
+Please make your payment at your earliest convenience to keep your lease in good standing.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop Team
+`
+)
+
+const (
 	SIGNING_TOKEN_INVITE_SUBJECT = "You have a document to sign on Rentloop"
 	SIGNING_TOKEN_INVITE_BODY    = `Hi {{signer_name}},
 

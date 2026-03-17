@@ -91,7 +91,12 @@ func NewServices(params INewServicesParams) Services {
 
 	tenantService := NewTenantService(params.AppCtx, params.Repository.TenantRepository)
 
-	leaseService := NewLeaseService(params.AppCtx, params.Repository.LeaseRepository)
+	leaseService := NewLeaseService(
+		params.AppCtx,
+		params.Repository.LeaseRepository,
+		invoiceService,
+		notificationService,
+	)
 
 	tenantAccountService := NewTenantAccountService(params.AppCtx, params.Repository.TenantAccountRepository)
 

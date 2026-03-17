@@ -1,9 +1,10 @@
 ---
-id: DRAFT-43
+id: RENTL-37
 title: Integrate payment invoices listings page
-status: Draft
+status: Done
 assignee: []
 created_date: '2026-03-05 09:18'
+updated_date: '2026-03-17 11:30'
 labels:
   - frontend
   - property-manager

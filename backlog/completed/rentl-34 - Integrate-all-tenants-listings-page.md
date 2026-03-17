@@ -1,9 +1,10 @@
 ---
-id: DRAFT-33
+id: RENTL-34
 title: Integrate all tenants listings page
-status: Draft
+status: Done
 assignee: []
 created_date: '2026-03-05 09:11'
+updated_date: '2026-03-17 11:29'
 labels:
   - frontend
   - property-manager

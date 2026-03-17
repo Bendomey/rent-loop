@@ -1,10 +1,10 @@
 ---
 id: RENTL-22
 title: Automatic Lease Rent Invoice Generation via Cron
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-11 18:09'
-updated_date: '2026-03-11 19:05'
+updated_date: '2026-03-17 13:03'
 labels:
   - backend
   - invoicing
@@ -23,7 +23,7 @@ references:
   - init/migration/jobs/
   - cmd/rentloop-engine/main.go
 priority: high
-ordinal: 2000
+ordinal: 3000
 ---
 
 ## Description

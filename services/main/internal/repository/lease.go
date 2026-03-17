@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
@@ -17,6 +18,7 @@ type LeaseRepository interface {
 	List(context context.Context, filterQuery ListLeasesFilter) (*[]models.Lease, error)
 	Count(context context.Context, filterQuery ListLeasesFilter) (int64, error)
 	CountActiveByUnitID(context context.Context, unitID string) (int64, error)
+	ListDueForBilling(ctx context.Context) (*[]models.Lease, error)
 }
 
 type leaseRepository struct {
@@ -212,4 +214,17 @@ func tenantAccountLeasesScope(tenantAccountID *string) func(db *gorm.DB) *gorm.D
 			*tenantAccountID,
 		)
 	}
+}
+
+func (r *leaseRepository) ListDueForBilling(ctx context.Context) (*[]models.Lease, error) {
+	var leases []models.Lease
+	result := r.DB.WithContext(ctx).
+		Where("status = ? AND next_billing_date IS NOT NULL AND next_billing_date <= ?", "Lease.Status.Active", time.Now()).
+		Preload("Unit.Property").
+		Preload("Tenant.TenantAccount").
+		Find(&leases)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &leases, nil
 }
