@@ -66,7 +66,6 @@ type ListPropertiesFilter struct {
 	ClientID string
 	Status   *string
 	Type     *string
-	IDs      *[]string
 }
 
 func (r *propertyRepository) List(

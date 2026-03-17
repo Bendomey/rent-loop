@@ -45,7 +45,6 @@ type ListTenantApplicationsQuery struct {
 	PropertyId                   *string
 	Email                        *[]string
 	Phone                        *[]string
-	IDs                          *[]string
 }
 
 func (r *tenantApplicationRepository) List(

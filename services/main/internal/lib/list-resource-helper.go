@@ -20,6 +20,7 @@ type FilterQueryInput struct {
 	StartDate    time.Time `json:"start_date"    validate:"omitempty"`
 	EndDate      time.Time `json:"end_date"      validate:"omitempty,gtfield=StartDate"`
 	Populate     *[]string `json:"populate"      validate:"omitempty"`
+	IDs          []string  `json:"ids"           validate:"omitempty,dive,uuid4"        example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of IDs to filter by" collectionFormat:"multi"`
 }
 
 // FilterQuery type to help generate filter for queries
@@ -31,6 +32,7 @@ type FilterQuery struct {
 	Search    *Search        `json:"search"     validate:"omitempty"`
 	DateRange *DateRangeType `json:"date_range" validate:"omitempty"`
 	Populate  *[]string      `json:"populate"   validate:"omitempty"`
+	IDs       *[]string      `json:"ids"        validate:"omitempty,dive,uuid4"     collectionFormat:"multi"`
 }
 
 // DateRangeType
@@ -123,6 +125,9 @@ func GenerateQuery(argument url.Values) (*FilterQuery, error) {
 		filterResult.Populate = &fields
 	}
 
+	ids := argument["ids"]
+	filterResult.IDs = &ids
+
 	return &filterResult, nil
 }
 
@@ -135,6 +140,7 @@ func GenerateEmptyQuery() FilterQuery {
 		Search:    nil,
 		DateRange: nil,
 		Populate:  nil,
+		IDs:       nil,
 	}
 }
 

@@ -22,9 +22,8 @@ type AdminService interface {
 	ListAdmins(
 		ctx context.Context,
 		filterQuery lib.FilterQuery,
-		filters repository.ListAdminsFilter,
 	) ([]models.Admin, error)
-	CountAdmins(ctx context.Context, filterQuery lib.FilterQuery, filters repository.ListAdminsFilter) (int64, error)
+	CountAdmins(ctx context.Context, filterQuery lib.FilterQuery) (int64, error)
 }
 
 type adminService struct {
@@ -175,9 +174,8 @@ func (s *adminService) CreateAdmin(ctx context.Context, input CreateAdminInput) 
 func (s *adminService) ListAdmins(
 	ctx context.Context,
 	filterQuery lib.FilterQuery,
-	filters repository.ListAdminsFilter,
 ) ([]models.Admin, error) {
-	admins, err := s.repo.List(ctx, filterQuery, filters)
+	admins, err := s.repo.List(ctx, filterQuery)
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
@@ -190,9 +188,8 @@ func (s *adminService) ListAdmins(
 func (s *adminService) CountAdmins(
 	ctx context.Context,
 	filterQuery lib.FilterQuery,
-	filters repository.ListAdminsFilter,
 ) (int64, error) {
-	count, err := s.repo.Count(ctx, filterQuery, filters)
+	count, err := s.repo.Count(ctx, filterQuery)
 	if err != nil {
 		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,

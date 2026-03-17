@@ -90,7 +90,6 @@ type ListLeasesFilter struct {
 	StayDurationFrequency      *string
 	LeaseAgreementDocumentMode *string
 	UnitIds                    *[]string
-	IDs                        *[]string
 }
 
 func (r *leaseRepository) List(ctx context.Context, filterQuery ListLeasesFilter) (*[]models.Lease, error) {

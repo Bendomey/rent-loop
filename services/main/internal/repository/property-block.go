@@ -82,7 +82,6 @@ type ListPropertyBlocksFilter struct {
 	lib.FilterQuery
 	PropertyID string
 	Status     *string
-	IDs        *[]string
 }
 
 func (r *propertyBlockRepository) List(

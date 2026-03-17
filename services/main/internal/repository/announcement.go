@@ -89,6 +89,7 @@ func (r *announcementRepository) List(
 
 	db := r.DB.WithContext(ctx).
 		Scopes(
+			IDsFilterScope("announcements", filterQuery.IDs),
 			DateRangeScope("announcements", filterQuery.DateRange),
 			SearchScope("announcements", filterQuery.Search),
 			announcementClientIDScope(filters.ClientID),
@@ -123,6 +124,7 @@ func (r *announcementRepository) Count(
 	result := r.DB.WithContext(ctx).
 		Model(&models.Announcement{}).
 		Scopes(
+			IDsFilterScope("announcements", filterQuery.IDs),
 			DateRangeScope("announcements", filterQuery.DateRange),
 			SearchScope("announcements", filterQuery.Search),
 			announcementClientIDScope(filters.ClientID),

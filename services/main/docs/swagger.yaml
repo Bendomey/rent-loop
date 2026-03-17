@@ -4021,6 +4021,14 @@ paths:
       - in: query
         name: end_date
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - enum:
         - asc
         - desc
@@ -6633,6 +6641,14 @@ paths:
       - in: query
         name: end_date
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - in: query
         name: lease_id
         type: string
@@ -6833,6 +6849,14 @@ paths:
       - in: query
         name: end_date
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - enum:
         - asc
         - desc
@@ -7024,6 +7048,14 @@ paths:
       - in: query
         name: end_date
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - enum:
         - asc
         - desc
@@ -7253,6 +7285,14 @@ paths:
       - in: query
         name: end_date
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - enum:
         - asc
         - desc
@@ -8711,6 +8751,14 @@ paths:
       - in: query
         name: end_date
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - enum:
         - asc
         - desc
@@ -9412,7 +9460,9 @@ paths:
       - in: query
         name: end_date
         type: string
-      - collectionFormat: csv
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
         in: query
         items:
           type: string
@@ -10730,6 +10780,14 @@ paths:
       - in: query
         name: end_date
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - example: true
         in: query
         name: is_unread
@@ -10844,6 +10902,14 @@ paths:
       - in: query
         name: end_date
         type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
       - enum:
         - asc
         - desc

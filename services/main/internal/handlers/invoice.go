@@ -151,16 +151,15 @@ func (h *InvoiceHandler) GetInvoiceByID(w http.ResponseWriter, r *http.Request) 
 
 type ListInvoicesQuery struct {
 	lib.FilterQueryInput
-	PayerType     *string  `json:"payer_type"      query:"payer_type"`
-	PayerClientID *string  `json:"payer_client_id" query:"payer_client_id"`
-	PayerTenantID *string  `json:"payer_tenant_id" query:"payer_tenant_id"`
-	PayeeType     *string  `json:"payee_type"      query:"payee_type"`
-	PayeeClientID *string  `json:"payee_client_id" query:"payee_client_id"`
-	ContextType   *string  `json:"context_type"    query:"context_type"`
-	Status        *string  `json:"status"          query:"status"`
-	Active        *bool    `json:"active"          query:"active"          description:"Filter invoices by active status. true for active invoices, false for VOID invoices"`
-	IDs           []string `json:"ids"                                     description:"List of property block IDs to filter by"                                             validate:"omitempty,dive,uuid4" example:"a8098c1a-f86e-11da-bd1a-00112444be1e" collectionFormat:"multi"`
-	PropertyID    *string  `json:"property_id"     query:"property_id"     description:"Filter invoices by property ID (resolved via context)"                               validate:"omitempty,uuid4"`
+	PayerType     *string `json:"payer_type"      query:"payer_type"`
+	PayerClientID *string `json:"payer_client_id" query:"payer_client_id"`
+	PayerTenantID *string `json:"payer_tenant_id" query:"payer_tenant_id"`
+	PayeeType     *string `json:"payee_type"      query:"payee_type"`
+	PayeeClientID *string `json:"payee_client_id" query:"payee_client_id"`
+	ContextType   *string `json:"context_type"    query:"context_type"`
+	Status        *string `json:"status"          query:"status"`
+	Active        *bool   `json:"active"          query:"active"          description:"Filter invoices by active status. true for active invoices, false for VOID invoices"`
+	PropertyID    *string `json:"property_id"     query:"property_id"     description:"Filter invoices by property ID (resolved via context)"                               validate:"omitempty,uuid4"`
 }
 
 // ListInvoices godoc
@@ -198,7 +197,6 @@ func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 		PayeeClientID: lib.NullOrString(r.URL.Query().Get("payee_client_id")),
 		ContextType:   lib.NullOrString(r.URL.Query().Get("context_type")),
 		Status:        lib.NullOrString(r.URL.Query().Get("status")),
-		IDs:           lib.NullOrStringArray(r.URL.Query()["ids"]),
 		Active:        lib.NullOrBool(r.URL.Query().Get("active")),
 		PropertyID:    lib.NullOrString(r.URL.Query().Get("property_id")),
 	}

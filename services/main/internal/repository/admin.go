@@ -12,8 +12,8 @@ type AdminRepository interface {
 	GetByEmail(context context.Context, email string) (*models.Admin, error)
 	GetByID(context context.Context, id string) (*models.Admin, error)
 	Create(context context.Context, admin *models.Admin) error
-	List(context context.Context, filterQuery lib.FilterQuery, filters ListAdminsFilter) (*[]models.Admin, error)
-	Count(context context.Context, filterQuery lib.FilterQuery, filters ListAdminsFilter) (int64, error)
+	List(context context.Context, filterQuery lib.FilterQuery) (*[]models.Admin, error)
+	Count(context context.Context, filterQuery lib.FilterQuery) (int64, error)
 }
 
 type adminRepository struct {
@@ -47,20 +47,15 @@ func (r *adminRepository) Create(ctx context.Context, admin *models.Admin) error
 	return r.DB.WithContext(ctx).Create(admin).Error
 }
 
-type ListAdminsFilter struct {
-	IDs *[]string
-}
-
 func (r *adminRepository) List(
 	ctx context.Context,
 	filterQuery lib.FilterQuery,
-	filters ListAdminsFilter,
 ) (*[]models.Admin, error) {
 	var admins []models.Admin
 
 	db := r.DB.WithContext(ctx).
 		Scopes(
-			IDsFilterScope("admins", filters.IDs),
+			IDsFilterScope("admins", filterQuery.IDs),
 			DateRangeScope("admins", filterQuery.DateRange),
 			SearchScope("admins", filterQuery.Search),
 
@@ -86,7 +81,6 @@ func (r *adminRepository) List(
 func (r *adminRepository) Count(
 	ctx context.Context,
 	filterQuery lib.FilterQuery,
-	filters ListAdminsFilter,
 ) (int64, error) {
 	var count int64
 
@@ -94,7 +88,7 @@ func (r *adminRepository) Count(
 		WithContext(ctx).
 		Model(&models.Admin{}).
 		Scopes(
-			IDsFilterScope("admins", filters.IDs),
+			IDsFilterScope("admins", filterQuery.IDs),
 			DateRangeScope("admins", filterQuery.DateRange),
 			SearchScope("admins", filterQuery.Search),
 		).

@@ -229,8 +229,7 @@ func (h *LeaseChecklistHandler) DeleteLeaseChecklist(w http.ResponseWriter, r *h
 
 type ListLeaseChecklistsQuery struct {
 	lib.FilterQueryInput
-	Type *string  `json:"type,omitempty" validate:"omitempty,oneof=CHECK_IN CHECK_OUT ROUTINE" example:"CHECK_IN"                             description:"Lease checklist type"`
-	IDs  []string `json:"ids"            validate:"omitempty,dive,uuid4"                       example:"a8098c1a-f86e-11da-bd1a-00112444be1e" description:"List of lease checklist IDs to filter by" collectionFormat:"multi"`
+	Type *string `json:"type,omitempty" validate:"omitempty,oneof=CHECK_IN CHECK_OUT ROUTINE" example:"CHECK_IN" description:"Lease checklist type"`
 }
 
 // ListLeaseChecklists godoc
@@ -265,7 +264,6 @@ func (h *LeaseChecklistHandler) ListLeaseChecklists(w http.ResponseWriter, r *ht
 		FilterQuery: *filterQuery,
 		LeaseId:     leaseId,
 		Type:        lib.NullOrString(r.URL.Query().Get("type")),
-		IDs:         lib.NullOrStringArray(r.URL.Query()["ids"]),
 	}
 
 	leaseChecklists, leaseChecklistsErr := h.service.ListLeaseChecklists(r.Context(), input)

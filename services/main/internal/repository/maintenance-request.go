@@ -137,6 +137,7 @@ func (r *maintenanceRequestRepository) List(
 
 	db := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
 		Scopes(
+			IDsFilterScope("maintenance_requests", filterQuery.IDs),
 			DateRangeScope("maintenance_requests", filterQuery.DateRange),
 			SearchScope("maintenance_requests", filterQuery.Search),
 			mrClientIDScope(filters.ClientID),

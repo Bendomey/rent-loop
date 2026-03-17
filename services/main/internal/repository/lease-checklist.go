@@ -84,7 +84,6 @@ func (r *leaseChecklistRepository) Delete(ctx context.Context, query DeleteLease
 
 type ListLeaseChecklistsFilter struct {
 	lib.FilterQuery
-	IDs     *[]string
 	LeaseId string
 	Type    *string
 }
