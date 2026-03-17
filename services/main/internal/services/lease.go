@@ -488,7 +488,8 @@ func (s *leaseService) GenerateLeaseRentInvoice(ctx context.Context, leaseID str
 
 	label := lib.RentInvoiceLabel(*lease.PaymentFrequency, *lease.NextBillingDate)
 	grace := lib.RentInvoiceGracePeriod(*lease.PaymentFrequency)
-	dueDate := lease.NextBillingDate.Add(grace)
+	nextBillingDate := *lease.NextBillingDate
+	dueDate := nextBillingDate.Add(grace)
 
 	leaseIDStr := lease.ID.String()
 	clientID := lease.Unit.Property.ClientID

@@ -14,6 +14,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -492,17 +493,26 @@ func (s *paymentService) VerifyOfflinePayment(
 			})
 		}
 
-		go s.appCtx.Clients.GatekeeperAPI.SendSMS(context.Background(), gatekeeper.SendSMSInput{
-			Recipient: tenant.Phone,
-			Message:   message,
-		})
+		go func() {
+			if err := s.appCtx.Clients.GatekeeperAPI.SendSMS(context.Background(), gatekeeper.SendSMSInput{
+				Recipient: tenant.Phone,
+				Message:   message,
+			}); err != nil {
+				logrus.Errorf(
+					"failed to send invoice paid SMS for invoice %s to tenant %s: %v",
+					payment.Invoice.Code,
+					tenant.ID.String(),
+					err,
+				)
+			}
+		}()
 
 		if tenant.TenantAccount != nil {
 			tenantAccountID := tenant.TenantAccount.ID.String()
 			invoiceID := payment.Invoice.ID.String()
 			templatedMessage := lib.ApplyGlobalVariableTemplate(s.appCtx.Config, message)
 			go func() {
-				_ = s.notificationService.SendToTenantAccount(
+				if err := s.notificationService.SendToTenantAccount(
 					context.Background(),
 					tenantAccountID,
 					lib.INVOICE_PAID_SUBJECT,
@@ -512,7 +522,14 @@ func (s *paymentService) VerifyOfflinePayment(
 						"invoice_id":   invoiceID,
 						"invoice_code": payment.Invoice.Code,
 					},
-				)
+				); err != nil {
+					logrus.Errorf(
+						"failed to send tenant account notification for invoice %s to tenant account %s: %v",
+						payment.Invoice.Code,
+						tenantAccountID,
+						err,
+					)
+				}
 			}()
 		}
 	}
