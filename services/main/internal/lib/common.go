@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 
 	"gorm.io/datatypes"
@@ -240,7 +241,7 @@ func PesewasToCedis(pesewas int64) float64 {
 
 // CedisToPesewas converts a cedis float to an integer pesewas amount (e.g. 100.50 → 10050).
 func CedisToPesewas(cedis float64) int64 {
-	return int64(cedis * 100)
+	return int64(math.Round(cedis * 100))
 }
 
 // FormatAmount formats a float64 amount to 2 decimal places (e.g. 100.5 → "100.50").

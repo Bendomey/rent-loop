@@ -64,20 +64,27 @@ func handleInvoiceReminder(
 				continue
 			}
 
-			hoursUntilDue := time.Until(*invoice.DueDate).Hours()
+			due := invoice.DueDate
+			dueLoc := due.Location()
+			now := time.Now().In(dueLoc)
+			// Normalize to calendar dates (start of day) in the due date's location.
+			nowDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, dueLoc)
+			dueDate := time.Date(due.Year(), due.Month(), due.Day(), 0, 0, 0, 0, dueLoc)
+			daysUntilDue := int(dueDate.Sub(nowDate).Hours() / 24)
+
 			var reminderKey string
 			var subject, bodyTemplate string
 
-			if hoursUntilDue > 0 && hoursUntilDue <= 24 {
-				// Pre-due: due within the next 24 hours
+			if daysUntilDue == 1 {
+				// Pre-due: due tomorrow (next calendar day)
 				if !slices.Contains(invoice.RemindersSent, "pre_due_1d") {
 					reminderKey = "pre_due_1d"
 					subject = lib.INVOICE_PRE_DUE_1D_SUBJECT
 					bodyTemplate = lib.INVOICE_PRE_DUE_1D_BODY
 				}
-			} else if hoursUntilDue < 0 {
-				// Overdue: find highest applicable unsent threshold
-				daysPastDue := int(-hoursUntilDue / 24)
+			} else if daysUntilDue < 0 {
+				// Overdue: find highest applicable unsent threshold based on full calendar days past due
+				daysPastDue := -daysUntilDue
 				for _, threshold := range overdueThresholds {
 					if daysPastDue >= threshold.days && !slices.Contains(invoice.RemindersSent, threshold.key) {
 						reminderKey = threshold.key
@@ -103,7 +110,6 @@ func handleInvoiceReminder(
 			if invoice.ContextLease != nil {
 				unitName = invoice.ContextLease.Unit.Name
 			}
-			dueDate := invoice.DueDate.Format("2 Jan 2006")
 
 			message := strings.NewReplacer(
 				"{{tenant_name}}", tenant.FirstName,
@@ -111,39 +117,64 @@ func handleInvoiceReminder(
 				"{{unit_name}}", unitName,
 				"{{currency}}", invoice.Currency,
 				"{{amount}}", lib.FormatAmount(lib.PesewasToCedis(int64(invoice.TotalAmount))),
-				"{{due_date}}", dueDate,
+				"{{due_date}}", invoice.DueDate.Format("2 Jan 2006"),
 			).Replace(bodyTemplate)
 
+			channelSucceeded := false
+
 			if tenant.Email != nil {
-				go pkg.SendEmail(appCtx.Config, pkg.SendEmailInput{
+				if err := pkg.SendEmail(appCtx.Config, pkg.SendEmailInput{
 					Recipient: *tenant.Email,
 					Subject:   subject,
 					TextBody:  message,
-				})
+				}); err != nil {
+					log.WithError(err).
+						WithField("invoice_id", invoice.ID.String()).
+						Error("[Cron] failed to send invoice reminder email")
+				} else {
+					channelSucceeded = true
+				}
 			}
 
-			go appCtx.Clients.GatekeeperAPI.SendSMS(context.Background(), gatekeeper.SendSMSInput{
+			if err := appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
 				Recipient: tenant.Phone,
 				Message:   message,
-			})
+			}); err != nil {
+				log.WithError(err).
+					WithField("invoice_id", invoice.ID.String()).
+					Error("[Cron] failed to send invoice reminder SMS")
+			} else {
+				channelSucceeded = true
+			}
 
 			if tenant.TenantAccount != nil {
 				invoiceID := invoice.ID.String()
 				tenantAccountID := tenant.TenantAccount.ID.String()
-				go func() {
-					_ = notificationSvc.SendToTenantAccount(
-						context.Background(),
-						tenantAccountID,
-						subject,
-						message,
-						map[string]string{
-							"type":         "INVOICE_REMINDER",
-							"invoice_id":   invoiceID,
-							"invoice_code": invoice.Code,
-							"reminder_key": reminderKey,
-						},
-					)
-				}()
+				processedMessage := lib.ApplyGlobalVariableTemplate(appCtx.Config, message)
+				if err := notificationSvc.SendToTenantAccount(
+					ctx,
+					tenantAccountID,
+					subject,
+					processedMessage,
+					map[string]string{
+						"type":         "INVOICE_REMINDER",
+						"invoice_id":   invoiceID,
+						"invoice_code": invoice.Code,
+						"reminder_key": reminderKey,
+					},
+				); err != nil {
+					log.WithError(err).
+						WithField("invoice_id", invoice.ID.String()).
+						Error("[Cron] failed to send invoice reminder notification")
+				} else {
+					channelSucceeded = true
+				}
+			}
+
+			// Only mark reminder as sent if at least one channel succeeded
+			if !channelSucceeded {
+				failCount++
+				continue
 			}
 
 			// Mark reminder as sent

@@ -1,10 +1,10 @@
 ---
 id: RENTL-23
 title: Invoice Payment Reminder Notifications via Cron
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-03-11 18:31'
-updated_date: '2026-03-17 13:09'
+updated_date: '2026-03-17 13:53'
 labels:
   - backend
   - invoicing

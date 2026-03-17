@@ -500,12 +500,13 @@ func (s *paymentService) VerifyOfflinePayment(
 		if tenant.TenantAccount != nil {
 			tenantAccountID := tenant.TenantAccount.ID.String()
 			invoiceID := payment.Invoice.ID.String()
+			templatedMessage := lib.ApplyGlobalVariableTemplate(s.appCtx.Config, message)
 			go func() {
 				_ = s.notificationService.SendToTenantAccount(
 					context.Background(),
 					tenantAccountID,
 					lib.INVOICE_PAID_SUBJECT,
-					message,
+					templatedMessage,
 					map[string]string{
 						"type":         "INVOICE_PAID",
 						"invoice_id":   invoiceID,
