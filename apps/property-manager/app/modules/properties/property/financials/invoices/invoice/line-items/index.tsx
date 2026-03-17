@@ -47,7 +47,7 @@ export function PropertyFinancialsPaymentLineItemsModule({
 				cell: ({ row }) => {
 					return (
 						<div className="">
-							<span className="text-muted-foreground truncate text-xs font-bold">
+							<span className="text-muted-foreground truncate text-xs font-bold dark:text-white">
 								{row.original.label}
 							</span>
 						</div>
@@ -59,7 +59,7 @@ export function PropertyFinancialsPaymentLineItemsModule({
 				accessorKey: 'unit_amount',
 				header: 'Unit Amount x Quantity',
 				cell: ({ row }) => (
-					<span className="truncate text-xs font-semibold text-zinc-600">
+					<span className="truncate text-xs font-semibold text-zinc-600 dark:text-white">
 						{formatAmount(convertPesewasToCedis(row.original.unit_amount))} x{' '}
 						{row.original.quantity}
 					</span>
@@ -69,7 +69,7 @@ export function PropertyFinancialsPaymentLineItemsModule({
 				accessorKey: 'total_amount',
 				header: 'Total Amount',
 				cell: ({ row }) => (
-					<span className="truncate text-xs font-semibold text-zinc-800">
+					<span className="truncate text-xs font-semibold text-zinc-800 dark:text-white">
 						{formatAmount(convertPesewasToCedis(row.original.total_amount)) ??
 							'N/A'}
 					</span>
@@ -80,7 +80,7 @@ export function PropertyFinancialsPaymentLineItemsModule({
 				header: 'Category',
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
-						<span className="truncate text-xs text-zinc-600">
+						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
 							{getValue<string>()}
 						</span>
 					</Badge>
@@ -92,7 +92,7 @@ export function PropertyFinancialsPaymentLineItemsModule({
 				header: 'Payment Date',
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
-						<span className="truncate text-xs text-zinc-600">
+						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
 							{localizedDayjs(getValue<Date>()).format('DD/MM/YYYY hh:mm a')}
 						</span>
 					</div>

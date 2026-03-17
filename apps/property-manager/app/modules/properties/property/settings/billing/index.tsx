@@ -27,7 +27,9 @@ export function PropertyBillingSettingsModule() {
 			{
 				id: 'drag',
 				header: () => null,
-				cell: () => <FileText className="size-5 text-zinc-500" />,
+				cell: () => (
+					<FileText className="size-5 text-zinc-500 dark:text-white" />
+				),
 			},
 			{
 				accessorKey: 'created_at',
@@ -35,7 +37,7 @@ export function PropertyBillingSettingsModule() {
 				cell: ({ getValue }) => {
 					return (
 						<div className="min-w-32">
-							<span className="truncate text-xs text-zinc-600">
+							<span className="truncate text-xs text-zinc-600 dark:text-white">
 								{dayjs(getValue<Date>()).format('MMMM, YYYY')}
 							</span>
 						</div>
@@ -64,9 +66,20 @@ export function PropertyBillingSettingsModule() {
 				accessorKey: 'amount',
 				header: 'Amount',
 				cell: ({ getValue }) => (
-					<span className="truncate text-xs text-zinc-600">
+					<span className="truncate text-xs text-zinc-600 dark:text-white">
 						{formatAmount(convertPesewasToCedis(getValue<number>()))}
 					</span>
+				),
+			},
+			{
+				accessorKey: 'created_at',
+				header: 'Created On',
+				cell: ({ getValue }) => (
+					<div className="min-w-32">
+						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
+							{dayjs(getValue<Date>()).format('DD/MM/YYYY hh:mm a')}
+						</span>
+					</div>
 				),
 			},
 			{

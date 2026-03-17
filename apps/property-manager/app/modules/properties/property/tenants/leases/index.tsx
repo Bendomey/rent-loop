@@ -92,7 +92,7 @@ export function PropertyTenantLeasesModule() {
 							to={`/properties/${propertyId}/tenants/leases/${row.original.id}`}
 							aria-label={`View lease ${row.original.code}`}
 						>
-							<span className="truncate text-xs text-blue-600 hover:underline">
+							<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-400">
 								{row.original.code}
 							</span>
 						</Link>
@@ -110,7 +110,7 @@ export function PropertyTenantLeasesModule() {
 								to={`/properties/${propertyId}/tenants/all/${tenant?.id}`}
 								aria-label={`View tenant ${tenant?.first_name}`}
 							>
-								<span className="truncate text-xs text-blue-600 hover:underline">
+								<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-400">
 									{tenant ? `${tenant.first_name} ${tenant.last_name}` : '—'}
 								</span>
 							</Link>
@@ -130,7 +130,7 @@ export function PropertyTenantLeasesModule() {
 								to={`/properties/${propertyId}/assets/units/${unit?.id}`}
 								aria-label={`View unit ${unit?.name}`}
 							>
-								<span className="truncate text-xs text-blue-600 hover:underline">
+								<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-400">
 									{unit?.name ?? '—'}
 								</span>
 							</Link>
@@ -166,7 +166,7 @@ export function PropertyTenantLeasesModule() {
 				accessorKey: 'stay_duration',
 				header: 'Duration',
 				cell: ({ row }) => (
-					<span className="truncate text-xs text-zinc-600">
+					<span className="truncate text-xs text-zinc-600 dark:text-white">
 						{row.original.stay_duration}{' '}
 						{getPaymentFrequencyPeriodLabel(
 							row.original.stay_duration_frequency,
@@ -180,7 +180,7 @@ export function PropertyTenantLeasesModule() {
 				header: 'Created On',
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
-						<span className="truncate text-xs text-zinc-600">
+						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
 							{localizedDayjs(getValue<Date>()).format('DD/MM/YYYY hh:mm a')}
 						</span>
 					</div>

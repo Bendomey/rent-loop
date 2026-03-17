@@ -52,7 +52,7 @@ export function PropertyAssetUnitLeasesModule() {
 							to={`/properties/${propertyId}/tenants/leases/${row.original.id}`}
 							aria-label={`View lease ${row.original.code}`}
 						>
-							<span className="truncate text-xs text-blue-600 hover:underline">
+							<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-500">
 								{row.original.code}
 							</span>
 						</Link>
@@ -70,7 +70,7 @@ export function PropertyAssetUnitLeasesModule() {
 								to={`/properties/${propertyId}/tenants/all/${tenant?.id}`}
 								aria-label={`View tenant ${tenant?.first_name}`}
 							>
-								<span className="truncate text-xs text-blue-600 hover:underline">
+								<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-500">
 									{tenant ? `${tenant.first_name} ${tenant.last_name}` : '—'}
 								</span>
 							</Link>
@@ -107,7 +107,7 @@ export function PropertyAssetUnitLeasesModule() {
 				accessorKey: 'stay_duration',
 				header: 'Duration',
 				cell: ({ row }) => (
-					<span className="truncate text-xs text-zinc-600">
+					<span className="truncate text-xs text-zinc-600 dark:text-white">
 						{row.original.stay_duration}{' '}
 						{getPaymentFrequencyPeriodLabel(
 							row.original.stay_duration_frequency,
@@ -121,7 +121,7 @@ export function PropertyAssetUnitLeasesModule() {
 				header: 'Created On',
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
-						<span className="truncate text-xs text-zinc-600">
+						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
 							{localizedDayjs(getValue<Date>()).format('LLL')}
 						</span>
 					</div>

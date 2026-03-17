@@ -193,7 +193,7 @@ export function TenantPaymentsModule() {
 								to={`/properties/${clientUserProperty?.property_id}/financials/payments/${row.original.id}`}
 								aria-label={`View details for application`}
 							>
-								<span className="truncate text-xs text-blue-600 hover:underline">
+								<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-400">
 									{row.original.unit.name}
 								</span>
 							</Link>
@@ -206,7 +206,7 @@ export function TenantPaymentsModule() {
 				accessorKey: 'amount',
 				header: 'Amount',
 				cell: ({ row }) => (
-					<span className="truncate text-xs font-semibold text-zinc-800">
+					<span className="truncate text-xs font-semibold text-zinc-800 dark:text-white">
 						{formatAmount(row.original.amount) ?? 'N/A'}
 					</span>
 				),
@@ -215,8 +215,8 @@ export function TenantPaymentsModule() {
 				accessorKey: 'payment_method',
 				header: 'Payment Method',
 				cell: ({ getValue }) => (
-					<Badge variant="outline" className="text-muted-foreground px-1.5">
-						<span className="truncate text-xs text-zinc-600">
+					<Badge variant="outline" className="px-1.5">
+						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
 							{getPaymentMethodLabel(getValue<Payment['payment_method']>())}
 						</span>
 					</Badge>
@@ -226,7 +226,7 @@ export function TenantPaymentsModule() {
 				accessorKey: 'reference',
 				header: 'Reference',
 				cell: ({ getValue }) => (
-					<span className="truncate text-xs text-zinc-600">
+					<span className="truncate text-xs text-zinc-600 dark:text-white">
 						{getValue<string>() ?? 'N/A'}
 					</span>
 				),
@@ -256,7 +256,7 @@ export function TenantPaymentsModule() {
 				header: 'Payment Date',
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
-						<span className="truncate text-xs text-zinc-600">
+						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
 							{localizedDayjs(getValue<Date>()).format('DD/MM/YYYY hh:mm a')}
 						</span>
 					</div>

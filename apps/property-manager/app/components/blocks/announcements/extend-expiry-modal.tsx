@@ -3,7 +3,7 @@ import type { Dispatch, SetStateAction } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { useExtendAnnouncementExpiry } from '~/api/announcements'
-import { DatePickerInput } from '~/components/date-picker-input'
+import { DateTimePickerInput } from '~/components/date-time-picker-input'
 import {
 	AlertDialog,
 	AlertDialogCancel,
@@ -18,16 +18,12 @@ import { Spinner } from '~/components/ui/spinner'
 import { QUERY_KEYS } from '~/lib/constants'
 
 interface Props {
-	announcementId: string | null
+	announcement: Announcement | null
 	opened: boolean
 	setOpened: Dispatch<SetStateAction<boolean>>
 }
 
-export function ExtendExpiryModal({
-	announcementId,
-	opened,
-	setOpened,
-}: Props) {
+export function ExtendExpiryModal({ announcement, opened, setOpened }: Props) {
 	const queryClient = useQueryClient()
 	const [expiresAt, setExpiresAt] = useState<Date | undefined>(undefined)
 	const { mutate, isPending } = useExtendAnnouncementExpiry()
@@ -38,9 +34,9 @@ export function ExtendExpiryModal({
 	}
 
 	const handleSubmit = () => {
-		if (!announcementId || !expiresAt) return
+		if (!announcement || !expiresAt) return
 		mutate(
-			{ id: announcementId, expires_at: expiresAt.toISOString() },
+			{ id: announcement.id, expires_at: expiresAt.toISOString() },
 			{
 				onError: () => toast.error('Failed to extend expiry. Try again later.'),
 				onSuccess: () => {
@@ -58,17 +54,19 @@ export function ExtendExpiryModal({
 		<AlertDialog open={opened} onOpenChange={setOpened}>
 			<AlertDialogContent className="sm:max-w-[425px]">
 				<AlertDialogHeader>
-					<AlertDialogTitle>Extend Expiry</AlertDialogTitle>
+					<AlertDialogTitle>
+						{announcement?.expires_at ? 'Extend Expiry' : 'Set Expiry'}
+					</AlertDialogTitle>
 					<AlertDialogDescription>
 						Set a new expiry date for this published announcement.
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<div className="py-2">
-					<DatePickerInput
+					<DateTimePickerInput
 						value={expiresAt}
 						onChange={setExpiresAt}
 						placeholder="Select new expiry date"
-						startMonth={new Date()}
+						minDate={new Date()}
 					/>
 				</div>
 				<AlertDialogFooter>

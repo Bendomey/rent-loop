@@ -17,6 +17,7 @@ import { FieldGroup } from '~/components/ui/field'
 import {
 	Form,
 	FormControl,
+	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -128,6 +129,9 @@ export function EditDraftModal({ announcement, opened, setOpened }: Props) {
 											<Input {...field} placeholder="Announcement title" />
 										</FormControl>
 										<FormMessage />
+										<FormDescription className="text-xs">
+											Maximum of 60 characters.
+										</FormDescription>
 									</FormItem>
 								)}
 							/>

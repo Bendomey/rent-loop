@@ -333,7 +333,7 @@ export function AnnouncementDetailModule() {
 									className="w-full"
 									onClick={() => setExtendExpiryOpen(true)}
 								>
-									Extend Expiry
+									{announcement.expires_at ? 'Extend Expiry' : 'Set Expiry'}
 								</Button>
 							)}
 						</div>
@@ -374,7 +374,7 @@ export function AnnouncementDetailModule() {
 			/>
 
 			<ExtendExpiryModal
-				announcementId={announcement.id}
+				announcement={announcement}
 				opened={extendExpiryOpen}
 				setOpened={setExtendExpiryOpen}
 			/>

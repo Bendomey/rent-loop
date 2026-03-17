@@ -99,7 +99,7 @@ export function PropertyTenantApplicationsModule() {
 								to={`/properties/${clientUserProperty?.property_id}/tenants/applications/${row.original.id}`}
 								aria-label={`View details for application`}
 							>
-								<span className="truncate text-xs text-blue-600 hover:underline">
+								<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-500">
 									{row.original.code}
 								</span>
 							</Link>
@@ -113,10 +113,10 @@ export function PropertyTenantApplicationsModule() {
 				header: 'Contact',
 				cell: ({ row }) => (
 					<div className="flex min-w-32 flex-col items-start gap-1">
-						<span className="truncate text-xs text-zinc-600">
+						<span className="truncate text-xs text-zinc-600 dark:text-white">
 							{row.original.email}
 						</span>
-						<span className="truncate text-xs text-zinc-600">
+						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
 							{row.original.phone}
 						</span>
 					</div>
@@ -130,7 +130,7 @@ export function PropertyTenantApplicationsModule() {
 						to={`/properties/${clientUserProperty?.property_id}/assets/units/${row.original.desired_unit_id}`}
 						aria-label={`View details for unit`}
 					>
-						<span className="truncate text-xs text-blue-600 hover:underline">
+						<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-500">
 							{getValue<string>()}
 						</span>
 					</Link>
@@ -161,7 +161,7 @@ export function PropertyTenantApplicationsModule() {
 				header: 'Created On',
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
-						<span className="truncate text-xs text-zinc-600">
+						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
 							{localizedDayjs(getValue<Date>()).format('LLLL')}
 						</span>
 					</div>

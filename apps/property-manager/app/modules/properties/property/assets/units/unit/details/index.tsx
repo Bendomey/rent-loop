@@ -28,7 +28,7 @@ export function PropertyAssetUnitDetailsModule() {
 					<CardTitle>Description</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<TypographyP className="!mt-0 text-sm text-zinc-700">
+					<TypographyP className="!mt-0 text-sm text-zinc-700 dark:text-zinc-400">
 						{unit.description ?? 'No description provided.'}
 					</TypographyP>
 				</CardContent>

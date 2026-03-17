@@ -313,7 +313,7 @@ export function NewAnnouncementModule() {
 
 				<Separator className="my-8" />
 
-				<div className="mb-10 flex items-center justify-between">
+				<div className="flex items-center justify-between pb-10">
 					<div className="space-x-2">
 						<Button
 							type="submit"

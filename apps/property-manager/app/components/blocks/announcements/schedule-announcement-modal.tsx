@@ -3,7 +3,7 @@ import type { Dispatch, SetStateAction } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { useScheduleAnnouncement } from '~/api/announcements'
-import { DatePickerInput } from '~/components/date-picker-input'
+import { DateTimePickerInput } from '~/components/date-time-picker-input'
 import {
 	AlertDialog,
 	AlertDialogCancel,
@@ -65,11 +65,11 @@ export function ScheduleAnnouncementModal({
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<div className="py-2">
-					<DatePickerInput
+					<DateTimePickerInput
 						value={scheduledAt}
 						onChange={setScheduledAt}
 						placeholder="Select publish date"
-						startMonth={new Date()}
+						minDate={new Date()}
 					/>
 				</div>
 				<AlertDialogFooter>

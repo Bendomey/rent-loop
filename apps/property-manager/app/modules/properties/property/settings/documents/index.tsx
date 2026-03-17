@@ -87,7 +87,7 @@ export function PropertyDocumentsSettingsModule() {
 					return (
 						<Badge
 							variant="outline"
-							className={`flex h-9 w-9 flex-col bg-blue-100 p-0.5`}
+							className={`flex h-9 w-9 flex-col bg-blue-100 p-0.5 dark:bg-blue-50`}
 						>
 							<FileText className={`h-full w-full text-blue-600`} />
 							<span className="text-[7px] font-bold text-black">DOCX</span>
@@ -103,11 +103,11 @@ export function PropertyDocumentsSettingsModule() {
 						<Link
 							to={`/properties/${property_id}/settings/documents/${row.original.id}`}
 						>
-							<span className="truncate text-xs text-blue-600 hover:underline">
+							<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-400">
 								{row.original.title}
 							</span>
 						</Link>
-						<span className="truncate text-xs text-zinc-600">
+						<span className="truncate text-xs text-zinc-600 dark:text-white">
 							Characters count: {row.original.size}
 						</span>
 					</div>
@@ -126,7 +126,7 @@ export function PropertyDocumentsSettingsModule() {
 									{getNameInitials(safeString(row.original.created_by?.name))}
 								</AvatarFallback>
 							</Avatar>
-							<span className="truncate pl-1.5 text-xs text-zinc-600">
+							<span className="truncate pl-1.5 text-xs text-zinc-600 dark:text-white">
 								{safeString(row.original.created_by?.name)}
 							</span>
 						</div>
@@ -139,7 +139,7 @@ export function PropertyDocumentsSettingsModule() {
 				header: 'Last Updated',
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
-						<span className="truncate text-xs text-zinc-600">
+						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
 							{localizedDayjs(getValue<Date>()).format('DD/MM/YYYY hh:mm a')}
 						</span>
 					</div>

@@ -82,7 +82,7 @@ export function NavMain({
 											tooltip={item.title}
 											className={
 												isActive
-													? 'text-primary-foreground hover:text-primary-foreground bg-rose-600 hover:bg-rose-700'
+													? 'text-primary-foreground hover:text-primary-foreground bg-rose-600 hover:bg-rose-700 dark:text-white dark:hover:bg-rose-700'
 													: ''
 											}
 										>
@@ -152,7 +152,7 @@ export function NavMain({
 							<SidebarMenuButton
 								className={
 									isActive
-										? 'text-primary-foreground hover:text-primary-foreground bg-rose-600 hover:bg-rose-700'
+										? 'text-primary-foreground hover:text-primary-foreground bg-rose-600 hover:bg-rose-700 dark:text-white dark:hover:bg-rose-700'
 										: ''
 								}
 								tooltip={item.title}

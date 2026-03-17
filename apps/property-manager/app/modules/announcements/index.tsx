@@ -17,7 +17,7 @@ function getStatusBadge(status: Announcement['status']) {
 	> = {
 		DRAFT: {
 			label: 'Draft',
-			className: 'bg-zinc-400 dark:bg-zinc-700 text-white',
+			className: 'bg-zinc-200 dark:bg-zinc-700 text-black dark:text-white',
 		},
 		SCHEDULED: {
 			label: 'Scheduled',
@@ -120,7 +120,7 @@ export function AnnouncementsModule() {
 	)
 
 	return (
-		<div className="mx-auto my-6 flex max-w-5xl flex-col gap-4 sm:gap-6">
+		<div className="mx-auto my-6 flex max-w-4xl flex-col gap-4 sm:gap-6">
 			<div className="flex flex-row items-center justify-between">
 				<div>
 					<TypographyH2>Announcements</TypographyH2>

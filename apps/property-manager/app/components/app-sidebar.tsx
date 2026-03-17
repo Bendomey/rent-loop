@@ -78,7 +78,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 					{sidebarState.open ? (
 						<>
 							<div className="flex flex-row items-end">
-								<span className="text-4xl font-extrabold text-rose-700">
+								<span className="text-4xl font-extrabold text-rose-700 dark:text-rose-500">
 									{APP_NAME.slice(0, 4)}
 								</span>
 								<span className="text-4xl font-extrabold">

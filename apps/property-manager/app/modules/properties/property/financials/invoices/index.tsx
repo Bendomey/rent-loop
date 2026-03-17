@@ -82,7 +82,7 @@ export function PropertyFinancialsPaymentsModule() {
 								to={`/properties/${clientUserProperty?.property_id}/financials/invoices/${row.original.id}`}
 								aria-label={`View details for application`}
 							>
-								<span className="truncate text-xs text-blue-600 hover:underline">
+								<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-500">
 									{row.original.code}
 								</span>
 							</Link>
@@ -95,7 +95,7 @@ export function PropertyFinancialsPaymentsModule() {
 				accessorKey: 'total_amount',
 				header: 'Amount',
 				cell: ({ row }) => (
-					<span className="truncate text-xs font-semibold text-zinc-800">
+					<span className="truncate text-xs font-semibold text-zinc-800 dark:text-white">
 						{formatAmount(convertPesewasToCedis(row.original.total_amount)) ??
 							'N/A'}
 					</span>
@@ -105,7 +105,7 @@ export function PropertyFinancialsPaymentsModule() {
 				accessorKey: 'context_type',
 				header: 'Type',
 				cell: ({ getValue }) => (
-					<span className="truncate text-xs text-zinc-600">
+					<span className="truncate text-xs text-zinc-600 dark:text-white">
 						{getInvoiceContextTypeLabel(getValue<Invoice['context_type']>())}
 					</span>
 				),
@@ -137,8 +137,8 @@ export function PropertyFinancialsPaymentsModule() {
 					const date = getValue<Date | null>()
 					return (
 						<div className="min-w-32">
-							<span className="truncate text-xs text-zinc-600">
-								{date ? localizedDayjs(date).format('DD/MM/YYYY hh:mm a') : '—'}
+							<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
+								{date ? localizedDayjs(date).format('LLL') : '—'}
 							</span>
 						</div>
 					)
@@ -149,8 +149,8 @@ export function PropertyFinancialsPaymentsModule() {
 				header: 'Created On',
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
-						<span className="truncate text-xs text-zinc-600">
-							{localizedDayjs(getValue<Date>()).format('DD/MM/YYYY hh:mm a')}
+						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
+							{localizedDayjs(getValue<Date>()).format('LLL')}
 						</span>
 					</div>
 				),

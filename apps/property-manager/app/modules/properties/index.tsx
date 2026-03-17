@@ -62,7 +62,7 @@ export function PropertiesModule() {
 							</Link>
 
 							<Badge variant="outline" className="text-muted-foreground px-1.5">
-								<span className="truncate text-xs text-zinc-600">
+								<span className="truncate text-xs text-zinc-600 dark:text-white">
 									{row.original.property?.type}
 								</span>
 							</Badge>
@@ -76,7 +76,7 @@ export function PropertiesModule() {
 				header: 'Address',
 				cell: ({ row }) => (
 					<div className="flex min-w-32 flex-col items-start gap-1">
-						<span className="truncate text-xs text-zinc-600">
+						<span className="truncate text-xs text-zinc-600 dark:text-white">
 							{row.original.property?.address}
 						</span>
 					</div>
@@ -108,7 +108,7 @@ export function PropertiesModule() {
 				header: 'Created On',
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
-						<span className="truncate text-xs text-zinc-600">
+						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
 							{localizedDayjs(getValue<Date>()).format('DD/MM/YYYY hh:mm a')}
 						</span>
 					</div>

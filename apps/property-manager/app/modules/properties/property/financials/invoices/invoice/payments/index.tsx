@@ -37,7 +37,7 @@ export function PropertyFinancialsPaymentItemsModule({
 				cell: ({ row }) => {
 					return (
 						<div className="">
-							<span className="text-muted-foreground truncate text-xs font-bold">
+							<span className="text-muted-foreground truncate text-xs font-bold dark:text-white">
 								{row.original.reference || 'N/A'}
 							</span>
 						</div>
@@ -49,7 +49,7 @@ export function PropertyFinancialsPaymentItemsModule({
 				accessorKey: 'amount',
 				header: 'Amount',
 				cell: ({ row }) => (
-					<span className="truncate text-xs font-semibold text-zinc-600">
+					<span className="truncate text-xs font-semibold text-zinc-600 dark:text-white">
 						{formatAmount(convertPesewasToCedis(row.original.amount))}
 					</span>
 				),
@@ -60,7 +60,10 @@ export function PropertyFinancialsPaymentItemsModule({
 				cell: ({ getValue }) => {
 					const status = getValue<Payment['status']>()
 					return (
-						<Badge variant="outline" className="text-muted-foreground px-1.5">
+						<Badge
+							variant="outline"
+							className="text-muted-foreground px-1.5 dark:text-zinc-400"
+						>
 							{status === 'PENDING' ? (
 								<Clock className="text-gray-500" />
 							) : status === 'SUCCESSFUL' ? (
@@ -79,8 +82,8 @@ export function PropertyFinancialsPaymentItemsModule({
 				accessorKey: 'provider',
 				header: 'Provider',
 				cell: ({ getValue }) => (
-					<Badge variant="outline" className="text-muted-foreground px-1.5">
-						<span className="truncate text-xs text-zinc-600">
+					<Badge variant="outline" className="px-1.5">
+						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
 							{getValue<string>()}
 						</span>
 					</Badge>
@@ -92,7 +95,7 @@ export function PropertyFinancialsPaymentItemsModule({
 				header: 'Payment Date',
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
-						<span className="truncate text-xs text-zinc-600">
+						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
 							{localizedDayjs(getValue<Date>()).format('DD/MM/YYYY hh:mm a')}
 						</span>
 					</div>
