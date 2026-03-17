@@ -45,7 +45,7 @@ const getPropertyAnnouncements = async (
 		const params = getQueryParams<FetchAnnouncementFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<Announcement>>
-		>(`/v1/properties/${propertyId}/announcements?${params.toString()}`)
+		>(`/v1/admin/properties/${propertyId}/announcements?${params.toString()}`)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -291,7 +291,7 @@ export const useExtendAnnouncementExpiry = () =>
 const getPropertyAnnouncement = async (propertyId: string, id: string) => {
 	try {
 		const response = await fetchClient<ApiResponse<Announcement>>(
-			`/v1/properties/${propertyId}/announcements/${id}`,
+			`/v1/admin/properties/${propertyId}/announcements/${id}`,
 		)
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -326,7 +326,7 @@ const createPropertyAnnouncement = async (
 	const { propertyId, ...body } = props
 	try {
 		const response = await fetchClient<ApiResponse<Announcement>>(
-			`/v1/properties/${propertyId}/announcements`,
+			`/v1/admin/properties/${propertyId}/announcements`,
 			{ method: 'POST', body: JSON.stringify(body) },
 		)
 		return response.parsedBody.data
@@ -352,7 +352,7 @@ const updatePropertyAnnouncement = async (props: {
 }) => {
 	try {
 		const response = await fetchClient<ApiResponse<Announcement>>(
-			`/v1/properties/${props.propertyId}/announcements/${props.id}`,
+			`/v1/admin/properties/${props.propertyId}/announcements/${props.id}`,
 			{ method: 'PATCH', body: JSON.stringify(props.data) },
 		)
 		return response.parsedBody.data
@@ -377,7 +377,7 @@ const deletePropertyAnnouncement = async (props: {
 }) => {
 	try {
 		await fetchClient(
-			`/v1/properties/${props.propertyId}/announcements/${props.id}`,
+			`/v1/admin/properties/${props.propertyId}/announcements/${props.id}`,
 			{ method: 'DELETE', body: JSON.stringify({}) },
 		)
 	} catch (error: unknown) {
@@ -401,7 +401,7 @@ const publishPropertyAnnouncement = async (props: {
 }) => {
 	try {
 		const response = await fetchClient<ApiResponse<Announcement>>(
-			`/v1/properties/${props.propertyId}/announcements/${props.id}/publish`,
+			`/v1/admin/properties/${props.propertyId}/announcements/${props.id}/publish`,
 			{ method: 'POST' },
 		)
 		return response.parsedBody.data
@@ -427,7 +427,7 @@ const schedulePropertyAnnouncement = async (props: {
 }) => {
 	try {
 		const response = await fetchClient<ApiResponse<Announcement>>(
-			`/v1/properties/${props.propertyId}/announcements/${props.id}/schedule`,
+			`/v1/admin/properties/${props.propertyId}/announcements/${props.id}/schedule`,
 			{
 				method: 'POST',
 				body: JSON.stringify({ scheduled_at: props.scheduled_at }),
@@ -455,7 +455,7 @@ const cancelScheduledPropertyAnnouncement = async (props: {
 }) => {
 	try {
 		await fetchClient(
-			`/v1/properties/${props.propertyId}/announcements/${props.id}/schedule`,
+			`/v1/admin/properties/${props.propertyId}/announcements/${props.id}/schedule`,
 			{ method: 'DELETE', body: JSON.stringify({}) },
 		)
 	} catch (error: unknown) {
@@ -480,7 +480,7 @@ const extendPropertyAnnouncementExpiry = async (props: {
 }) => {
 	try {
 		const response = await fetchClient<ApiResponse<Announcement>>(
-			`/v1/properties/${props.propertyId}/announcements/${props.id}/expiry`,
+			`/v1/admin/properties/${props.propertyId}/announcements/${props.id}/expiry`,
 			{
 				method: 'PATCH',
 				body: JSON.stringify({ expires_at: props.expires_at }),
