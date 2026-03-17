@@ -9,10 +9,6 @@
 		'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
-html,
-body {
-	@apply bg-white dark:bg-gray-950;
-}
 
 @theme inline {
 	--radius-sm: calc(var(--radius) - 4px);
@@ -125,6 +121,7 @@ body {
 	* {
 		@apply border-border outline-ring/50;
 	}
+	html,
 	body {
 		@apply bg-background text-foreground;
 	}

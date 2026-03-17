@@ -56,7 +56,7 @@ export function PropertiesModule() {
 								to={`/properties/${row.original.property?.id}`}
 								aria-label={`View details for property ${getValue<string>()}`}
 							>
-								<span className="truncate text-xs text-blue-600 hover:underline">
+								<span className="truncate text-xs text-blue-600 dark:text-blue-500 hover:underline">
 									{getValue<string>()}
 								</span>
 							</Link>
