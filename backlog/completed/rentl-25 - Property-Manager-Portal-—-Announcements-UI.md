@@ -1,10 +1,10 @@
 ---
 id: RENTL-25
 title: Property Manager Portal — Announcements UI
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-11 19:05'
-updated_date: '2026-03-11 19:05'
+updated_date: '2026-03-17 11:22'
 labels:
   - frontend
   - announcements
@@ -21,7 +21,7 @@ references:
   - app/lib/constants.ts
   - app/api/properties/index.ts
 priority: medium
-ordinal: 5000
+ordinal: 1000
 ---
 
 ## Description

@@ -1,9 +1,10 @@
 ---
 id: RENTL-28
 title: Push Notification Deep Linking — Navigate to Lease-Scoped Screens on Tap
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-12 08:02'
+updated_date: '2026-03-17 11:22'
 labels:
   - flutter
   - backend
@@ -12,6 +13,7 @@ labels:
 dependencies:
   - RENTL-24
 priority: medium
+ordinal: 1000
 ---
 
 ## Description
