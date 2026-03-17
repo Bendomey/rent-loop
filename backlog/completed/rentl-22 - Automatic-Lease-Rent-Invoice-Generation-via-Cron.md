@@ -1,10 +1,10 @@
 ---
 id: RENTL-22
 title: Automatic Lease Rent Invoice Generation via Cron
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-03-11 18:09'
-updated_date: '2026-03-17 11:25'
+updated_date: '2026-03-17 13:03'
 labels:
   - backend
   - invoicing
