@@ -32,7 +32,7 @@ export const getPropertyAnnouncementForServer = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<Announcement>>(
-			`${apiConfig.baseUrl}/v1/properties/${propertyId}/announcements/${id}`,
+			`${apiConfig.baseUrl}/v1/admin/properties/${propertyId}/announcements/${id}?populate=PropertyBlock`,
 			{ ...apiConfig },
 		)
 		return response.parsedBody.data

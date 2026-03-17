@@ -193,8 +193,8 @@ export function AnnouncementDetailModule() {
 					<CardContent className="space-y-4">
 						<MetaRow
 							icon={<Building2 className="size-4" />}
-							label="Property"
-							value={announcement.property?.name ?? 'All Properties'}
+							label="Audience"
+							value={'All tenants under this property owner'}
 						/>
 
 						<MetaRow

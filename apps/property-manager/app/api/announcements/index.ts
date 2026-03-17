@@ -291,7 +291,7 @@ export const useExtendAnnouncementExpiry = () =>
 const getPropertyAnnouncement = async (propertyId: string, id: string) => {
 	try {
 		const response = await fetchClient<ApiResponse<Announcement>>(
-			`/v1/admin/properties/${propertyId}/announcements/${id}`,
+			`/v1/admin/properties/${propertyId}/announcements/${id}?populate=PropertyBlock`,
 		)
 		return response.parsedBody.data
 	} catch (error: unknown) {

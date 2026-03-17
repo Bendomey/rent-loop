@@ -272,7 +272,7 @@ func (h *AnnouncementHandler) ListAnnouncements(w http.ResponseWriter, r *http.R
 	if pid := chi.URLParam(r, "property_id"); pid != "" {
 		propertyID = &pid
 	} else {
-		propertyID = lib.NullOrString(r.URL.Query().Get("property_id"))
+		propertyID = nil
 	}
 
 	input := repository.ListAnnouncementsFilter{
