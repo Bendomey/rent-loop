@@ -74,7 +74,7 @@ type TenantAnnouncementFilter struct {
 
 type ListAnnouncementsFilter struct {
 	ClientID     *string
-	PropertyID   *string
+	PropertyID   lib.Optional[string]
 	Status       *string
 	Type         *string
 	TenantFilter *TenantAnnouncementFilter
@@ -196,12 +196,17 @@ func announcementClientIDScope(clientID *string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func announcementPropertyIDScope(propertyID *string) func(db *gorm.DB) *gorm.DB {
+func announcementPropertyIDScope(propertyID lib.Optional[string]) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if propertyID == nil {
-			return db
+		if propertyID.IsSet {
+			if propertyID.Value == nil {
+				return db.Where("announcements.property_id IS NULL")
+			}
+
+			return db.Where("announcements.property_id = ?", *propertyID.Value)
 		}
-		return db.Where("announcements.property_id = ?", *propertyID)
+
+		return db
 	}
 }
 
