@@ -58,6 +58,7 @@ type MaintenanceRequestRepository interface {
 	) (int64, error)
 	UpdateComment(ctx context.Context, comment *models.MaintenanceRequestComment) error
 	DeleteComment(ctx context.Context, id string) error
+	CountByStatus(ctx context.Context, filters ListMaintenanceRequestsFilter) (map[string]int64, error)
 }
 
 type maintenanceRequestRepository struct {
@@ -218,6 +219,7 @@ func (r *maintenanceRequestRepository) ListActivityLogs(
 ) (*[]models.MaintenanceRequestActivityLog, error) {
 	var logs []models.MaintenanceRequestActivityLog
 	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Preload("PerformedByClientUser").
 		Scopes(
 			DateRangeScope("maintenance_request_activity_logs", filterQuery.DateRange),
 			SearchScope("maintenance_request_activity_logs", filterQuery.Search),
@@ -586,4 +588,35 @@ func mrCommentCreatedByScope(clientUserID *string) func(db *gorm.DB) *gorm.DB {
 		}
 		return db.Where("maintenance_request_comments.created_by_client_user_id = ?", *clientUserID)
 	}
+}
+
+func (r *maintenanceRequestRepository) CountByStatus(
+	ctx context.Context,
+	filters ListMaintenanceRequestsFilter,
+) (map[string]int64, error) {
+	type statusCount struct {
+		Status string
+		Count  int64
+	}
+	var results []statusCount
+	err := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Model(&models.MaintenanceRequest{}).
+		Select("status, count(*) as count").
+		Scopes(
+			mrClientIDScope(filters.ClientID),
+			mrPropertyIDScope(filters.PropertyID),
+			mrUnitIDScope(filters.UnitID),
+			mrLeaseIDScope(filters.LeaseID),
+			mrTenantScope(filters.TenantID),
+		).
+		Group("status").
+		Find(&results).Error
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[string]int64, len(results))
+	for _, sc := range results {
+		out[sc.Status] = sc.Count
+	}
+	return out, nil
 }

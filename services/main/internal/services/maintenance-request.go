@@ -79,6 +79,10 @@ type MaintenanceRequestService interface {
 		maintenanceRequestID string,
 		actorClientID string,
 	) (*models.Invoice, error)
+	GetMaintenanceRequestStats(
+		ctx context.Context,
+		filters repository.ListMaintenanceRequestsFilter,
+	) (map[string]int64, error)
 }
 
 type maintenanceRequestService struct {
@@ -1011,4 +1015,11 @@ func (s *maintenanceRequestService) GenerateExpenseInvoice(
 	}
 
 	return invoice, nil
+}
+
+func (s *maintenanceRequestService) GetMaintenanceRequestStats(
+	ctx context.Context,
+	filters repository.ListMaintenanceRequestsFilter,
+) (map[string]int64, error) {
+	return s.repo.CountByStatus(ctx, filters)
 }

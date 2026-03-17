@@ -11111,6 +11111,60 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/leases/{lease_id}/maintenance-requests/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the count of maintenance requests grouped by status for the given lease. Useful for displaying summary cards on the home screen.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MaintenanceRequests"
+                ],
+                "summary": "Get maintenance request stats (Tenant)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Counts per status",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.MaintenanceRequestStatsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/leases/{lease_id}/maintenance-requests/{maintenance_request_id}": {
             "get": {
                 "security": [
@@ -14685,8 +14739,14 @@ const docTemplate = `{
                         "$ref": "#/definitions/transformations.OutputMaintenanceActivityLog"
                     }
                 },
+                "assigned_manager": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
                 "assigned_manager_id": {
                     "type": "string"
+                },
+                "assigned_worker": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
                 },
                 "assigned_worker_id": {
                     "type": "string"
@@ -14712,8 +14772,14 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "created_by_client_user": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
                 "created_by_client_user_id": {
                     "type": "string"
+                },
+                "created_by_tenant": {
+                    "$ref": "#/definitions/transformations.OutputAdminTenant"
                 },
                 "created_by_tenant_id": {
                     "type": "string"
@@ -14869,6 +14935,31 @@ const docTemplate = `{
                     "type": "string",
                     "format": "date-time",
                     "example": "2023-01-01T00:00:00Z"
+                }
+            }
+        },
+        "transformations.MaintenanceRequestStatsResponse": {
+            "type": "object",
+            "properties": {
+                "canceled": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "in_progress": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "in_review": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "new": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "resolved": {
+                    "type": "integer",
+                    "example": 12
                 }
             }
         },

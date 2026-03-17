@@ -1802,8 +1802,12 @@ definitions:
         items:
           $ref: '#/definitions/transformations.OutputMaintenanceActivityLog'
         type: array
+      assigned_manager:
+        $ref: '#/definitions/transformations.OutputClientUser'
       assigned_manager_id:
         type: string
+      assigned_worker:
+        $ref: '#/definitions/transformations.OutputClientUser'
       assigned_worker_id:
         type: string
       attachments:
@@ -1820,8 +1824,12 @@ definitions:
         type: string
       created_at:
         type: string
+      created_by_client_user:
+        $ref: '#/definitions/transformations.OutputClientUser'
       created_by_client_user_id:
         type: string
+      created_by_tenant:
+        $ref: '#/definitions/transformations.OutputAdminTenant'
       created_by_tenant_id:
         type: string
       description:
@@ -1933,6 +1941,24 @@ definitions:
         example: "2023-01-01T00:00:00Z"
         format: date-time
         type: string
+    type: object
+  transformations.MaintenanceRequestStatsResponse:
+    properties:
+      canceled:
+        example: 0
+        type: integer
+      in_progress:
+        example: 2
+        type: integer
+      in_review:
+        example: 1
+        type: integer
+      new:
+        example: 3
+        type: integer
+      resolved:
+        example: 12
+        type: integer
     type: object
   transformations.OutputAdmin:
     properties:
@@ -10940,6 +10966,41 @@ paths:
       security:
       - BearerAuth: []
       summary: Get a single maintenance request (Tenant)
+      tags:
+      - MaintenanceRequests
+  /api/v1/leases/{lease_id}/maintenance-requests/stats:
+    get:
+      consumes:
+      - application/json
+      description: Returns the count of maintenance requests grouped by status for
+        the given lease. Useful for displaying summary cards on the home screen.
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Counts per status
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.MaintenanceRequestStatsResponse'
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get maintenance request stats (Tenant)
       tags:
       - MaintenanceRequests
   /api/v1/payments/offline:

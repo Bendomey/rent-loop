@@ -13,7 +13,9 @@ type AdminOutputMaintenanceRequest struct {
 	Unit                  AdminOutputUnit                `json:"unit,omitempty"`
 	LeaseID               *string                        `json:"lease_id,omitempty"`
 	CreatedByTenantID     *string                        `json:"created_by_tenant_id,omitempty"`
+	CreatedByTenant       *OutputAdminTenant             `json:"created_by_tenant,omitempty"`
 	CreatedByClientUserID *string                        `json:"created_by_client_user_id,omitempty"`
+	CreatedByClientUser   *OutputClientUser              `json:"created_by_client_user,omitempty"`
 	Title                 string                         `json:"title"`
 	Description           string                         `json:"description"`
 	Attachments           []string                       `json:"attachments"`
@@ -22,7 +24,9 @@ type AdminOutputMaintenanceRequest struct {
 	Status                string                         `json:"status"`
 	Visibility            string                         `json:"visibility"`
 	AssignedWorkerID      *string                        `json:"assigned_worker_id,omitempty"`
+	AssignedWorker        *OutputClientUser              `json:"assigned_worker,omitempty"`
 	AssignedManagerID     *string                        `json:"assigned_manager_id,omitempty"`
+	AssignedManager       *OutputClientUser              `json:"assigned_manager,omitempty"`
 	CancellationReason    *string                        `json:"cancellation_reason,omitempty"`
 	StartedAt             *time.Time                     `json:"started_at,omitempty"`
 	ReviewedAt            *time.Time                     `json:"reviewed_at,omitempty"`
@@ -62,7 +66,9 @@ func DBMaintenanceRequestToRest(mr *models.MaintenanceRequest) any {
 		"unit":                      DBUnitToRest(&mr.Unit),
 		"lease_id":                  mr.LeaseID,
 		"created_by_tenant_id":      mr.CreatedByTenantID,
+		"created_by_tenant":         DBTenantToRest(mr.CreatedByTenant),
 		"created_by_client_user_id": mr.CreatedByClientUserID,
+		"created_by_client_user":    DBClientUserToRest(mr.CreatedByClientUser),
 		"title":                     mr.Title,
 		"description":               mr.Description,
 		"attachments":               attachments,
@@ -72,6 +78,8 @@ func DBMaintenanceRequestToRest(mr *models.MaintenanceRequest) any {
 		"visibility":                mr.Visibility,
 		"assigned_worker_id":        mr.AssignedWorkerID,
 		"assigned_manager_id":       mr.AssignedManagerID,
+		"assigned_worker":           DBClientUserToRest(mr.AssignedWorker),
+		"assigned_manager":          DBClientUserToRest(mr.AssignedManager),
 		"started_at":                mr.StartedAt,
 		"reviewed_at":               mr.ReviewedAt,
 		"resolved_at":               mr.ResolvedAt,
@@ -170,6 +178,7 @@ func DBMaintenanceActivityLogToRest(log *models.MaintenanceRequestActivityLog) a
 		"action":                      log.Action,
 		"description":                 log.Description,
 		"performed_by_client_user_id": log.PerformedByClientUserID,
+		"performed_by_client_user":    DBClientUserToRest(log.PerformedByClientUser),
 		"performed_by_tenant_id":      log.PerformedByTenantID,
 		"metadata":                    log.Metadata,
 		"created_at":                  log.CreatedAt,
@@ -185,6 +194,16 @@ type OutputMaintenanceRequestComment struct {
 	CreatedByClientUser   OutputClientUser `json:"created_by_client_user,omitempty"`
 	CreatedAt             time.Time        `json:"created_at"`
 	UpdatedAt             time.Time        `json:"updated_at"`
+}
+
+// MaintenanceRequestStatsResponse is the response shape for the stats endpoint.
+// Each field holds the count of maintenance requests in that status.
+type MaintenanceRequestStatsResponse struct {
+	New        int64 `json:"new"         example:"3"  description:"Number of newly submitted requests awaiting action"`
+	InProgress int64 `json:"in_progress" example:"2"  description:"Number of requests currently being worked on"`
+	InReview   int64 `json:"in_review"   example:"1"  description:"Number of requests pending review or approval"`
+	Resolved   int64 `json:"resolved"    example:"12" description:"Number of fully resolved requests"`
+	Canceled   int64 `json:"canceled"    example:"0"  description:"Number of canceled requests"`
 }
 
 // DBMaintenanceRequestCommentToRest transforms a MaintenanceRequestComment to REST.

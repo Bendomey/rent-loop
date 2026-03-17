@@ -1047,3 +1047,50 @@ func (h *MaintenanceRequestHandler) TenantGet(w http.ResponseWriter, r *http.Req
 		"data": transformations.DBMaintenanceRequestToTenantRest(mr),
 	})
 }
+
+// TenantStats godoc
+//
+//	@Summary		Get maintenance request stats (Tenant)
+//	@Description	Returns the count of maintenance requests grouped by status for the given lease. Useful for displaying summary cards on the home screen.
+//	@Tags			MaintenanceRequests
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			lease_id	path		string															true	"Lease ID"
+//	@Success		200			{object}	object{data=transformations.MaintenanceRequestStatsResponse}	"Counts per status"
+//	@Failure		401			{object}	string															"Invalid or absent authentication token"
+//	@Failure		500			{object}	string															"An unexpected error occurred"
+//	@Router			/api/v1/leases/{lease_id}/maintenance-requests/stats [get]
+func (h *MaintenanceRequestHandler) TenantStats(w http.ResponseWriter, r *http.Request) {
+	tenantAccount, ok := lib.TenantAccountFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	account, err := h.tenantAccountService.GetMe(r.Context(), tenantAccount.ID)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	leaseID := chi.URLParam(r, "lease_id")
+	tenantID := account.TenantId
+	counts, err := h.service.GetMaintenanceRequestStats(r.Context(), repository.ListMaintenanceRequestsFilter{
+		LeaseID:  &leaseID,
+		TenantID: &tenantID,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	resp := transformations.MaintenanceRequestStatsResponse{
+		New:        counts["NEW"],
+		InProgress: counts["IN_PROGRESS"],
+		InReview:   counts["IN_REVIEW"],
+		Resolved:   counts["RESOLVED"],
+		Canceled:   counts["CANCELED"],
+	}
+	json.NewEncoder(w).Encode(map[string]any{"data": resp})
+}
