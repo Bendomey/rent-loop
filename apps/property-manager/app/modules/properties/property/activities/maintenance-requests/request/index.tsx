@@ -1,3 +1,4 @@
+import { Paperclip, X } from 'lucide-react'
 import { Pencil } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useLoaderData, useRevalidator } from 'react-router'
@@ -201,6 +202,65 @@ function InlineDescription({
 	)
 }
 
+function AttachmentsSection({ attachments }: { attachments: string[] }) {
+	const [lightbox, setLightbox] = useState<string | null>(null)
+
+	if (!attachments || attachments.length === 0) return null
+
+	return (
+		<>
+			<div className="flex flex-col gap-2">
+				<div className="flex items-center gap-1.5">
+					<Paperclip className="text-muted-foreground h-4 w-4" />
+					<TypographyH5 className="text-base">
+						Attachments{' '}
+						<span className="text-muted-foreground text-sm font-normal">
+							({attachments.length})
+						</span>
+					</TypographyH5>
+				</div>
+				<div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
+					{attachments.map((url) => (
+						<button
+							key={url}
+							type="button"
+							onClick={() => setLightbox(url)}
+							className="group border-border bg-muted relative aspect-square overflow-hidden rounded-lg border"
+						>
+							<img
+								src={url}
+								alt="attachment"
+								className="h-full w-full object-cover transition-opacity group-hover:opacity-80"
+							/>
+						</button>
+					))}
+				</div>
+			</div>
+
+			{lightbox && (
+				<div
+					className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+					onClick={() => setLightbox(null)}
+				>
+					<button
+						type="button"
+						className="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+						onClick={() => setLightbox(null)}
+					>
+						<X className="h-5 w-5" />
+					</button>
+					<img
+						src={lightbox}
+						alt="attachment preview"
+						className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
+						onClick={(e) => e.stopPropagation()}
+					/>
+				</div>
+			)}
+		</>
+	)
+}
+
 export function MaintenanceRequestDetailModule() {
 	const { mr: request, clientUserProperty } = useLoaderData<typeof loader>()
 
@@ -247,6 +307,9 @@ export function MaintenanceRequestDetailModule() {
 						disabled={isLocked}
 					/>
 				</div>
+
+				{/* Attachments */}
+				<AttachmentsSection attachments={request.attachments} />
 
 				{/* Tabs */}
 				<Tabs defaultValue="comments" className="w-full">

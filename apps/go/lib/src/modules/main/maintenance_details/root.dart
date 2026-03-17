@@ -35,7 +35,12 @@ class _MaintenanceDetailsScreen
     return requestAsync.when(
       loading: () => Scaffold(appBar: AppBar(), body: const _DetailsShimmer()),
       error: (_, __) => Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop('/maintenance'),
+          ),
+        ),
         body: ScreenErrorState(
           title: 'Failed to load request',
           onRetry: () => ref.invalidate(
