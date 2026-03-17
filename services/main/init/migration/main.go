@@ -72,6 +72,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.SeedSystemOfflinePaymentAccount(),
 		jobs.DropTenantAccountNotificationToken(),
 		jobs.AddLeaseNextBillingDate(),
+		jobs.AddInvoiceRemindersSent(),
 	})
 	m.Migrate()
 

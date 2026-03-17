@@ -232,3 +232,18 @@ func ConvertStringToInt64(s string) (int64, error) {
 	}
 	return i, nil
 }
+
+// PesewasToCedis converts an integer pesewas amount to cedis (e.g. 10050 → 100.50).
+func PesewasToCedis(pesewas int64) float64 {
+	return float64(pesewas) / 100
+}
+
+// CedisToPesewas converts a cedis float to an integer pesewas amount (e.g. 100.50 → 10050).
+func CedisToPesewas(cedis float64) int64 {
+	return int64(cedis * 100)
+}
+
+// FormatAmount formats a float64 amount to 2 decimal places (e.g. 100.5 → "100.50").
+func FormatAmount(amount float64) string {
+	return fmt.Sprintf("%.2f", amount)
+}

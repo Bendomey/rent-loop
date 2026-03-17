@@ -487,6 +487,8 @@ func (s *leaseService) GenerateLeaseRentInvoice(ctx context.Context, leaseID str
 	transCtx := lib.WithTransaction(ctx, transaction)
 
 	label := lib.RentInvoiceLabel(*lease.PaymentFrequency, *lease.NextBillingDate)
+	grace := lib.RentInvoiceGracePeriod(*lease.PaymentFrequency)
+	dueDate := lease.NextBillingDate.Add(grace)
 
 	leaseIDStr := lease.ID.String()
 	clientID := lease.Unit.Property.ClientID
@@ -501,6 +503,7 @@ func (s *leaseService) GenerateLeaseRentInvoice(ctx context.Context, leaseID str
 		SubTotal:       lease.RentFee,
 		Currency:       lease.RentFeeCurrency,
 		Status:         "ISSUED",
+		DueDate:        &dueDate,
 		LineItems: []LineItemInput{
 			{
 				Label:       label,
@@ -545,7 +548,7 @@ func (s *leaseService) GenerateLeaseRentInvoice(ctx context.Context, leaseID str
 	unitName := lease.Unit.Name
 	tenantName := lease.Tenant.FirstName
 	currency := lease.RentFeeCurrency
-	amount := fmt.Sprintf("%d", lease.RentFee)
+	amount := lib.FormatAmount(lib.PesewasToCedis(int64(lease.RentFee)))
 
 	message := strings.NewReplacer(
 		"{{tenant_name}}", tenantName,

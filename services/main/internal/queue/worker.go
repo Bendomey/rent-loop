@@ -6,6 +6,7 @@ import (
 
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
+	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/getsentry/raven-go"
 	"github.com/hibiken/asynq"
 	log "github.com/sirupsen/logrus"
@@ -44,7 +45,7 @@ func NewServeMux(registrars ...HandlerRegistrar) *asynq.ServeMux {
 	return mux
 }
 
-func RegisterWorkers(redisURL string, repo repository.Repository, svcs services.Services) {
+func RegisterWorkers(redisURL string, appCtx pkg.AppContext, repo repository.Repository, svcs services.Services) {
 	queueServer, err := NewServer(redisURL)
 	if err != nil {
 		raven.CaptureError(err, nil)
@@ -55,6 +56,7 @@ func RegisterWorkers(redisURL string, repo repository.Repository, svcs services.
 		mux := NewServeMux(
 			AnnouncementHandlers(svcs.AnnouncementService),
 			LeaseInvoicingHandlers(repo.LeaseRepository, svcs.LeaseService),
+			InvoiceReminderHandlers(repo.InvoiceRepository, appCtx, svcs.NotificationService),
 		)
 		if err := queueServer.Run(mux); err != nil {
 			raven.CaptureError(err, nil)
@@ -79,6 +81,12 @@ func RegisterScheduler(redisURL string) {
 	if _, err = scheduler.Register("0 * * * *", asynq.NewTask(TypeLeaseRentInvoiceGeneration, nil), asynq.MaxRetry(1)); err != nil {
 		raven.CaptureError(err, nil)
 		log.Fatal("failed to register lease invoicing schedule:", err)
+	}
+
+	// Every day at midnight — reminders are day-granularity (pre_due_1d, overdue_Nd).
+	if _, err = scheduler.Register("0 0 * * *", asynq.NewTask(TypeInvoiceReminder, nil), asynq.MaxRetry(1)); err != nil {
+		raven.CaptureError(err, nil)
+		log.Fatal("failed to register invoice reminder schedule:", err)
 	}
 
 	go func() {

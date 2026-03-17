@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
@@ -19,6 +20,7 @@ type InvoiceRepository interface {
 	GetLineItem(context context.Context, lineItemID string) (*models.InvoiceLineItem, error)
 	GetLineItems(context context.Context, invoiceID string) ([]models.InvoiceLineItem, error)
 	DeleteLineItem(context context.Context, lineItemID string) error
+	ListForReminders(ctx context.Context) (*[]models.Invoice, error)
 }
 
 type invoiceRepository struct {
@@ -287,4 +289,25 @@ func (r *invoiceRepository) DeleteLineItem(ctx context.Context, lineItemID strin
 	db := lib.ResolveDB(ctx, r.DB)
 
 	return db.WithContext(ctx).Delete(&models.InvoiceLineItem{}, "id = ?", lineItemID).Error
+}
+
+func (r *invoiceRepository) ListForReminders(ctx context.Context) (*[]models.Invoice, error) {
+	var invoices []models.Invoice
+	// Fetch LEASE_RENT invoices that are unpaid and due within the next 24 hours
+	// (pre-due) or already overdue. `due_date <= tomorrow` catches both windows.
+	tomorrow := time.Now().Add(24 * time.Hour)
+	result := r.DB.WithContext(ctx).
+		Where(
+			"context_type = ? AND status IN ? AND due_date IS NOT NULL AND due_date <= ?",
+			"LEASE_RENT",
+			[]string{"ISSUED", "PARTIALLY_PAID"},
+			tomorrow,
+		).
+		Preload("PayerTenant.TenantAccount").
+		Preload("ContextLease.Unit").
+		Find(&invoices)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &invoices, nil
 }

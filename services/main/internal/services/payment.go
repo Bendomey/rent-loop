@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/accounting"
+	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
@@ -34,6 +36,7 @@ type paymentService struct {
 	paymentAccountService PaymentAccountService
 	invoiceService        InvoiceService
 	accountingService     AccountingService
+	notificationService   NotificationService
 }
 
 type PaymentServiceDeps struct {
@@ -42,6 +45,7 @@ type PaymentServiceDeps struct {
 	PaymentAccountService PaymentAccountService
 	InvoiceService        InvoiceService
 	AccountingService     AccountingService
+	NotificationService   NotificationService
 }
 
 func NewPaymentService(deps PaymentServiceDeps) PaymentService {
@@ -51,6 +55,7 @@ func NewPaymentService(deps PaymentServiceDeps) PaymentService {
 		paymentAccountService: deps.PaymentAccountService,
 		invoiceService:        deps.InvoiceService,
 		accountingService:     deps.AccountingService,
+		notificationService:   deps.NotificationService,
 	}
 }
 
@@ -233,8 +238,8 @@ func (s *paymentService) VerifyOfflinePayment(
 	ctx context.Context,
 	input VerifyOfflinePaymentInput,
 ) (*models.Payment, error) {
-	// Get payment
-	populate := []string{"Invoice"}
+	// Get payment with tenant info for notifications
+	populate := []string{"Invoice", "Invoice.PayerTenant.TenantAccount", "Invoice.ContextLease.Unit"}
 	payment, paymentErr := s.repo.GetByIDWithQuery(ctx, repository.GetPaymentQuery{
 		PaymentID: input.PaymentID,
 		Populate:  &populate,
@@ -283,6 +288,7 @@ func (s *paymentService) VerifyOfflinePayment(
 	transCtx := lib.WithTransaction(ctx, transaction)
 
 	now := time.Now()
+	invoiceFullyPaid := false
 
 	// Update payment metadata with verification response
 	existingMetadata := map[string]any{}
@@ -365,6 +371,7 @@ func (s *paymentService) VerifyOfflinePayment(
 			// Full payment - mark as PAID
 			newInvoiceStatus = "PAID"
 			paidAt = &now
+			invoiceFullyPaid = true
 		} else {
 			// Partial payment - mark as PARTIALLY_PAID
 			newInvoiceStatus = "PARTIALLY_PAID"
@@ -460,6 +467,53 @@ func (s *paymentService) VerifyOfflinePayment(
 				"function":   "VerifyOfflinePayment",
 			},
 		})
+	}
+
+	// Fire-and-forget payment confirmation notifications when invoice is fully paid
+	if invoiceFullyPaid && payment.Invoice.PayerTenant != nil {
+		tenant := payment.Invoice.PayerTenant
+		unitName := ""
+		if payment.Invoice.ContextLease != nil {
+			unitName = payment.Invoice.ContextLease.Unit.Name
+		}
+		message := strings.NewReplacer(
+			"{{tenant_name}}", tenant.FirstName,
+			"{{invoice_code}}", payment.Invoice.Code,
+			"{{unit_name}}", unitName,
+			"{{currency}}", payment.Invoice.Currency,
+			"{{amount}}", lib.FormatAmount(lib.PesewasToCedis(int64(payment.Invoice.TotalAmount))),
+		).Replace(lib.INVOICE_PAID_BODY)
+
+		if tenant.Email != nil {
+			go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+				Recipient: *tenant.Email,
+				Subject:   lib.INVOICE_PAID_SUBJECT,
+				TextBody:  message,
+			})
+		}
+
+		go s.appCtx.Clients.GatekeeperAPI.SendSMS(context.Background(), gatekeeper.SendSMSInput{
+			Recipient: tenant.Phone,
+			Message:   message,
+		})
+
+		if tenant.TenantAccount != nil {
+			tenantAccountID := tenant.TenantAccount.ID.String()
+			invoiceID := payment.Invoice.ID.String()
+			go func() {
+				_ = s.notificationService.SendToTenantAccount(
+					context.Background(),
+					tenantAccountID,
+					lib.INVOICE_PAID_SUBJECT,
+					message,
+					map[string]string{
+						"type":         "INVOICE_PAID",
+						"invoice_id":   invoiceID,
+						"invoice_code": payment.Invoice.Code,
+					},
+				)
+			}()
+		}
 	}
 
 	return payment, nil
