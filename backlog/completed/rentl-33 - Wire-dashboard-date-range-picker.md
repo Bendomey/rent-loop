@@ -1,9 +1,10 @@
 ---
-id: DRAFT-17
+id: RENTL-33
 title: Wire dashboard date range picker
-status: Draft
+status: Done
 assignee: []
 created_date: '2026-03-04 18:57'
+updated_date: '2026-03-17 11:28'
 labels:
   - frontend
   - property-manager

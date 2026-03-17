@@ -1,9 +1,10 @@
 ---
-id: DRAFT-39
+id: RENTL-39
 title: Add create new maintenance request page
-status: Draft
+status: Done
 assignee: []
 created_date: '2026-03-05 09:16'
+updated_date: '2026-03-17 11:29'
 labels:
   - frontend
   - property-manager
