@@ -5088,7 +5088,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "List all comments for a maintenance request with pagination (Admin)",
+                "description": "List all comments on a maintenance request with pagination. Optionally filter by the creating client user.",
                 "consumes": [
                     "application/json"
                 ],
@@ -5106,11 +5106,76 @@ const docTemplate = `{
                         "name": "maintenance_request_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "created_by_client_user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Comments",
+                        "description": "Paginated list of comments",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -5123,7 +5188,7 @@ const docTemplate = `{
                                         "rows": {
                                             "type": "array",
                                             "items": {
-                                                "type": "boolean"
+                                                "$ref": "#/definitions/transformations.OutputMaintenanceRequestComment"
                                             }
                                         }
                                     }
@@ -16638,6 +16703,32 @@ const docTemplate = `{
                     "$ref": "#/definitions/transformations.OutputUnit"
                 },
                 "unit_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "transformations.OutputMaintenanceRequestComment": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by_client_user": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "created_by_client_user_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "maintenance_request_id": {
                     "type": "string"
                 },
                 "updated_at": {

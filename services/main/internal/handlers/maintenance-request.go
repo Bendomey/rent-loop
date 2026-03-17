@@ -552,18 +552,25 @@ func (h *MaintenanceRequestHandler) CreateComment(w http.ResponseWriter, r *http
 	})
 }
 
+// ListCommentsQuery holds optional filters for listing comments.
+type ListCommentsQuery struct {
+	lib.FilterQueryInput
+	CreatedByClientUserID *string `json:"created_by_client_user_id" query:"created_by_client_user_id" description:"Filter by the client user who created the comment" validate:"omitempty,uuid4"`
+}
+
 // ListComments godoc
 //
 //	@Summary		List comments for a maintenance request
-//	@Description	List all comments for a maintenance request with pagination (Admin)
+//	@Description	List all comments on a maintenance request with pagination. Optionally filter by the creating client user.
 //	@Tags			MaintenanceRequests
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			maintenance_request_id	path		string																		true	"Maintenance Request ID"
-//	@Success		200						{object}	object{data=object{rows=[]bool,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Comments"
-//	@Failure		401						{object}	string																		"Invalid or absent authentication token"
-//	@Failure		500						{object}	string																		"An unexpected error occurred"
+//	@Param			maintenance_request_id	path		string																													true	"Maintenance Request ID"
+//	@Param			q						query		ListCommentsQuery																										true	"Query parameters"
+//	@Success		200						{object}	object{data=object{rows=[]transformations.OutputMaintenanceRequestComment,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Paginated list of comments"
+//	@Failure		401						{object}	string																													"Invalid or absent authentication token"
+//	@Failure		500						{object}	string																													"An unexpected error occurred"
 //	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/comments [get]
 func (h *MaintenanceRequestHandler) ListComments(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())

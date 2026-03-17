@@ -3183,6 +3183,23 @@ definitions:
       updated_at:
         type: string
     type: object
+  transformations.OutputMaintenanceRequestComment:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      created_by_client_user:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      created_by_client_user_id:
+        type: string
+      id:
+        type: string
+      maintenance_request_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
   transformations.OutputPayment:
     properties:
       amount:
@@ -6993,18 +7010,61 @@ paths:
     get:
       consumes:
       - application/json
-      description: List all comments for a maintenance request with pagination (Admin)
+      description: List all comments on a maintenance request with pagination. Optionally
+        filter by the creating client user.
       parameters:
       - description: Maintenance Request ID
         in: path
         name: maintenance_request_id
         required: true
         type: string
+      - in: query
+        name: created_by_client_user_id
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: Comments
+          description: Paginated list of comments
           schema:
             properties:
               data:
@@ -7013,7 +7073,7 @@ paths:
                     $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
                   rows:
                     items:
-                      type: boolean
+                      $ref: '#/definitions/transformations.OutputMaintenanceRequestComment'
                     type: array
                 type: object
             type: object

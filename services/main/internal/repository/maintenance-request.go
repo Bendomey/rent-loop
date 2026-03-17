@@ -360,16 +360,24 @@ func (r *maintenanceRequestRepository) ListComments(
 	filters ListMaintenanceRequestCommentsFilter,
 ) (*[]models.MaintenanceRequestComment, error) {
 	var comments []models.MaintenanceRequestComment
-	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+	db := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
 		Scopes(
 			DateRangeScope("maintenance_request_comments", filterQuery.DateRange),
 			SearchScope("maintenance_request_comments", filterQuery.Search),
 			mrCommentRequestScope(filters.MaintenanceRequestID),
 			mrCommentCreatedByScope(filters.CreatedByClientUserID),
+
 			PaginationScope(filterQuery.Page, filterQuery.PageSize),
 			OrderScope("maintenance_request_comments", filterQuery.OrderBy, filterQuery.Order),
-		).
-		Find(&comments)
+		)
+
+	if filterQuery.Populate != nil {
+		for _, field := range *filterQuery.Populate {
+			db = db.Preload(field)
+		}
+	}
+
+	result := db.Find(&comments)
 	if result.Error != nil {
 		return nil, result.Error
 	}
