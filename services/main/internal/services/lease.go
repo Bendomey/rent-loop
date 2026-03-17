@@ -471,9 +471,6 @@ func (s *leaseService) GenerateLeaseRentInvoice(ctx context.Context, leaseID str
 		})
 	}
 
-	transaction := s.appCtx.DB.Begin()
-	transCtx := lib.WithTransaction(ctx, transaction)
-
 	if lease.Status != "Lease.Status.Active" {
 		return pkg.BadRequestError("LeaseIsNotActive", nil)
 	}
@@ -485,6 +482,9 @@ func (s *leaseService) GenerateLeaseRentInvoice(ctx context.Context, leaseID str
 	if lease.NextBillingDate == nil {
 		return pkg.BadRequestError("LeaseHasNoNextBillingDate", nil)
 	}
+
+	transaction := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, transaction)
 
 	label := lib.RentInvoiceLabel(*lease.PaymentFrequency, *lease.NextBillingDate)
 
