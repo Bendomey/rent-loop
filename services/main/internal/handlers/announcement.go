@@ -268,11 +268,11 @@ func (h *AnnouncementHandler) ListAnnouncements(w http.ResponseWriter, r *http.R
 	}
 
 	// Optional property scoping via URL param
-	var propertyID *string
+	var propertyID lib.Optional[string]
 	if pid := chi.URLParam(r, "property_id"); pid != "" {
-		propertyID = &pid
+		propertyID = lib.Optional[string]{Value: &pid, IsSet: true}
 	} else {
-		propertyID = nil
+		propertyID = lib.Optional[string]{IsSet: true, Value: nil} // Set with nil value to filter for announcements with no property_id (i.e. broadcast)
 	}
 
 	input := repository.ListAnnouncementsFilter{
