@@ -32,4 +32,6 @@ type Tenant struct {
 
 	CreatedById string `gorm:"not null;"`
 	CreatedBy   ClientUser
+
+	TenantAccount *TenantAccount `gorm:"foreignKey:TenantId"`
 }

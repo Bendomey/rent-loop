@@ -63,7 +63,8 @@ func main() {
 	})
 	handlers := handlers.NewHandlers(appCtx, services)
 
-	queue.RegisterWorkers(cfg.RedisDB.Url, services)
+	queue.RegisterWorkers(cfg.RedisDB.Url, repository, services)
+	queue.RegisterScheduler(cfg.RedisDB.Url)
 
 	r := router.New(appCtx, handlers)
 

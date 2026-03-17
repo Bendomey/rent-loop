@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
 	"github.com/getsentry/raven-go"
 	"github.com/hibiken/asynq"
@@ -43,7 +44,7 @@ func NewServeMux(registrars ...HandlerRegistrar) *asynq.ServeMux {
 	return mux
 }
 
-func RegisterWorkers(redisURL string, services services.Services) {
+func RegisterWorkers(redisURL string, repo repository.Repository, svcs services.Services) {
 	queueServer, err := NewServer(redisURL)
 	if err != nil {
 		raven.CaptureError(err, nil)
@@ -52,7 +53,8 @@ func RegisterWorkers(redisURL string, services services.Services) {
 
 	go func() {
 		mux := NewServeMux(
-			AnnouncementHandlers(services.AnnouncementService),
+			AnnouncementHandlers(svcs.AnnouncementService),
+			LeaseInvoicingHandlers(repo.LeaseRepository, svcs.LeaseService),
 		)
 		if err := queueServer.Run(mux); err != nil {
 			raven.CaptureError(err, nil)
@@ -61,4 +63,30 @@ func RegisterWorkers(redisURL string, services services.Services) {
 	}()
 
 	log.Info("Queue worker started")
+}
+
+func RegisterScheduler(redisURL string) {
+	opt, err := asynq.ParseRedisURI(redisURL)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Fatal("failed to parse redis URI for scheduler:", err)
+	}
+
+	scheduler := asynq.NewScheduler(opt, nil)
+
+	// Every hour — catches Hourly leases on time; longer-frequency leases are
+	// skipped naturally when NextBillingDate is still in the future.
+	if _, err = scheduler.Register("0 * * * *", asynq.NewTask(TypeLeaseRentInvoiceGeneration, nil), asynq.MaxRetry(1)); err != nil {
+		raven.CaptureError(err, nil)
+		log.Fatal("failed to register lease invoicing schedule:", err)
+	}
+
+	go func() {
+		if err := scheduler.Run(); err != nil {
+			raven.CaptureError(err, nil)
+			log.Fatal("scheduler error:", err)
+		}
+	}()
+
+	log.Info("Cron scheduler started")
 }
