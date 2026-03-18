@@ -14,6 +14,7 @@ import (
 func updateMigration(db *gorm.DB) error {
 	err := db.AutoMigrate(
 
+		&models.Waitlist{},
 		&models.Admin{},
 		&models.ClientApplication{},
 		&models.Client{},
