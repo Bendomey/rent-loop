@@ -46,6 +46,7 @@ type CreateLeaseChecklistItemInput struct {
 }
 
 type CreateSingleLeaseChecklistItemInput struct {
+	LeaseID          string
 	LeaseChecklistID string
 	Description      string
 	Status           string
@@ -55,6 +56,7 @@ type CreateSingleLeaseChecklistItemInput struct {
 
 type UpdateLeaseChecklistItemInput struct {
 	ID               string
+	LeaseID          string
 	LeaseChecklistID string
 	Description      *string
 	Status           *string
@@ -85,7 +87,8 @@ func (s *leaseChecklistItemService) CreateLeaseChecklistItem(
 	input CreateSingleLeaseChecklistItemInput,
 ) (*models.LeaseChecklistItem, error) {
 	checklist, err := s.checklistRepo.GetOneWithPopulate(ctx, repository.GetLeaseCheckListQuery{
-		ID: input.LeaseChecklistID,
+		ID:      input.LeaseChecklistID,
+		LeaseID: input.LeaseID,
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -126,7 +129,8 @@ func (s *leaseChecklistItemService) UpdateLeaseChecklistItem(
 	input UpdateLeaseChecklistItemInput,
 ) (*models.LeaseChecklistItem, error) {
 	checklist, err := s.checklistRepo.GetOneWithPopulate(ctx, repository.GetLeaseCheckListQuery{
-		ID: input.LeaseChecklistID,
+		ID:      input.LeaseChecklistID,
+		LeaseID: input.LeaseID,
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

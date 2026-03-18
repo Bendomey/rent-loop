@@ -151,11 +151,10 @@ func (s *leaseChecklistService) CreateLeaseChecklist(
 		checklistItems := make([]models.LeaseChecklistItem, 0, len(input.ChecklistItems))
 		for _, item := range input.ChecklistItems {
 			checklistItems = append(checklistItems, models.LeaseChecklistItem{
-				LeaseChecklistId: leaseChecklist.ID.String(),
-				Description:      item.Description,
-				Status:           item.Status,
-				Notes:            item.Notes,
-				Photos:           pq.StringArray(item.Photos),
+				Description: item.Description,
+				Status:      item.Status,
+				Notes:       item.Notes,
+				Photos:      pq.StringArray(item.Photos),
 			})
 		}
 

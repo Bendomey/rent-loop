@@ -4181,7 +4181,7 @@ const docTemplate = `{
                         },
                         "collectionFormat": "csv",
                         "example": [
-                            "["
+                            "DRAFT"
                         ],
                         "name": "statuses",
                         "in": "query"
@@ -11742,7 +11742,7 @@ const docTemplate = `{
                         },
                         "collectionFormat": "csv",
                         "example": [
-                            "["
+                            "DRAFT"
                         ],
                         "name": "statuses",
                         "in": "query"
@@ -17824,9 +17824,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
                 },
-                "lease_checklist": {
-                    "$ref": "#/definitions/transformations.OutputLeaseChecklist"
-                },
                 "lease_checklist_id": {
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
@@ -17860,15 +17857,13 @@ const docTemplate = `{
                     "example": "2024-06-01T09:00:00Z"
                 },
                 "description": {
+                    "description": "LeaseChecklist   OutputLeaseChecklist ` + "`" + `json:\"lease_checklist\"` + "`" + `",
                     "type": "string",
                     "example": "Checked in"
                 },
                 "id": {
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
-                },
-                "lease_checklist": {
-                    "$ref": "#/definitions/transformations.OutputLeaseChecklist"
                 },
                 "lease_checklist_id": {
                     "type": "string",
@@ -17884,7 +17879,7 @@ const docTemplate = `{
                         "type": "string"
                     },
                     "example": [
-                        "["
+                        "https://example.com/photo1.jpg"
                     ]
                 },
                 "status": {

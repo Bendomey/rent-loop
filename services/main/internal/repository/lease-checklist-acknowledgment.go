@@ -40,7 +40,7 @@ func (r *leaseChecklistAcknowledgmentRepository) GetByChecklistTenantAndRound(
 	round int,
 ) (*models.LeaseChecklistAcknowledgment, error) {
 	var ack models.LeaseChecklistAcknowledgment
-	result := r.db.WithContext(ctx).
+	result := lib.ResolveDB(ctx, r.db).WithContext(ctx).
 		Where("lease_checklist_id = ? AND tenant_account_id = ? AND round = ?", checklistID, tenantAccountID, round).
 		First(&ack)
 	if result.Error != nil {
@@ -54,7 +54,7 @@ func (r *leaseChecklistAcknowledgmentRepository) ListByChecklist(
 	checklistID string,
 ) (*[]models.LeaseChecklistAcknowledgment, error) {
 	var acks []models.LeaseChecklistAcknowledgment
-	result := r.db.WithContext(ctx).
+	result := lib.ResolveDB(ctx, r.db).WithContext(ctx).
 		Where("lease_checklist_id = ?", checklistID).
 		Order("round ASC").
 		Find(&acks)

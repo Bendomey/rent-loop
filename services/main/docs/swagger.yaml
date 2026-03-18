@@ -3238,8 +3238,6 @@ definitions:
       id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
-      lease_checklist:
-        $ref: '#/definitions/transformations.OutputLeaseChecklist'
       lease_checklist_id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
@@ -3264,13 +3262,12 @@ definitions:
         example: "2024-06-01T09:00:00Z"
         type: string
       description:
+        description: LeaseChecklist   OutputLeaseChecklist `json:"lease_checklist"`
         example: Checked in
         type: string
       id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
-      lease_checklist:
-        $ref: '#/definitions/transformations.OutputLeaseChecklist'
       lease_checklist_id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
@@ -3279,7 +3276,7 @@ definitions:
         type: string
       photos:
         example:
-        - '['
+        - https://example.com/photo1.jpg
         items:
           type: string
         type: array
@@ -6591,7 +6588,7 @@ paths:
         type: string
       - collectionFormat: csv
         example:
-        - '['
+        - DRAFT
         in: query
         items:
           type: string
@@ -11506,7 +11503,7 @@ paths:
         type: string
       - collectionFormat: csv
         example:
-        - '['
+        - DRAFT
         in: query
         items:
           type: string

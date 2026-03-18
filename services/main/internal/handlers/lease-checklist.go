@@ -240,8 +240,8 @@ func (h *LeaseChecklistHandler) DeleteLeaseChecklist(w http.ResponseWriter, r *h
 
 type ListLeaseChecklistsQuery struct {
 	lib.FilterQueryInput
-	Type     *string  `json:"type,omitempty"     validate:"omitempty,oneof=CHECK_IN CHECK_OUT ROUTINE"                 example:"CHECK_IN"              description:"Lease checklist type"`
-	Statuses []string `json:"statuses,omitempty" validate:"omitempty,dive,oneof=DRAFT SUBMITTED ACKNOWLEDGED DISPUTED" example:"["DRAFT","SUBMITTED"]" description:"Lease checklist statuses"`
+	Type     *string  `json:"type,omitempty"     validate:"omitempty,oneof=CHECK_IN CHECK_OUT ROUTINE"                 example:"CHECK_IN" description:"Lease checklist type"`
+	Statuses []string `json:"statuses,omitempty" validate:"omitempty,dive,oneof=DRAFT SUBMITTED ACKNOWLEDGED DISPUTED" example:"DRAFT"    description:"Lease checklist statuses"`
 }
 
 // ListLeaseChecklists godoc
@@ -404,8 +404,11 @@ func (h *LeaseChecklistHandler) CreateLeaseChecklistItem(w http.ResponseWriter, 
 		return
 	}
 
+	leaseID := chi.URLParam(r, "lease_id")
+
 	item, err := h.itemService.CreateLeaseChecklistItem(r.Context(), services.CreateSingleLeaseChecklistItemInput{
 		LeaseChecklistID: checklistID,
+		LeaseID:          leaseID,
 		Description:      body.Description,
 		Status:           body.Status,
 		Notes:            body.Notes,
@@ -462,9 +465,12 @@ func (h *LeaseChecklistHandler) UpdateLeaseChecklistItem(w http.ResponseWriter, 
 		return
 	}
 
+	leaseID := chi.URLParam(r, "lease_id")
+
 	item, err := h.itemService.UpdateLeaseChecklistItem(r.Context(), services.UpdateLeaseChecklistItemInput{
 		ID:               itemID,
 		LeaseChecklistID: checklistID,
+		LeaseID:          leaseID,
 		Description:      body.Description,
 		Status:           body.Status,
 		Notes:            body.Notes,

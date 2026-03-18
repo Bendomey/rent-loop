@@ -48,7 +48,7 @@ func (r *leaseChecklistItemRepository) GetOne(
 	checklistID string,
 ) (*models.LeaseChecklistItem, error) {
 	var item models.LeaseChecklistItem
-	result := r.db.WithContext(ctx).
+	result := lib.ResolveDB(ctx, r.db).WithContext(ctx).
 		Where("id = ? AND lease_checklist_id = ?", id, checklistID).
 		First(&item)
 	if result.Error != nil {
