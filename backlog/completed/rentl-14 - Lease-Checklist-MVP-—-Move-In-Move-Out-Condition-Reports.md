@@ -1,10 +1,10 @@
 ---
 id: RENTL-14
 title: Lease Checklist MVP — Move-In / Move-Out Condition Reports
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-03-05 09:01'
-updated_date: '2026-03-18 11:01'
+updated_date: '2026-03-18 12:05'
 labels:
   - backend
   - mobile
