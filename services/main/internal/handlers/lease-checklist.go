@@ -504,10 +504,11 @@ func (h *LeaseChecklistHandler) UpdateLeaseChecklistItem(w http.ResponseWriter, 
 //	@Failure		500				{object}	string			"An unexpected error occurred"
 //	@Router			/api/v1/admin/leases/{lease_id}/checklists/{checklist_id}/items/{item_id} [delete]
 func (h *LeaseChecklistHandler) DeleteLeaseChecklistItem(w http.ResponseWriter, r *http.Request) {
+	leaseID := chi.URLParam(r, "lease_id")
 	checklistID := chi.URLParam(r, "checklist_id")
 	itemID := chi.URLParam(r, "item_id")
 
-	if err := h.itemService.DeleteLeaseChecklistItem(r.Context(), checklistID, itemID); err != nil {
+	if err := h.itemService.DeleteLeaseChecklistItem(r.Context(), leaseID, checklistID, itemID); err != nil {
 		HandleErrorResponse(w, err)
 		return
 	}
