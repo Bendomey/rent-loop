@@ -21,7 +21,6 @@ export function GoogleAnalytics({ gaId }: Props) {
 
 			window.dataLayer = window.dataLayer ?? []
 			window.gtag = function gtag() {
-				// eslint-disable-next-line prefer-rest-params
 				window.dataLayer.push(arguments)
 			}
 			window.gtag('js', new Date())
@@ -32,7 +31,9 @@ export function GoogleAnalytics({ gaId }: Props) {
 	// Track page views on every navigation
 	useEffect(() => {
 		if (!gaId || typeof window.gtag !== 'function') return
-		window.gtag('event', 'page_view', { page_path: location.pathname + location.search })
+		window.gtag('event', 'page_view', {
+			page_path: location.pathname + location.search,
+		})
 	}, [gaId, location])
 
 	return null

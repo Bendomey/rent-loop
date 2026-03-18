@@ -467,3 +467,20 @@ Thank you for your understanding,
 The Rentloop Team
 `
 )
+
+const (
+	WAITLIST_JOINED_SUBJECT = "You're on the Rentloop waitlist! 🎉"
+	WAITLIST_JOINED_BODY    = `Hi {{full_name}},
+
+Thanks for joining the Rentloop waitlist! 🎉
+We're working hard to bring you the smartest rental management platform in Ghana. You'll be among the first to know when we launch and get early access.
+
+Stay tuned — great things are coming.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop Team
+`
+	WAITLIST_JOINED_SMS_BODY = `Hi {{full_name}}, you're on the waitlist! We'll let you know when we launch. Stay tuned.`
+)
