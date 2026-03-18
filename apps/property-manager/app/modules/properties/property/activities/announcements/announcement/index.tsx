@@ -201,7 +201,15 @@ export function PropertyAnnouncementDetailModule() {
 						<MetaRow
 							icon={<Building2 className="size-4" />}
 							label="Audience"
-							value={announcement?.property_id ? "All tenants of this property" : announcement?.property_block_id ? `All tenants of ${announcement.property_block?.name ?? "a block"}` : announcement?.target_unit_ids?.length ? `Specific units (${announcement.target_unit_ids.length})` : "N/A"}
+							value={
+								announcement?.property_id
+									? 'All tenants of this property'
+									: announcement?.property_block_id
+										? `All tenants of ${announcement.property_block?.name ?? 'a block'}`
+										: announcement?.target_unit_ids?.length
+											? `Specific units (${announcement.target_unit_ids.length})`
+											: 'N/A'
+							}
 						/>
 
 						<MetaRow

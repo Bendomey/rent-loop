@@ -54,6 +54,26 @@ func RentInvoiceLabel(frequency string, billingDate time.Time) string {
 	}
 }
 
+// LeaseChecklistTypeLabel returns a human-readable label for a checklist type.
+//
+// Examples:
+//
+//	CHECK_IN  → "Move-In"
+//	CHECK_OUT → "Move-Out"
+//	ROUTINE   → "Routine"
+func LeaseChecklistTypeLabel(checklistType string) string {
+	switch checklistType {
+	case "CHECK_IN":
+		return "Move-In"
+	case "CHECK_OUT":
+		return "Move-Out"
+	case "ROUTINE":
+		return "Routine"
+	default:
+		return checklistType
+	}
+}
+
 // RentInvoiceGracePeriod returns the grace period duration for a given payment
 // frequency. The DueDate is set to BillingDate + grace period.
 func RentInvoiceGracePeriod(frequency string) time.Duration {

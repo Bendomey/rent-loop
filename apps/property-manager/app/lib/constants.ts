@@ -28,6 +28,7 @@ export const QUERY_KEYS = {
 	ANALYTICS_TOKEN: 'analytics-token',
 	MAINTENANCE_REQUESTS: 'maintenance-requests',
 	ANNOUNCEMENTS: 'announcements',
+	LEASE_CHECKLISTS: 'lease-checklists',
 } as const
 
 export const PermissionState = {
