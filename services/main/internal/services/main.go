@@ -28,6 +28,7 @@ type Services struct {
 	SigningService            SigningService
 	LeaseChecklistService     LeaseChecklistService
 	LeaseChecklistItemService LeaseChecklistItemService
+	ChecklistTemplateService  ChecklistTemplateService
 	AnnouncementService       AnnouncementService
 	MaintenanceRequestService MaintenanceRequestService
 }
@@ -125,11 +126,19 @@ func NewServices(params INewServicesParams) Services {
 	leaseChecklistItemService := NewLeaseChecklistItemService(
 		params.AppCtx,
 		params.Repository.LeaseChecklistItemRepository,
+		params.Repository.LeaseChecklistRepository,
 	)
+	checklistTemplateService := NewChecklistTemplateService(params.Repository.ChecklistTemplateRepository)
+
 	leaseChecklistService := NewLeaseChecklistService(LeaseChecklistServiceDeps{
 		AppCtx:               params.AppCtx,
 		Repo:                 params.Repository.LeaseChecklistRepository,
 		ChecklistItemService: leaseChecklistItemService,
+		AcknowledgmentRepo:   params.Repository.LeaseChecklistAcknowledgmentRepository,
+		TemplateRepo:         params.Repository.ChecklistTemplateRepository,
+		LeaseRepo:            params.Repository.LeaseRepository,
+		TenantAccountRepo:    params.Repository.TenantAccountRepository,
+		NotificationService:  notificationService,
 	})
 
 	announcementService := NewAnnouncementService(AnnouncementServiceDeps{
@@ -173,6 +182,7 @@ func NewServices(params INewServicesParams) Services {
 		SigningService:            signingService,
 		LeaseChecklistService:     leaseChecklistService,
 		LeaseChecklistItemService: leaseChecklistItemService,
+		ChecklistTemplateService:  checklistTemplateService,
 		AnnouncementService:       announcementService,
 		MaintenanceRequestService: maintenanceRequestService,
 	}

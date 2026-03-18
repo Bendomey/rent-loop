@@ -46,6 +46,17 @@ func NewTenantAccountRouter(appCtx pkg.AppContext, handlers handlers.Handlers) f
 			r.Get("/v1/announcements/{announcement_id}", handlers.AnnouncementHandler.GetTenantAnnouncement)
 			r.Post("/v1/announcements/{announcement_id}/read", handlers.AnnouncementHandler.MarkAnnouncementRead)
 
+			// tenant checklists
+			r.Get("/v1/leases/{lease_id}/checklists", handlers.LeaseChecklistHandler.TenantListLeaseChecklists)
+			r.Get(
+				"/v1/leases/{lease_id}/checklists/{checklist_id}",
+				handlers.LeaseChecklistHandler.TenantGetLeaseChecklist,
+			)
+			r.Post(
+				"/v1/leases/{lease_id}/checklists/{checklist_id}/acknowledge",
+				handlers.LeaseChecklistHandler.TenantAcknowledgeChecklist,
+			)
+
 			// tenant maintenance requests
 			r.Post("/v1/leases/{lease_id}/maintenance-requests", handlers.MaintenanceRequestHandler.TenantCreate)
 			r.Get("/v1/leases/{lease_id}/maintenance-requests", handlers.MaintenanceRequestHandler.TenantList)

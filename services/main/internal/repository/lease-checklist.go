@@ -19,6 +19,7 @@ type LeaseChecklistRepository interface {
 		filters ListLeaseChecklistsFilter,
 	) (*[]models.LeaseChecklist, error)
 	Count(context context.Context, filters ListLeaseChecklistsFilter) (int64, error)
+	GetCheckInChecklist(ctx context.Context, leaseID string) (*models.LeaseChecklist, error)
 }
 
 type leaseChecklistRepository struct {
@@ -84,8 +85,9 @@ func (r *leaseChecklistRepository) Delete(ctx context.Context, query DeleteLease
 
 type ListLeaseChecklistsFilter struct {
 	lib.FilterQuery
-	LeaseId string
-	Type    *string
+	LeaseId  string
+	Type     *string
+	Statuses []string // optional status filter (e.g. for tenant-visible checklists)
 }
 
 func (r *leaseChecklistRepository) List(
@@ -98,6 +100,7 @@ func (r *leaseChecklistRepository) List(
 		IDsFilterScope("lease_checklists", filters.IDs),
 		leaseChecklistFilterScope("lease_id", &filters.LeaseId),
 		leaseChecklistFilterScope("type", filters.Type),
+		leaseChecklistStatusesFilterScope(filters.Statuses),
 		DateRangeScope("lease_checklists", filters.DateRange),
 		SearchScope("lease_checklists", filters.Search),
 
@@ -129,6 +132,7 @@ func (r *leaseChecklistRepository) Count(
 		IDsFilterScope("lease_checklists", filters.IDs),
 		leaseChecklistFilterScope("lease_id", &filters.LeaseId),
 		leaseChecklistFilterScope("type", filters.Type),
+		leaseChecklistStatusesFilterScope(filters.Statuses),
 		DateRangeScope("lease_checklists", filters.DateRange),
 		SearchScope("lease_checklists", filters.Search),
 	).Count(&count)
@@ -140,6 +144,21 @@ func (r *leaseChecklistRepository) Count(
 	return count, nil
 }
 
+func (r *leaseChecklistRepository) GetCheckInChecklist(
+	ctx context.Context,
+	leaseID string,
+) (*models.LeaseChecklist, error) {
+	var checklist models.LeaseChecklist
+	result := r.db.WithContext(ctx).
+		Preload("Items").
+		Where("lease_id = ? AND type = ?", leaseID, "CHECK_IN").
+		First(&checklist)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &checklist, nil
+}
+
 func leaseChecklistFilterScope(field string, value *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if value == nil {
@@ -148,5 +167,14 @@ func leaseChecklistFilterScope(field string, value *string) func(db *gorm.DB) *g
 
 		query := fmt.Sprintf("lease_checklists.%s = ?", field)
 		return db.Where(query, value)
+	}
+}
+
+func leaseChecklistStatusesFilterScope(statuses []string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if len(statuses) == 0 {
+			return db
+		}
+		return db.Where("lease_checklists.status IN ?", statuses)
 	}
 }

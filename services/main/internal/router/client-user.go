@@ -270,8 +270,27 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 							Patch("/", handlers.LeaseChecklistHandler.UpdateLeaseChecklist)
 						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 							Delete("/", handlers.LeaseChecklistHandler.DeleteLeaseChecklist)
+						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+							Post("/submit", handlers.LeaseChecklistHandler.SubmitLeaseChecklist)
+						r.Get("/comparison", handlers.LeaseChecklistHandler.GetChecklistComparison)
+						r.Route("/items", func(r chi.Router) {
+							r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+								Post("/", handlers.LeaseChecklistHandler.CreateLeaseChecklistItem)
+							r.Route("/{item_id}", func(r chi.Router) {
+								r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+									Patch("/", handlers.LeaseChecklistHandler.UpdateLeaseChecklistItem)
+								r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+									Delete("/", handlers.LeaseChecklistHandler.DeleteLeaseChecklistItem)
+							})
+						})
 					})
 				})
+			})
+
+			// checklist templates
+			r.Route("/v1/admin/checklist-templates", func(r chi.Router) {
+				r.Get("/", handlers.ChecklistTemplateHandler.ListChecklistTemplates)
+				r.Get("/{template_id}", handlers.ChecklistTemplateHandler.GetChecklistTemplate)
 			})
 
 			// maintenance requests

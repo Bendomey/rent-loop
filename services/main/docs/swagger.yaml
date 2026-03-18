@@ -564,11 +564,19 @@ definitions:
       description:
         example: Checked in
         type: string
+      notes:
+        type: string
+      photos:
+        items:
+          type: string
+        type: array
       status:
         enum:
         - FUNCTIONAL
         - DAMAGED
         - MISSING
+        - NEEDS_REPAIR
+        - NOT_PRESENT
         example: FUNCTIONAL
         type: string
     required:
@@ -581,6 +589,8 @@ definitions:
         items:
           $ref: '#/definitions/handlers.CreateLeaseChecklistItemRequest'
         type: array
+      template_id:
+        type: string
       type:
         enum:
         - CHECK_IN
@@ -803,6 +813,30 @@ definitions:
     - region
     - status
     - type
+    type: object
+  handlers.CreateSingleLeaseChecklistItemRequest:
+    properties:
+      description:
+        example: Walls
+        type: string
+      notes:
+        type: string
+      photos:
+        items:
+          type: string
+        type: array
+      status:
+        enum:
+        - FUNCTIONAL
+        - DAMAGED
+        - MISSING
+        - NEEDS_REPAIR
+        - NOT_PRESENT
+        example: FUNCTIONAL
+        type: string
+    required:
+    - description
+    - status
     type: object
   handlers.CreateTenantApplicationRequest:
     properties:
@@ -1256,6 +1290,19 @@ definitions:
     required:
     - signature_url
     type: object
+  handlers.TenantAcknowledgeChecklistRequest:
+    properties:
+      action:
+        enum:
+        - ACKNOWLEDGED
+        - DISPUTED
+        example: ACKNOWLEDGED
+        type: string
+      comment:
+        type: string
+    required:
+    - action
+    type: object
   handlers.TenantCreateMaintenanceRequestBody:
     properties:
       attachments:
@@ -1399,6 +1446,26 @@ definitions:
         - PAID
         - VOID
         example: ISSUED
+        type: string
+    type: object
+  handlers.UpdateLeaseChecklistItemRequest:
+    properties:
+      description:
+        type: string
+      notes:
+        type: string
+      photos:
+        items:
+          type: string
+        type: array
+      status:
+        enum:
+        - FUNCTIONAL
+        - DAMAGED
+        - MISSING
+        - NEEDS_REPAIR
+        - NOT_PRESENT
+        example: FUNCTIONAL
         type: string
     type: object
   handlers.UpdateLeaseChecklistRequest:
@@ -2526,6 +2593,46 @@ definitions:
         example: MAINTENANCE
         type: string
     type: object
+  transformations.OutputChecklistTemplate:
+    properties:
+      created_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/transformations.OutputChecklistTemplateItem'
+        type: array
+      name:
+        example: Default Apartment Checklist
+        type: string
+      unit_type:
+        example: APARTMENT
+        type: string
+      updated_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+    type: object
+  transformations.OutputChecklistTemplateItem:
+    properties:
+      category:
+        example: Living Room
+        type: string
+      created_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      description:
+        example: Walls
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      updated_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+    type: object
   transformations.OutputClient:
     properties:
       address:
@@ -3073,6 +3180,15 @@ definitions:
     type: object
   transformations.OutputLeaseChecklist:
     properties:
+      acknowledgments:
+        items:
+          $ref: '#/definitions/transformations.OutputLeaseChecklistAcknowledgment'
+        type: array
+      check_in_checklist:
+        $ref: '#/definitions/transformations.OutputLeaseChecklist'
+      check_in_checklist_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
       created_at:
         example: "2024-06-01T09:00:00Z"
         type: string
@@ -3093,11 +3209,51 @@ definitions:
       lease_id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
+      round:
+        example: 1
+        type: integer
+      status:
+        example: DRAFT
+        type: string
+      submitted_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
       type:
         example: CHECK_IN
         type: string
       updated_at:
         example: "2024-06-10T09:00:00Z"
+        type: string
+    type: object
+  transformations.OutputLeaseChecklistAcknowledgment:
+    properties:
+      action:
+        example: ACKNOWLEDGED
+        type: string
+      comment:
+        type: string
+      created_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      lease_checklist_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      round:
+        example: 1
+        type: integer
+      submitted_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      tenant_account:
+        $ref: '#/definitions/transformations.OutputTenantAccount'
+      tenant_account_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      updated_at:
+        example: "2024-06-01T09:00:00Z"
         type: string
     type: object
   transformations.OutputLeaseChecklistItem:
@@ -3106,11 +3262,24 @@ definitions:
         example: "2024-06-01T09:00:00Z"
         type: string
       description:
+        description: LeaseChecklist   OutputLeaseChecklist `json:"lease_checklist"`
         example: Checked in
         type: string
       id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
+      lease_checklist_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      notes:
+        example: Some notes about this item
+        type: string
+      photos:
+        example:
+        - https://example.com/photo1.jpg
+        items:
+          type: string
+        type: array
       status:
         example: FUNCTIONAL
         type: string
@@ -4424,6 +4593,135 @@ paths:
       summary: Schedule an announcement (Admin)
       tags:
       - Announcements
+  /api/v1/admin/checklist-templates:
+    get:
+      consumes:
+      - application/json
+      description: List all system-seeded checklist templates
+      parameters:
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputChecklistTemplate'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List checklist templates
+      tags:
+      - ChecklistTemplate
+  /api/v1/admin/checklist-templates/{template_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a single checklist template by ID
+      parameters:
+      - description: Template ID
+        in: path
+        name: template_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputChecklistTemplate'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get checklist template
+      tags:
+      - ChecklistTemplate
   /api/v1/admin/client-applications:
     get:
       consumes:
@@ -6288,6 +6586,14 @@ paths:
       - in: query
         name: start_date
         type: string
+      - collectionFormat: csv
+        example:
+        - DRAFT
+        in: query
+        items:
+          type: string
+        name: statuses
+        type: array
       - enum:
         - CHECK_IN
         - CHECK_OUT
@@ -6537,6 +6843,262 @@ paths:
       security:
       - BearerAuth: []
       summary: Update lease checklist
+      tags:
+      - LeaseChecklist
+  /api/v1/admin/leases/{lease_id}/checklists/{checklist_id}/comparison:
+    get:
+      consumes:
+      - application/json
+      description: Compare CHECK_IN and CHECK_OUT checklists side by side
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: CHECK_OUT checklist ID
+        in: path
+        name: checklist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  check_in:
+                    $ref: '#/definitions/transformations.OutputLeaseChecklist'
+                  check_out:
+                    $ref: '#/definitions/transformations.OutputLeaseChecklist'
+                type: object
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Checklist not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get checklist comparison
+      tags:
+      - LeaseChecklist
+  /api/v1/admin/leases/{lease_id}/checklists/{checklist_id}/items:
+    post:
+      consumes:
+      - application/json
+      description: Add a single item to a DRAFT or DISPUTED checklist
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Lease checklist ID
+        in: path
+        name: checklist_id
+        required: true
+        type: string
+      - description: Item data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateSingleLeaseChecklistItemRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputLeaseChecklistItem'
+            type: object
+        "400":
+          description: Checklist not editable
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create lease checklist item
+      tags:
+      - LeaseChecklist
+  /api/v1/admin/leases/{lease_id}/checklists/{checklist_id}/items/{item_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a single item from a DRAFT or DISPUTED checklist
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Lease checklist ID
+        in: path
+        name: checklist_id
+        required: true
+        type: string
+      - description: Item ID
+        in: path
+        name: item_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Item deleted successfully
+        "400":
+          description: Checklist not editable
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Item not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete lease checklist item
+      tags:
+      - LeaseChecklist
+    patch:
+      consumes:
+      - application/json
+      description: Update a single item on a DRAFT or DISPUTED checklist
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Lease checklist ID
+        in: path
+        name: checklist_id
+        required: true
+        type: string
+      - description: Item ID
+        in: path
+        name: item_id
+        required: true
+        type: string
+      - description: Item update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateLeaseChecklistItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputLeaseChecklistItem'
+            type: object
+        "400":
+          description: Checklist not editable
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Item not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update lease checklist item
+      tags:
+      - LeaseChecklist
+  /api/v1/admin/leases/{lease_id}/checklists/{checklist_id}/submit:
+    post:
+      consumes:
+      - application/json
+      description: Submit a DRAFT or DISPUTED checklist for tenant review
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Lease checklist ID
+        in: path
+        name: checklist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Checklist submitted successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputLeaseChecklist'
+            type: object
+        "400":
+          description: Checklist cannot be submitted
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Checklist not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Submit lease checklist
       tags:
       - LeaseChecklist
   /api/v1/admin/leases/{lease_id}/status:active:
@@ -10880,6 +11442,225 @@ paths:
       summary: List announcements (Tenant)
       tags:
       - Announcements
+  /api/v1/leases/{lease_id}/checklists:
+    get:
+      consumes:
+      - application/json
+      description: List submitted/acknowledged/disputed checklists visible to the
+        tenant
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - collectionFormat: csv
+        example:
+        - DRAFT
+        in: query
+        items:
+          type: string
+        name: statuses
+        type: array
+      - enum:
+        - CHECK_IN
+        - CHECK_OUT
+        - ROUTINE
+        example: CHECK_IN
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputLeaseChecklist'
+                    type: array
+                type: object
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: 'Tenant: list lease checklists'
+      tags:
+      - LeaseChecklist
+  /api/v1/leases/{lease_id}/checklists/{checklist_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a single checklist (non-DRAFT) for the authenticated tenant
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Checklist ID
+        in: path
+        name: checklist_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Checklist retrieved
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputLeaseChecklist'
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: 'Tenant: get lease checklist'
+      tags:
+      - LeaseChecklist
+  /api/v1/leases/{lease_id}/checklists/{checklist_id}/acknowledge:
+    post:
+      consumes:
+      - application/json
+      description: Tenant acknowledges or disputes a SUBMITTED checklist
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Checklist ID
+        in: path
+        name: checklist_id
+        required: true
+        type: string
+      - description: Acknowledge or dispute
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.TenantAcknowledgeChecklistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputLeaseChecklist'
+            type: object
+        "400":
+          description: Checklist not submitted
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "409":
+          description: Already responded in this round
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: 'Tenant: acknowledge or dispute checklist'
+      tags:
+      - LeaseChecklist
   /api/v1/leases/{lease_id}/maintenance-requests:
     get:
       consumes:
