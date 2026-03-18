@@ -473,7 +473,7 @@ const (
 	WAITLIST_JOINED_BODY    = `Hi {{full_name}},
 
 Thanks for joining the Rentloop waitlist! 🎉
-We're working hard to bring you the smartest rental management platform in Ghana. You'll be among the first to know when we launch and get early access.
+We're working hard to bring you the smartest rental management platform. You'll be among the first to know when we launch and get early access.
 
 Stay tuned — great things are coming.
 
