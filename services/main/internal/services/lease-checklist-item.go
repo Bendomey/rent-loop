@@ -21,7 +21,7 @@ type LeaseChecklistItemService interface {
 		ctx context.Context,
 		input UpdateLeaseChecklistItemInput,
 	) (*models.LeaseChecklistItem, error)
-	DeleteLeaseChecklistItem(ctx context.Context, checklistID string, itemID string) error
+	DeleteLeaseChecklistItem(ctx context.Context, leaseID string, checklistID string, itemID string) error
 }
 
 type leaseChecklistItemService struct {
@@ -181,11 +181,13 @@ func (s *leaseChecklistItemService) UpdateLeaseChecklistItem(
 
 func (s *leaseChecklistItemService) DeleteLeaseChecklistItem(
 	ctx context.Context,
+	leaseID string,
 	checklistID string,
 	itemID string,
 ) error {
 	checklist, err := s.checklistRepo.GetOneWithPopulate(ctx, repository.GetLeaseCheckListQuery{
-		ID: checklistID,
+		ID:      checklistID,
+		LeaseID: leaseID,
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
