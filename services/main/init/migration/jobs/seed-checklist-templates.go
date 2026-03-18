@@ -161,7 +161,7 @@ var checklistTemplates = []templateDef{
 	},
 	{
 		unitType: "RETAIL",
-		name:     "Default Retail Checklist",
+		name:     "Default Shop Checklist",
 		items: []struct{ category, description string }{
 			{"Sales Floor", "Walls"},
 			{"Sales Floor", "Ceiling"},
