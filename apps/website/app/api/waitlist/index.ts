@@ -13,7 +13,7 @@ export const createWaitlistEntry = async (input: CreateWaitlistEntryInput) => {
 				id: string
 				full_name: string
 				phone_number: string
-				email: string
+				email?: Nullable<string>
 			}
 		}>('/v1/waitlist', {
 			method: 'POST',

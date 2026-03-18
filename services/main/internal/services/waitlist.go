@@ -54,7 +54,7 @@ func (s *waitlistService) CreateWaitlistEntry(
 	}
 
 	smsMessage := strings.ReplaceAll(lib.WAITLIST_JOINED_SMS_BODY, "{{full_name}}", input.FullName)
-	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
+	go s.appCtx.Clients.GatekeeperAPI.SendSMS(context.Background(), gatekeeper.SendSMSInput{
 		Recipient: input.PhoneNumber,
 		Message:   smsMessage,
 	})

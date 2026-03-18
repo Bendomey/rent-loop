@@ -13429,9 +13429,9 @@ const docTemplate = `{
                         }
                     },
                     "422": {
-                        "description": "Unprocessable Entity",
+                        "description": "Validation error",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "500": {

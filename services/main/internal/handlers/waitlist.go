@@ -19,9 +19,9 @@ func NewWaitlistHandler(appCtx pkg.AppContext, service services.WaitlistService)
 }
 
 type CreateWaitlistEntryRequest struct {
-	FullName    string `json:"full_name"    validate:"required"        example:"John Doe"`
-	PhoneNumber string `json:"phone_number" validate:"required"        example:"+233201234567"`
-	Email       string `json:"email"        validate:"omitempty,email" example:"john@example.com"`
+	FullName    string  `json:"full_name"       validate:"required"        example:"John Doe"`
+	PhoneNumber string  `json:"phone_number"    validate:"required"        example:"+233201234567"`
+	Email       *string `json:"email,omitempty" validate:"omitempty,email" example:"john@example.com"`
 }
 
 // CreateWaitlistEntry godoc
@@ -34,7 +34,7 @@ type CreateWaitlistEntryRequest struct {
 //	@Param			body	body		CreateWaitlistEntryRequest	true	"Waitlist entry"
 //	@Success		201		{object}	object{data=object{full_name=string,phone_number=string,email=string}}
 //	@Failure		400		{object}	lib.HTTPError
-//	@Failure		422		{object}	string
+//	@Failure		422		{object}	lib.HTTPError	"Validation error"
 //	@Failure		500		{object}	string
 //	@Router			/api/v1/waitlist [post]
 func (h *WaitlistHandler) CreateWaitlistEntry(w http.ResponseWriter, r *http.Request) {
@@ -49,15 +49,10 @@ func (h *WaitlistHandler) CreateWaitlistEntry(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	var email *string
-	if body.Email != "" {
-		email = &body.Email
-	}
-
 	entry, err := h.service.CreateWaitlistEntry(r.Context(), services.CreateWaitlistEntryInput{
 		FullName:    body.FullName,
 		PhoneNumber: body.PhoneNumber,
-		Email:       email,
+		Email:       body.Email,
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)
