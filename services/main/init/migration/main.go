@@ -29,6 +29,9 @@ func updateMigration(db *gorm.DB) error {
 		&models.Lease{},
 		&models.LeaseChecklist{},
 		&models.LeaseChecklistItem{},
+		&models.LeaseChecklistAcknowledgment{},
+		&models.ChecklistTemplate{},
+		&models.ChecklistTemplateItem{},
 		&models.LeasePayment{},
 		&models.TenantAccount{},
 		&models.Invoice{},
@@ -73,6 +76,8 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.DropTenantAccountNotificationToken(),
 		jobs.AddLeaseNextBillingDate(),
 		jobs.AddInvoiceRemindersSent(),
+		jobs.EnhanceLeaseChecklist(),
+		jobs.SeedChecklistTemplates(),
 	})
 	m.Migrate()
 

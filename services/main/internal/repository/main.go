@@ -3,28 +3,30 @@ package repository
 import "gorm.io/gorm"
 
 type Repository struct {
-	AdminRepository              AdminRepository
-	ClientApplicationRepository  ClientApplicationRepository
-	ClientUserRepository         ClientUserRepository
-	ClientRepository             ClientRepository
-	PropertyRepository           PropertyRepository
-	ClientUserPropertyRepository ClientUserPropertyRepository
-	DocumentRepository           DocumentRepository
-	UnitRepository               UnitRepository
-	PropertyBlockRepository      PropertyBlockRepository
-	TenantApplicationRepository  TenantApplicationRepository
-	TenantRepository             TenantRepository
-	LeaseRepository              LeaseRepository
-	TenantAccountRepository      TenantAccountRepository
-	PaymentAccountRepository     PaymentAccountRepository
-	InvoiceRepository            InvoiceRepository
-	PaymentRepository            PaymentRepository
-	SigningRepository            SigningRepository
-	LeaseChecklistRepository     LeaseChecklistRepository
-	LeaseChecklistItemRepository LeaseChecklistItemRepository
-	FcmTokenRepository           FcmTokenRepository
-	AnnouncementRepository       AnnouncementRepository
-	MaintenanceRequestRepository MaintenanceRequestRepository
+	AdminRepository                        AdminRepository
+	ClientApplicationRepository            ClientApplicationRepository
+	ClientUserRepository                   ClientUserRepository
+	ClientRepository                       ClientRepository
+	PropertyRepository                     PropertyRepository
+	ClientUserPropertyRepository           ClientUserPropertyRepository
+	DocumentRepository                     DocumentRepository
+	UnitRepository                         UnitRepository
+	PropertyBlockRepository                PropertyBlockRepository
+	TenantApplicationRepository            TenantApplicationRepository
+	TenantRepository                       TenantRepository
+	LeaseRepository                        LeaseRepository
+	TenantAccountRepository                TenantAccountRepository
+	PaymentAccountRepository               PaymentAccountRepository
+	InvoiceRepository                      InvoiceRepository
+	PaymentRepository                      PaymentRepository
+	SigningRepository                      SigningRepository
+	LeaseChecklistRepository               LeaseChecklistRepository
+	LeaseChecklistItemRepository           LeaseChecklistItemRepository
+	LeaseChecklistAcknowledgmentRepository LeaseChecklistAcknowledgmentRepository
+	ChecklistTemplateRepository            ChecklistTemplateRepository
+	FcmTokenRepository                     FcmTokenRepository
+	AnnouncementRepository                 AnnouncementRepository
+	MaintenanceRequestRepository           MaintenanceRequestRepository
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -47,32 +49,36 @@ func NewRepository(db *gorm.DB) Repository {
 	signingRepository := NewSigningRepository(db)
 	leaseChecklistRepository := NewLeaseChecklistRepository(db)
 	leaseChecklistItemRepository := NewLeaseChecklistItemRepository(db)
+	leaseChecklistAcknowledgmentRepository := NewLeaseChecklistAcknowledgmentRepository(db)
+	checklistTemplateRepository := NewChecklistTemplateRepository(db)
 	fcmTokenRepository := NewFcmTokenRepository(db)
 	announcementRepository := NewAnnouncementRepository(db)
 	maintenanceRequestRepository := NewMaintenanceRequestRepository(db)
 
 	return Repository{
-		AdminRepository:              adminRepository,
-		ClientApplicationRepository:  clientApplicationRepository,
-		ClientUserRepository:         clientUserRepository,
-		ClientRepository:             clientRepository,
-		PropertyRepository:           propertyRepository,
-		ClientUserPropertyRepository: clientUserPropertyRepository,
-		DocumentRepository:           documentRepository,
-		UnitRepository:               unitRepository,
-		PropertyBlockRepository:      propertyBlockRepository,
-		TenantApplicationRepository:  tenantApplicationRepository,
-		TenantRepository:             tenantRepository,
-		LeaseRepository:              leaseRepository,
-		TenantAccountRepository:      tenantAccountRepository,
-		PaymentAccountRepository:     paymentAccountRepository,
-		InvoiceRepository:            invoiceRepository,
-		PaymentRepository:            paymentRepository,
-		SigningRepository:            signingRepository,
-		LeaseChecklistRepository:     leaseChecklistRepository,
-		LeaseChecklistItemRepository: leaseChecklistItemRepository,
-		FcmTokenRepository:           fcmTokenRepository,
-		AnnouncementRepository:       announcementRepository,
-		MaintenanceRequestRepository: maintenanceRequestRepository,
+		AdminRepository:                        adminRepository,
+		ClientApplicationRepository:            clientApplicationRepository,
+		ClientUserRepository:                   clientUserRepository,
+		ClientRepository:                       clientRepository,
+		PropertyRepository:                     propertyRepository,
+		ClientUserPropertyRepository:           clientUserPropertyRepository,
+		DocumentRepository:                     documentRepository,
+		UnitRepository:                         unitRepository,
+		PropertyBlockRepository:                propertyBlockRepository,
+		TenantApplicationRepository:            tenantApplicationRepository,
+		TenantRepository:                       tenantRepository,
+		LeaseRepository:                        leaseRepository,
+		TenantAccountRepository:                tenantAccountRepository,
+		PaymentAccountRepository:               paymentAccountRepository,
+		InvoiceRepository:                      invoiceRepository,
+		PaymentRepository:                      paymentRepository,
+		SigningRepository:                      signingRepository,
+		LeaseChecklistRepository:               leaseChecklistRepository,
+		LeaseChecklistItemRepository:           leaseChecklistItemRepository,
+		LeaseChecklistAcknowledgmentRepository: leaseChecklistAcknowledgmentRepository,
+		ChecklistTemplateRepository:            checklistTemplateRepository,
+		FcmTokenRepository:                     fcmTokenRepository,
+		AnnouncementRepository:                 announcementRepository,
+		MaintenanceRequestRepository:           maintenanceRequestRepository,
 	}
 }
