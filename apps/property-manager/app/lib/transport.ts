@@ -125,6 +125,15 @@ export function fetchClient<T>(
 
 			resolve(res)
 		} catch (error: unknown) {
+			if (error instanceof Response && error.status === 403) {
+				reject(
+					new Error(
+						"You can't perform this action. Please contact your administrator.",
+					),
+				)
+				return
+			}
+
 			reject(error)
 		}
 	})

@@ -146,18 +146,18 @@ export function PropertyAssetBlocksModule() {
 										>
 											View Units
 										</Button>
-										<DropdownMenu>
-											<DropdownMenuTrigger asChild>
-												<Button
-													variant="outline"
-													size="icon"
-													aria-label="More Options"
-												>
-													<MoreHorizontalIcon />
-												</Button>
-											</DropdownMenuTrigger>
-											<DropdownMenuContent align="end" className="w-52">
-												<PropertyPermissionGuard roles={['MANAGER']}>
+										<PropertyPermissionGuard roles={['MANAGER']}>
+											<DropdownMenu>
+												<DropdownMenuTrigger asChild>
+													<Button
+														variant="outline"
+														size="icon"
+														aria-label="More Options"
+													>
+														<MoreHorizontalIcon />
+													</Button>
+												</DropdownMenuTrigger>
+												<DropdownMenuContent align="end" className="w-52">
 													<DropdownMenuGroup>
 														<DropdownMenuItem
 															onClick={() =>
@@ -180,9 +180,9 @@ export function PropertyAssetBlocksModule() {
 															Delete
 														</DropdownMenuItem>
 													</DropdownMenuGroup>
-												</PropertyPermissionGuard>
-											</DropdownMenuContent>
-										</DropdownMenu>
+												</DropdownMenuContent>
+											</DropdownMenu>
+										</PropertyPermissionGuard>
 									</ButtonGroup>
 								</div>
 							</CardFooter>

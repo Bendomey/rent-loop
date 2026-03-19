@@ -1,6 +1,7 @@
 import { Plus, RotateCw, ToggleLeft } from 'lucide-react'
 import { Link } from 'react-router'
 import { FilterSet } from '~/components/filter-set'
+import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { SearchInput } from '~/components/search'
 import { Button } from '~/components/ui/button'
 import { cn } from '~/lib/utils'
@@ -45,18 +46,21 @@ export const PropertyTenantsController = ({
 					<SearchInput placeholder="Search tenants..." />
 				</div>
 				<div className="flex items-center justify-end gap-2">
-					<Link
-						to={`/properties/${clientUserProperty?.property_id}/tenants/applications/new`}
-					>
-						<Button
-							variant="default"
-							size="sm"
-							className="bg-rose-600 text-white hover:bg-rose-700"
+					<PropertyPermissionGuard roles={['MANAGER']}>
+						<Link
+							to={`/properties/${clientUserProperty?.property_id}/tenants/applications/new`}
 						>
-							<Plus className="size-4" />
-							Add Tenant
-						</Button>
-					</Link>
+							<Button
+								variant="default"
+								size="sm"
+								className="bg-rose-600 text-white hover:bg-rose-700"
+							>
+								<Plus className="size-4" />
+								Add Tenant
+							</Button>
+						</Link>
+					</PropertyPermissionGuard>
+
 					<Button
 						onClick={() => refetch()}
 						disabled={isLoading}

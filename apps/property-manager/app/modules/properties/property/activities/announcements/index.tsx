@@ -98,22 +98,24 @@ export function PropertyActivitiesAnnouncementsModule() {
 					const announcement = row.original
 					return (
 						<div className="flex items-center justify-end gap-1">
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<Button
-										size="icon"
-										variant="ghost"
-										onClick={() =>
-											void navigate(
-												`/properties/${propertyId}/activities/announcements/new?announcement_id=${announcement.id}`,
-											)
-										}
-									>
-										<Copy className="h-4 w-4" />
-									</Button>
-								</TooltipTrigger>
-								<TooltipContent>Duplicate</TooltipContent>
-							</Tooltip>
+							<PropertyPermissionGuard roles={['MANAGER']}>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button
+											size="icon"
+											variant="ghost"
+											onClick={() =>
+												void navigate(
+													`/properties/${propertyId}/activities/announcements/new?announcement_id=${announcement.id}`,
+												)
+											}
+										>
+											<Copy className="h-4 w-4" />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>Duplicate</TooltipContent>
+								</Tooltip>
+							</PropertyPermissionGuard>
 							<Button
 								size="icon"
 								variant="ghost"

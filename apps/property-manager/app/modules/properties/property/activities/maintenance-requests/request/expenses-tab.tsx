@@ -12,6 +12,7 @@ import {
 	useGenerateMaintenanceInvoice,
 	useGetMaintenanceRequestExpenses,
 } from '~/api/maintenance-requests'
+import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -167,22 +168,26 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 						</p>
 					)}
 				</div>
-				<div className="flex items-center gap-2">
-					{billableExpenses.length > 0 && (
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={handleGenerateInvoice}
-							disabled={generateInvoice.isPending}
-						>
-							<FileText className="mr-1.5 h-3.5 w-3.5" />
-							{generateInvoice.isPending ? 'Generating...' : 'Generate Invoice'}
+				<PropertyPermissionGuard roles={['MANAGER']}>
+					<div className="flex items-center gap-2">
+						{billableExpenses.length > 0 && (
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={handleGenerateInvoice}
+								disabled={generateInvoice.isPending}
+							>
+								<FileText className="mr-1.5 h-3.5 w-3.5" />
+								{generateInvoice.isPending
+									? 'Generating...'
+									: 'Generate Invoice'}
+							</Button>
+						)}
+						<Button size="sm" onClick={() => setShowForm((v) => !v)}>
+							{showForm ? 'Cancel' : 'Add Expense'}
 						</Button>
-					)}
-					<Button size="sm" onClick={() => setShowForm((v) => !v)}>
-						{showForm ? 'Cancel' : 'Add Expense'}
-					</Button>
-				</div>
+					</div>
+				</PropertyPermissionGuard>
 			</div>
 
 			{showForm && (
@@ -266,15 +271,17 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 									)}
 								/>
 							</div>
-							<div className="flex justify-end">
-								<Button
-									type="submit"
-									size="sm"
-									disabled={createExpense.isPending}
-								>
-									{createExpense.isPending ? 'Saving...' : 'Add Expense'}
-								</Button>
-							</div>
+							<PropertyPermissionGuard roles={['MANAGER']}>
+								<div className="flex justify-end">
+									<Button
+										type="submit"
+										size="sm"
+										disabled={createExpense.isPending}
+									>
+										{createExpense.isPending ? 'Saving...' : 'Add Expense'}
+									</Button>
+								</div>
+							</PropertyPermissionGuard>
 						</form>
 					</Form>
 				</div>
@@ -345,17 +352,19 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 								<p className="text-sm font-semibold">
 									{formatAmount(expense.amount)}
 								</p>
-								{!expense.invoice_id && (
-									<Button
-										variant="ghost"
-										size="icon"
-										className="text-destructive hover:text-destructive h-7 w-7"
-										onClick={() => handleDelete(expense.id)}
-										disabled={deleteExpense.isPending}
-									>
-										<Trash2 className="h-3.5 w-3.5" />
-									</Button>
-								)}
+								<PropertyPermissionGuard roles={['MANAGER']}>
+									{!expense.invoice_id && (
+										<Button
+											variant="ghost"
+											size="icon"
+											className="text-destructive hover:text-destructive h-7 w-7"
+											onClick={() => handleDelete(expense.id)}
+											disabled={deleteExpense.isPending}
+										>
+											<Trash2 className="h-3.5 w-3.5" />
+										</Button>
+									)}
+								</PropertyPermissionGuard>
 							</div>
 						</div>
 					))}

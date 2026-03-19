@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { ChecklistModal } from './checklist-modal'
 import { CreateChecklistDialog } from './create-checklist-dialog'
 import { useGetLeaseChecklists } from '~/api/lease-checklists'
+import { useHasPropertyPermissions } from '~/components/permissions/use-has-role'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
 import {
@@ -21,10 +22,13 @@ export function ChecklistAlerts({ lease, canEdit, propertyId }: Props) {
 	const { data, isSuccess } = useGetLeaseChecklists(propertyId, lease.id, {
 		populate: ['Items', 'Acknowledgments'],
 	})
+	const { hasPermissions: canCreateReport } = useHasPropertyPermissions({
+		roles: ['MANAGER'],
+	})
 	const [createType, setCreateType] = useState<LeaseChecklistType | null>(null)
 	const [viewChecklistId, setViewChecklistId] = useState<string | null>(null)
 
-	if (!isSuccess) return null
+	if (!isSuccess || canCreateReport === 'UNAUTHORIZED') return null
 
 	const checklists = data?.rows ?? []
 	const viewChecklist = checklists.find((c) => c.id === viewChecklistId) ?? null
