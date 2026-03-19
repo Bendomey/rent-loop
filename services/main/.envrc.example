@@ -60,3 +60,6 @@ export CUBEJS_API_SECRET=
 
 # Firebase Cloud Messaging
 export FIREBASE_SERVICE_ACCOUNT_JSON=
+
+export TEST_OTP_PHONE_NUMBERS=
+export TEST_OTP_CODE=
