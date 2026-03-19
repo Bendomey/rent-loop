@@ -46,6 +46,8 @@ type SendCodeInput struct {
 	Phone   *string
 }
 
+const testOTPSentinel = "__test_otp__"
+
 func (s *authService) SendCode(ctx context.Context, input SendCodeInput) error {
 	if input.Email == nil && input.Phone == nil {
 		return pkg.BadRequestError("EmailOrPhoneRequired", nil)
@@ -57,6 +59,28 @@ func (s *authService) SendCode(ctx context.Context, input SendCodeInput) error {
 
 	if slices.Contains(input.Channel, "SMS") && input.Phone == nil {
 		return pkg.BadRequestError("PhoneRequired", nil)
+	}
+
+	// Test phone bypass: skip Gatekeeper and store a sentinel reference.
+	if input.Phone != nil && s.appCtx.Config.IsTestOTPPhone(*input.Phone) {
+		pipe := s.appCtx.RDB.TxPipeline()
+		if slices.Contains(input.Channel, "SMS") {
+			pipe.Set(ctx, *input.Phone, testOTPSentinel, 10*time.Minute)
+		}
+		if slices.Contains(input.Channel, "EMAIL") && input.Email != nil {
+			pipe.Set(ctx, *input.Email, testOTPSentinel, 10*time.Minute)
+		}
+		_, setErr := pipe.Exec(ctx)
+		if setErr != nil {
+			return pkg.InternalServerError(setErr.Error(), &pkg.RentLoopErrorParams{
+				Err: setErr,
+				Metadata: map[string]string{
+					"function": "SendCode",
+					"action":   "setting test sentinel in redis",
+				},
+			})
+		}
+		return nil
 	}
 
 	req := gatekeeper.GenerateOtpInput{
@@ -131,6 +155,24 @@ func (s *authService) VerifyCode(ctx context.Context, input VerifyCodeInput) err
 		})
 	}
 
+	// Test phone bypass: validate directly against the fixed test code.
+	if reference == testOTPSentinel {
+		if input.Code != s.appCtx.Config.TestOTP.Code {
+			return pkg.BadRequestError("CodeIncorrect", nil)
+		}
+		_, delErr := s.appCtx.RDB.Del(ctx, identifier).Result()
+		if delErr != nil {
+			return pkg.InternalServerError(delErr.Error(), &pkg.RentLoopErrorParams{
+				Err: delErr,
+				Metadata: map[string]string{
+					"function": "VerifyCode",
+					"action":   "deleting test sentinel",
+				},
+			})
+		}
+		return nil
+	}
+
 	response, err := s.gatekeeperClient.VerifyOtp(ctx, gatekeeper.VerifyOtpRequest{
 		Reference: reference,
 		Otp:       input.Code,
@@ -184,6 +226,21 @@ func (s *authService) SendTenantCode(ctx context.Context, phone string) error {
 				"action":   "fetching tenant account",
 			},
 		})
+	}
+
+	// Test phone bypass: skip Gatekeeper and store a sentinel reference.
+	if s.appCtx.Config.IsTestOTPPhone(phone) {
+		setErr := s.appCtx.RDB.Set(ctx, "tenant:"+phone, testOTPSentinel, 10*time.Minute).Err()
+		if setErr != nil {
+			return pkg.InternalServerError(setErr.Error(), &pkg.RentLoopErrorParams{
+				Err: setErr,
+				Metadata: map[string]string{
+					"function": "SendTenantCode",
+					"action":   "setting test sentinel in redis",
+				},
+			})
+		}
+		return nil
 	}
 
 	response, err := s.gatekeeperClient.GenerateOtp(ctx, gatekeeper.GenerateOtpInput{
@@ -242,37 +299,54 @@ func (s *authService) VerifyTenantCode(
 		})
 	}
 
-	response, err := s.gatekeeperClient.VerifyOtp(ctx, gatekeeper.VerifyOtpRequest{
-		Reference: reference,
-		Otp:       input.Code,
-	})
-	if err != nil {
-		var gatekeeperErr *gatekeeper.GatekeeperAPIError
-		if errors.As(err, &gatekeeperErr) && gatekeeperErr.StatusCode == http.StatusBadRequest {
+	// Test phone bypass: validate directly against the fixed test code.
+	if reference == testOTPSentinel {
+		if input.Code != s.appCtx.Config.TestOTP.Code {
 			return nil, pkg.BadRequestError("CodeIncorrect", nil)
 		}
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "VerifyTenantCode",
-				"action":   "verifying code",
-			},
+		_, delErr := s.appCtx.RDB.Del(ctx, "tenant:"+input.Phone).Result()
+		if delErr != nil {
+			return nil, pkg.InternalServerError(delErr.Error(), &pkg.RentLoopErrorParams{
+				Err: delErr,
+				Metadata: map[string]string{
+					"function": "VerifyTenantCode",
+					"action":   "deleting test sentinel",
+				},
+			})
+		}
+	} else {
+		response, err := s.gatekeeperClient.VerifyOtp(ctx, gatekeeper.VerifyOtpRequest{
+			Reference: reference,
+			Otp:       input.Code,
 		})
-	}
+		if err != nil {
+			var gatekeeperErr *gatekeeper.GatekeeperAPIError
+			if errors.As(err, &gatekeeperErr) && gatekeeperErr.StatusCode == http.StatusBadRequest {
+				return nil, pkg.BadRequestError("CodeIncorrect", nil)
+			}
+			return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+				Err: err,
+				Metadata: map[string]string{
+					"function": "VerifyTenantCode",
+					"action":   "verifying code",
+				},
+			})
+		}
 
-	if !response.Verified {
-		return nil, pkg.BadRequestError("CodeIncorrect", nil)
-	}
+		if !response.Verified {
+			return nil, pkg.BadRequestError("CodeIncorrect", nil)
+		}
 
-	_, delErr := s.appCtx.RDB.Del(ctx, "tenant:"+input.Phone).Result()
-	if delErr != nil {
-		return nil, pkg.InternalServerError(delErr.Error(), &pkg.RentLoopErrorParams{
-			Err: delErr,
-			Metadata: map[string]string{
-				"function": "VerifyTenantCode",
-				"action":   "deleting code",
-			},
-		})
+		_, delErr := s.appCtx.RDB.Del(ctx, "tenant:"+input.Phone).Result()
+		if delErr != nil {
+			return nil, pkg.InternalServerError(delErr.Error(), &pkg.RentLoopErrorParams{
+				Err: delErr,
+				Metadata: map[string]string{
+					"function": "VerifyTenantCode",
+					"action":   "deleting code",
+				},
+			})
+		}
 	}
 
 	tenantAccount, findErr := s.tenantAccountRepo.GetOneWithPopulate(ctx, repository.GetTenantAccountQuery{

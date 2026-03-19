@@ -16,3 +16,5 @@ node_modules
 
 google-services.json
 GoogleService-Info.plist
+
+firebase_test_cases.yaml

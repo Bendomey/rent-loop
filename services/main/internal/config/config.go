@@ -2,6 +2,8 @@ package config
 
 import (
 	"os"
+	"slices"
+	"strings"
 )
 
 type IDatabase struct {
@@ -92,6 +94,11 @@ type IFirebase struct {
 	ServiceAccountJSON string
 }
 
+type ITestOTP struct {
+	PhoneNumbers []string
+	Code         string
+}
+
 type Config struct {
 	Firebase        IFirebase
 	Port            string
@@ -108,6 +115,16 @@ type Config struct {
 	Clients         IClients
 	ChartOfAccounts IChartOfAccounts
 	CubeApiSecret   string
+	TestOTP         ITestOTP
+}
+
+// IsTestOTPPhone returns true only in non-production environments when the
+// given phone number is in the whitelisted test numbers list.
+func (c *Config) IsTestOTPPhone(phone string) bool {
+	if c.Env == "production" {
+		return false
+	}
+	return slices.Contains(c.TestOTP.PhoneNumbers, phone)
 }
 
 // Load loads config from environment variables
@@ -168,6 +185,10 @@ func Load() Config {
 			},
 		},
 		CubeApiSecret: getEnv("CUBEJS_API_SECRET", "superdupercubeapisecret"),
+		TestOTP: ITestOTP{
+			PhoneNumbers: parseCommaSeparated(getEnv("TEST_OTP_PHONE_NUMBERS", "")),
+			Code:         getEnv("TEST_OTP_CODE", ""),
+		},
 		Firebase: IFirebase{
 			ServiceAccountJSON: getEnv("FIREBASE_SERVICE_ACCOUNT_JSON", ""),
 		},
@@ -196,4 +217,18 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func parseCommaSeparated(s string) []string {
+	if s == "" {
+		return nil
+	}
+	parts := strings.Split(s, ",")
+	result := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if trimmed := strings.TrimSpace(p); trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	return result
 }
