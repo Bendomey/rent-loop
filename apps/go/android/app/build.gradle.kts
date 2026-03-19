@@ -12,7 +12,6 @@ dependencies {
 
     // When using the BoM, don't specify versions in Firebase dependencies
     implementation("com.google.firebase:firebase-messaging")
-    implementation("com.google.firebase:firebase-analytics")
 }
 
 android {
@@ -39,11 +38,24 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {                                                                                                                                           
+        create("release") {                                                                                                                                    
+          keyAlias = System.getenv("KEY_ALIAS")                                                                                                              
+          keyPassword = System.getenv("KEY_PASSWORD")                                                                                                        
+          storeFile = file(System.getenv("STORE_FILE"))                                                                                                      
+          storePassword = System.getenv("STORE_PASSWORD")                                                                                                    
+        }                                                                                                                                                      
+    } 
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(                                                                                                                                     
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"                                                                                                                           
+            )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }

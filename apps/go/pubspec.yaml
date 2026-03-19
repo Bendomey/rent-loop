@@ -105,13 +105,9 @@ flutter:
     - family: Inter
       fonts:
         - asset: assets/font/Inter-VariableFont_opsz,wght.ttf
-        - asset: assets/font/Inter-Italic-VariableFont_opsz,wght.ttf
-          style: italic
     - family: Shantell
       fonts:
         - asset: assets/font/ShantellSans-VariableFont_BNCE,INFM,SPAC,wght.ttf
-        - asset: assets/font/ShantellSans-Italic-VariableFont_BNCE,INFM,SPAC,wght.ttf
-          style: italic
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

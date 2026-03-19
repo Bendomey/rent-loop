@@ -5,7 +5,7 @@ build_bundle:
 	flutter build appbundle --release --obfuscate --split-debug-info=build/debug-info
 
 build_apk:
-	flutter build apk
+	flutter build apk --release --obfuscate --split-debug-info=build/debug-info
 
 install:
 	flutter pub get

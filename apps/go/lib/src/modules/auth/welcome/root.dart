@@ -19,19 +19,19 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen> {
       title: 'Welcome to RentLoop',
       description:
           'Manage your rental experience with ease. Your new home, right at your fingertips.',
-      image: 'assets/images/welcome_illustration.png',
+      image: 'assets/images/welcome_illustration.webp',
     ),
     OnboardingItem(
       title: 'Easy Payments',
       description:
           'Pay your rent securely and instantly. Track your payment history and never miss a due date.',
-      image: 'assets/images/payment_illustration.png',
+      image: 'assets/images/payment_illustration.webp',
     ),
     OnboardingItem(
       title: 'Quick Maintenance',
       description:
           'Submit maintenance requests in seconds. Track real-time progress as we fix your issues.',
-      image: 'assets/images/maintenance_illustration.png',
+      image: 'assets/images/maintenance_illustration.webp',
     ),
   ];
 
