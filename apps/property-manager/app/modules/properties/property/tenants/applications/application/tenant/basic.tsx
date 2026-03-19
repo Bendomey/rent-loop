@@ -76,7 +76,11 @@ function FieldDisplay({ label, value }: FieldDisplayProps) {
 	)
 }
 
-export function PropertyTenantApplicationBasic() {
+interface Props {
+	property_id: string
+}
+
+export function PropertyTenantApplicationBasic({ property_id }: Props) {
 	const { tenantApplication: application } = useTenantApplicationContext()
 
 	const isDocLocked = ['SIGNED', 'SIGNING'].includes(
@@ -131,6 +135,7 @@ export function PropertyTenantApplicationBasic() {
 		mutate(
 			{
 				id: application.id,
+				property_id,
 				data: {
 					...data,
 					date_of_birth: data.date_of_birth.toISOString(),

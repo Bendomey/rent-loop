@@ -20,6 +20,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 		const tenantApplication = await getAdminPropertyTenantApplicationForServer(
 			{
 				id: params.applicationId,
+				property_id: params.propertyId,
 				populate: [
 					'DesiredUnit',
 					'CreatedBy',

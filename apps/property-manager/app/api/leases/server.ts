@@ -1,12 +1,12 @@
 import { fetchServer } from '~/lib/transport'
 
 export const getLeaseForServer = async (
-	props: { lease_id: string },
+	props: { lease_id: string; property_id: string },
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<Lease>>(
-			`${apiConfig.baseUrl}/v1/admin/leases/${props.lease_id}?populate=Tenant,Unit,TenantApplication,TenantApplication.LeaseAgreementDocumentSignatures,TenantApplication.ApplicationPaymentInvoice`,
+			`${apiConfig.baseUrl}/v1/admin/properties/${props.property_id}/leases/${props.lease_id}?populate=Tenant,Unit,TenantApplication,TenantApplication.LeaseAgreementDocumentSignatures,TenantApplication.ApplicationPaymentInvoice`,
 			{ ...apiConfig },
 		)
 		return response.parsedBody.data

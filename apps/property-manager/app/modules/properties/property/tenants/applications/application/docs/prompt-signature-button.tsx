@@ -47,6 +47,7 @@ interface PromptSignatureButtonProps {
 	existingToken?: AdminSigningToken | null
 	documentId: string
 	role: 'TENANT' | 'PM_WITNESS' | 'TENANT_WITNESS'
+	propertyId: string
 	tenantApplicationId?: string
 }
 
@@ -54,6 +55,7 @@ export function PromptSignatureButton({
 	existingToken,
 	documentId,
 	role,
+	propertyId,
 	tenantApplicationId,
 }: PromptSignatureButtonProps) {
 	const queryClient = useQueryClient()
@@ -136,15 +138,20 @@ export function PromptSignatureButton({
 					if (hasChanges) {
 						await updateToken({
 							signing_token_id: existingToken.id,
+							property_id: propertyId,
 							signer_name: values.signer_name,
 							signer_email: values.signer_email || undefined,
 							signer_phone: normalizedPhone,
 						})
 					}
 
-					await resendToken(existingToken.id)
+					await resendToken({
+						property_id: propertyId ?? '',
+						signing_token_id: existingToken.id,
+					})
 				} else {
 					await generateToken({
+						property_id: propertyId,
 						document_id: documentId,
 						role,
 						tenant_application_id: tenantApplicationId,
@@ -167,16 +174,17 @@ export function PromptSignatureButton({
 		},
 		[
 			existingToken,
-			generateToken,
-			updateToken,
-			resendToken,
-			documentId,
-			role,
-			tenantApplicationId,
 			queryClient,
 			handleCloseModal,
 			startCooldown,
 			rhfMethods,
+			resendToken,
+			propertyId,
+			updateToken,
+			generateToken,
+			documentId,
+			role,
+			tenantApplicationId,
 		],
 	)
 

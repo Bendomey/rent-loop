@@ -24,6 +24,7 @@ interface AssignDialogProps {
 	open: boolean
 	onOpenChange: (open: boolean) => void
 	requestId: string
+	propertyId: string
 	type: 'worker' | 'manager'
 }
 
@@ -31,6 +32,7 @@ export function AssignDialog({
 	open,
 	onOpenChange,
 	requestId,
+	propertyId,
 	type,
 }: AssignDialogProps) {
 	const queryClient = useQueryClient()
@@ -52,11 +54,13 @@ export function AssignDialog({
 			if (type === 'worker') {
 				await assignWorker.mutateAsync({
 					id: requestId,
+					property_id: propertyId,
 					worker_id: selectedUserId,
 				})
 			} else {
 				await assignManager.mutateAsync({
 					id: requestId,
+					property_id: propertyId,
 					manager_id: selectedUserId,
 				})
 			}

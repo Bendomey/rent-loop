@@ -17,7 +17,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 
 	try {
 		const invoice = await getInvoiceForServer(
-			{ invoice_id: invoice_id },
+			{ invoice_id: invoice_id, property_id: params.propertyId },
 			{
 				authToken,
 				baseUrl,

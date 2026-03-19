@@ -42,6 +42,7 @@ type UpdateLeaseRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
+//	@Param			property_id	path		string											true	"Property ID"
 //	@Param			lease_id	path		string											true	"Lease ID"
 //	@Param			body		body		UpdateLeaseRequest								true	"Update lease request body"
 //	@Success		200			{object}	object{data=transformations.OutputAdminLease}	"Lease Updated Successfully"
@@ -50,7 +51,7 @@ type UpdateLeaseRequest struct {
 //	@Failure		404			{object}	lib.HTTPError									"Lease not found"
 //	@Failure		422			{object}	lib.HTTPError									"Validation error"
 //	@Failure		500			{object}	string											"An unexpected error occurred"
-//	@Router			/api/v1/admin/leases/{lease_id} [patch]
+//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id} [patch]
 func (h *LeaseHandler) UpdateLease(w http.ResponseWriter, r *http.Request) {
 	var body UpdateLeaseRequest
 	leaseID := chi.URLParam(r, "lease_id")
@@ -100,6 +101,7 @@ type GetLeaseQuery struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
+//	@Param			property_id	path		string											true	"Property ID"
 //	@Param			lease_id	path		string											true	"Lease ID"
 //	@Param			q			query		GetLeaseQuery									true	"Leases"
 //	@Success		200			{object}	object{data=transformations.OutputAdminLease}	"Lease"
@@ -107,7 +109,7 @@ type GetLeaseQuery struct {
 //	@Failure		401			{object}	string											"Invalid or absent authentication token"
 //	@Failure		404			{object}	lib.HTTPError									"Lease not found"
 //	@Failure		500			{object}	string											"An unexpected error occurred"
-//	@Router			/api/v1/admin/leases/{lease_id} [get]
+//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id} [get]
 func (h *LeaseHandler) GetLeaseByID(w http.ResponseWriter, r *http.Request) {
 	leaseID := chi.URLParam(r, "lease_id")
 
@@ -131,7 +133,6 @@ func (h *LeaseHandler) GetLeaseByID(w http.ResponseWriter, r *http.Request) {
 type ListLeasesQuery struct {
 	lib.FilterQueryInput
 	Status                     *string   `json:"status,omitempty"                        validate:"omitempty,oneof=Lease.Status.Pending Lease.Status.Active Lease.Status.Terminated Lease.Status.Completed Lease.Status.Cancelled" example:"Lease.Status.Pending"                 description:"Lease status"`
-	PropertyID                 *string   `json:"property_id,omitempty"                   validate:"omitempty,uuid"                                                                                                                 example:"b4d0243c-6581-4104-8185-d83a45ebe41b" description:"Property ID"`
 	ParentLeaseId              *string   `json:"parent_lease_id,omitempty"               validate:"omitempty,uuid"                                                                                                                 example:"b4d0243c-6581-4104-8185-d83a45ebe41b" description:"Parent lease ID"`
 	PaymentFrequency           *string   `json:"payment_frequency,omitempty"             validate:"omitempty,oneof=HOURLY DAILY MONTHLY QUARTERLY BIANNUALLY ANNUALLY ONETIME"                                                     example:"HOURLY"                               description:"Frequency of rent payments"`
 	StayDurationFrequency      *string   `json:"stay_duration_frequency,omitempty"       validate:"omitempty,oneof=HOURS DAYS MONTHS"                                                                                              example:"HOURS"                                description:"Unit of stay duration (e.g., months, years)"`
@@ -147,13 +148,14 @@ type ListLeasesQuery struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
+//	@Param			property_id	path		string			true	"Property ID"
 //	@Param			tenant_id	path		string			true	"Tenant ID"
 //	@Param			q			query		ListLeasesQuery	true	"Leases"
 //	@Success		200			{object}	object{data=object{rows=[]transformations.OutputAdminLease,meta=lib.HTTPReturnPaginatedMetaResponse}}
 //	@Failure		400			{object}	lib.HTTPError	"An error occurred while filtering leases"
 //	@Failure		401			{object}	string			"Absent or invalid authentication token"
 //	@Failure		500			{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/tenants/{tenant_id}/leases [get]
+//	@Router			/api/v1/admin/properties/{property_id}/tenants/{tenant_id}/leases [get]
 func (h *LeaseHandler) ListLeasesByTenant(w http.ResponseWriter, r *http.Request) {
 	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
 	if filterQueryErr != nil {
@@ -167,11 +169,12 @@ func (h *LeaseHandler) ListLeasesByTenant(w http.ResponseWriter, r *http.Request
 	}
 
 	tenantID := chi.URLParam(r, "tenant_id")
+	propertyID := chi.URLParam(r, "property_id")
 
 	input := repository.ListLeasesFilter{
 		FilterQuery:                *filterQuery,
 		TenantID:                   &tenantID,
-		PropertyID:                 lib.NullOrString(r.URL.Query().Get("property_id")),
+		PropertyID:                 &propertyID,
 		Status:                     lib.NullOrString(r.URL.Query().Get("status")),
 		ParentLeaseID:              lib.NullOrString(r.URL.Query().Get("parent_lease_id")),
 		PaymentFrequency:           lib.NullOrString(r.URL.Query().Get("payment_frequency")),
@@ -343,13 +346,14 @@ func (h *LeaseHandler) ListLeasesByTenantAccount(w http.ResponseWriter, r *http.
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
+//	@Param			property_id	path		string			true	"Property ID"
 //	@Param			lease_id	path		string			true	"Lease ID"
 //	@Success		204			{object}	nil				"Lease Activated Successfully"
 //	@Failure		400			{object}	lib.HTTPError	"Error occurred when activating lease"
 //	@Failure		401			{object}	string			"Invalid or absent authentication token"
 //	@Failure		404			{object}	lib.HTTPError	"Lease not found"
 //	@Failure		500			{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/leases/{lease_id}/status:active [patch]
+//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id}/status:active [patch]
 func (h *LeaseHandler) ActivateLease(w http.ResponseWriter, r *http.Request) {
 	clientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {
@@ -384,6 +388,7 @@ type CancelLeaseRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
+//	@Param			property_id	path		string				true	"Property ID"
 //	@Param			lease_id	path		string				true	"Lease ID"
 //	@Param			body		body		CancelLeaseRequest	true	"Cancel lease request body"
 //	@Success		204			{object}	nil					"Lease Cancelled Successfully"
@@ -392,7 +397,7 @@ type CancelLeaseRequest struct {
 //	@Failure		404			{object}	lib.HTTPError		"Lease not found"
 //	@Failure		422			{object}	lib.HTTPError		"Validation error"
 //	@Failure		500			{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/leases/{lease_id}/status:cancelled [patch]
+//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id}/status:cancelled [patch]
 func (h *LeaseHandler) CancelLease(w http.ResponseWriter, r *http.Request) {
 	clientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {

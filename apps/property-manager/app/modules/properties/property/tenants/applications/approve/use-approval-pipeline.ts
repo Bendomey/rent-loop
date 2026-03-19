@@ -37,11 +37,13 @@ const STEP_DESCRIPTIONS: Record<ApprovalStep, string> = {
 interface UseApprovalPipelineProps {
 	application: TenantApplication
 	onSuccess: () => void
+	propertyId: string
 }
 
 export function useApprovalPipeline({
 	application,
 	onSuccess,
+	propertyId,
 }: UseApprovalPipelineProps) {
 	const [state, setState] = useState<PipelineState>({ status: 'IDLE' })
 	const queryClient = useQueryClient()
@@ -181,6 +183,7 @@ export function useApprovalPipeline({
 				beginStep('UPDATE_APPLICATION')
 				await updateApplication({
 					id: application.id,
+					property_id: propertyId,
 					data: { lease_agreement_document_url: pdfUrl },
 				})
 				completeStep('UPDATE_APPLICATION')
@@ -188,7 +191,7 @@ export function useApprovalPipeline({
 
 			// Step 4: Approve
 			beginStep('APPROVE')
-			await approveApplication(application.id)
+			await approveApplication({ property_id: propertyId, id: application.id })
 			completeStep('APPROVE')
 
 			// Success
@@ -221,13 +224,14 @@ export function useApprovalPipeline({
 	}, [
 		hasLeaseDocument,
 		hasExistingPdfUrl,
-		application,
-		updateApplication,
-		approveApplication,
 		beginStep,
+		approveApplication,
+		propertyId,
+		application,
 		completeStep,
 		queryClient,
 		revalidator,
+		updateApplication,
 		onSuccess,
 	])
 

@@ -207,12 +207,13 @@ function ActivityDetail({
 
 interface ActivityTabProps {
 	requestId: string
+	propertyId: string
 	mr: MaintenanceRequest
 }
 
-export function ActivityTab({ requestId, mr }: ActivityTabProps) {
+export function ActivityTab({ requestId, propertyId, mr }: ActivityTabProps) {
 	const { data, isLoading, isError, refetch } =
-		useGetMaintenanceRequestActivityLogs(requestId, {
+		useGetMaintenanceRequestActivityLogs(propertyId, requestId, {
 			pagination: { page: 1, per: 100 },
 			filters: {},
 			populate: ['PerformedByClientUser', 'PerformedByTenant'],

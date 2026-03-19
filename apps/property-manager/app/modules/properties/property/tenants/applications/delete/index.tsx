@@ -19,12 +19,14 @@ interface Props {
 	data?: TenantApplication
 	opened: boolean
 	setOpened: Dispatch<SetStateAction<boolean>>
+	propertyId: string
 }
 
 export default function DeleteTenantApplicationModal({
 	data,
 	opened,
 	setOpened,
+	propertyId,
 }: Props) {
 	const queryClient = useQueryClient()
 
@@ -40,6 +42,7 @@ export default function DeleteTenantApplicationModal({
 			mutate(
 				{
 					id: data.id,
+					property_id: propertyId,
 				},
 				{
 					onError: () => {

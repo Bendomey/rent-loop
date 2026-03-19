@@ -45,6 +45,7 @@ import {
 
 interface Props {
 	leaseId: string
+	propertyId: string
 	checklist: LeaseChecklist
 	canEdit: boolean
 	opened: boolean
@@ -71,6 +72,7 @@ function getDescriptionLabel(description: string): string {
 
 export function ChecklistModal({
 	leaseId,
+	propertyId,
 	checklist,
 	canEdit,
 	opened,
@@ -97,6 +99,7 @@ export function ChecklistModal({
 		try {
 			await submitMutation.mutateAsync({
 				lease_id: leaseId,
+				property_id: propertyId,
 				checklist_id: checklist.id,
 			})
 			toast.success('Checklist submitted for tenant review')
@@ -112,6 +115,7 @@ export function ChecklistModal({
 		try {
 			await deleteItemMutation.mutateAsync({
 				lease_id: leaseId,
+				property_id: propertyId,
 				checklist_id: checklist.id,
 				item_id: itemId,
 			})
@@ -163,9 +167,7 @@ export function ChecklistModal({
 						{/* Items */}
 						<div className="space-y-4">
 							<div className="flex items-center justify-between">
-								<p className="text-sm font-semibold">
-									Items ({items.length})
-								</p>
+								<p className="text-sm font-semibold">Items ({items.length})</p>
 								{canEditItems && (
 									<Button size="sm" variant="outline" onClick={openAddItem}>
 										<PlusIcon className="mr-1 size-3.5" />
@@ -190,7 +192,7 @@ export function ChecklistModal({
 												{items.map((item) => (
 													<div
 														key={item.id}
-														className="flex items-start justify-between gap-3 dark:bg-zinc-900 rounded-md border px-3 py-2"
+														className="flex items-start justify-between gap-3 rounded-md border px-3 py-2 dark:bg-zinc-900"
 													>
 														<div className="min-w-0 flex-1 space-y-0.5">
 															<p className="text-sm font-medium">
@@ -306,6 +308,7 @@ export function ChecklistModal({
 			{/* Item add/edit dialog */}
 			<ChecklistItemDialog
 				leaseId={leaseId}
+				propertyId={propertyId}
 				checklistId={checklist.id}
 				item={editingItem}
 				opened={itemDialogOpen}

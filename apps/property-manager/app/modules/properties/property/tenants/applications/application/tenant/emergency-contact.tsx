@@ -81,7 +81,13 @@ function FieldDisplay({ label, value }: FieldDisplayProps) {
 	)
 }
 
-export function PropertyTenantApplicationEmergencyContact() {
+interface Props {
+	property_id: string
+}
+
+export function PropertyTenantApplicationEmergencyContact({
+	property_id,
+}: Props) {
 	const { tenantApplication: application } = useTenantApplicationContext()
 
 	const isDocLocked = ['SIGNED', 'SIGNING'].includes(
@@ -137,6 +143,7 @@ export function PropertyTenantApplicationEmergencyContact() {
 		mutate(
 			{
 				id: application.id,
+				property_id,
 				data,
 			},
 			{

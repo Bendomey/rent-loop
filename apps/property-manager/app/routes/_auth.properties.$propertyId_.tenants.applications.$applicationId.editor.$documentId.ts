@@ -23,6 +23,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 			getAdminPropertyTenantApplicationForServer(
 				{
 					id: params.applicationId,
+					property_id: params.propertyId,
 					populate: ['DesiredUnit', 'CreatedBy'],
 				},
 				{ baseUrl, authToken },

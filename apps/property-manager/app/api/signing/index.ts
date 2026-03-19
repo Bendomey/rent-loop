@@ -33,6 +33,7 @@ export const verifySigningToken = async (
  * Authenticated — requires ADMIN or OWNER role.
  */
 export interface GenerateSigningTokenInput {
+	property_id: string
 	document_id: string
 	role: 'TENANT' | 'PM_WITNESS' | 'TENANT_WITNESS'
 	tenant_application_id?: string
@@ -42,10 +43,13 @@ export interface GenerateSigningTokenInput {
 	signer_phone?: string
 }
 
-const generateSigningToken = async (body: GenerateSigningTokenInput) => {
+const generateSigningToken = async ({
+	property_id,
+	...body
+}: GenerateSigningTokenInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<AdminSigningToken>>(
-			'/v1/admin/signing-tokens',
+			`/v1/admin/properties/${property_id}/signing-tokens`,
 			{
 				method: 'POST',
 				body: JSON.stringify(body),
@@ -110,16 +114,20 @@ export const useSignDocument = () =>
  * Authenticated — requires ADMIN or OWNER role.
  */
 export interface SignDocumentDirectInput {
+	property_id: string
 	document_id: string
 	signature_url: string
 	tenant_application_id?: string
 	lease_id?: string
 }
 
-const signDocumentDirect = async (body: SignDocumentDirectInput) => {
+const signDocumentDirect = async ({
+	property_id,
+	...body
+}: SignDocumentDirectInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<RentloopDocumentSignature>>(
-			'/v1/admin/signing',
+			`/v1/admin/properties/${property_id}/signing`,
 			{
 				method: 'POST',
 				body: JSON.stringify(body),
@@ -146,6 +154,7 @@ export const useSignDocumentDirect = () =>
  * Update signer details on an existing signing token.
  */
 export interface UpdateSigningTokenInput {
+	property_id: string
 	signing_token_id: string
 	signer_name?: string
 	signer_email?: string
@@ -153,12 +162,13 @@ export interface UpdateSigningTokenInput {
 }
 
 const updateSigningToken = async ({
+	property_id,
 	signing_token_id,
 	...body
 }: UpdateSigningTokenInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<AdminSigningToken>>(
-			`/v1/admin/signing-tokens/${signing_token_id}`,
+			`/v1/admin/properties/${property_id}/signing-tokens/${signing_token_id}`,
 			{
 				method: 'PATCH',
 				body: JSON.stringify(body),
@@ -184,10 +194,16 @@ export const useUpdateSigningToken = () =>
 /**
  * Resend the signing notification for an existing token.
  */
-const resendSigningToken = async (signing_token_id: string) => {
+const resendSigningToken = async ({
+	property_id,
+	signing_token_id,
+}: {
+	property_id: string
+	signing_token_id: string
+}) => {
 	try {
 		const response = await fetchClient<ApiResponse<AdminSigningToken>>(
-			`/v1/admin/signing-tokens/${signing_token_id}/resend`,
+			`/v1/admin/properties/${property_id}/signing-tokens/${signing_token_id}/resend`,
 			{ method: 'POST' },
 		)
 		return response.parsedBody.data
@@ -211,13 +227,14 @@ export const useResendSigningToken = () =>
  * Fetch signing tokens filtered by document and tenant application.
  */
 const fetchSigningTokens = async (
+	propertyId: string,
 	query: FetchMultipleDataInputParams<FetchSigningTokenFilter>,
 ) => {
 	try {
 		const params = getQueryParams<FetchSigningTokenFilter>(query)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<AdminSigningToken>>
-		>(`/v1/admin/signing-tokens?${params.toString()}`)
+		>(`/v1/admin/properties/${propertyId}/signing-tokens?${params.toString()}`)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -232,9 +249,11 @@ const fetchSigningTokens = async (
 }
 
 export const useSigningTokens = (
+	propertyId: string,
 	query: FetchMultipleDataInputParams<FetchSigningTokenFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.SIGNING_TOKENS, query],
-		queryFn: () => fetchSigningTokens(query),
+		queryKey: [QUERY_KEYS.SIGNING_TOKENS, propertyId, query],
+		queryFn: () => fetchSigningTokens(propertyId, query),
+		enabled: !!propertyId,
 	})

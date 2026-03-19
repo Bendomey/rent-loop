@@ -4,12 +4,12 @@ import { fetchServer } from '~/lib/transport'
  * GET single invoice by ID.
  */
 export const getInvoiceForServer = async (
-	props: { invoice_id: string },
+	props: { invoice_id: string; property_id: string },
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<Invoice>>(
-			`${apiConfig.baseUrl}/v1/admin/invoices/${props.invoice_id}?populate=ContextTenantApplication,Payments,LineItems`,
+			`${apiConfig.baseUrl}/v1/admin/properties/${props.property_id}/invoices/${props.invoice_id}?populate=ContextTenantApplication,Payments,LineItems`,
 			{
 				...apiConfig,
 			},

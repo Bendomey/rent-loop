@@ -31,6 +31,7 @@ interface Props {
 	opened: boolean
 	setOpened: Dispatch<SetStateAction<boolean>>
 	refetch?: VoidFunction
+	propertyId: string
 }
 
 const ValidationSchema = z.object({
@@ -44,7 +45,12 @@ const ValidationSchema = z.object({
 
 export type FormSchema = z.infer<typeof ValidationSchema>
 
-function CancelTenantApplicationModal({ opened, setOpened, data }: Props) {
+function CancelTenantApplicationModal({
+	opened,
+	setOpened,
+	data,
+	propertyId,
+}: Props) {
 	const queryClient = useQueryClient()
 	const revalidator = useRevalidator()
 
@@ -74,12 +80,13 @@ function CancelTenantApplicationModal({ opened, setOpened, data }: Props) {
 
 	const { isPending, mutate } = useCancelTenantApplication()
 
-	const onSubmit = (data: FormSchema) => {
-		if (data) {
+	const onSubmit = (formData: FormSchema) => {
+		if (formData) {
 			mutate(
 				{
-					id: data.id,
-					reason: data.reason,
+					id: formData.id,
+					reason: formData.reason,
+					property_id: propertyId,
 				},
 				{
 					onError: () => {

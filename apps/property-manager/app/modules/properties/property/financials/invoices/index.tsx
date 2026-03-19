@@ -31,6 +31,7 @@ import {
 	getInvoiceContextTypeLabel,
 	getInvoiceStatusLabel,
 } from '~/lib/invoice'
+import { safeString } from '~/lib/strings'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyFinancialsPaymentsModule() {
@@ -47,20 +48,22 @@ export function PropertyFinancialsPaymentsModule() {
 	const payee_type = searchParams.get('payee_type') ?? undefined
 	const status = searchParams.get('status') ?? undefined
 
-	const { data, isPending, isRefetching, error, refetch } = useGetInvoices({
-		filters: {
-			status: status,
-			payer_type: payer_type,
-			payee_type: payee_type,
-			property_id: clientUserProperty?.property_id,
+	const { data, isPending, isRefetching, error, refetch } = useGetInvoices(
+		safeString(clientUserProperty?.property_id),
+		{
+			filters: {
+				status: status,
+				payer_type: payer_type,
+				payee_type: payee_type,
+			},
+			pagination: { page, per },
+			sorter: { sort: 'desc', sort_by: 'created_at' },
+			search: {
+				query: searchParams.get('query') ?? undefined,
+				fields: ['end_date', 'payer_tenant_id'],
+			},
 		},
-		pagination: { page, per },
-		sorter: { sort: 'desc', sort_by: 'created_at' },
-		search: {
-			query: searchParams.get('query') ?? undefined,
-			fields: ['end_date', 'payer_tenant_id'],
-		},
-	})
+	)
 	const isLoading = isPending || isRefetching
 
 	const columns: ColumnDef<Invoice>[] = useMemo(() => {

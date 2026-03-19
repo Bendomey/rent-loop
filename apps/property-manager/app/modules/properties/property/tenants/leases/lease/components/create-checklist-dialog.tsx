@@ -16,6 +16,7 @@ import { getChecklistTypeLabel } from '~/lib/lease-checklist.utils'
 
 interface Props {
 	leaseId: string
+	propertyId: string
 	type: LeaseChecklistType
 	opened: boolean
 	setOpened: (open: boolean) => void
@@ -23,6 +24,7 @@ interface Props {
 
 export function CreateChecklistDialog({
 	leaseId,
+	propertyId,
 	type,
 	opened,
 	setOpened,
@@ -34,7 +36,12 @@ export function CreateChecklistDialog({
 
 	async function handleCreate() {
 		try {
-			await mutateAsync({ lease_id: leaseId, type, checklist_items: [] })
+			await mutateAsync({
+				lease_id: leaseId,
+				property_id: propertyId,
+				type,
+				checklist_items: [],
+			})
 			toast.success(`${label} created`)
 			setOpened(false)
 		} catch (err) {

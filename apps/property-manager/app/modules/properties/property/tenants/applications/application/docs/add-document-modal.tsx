@@ -24,7 +24,7 @@ import type { IDocumentTemplate } from '~/modules/settings/documents/controller'
 interface AddDocumentModalProps {
 	open: boolean
 	onOpenChange: (open: boolean) => void
-	propertyId: string | undefined
+	propertyId: string
 	application: TenantApplication
 	attachedDoc: AttachedDocument | null
 	documentTemplates: IDocumentTemplate[]
@@ -67,6 +67,7 @@ export function AddDocumentModal({
 
 			await updateTenantApplication({
 				id: application.id,
+				property_id: propertyId,
 				data: {
 					lease_agreement_document_url: uploadedUrl,
 					lease_agreement_document_mode: 'MANUAL',
@@ -90,6 +91,7 @@ export function AddDocumentModal({
 
 			await updateTenantApplication({
 				id: application.id,
+				property_id: propertyId,
 				data: {
 					lease_agreement_document_id: newDoc.id,
 					lease_agreement_document_mode: 'ONLINE',

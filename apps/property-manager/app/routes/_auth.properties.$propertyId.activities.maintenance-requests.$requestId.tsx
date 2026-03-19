@@ -14,7 +14,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const authToken = authSession.get('authToken')
 
 	const mr = await getMaintenanceRequestForServer(
-		{ request_id: params.requestId },
+		{ request_id: params.requestId, property_id: params.propertyId },
 		{ authToken, baseUrl },
 	)
 

@@ -95,11 +95,13 @@ const RAIL_LABELS: Record<PAYMENT_RAIL, string> = {
 interface InvoiceDetailsProps {
 	invoice: Invoice
 	applicationId: string
+	propertyId: string
 }
 
 export function InvoiceDetails({
 	invoice,
 	applicationId,
+	propertyId,
 }: InvoiceDetailsProps) {
 	const revalidator = useRevalidator()
 	const [showReconfigureAlert, setShowReconfigureAlert] = useState(false)
@@ -124,32 +126,39 @@ export function InvoiceDetails({
 		usePayApplicationInvoice()
 
 	const handleVoidConfirm = () => {
-		voidInvoiceMutation(invoice.id, {
-			onError: () => {
-				toast.error('Failed to void invoice. Please try again.')
+		voidInvoiceMutation(
+			{ property_id: propertyId, id: invoice.id },
+			{
+				onError: () => {
+					toast.error('Failed to void invoice. Please try again.')
+				},
+				onSuccess: () => {
+					deleteInvoiceMutation(
+						{ property_id: propertyId, id: invoice.id },
+						{
+							onError: () => {
+								toast.error('Invoice voided but could not be deleted.')
+								void revalidator.revalidate()
+							},
+							onSuccess: () => {
+								toast.success(
+									'Invoice cancelled. You can now update the payment setup.',
+								)
+								setShowReconfigureAlert(false)
+								void revalidator.revalidate()
+							},
+						},
+					)
+				},
 			},
-			onSuccess: () => {
-				deleteInvoiceMutation(invoice.id, {
-					onError: () => {
-						toast.error('Invoice voided but could not be deleted.')
-						void revalidator.revalidate()
-					},
-					onSuccess: () => {
-						toast.success(
-							'Invoice cancelled. You can now update the payment setup.',
-						)
-						setShowReconfigureAlert(false)
-						void revalidator.revalidate()
-					},
-				})
-			},
-		})
+		)
 	}
 
 	const handleRecordPayment = () => {
 		if (!selectedAccount) return
 		payInvoiceMutation(
 			{
+				property_id: propertyId,
 				tenant_application_id: applicationId,
 				invoice_id: invoice.id,
 				body: {

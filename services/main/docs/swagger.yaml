@@ -6016,2118 +6016,6 @@ paths:
       summary: Update an existing document (Admin)
       tags:
       - Documents
-  /api/v1/admin/invoices:
-    get:
-      consumes:
-      - application/json
-      description: List invoices with optional filters (Admin)
-      parameters:
-      - in: query
-        name: active
-        type: boolean
-      - in: query
-        name: context_type
-        type: string
-      - in: query
-        name: end_date
-        type: string
-      - collectionFormat: multi
-        example:
-        - a8098c1a-f86e-11da-bd1a-00112444be1e
-        in: query
-        items:
-          type: string
-        name: ids
-        type: array
-      - enum:
-        - asc
-        - desc
-        in: query
-        name: order
-        type: string
-      - in: query
-        name: order_by
-        type: string
-      - in: query
-        minimum: 0
-        name: page
-        type: integer
-      - in: query
-        minimum: 0
-        name: page_size
-        type: integer
-      - in: query
-        name: payee_client_id
-        type: string
-      - in: query
-        name: payee_type
-        type: string
-      - in: query
-        name: payer_client_id
-        type: string
-      - in: query
-        name: payer_tenant_id
-        type: string
-      - in: query
-        name: payer_type
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      - in: query
-        name: property_id
-        type: string
-      - in: query
-        name: query
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        minItems: 1
-        name: search_fields
-        type: array
-      - in: query
-        name: start_date
-        type: string
-      - in: query
-        name: status
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Invoices
-          schema:
-            properties:
-              data:
-                properties:
-                  meta:
-                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
-                  rows:
-                    items:
-                      $ref: '#/definitions/transformations.OutputInvoice'
-                    type: array
-                type: object
-            type: object
-        "400":
-          description: Error occurred when listing invoices
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: List invoices (Admin)
-      tags:
-      - Invoice
-  /api/v1/admin/invoices/{invoice_id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete an invoice in DRAFT or VOID status (Admin)
-      parameters:
-      - description: Invoice ID
-        in: path
-        name: invoice_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Invoice Deleted Successfully
-        "400":
-          description: Invoice cannot be deleted in its current status
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Invoice not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Delete invoice (Admin)
-      tags:
-      - Invoice
-    get:
-      consumes:
-      - application/json
-      description: Get invoice by ID (Admin)
-      parameters:
-      - description: Invoice ID
-        in: path
-        name: invoice_id
-        required: true
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Invoice
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputInvoice'
-            type: object
-        "400":
-          description: Error occurred when getting invoice
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Invoice not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Get invoice (Admin)
-      tags:
-      - Invoice
-    patch:
-      consumes:
-      - application/json
-      description: Update an existing invoice (Admin)
-      parameters:
-      - description: Invoice ID
-        in: path
-        name: invoice_id
-        required: true
-        type: string
-      - description: Update invoice request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateInvoiceRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Invoice Updated Successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputInvoice'
-            type: object
-        "400":
-          description: Error occurred when updating invoice
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Invoice not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Update invoice (Admin)
-      tags:
-      - Invoice
-  /api/v1/admin/invoices/{invoice_id}/line-items:
-    get:
-      consumes:
-      - application/json
-      description: Get all line items for an invoice (Admin)
-      parameters:
-      - description: Invoice ID
-        in: path
-        name: invoice_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Line Items
-          schema:
-            properties:
-              data:
-                items:
-                  $ref: '#/definitions/transformations.OutputInvoiceLineItem'
-                type: array
-            type: object
-        "400":
-          description: Error occurred when getting line items
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Get line items for an invoice (Admin)
-      tags:
-      - Invoice
-    post:
-      consumes:
-      - application/json
-      description: Add a line item to an existing invoice (Admin)
-      parameters:
-      - description: Invoice ID
-        in: path
-        name: invoice_id
-        required: true
-        type: string
-      - description: Add line item request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.AddLineItemRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Line Item Added Successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputInvoiceLineItem'
-            type: object
-        "400":
-          description: Error occurred when adding line item
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Invoice not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Add line item to invoice (Admin)
-      tags:
-      - Invoice
-  /api/v1/admin/invoices/{invoice_id}/line-items/{line_item_id}:
-    delete:
-      consumes:
-      - application/json
-      description: Remove a line item from an existing draft invoice (Admin)
-      parameters:
-      - description: Invoice ID
-        in: path
-        name: invoice_id
-        required: true
-        type: string
-      - description: Line Item ID
-        in: path
-        name: line_item_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Line Item Removed Successfully
-        "400":
-          description: Error occurred when removing line item
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Invoice or line item not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Remove line item from invoice (Admin)
-      tags:
-      - Invoice
-  /api/v1/admin/invoices/{invoice_id}/void:
-    patch:
-      consumes:
-      - application/json
-      description: Void an existing invoice (Admin)
-      parameters:
-      - description: Invoice ID
-        in: path
-        name: invoice_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Invoice Voided Successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputInvoice'
-            type: object
-        "400":
-          description: Error occurred when voiding invoice
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Invoice not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Void invoice (Admin)
-      tags:
-      - Invoice
-  /api/v1/admin/leases/{lease_id}:
-    get:
-      consumes:
-      - application/json
-      description: Get lease (Admin)
-      parameters:
-      - description: Lease ID
-        in: path
-        name: lease_id
-        required: true
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Lease
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputAdminLease'
-            type: object
-        "400":
-          description: Error occurred when getting lease
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Lease not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Get lease (Admin)
-      tags:
-      - Lease
-    patch:
-      consumes:
-      - application/json
-      description: Update lease (Admin)
-      parameters:
-      - description: Lease ID
-        in: path
-        name: lease_id
-        required: true
-        type: string
-      - description: Update lease request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateLeaseRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Lease Updated Successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputAdminLease'
-            type: object
-        "400":
-          description: Error occurred when updating lease
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Lease not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Update lease (Admin)
-      tags:
-      - Lease
-  /api/v1/admin/leases/{lease_id}/checklists:
-    get:
-      consumes:
-      - application/json
-      description: List lease checklists
-      parameters:
-      - description: Lease ID
-        in: path
-        name: lease_id
-        required: true
-        type: string
-      - in: query
-        name: end_date
-        type: string
-      - collectionFormat: multi
-        example:
-        - a8098c1a-f86e-11da-bd1a-00112444be1e
-        in: query
-        items:
-          type: string
-        name: ids
-        type: array
-      - enum:
-        - asc
-        - desc
-        in: query
-        name: order
-        type: string
-      - in: query
-        name: order_by
-        type: string
-      - in: query
-        minimum: 0
-        name: page
-        type: integer
-      - in: query
-        minimum: 0
-        name: page_size
-        type: integer
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      - in: query
-        name: query
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        minItems: 1
-        name: search_fields
-        type: array
-      - in: query
-        name: start_date
-        type: string
-      - collectionFormat: csv
-        example:
-        - DRAFT
-        in: query
-        items:
-          type: string
-        name: statuses
-        type: array
-      - enum:
-        - CHECK_IN
-        - CHECK_OUT
-        - ROUTINE
-        example: CHECK_IN
-        in: query
-        name: type
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                properties:
-                  meta:
-                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
-                  rows:
-                    items:
-                      $ref: '#/definitions/transformations.OutputLeaseChecklist'
-                    type: array
-                type: object
-            type: object
-        "400":
-          description: An error occurred while filtering lease checklists
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Absent or invalid authentication token
-          schema:
-            type: string
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: List lease checklists
-      tags:
-      - LeaseChecklist
-    post:
-      consumes:
-      - application/json
-      description: Create lease checklist
-      parameters:
-      - description: Lease ID
-        in: path
-        name: lease_id
-        required: true
-        type: string
-      - description: Create lease checklist request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.CreateLeaseChecklistRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Lease checklist Created Successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputLeaseChecklist'
-            type: object
-        "400":
-          description: Error occurred when creating lease checklist
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Create lease checklist
-      tags:
-      - LeaseChecklist
-  /api/v1/admin/leases/{lease_id}/checklists/{checklist_id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete lease checklist
-      parameters:
-      - description: Lease ID
-        in: path
-        name: lease_id
-        required: true
-        type: string
-      - description: Lease checklist ID
-        in: path
-        name: checklist_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Lease checklist deleted successfully
-        "400":
-          description: Error occurred when deleting lease checklist
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "404":
-          description: Lease checklist not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Delete lease checklist
-      tags:
-      - LeaseChecklist
-    get:
-      consumes:
-      - application/json
-      description: Get lease checklist
-      parameters:
-      - description: Lease ID
-        in: path
-        name: lease_id
-        required: true
-        type: string
-      - description: Lease checklist ID
-        in: path
-        name: checklist_id
-        required: true
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Lease Checklist retrieved successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputLeaseChecklist'
-            type: object
-        "400":
-          description: Error occurred when fetching lease checklist
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Lease checklist not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Get lease checklist
-      tags:
-      - LeaseChecklist
-    patch:
-      consumes:
-      - application/json
-      description: Update lease checklist
-      parameters:
-      - description: Lease ID
-        in: path
-        name: lease_id
-        required: true
-        type: string
-      - description: Lease checklist ID
-        in: path
-        name: checklist_id
-        required: true
-        type: string
-      - description: Update lease checklist request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateLeaseChecklistRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Lease checklist updated successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputLeaseChecklist'
-            type: object
-        "400":
-          description: Error occurred when updating lease checklist
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "404":
-          description: Lease checklist not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Update lease checklist
-      tags:
-      - LeaseChecklist
-  /api/v1/admin/leases/{lease_id}/checklists/{checklist_id}/comparison:
-    get:
-      consumes:
-      - application/json
-      description: Compare CHECK_IN and CHECK_OUT checklists side by side
-      parameters:
-      - description: Lease ID
-        in: path
-        name: lease_id
-        required: true
-        type: string
-      - description: CHECK_OUT checklist ID
-        in: path
-        name: checklist_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                properties:
-                  check_in:
-                    $ref: '#/definitions/transformations.OutputLeaseChecklist'
-                  check_out:
-                    $ref: '#/definitions/transformations.OutputLeaseChecklist'
-                type: object
-            type: object
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Checklist not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Get checklist comparison
-      tags:
-      - LeaseChecklist
-  /api/v1/admin/leases/{lease_id}/checklists/{checklist_id}/items:
-    post:
-      consumes:
-      - application/json
-      description: Add a single item to a DRAFT or DISPUTED checklist
-      parameters:
-      - description: Lease ID
-        in: path
-        name: lease_id
-        required: true
-        type: string
-      - description: Lease checklist ID
-        in: path
-        name: checklist_id
-        required: true
-        type: string
-      - description: Item data
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.CreateSingleLeaseChecklistItemRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputLeaseChecklistItem'
-            type: object
-        "400":
-          description: Checklist not editable
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Create lease checklist item
-      tags:
-      - LeaseChecklist
-  /api/v1/admin/leases/{lease_id}/checklists/{checklist_id}/items/{item_id}:
-    delete:
-      consumes:
-      - application/json
-      description: Remove a single item from a DRAFT or DISPUTED checklist
-      parameters:
-      - description: Lease ID
-        in: path
-        name: lease_id
-        required: true
-        type: string
-      - description: Lease checklist ID
-        in: path
-        name: checklist_id
-        required: true
-        type: string
-      - description: Item ID
-        in: path
-        name: item_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Item deleted successfully
-        "400":
-          description: Checklist not editable
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Item not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Delete lease checklist item
-      tags:
-      - LeaseChecklist
-    patch:
-      consumes:
-      - application/json
-      description: Update a single item on a DRAFT or DISPUTED checklist
-      parameters:
-      - description: Lease ID
-        in: path
-        name: lease_id
-        required: true
-        type: string
-      - description: Lease checklist ID
-        in: path
-        name: checklist_id
-        required: true
-        type: string
-      - description: Item ID
-        in: path
-        name: item_id
-        required: true
-        type: string
-      - description: Item update
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateLeaseChecklistItemRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputLeaseChecklistItem'
-            type: object
-        "400":
-          description: Checklist not editable
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Item not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Update lease checklist item
-      tags:
-      - LeaseChecklist
-  /api/v1/admin/leases/{lease_id}/checklists/{checklist_id}/submit:
-    post:
-      consumes:
-      - application/json
-      description: Submit a DRAFT or DISPUTED checklist for tenant review
-      parameters:
-      - description: Lease ID
-        in: path
-        name: lease_id
-        required: true
-        type: string
-      - description: Lease checklist ID
-        in: path
-        name: checklist_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Checklist submitted successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputLeaseChecklist'
-            type: object
-        "400":
-          description: Checklist cannot be submitted
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Checklist not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Submit lease checklist
-      tags:
-      - LeaseChecklist
-  /api/v1/admin/leases/{lease_id}/status:active:
-    patch:
-      consumes:
-      - application/json
-      description: Activate lease (Admin)
-      parameters:
-      - description: Lease ID
-        in: path
-        name: lease_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Lease Activated Successfully
-        "400":
-          description: Error occurred when activating lease
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Lease not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Activate lease (Admin)
-      tags:
-      - Lease
-  /api/v1/admin/leases/{lease_id}/status:cancelled:
-    patch:
-      consumes:
-      - application/json
-      description: Cancel lease (Admin)
-      parameters:
-      - description: Lease ID
-        in: path
-        name: lease_id
-        required: true
-        type: string
-      - description: Cancel lease request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.CancelLeaseRequest'
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Lease Cancelled Successfully
-        "400":
-          description: Error occurred when cancelling lease
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Lease not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Cancel lease (Admin)
-      tags:
-      - Lease
-  /api/v1/admin/maintenance-requests:
-    get:
-      consumes:
-      - application/json
-      description: List maintenance requests with optional filters (Admin)
-      parameters:
-      - in: query
-        name: assigned_manager_id
-        type: string
-      - in: query
-        name: assigned_worker_id
-        type: string
-      - in: query
-        name: category
-        type: string
-      - in: query
-        name: end_date
-        type: string
-      - collectionFormat: multi
-        example:
-        - a8098c1a-f86e-11da-bd1a-00112444be1e
-        in: query
-        items:
-          type: string
-        name: ids
-        type: array
-      - in: query
-        name: lease_id
-        type: string
-      - enum:
-        - asc
-        - desc
-        in: query
-        name: order
-        type: string
-      - in: query
-        name: order_by
-        type: string
-      - in: query
-        minimum: 0
-        name: page
-        type: integer
-      - in: query
-        minimum: 0
-        name: page_size
-        type: integer
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      - in: query
-        name: priority
-        type: string
-      - in: query
-        name: property_id
-        type: string
-      - in: query
-        name: query
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        minItems: 1
-        name: search_fields
-        type: array
-      - in: query
-        name: start_date
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: status
-        type: array
-      - in: query
-        name: unit_id
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Maintenance requests
-          schema:
-            properties:
-              data:
-                properties:
-                  meta:
-                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
-                  rows:
-                    items:
-                      $ref: '#/definitions/transformations.AdminOutputMaintenanceRequest'
-                    type: array
-                type: object
-            type: object
-        "400":
-          description: Error occurred when listing maintenance requests
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: List maintenance requests (Admin)
-      tags:
-      - MaintenanceRequests
-    post:
-      consumes:
-      - application/json
-      description: Create a new maintenance request (Admin)
-      parameters:
-      - description: Request details
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.CreateMaintenanceRequestBody'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Maintenance request created successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.AdminOutputMaintenanceRequest'
-            type: object
-        "400":
-          description: Error occurred when creating maintenance request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Create a maintenance request (Admin)
-      tags:
-      - MaintenanceRequests
-  /api/v1/admin/maintenance-requests/{maintenance_request_id}:
-    patch:
-      consumes:
-      - application/json
-      description: Update an existing maintenance request (Admin)
-      parameters:
-      - description: Maintenance Request ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Fields to update
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateMaintenanceRequestBody'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Maintenance request updated successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.AdminOutputMaintenanceRequest'
-            type: object
-        "400":
-          description: Error occurred when updating maintenance request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Maintenance request not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Update a maintenance request (Admin)
-      tags:
-      - MaintenanceRequests
-  /api/v1/admin/maintenance-requests/{maintenance_request_id}/activity_logs:
-    get:
-      consumes:
-      - application/json
-      description: List all activity logs for a maintenance request with pagination
-        (Admin)
-      parameters:
-      - description: Maintenance Request ID
-        in: path
-        name: maintenance_request_id
-        required: true
-        type: string
-      - in: query
-        name: action
-        type: string
-      - in: query
-        name: end_date
-        type: string
-      - collectionFormat: multi
-        example:
-        - a8098c1a-f86e-11da-bd1a-00112444be1e
-        in: query
-        items:
-          type: string
-        name: ids
-        type: array
-      - enum:
-        - asc
-        - desc
-        in: query
-        name: order
-        type: string
-      - in: query
-        name: order_by
-        type: string
-      - in: query
-        minimum: 0
-        name: page
-        type: integer
-      - in: query
-        minimum: 0
-        name: page_size
-        type: integer
-      - in: query
-        name: performed_by_client_user_id
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      - in: query
-        name: query
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        minItems: 1
-        name: search_fields
-        type: array
-      - in: query
-        name: start_date
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Activity logs
-          schema:
-            properties:
-              data:
-                properties:
-                  meta:
-                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
-                  rows:
-                    items:
-                      $ref: '#/definitions/transformations.OutputMaintenanceActivityLog'
-                    type: array
-                type: object
-            type: object
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: List activity logs for a maintenance request
-      tags:
-      - MaintenanceRequests
-  /api/v1/admin/maintenance-requests/{maintenance_request_id}/assign-manager:
-    post:
-      consumes:
-      - application/json
-      description: Assign a manager to an existing maintenance request (Admin)
-      parameters:
-      - description: Maintenance Request ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Manager ID
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.AssignManagerBody'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Manager assigned successfully
-          schema:
-            properties:
-              data:
-                type: boolean
-            type: object
-        "400":
-          description: Error occurred when assigning manager
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Maintenance request not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Assign a manager to a maintenance request
-      tags:
-      - MaintenanceRequests
-  /api/v1/admin/maintenance-requests/{maintenance_request_id}/assign-worker:
-    post:
-      consumes:
-      - application/json
-      description: Assign a worker to an existing maintenance request (Admin)
-      parameters:
-      - description: Maintenance Request ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Worker ID
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.AssignWorkerBody'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Worker assigned successfully
-          schema:
-            properties:
-              data:
-                type: boolean
-            type: object
-        "400":
-          description: Error occurred when assigning worker
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Maintenance request not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Assign a worker to a maintenance request
-      tags:
-      - MaintenanceRequests
-  /api/v1/admin/maintenance-requests/{maintenance_request_id}/comments:
-    get:
-      consumes:
-      - application/json
-      description: List all comments on a maintenance request with pagination. Optionally
-        filter by the creating client user.
-      parameters:
-      - description: Maintenance Request ID
-        in: path
-        name: maintenance_request_id
-        required: true
-        type: string
-      - in: query
-        name: created_by_client_user_id
-        type: string
-      - in: query
-        name: end_date
-        type: string
-      - collectionFormat: multi
-        example:
-        - a8098c1a-f86e-11da-bd1a-00112444be1e
-        in: query
-        items:
-          type: string
-        name: ids
-        type: array
-      - enum:
-        - asc
-        - desc
-        in: query
-        name: order
-        type: string
-      - in: query
-        name: order_by
-        type: string
-      - in: query
-        minimum: 0
-        name: page
-        type: integer
-      - in: query
-        minimum: 0
-        name: page_size
-        type: integer
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      - in: query
-        name: query
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        minItems: 1
-        name: search_fields
-        type: array
-      - in: query
-        name: start_date
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Paginated list of comments
-          schema:
-            properties:
-              data:
-                properties:
-                  meta:
-                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
-                  rows:
-                    items:
-                      $ref: '#/definitions/transformations.OutputMaintenanceRequestComment'
-                    type: array
-                type: object
-            type: object
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: List comments for a maintenance request
-      tags:
-      - MaintenanceRequests
-    post:
-      consumes:
-      - application/json
-      description: Add a new comment to a maintenance request (Admin)
-      parameters:
-      - description: Maintenance Request ID
-        in: path
-        name: maintenance_request_id
-        required: true
-        type: string
-      - description: Comment content
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.CreateCommentBody'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Comment created
-          schema:
-            properties:
-              data:
-                type: boolean
-            type: object
-        "400":
-          description: Invalid request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "404":
-          description: Maintenance request not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Create a comment on a maintenance request
-      tags:
-      - MaintenanceRequests
-  /api/v1/admin/maintenance-requests/{maintenance_request_id}/comments/{comment_id}:
-    delete:
-      consumes:
-      - application/json
-      description: Remove a comment from a maintenance request (Admin)
-      parameters:
-      - description: Maintenance Request ID
-        in: path
-        name: maintenance_request_id
-        required: true
-        type: string
-      - description: Comment ID
-        in: path
-        name: comment_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Comment deleted
-          schema:
-            properties:
-              data:
-                type: boolean
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Delete a comment from a maintenance request
-      tags:
-      - MaintenanceRequests
-    patch:
-      consumes:
-      - application/json
-      description: Update an existing comment (Admin)
-      parameters:
-      - description: Maintenance Request ID
-        in: path
-        name: maintenance_request_id
-        required: true
-        type: string
-      - description: Comment ID
-        in: path
-        name: comment_id
-        required: true
-        type: string
-      - description: Updated content
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateCommentBody'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Comment updated
-          schema:
-            properties:
-              data:
-                type: boolean
-            type: object
-        "400":
-          description: Invalid request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "404":
-          description: Comment not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Update a comment on a maintenance request
-      tags:
-      - MaintenanceRequests
-  /api/v1/admin/maintenance-requests/{maintenance_request_id}/expenses:
-    get:
-      consumes:
-      - application/json
-      description: List expenses with pagination and optional filters (Admin)
-      parameters:
-      - description: Maintenance Request ID
-        in: path
-        name: maintenance_request_id
-        required: true
-        type: string
-      - in: query
-        name: billable_to_tenant
-        type: boolean
-      - in: query
-        name: end_date
-        type: string
-      - collectionFormat: multi
-        example:
-        - a8098c1a-f86e-11da-bd1a-00112444be1e
-        in: query
-        items:
-          type: string
-        name: ids
-        type: array
-      - enum:
-        - asc
-        - desc
-        in: query
-        name: order
-        type: string
-      - in: query
-        name: order_by
-        type: string
-      - in: query
-        minimum: 0
-        name: page
-        type: integer
-      - in: query
-        minimum: 0
-        name: page_size
-        type: integer
-      - in: query
-        name: paid_by
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      - in: query
-        name: query
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        minItems: 1
-        name: search_fields
-        type: array
-      - in: query
-        name: start_date
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Expenses
-          schema:
-            properties:
-              data:
-                properties:
-                  meta:
-                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
-                  rows:
-                    items:
-                      $ref: '#/definitions/transformations.OutputExpense'
-                    type: array
-                type: object
-            type: object
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: List expenses for a maintenance request
-      tags:
-      - MaintenanceRequests
-    post:
-      consumes:
-      - application/json
-      description: Record a new expense against a maintenance request (Admin)
-      parameters:
-      - description: Maintenance Request ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Expense details
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.AddExpenseBody'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Expense added successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputExpense'
-            type: object
-        "400":
-          description: Error occurred when adding expense
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Maintenance request not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Add an expense to a maintenance request
-      tags:
-      - MaintenanceRequests
-  /api/v1/admin/maintenance-requests/{maintenance_request_id}/expenses/{expense_id}:
-    delete:
-      consumes:
-      - application/json
-      description: Remove an expense record from a maintenance request (Admin)
-      parameters:
-      - description: Maintenance Request ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Expense ID
-        in: path
-        name: expense_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Expense deleted successfully
-          schema:
-            properties:
-              data:
-                type: boolean
-            type: object
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Expense not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Delete an expense from a maintenance request
-      tags:
-      - MaintenanceRequests
-  /api/v1/admin/maintenance-requests/{maintenance_request_id}/expenses:invoice:
-    post:
-      consumes:
-      - application/json
-      description: Create a draft invoice from all unbilled, billable expenses on
-        a maintenance request (Admin)
-      parameters:
-      - description: Maintenance Request ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Invoice ID of the generated draft invoice
-          schema:
-            properties:
-              data:
-                type: string
-            type: object
-        "400":
-          description: No billable expenses found or error generating invoice
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Maintenance request not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Generate a draft invoice from billable expenses
-      tags:
-      - MaintenanceRequests
-  /api/v1/admin/maintenance-requests/{maintenance_request_id}/status:
-    patch:
-      consumes:
-      - application/json
-      description: Transition a maintenance request to a new status (Admin)
-      parameters:
-      - description: Maintenance Request ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: New status
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateStatusBody'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Status updated successfully
-          schema:
-            properties:
-              data:
-                type: boolean
-            type: object
-        "400":
-          description: Error occurred when updating status
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Maintenance request not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Update the status of a maintenance request
-      tags:
-      - MaintenanceRequests
   /api/v1/admin/payment-accounts:
     get:
       consumes:
@@ -8412,59 +6300,6 @@ paths:
       summary: Update an existing payment account (Admin)
       tags:
       - Payment Accounts
-  /api/v1/admin/payments/{payment_id}/verify:
-    patch:
-      consumes:
-      - application/json
-      description: Mark a PENDING offline payment as SUCCESSFUL or FAILED. Updates
-        the invoice status accordingly.
-      parameters:
-      - description: Payment ID
-        in: path
-        name: payment_id
-        required: true
-        type: string
-      - description: Verify Payment Request Body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.VerifyPaymentRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Payment verified
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputPayment'
-            type: object
-        "400":
-          description: Invalid request or payment not verifiable
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Payment not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Verify an offline payment (Admin)
-      tags:
-      - Payments
   /api/v1/admin/properties:
     get:
       consumes:
@@ -9167,6 +7002,471 @@ paths:
       summary: Unlink property from client users (Admin)
       tags:
       - ClientUserProperties
+  /api/v1/admin/properties/{property_id}/invoices:
+    get:
+      consumes:
+      - application/json
+      description: List invoices with optional filters (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - in: query
+        name: active
+        type: boolean
+      - in: query
+        name: context_type
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - in: query
+        name: payee_client_id
+        type: string
+      - in: query
+        name: payee_type
+        type: string
+      - in: query
+        name: payer_client_id
+        type: string
+      - in: query
+        name: payer_tenant_id
+        type: string
+      - in: query
+        name: payer_type
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invoices
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputInvoice'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Error occurred when listing invoices
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List invoices (Admin)
+      tags:
+      - Invoice
+  /api/v1/admin/properties/{property_id}/invoices/{invoice_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an invoice in DRAFT or VOID status (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Invoice Deleted Successfully
+        "400":
+          description: Invoice cannot be deleted in its current status
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Invoice not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete invoice (Admin)
+      tags:
+      - Invoice
+    get:
+      consumes:
+      - application/json
+      description: Get invoice by ID (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invoice
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputInvoice'
+            type: object
+        "400":
+          description: Error occurred when getting invoice
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Invoice not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get invoice (Admin)
+      tags:
+      - Invoice
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing invoice (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      - description: Update invoice request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateInvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invoice Updated Successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputInvoice'
+            type: object
+        "400":
+          description: Error occurred when updating invoice
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Invoice not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update invoice (Admin)
+      tags:
+      - Invoice
+  /api/v1/admin/properties/{property_id}/invoices/{invoice_id}/line-items:
+    get:
+      consumes:
+      - application/json
+      description: Get all line items for an invoice (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Line Items
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/transformations.OutputInvoiceLineItem'
+                type: array
+            type: object
+        "400":
+          description: Error occurred when getting line items
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get line items for an invoice (Admin)
+      tags:
+      - Invoice
+    post:
+      consumes:
+      - application/json
+      description: Add a line item to an existing invoice (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      - description: Add line item request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AddLineItemRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Line Item Added Successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputInvoiceLineItem'
+            type: object
+        "400":
+          description: Error occurred when adding line item
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Invoice not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Add line item to invoice (Admin)
+      tags:
+      - Invoice
+  /api/v1/admin/properties/{property_id}/invoices/{invoice_id}/line-items/{line_item_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a line item from an existing draft invoice (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      - description: Line Item ID
+        in: path
+        name: line_item_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Line Item Removed Successfully
+        "400":
+          description: Error occurred when removing line item
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Invoice or line item not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Remove line item from invoice (Admin)
+      tags:
+      - Invoice
+  /api/v1/admin/properties/{property_id}/invoices/{invoice_id}/void:
+    patch:
+      consumes:
+      - application/json
+      description: Void an existing invoice (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invoice Voided Successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputInvoice'
+            type: object
+        "400":
+          description: Error occurred when voiding invoice
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Invoice not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Void invoice (Admin)
+      tags:
+      - Invoice
   /api/v1/admin/properties/{property_id}/leases:
     get:
       consumes:
@@ -9235,10 +7535,6 @@ paths:
           type: string
         name: populate
         type: array
-      - example: b4d0243c-6581-4104-8185-d83a45ebe41b
-        in: query
-        name: property_id
-        type: string
       - in: query
         name: query
         type: string
@@ -9312,6 +7608,2867 @@ paths:
       summary: List leases by property (Admin)
       tags:
       - Lease
+  /api/v1/admin/properties/{property_id}/leases/{lease_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get lease (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lease
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminLease'
+            type: object
+        "400":
+          description: Error occurred when getting lease
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Lease not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get lease (Admin)
+      tags:
+      - Lease
+    patch:
+      consumes:
+      - application/json
+      description: Update lease (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Update lease request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateLeaseRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lease Updated Successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminLease'
+            type: object
+        "400":
+          description: Error occurred when updating lease
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Lease not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update lease (Admin)
+      tags:
+      - Lease
+  /api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists:
+    get:
+      consumes:
+      - application/json
+      description: List lease checklists
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - collectionFormat: csv
+        example:
+        - DRAFT
+        in: query
+        items:
+          type: string
+        name: statuses
+        type: array
+      - enum:
+        - CHECK_IN
+        - CHECK_OUT
+        - ROUTINE
+        example: CHECK_IN
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputLeaseChecklist'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: An error occurred while filtering lease checklists
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Absent or invalid authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List lease checklists
+      tags:
+      - LeaseChecklist
+    post:
+      consumes:
+      - application/json
+      description: Create lease checklist
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Create lease checklist request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateLeaseChecklistRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Lease checklist Created Successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputLeaseChecklist'
+            type: object
+        "400":
+          description: Error occurred when creating lease checklist
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create lease checklist
+      tags:
+      - LeaseChecklist
+  /api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete lease checklist
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Lease checklist ID
+        in: path
+        name: checklist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Lease checklist deleted successfully
+        "400":
+          description: Error occurred when deleting lease checklist
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Lease checklist not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete lease checklist
+      tags:
+      - LeaseChecklist
+    get:
+      consumes:
+      - application/json
+      description: Get lease checklist
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Lease checklist ID
+        in: path
+        name: checklist_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lease Checklist retrieved successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputLeaseChecklist'
+            type: object
+        "400":
+          description: Error occurred when fetching lease checklist
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Lease checklist not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get lease checklist
+      tags:
+      - LeaseChecklist
+    patch:
+      consumes:
+      - application/json
+      description: Update lease checklist
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Lease checklist ID
+        in: path
+        name: checklist_id
+        required: true
+        type: string
+      - description: Update lease checklist request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateLeaseChecklistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lease checklist updated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputLeaseChecklist'
+            type: object
+        "400":
+          description: Error occurred when updating lease checklist
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Lease checklist not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update lease checklist
+      tags:
+      - LeaseChecklist
+  /api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/comparison:
+    get:
+      consumes:
+      - application/json
+      description: Compare CHECK_IN and CHECK_OUT checklists side by side
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: CHECK_OUT checklist ID
+        in: path
+        name: checklist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  check_in:
+                    $ref: '#/definitions/transformations.OutputLeaseChecklist'
+                  check_out:
+                    $ref: '#/definitions/transformations.OutputLeaseChecklist'
+                type: object
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Checklist not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get checklist comparison
+      tags:
+      - LeaseChecklist
+  /api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/items:
+    post:
+      consumes:
+      - application/json
+      description: Add a single item to a DRAFT or DISPUTED checklist
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Lease checklist ID
+        in: path
+        name: checklist_id
+        required: true
+        type: string
+      - description: Item data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateSingleLeaseChecklistItemRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputLeaseChecklistItem'
+            type: object
+        "400":
+          description: Checklist not editable
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create lease checklist item
+      tags:
+      - LeaseChecklist
+  /api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/items/{item_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a single item from a DRAFT or DISPUTED checklist
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Lease checklist ID
+        in: path
+        name: checklist_id
+        required: true
+        type: string
+      - description: Item ID
+        in: path
+        name: item_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Item deleted successfully
+        "400":
+          description: Checklist not editable
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Item not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete lease checklist item
+      tags:
+      - LeaseChecklist
+    patch:
+      consumes:
+      - application/json
+      description: Update a single item on a DRAFT or DISPUTED checklist
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Lease checklist ID
+        in: path
+        name: checklist_id
+        required: true
+        type: string
+      - description: Item ID
+        in: path
+        name: item_id
+        required: true
+        type: string
+      - description: Item update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateLeaseChecklistItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputLeaseChecklistItem'
+            type: object
+        "400":
+          description: Checklist not editable
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Item not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update lease checklist item
+      tags:
+      - LeaseChecklist
+  /api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/submit:
+    post:
+      consumes:
+      - application/json
+      description: Submit a DRAFT or DISPUTED checklist for tenant review
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Lease checklist ID
+        in: path
+        name: checklist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Checklist submitted successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputLeaseChecklist'
+            type: object
+        "400":
+          description: Checklist cannot be submitted
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Checklist not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Submit lease checklist
+      tags:
+      - LeaseChecklist
+  /api/v1/admin/properties/{property_id}/leases/{lease_id}/status:active:
+    patch:
+      consumes:
+      - application/json
+      description: Activate lease (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Lease Activated Successfully
+        "400":
+          description: Error occurred when activating lease
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Lease not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Activate lease (Admin)
+      tags:
+      - Lease
+  /api/v1/admin/properties/{property_id}/leases/{lease_id}/status:cancelled:
+    patch:
+      consumes:
+      - application/json
+      description: Cancel lease (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Cancel lease request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CancelLeaseRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Lease Cancelled Successfully
+        "400":
+          description: Error occurred when cancelling lease
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Lease not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Cancel lease (Admin)
+      tags:
+      - Lease
+  /api/v1/admin/properties/{property_id}/maintenance-requests:
+    get:
+      consumes:
+      - application/json
+      description: List maintenance requests with optional filters (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - in: query
+        name: assigned_manager_id
+        type: string
+      - in: query
+        name: assigned_worker_id
+        type: string
+      - in: query
+        name: category
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - in: query
+        name: lease_id
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: priority
+        type: string
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: status
+        type: array
+      - in: query
+        name: unit_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Maintenance requests
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.AdminOutputMaintenanceRequest'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Error occurred when listing maintenance requests
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List maintenance requests (Admin)
+      tags:
+      - MaintenanceRequests
+    post:
+      consumes:
+      - application/json
+      description: Create a new maintenance request (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Request details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateMaintenanceRequestBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Maintenance request created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputMaintenanceRequest'
+            type: object
+        "400":
+          description: Error occurred when creating maintenance request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a maintenance request (Admin)
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a maintenance request by ID (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Maintenance request
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputMaintenanceRequest'
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get a single maintenance request (Admin)
+      tags:
+      - MaintenanceRequests
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing maintenance request (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateMaintenanceRequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Maintenance request updated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputMaintenanceRequest'
+            type: object
+        "400":
+          description: Error occurred when updating maintenance request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update a maintenance request (Admin)
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/activity_logs:
+    get:
+      consumes:
+      - application/json
+      description: List all activity logs for a maintenance request with pagination
+        (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - in: query
+        name: action
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - in: query
+        name: performed_by_client_user_id
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Activity logs
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputMaintenanceActivityLog'
+                    type: array
+                type: object
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List activity logs for a maintenance request
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/assign-manager:
+    post:
+      consumes:
+      - application/json
+      description: Assign a manager to an existing maintenance request (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - description: Manager ID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AssignManagerBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Manager assigned successfully
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "400":
+          description: Error occurred when assigning manager
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Assign a manager to a maintenance request
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/assign-worker:
+    post:
+      consumes:
+      - application/json
+      description: Assign a worker to an existing maintenance request (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - description: Worker ID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AssignWorkerBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Worker assigned successfully
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "400":
+          description: Error occurred when assigning worker
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Assign a worker to a maintenance request
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments:
+    get:
+      consumes:
+      - application/json
+      description: List all comments on a maintenance request with pagination. Optionally
+        filter by the creating client user.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - in: query
+        name: created_by_client_user_id
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Paginated list of comments
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputMaintenanceRequestComment'
+                    type: array
+                type: object
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List comments for a maintenance request
+      tags:
+      - MaintenanceRequests
+    post:
+      consumes:
+      - application/json
+      description: Add a new comment to a maintenance request (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - description: Comment content
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateCommentBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Comment created
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a comment on a maintenance request
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments/{comment_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a comment from a maintenance request (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - description: Comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Comment deleted
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete a comment from a maintenance request
+      tags:
+      - MaintenanceRequests
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing comment (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - description: Comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      - description: Updated content
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateCommentBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Comment updated
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Comment not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update a comment on a maintenance request
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses:
+    get:
+      consumes:
+      - application/json
+      description: List expenses with pagination and optional filters (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - in: query
+        name: billable_to_tenant
+        type: boolean
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - in: query
+        name: paid_by
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Expenses
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputExpense'
+                    type: array
+                type: object
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List expenses for a maintenance request
+      tags:
+      - MaintenanceRequests
+    post:
+      consumes:
+      - application/json
+      description: Record a new expense against a maintenance request (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - description: Expense details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AddExpenseBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Expense added successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputExpense'
+            type: object
+        "400":
+          description: Error occurred when adding expense
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Add an expense to a maintenance request
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses/{expense_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove an expense record from a maintenance request (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - description: Expense ID
+        in: path
+        name: expense_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Expense deleted successfully
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Expense not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete an expense from a maintenance request
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses:invoice:
+    post:
+      consumes:
+      - application/json
+      description: Create a draft invoice from all unbilled, billable expenses on
+        a maintenance request (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Invoice ID of the generated draft invoice
+          schema:
+            properties:
+              data:
+                type: string
+            type: object
+        "400":
+          description: No billable expenses found or error generating invoice
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Generate a draft invoice from billable expenses
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Transition a maintenance request to a new status (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Maintenance Request ID
+        in: path
+        name: maintenance_request_id
+        required: true
+        type: string
+      - description: New status
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateStatusBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Status updated successfully
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "400":
+          description: Error occurred when updating status
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Maintenance request not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update the status of a maintenance request
+      tags:
+      - MaintenanceRequests
+  /api/v1/admin/properties/{property_id}/payments/{payment_id}/verify:
+    patch:
+      consumes:
+      - application/json
+      description: Mark a PENDING offline payment as SUCCESSFUL or FAILED. Updates
+        the invoice status accordingly.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Payment ID
+        in: path
+        name: payment_id
+        required: true
+        type: string
+      - description: Verify Payment Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.VerifyPaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment verified
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputPayment'
+            type: object
+        "400":
+          description: Invalid request or payment not verifiable
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Payment not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Verify an offline payment (Admin)
+      tags:
+      - Payments
+  /api/v1/admin/properties/{property_id}/signing:
+    post:
+      consumes:
+      - application/json
+      description: Generate a signing token for a document signer (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Token details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.GenerateTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Token created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminSigningToken'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Generate a signing token (Admin)
+      tags:
+      - Signing
+  /api/v1/admin/properties/{property_id}/signing-tokens:
+    get:
+      description: List signing tokens with optional filters (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - in: query
+        name: created_by_id
+        type: string
+      - in: query
+        name: document_id
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - in: query
+        name: lease_id
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - enum:
+        - TENANT
+        - PM_WITNESS
+        - TENANT_WITNESS
+        in: query
+        name: role
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - in: query
+        name: tenant_application_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputAdminSigningToken'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List signing tokens (Admin)
+      tags:
+      - Signing
+  /api/v1/admin/properties/{property_id}/signing-tokens/{signing_token_id}:
+    patch:
+      consumes:
+      - application/json
+      description: Update signer details on a token that has not yet been used (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Signing token ID
+        format: uuid4
+        in: path
+        name: signing_token_id
+        required: true
+        type: string
+      - description: Signer details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateSigningTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminSigningToken'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update a signing token (Admin)
+      tags:
+      - Signing
+  /api/v1/admin/properties/{property_id}/signing-tokens/{signing_token_id}/resend:
+    post:
+      description: Extend the token expiry by 7 days and resend the notification to
+        the signer (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Signing token ID
+        format: uuid4
+        in: path
+        name: signing_token_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminSigningToken'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Resend a signing token (Admin)
+      tags:
+      - Signing
+  /api/v1/admin/properties/{property_id}/signing/direct:
+    post:
+      consumes:
+      - application/json
+      description: Submit a signature for a document using tenant application or lease
+        context (for PMs) (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Signature details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SignDocumentPMRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Signature created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputDocumentSignature'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Submit a signature (Admin)
+      tags:
+      - Signing
+  /api/v1/admin/properties/{property_id}/tenant-applications:
+    get:
+      consumes:
+      - application/json
+      description: List all tenant applications (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - example: 72432ce6-5620-4ecf-a862-4bf2140556a1
+        in: query
+        name: created_by_id
+        type: string
+      - example: 72432ce6-5620-4ecf-a862-4bf2140556a1
+        in: query
+        name: desired_unit_id
+        type: string
+      - collectionFormat: multi
+        example:
+        - john.doe@example.com
+        - email@example.com
+        in: query
+        items:
+          type: string
+        name: email
+        type: array
+      - in: query
+        name: end_date
+        type: string
+      - enum:
+        - MALE
+        - FEMALE
+        in: query
+        name: gender
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - ONLINE
+        - CASH
+        - EXTERNAL
+        in: query
+        name: initial_deposit_payment_method
+        type: string
+      - enum:
+        - SINGLE
+        - MARRIED
+        - DIVORCED
+        - WIDOWED
+        in: query
+        name: marital_status
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - enum:
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
+        in: query
+        name: payment_frequency
+        type: string
+      - collectionFormat: multi
+        example:
+        - "+233281234569"
+        - "+233281234569"
+        in: query
+        items:
+          type: string
+        name: phone
+        type: array
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - enum:
+        - ONLINE
+        - CASH
+        - EXTERNAL
+        in: query
+        name: security_deposit_payment_method
+        type: string
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - TenantApplication.Status.InProgress
+        - TenantApplication.Status.Cancelled
+        - TenantApplication.Status.Completed
+        in: query
+        name: status
+        type: string
+      - enum:
+        - HOURS
+        - DAYS
+        - MONTHS
+        in: query
+        name: stay_duration_frequency
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputAdminTenantApplication'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: An error occurred while filtering tenant applications
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Absent or invalid authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List all tenant applications (Admin)
+      tags:
+      - TenantApplication
+    post:
+      consumes:
+      - application/json
+      description: Create a new tenant application (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Create Tenant Application Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AdminCreateTenantApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Tenant application created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminTenantApplication'
+            type: object
+        "400":
+          description: Error occurred when creating a tenant application
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Create a new tenant application (Admin)
+      tags:
+      - TenantApplication
+  /api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a tenant application. Only applications with status 'TenantApplication.Status.Cancelled'
+        can be deleted. (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Tenant application deleted successfully
+        "400":
+          description: Error occurred when deleting a tenant application or application
+            is not cancelled
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete a tenant application (Admin)
+      tags:
+      - TenantApplication
+    get:
+      consumes:
+      - application/json
+      description: Get tenant application (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tenant application retrieved successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminTenantApplication'
+            type: object
+        "400":
+          description: Error occurred when fetching a tenant application
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get tenant application (Admin)
+      tags:
+      - TenantApplication
+    patch:
+      consumes:
+      - application/json
+      description: Update a tenant application (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      - description: Update Tenant Application Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AdminUpdateTenantApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tenant application updated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminTenantApplication'
+            type: object
+        "400":
+          description: Error occurred when updating a tenant application
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update a tenant application (Admin)
+      tags:
+      - TenantApplication
+  /api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}/approve:
+    patch:
+      consumes:
+      - application/json
+      description: Approve a tenant application (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Tenant application approved successfully
+        "400":
+          description: Error occurred when approving a tenant application
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Tenant application not approved
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Tenant application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "409":
+          description: Tenant application already approved
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Approve a tenant application (Admin)
+      tags:
+      - TenantApplication
+  /api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}/cancel:
+    patch:
+      consumes:
+      - application/json
+      description: Cancel a tenant application (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      - description: Cancel Tenant Application Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CancelTenantApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Tenant application cancelled successfully
+        "400":
+          description: Error occurred when cancelling a tenant application
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Cancel a tenant application (Admin)
+      tags:
+      - TenantApplication
+  /api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay:
+    post:
+      consumes:
+      - application/json
+      description: Pay an invoice for a tenant application (security deposit and/or
+        initial deposit) (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      - description: Pay invoice request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.PayInvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Invoice paid successfully
+        "400":
+          description: Error occurred when paying invoice
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant application or invoice not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Pay an invoice for a tenant application (Admin)
+      tags:
+      - TenantApplication
+  /api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice:generate:
+    post:
+      consumes:
+      - application/json
+      description: Generate an invoice for a tenant application (security deposit
+        and/or initial deposit) (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Tenant application ID
+        in: path
+        name: tenant_application_id
+        required: true
+        type: string
+      - description: Generate Invoice Request Body
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.GenerateInvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Invoice generated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputInvoice'
+            type: object
+        "400":
+          description: Error occurred when generating invoice
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant application not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Generate an invoice for a tenant application (Admin)
+      tags:
+      - TenantApplication
+  /api/v1/admin/properties/{property_id}/tenant-applications/invite:
+    post:
+      consumes:
+      - application/json
+      description: Sends a tenant invite to a possible tenant (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Send Tenant Invite Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SendTenantInviteRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Tenant invite sent successfully
+        "400":
+          description: Error occurred when sending tenant invite
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: TenantApplication not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Sends a tenant invite to a possible tenant (Admin)
+      tags:
+      - TenantApplication
   /api/v1/admin/properties/{property_id}/tenants:
     get:
       consumes:
@@ -9413,6 +10570,201 @@ paths:
       summary: List tenants by property (Admin)
       tags:
       - Tenants
+  /api/v1/admin/properties/{property_id}/tenants/{tenant_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get tenant by ID (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Tenant ID
+        in: path
+        name: tenant_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tenant retrieved successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminTenant'
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Tenant not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get tenant by ID (Admin)
+      tags:
+      - Tenants
+  /api/v1/admin/properties/{property_id}/tenants/{tenant_id}/leases:
+    get:
+      consumes:
+      - application/json
+      description: List leases by tenant (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Tenant ID
+        in: path
+        name: tenant_id
+        required: true
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - MANUAL
+        - ONLINE
+        example: MANUAL
+        in: query
+        name: lease_agreement_document_mode
+        type: string
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - example: b4d0243c-6581-4104-8185-d83a45ebe41b
+        in: query
+        name: parent_lease_id
+        type: string
+      - enum:
+        - HOURLY
+        - DAILY
+        - MONTHLY
+        - QUARTERLY
+        - BIANNUALLY
+        - ANNUALLY
+        - ONETIME
+        example: HOURLY
+        in: query
+        name: payment_frequency
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - Lease.Status.Pending
+        - Lease.Status.Active
+        - Lease.Status.Terminated
+        - Lease.Status.Completed
+        - Lease.Status.Cancelled
+        example: Lease.Status.Pending
+        in: query
+        name: status
+        type: string
+      - enum:
+        - HOURS
+        - DAYS
+        - MONTHS
+        example: HOURS
+        in: query
+        name: stay_duration_frequency
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: unit_ids
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputAdminLease'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: An error occurred while filtering leases
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Absent or invalid authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List leases by tenant (Admin)
+      tags:
+      - Lease
   /api/v1/admin/properties/{property_id}/units:
     get:
       consumes:
@@ -9985,1053 +11337,6 @@ paths:
       summary: Get property by slug (Admin)
       tags:
       - Properties
-  /api/v1/admin/signing:
-    post:
-      consumes:
-      - application/json
-      description: Generate a signing token for a document signer (Admin)
-      parameters:
-      - description: Token details
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.GenerateTokenRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Token created successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputAdminSigningToken'
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Generate a signing token (Admin)
-      tags:
-      - Signing
-  /api/v1/admin/signing-tokens:
-    get:
-      description: List signing tokens with optional filters (Admin)
-      parameters:
-      - in: query
-        name: created_by_id
-        type: string
-      - in: query
-        name: document_id
-        type: string
-      - in: query
-        name: end_date
-        type: string
-      - collectionFormat: multi
-        example:
-        - a8098c1a-f86e-11da-bd1a-00112444be1e
-        in: query
-        items:
-          type: string
-        name: ids
-        type: array
-      - in: query
-        name: lease_id
-        type: string
-      - enum:
-        - asc
-        - desc
-        in: query
-        name: order
-        type: string
-      - in: query
-        name: order_by
-        type: string
-      - in: query
-        minimum: 0
-        name: page
-        type: integer
-      - in: query
-        minimum: 0
-        name: page_size
-        type: integer
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      - in: query
-        name: query
-        type: string
-      - enum:
-        - TENANT
-        - PM_WITNESS
-        - TENANT_WITNESS
-        in: query
-        name: role
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        minItems: 1
-        name: search_fields
-        type: array
-      - in: query
-        name: start_date
-        type: string
-      - in: query
-        name: tenant_application_id
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                properties:
-                  meta:
-                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
-                  rows:
-                    items:
-                      $ref: '#/definitions/transformations.OutputAdminSigningToken'
-                    type: array
-                type: object
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: List signing tokens (Admin)
-      tags:
-      - Signing
-  /api/v1/admin/signing-tokens/{signing_token_id}:
-    patch:
-      consumes:
-      - application/json
-      description: Update signer details on a token that has not yet been used (Admin)
-      parameters:
-      - description: Signing token ID
-        format: uuid4
-        in: path
-        name: signing_token_id
-        required: true
-        type: string
-      - description: Signer details
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateSigningTokenRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputAdminSigningToken'
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Update a signing token (Admin)
-      tags:
-      - Signing
-  /api/v1/admin/signing-tokens/{signing_token_id}/resend:
-    post:
-      description: Extend the token expiry by 7 days and resend the notification to
-        the signer (Admin)
-      parameters:
-      - description: Signing token ID
-        format: uuid4
-        in: path
-        name: signing_token_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputAdminSigningToken'
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Resend a signing token (Admin)
-      tags:
-      - Signing
-  /api/v1/admin/signing/direct:
-    post:
-      consumes:
-      - application/json
-      description: Submit a signature for a document using tenant application or lease
-        context (for PMs) (Admin)
-      parameters:
-      - description: Signature details
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.SignDocumentPMRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Signature created
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputDocumentSignature'
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      summary: Submit a signature (Admin)
-      tags:
-      - Signing
-  /api/v1/admin/tenant-applications:
-    get:
-      consumes:
-      - application/json
-      description: List all tenant applications (Admin)
-      parameters:
-      - example: 72432ce6-5620-4ecf-a862-4bf2140556a1
-        in: query
-        name: created_by_id
-        type: string
-      - example: 72432ce6-5620-4ecf-a862-4bf2140556a1
-        in: query
-        name: desired_unit_id
-        type: string
-      - collectionFormat: multi
-        example:
-        - john.doe@example.com
-        - email@example.com
-        in: query
-        items:
-          type: string
-        name: email
-        type: array
-      - in: query
-        name: end_date
-        type: string
-      - enum:
-        - MALE
-        - FEMALE
-        in: query
-        name: gender
-        type: string
-      - collectionFormat: multi
-        example:
-        - a8098c1a-f86e-11da-bd1a-00112444be1e
-        in: query
-        items:
-          type: string
-        name: ids
-        type: array
-      - enum:
-        - ONLINE
-        - CASH
-        - EXTERNAL
-        in: query
-        name: initial_deposit_payment_method
-        type: string
-      - enum:
-        - SINGLE
-        - MARRIED
-        - DIVORCED
-        - WIDOWED
-        in: query
-        name: marital_status
-        type: string
-      - enum:
-        - asc
-        - desc
-        in: query
-        name: order
-        type: string
-      - in: query
-        name: order_by
-        type: string
-      - in: query
-        minimum: 0
-        name: page
-        type: integer
-      - in: query
-        minimum: 0
-        name: page_size
-        type: integer
-      - enum:
-        - HOURLY
-        - DAILY
-        - MONTHLY
-        - QUARTERLY
-        - BIANNUALLY
-        - ANNUALLY
-        - ONETIME
-        in: query
-        name: payment_frequency
-        type: string
-      - collectionFormat: multi
-        example:
-        - "+233281234569"
-        - "+233281234569"
-        in: query
-        items:
-          type: string
-        name: phone
-        type: array
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      - example: 72432ce6-5620-4ecf-a862-4bf2140556a1
-        in: query
-        name: property_id
-        type: string
-      - in: query
-        name: query
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        minItems: 1
-        name: search_fields
-        type: array
-      - enum:
-        - ONLINE
-        - CASH
-        - EXTERNAL
-        in: query
-        name: security_deposit_payment_method
-        type: string
-      - in: query
-        name: start_date
-        type: string
-      - enum:
-        - TenantApplication.Status.InProgress
-        - TenantApplication.Status.Cancelled
-        - TenantApplication.Status.Completed
-        in: query
-        name: status
-        type: string
-      - enum:
-        - HOURS
-        - DAYS
-        - MONTHS
-        in: query
-        name: stay_duration_frequency
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                properties:
-                  meta:
-                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
-                  rows:
-                    items:
-                      $ref: '#/definitions/transformations.OutputAdminTenantApplication'
-                    type: array
-                type: object
-            type: object
-        "400":
-          description: An error occurred while filtering tenant applications
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Absent or invalid authentication token
-          schema:
-            type: string
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: List all tenant applications (Admin)
-      tags:
-      - TenantApplication
-    post:
-      consumes:
-      - application/json
-      description: Create a new tenant application (Admin)
-      parameters:
-      - description: Create Tenant Application Request Body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.AdminCreateTenantApplicationRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Tenant application created successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputAdminTenantApplication'
-            type: object
-        "400":
-          description: Error occurred when creating a tenant application
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      summary: Create a new tenant application (Admin)
-      tags:
-      - TenantApplication
-  /api/v1/admin/tenant-applications/{tenant_application_id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a tenant application. Only applications with status 'TenantApplication.Status.Cancelled'
-        can be deleted. (Admin)
-      parameters:
-      - description: Tenant application ID
-        in: path
-        name: tenant_application_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Tenant application deleted successfully
-        "400":
-          description: Error occurred when deleting a tenant application or application
-            is not cancelled
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Tenant application not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Delete a tenant application (Admin)
-      tags:
-      - TenantApplication
-    get:
-      consumes:
-      - application/json
-      description: Get tenant application (Admin)
-      parameters:
-      - description: Tenant application ID
-        in: path
-        name: tenant_application_id
-        required: true
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Tenant application retrieved successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputAdminTenantApplication'
-            type: object
-        "400":
-          description: Error occurred when fetching a tenant application
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Tenant application not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Get tenant application (Admin)
-      tags:
-      - TenantApplication
-    patch:
-      consumes:
-      - application/json
-      description: Update a tenant application (Admin)
-      parameters:
-      - description: Tenant application ID
-        in: path
-        name: tenant_application_id
-        required: true
-        type: string
-      - description: Update Tenant Application Request Body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.AdminUpdateTenantApplicationRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Tenant application updated successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputAdminTenantApplication'
-            type: object
-        "400":
-          description: Error occurred when updating a tenant application
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Tenant application not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Update a tenant application (Admin)
-      tags:
-      - TenantApplication
-  /api/v1/admin/tenant-applications/{tenant_application_id}/approve:
-    patch:
-      consumes:
-      - application/json
-      description: Approve a tenant application (Admin)
-      parameters:
-      - description: Tenant application ID
-        in: path
-        name: tenant_application_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Tenant application approved successfully
-        "400":
-          description: Error occurred when approving a tenant application
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "403":
-          description: Tenant application not approved
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "404":
-          description: Tenant application not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "409":
-          description: Tenant application already approved
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Approve a tenant application (Admin)
-      tags:
-      - TenantApplication
-  /api/v1/admin/tenant-applications/{tenant_application_id}/cancel:
-    patch:
-      consumes:
-      - application/json
-      description: Cancel a tenant application (Admin)
-      parameters:
-      - description: Tenant application ID
-        in: path
-        name: tenant_application_id
-        required: true
-        type: string
-      - description: Cancel Tenant Application Request Body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.CancelTenantApplicationRequest'
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Tenant application cancelled successfully
-        "400":
-          description: Error occurred when cancelling a tenant application
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Tenant application not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Cancel a tenant application (Admin)
-      tags:
-      - TenantApplication
-  /api/v1/admin/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay:
-    post:
-      consumes:
-      - application/json
-      description: Pay an invoice for a tenant application (security deposit and/or
-        initial deposit) (Admin)
-      parameters:
-      - description: Tenant application ID
-        in: path
-        name: tenant_application_id
-        required: true
-        type: string
-      - description: Invoice ID
-        in: path
-        name: invoice_id
-        required: true
-        type: string
-      - description: Pay invoice request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.PayInvoiceRequest'
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Invoice paid successfully
-        "400":
-          description: Error occurred when paying invoice
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Tenant application or invoice not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Pay an invoice for a tenant application (Admin)
-      tags:
-      - TenantApplication
-  /api/v1/admin/tenant-applications/{tenant_application_id}/invoice:generate:
-    post:
-      consumes:
-      - application/json
-      description: Generate an invoice for a tenant application (security deposit
-        and/or initial deposit) (Admin)
-      parameters:
-      - description: Tenant application ID
-        in: path
-        name: tenant_application_id
-        required: true
-        type: string
-      - description: Generate Invoice Request Body
-        in: body
-        name: body
-        schema:
-          $ref: '#/definitions/handlers.GenerateInvoiceRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Invoice generated successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputInvoice'
-            type: object
-        "400":
-          description: Error occurred when generating invoice
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Tenant application not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Generate an invoice for a tenant application (Admin)
-      tags:
-      - TenantApplication
-  /api/v1/admin/tenant-applications/invite:
-    post:
-      consumes:
-      - application/json
-      description: Sends a tenant invite to a possible tenant (Admin)
-      parameters:
-      - description: Send Tenant Invite Request Body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.SendTenantInviteRequest'
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Tenant invite sent successfully
-        "400":
-          description: Error occurred when sending tenant invite
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: TenantApplication not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            type: string
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Sends a tenant invite to a possible tenant (Admin)
-      tags:
-      - TenantApplication
-  /api/v1/admin/tenants/{tenant_id}:
-    get:
-      consumes:
-      - application/json
-      description: Get tenant by ID (Admin)
-      parameters:
-      - description: Tenant ID
-        in: path
-        name: tenant_id
-        required: true
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Tenant retrieved successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputAdminTenant'
-            type: object
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Tenant not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Get tenant by ID (Admin)
-      tags:
-      - Tenants
-  /api/v1/admin/tenants/{tenant_id}/leases:
-    get:
-      consumes:
-      - application/json
-      description: List leases by tenant (Admin)
-      parameters:
-      - description: Tenant ID
-        in: path
-        name: tenant_id
-        required: true
-        type: string
-      - in: query
-        name: end_date
-        type: string
-      - collectionFormat: multi
-        example:
-        - a8098c1a-f86e-11da-bd1a-00112444be1e
-        in: query
-        items:
-          type: string
-        name: ids
-        type: array
-      - enum:
-        - MANUAL
-        - ONLINE
-        example: MANUAL
-        in: query
-        name: lease_agreement_document_mode
-        type: string
-      - enum:
-        - asc
-        - desc
-        in: query
-        name: order
-        type: string
-      - in: query
-        name: order_by
-        type: string
-      - in: query
-        minimum: 0
-        name: page
-        type: integer
-      - in: query
-        minimum: 0
-        name: page_size
-        type: integer
-      - example: b4d0243c-6581-4104-8185-d83a45ebe41b
-        in: query
-        name: parent_lease_id
-        type: string
-      - enum:
-        - HOURLY
-        - DAILY
-        - MONTHLY
-        - QUARTERLY
-        - BIANNUALLY
-        - ANNUALLY
-        - ONETIME
-        example: HOURLY
-        in: query
-        name: payment_frequency
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      - example: b4d0243c-6581-4104-8185-d83a45ebe41b
-        in: query
-        name: property_id
-        type: string
-      - in: query
-        name: query
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        minItems: 1
-        name: search_fields
-        type: array
-      - in: query
-        name: start_date
-        type: string
-      - enum:
-        - Lease.Status.Pending
-        - Lease.Status.Active
-        - Lease.Status.Terminated
-        - Lease.Status.Completed
-        - Lease.Status.Cancelled
-        example: Lease.Status.Pending
-        in: query
-        name: status
-        type: string
-      - enum:
-        - HOURS
-        - DAYS
-        - MONTHS
-        example: HOURS
-        in: query
-        name: stay_duration_frequency
-        type: string
-      - collectionFormat: multi
-        example:
-        - a8098c1a-f86e-11da-bd1a-00112444be1e
-        in: query
-        items:
-          type: string
-        name: unit_ids
-        type: array
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                properties:
-                  meta:
-                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
-                  rows:
-                    items:
-                      $ref: '#/definitions/transformations.OutputAdminLease'
-                    type: array
-                type: object
-            type: object
-        "400":
-          description: An error occurred while filtering leases
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Absent or invalid authentication token
-          schema:
-            type: string
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: List leases by tenant (Admin)
-      tags:
-      - Lease
   /api/v1/announcements/{announcement_id}:
     get:
       description: Get a PUBLISHED announcement by ID
@@ -11267,10 +11572,6 @@ paths:
           type: string
         name: populate
         type: array
-      - example: b4d0243c-6581-4104-8185-d83a45ebe41b
-        in: query
-        name: property_id
-        type: string
       - in: query
         name: query
         type: string

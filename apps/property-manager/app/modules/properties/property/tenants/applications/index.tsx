@@ -27,6 +27,7 @@ import {
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
+import { safeString } from '~/lib/strings'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyTenantApplicationsModule() {
@@ -48,13 +49,14 @@ export function PropertyTenantApplicationsModule() {
 	const gender = searchParams.get('gender') ?? undefined
 	const status = searchParams.get('status') ?? undefined
 
+	const propertyId = safeString(clientUserProperty?.property_id)
+
 	const { data, isPending, isRefetching, error, refetch } =
-		useGetPropertyTenantApplications({
+		useGetPropertyTenantApplications(propertyId, {
 			filters: {
 				status: status,
 				gender: gender,
 				marital_status: marital_status,
-				property_id: clientUserProperty?.property?.id,
 			},
 			pagination: { page, per },
 			populate: ['DesiredUnit'],
@@ -264,6 +266,7 @@ export function PropertyTenantApplicationsModule() {
 			</div>
 
 			<CancelTenantApplicationModal
+				propertyId={safeString(clientUserProperty?.property_id)}
 				opened={openCancelModal}
 				setOpened={setOpenCancelModal}
 				refetch={refetch}
@@ -275,12 +278,14 @@ export function PropertyTenantApplicationsModule() {
 				setOpened={setOpenApproveModal}
 				refetch={refetch}
 				data={selectedApplication}
+				propertyId={safeString(clientUserProperty?.property_id)}
 			/>
 
 			<DeleteTenantApplicationModal
 				opened={openDeleteModal}
 				setOpened={setOpenDeleteModal}
 				data={selectedApplication}
+				propertyId={safeString(clientUserProperty?.property_id)}
 			/>
 		</div>
 	)

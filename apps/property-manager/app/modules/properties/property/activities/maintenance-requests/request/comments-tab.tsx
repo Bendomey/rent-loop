@@ -46,9 +46,10 @@ function UserChip({ name, isMe }: { name: string; isMe: boolean }) {
 
 interface CommentsTabProps {
 	requestId: string
+	propertyId: string
 }
 
-export function CommentsTab({ requestId }: CommentsTabProps) {
+export function CommentsTab({ requestId, propertyId }: CommentsTabProps) {
 	const { currentUser } = useAuth()
 	const queryClient = useQueryClient()
 	const [content, setContent] = useState('')
@@ -56,7 +57,7 @@ export function CommentsTab({ requestId }: CommentsTabProps) {
 	const [editContent, setEditContent] = useState('')
 
 	const { data, isLoading, isError, refetch } =
-		useGetMaintenanceRequestComments(requestId, {
+		useGetMaintenanceRequestComments(propertyId, requestId, {
 			pagination: { page: 1, per: 50 },
 			filters: {},
 			populate: ['CreatedByClientUser'],
@@ -79,7 +80,7 @@ export function CommentsTab({ requestId }: CommentsTabProps) {
 		if (!trimmed) return
 
 		createComment.mutate(
-			{ id: requestId, content: trimmed },
+			{ id: requestId, property_id: propertyId, content: trimmed },
 			{
 				onSuccess: () => {
 					setContent('')
@@ -104,7 +105,12 @@ export function CommentsTab({ requestId }: CommentsTabProps) {
 		if (!trimmed) return
 
 		updateComment.mutate(
-			{ id: requestId, comment_id: commentId, content: trimmed },
+			{
+				id: requestId,
+				property_id: propertyId,
+				comment_id: commentId,
+				content: trimmed,
+			},
 			{
 				onSuccess: () => {
 					setEditingId(null)
@@ -121,7 +127,7 @@ export function CommentsTab({ requestId }: CommentsTabProps) {
 
 	const handleDelete = (commentId: string) => {
 		deleteComment.mutate(
-			{ id: requestId, comment_id: commentId },
+			{ id: requestId, property_id: propertyId, comment_id: commentId },
 			{
 				onSuccess: () => {
 					invalidate()

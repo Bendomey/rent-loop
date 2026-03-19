@@ -3,12 +3,14 @@ import { QUERY_KEYS } from '~/lib/constants'
 import { getQueryParams } from '~/lib/get-param'
 import { fetchClient } from '~/lib/transport'
 
-const BASE = (leaseId: string) => `/v1/admin/leases/${leaseId}/checklists`
+const BASE = (propertyId: string, leaseId: string) =>
+	`/v1/admin/properties/${propertyId}/leases/${leaseId}/checklists`
 
 /**
  * GET all checklists for a lease
  */
 const getLeaseChecklists = async (
+	propertyId: string,
 	leaseId: string,
 	props: FetchMultipleDataInputParams<FetchLeaseChecklistFilter>,
 ) => {
@@ -16,7 +18,7 @@ const getLeaseChecklists = async (
 		const params = getQueryParams<FetchLeaseChecklistFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<LeaseChecklist>>
-		>(`${BASE(leaseId)}?${params.toString()}`)
+		>(`${BASE(propertyId, leaseId)}?${params.toString()}`)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -28,13 +30,14 @@ const getLeaseChecklists = async (
 }
 
 export const useGetLeaseChecklists = (
+	propertyId: string,
 	leaseId: string,
 	query: FetchMultipleDataInputParams<FetchLeaseChecklistFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.LEASE_CHECKLISTS, leaseId, query],
-		queryFn: () => getLeaseChecklists(leaseId, query),
-		enabled: !!leaseId,
+		queryKey: [QUERY_KEYS.LEASE_CHECKLISTS, propertyId, leaseId, query],
+		queryFn: () => getLeaseChecklists(propertyId, leaseId, query),
+		enabled: !!leaseId && !!propertyId,
 	})
 
 /**
@@ -48,6 +51,7 @@ export interface ChecklistItemDraft {
 }
 
 export interface CreateLeaseChecklistInput {
+	property_id: string
 	lease_id: string
 	type: LeaseChecklistType
 	checklist_items: ChecklistItemDraft[]
@@ -55,12 +59,13 @@ export interface CreateLeaseChecklistInput {
 }
 
 const createLeaseChecklist = async ({
+	property_id,
 	lease_id,
 	...data
 }: CreateLeaseChecklistInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<LeaseChecklist>>(
-			BASE(lease_id),
+			BASE(property_id, lease_id),
 			{ method: 'POST', body: JSON.stringify(data) },
 		)
 		return response.parsedBody.data
@@ -89,16 +94,20 @@ export const useCreateLeaseChecklist = () => {
  * DELETE a checklist
  */
 export interface DeleteLeaseChecklistInput {
+	property_id: string
 	lease_id: string
 	checklist_id: string
 }
 
 const deleteLeaseChecklist = async ({
+	property_id,
 	lease_id,
 	checklist_id,
 }: DeleteLeaseChecklistInput) => {
 	try {
-		await fetchClient(`${BASE(lease_id)}/${checklist_id}`, { method: 'DELETE' })
+		await fetchClient(`${BASE(property_id, lease_id)}/${checklist_id}`, {
+			method: 'DELETE',
+		})
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
@@ -124,17 +133,19 @@ export const useDeleteLeaseChecklist = () => {
  * SUBMIT a checklist for tenant review
  */
 export interface SubmitLeaseChecklistInput {
+	property_id: string
 	lease_id: string
 	checklist_id: string
 }
 
 const submitLeaseChecklist = async ({
+	property_id,
 	lease_id,
 	checklist_id,
 }: SubmitLeaseChecklistInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<LeaseChecklist>>(
-			`${BASE(lease_id)}/${checklist_id}/submit`,
+			`${BASE(property_id, lease_id)}/${checklist_id}/submit`,
 			{ method: 'POST' },
 		)
 		return response.parsedBody.data
@@ -163,6 +174,7 @@ export const useSubmitLeaseChecklist = () => {
  * CREATE a checklist item
  */
 export interface CreateLeaseChecklistItemInput {
+	property_id: string
 	lease_id: string
 	checklist_id: string
 	description: string
@@ -172,13 +184,14 @@ export interface CreateLeaseChecklistItemInput {
 }
 
 const createLeaseChecklistItem = async ({
+	property_id,
 	lease_id,
 	checklist_id,
 	...data
 }: CreateLeaseChecklistItemInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<LeaseChecklistItem>>(
-			`${BASE(lease_id)}/${checklist_id}/items`,
+			`${BASE(property_id, lease_id)}/${checklist_id}/items`,
 			{ method: 'POST', body: JSON.stringify(data) },
 		)
 		return response.parsedBody.data
@@ -207,6 +220,7 @@ export const useCreateLeaseChecklistItem = () => {
  * UPDATE a checklist item
  */
 export interface UpdateLeaseChecklistItemInput {
+	property_id: string
 	lease_id: string
 	checklist_id: string
 	item_id: string
@@ -217,6 +231,7 @@ export interface UpdateLeaseChecklistItemInput {
 }
 
 const updateLeaseChecklistItem = async ({
+	property_id,
 	lease_id,
 	checklist_id,
 	item_id,
@@ -224,7 +239,7 @@ const updateLeaseChecklistItem = async ({
 }: UpdateLeaseChecklistItemInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<LeaseChecklistItem>>(
-			`${BASE(lease_id)}/${checklist_id}/items/${item_id}`,
+			`${BASE(property_id, lease_id)}/${checklist_id}/items/${item_id}`,
 			{ method: 'PATCH', body: JSON.stringify(data) },
 		)
 		return response.parsedBody.data
@@ -253,20 +268,23 @@ export const useUpdateLeaseChecklistItem = () => {
  * DELETE a checklist item
  */
 export interface DeleteLeaseChecklistItemInput {
+	property_id: string
 	lease_id: string
 	checklist_id: string
 	item_id: string
 }
 
 const deleteLeaseChecklistItem = async ({
+	property_id,
 	lease_id,
 	checklist_id,
 	item_id,
 }: DeleteLeaseChecklistItemInput) => {
 	try {
-		await fetchClient(`${BASE(lease_id)}/${checklist_id}/items/${item_id}`, {
-			method: 'DELETE',
-		})
+		await fetchClient(
+			`${BASE(property_id, lease_id)}/${checklist_id}/items/${item_id}`,
+			{ method: 'DELETE' },
+		)
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()

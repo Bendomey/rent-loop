@@ -8,13 +8,16 @@ import { fetchClient, fetchServer } from '~/lib/transport'
  */
 
 const getPropertyTenantApplications = async (
+	propertyId: string,
 	props: FetchMultipleDataInputParams<FetchTenantApplicationFilter>,
 ) => {
 	try {
 		const params = getQueryParams<FetchTenantApplicationFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<TenantApplication>>
-		>(`/v1/admin/tenant-applications?${params.toString()}`)
+		>(
+			`/v1/admin/properties/${propertyId}/tenant-applications?${params.toString()}`,
+		)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -30,20 +33,23 @@ const getPropertyTenantApplications = async (
 }
 
 export const useGetPropertyTenantApplications = (
+	propertyId: string,
 	query: FetchMultipleDataInputParams<FetchTenantApplicationFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.PROPERTY_TENANT_APPLICATIONS, query],
-		queryFn: () => getPropertyTenantApplications(query),
+		queryKey: [QUERY_KEYS.PROPERTY_TENANT_APPLICATIONS, propertyId, query],
+		queryFn: () => getPropertyTenantApplications(propertyId, query),
+		enabled: !!propertyId,
 	})
 
-interface GetPropertyTenantApplicationProps {
+interface AdminGetPropertyTenantApplicationProps {
 	id: string
+	property_id: string
 	populate?: Array<string>
 }
 
 export const getAdminPropertyTenantApplicationForServer = async (
-	input: GetPropertyTenantApplicationProps,
+	input: AdminGetPropertyTenantApplicationProps,
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
@@ -51,7 +57,7 @@ export const getAdminPropertyTenantApplicationForServer = async (
 			populate: input.populate,
 		})
 		const response = await fetchServer<ApiResponse<TenantApplication>>(
-			`${apiConfig.baseUrl}/v1/admin/tenant-applications/${input.id}?${params.toString()}`,
+			`${apiConfig.baseUrl}/v1/admin/properties/${input.property_id}/tenant-applications/${input.id}?${params.toString()}`,
 			{
 				method: 'GET',
 				...apiConfig,
@@ -68,6 +74,11 @@ export const getAdminPropertyTenantApplicationForServer = async (
 			throw error
 		}
 	}
+}
+
+interface GetPropertyTenantApplicationProps {
+	id: string
+	populate?: Array<string>
 }
 
 export const getPropertyTenantApplicationForServer = async (
@@ -140,7 +151,7 @@ export const createTenantApplication = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<TenantApplication>>(
-			`${apiConfig?.baseUrl}/v1/admin/tenant-applications`,
+			`${apiConfig?.baseUrl}/v1/admin/properties/${props.property_id}/tenant-applications`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),
@@ -164,15 +175,20 @@ export const createTenantApplication = async (
  * Invite tenant to a property.
  */
 const inviteTenantToProperty = async (props: {
+	property_id: string
 	unit_id: string
 	email: Maybe<string>
 	phone: Maybe<string>
 }) => {
 	try {
-		await fetchClient(`/v1/admin/tenant-applications/invite`, {
-			method: 'POST',
-			body: JSON.stringify(props),
-		})
+		const { property_id, ...body } = props
+		await fetchClient(
+			`/v1/admin/properties/${property_id}/tenant-applications/invite`,
+			{
+				method: 'POST',
+				body: JSON.stringify(body),
+			},
+		)
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
@@ -191,6 +207,7 @@ export const useInviteTenateToProperty = () =>
 	})
 
 interface cancelTenantApplicationProps {
+	property_id: string
 	id: string
 	reason: string
 }
@@ -199,12 +216,13 @@ interface cancelTenantApplicationProps {
  * Cancel Tenant Application
  */
 const cancelTenantApplication = async ({
+	property_id,
 	id,
 	reason,
 }: cancelTenantApplicationProps) => {
 	try {
 		const response = await fetchClient<ApiResponse<TenantApplication>>(
-			`/v1/admin/tenant-applications/${id}/cancel`,
+			`/v1/admin/properties/${property_id}/tenant-applications/${id}/cancel`,
 			{
 				method: 'PATCH',
 				body: JSON.stringify({ reason }),
@@ -229,11 +247,20 @@ export const useCancelTenantApplication = () =>
  * approve tenant application
  */
 
-const approveTenantApplication = async (id: string) => {
+const approveTenantApplication = async ({
+	property_id,
+	id,
+}: {
+	property_id: string
+	id: string
+}) => {
 	try {
-		await fetchClient<boolean>(`/v1/admin/tenant-applications/${id}/approve`, {
-			method: 'PATCH',
-		})
+		await fetchClient<boolean>(
+			`/v1/admin/properties/${property_id}/tenant-applications/${id}/approve`,
+			{
+				method: 'PATCH',
+			},
+		)
 	} catch (error) {
 		if (error instanceof Error) {
 			throw error
@@ -253,11 +280,17 @@ export const useApproveTenantApplication = () =>
 /**
  * Delete Tenant Application
  */
-const deleteTenantApplication = async (props: { id: string }) => {
+const deleteTenantApplication = async (props: {
+	property_id: string
+	id: string
+}) => {
 	try {
-		await fetchClient(`/v1/admin/tenant-applications/${props.id}`, {
-			method: 'DELETE',
-		})
+		await fetchClient(
+			`/v1/admin/properties/${props.property_id}/tenant-applications/${props.id}`,
+			{
+				method: 'DELETE',
+			},
+		)
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
@@ -279,17 +312,19 @@ export const useDeleteTenantApplication = () =>
  * Update Admin Tenant Application
  */
 interface AdminUpdateTenantApplicationProps {
+	property_id: string
 	id: string
 	data: Partial<TenantApplication>
 }
 
 const adminUpdateTenantApplication = async ({
+	property_id,
 	id,
 	data,
 }: AdminUpdateTenantApplicationProps) => {
 	try {
 		const response = await fetchClient<ApiResponse<TenantApplication>>(
-			`/v1/admin/tenant-applications/${id}`,
+			`/v1/admin/properties/${property_id}/tenant-applications/${id}`,
 			{
 				method: 'PATCH',
 				body: JSON.stringify(data),
@@ -353,17 +388,19 @@ export const useUpdateTenantApplication = () =>
  * tenant application fields. Only an optional due_date can be provided.
  */
 interface GenerateApplicationPaymentInvoiceInput {
+	property_id: string
 	id: string
 	due_date?: string
 }
 
 const generateApplicationPaymentInvoice = async ({
+	property_id,
 	id,
 	due_date,
 }: GenerateApplicationPaymentInvoiceInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<Invoice>>(
-			`/v1/admin/tenant-applications/${id}/invoice:generate`,
+			`/v1/admin/properties/${property_id}/tenant-applications/${id}/invoice:generate`,
 			{
 				method: 'POST',
 				body: JSON.stringify(due_date ? { due_date } : {}),
@@ -396,6 +433,7 @@ type PaymentProvider =
 	| 'CASH'
 
 interface PayApplicationInvoiceInput {
+	property_id: string
 	tenant_application_id: string
 	invoice_id: string
 	body: {
@@ -408,13 +446,14 @@ interface PayApplicationInvoiceInput {
 }
 
 const payApplicationInvoice = async ({
+	property_id,
 	tenant_application_id,
 	invoice_id,
 	body,
 }: PayApplicationInvoiceInput) => {
 	try {
 		await fetchClient(
-			`/v1/admin/tenant-applications/${tenant_application_id}/invoice/${invoice_id}/pay`,
+			`/v1/admin/properties/${property_id}/tenant-applications/${tenant_application_id}/invoice/${invoice_id}/pay`,
 			{
 				method: 'POST',
 				body: JSON.stringify(body),

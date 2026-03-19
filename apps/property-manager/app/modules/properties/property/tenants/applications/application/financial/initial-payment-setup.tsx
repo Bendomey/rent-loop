@@ -43,6 +43,7 @@ import {
 import { cn } from '~/lib/utils'
 
 interface InitialPaymentSetupProps {
+	propertyId: string
 	applicationId: string
 	existingInvoice: Invoice | null
 	hasFinancialChanges: boolean
@@ -73,6 +74,7 @@ function derivePaymentMode(
 }
 
 export function InitialPaymentSetup({
+	propertyId,
 	applicationId,
 	existingInvoice,
 	hasFinancialChanges,
@@ -130,7 +132,11 @@ export function InitialPaymentSetup({
 
 	if (existingInvoice) {
 		return (
-			<InvoiceDetails invoice={existingInvoice} applicationId={applicationId} />
+			<InvoiceDetails
+				invoice={existingInvoice}
+				applicationId={applicationId}
+				propertyId={propertyId}
+			/>
 		)
 	}
 
@@ -144,12 +150,14 @@ export function InitialPaymentSetup({
 		try {
 			await updateApplication({
 				id: applicationId,
+				property_id: propertyId,
 				data: {
 					initial_deposit_fee: convertCedisToPesewas(rentAmount * periods),
 					initial_deposit_fee_currency: 'GHS',
 				},
 			})
 			await generateInvoice({
+				property_id: propertyId,
 				id: applicationId,
 				due_date: dueDate ? dueDate.toISOString() : undefined,
 			})

@@ -58,6 +58,7 @@ type FormValues = z.infer<typeof schema>
 
 interface Props {
 	leaseId: string
+	propertyId: string
 	checklistId: string
 	item?: LeaseChecklistItem
 	opened: boolean
@@ -66,6 +67,7 @@ interface Props {
 
 export function ChecklistItemDialog({
 	leaseId,
+	propertyId,
 	checklistId,
 	item,
 	opened,
@@ -100,6 +102,7 @@ export function ChecklistItemDialog({
 			if (isEdit && item) {
 				await updateMutation.mutateAsync({
 					lease_id: leaseId,
+					property_id: propertyId,
 					checklist_id: checklistId,
 					item_id: item.id,
 					description: values.description,
@@ -110,6 +113,7 @@ export function ChecklistItemDialog({
 			} else {
 				await createMutation.mutateAsync({
 					lease_id: leaseId,
+					property_id: propertyId,
 					checklist_id: checklistId,
 					description: values.description,
 					status: values.status,

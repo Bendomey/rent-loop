@@ -146,6 +146,7 @@ export function RequestCard({ item, propertyId }: RequestCardProps) {
 				open={assignDialogOpen}
 				onOpenChange={setAssignDialogOpen}
 				requestId={item.id}
+				propertyId={propertyId}
 				type={assignType}
 			/>
 		</>

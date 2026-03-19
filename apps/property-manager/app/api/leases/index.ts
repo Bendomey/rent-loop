@@ -35,6 +35,7 @@ export const useGetPropertyLeases = (
 	})
 
 const getTenantLeases = async (
+	propertyId: string,
 	tenantId: string,
 	props: FetchMultipleDataInputParams<FetchLeaseFilter>,
 ) => {
@@ -42,7 +43,9 @@ const getTenantLeases = async (
 		const params = getQueryParams<FetchLeaseFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<Lease>>
-		>(`/v1/admin/tenants/${tenantId}/leases?${params.toString()}`)
+		>(
+			`/v1/admin/properties/${propertyId}/tenants/${tenantId}/leases?${params.toString()}`,
+		)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -56,11 +59,12 @@ const getTenantLeases = async (
 }
 
 export const useGetTenantLeases = (
+	propertyId: string,
 	tenantId: string,
 	query: FetchMultipleDataInputParams<FetchLeaseFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.LEASES, tenantId, query],
-		queryFn: () => getTenantLeases(tenantId, query),
-		enabled: !!tenantId,
+		queryKey: [QUERY_KEYS.LEASES, propertyId, tenantId, query],
+		queryFn: () => getTenantLeases(propertyId, tenantId, query),
+		enabled: !!tenantId && !!propertyId,
 	})
