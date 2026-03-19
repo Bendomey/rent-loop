@@ -11,16 +11,19 @@ String _$registerFcmTokenNotifierHash() =>
 
 /// See also [RegisterFcmTokenNotifier].
 @ProviderFor(RegisterFcmTokenNotifier)
-final registerFcmTokenNotifierProvider = AutoDisposeNotifierProvider<
-    RegisterFcmTokenNotifier, RegisterFcmTokenState>.internal(
-  RegisterFcmTokenNotifier.new,
-  name: r'registerFcmTokenNotifierProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$registerFcmTokenNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final registerFcmTokenNotifierProvider =
+    AutoDisposeNotifierProvider<
+      RegisterFcmTokenNotifier,
+      RegisterFcmTokenState
+    >.internal(
+      RegisterFcmTokenNotifier.new,
+      name: r'registerFcmTokenNotifierProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$registerFcmTokenNotifierHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
 typedef _$RegisterFcmTokenNotifier = AutoDisposeNotifier<RegisterFcmTokenState>;
 // ignore_for_file: type=lint

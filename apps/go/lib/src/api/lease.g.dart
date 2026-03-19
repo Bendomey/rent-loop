@@ -13,8 +13,9 @@ String _$leaseApiHash() => r'e1f4b0c1bf43159f1e595617035c9a9eed348c79';
 final leaseApiProvider = AutoDisposeProvider<LeaseApi>.internal(
   leaseApi,
   name: r'leaseApiProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$leaseApiHash,
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$leaseApiHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );

@@ -11819,11 +11819,11 @@ paths:
         type: string
       - collectionFormat: csv
         example:
-        - DRAFT
+        - SUBMITTED
         in: query
         items:
           type: string
-        name: statuses
+        name: status
         type: array
       - enum:
         - CHECK_IN

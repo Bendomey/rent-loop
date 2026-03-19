@@ -41,24 +41,15 @@ class MaintenanceRequestFamily
   const MaintenanceRequestFamily();
 
   /// See also [maintenanceRequest].
-  MaintenanceRequestProvider call(
-    String leaseId,
-    String id,
-  ) {
-    return MaintenanceRequestProvider(
-      leaseId,
-      id,
-    );
+  MaintenanceRequestProvider call(String leaseId, String id) {
+    return MaintenanceRequestProvider(leaseId, id);
   }
 
   @override
   MaintenanceRequestProvider getProviderOverride(
     covariant MaintenanceRequestProvider provider,
   ) {
-    return call(
-      provider.leaseId,
-      provider.id,
-    );
+    return call(provider.leaseId, provider.id);
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -80,27 +71,20 @@ class MaintenanceRequestFamily
 class MaintenanceRequestProvider
     extends AutoDisposeFutureProvider<MaintenanceRequestModel> {
   /// See also [maintenanceRequest].
-  MaintenanceRequestProvider(
-    String leaseId,
-    String id,
-  ) : this._internal(
-          (ref) => maintenanceRequest(
-            ref as MaintenanceRequestRef,
-            leaseId,
-            id,
-          ),
-          from: maintenanceRequestProvider,
-          name: r'maintenanceRequestProvider',
-          debugGetCreateSourceHash:
-              const bool.fromEnvironment('dart.vm.product')
-                  ? null
-                  : _$maintenanceRequestHash,
-          dependencies: MaintenanceRequestFamily._dependencies,
-          allTransitiveDependencies:
-              MaintenanceRequestFamily._allTransitiveDependencies,
-          leaseId: leaseId,
-          id: id,
-        );
+  MaintenanceRequestProvider(String leaseId, String id)
+    : this._internal(
+        (ref) => maintenanceRequest(ref as MaintenanceRequestRef, leaseId, id),
+        from: maintenanceRequestProvider,
+        name: r'maintenanceRequestProvider',
+        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+            ? null
+            : _$maintenanceRequestHash,
+        dependencies: MaintenanceRequestFamily._dependencies,
+        allTransitiveDependencies:
+            MaintenanceRequestFamily._allTransitiveDependencies,
+        leaseId: leaseId,
+        id: id,
+      );
 
   MaintenanceRequestProvider._internal(
     super._createNotifier, {
@@ -119,7 +103,7 @@ class MaintenanceRequestProvider
   @override
   Override overrideWith(
     FutureOr<MaintenanceRequestModel> Function(MaintenanceRequestRef provider)
-        create,
+    create,
   ) {
     return ProviderOverride(
       origin: this,
@@ -179,5 +163,6 @@ class _MaintenanceRequestProviderElement
   @override
   String get id => (origin as MaintenanceRequestProvider).id;
 }
+
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

@@ -6,7 +6,7 @@ part of 'maintenance_badge_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$mrStatsHash() => r'5f8fcdbe415d9fa5bdfd2d2e8859a7517c23b54d';
+String _$mrStatsHash() => r'257348db4462e34b7be2ee604b5135ce533a6479';
 
 /// Fetches MR counts grouped by status via the dedicated stats endpoint.
 /// keepAlive so the badge count persists across tabs.
@@ -16,8 +16,9 @@ String _$mrStatsHash() => r'5f8fcdbe415d9fa5bdfd2d2e8859a7517c23b54d';
 final mrStatsProvider = FutureProvider<Map<String, int>>.internal(
   mrStats,
   name: r'mrStatsProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$mrStatsHash,
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$mrStatsHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
@@ -34,14 +35,14 @@ String _$maintenanceRequestTotalNotifierHash() =>
 @ProviderFor(MaintenanceRequestTotalNotifier)
 final maintenanceRequestTotalNotifierProvider =
     NotifierProvider<MaintenanceRequestTotalNotifier, int>.internal(
-  MaintenanceRequestTotalNotifier.new,
-  name: r'maintenanceRequestTotalNotifierProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$maintenanceRequestTotalNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+      MaintenanceRequestTotalNotifier.new,
+      name: r'maintenanceRequestTotalNotifierProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$maintenanceRequestTotalNotifierHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
 typedef _$MaintenanceRequestTotalNotifier = Notifier<int>;
 // ignore_for_file: type=lint

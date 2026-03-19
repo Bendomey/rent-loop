@@ -84,7 +84,11 @@ export const useCreateLeaseChecklist = () => {
 		mutationFn: createLeaseChecklist,
 		onSuccess: (_, variables) => {
 			void queryClient.invalidateQueries({
-				queryKey: [QUERY_KEYS.LEASE_CHECKLISTS, variables.lease_id],
+				queryKey: [
+					QUERY_KEYS.LEASE_CHECKLISTS,
+					variables.property_id,
+					variables.lease_id,
+				],
 			})
 		},
 	})
@@ -123,7 +127,11 @@ export const useDeleteLeaseChecklist = () => {
 		mutationFn: deleteLeaseChecklist,
 		onSuccess: (_, variables) => {
 			void queryClient.invalidateQueries({
-				queryKey: [QUERY_KEYS.LEASE_CHECKLISTS, variables.lease_id],
+				queryKey: [
+					QUERY_KEYS.LEASE_CHECKLISTS,
+					variables.property_id,
+					variables.lease_id,
+				],
 			})
 		},
 	})
@@ -164,7 +172,11 @@ export const useSubmitLeaseChecklist = () => {
 		mutationFn: submitLeaseChecklist,
 		onSuccess: (_, variables) => {
 			void queryClient.invalidateQueries({
-				queryKey: [QUERY_KEYS.LEASE_CHECKLISTS, variables.lease_id],
+				queryKey: [
+					QUERY_KEYS.LEASE_CHECKLISTS,
+					variables.property_id,
+					variables.lease_id,
+				],
 			})
 		},
 	})
@@ -210,7 +222,11 @@ export const useCreateLeaseChecklistItem = () => {
 		mutationFn: createLeaseChecklistItem,
 		onSuccess: (_, variables) => {
 			void queryClient.invalidateQueries({
-				queryKey: [QUERY_KEYS.LEASE_CHECKLISTS, variables.lease_id],
+				queryKey: [
+					QUERY_KEYS.LEASE_CHECKLISTS,
+					variables.property_id,
+					variables.lease_id,
+				],
 			})
 		},
 	})
@@ -258,7 +274,11 @@ export const useUpdateLeaseChecklistItem = () => {
 		mutationFn: updateLeaseChecklistItem,
 		onSuccess: (_, variables) => {
 			void queryClient.invalidateQueries({
-				queryKey: [QUERY_KEYS.LEASE_CHECKLISTS, variables.lease_id],
+				queryKey: [
+					QUERY_KEYS.LEASE_CHECKLISTS,
+					variables.property_id,
+					variables.lease_id,
+				],
 			})
 		},
 	})
@@ -300,7 +320,11 @@ export const useDeleteLeaseChecklistItem = () => {
 		mutationFn: deleteLeaseChecklistItem,
 		onSuccess: (_, variables) => {
 			void queryClient.invalidateQueries({
-				queryKey: [QUERY_KEYS.LEASE_CHECKLISTS, variables.lease_id],
+				queryKey: [
+					QUERY_KEYS.LEASE_CHECKLISTS,
+					variables.property_id,
+					variables.lease_id,
+				],
 			})
 		},
 	})

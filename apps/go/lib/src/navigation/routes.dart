@@ -160,6 +160,14 @@ GoRouter buildRoutes(WidgetRef ref, Listenable refreshListenable) {
         builder: (context, state) => const DeleteAccountScreen(),
       ),
       GoRoute(
+        path: '/unit-condition-reports/:id',
+        name: 'UnitConditionReportDetail',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return UnitConditionReportDetailScreen(checklistId: id);
+        },
+      ),
+      GoRoute(
         path: '/maintenance/new',
         name: "NewMaintenanceRequest",
         builder: (context, state) => const NewMaintenanceScreen(),
