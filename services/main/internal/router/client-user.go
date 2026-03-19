@@ -251,24 +251,17 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 						r.Get("/", handlers.MaintenanceRequestHandler.List)
 						r.Route("/{maintenance_request_id}", func(r chi.Router) {
 							r.Get("/", handlers.MaintenanceRequestHandler.Get)
-							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-								Patch("/", handlers.MaintenanceRequestHandler.Update)
-							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-								Post("/assign-worker", handlers.MaintenanceRequestHandler.AssignWorker)
-							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-								Post("/assign-manager", handlers.MaintenanceRequestHandler.AssignManager)
-							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-								Patch("/status", handlers.MaintenanceRequestHandler.UpdateStatus)
+							r.Patch("/", handlers.MaintenanceRequestHandler.Update)
+							r.Post("/assign-worker", handlers.MaintenanceRequestHandler.AssignWorker)
+							r.Post("/assign-manager", handlers.MaintenanceRequestHandler.AssignManager)
+							r.Patch("/status", handlers.MaintenanceRequestHandler.UpdateStatus)
 							r.Get("/activity_logs", handlers.MaintenanceRequestHandler.ListActivityLogs)
 							r.Route("/comments", func(r chi.Router) {
-								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-									Post("/", handlers.MaintenanceRequestHandler.CreateComment)
+								r.Post("/", handlers.MaintenanceRequestHandler.CreateComment)
 								r.Get("/", handlers.MaintenanceRequestHandler.ListComments)
 								r.Route("/{comment_id}", func(r chi.Router) {
-									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-										Patch("/", handlers.MaintenanceRequestHandler.UpdateComment)
-									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-										Delete("/", handlers.MaintenanceRequestHandler.DeleteComment)
+									r.Patch("/", handlers.MaintenanceRequestHandler.UpdateComment)
+									r.Delete("/", handlers.MaintenanceRequestHandler.DeleteComment)
 								})
 							})
 							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).

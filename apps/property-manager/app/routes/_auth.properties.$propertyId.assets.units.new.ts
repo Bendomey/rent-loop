@@ -15,6 +15,10 @@ import { NewPropertyAssetUnitsModule } from '~/modules'
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const clientUserProperty = context.get(propertyContext)
 
+	if (clientUserProperty?.role !== 'MANAGER') {
+		throw new Response(null, { status: 403, statusText: 'Unauthorized' })
+	}
+
 	if (clientUserProperty?.property?.type === 'SINGLE') {
 		return redirect(NOT_FOUND_ROUTE)
 	}

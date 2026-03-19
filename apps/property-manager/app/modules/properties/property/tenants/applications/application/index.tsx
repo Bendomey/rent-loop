@@ -4,6 +4,7 @@ import ApproveTenantApplicationModal from '../approve'
 import CancelTenantApplicationModal from '../cancel'
 import { PropertyTenantApplicationChecklist } from './components/checklist'
 import { useCalculateChecklist } from './components/use-calculate-checklist'
+import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -83,42 +84,46 @@ export function PropertyTenantApplicationContainer() {
 			</div>
 			<div className="col-span-4">
 				{tenantApplication?.status === 'TenantApplication.Status.InProgress' ? (
-					<div className="mb-3 flex w-full flex-row items-center justify-end space-x-2">
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<span>
-									<Button
-										variant="secondary"
-										disabled={isInvoicePaid}
-										onClick={() => setOpenCancelModal(true)}
-									>
-										Cancel
-									</Button>
-								</span>
-							</TooltipTrigger>
-							{isInvoicePaid && (
-								<TooltipContent>
-									Cannot cancel after invoice payments have been made
-								</TooltipContent>
-							)}
-						</Tooltip>
-						<Button
-							disabled={progress !== 100}
-							onClick={() => setOpenApproveModal(true)}
-						>
-							Approve
-						</Button>
-					</div>
+					<PropertyPermissionGuard roles={['MANAGER']}>
+						<div className="mb-3 flex w-full flex-row items-center justify-end space-x-2">
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<span>
+										<Button
+											variant="secondary"
+											disabled={isInvoicePaid}
+											onClick={() => setOpenCancelModal(true)}
+										>
+											Cancel
+										</Button>
+									</span>
+								</TooltipTrigger>
+								{isInvoicePaid && (
+									<TooltipContent>
+										Cannot cancel after invoice payments have been made
+									</TooltipContent>
+								)}
+							</Tooltip>
+							<Button
+								disabled={progress !== 100}
+								onClick={() => setOpenApproveModal(true)}
+							>
+								Approve
+							</Button>
+						</div>
+					</PropertyPermissionGuard>
 				) : tenantApplication.status ===
 				  'TenantApplication.Status.Cancelled' ? (
-					<div className="mb-3 flex w-full flex-row items-center justify-end space-x-2">
-						<Button
-							variant="destructive"
-							onClick={() => setOpenApproveModal(true)}
-						>
-							Delete application
-						</Button>
-					</div>
+					<PropertyPermissionGuard roles={['MANAGER']}>
+						<div className="mb-3 flex w-full flex-row items-center justify-end space-x-2">
+							<Button
+								variant="destructive"
+								onClick={() => setOpenApproveModal(true)}
+							>
+								Delete application
+							</Button>
+						</div>
+					</PropertyPermissionGuard>
 				) : null}
 				<PropertyTenantApplicationChecklist application={tenantApplication} />
 			</div>

@@ -119,7 +119,7 @@ export const PropertyTenantApplicationsController = ({
 					<SearchInput placeholder="Search tenant applications..." />
 				</div>
 				<div className="flex items-center justify-end gap-2">
-					<PropertyPermissionGuard roles={['MANAGER', 'STAFF']}>
+					<PropertyPermissionGuard roles={['MANAGER']}>
 						<Link
 							to={`/properties/${clientUserProperty?.property_id}/tenants/applications/new`}
 						>

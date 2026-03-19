@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 import { PropertyDocumentsController } from './controller'
 import { useDeleteDocument, useGetDocuments } from '~/api/documents'
 import { DataTable } from '~/components/datatable'
+import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 import {
 	AlertDialog,
@@ -165,16 +166,18 @@ export function PropertyDocumentsSettingsModule() {
 							>
 								<DropdownMenuItem>Edit</DropdownMenuItem>
 							</Link>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem
-								variant="destructive"
-								onClick={() => {
-									setActiveId(row.original.id)
-									setOpenDeleteDialog(true)
-								}}
-							>
-								Delete
-							</DropdownMenuItem>
+							<PropertyPermissionGuard roles={['MANAGER']}>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem
+									variant="destructive"
+									onClick={() => {
+										setActiveId(row.original.id)
+										setOpenDeleteDialog(true)
+									}}
+								>
+									Delete
+								</DropdownMenuItem>
+							</PropertyPermissionGuard>
 						</DropdownMenuContent>
 					</DropdownMenu>
 				),

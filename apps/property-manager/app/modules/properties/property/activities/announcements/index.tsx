@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { useGetPropertyAnnouncements } from '~/api/announcements'
 import { DataTable } from '~/components/datatable'
+import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -97,22 +98,24 @@ export function PropertyActivitiesAnnouncementsModule() {
 					const announcement = row.original
 					return (
 						<div className="flex items-center justify-end gap-1">
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<Button
-										size="icon"
-										variant="ghost"
-										onClick={() =>
-											void navigate(
-												`/properties/${propertyId}/activities/announcements/new?announcement_id=${announcement.id}`,
-											)
-										}
-									>
-										<Copy className="h-4 w-4" />
-									</Button>
-								</TooltipTrigger>
-								<TooltipContent>Duplicate</TooltipContent>
-							</Tooltip>
+							<PropertyPermissionGuard roles={['MANAGER']}>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button
+											size="icon"
+											variant="ghost"
+											onClick={() =>
+												void navigate(
+													`/properties/${propertyId}/activities/announcements/new?announcement_id=${announcement.id}`,
+												)
+											}
+										>
+											<Copy className="h-4 w-4" />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>Duplicate</TooltipContent>
+								</Tooltip>
+							</PropertyPermissionGuard>
 							<Button
 								size="icon"
 								variant="ghost"
@@ -141,12 +144,14 @@ export function PropertyActivitiesAnnouncementsModule() {
 						Manage announcements for your tenants.
 					</p>
 				</div>
-				<Link to={`/properties/${propertyId}/activities/announcements/new`}>
-					<Button size="sm">
-						<Plus className="size-4" />
-						New Announcement
-					</Button>
-				</Link>
+				<PropertyPermissionGuard roles={['MANAGER']}>
+					<Link to={`/properties/${propertyId}/activities/announcements/new`}>
+						<Button size="sm">
+							<Plus className="size-4" />
+							New Announcement
+						</Button>
+					</Link>
+				</PropertyPermissionGuard>
 			</div>
 
 			<DataTable

@@ -17,6 +17,7 @@ import {
 	KanbanHeader,
 	KanbanProvider,
 } from '~/components/kanban'
+import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Button } from '~/components/ui/button'
 import {
 	Dialog,
@@ -326,14 +327,16 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 				<div className="m-5 flex shrink-0 flex-col gap-3">
 					<div className="flex items-center justify-between">
 						<TypographyH3>Maintenance Requests</TypographyH3>
-						<Button asChild>
-							<Link
-								to={`/properties/${propertyId}/activities/maintenance-requests/new`}
-							>
-								<Plus className="size-4" />
-								Add Request
-							</Link>
-						</Button>
+						<PropertyPermissionGuard roles={['MANAGER']}>
+							<Button asChild>
+								<Link
+									to={`/properties/${propertyId}/activities/maintenance-requests/new`}
+								>
+									<Plus className="size-4" />
+									Add Request
+								</Link>
+							</Button>
+						</PropertyPermissionGuard>
 					</div>
 					<PropertyActivitiesMaintenanceRequestsController />
 				</div>

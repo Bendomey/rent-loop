@@ -20,6 +20,7 @@ import {
 import { EditDraftModal } from '~/components/blocks/announcements/edit-draft-modal'
 import { ExtendExpiryModal } from '~/components/blocks/announcements/extend-expiry-modal'
 import { ScheduleAnnouncementModal } from '~/components/blocks/announcements/schedule-announcement-modal'
+import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -273,87 +274,89 @@ export function PropertyAnnouncementDetailModule() {
 						<Separator />
 
 						{/* Actions */}
-						<div className="flex flex-col gap-2">
-							{announcement.status === 'DRAFT' && (
-								<>
-									<Button
-										variant="outline"
-										size="sm"
-										className="w-full"
-										onClick={() => setEditOpen(true)}
-									>
-										Edit Draft
-									</Button>
-									<Button
-										size="sm"
-										className="w-full bg-rose-600 hover:bg-rose-700"
-										onClick={() => setPublishOpen(true)}
-									>
-										Publish Now
-									</Button>
-									<Button
-										variant="outline"
-										size="sm"
-										className="w-full"
-										onClick={() => setScheduleOpen(true)}
-									>
-										Schedule
-									</Button>
-									<Button
-										variant="outline"
-										size="sm"
-										className="text-destructive hover:text-destructive w-full"
-										onClick={() => setDeleteOpen(true)}
-									>
-										Delete
-									</Button>
-								</>
-							)}
+						<PropertyPermissionGuard roles={['MANAGER']}>
+							<div className="flex flex-col gap-2">
+								{announcement.status === 'DRAFT' && (
+									<>
+										<Button
+											variant="outline"
+											size="sm"
+											className="w-full"
+											onClick={() => setEditOpen(true)}
+										>
+											Edit Draft
+										</Button>
+										<Button
+											size="sm"
+											className="w-full bg-rose-600 hover:bg-rose-700"
+											onClick={() => setPublishOpen(true)}
+										>
+											Publish Now
+										</Button>
+										<Button
+											variant="outline"
+											size="sm"
+											className="w-full"
+											onClick={() => setScheduleOpen(true)}
+										>
+											Schedule
+										</Button>
+										<Button
+											variant="outline"
+											size="sm"
+											className="text-destructive hover:text-destructive w-full"
+											onClick={() => setDeleteOpen(true)}
+										>
+											Delete
+										</Button>
+									</>
+								)}
 
-							{announcement.status === 'SCHEDULED' && (
-								<>
-									<Button
-										size="sm"
-										className="w-full bg-rose-600 hover:bg-rose-700"
-										onClick={() => setPublishOpen(true)}
-									>
-										Publish Now
-									</Button>
-									<Button
-										variant="outline"
-										size="sm"
-										className="w-full"
-										disabled={isCancelling}
-										onClick={() =>
-											cancelSchedule(
-												{ propertyId: propertyId!, id: announcement.id },
-												{
-													onError: () =>
-														toast.error('Failed to cancel schedule.'),
-													onSuccess: () => {
-														toast.success('Schedule cancelled.')
-														invalidate()
+								{announcement.status === 'SCHEDULED' && (
+									<>
+										<Button
+											size="sm"
+											className="w-full bg-rose-600 hover:bg-rose-700"
+											onClick={() => setPublishOpen(true)}
+										>
+											Publish Now
+										</Button>
+										<Button
+											variant="outline"
+											size="sm"
+											className="w-full"
+											disabled={isCancelling}
+											onClick={() =>
+												cancelSchedule(
+													{ propertyId: propertyId!, id: announcement.id },
+													{
+														onError: () =>
+															toast.error('Failed to cancel schedule.'),
+														onSuccess: () => {
+															toast.success('Schedule cancelled.')
+															invalidate()
+														},
 													},
-												},
-											)
-										}
-									>
-										{isCancelling ? 'Cancelling…' : 'Cancel Schedule'}
-									</Button>
-								</>
-							)}
+												)
+											}
+										>
+											{isCancelling ? 'Cancelling…' : 'Cancel Schedule'}
+										</Button>
+									</>
+								)}
 
-							{announcement.status === 'PUBLISHED' && (
-								<Button
-									variant="outline"
-									size="sm"
-									className="w-full"
-									onClick={() => setExtendExpiryOpen(true)}
-								>
-									{announcement.expires_at ? 'Extend Expiry' : 'Set Expiry'}
-								</Button>
-							)}
-						</div>
+								{announcement.status === 'PUBLISHED' && (
+									<Button
+										variant="outline"
+										size="sm"
+										className="w-full"
+										onClick={() => setExtendExpiryOpen(true)}
+									>
+										{announcement.expires_at ? 'Extend Expiry' : 'Set Expiry'}
+									</Button>
+								)}
+							</div>
+						</PropertyPermissionGuard>
 					</CardContent>
 				</Card>
 

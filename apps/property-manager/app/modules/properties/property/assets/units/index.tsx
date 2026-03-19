@@ -6,6 +6,7 @@ import { PropertyAssetUnitsController } from './controller'
 import { useGetPropertyUnits } from '~/api/units'
 import { GridElement } from '~/components/Grid'
 import { Image } from '~/components/Image'
+import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -133,25 +134,27 @@ export function PropertyAssetUnitsModule() {
 								<Eye />
 								View
 							</Button>
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button variant="ghost" size="icon">
-										<EllipsisVertical className="size-4" />
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent align="end">
-									<DropdownMenuItem
-										onClick={() =>
-											void navigate(
-												`/properties/${data.property_id}/assets/units/new?unit_id=${data.id}`,
-											)
-										}
-									>
-										<Copy className="size-4" />
-										Duplicate
-									</DropdownMenuItem>
-								</DropdownMenuContent>
-							</DropdownMenu>
+							<PropertyPermissionGuard roles={['MANAGER']}>
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button variant="ghost" size="icon">
+											<EllipsisVertical className="size-4" />
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent align="end">
+										<DropdownMenuItem
+											onClick={() =>
+												void navigate(
+													`/properties/${data.property_id}/assets/units/new?unit_id=${data.id}`,
+												)
+											}
+										>
+											<Copy className="size-4" />
+											Duplicate
+										</DropdownMenuItem>
+									</DropdownMenuContent>
+								</DropdownMenu>
+							</PropertyPermissionGuard>
 						</CardFooter>
 					</Card>
 				)
