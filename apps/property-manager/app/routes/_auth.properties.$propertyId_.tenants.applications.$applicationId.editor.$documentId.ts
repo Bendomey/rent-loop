@@ -4,7 +4,6 @@ import { getDocument } from '~/api/documents'
 import { getAdminPropertyTenantApplicationForServer } from '~/api/tenant-applications'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
-import { NOT_FOUND_ROUTE } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { LeaseDocumentModule } from '~/modules/properties/property/tenants/applications/application/docs/lease-editor'
@@ -36,7 +35,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 			tenantApplication,
 		}
 	} catch {
-		return redirect(NOT_FOUND_ROUTE)
+		throw new Response(null, { status: 404, statusText: 'Not Found' })
 	}
 }
 

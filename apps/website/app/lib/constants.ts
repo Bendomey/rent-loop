@@ -8,7 +8,6 @@ export const PROPERTY_MANAGER_APP_URL =
 		? 'https://rentloop-property-manager-staging.fly.dev' // https://app.rentloopapp.com
 		: 'https://rentloop-property-manager-staging.fly.dev'
 
-export const NOT_FOUND_ROUTE = '/not-found'
 export const COMING_SOON_ROUTE = '/coming-soon'
 
 export const USER_CIPHER = 'rentloop-website'

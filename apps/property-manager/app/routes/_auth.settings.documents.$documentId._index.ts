@@ -3,7 +3,7 @@ import type { Route } from './+types/_auth.settings.documents.$documentId._index
 import { getDocument } from '~/api/documents'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
-import { APP_NAME, NOT_FOUND_ROUTE } from '~/lib/constants'
+import { APP_NAME } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { SingleDocumentModule } from '~/modules'
@@ -26,7 +26,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 			document,
 		}
 	} catch {
-		return redirect(NOT_FOUND_ROUTE)
+		throw new Response(null, { status: 404, statusText: 'Not Found' })
 	}
 }
 

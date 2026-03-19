@@ -24,7 +24,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 			clientUserProperty,
 		}
 	} catch {
-		throw new Error('Failed to load lease')
+		throw new Response(null, { status: 404, statusText: 'Not Found' })
 	}
 }
 

@@ -13,15 +13,19 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const authToken = authSession.get('authToken')
 
-	const mr = await getMaintenanceRequestForServer(
-		{ request_id: params.requestId, property_id: params.propertyId },
-		{ authToken, baseUrl },
-	)
+	try {
+		const mr = await getMaintenanceRequestForServer(
+			{ request_id: params.requestId, property_id: params.propertyId },
+			{ authToken, baseUrl },
+		)
 
-	return {
-		origin: getDomainUrl(request),
-		clientUserProperty,
-		mr,
+		return {
+			origin: getDomainUrl(request),
+			clientUserProperty,
+			mr,
+		}
+	} catch {
+		throw new Response(null, { status: 404, statusText: 'Not Found' })
 	}
 }
 

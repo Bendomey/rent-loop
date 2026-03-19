@@ -25,7 +25,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 			paymentAccount: paymentAccount,
 		}
 	} catch {
-		throw new Error('Failed to load payment account')
+		throw new Response(null, { status: 404, statusText: 'Not Found' })
 	}
 }
 

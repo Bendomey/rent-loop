@@ -4,7 +4,6 @@ import { getPropertyUnitsForServer } from '~/api/units/server'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
-import { NOT_FOUND_ROUTE } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { safeString } from '~/lib/strings'
@@ -41,7 +40,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 				`/properties/${clientUserProperty?.property?.id}/assets/units/${units.rows?.[0]?.id}`,
 			)
 		}
-		return redirect(NOT_FOUND_ROUTE)
+		throw new Response(null, { status: 404, statusText: 'Not Found' })
 	}
 
 	return {

@@ -4,7 +4,6 @@ import { getAdminPropertyTenantApplicationForServer } from '~/api/tenant-applica
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
-import { NOT_FOUND_ROUTE } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { LeaseSigningModule } from '~/modules/properties/property/tenants/applications/application/docs/lease-signing'
@@ -41,7 +40,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 			clientUserProperty,
 		}
 	} catch {
-		return redirect(NOT_FOUND_ROUTE)
+		throw new Response(null, { status: 404, statusText: 'Not Found' })
 	}
 }
 

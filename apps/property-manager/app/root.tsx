@@ -20,6 +20,7 @@ import { TopbarLoader } from './components/top-bar-loader'
 import { Toaster } from './components/ui/sonner'
 import { getAuthSession } from './lib/actions/auth.session.server'
 import { environmentVariables } from './lib/actions/env.server'
+import { NotFoundModule } from './modules'
 import { Providers } from './providers'
 
 dayjs.locale('en-gb')
@@ -111,9 +112,10 @@ export default function App() {
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 	let message = 'Oops!'
 	let details = 'An unexpected error occurred.'
-	let stack: string | undefined
+	let status = 500
 
 	if (isRouteErrorResponse(error)) {
+		status = error.status
 		if (error.status === 403) {
 			message = 'Unauthorized'
 			details = "You don't have permission to access this page."
@@ -125,19 +127,20 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 			details = error.statusText || details
 		}
 	} else if (import.meta.env.DEV && error && error instanceof Error) {
-		details = error.message
-		stack = error.stack
+		message = error.message
+		details = error.stack || message
 	}
 
-	return (
-		<main className="container mx-auto p-4 pt-16">
-			<h1>{message}</h1>
-			<p>{details}</p>
-			{stack && (
-				<pre className="w-full overflow-x-auto p-4">
-					<code>{stack}</code>
-				</pre>
-			)}
-		</main>
-	)
+	// return (
+	// 	<main className="container mx-auto p-4 pt-16 bg-amber-200">
+	// 		<h1>{message}</h1>
+	// 		<p>{details}</p>
+	// 		{stack && (
+	// 			<pre className="w-full overflow-x-auto p-4">
+	// 				<code>{stack}</code>
+	// 			</pre>
+	// 		)}
+	// 	</main>
+	// )
+	return <NotFoundModule status={status} title={message} message={details} />
 }

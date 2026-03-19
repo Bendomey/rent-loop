@@ -6,7 +6,6 @@ import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
 import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'
-import { NOT_FOUND_ROUTE } from '~/lib/constants'
 import { convertCedisToPesewas } from '~/lib/format-amount'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
@@ -20,7 +19,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	}
 
 	if (clientUserProperty?.property?.type === 'SINGLE') {
-		return redirect(NOT_FOUND_ROUTE)
+		throw new Response(null, { status: 404, statusText: 'Not Found' })
 	}
 
 	const url = new URL(request.url)

@@ -1,5 +1,4 @@
 import { redirect, type MiddlewareFunction } from 'react-router'
-import { NOT_FOUND_ROUTE } from '../constants'
 import { userContext } from './auth.context.server'
 import { getAuthSession } from './auth.session.server'
 import { environmentVariables } from './env.server'
@@ -51,6 +50,6 @@ export const propertyMiddleware: MiddlewareFunction = async ({
 
 		context.set(propertyContext, clientUserProperty)
 	} catch {
-		return redirect(NOT_FOUND_ROUTE)
+		throw new Response(null, { status: 404, statusText: 'Not Found' })
 	}
 }

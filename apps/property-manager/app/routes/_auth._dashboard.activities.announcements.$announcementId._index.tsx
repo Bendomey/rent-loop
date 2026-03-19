@@ -21,7 +21,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 			announcement,
 		}
 	} catch {
-		throw new Error('Failed to load announcement')
+		throw new Response(null, { status: 404, statusText: 'Not Found' })
 	}
 }
 
