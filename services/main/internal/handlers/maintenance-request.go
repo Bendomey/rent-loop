@@ -106,13 +106,14 @@ type TenantCreateMaintenanceRequestBody struct {
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			body	body		CreateMaintenanceRequestBody								true	"Request details"
-//	@Success		201		{object}	object{data=transformations.AdminOutputMaintenanceRequest}	"Maintenance request created successfully"
-//	@Failure		400		{object}	lib.HTTPError												"Error occurred when creating maintenance request"
-//	@Failure		401		{object}	string														"Invalid or absent authentication token"
-//	@Failure		422		{object}	lib.HTTPError												"Validation error"
-//	@Failure		500		{object}	string														"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests [post]
+//	@Param			property_id	path		string														true	"Property ID"
+//	@Param			body		body		CreateMaintenanceRequestBody								true	"Request details"
+//	@Success		201			{object}	object{data=transformations.AdminOutputMaintenanceRequest}	"Maintenance request created successfully"
+//	@Failure		400			{object}	lib.HTTPError												"Error occurred when creating maintenance request"
+//	@Failure		401			{object}	string														"Invalid or absent authentication token"
+//	@Failure		422			{object}	lib.HTTPError												"Validation error"
+//	@Failure		500			{object}	string														"An unexpected error occurred"
+//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests [post]
 func (h *MaintenanceRequestHandler) Create(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -170,12 +171,13 @@ type ListMaintenanceRequestsQuery struct {
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			q	query		ListMaintenanceRequestsQuery																						true	"Query parameters"
-//	@Success		200	{object}	object{data=object{rows=[]transformations.AdminOutputMaintenanceRequest,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Maintenance requests"
-//	@Failure		400	{object}	lib.HTTPError																										"Error occurred when listing maintenance requests"
-//	@Failure		401	{object}	string																												"Invalid or absent authentication token"
-//	@Failure		500	{object}	string																												"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests [get]
+//	@Param			property_id	path		string																												true	"Property ID"
+//	@Param			q			query		ListMaintenanceRequestsQuery																						true	"Query parameters"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.AdminOutputMaintenanceRequest,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Maintenance requests"
+//	@Failure		400			{object}	lib.HTTPError																										"Error occurred when listing maintenance requests"
+//	@Failure		401			{object}	string																												"Invalid or absent authentication token"
+//	@Failure		500			{object}	string																												"An unexpected error occurred"
+//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests [get]
 func (h *MaintenanceRequestHandler) List(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -221,6 +223,10 @@ func (h *MaintenanceRequestHandler) List(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, rows, count))
 }
 
+type GetMaintenanceRequestQuery struct {
+	lib.GetOneQueryInput
+}
+
 // Get godoc
 //
 //	@Summary		Get a single maintenance request (Admin)
@@ -229,17 +235,14 @@ func (h *MaintenanceRequestHandler) List(w http.ResponseWriter, r *http.Request)
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			id	path		string														true	"Maintenance Request ID"
-//	@Param			q	query		GetMaintenanceRequestQuery									true	"Query parameters"
-//	@Success		200	{object}	object{data=transformations.AdminOutputMaintenanceRequest}	"Maintenance request"
-//	@Failure		401	{object}	string														"Invalid or absent authentication token"
-//	@Failure		404	{object}	lib.HTTPError												"Maintenance request not found"
-//	@Failure		500	{object}	string														"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id} [get]
-type GetMaintenanceRequestQuery struct {
-	lib.GetOneQueryInput
-}
-
+//	@Param			property_id				path		string														true	"Property ID"
+//	@Param			maintenance_request_id	path		string														true	"Maintenance Request ID"
+//	@Param			q						query		GetMaintenanceRequestQuery									true	"Query parameters"
+//	@Success		200						{object}	object{data=transformations.AdminOutputMaintenanceRequest}	"Maintenance request"
+//	@Failure		401						{object}	string														"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError												"Maintenance request not found"
+//	@Failure		500						{object}	string														"An unexpected error occurred"
+//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id} [get]
 func (h *MaintenanceRequestHandler) Get(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -269,15 +272,16 @@ func (h *MaintenanceRequestHandler) Get(w http.ResponseWriter, r *http.Request) 
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			id		path		string														true	"Maintenance Request ID"
-//	@Param			body	body		UpdateMaintenanceRequestBody								true	"Fields to update"
-//	@Success		200		{object}	object{data=transformations.AdminOutputMaintenanceRequest}	"Maintenance request updated successfully"
-//	@Failure		400		{object}	lib.HTTPError												"Error occurred when updating maintenance request"
-//	@Failure		401		{object}	string														"Invalid or absent authentication token"
-//	@Failure		404		{object}	lib.HTTPError												"Maintenance request not found"
-//	@Failure		422		{object}	lib.HTTPError												"Validation error"
-//	@Failure		500		{object}	string														"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id} [patch]
+//	@Param			property_id				path		string														true	"Property ID"
+//	@Param			maintenance_request_id	path		string														true	"Maintenance Request ID"
+//	@Param			body					body		UpdateMaintenanceRequestBody								true	"Fields to update"
+//	@Success		200						{object}	object{data=transformations.AdminOutputMaintenanceRequest}	"Maintenance request updated successfully"
+//	@Failure		400						{object}	lib.HTTPError												"Error occurred when updating maintenance request"
+//	@Failure		401						{object}	string														"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError												"Maintenance request not found"
+//	@Failure		422						{object}	lib.HTTPError												"Validation error"
+//	@Failure		500						{object}	string														"An unexpected error occurred"
+//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id} [patch]
 func (h *MaintenanceRequestHandler) Update(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -321,15 +325,16 @@ func (h *MaintenanceRequestHandler) Update(w http.ResponseWriter, r *http.Reques
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			id		path		string				true	"Maintenance Request ID"
-//	@Param			body	body		AssignWorkerBody	true	"Worker ID"
-//	@Success		200		{object}	object{data=bool}	"Worker assigned successfully"
-//	@Failure		400		{object}	lib.HTTPError		"Error occurred when assigning worker"
-//	@Failure		401		{object}	string				"Invalid or absent authentication token"
-//	@Failure		404		{object}	lib.HTTPError		"Maintenance request not found"
-//	@Failure		422		{object}	lib.HTTPError		"Validation error"
-//	@Failure		500		{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/assign-worker [post]
+//	@Param			property_id				path		string				true	"Property ID"
+//	@Param			maintenance_request_id	path		string				true	"Maintenance Request ID"
+//	@Param			body					body		AssignWorkerBody	true	"Worker ID"
+//	@Success		200						{object}	object{data=bool}	"Worker assigned successfully"
+//	@Failure		400						{object}	lib.HTTPError		"Error occurred when assigning worker"
+//	@Failure		401						{object}	string				"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError		"Maintenance request not found"
+//	@Failure		422						{object}	lib.HTTPError		"Validation error"
+//	@Failure		500						{object}	string				"An unexpected error occurred"
+//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/assign-worker [post]
 func (h *MaintenanceRequestHandler) AssignWorker(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -366,15 +371,16 @@ func (h *MaintenanceRequestHandler) AssignWorker(w http.ResponseWriter, r *http.
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			id		path		string				true	"Maintenance Request ID"
-//	@Param			body	body		AssignManagerBody	true	"Manager ID"
-//	@Success		200		{object}	object{data=bool}	"Manager assigned successfully"
-//	@Failure		400		{object}	lib.HTTPError		"Error occurred when assigning manager"
-//	@Failure		401		{object}	string				"Invalid or absent authentication token"
-//	@Failure		404		{object}	lib.HTTPError		"Maintenance request not found"
-//	@Failure		422		{object}	lib.HTTPError		"Validation error"
-//	@Failure		500		{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/assign-manager [post]
+//	@Param			property_id				path		string				true	"Property ID"
+//	@Param			maintenance_request_id	path		string				true	"Maintenance Request ID"
+//	@Param			body					body		AssignManagerBody	true	"Manager ID"
+//	@Success		200						{object}	object{data=bool}	"Manager assigned successfully"
+//	@Failure		400						{object}	lib.HTTPError		"Error occurred when assigning manager"
+//	@Failure		401						{object}	string				"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError		"Maintenance request not found"
+//	@Failure		422						{object}	lib.HTTPError		"Validation error"
+//	@Failure		500						{object}	string				"An unexpected error occurred"
+//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/assign-manager [post]
 func (h *MaintenanceRequestHandler) AssignManager(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -411,15 +417,16 @@ func (h *MaintenanceRequestHandler) AssignManager(w http.ResponseWriter, r *http
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			id		path		string				true	"Maintenance Request ID"
-//	@Param			body	body		UpdateStatusBody	true	"New status"
-//	@Success		200		{object}	object{data=bool}	"Status updated successfully"
-//	@Failure		400		{object}	lib.HTTPError		"Error occurred when updating status"
-//	@Failure		401		{object}	string				"Invalid or absent authentication token"
-//	@Failure		404		{object}	lib.HTTPError		"Maintenance request not found"
-//	@Failure		422		{object}	lib.HTTPError		"Validation error"
-//	@Failure		500		{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/status [patch]
+//	@Param			property_id				path		string				true	"Property ID"
+//	@Param			maintenance_request_id	path		string				true	"Maintenance Request ID"
+//	@Param			body					body		UpdateStatusBody	true	"New status"
+//	@Success		200						{object}	object{data=bool}	"Status updated successfully"
+//	@Failure		400						{object}	lib.HTTPError		"Error occurred when updating status"
+//	@Failure		401						{object}	string				"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError		"Maintenance request not found"
+//	@Failure		422						{object}	lib.HTTPError		"Validation error"
+//	@Failure		500						{object}	string				"An unexpected error occurred"
+//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/status [patch]
 func (h *MaintenanceRequestHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -458,12 +465,13 @@ func (h *MaintenanceRequestHandler) UpdateStatus(w http.ResponseWriter, r *http.
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
+//	@Param			property_id				path		string																												true	"Property ID"
 //	@Param			maintenance_request_id	path		string																												true	"Maintenance Request ID"
 //	@Param			q						query		ListActivityLogsQuery																								true	"Query parameters"
 //	@Success		200						{object}	object{data=object{rows=[]transformations.OutputMaintenanceActivityLog,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Activity logs"
 //	@Failure		401						{object}	string																												"Invalid or absent authentication token"
 //	@Failure		500						{object}	string																												"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/activity_logs [get]
+//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/activity_logs [get]
 func (h *MaintenanceRequestHandler) ListActivityLogs(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -511,6 +519,7 @@ func (h *MaintenanceRequestHandler) ListActivityLogs(w http.ResponseWriter, r *h
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
+//	@Param			property_id				path		string				true	"Property ID"
 //	@Param			maintenance_request_id	path		string				true	"Maintenance Request ID"
 //	@Param			body					body		CreateCommentBody	true	"Comment content"
 //	@Success		201						{object}	object{data=bool}	"Comment created"
@@ -519,7 +528,7 @@ func (h *MaintenanceRequestHandler) ListActivityLogs(w http.ResponseWriter, r *h
 //	@Failure		404						{object}	lib.HTTPError		"Maintenance request not found"
 //	@Failure		422						{object}	lib.HTTPError		"Validation error"
 //	@Failure		500						{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/comments [post]
+//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments [post]
 func (h *MaintenanceRequestHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -566,12 +575,13 @@ type ListCommentsQuery struct {
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
+//	@Param			property_id				path		string																													true	"Property ID"
 //	@Param			maintenance_request_id	path		string																													true	"Maintenance Request ID"
 //	@Param			q						query		ListCommentsQuery																										true	"Query parameters"
 //	@Success		200						{object}	object{data=object{rows=[]transformations.OutputMaintenanceRequestComment,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Paginated list of comments"
 //	@Failure		401						{object}	string																													"Invalid or absent authentication token"
 //	@Failure		500						{object}	string																													"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/comments [get]
+//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments [get]
 func (h *MaintenanceRequestHandler) ListComments(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -617,6 +627,7 @@ func (h *MaintenanceRequestHandler) ListComments(w http.ResponseWriter, r *http.
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
+//	@Param			property_id				path		string				true	"Property ID"
 //	@Param			maintenance_request_id	path		string				true	"Maintenance Request ID"
 //	@Param			comment_id				path		string				true	"Comment ID"
 //	@Param			body					body		UpdateCommentBody	true	"Updated content"
@@ -626,7 +637,7 @@ func (h *MaintenanceRequestHandler) ListComments(w http.ResponseWriter, r *http.
 //	@Failure		404						{object}	lib.HTTPError		"Comment not found"
 //	@Failure		422						{object}	lib.HTTPError		"Validation error"
 //	@Failure		500						{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/comments/{comment_id} [patch]
+//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments/{comment_id} [patch]
 func (h *MaintenanceRequestHandler) UpdateComment(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -665,12 +676,13 @@ func (h *MaintenanceRequestHandler) UpdateComment(w http.ResponseWriter, r *http
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
+//	@Param			property_id				path		string				true	"Property ID"
 //	@Param			maintenance_request_id	path		string				true	"Maintenance Request ID"
 //	@Param			comment_id				path		string				true	"Comment ID"
 //	@Success		200						{object}	object{data=bool}	"Comment deleted"
 //	@Failure		401						{object}	string				"Unauthorized"
 //	@Failure		500						{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/comments/{comment_id} [delete]
+//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments/{comment_id} [delete]
 func (h *MaintenanceRequestHandler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -694,15 +706,16 @@ func (h *MaintenanceRequestHandler) DeleteComment(w http.ResponseWriter, r *http
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			id		path		string										true	"Maintenance Request ID"
-//	@Param			body	body		AddExpenseBody								true	"Expense details"
-//	@Success		201		{object}	object{data=transformations.OutputExpense}	"Expense added successfully"
-//	@Failure		400		{object}	lib.HTTPError								"Error occurred when adding expense"
-//	@Failure		401		{object}	string										"Invalid or absent authentication token"
-//	@Failure		404		{object}	lib.HTTPError								"Maintenance request not found"
-//	@Failure		422		{object}	lib.HTTPError								"Validation error"
-//	@Failure		500		{object}	string										"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/expenses [post]
+//	@Param			property_id				path		string										true	"Property ID"
+//	@Param			maintenance_request_id	path		string										true	"Maintenance Request ID"
+//	@Param			body					body		AddExpenseBody								true	"Expense details"
+//	@Success		201						{object}	object{data=transformations.OutputExpense}	"Expense added successfully"
+//	@Failure		400						{object}	lib.HTTPError								"Error occurred when adding expense"
+//	@Failure		401						{object}	string										"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError								"Maintenance request not found"
+//	@Failure		422						{object}	lib.HTTPError								"Validation error"
+//	@Failure		500						{object}	string										"An unexpected error occurred"
+//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses [post]
 func (h *MaintenanceRequestHandler) AddExpense(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -747,12 +760,13 @@ func (h *MaintenanceRequestHandler) AddExpense(w http.ResponseWriter, r *http.Re
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
+//	@Param			property_id				path		string																								true	"Property ID"
 //	@Param			maintenance_request_id	path		string																								true	"Maintenance Request ID"
 //	@Param			q						query		ListExpensesQuery																					true	"Query parameters"
 //	@Success		200						{object}	object{data=object{rows=[]transformations.OutputExpense,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Expenses"
 //	@Failure		401						{object}	string																								"Invalid or absent authentication token"
 //	@Failure		500						{object}	string																								"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/expenses [get]
+//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses [get]
 func (h *MaintenanceRequestHandler) ListExpenses(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -799,13 +813,14 @@ func (h *MaintenanceRequestHandler) ListExpenses(w http.ResponseWriter, r *http.
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			id			path		string				true	"Maintenance Request ID"
-//	@Param			expense_id	path		string				true	"Expense ID"
-//	@Success		200			{object}	object{data=bool}	"Expense deleted successfully"
-//	@Failure		401			{object}	string				"Invalid or absent authentication token"
-//	@Failure		404			{object}	lib.HTTPError		"Expense not found"
-//	@Failure		500			{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/expenses/{expense_id} [delete]
+//	@Param			property_id				path		string				true	"Property ID"
+//	@Param			maintenance_request_id	path		string				true	"Maintenance Request ID"
+//	@Param			expense_id				path		string				true	"Expense ID"
+//	@Success		200						{object}	object{data=bool}	"Expense deleted successfully"
+//	@Failure		401						{object}	string				"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError		"Expense not found"
+//	@Failure		500						{object}	string				"An unexpected error occurred"
+//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses/{expense_id} [delete]
 func (h *MaintenanceRequestHandler) DeleteExpense(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -829,13 +844,14 @@ func (h *MaintenanceRequestHandler) DeleteExpense(w http.ResponseWriter, r *http
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			id	path		string				true	"Maintenance Request ID"
-//	@Success		201	{object}	object{data=string}	"Invoice ID of the generated draft invoice"
-//	@Failure		400	{object}	lib.HTTPError		"No billable expenses found or error generating invoice"
-//	@Failure		401	{object}	string				"Invalid or absent authentication token"
-//	@Failure		404	{object}	lib.HTTPError		"Maintenance request not found"
-//	@Failure		500	{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/maintenance-requests/{maintenance_request_id}/expenses:invoice [post]
+//	@Param			property_id				path		string				true	"Property ID"
+//	@Param			maintenance_request_id	path		string				true	"Maintenance Request ID"
+//	@Success		201						{object}	object{data=string}	"Invoice ID of the generated draft invoice"
+//	@Failure		400						{object}	lib.HTTPError		"No billable expenses found or error generating invoice"
+//	@Failure		401						{object}	string				"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError		"Maintenance request not found"
+//	@Failure		500						{object}	string				"An unexpected error occurred"
+//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses:invoice [post]
 func (h *MaintenanceRequestHandler) GenerateExpenseInvoice(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {

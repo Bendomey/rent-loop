@@ -67,13 +67,14 @@ type GetTenantQuery struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
+//	@Param			property_id	path		string											true	"Property ID"
 //	@Param			tenant_id	path		string											true	"Tenant ID"
 //	@Param			q			query		GetTenantQuery									true	"Tenant"
 //	@Success		200			{object}	object{data=transformations.OutputAdminTenant}	"Tenant retrieved successfully"
 //	@Failure		401			{object}	string											"Invalid or absent authentication token"
 //	@Failure		404			{object}	lib.HTTPError									"Tenant not found"
 //	@Failure		500			{object}	string											"An unexpected error occurred"
-//	@Router			/api/v1/admin/tenants/{tenant_id} [get]
+//	@Router			/api/v1/admin/properties/{property_id}/tenants/{tenant_id} [get]
 func (h *TenantHandler) GetTenantByID(w http.ResponseWriter, r *http.Request) {
 	tenantID := chi.URLParam(r, "tenant_id")
 	populateFields := GetPopulateFields(r)

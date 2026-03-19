@@ -41,12 +41,13 @@ type GenerateTokenRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			body	body		GenerateTokenRequest									true	"Token details"
-//	@Success		201		{object}	object{data=transformations.OutputAdminSigningToken}	"Token created successfully"
-//	@Failure		400		{object}	lib.HTTPError
-//	@Failure		401		{object}	string
-//	@Failure		500		{object}	string
-//	@Router			/api/v1/admin/signing [post]
+//	@Param			property_id	path		string													true	"Property ID"
+//	@Param			body		body		GenerateTokenRequest									true	"Token details"
+//	@Success		201			{object}	object{data=transformations.OutputAdminSigningToken}	"Token created successfully"
+//	@Failure		400			{object}	lib.HTTPError
+//	@Failure		401			{object}	string
+//	@Failure		500			{object}	string
+//	@Router			/api/v1/admin/properties/{property_id}/signing [post]
 func (h *SigningHandler) GenerateToken(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {
@@ -192,12 +193,13 @@ type ListSigningTokensFilterRequest struct {
 //	@Tags			Signing
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			q	query		ListSigningTokensFilterRequest	true	"Filter query"
-//	@Success		200	{object}	object{data=object{rows=[]transformations.OutputAdminSigningToken,meta=lib.HTTPReturnPaginatedMetaResponse}}
-//	@Failure		400	{object}	lib.HTTPError
-//	@Failure		401	{object}	string
-//	@Failure		500	{object}	string
-//	@Router			/api/v1/admin/signing-tokens [get]
+//	@Param			property_id	path		string							true	"Property ID"
+//	@Param			q			query		ListSigningTokensFilterRequest	true	"Filter query"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.OutputAdminSigningToken,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400			{object}	lib.HTTPError
+//	@Failure		401			{object}	string
+//	@Failure		500			{object}	string
+//	@Router			/api/v1/admin/properties/{property_id}/signing-tokens [get]
 func (h *SigningHandler) ListSigningTokens(w http.ResponseWriter, r *http.Request) {
 	_, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {
@@ -285,6 +287,7 @@ type UpdateSigningTokenRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
+//	@Param			property_id			path		string						true	"Property ID"
 //	@Param			signing_token_id	path		string						true	"Signing token ID"	format(uuid4)
 //	@Param			body				body		UpdateSigningTokenRequest	true	"Signer details"
 //	@Success		200					{object}	object{data=transformations.OutputAdminSigningToken}
@@ -292,7 +295,7 @@ type UpdateSigningTokenRequest struct {
 //	@Failure		401					{object}	string
 //	@Failure		404					{object}	lib.HTTPError
 //	@Failure		500					{object}	string
-//	@Router			/api/v1/admin/signing-tokens/{signing_token_id} [patch]
+//	@Router			/api/v1/admin/properties/{property_id}/signing-tokens/{signing_token_id} [patch]
 func (h *SigningHandler) UpdateToken(w http.ResponseWriter, r *http.Request) {
 	_, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {
@@ -334,13 +337,14 @@ func (h *SigningHandler) UpdateToken(w http.ResponseWriter, r *http.Request) {
 //	@Tags			Signing
 //	@Security		BearerAuth
 //	@Produce		json
+//	@Param			property_id			path		string	true	"Property ID"
 //	@Param			signing_token_id	path		string	true	"Signing token ID"	format(uuid4)
 //	@Success		200					{object}	object{data=transformations.OutputAdminSigningToken}
 //	@Failure		400					{object}	lib.HTTPError
 //	@Failure		401					{object}	string
 //	@Failure		404					{object}	lib.HTTPError
 //	@Failure		500					{object}	string
-//	@Router			/api/v1/admin/signing-tokens/{signing_token_id}/resend [post]
+//	@Router			/api/v1/admin/properties/{property_id}/signing-tokens/{signing_token_id}/resend [post]
 func (h *SigningHandler) ResendToken(w http.ResponseWriter, r *http.Request) {
 	_, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {
@@ -375,12 +379,13 @@ type SignDocumentPMRequest struct {
 //	@Tags			Signing
 //	@Accept			json
 //	@Produce		json
-//	@Param			body	body		SignDocumentPMRequest									true	"Signature details"
-//	@Success		201		{object}	object{data=transformations.OutputDocumentSignature}	"Signature created"
-//	@Failure		400		{object}	lib.HTTPError
-//	@Failure		404		{object}	lib.HTTPError
-//	@Failure		500		{object}	string
-//	@Router			/api/v1/admin/signing/direct [post]
+//	@Param			property_id	path		string													true	"Property ID"
+//	@Param			body		body		SignDocumentPMRequest									true	"Signature details"
+//	@Success		201			{object}	object{data=transformations.OutputDocumentSignature}	"Signature created"
+//	@Failure		400			{object}	lib.HTTPError
+//	@Failure		404			{object}	lib.HTTPError
+//	@Failure		500			{object}	string
+//	@Router			/api/v1/admin/properties/{property_id}/signing/direct [post]
 func (h *SigningHandler) SignDocumentPM(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {

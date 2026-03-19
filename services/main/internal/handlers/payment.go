@@ -90,6 +90,7 @@ type VerifyPaymentRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
+//	@Param			property_id	path		string										true	"Property ID"
 //	@Param			payment_id	path		string										true	"Payment ID"
 //	@Param			body		body		VerifyPaymentRequest						true	"Verify Payment Request Body"
 //	@Success		200			{object}	object{data=transformations.OutputPayment}	"Payment verified"
@@ -98,7 +99,7 @@ type VerifyPaymentRequest struct {
 //	@Failure		404			{object}	lib.HTTPError								"Payment not found"
 //	@Failure		422			{object}	lib.HTTPError								"Validation error"
 //	@Failure		500			{object}	string										"An unexpected error occurred"
-//	@Router			/api/v1/admin/payments/{payment_id}/verify [patch]
+//	@Router			/api/v1/admin/properties/{property_id}/payments/{payment_id}/verify [patch]
 func (h *PaymentHandler) VerifyPayment(w http.ResponseWriter, r *http.Request) {
 	clientUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {

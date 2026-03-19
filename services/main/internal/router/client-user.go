@@ -142,24 +142,167 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 
 					// property-scoped announcements
 					r.Route("/announcements", func(r chi.Router) {
-						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 							Post("/", handlers.AnnouncementHandler.CreateAnnouncement)
 						r.Get("/", handlers.AnnouncementHandler.ListAnnouncements)
 						r.Route("/{announcement_id}", func(r chi.Router) {
 							r.Get("/", handlers.AnnouncementHandler.GetAnnouncementById)
-							r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Patch("/", handlers.AnnouncementHandler.UpdateAnnouncement)
-							r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Delete("/", handlers.AnnouncementHandler.DeleteAnnouncement)
-							r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Post("/publish", handlers.AnnouncementHandler.PublishAnnouncement)
-							r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Post("/schedule", handlers.AnnouncementHandler.ScheduleAnnouncement)
-							r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Delete("/schedule", handlers.AnnouncementHandler.CancelScheduleAnnouncement)
-							r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Patch("/expiry", handlers.AnnouncementHandler.ExtendAnnouncementExpiry)
 						})
+					})
+
+					r.Route("/tenant-applications", func(r chi.Router) {
+						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+							Post("/invite", handlers.TenantApplicationHandler.SendTenantInvite)
+						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+							Post("/", handlers.TenantApplicationHandler.AdminCreateTenantApplication)
+						r.Get("/", handlers.TenantApplicationHandler.ListTenantApplications)
+						r.Get("/{tenant_application_id}", handlers.TenantApplicationHandler.AdminGetTenantApplication)
+						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+							Patch("/{tenant_application_id}", handlers.TenantApplicationHandler.AdminUpdateTenantApplication)
+						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+							Delete("/{tenant_application_id}", handlers.TenantApplicationHandler.DeleteTenantApplication)
+						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+							Patch("/{tenant_application_id}/cancel", handlers.TenantApplicationHandler.CancelTenantApplication)
+						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+							Post("/{tenant_application_id}/invoice:generate", handlers.TenantApplicationHandler.GenerateInvoice)
+						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+							Post("/{tenant_application_id}/invoice/{invoice_id}/pay", handlers.TenantApplicationHandler.PayInvoice)
+						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+							Patch("/{tenant_application_id}/approve", handlers.TenantApplicationHandler.ApproveTenantApplication)
+					})
+
+					r.Route("/signing", func(r chi.Router) {
+						// property owner signing.
+						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+							Post("/", handlers.SigningHandler.SignDocumentPM)
+					})
+
+					r.Route("/signing-tokens", func(r chi.Router) {
+						// signing - generate tokens
+						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+							Post("/", handlers.SigningHandler.GenerateToken)
+
+						r.Get("/", handlers.SigningHandler.ListSigningTokens)
+						r.Route("/{signing_token_id}", func(r chi.Router) {
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Patch("/", handlers.SigningHandler.UpdateToken)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/resend", handlers.SigningHandler.ResendToken)
+						})
+					})
+
+					r.Route("/leases/{lease_id}", func(r chi.Router) {
+						r.Get("/", handlers.LeaseHandler.GetLeaseByID)
+						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+							Patch("/", handlers.LeaseHandler.UpdateLease)
+						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+							Patch("/status:active", handlers.LeaseHandler.ActivateLease)
+						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+							Patch("/status:cancelled", handlers.LeaseHandler.CancelLease)
+
+						r.Route("/checklists", func(r chi.Router) {
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/", handlers.LeaseChecklistHandler.CreateLeaseChecklist)
+							r.Get("/", handlers.LeaseChecklistHandler.ListLeaseChecklists)
+							r.Route("/{checklist_id}", func(r chi.Router) {
+								r.Get("/", handlers.LeaseChecklistHandler.GetLeaseCheckList)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Patch("/", handlers.LeaseChecklistHandler.UpdateLeaseChecklist)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Delete("/", handlers.LeaseChecklistHandler.DeleteLeaseChecklist)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Post("/submit", handlers.LeaseChecklistHandler.SubmitLeaseChecklist)
+								r.Get("/comparison", handlers.LeaseChecklistHandler.GetChecklistComparison)
+								r.Route("/items", func(r chi.Router) {
+									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+										Post("/", handlers.LeaseChecklistHandler.CreateLeaseChecklistItem)
+									r.Route("/{item_id}", func(r chi.Router) {
+										r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+											Patch("/", handlers.LeaseChecklistHandler.UpdateLeaseChecklistItem)
+										r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+											Delete("/", handlers.LeaseChecklistHandler.DeleteLeaseChecklistItem)
+									})
+								})
+							})
+						})
+					})
+
+					r.Route("/tenants/{tenant_id}", func(r chi.Router) {
+						r.Get("/", handlers.TenantHandler.GetTenantByID)
+						r.Get("/leases", handlers.LeaseHandler.ListLeasesByTenant)
+					})
+
+					// maintenance requests
+					r.Route("/maintenance-requests", func(r chi.Router) {
+						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+							Post("/", handlers.MaintenanceRequestHandler.Create)
+						r.Get("/", handlers.MaintenanceRequestHandler.List)
+						r.Route("/{maintenance_request_id}", func(r chi.Router) {
+							r.Get("/", handlers.MaintenanceRequestHandler.Get)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Patch("/", handlers.MaintenanceRequestHandler.Update)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/assign-worker", handlers.MaintenanceRequestHandler.AssignWorker)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/assign-manager", handlers.MaintenanceRequestHandler.AssignManager)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Patch("/status", handlers.MaintenanceRequestHandler.UpdateStatus)
+							r.Get("/activity_logs", handlers.MaintenanceRequestHandler.ListActivityLogs)
+							r.Route("/comments", func(r chi.Router) {
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Post("/", handlers.MaintenanceRequestHandler.CreateComment)
+								r.Get("/", handlers.MaintenanceRequestHandler.ListComments)
+								r.Route("/{comment_id}", func(r chi.Router) {
+									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+										Patch("/", handlers.MaintenanceRequestHandler.UpdateComment)
+									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+										Delete("/", handlers.MaintenanceRequestHandler.DeleteComment)
+								})
+							})
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/expenses", handlers.MaintenanceRequestHandler.AddExpense)
+							r.Get("/expenses", handlers.MaintenanceRequestHandler.ListExpenses)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Delete("/expenses/{expense_id}", handlers.MaintenanceRequestHandler.DeleteExpense)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/expenses:invoice", handlers.MaintenanceRequestHandler.GenerateExpenseInvoice)
+						})
+					})
+
+					r.Route("/invoices", func(r chi.Router) {
+						r.Get("/", handlers.InvoiceHandler.ListInvoices)
+						r.Route("/{invoice_id}", func(r chi.Router) {
+							r.Get("/", handlers.InvoiceHandler.GetInvoiceByID)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Patch("/", handlers.InvoiceHandler.UpdateInvoice)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Patch("/void", handlers.InvoiceHandler.VoidInvoice)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Delete("/", handlers.InvoiceHandler.DeleteInvoice)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/line-items", handlers.InvoiceHandler.AddLineItem)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Delete("/line-items/{line_item_id}", handlers.InvoiceHandler.RemoveLineItem)
+							r.Get("/line-items", handlers.InvoiceHandler.GetLineItems)
+						})
+					})
+
+					// payments
+					r.Route("/v1/admin/payments/{payment_id}", func(r chi.Router) {
+						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+							Patch("/verify", handlers.PaymentHandler.VerifyPayment)
 					})
 				})
 			})
@@ -207,129 +350,10 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				)
 			})
 
-			r.Route("/v1/admin/tenant-applications", func(r chi.Router) {
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Post("/invite", handlers.TenantApplicationHandler.SendTenantInvite)
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Post("/", handlers.TenantApplicationHandler.AdminCreateTenantApplication)
-				r.Get("/", handlers.TenantApplicationHandler.ListTenantApplications)
-				r.Get("/{tenant_application_id}", handlers.TenantApplicationHandler.AdminGetTenantApplication)
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Patch("/{tenant_application_id}", handlers.TenantApplicationHandler.AdminUpdateTenantApplication)
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Delete("/{tenant_application_id}", handlers.TenantApplicationHandler.DeleteTenantApplication)
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Patch("/{tenant_application_id}/cancel", handlers.TenantApplicationHandler.CancelTenantApplication)
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Post("/{tenant_application_id}/invoice:generate", handlers.TenantApplicationHandler.GenerateInvoice)
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Post("/{tenant_application_id}/invoice/{invoice_id}/pay", handlers.TenantApplicationHandler.PayInvoice)
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Patch("/{tenant_application_id}/approve", handlers.TenantApplicationHandler.ApproveTenantApplication)
-			})
-
-			r.Route("/v1/admin/signing", func(r chi.Router) {
-				// property owner signing.
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Post("/", handlers.SigningHandler.SignDocumentPM)
-			})
-
-			r.Route("/v1/admin/signing-tokens", func(r chi.Router) {
-				// signing - generate tokens
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Post("/", handlers.SigningHandler.GenerateToken)
-
-				r.Get("/", handlers.SigningHandler.ListSigningTokens)
-				r.Route("/{signing_token_id}", func(r chi.Router) {
-					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-						Patch("/", handlers.SigningHandler.UpdateToken)
-					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-						Post("/resend", handlers.SigningHandler.ResendToken)
-				})
-			})
-
-			r.Route("/v1/admin/tenants/{tenant_id}", func(r chi.Router) {
-				r.Get("/", handlers.TenantHandler.GetTenantByID)
-				r.Get("/leases", handlers.LeaseHandler.ListLeasesByTenant)
-			})
-
-			r.Route("/v1/admin/leases/{lease_id}", func(r chi.Router) {
-				r.Get("/", handlers.LeaseHandler.GetLeaseByID)
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Patch("/", handlers.LeaseHandler.UpdateLease)
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Patch("/status:active", handlers.LeaseHandler.ActivateLease)
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Patch("/status:cancelled", handlers.LeaseHandler.CancelLease)
-
-				r.Route("/checklists", func(r chi.Router) {
-					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-						Post("/", handlers.LeaseChecklistHandler.CreateLeaseChecklist)
-					r.Get("/", handlers.LeaseChecklistHandler.ListLeaseChecklists)
-					r.Route("/{checklist_id}", func(r chi.Router) {
-						r.Get("/", handlers.LeaseChecklistHandler.GetLeaseCheckList)
-						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-							Patch("/", handlers.LeaseChecklistHandler.UpdateLeaseChecklist)
-						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-							Delete("/", handlers.LeaseChecklistHandler.DeleteLeaseChecklist)
-						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-							Post("/submit", handlers.LeaseChecklistHandler.SubmitLeaseChecklist)
-						r.Get("/comparison", handlers.LeaseChecklistHandler.GetChecklistComparison)
-						r.Route("/items", func(r chi.Router) {
-							r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-								Post("/", handlers.LeaseChecklistHandler.CreateLeaseChecklistItem)
-							r.Route("/{item_id}", func(r chi.Router) {
-								r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-									Patch("/", handlers.LeaseChecklistHandler.UpdateLeaseChecklistItem)
-								r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-									Delete("/", handlers.LeaseChecklistHandler.DeleteLeaseChecklistItem)
-							})
-						})
-					})
-				})
-			})
-
 			// checklist templates
 			r.Route("/v1/admin/checklist-templates", func(r chi.Router) {
 				r.Get("/", handlers.ChecklistTemplateHandler.ListChecklistTemplates)
 				r.Get("/{template_id}", handlers.ChecklistTemplateHandler.GetChecklistTemplate)
-			})
-
-			// maintenance requests
-			r.Route("/v1/admin/maintenance-requests", func(r chi.Router) {
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
-					Post("/", handlers.MaintenanceRequestHandler.Create)
-				r.Get("/", handlers.MaintenanceRequestHandler.List)
-				r.Route("/{maintenance_request_id}", func(r chi.Router) {
-					r.Get("/", handlers.MaintenanceRequestHandler.Get)
-					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
-						Patch("/", handlers.MaintenanceRequestHandler.Update)
-					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
-						Post("/assign-worker", handlers.MaintenanceRequestHandler.AssignWorker)
-					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
-						Post("/assign-manager", handlers.MaintenanceRequestHandler.AssignManager)
-					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
-						Patch("/status", handlers.MaintenanceRequestHandler.UpdateStatus)
-					r.Get("/activity_logs", handlers.MaintenanceRequestHandler.ListActivityLogs)
-					r.Route("/comments", func(r chi.Router) {
-						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
-							Post("/", handlers.MaintenanceRequestHandler.CreateComment)
-						r.Get("/", handlers.MaintenanceRequestHandler.ListComments)
-						r.Route("/{comment_id}", func(r chi.Router) {
-							r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
-								Patch("/", handlers.MaintenanceRequestHandler.UpdateComment)
-							r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER", "MANAGER")).
-								Delete("/", handlers.MaintenanceRequestHandler.DeleteComment)
-						})
-					})
-					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-						Post("/expenses", handlers.MaintenanceRequestHandler.AddExpense)
-					r.Get("/expenses", handlers.MaintenanceRequestHandler.ListExpenses)
-					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-						Delete("/expenses/{expense_id}", handlers.MaintenanceRequestHandler.DeleteExpense)
-					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-						Post("/expenses:invoice", handlers.MaintenanceRequestHandler.GenerateExpenseInvoice)
-				})
 			})
 
 			r.Route("/v1/admin/payment-accounts", func(r chi.Router) {
@@ -343,30 +367,6 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
 						Delete("/", handlers.PaymentAccountHandler.DeletePaymentAccount)
 				})
-			})
-
-			r.Route("/v1/admin/invoices", func(r chi.Router) {
-				r.Get("/", handlers.InvoiceHandler.ListInvoices)
-				r.Route("/{invoice_id}", func(r chi.Router) {
-					r.Get("/", handlers.InvoiceHandler.GetInvoiceByID)
-					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-						Patch("/", handlers.InvoiceHandler.UpdateInvoice)
-					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-						Patch("/void", handlers.InvoiceHandler.VoidInvoice)
-					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-						Delete("/", handlers.InvoiceHandler.DeleteInvoice)
-					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-						Post("/line-items", handlers.InvoiceHandler.AddLineItem)
-					r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-						Delete("/line-items/{line_item_id}", handlers.InvoiceHandler.RemoveLineItem)
-					r.Get("/line-items", handlers.InvoiceHandler.GetLineItems)
-				})
-			})
-
-			// payments
-			r.Route("/v1/admin/payments/{payment_id}", func(r chi.Router) {
-				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-					Patch("/verify", handlers.PaymentHandler.VerifyPayment)
 			})
 		})
 	}
