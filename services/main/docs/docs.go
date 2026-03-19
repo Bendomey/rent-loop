@@ -12167,9 +12167,9 @@ const docTemplate = `{
                         },
                         "collectionFormat": "csv",
                         "example": [
-                            "DRAFT"
+                            "SUBMITTED"
                         ],
-                        "name": "statuses",
+                        "name": "status",
                         "in": "query"
                     },
                     {

@@ -13,8 +13,9 @@ String _$invoiceApiHash() => r'34f8dc0858e1cc1f377f7171882134c7269fa553';
 final invoiceApiProvider = AutoDisposeProvider<InvoiceApi>.internal(
   invoiceApi,
   name: r'invoiceApiProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$invoiceApiHash,
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$invoiceApiHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );

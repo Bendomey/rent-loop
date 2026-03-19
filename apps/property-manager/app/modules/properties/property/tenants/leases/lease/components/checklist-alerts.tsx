@@ -60,7 +60,7 @@ export function ChecklistAlerts({ lease, canEdit, propertyId }: Props) {
 							<AlertDescription className="flex items-center justify-between gap-3">
 								<span className="text-xs">
 									{latestDispute?.comment
-										? `"${latestDispute.comment}"`
+										? `Note: ${latestDispute.comment}`
 										: 'The tenant has raised concerns about this report. Review their feedback, update the items, and resubmit.'}
 								</span>
 								<Button

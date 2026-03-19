@@ -17,6 +17,11 @@ String? notificationMessageToPath(RemoteMessage message) {
       return '/payments';
     case 'LEASE':
       return '/more/lease-details';
+    case 'CHECKLIST_SUBMITTED':
+      final checklistId = message.data['checklist_id'] as String?;
+      return checklistId != null
+          ? '/unit-condition-reports/$checklistId'
+          : '/more/lease-details';
     default:
       return null;
   }

@@ -13,8 +13,9 @@ String _$authApiHash() => r'4f5b2ee125965db711ac389696d859e7361e801e';
 final authApiProvider = AutoDisposeProvider<AuthApi>.internal(
   authApi,
   name: r'authApiProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$authApiHash,
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$authApiHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );

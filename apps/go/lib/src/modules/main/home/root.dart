@@ -3,6 +3,7 @@ import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:rentloop_go/src/repository/models/lease_model.dart';
 import 'package:rentloop_go/src/repository/providers/leases_provider.dart';
 import 'announcements_card.dart';
+import 'checklist_review_card.dart';
 import 'lease_selector_bar.dart';
 import 'maintenance_stats_card.dart';
 import 'upcoming_payment_card.dart';
@@ -57,6 +58,7 @@ class _HomeContent extends ConsumerWidget {
         ),
         const SizedBox(height: 5),
         const AnnouncementsCard(),
+        const ChecklistReviewCard(),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           child: UplomingPaymentCard(),

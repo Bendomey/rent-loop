@@ -528,6 +528,12 @@ func (h *LeaseChecklistHandler) DeleteLeaseChecklistItem(w http.ResponseWriter, 
 
 // ─── Tenant-facing handlers ───────────────────────────────────────────────────
 
+type TenantListLeaseChecklists struct {
+	lib.FilterQueryInput
+	Type   *string  `json:"type,omitempty"   validate:"omitempty,oneof=CHECK_IN CHECK_OUT ROUTINE"           example:"CHECK_IN"  description:"Lease checklist type"`
+	Status []string `json:"status,omitempty" validate:"omitempty,dive,oneof=SUBMITTED ACKNOWLEDGED DISPUTED" example:"SUBMITTED" description:"Lease checklist statuses"`
+}
+
 // TenantListLeaseChecklists godoc
 //
 //	@Summary		Tenant: list lease checklists
@@ -537,7 +543,7 @@ func (h *LeaseChecklistHandler) DeleteLeaseChecklistItem(w http.ResponseWriter, 
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Param			lease_id	path		string						true	"Lease ID"
-//	@Param			q			query		ListLeaseChecklistsQuery	true	"Filters"
+//	@Param			q			query		TenantListLeaseChecklists	true	"Filters"
 //	@Success		200			{object}	object{data=object{rows=[]transformations.OutputLeaseChecklist,meta=lib.HTTPReturnPaginatedMetaResponse}}
 //	@Failure		401			{object}	string	"Invalid or absent authentication token"
 //	@Failure		500			{object}	string	"An unexpected error occurred"
@@ -556,10 +562,15 @@ func (h *LeaseChecklistHandler) TenantListLeaseChecklists(w http.ResponseWriter,
 
 	// Tenants only see non-DRAFT checklists
 	statuses := []string{"SUBMITTED", "ACKNOWLEDGED", "DISPUTED"}
+	if len(r.URL.Query()["status"]) > 0 {
+		statuses = r.URL.Query()["status"]
+	}
+
 	input := repository.ListLeaseChecklistsFilter{
 		FilterQuery: *filterQuery,
 		LeaseId:     leaseId,
 		Statuses:    statuses,
+		Type:        lib.NullOrString(r.URL.Query().Get("type")),
 	}
 
 	leaseChecklists, err := h.service.ListLeaseChecklists(r.Context(), input)

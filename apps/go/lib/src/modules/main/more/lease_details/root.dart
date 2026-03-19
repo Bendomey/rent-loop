@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:rentloop_go/src/lib/launch_external_site.dart';
 import 'package:rentloop_go/src/lib/money.dart';
 import 'package:rentloop_go/src/lib/payment_frequency.dart';
 import 'package:rentloop_go/src/repository/models/lease_model.dart';
+import 'package:rentloop_go/src/repository/providers/checklists_provider.dart';
 
 class LeaseDetailsScreen extends ConsumerWidget {
   const LeaseDetailsScreen({super.key});
@@ -20,126 +20,133 @@ class LeaseDetailsScreen extends ConsumerWidget {
       ),
       body: lease == null
           ? const Center(child: Text('No active lease found.'))
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _StatusHeader(lease: lease),
-                const SizedBox(height: 16),
-                _SectionCard(
-                  title: 'Financials',
-                  children: [
-                    _DetailRow(
-                      icon: Icons.payments_outlined,
-                      label: 'Rent',
-                      value: MoneyLib.formatPesewas(lease.rentFee),
-                    ),
-                    if (lease.paymentFrequency != null)
-                      _DetailRow(
-                        icon: Icons.repeat,
-                        label: 'Payment Frequency',
-                        value: getPaymentFrequencyLabel(
-                          lease.paymentFrequency!,
-                        ),
-                      ),
-                    if (lease.stayDuration != null)
-                      _DetailRow(
-                        icon: Icons.timelapse,
-                        label: 'Duration',
-                        value:
-                            '${lease.stayDuration} ${lease.stayDurationFrequency != null ? getPaymentFrequencyPeriodLabel(lease.stayDurationFrequency!, count: lease.stayDuration!) : ''}',
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                _SectionCard(
-                  title: 'Key Dates',
-                  children: [
-                    if (lease.moveInDate != null)
-                      _DetailRow(
-                        icon: Icons.door_front_door_outlined,
-                        label: 'Move-in Date',
-                        value: _formatDate(lease.moveInDate!),
-                      ),
-                    if (lease.activatedAt != null)
-                      _DetailRow(
-                        icon: Icons.check_circle_outline,
-                        label: 'Activated',
-                        value: _formatDate(lease.activatedAt!),
-                      ),
-                    if (lease.keyHandoverDate != null)
-                      _DetailRow(
-                        icon: Icons.key_outlined,
-                        label: 'Key Handover',
-                        value: _formatDate(lease.keyHandoverDate!),
-                      ),
-                    if (lease.propertyInspectionDate != null)
-                      _DetailRow(
-                        icon: Icons.search_outlined,
-                        label: 'Property Inspection',
-                        value: _formatDate(lease.propertyInspectionDate!),
-                      ),
-                    if (lease.createdAt != null)
-                      _DetailRow(
-                        icon: Icons.calendar_today_outlined,
-                        label: 'Created',
-                        value: _formatDate(lease.createdAt!),
-                      ),
-                    if (_calculateExpiry(lease) != null)
-                      _DetailRow(
-                        icon: Icons.event_busy_outlined,
-                        label: 'Expires',
-                        value: _calculateExpiry(lease)!,
-                      ),
-                  ],
-                ),
-                if (lease.leaseAgreementDocumentUrl != null &&
-                    lease.leaseAgreementDocumentUrl!.isNotEmpty) ...[
-                  const SizedBox(height: 12),
+          : RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(checklistsProvider);
+              },
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _StatusHeader(lease: lease),
+                  const SizedBox(height: 16),
                   _SectionCard(
-                    title: 'Documents',
+                    title: 'Financials',
                     children: [
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.description_outlined),
-                        title: const Text('Lease Agreement'),
-                        trailing: const Icon(
-                          Icons.open_in_new,
-                          size: 18,
-                          color: Colors.grey,
-                        ),
-                        onTap: () async {
-                          await Haptics.vibrate(HapticsType.selection);
-                          if (context.mounted) {
-                            launchExternalSite(
-                              context,
-                              lease.leaseAgreementDocumentUrl!,
-                            );
-                          }
-                        },
+                      _DetailRow(
+                        icon: Icons.payments_outlined,
+                        label: 'Rent',
+                        value: MoneyLib.formatPesewas(lease.rentFee),
                       ),
+                      if (lease.paymentFrequency != null)
+                        _DetailRow(
+                          icon: Icons.repeat,
+                          label: 'Payment Frequency',
+                          value: getPaymentFrequencyLabel(
+                            lease.paymentFrequency!,
+                          ),
+                        ),
+                      if (lease.stayDuration != null)
+                        _DetailRow(
+                          icon: Icons.timelapse,
+                          label: 'Duration',
+                          value:
+                              '${lease.stayDuration} ${lease.stayDurationFrequency != null ? getPaymentFrequencyPeriodLabel(lease.stayDurationFrequency!, count: lease.stayDuration!) : ''}',
+                        ),
                     ],
                   ),
-                ],
-                const SizedBox(height: 12),
-                _SectionCard(
-                  title: 'Reference',
-                  children: [
-                    _DetailRow(
-                      icon: Icons.tag,
-                      label: 'Lease Code',
-                      value: lease.code,
-                    ),
-                    if (lease.unit != null) ...[
-                      _DetailRow(
-                        icon: Icons.apartment,
-                        label: 'Unit',
-                        value: lease.unit!.name,
-                      ),
+                  const SizedBox(height: 12),
+                  _SectionCard(
+                    title: 'Key Dates',
+                    children: [
+                      if (lease.moveInDate != null)
+                        _DetailRow(
+                          icon: Icons.door_front_door_outlined,
+                          label: 'Move-in Date',
+                          value: _formatDate(lease.moveInDate!),
+                        ),
+                      if (lease.activatedAt != null)
+                        _DetailRow(
+                          icon: Icons.check_circle_outline,
+                          label: 'Activated',
+                          value: _formatDate(lease.activatedAt!),
+                        ),
+                      if (lease.keyHandoverDate != null)
+                        _DetailRow(
+                          icon: Icons.key_outlined,
+                          label: 'Key Handover',
+                          value: _formatDate(lease.keyHandoverDate!),
+                        ),
+                      if (lease.propertyInspectionDate != null)
+                        _DetailRow(
+                          icon: Icons.search_outlined,
+                          label: 'Property Inspection',
+                          value: _formatDate(lease.propertyInspectionDate!),
+                        ),
+                      if (lease.createdAt != null)
+                        _DetailRow(
+                          icon: Icons.calendar_today_outlined,
+                          label: 'Created',
+                          value: _formatDate(lease.createdAt!),
+                        ),
+                      if (_calculateExpiry(lease) != null)
+                        _DetailRow(
+                          icon: Icons.event_busy_outlined,
+                          label: 'Expires',
+                          value: _calculateExpiry(lease)!,
+                        ),
                     ],
+                  ),
+                  if (lease.leaseAgreementDocumentUrl != null &&
+                      lease.leaseAgreementDocumentUrl!.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _SectionCard(
+                      title: 'Documents',
+                      children: [
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.description_outlined),
+                          title: const Text('Lease Agreement'),
+                          trailing: const Icon(
+                            Icons.open_in_new,
+                            size: 18,
+                            color: Colors.grey,
+                          ),
+                          onTap: () async {
+                            await Haptics.vibrate(HapticsType.selection);
+                            if (context.mounted) {
+                              launchExternalSite(
+                                context,
+                                lease.leaseAgreementDocumentUrl!,
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
                   ],
-                ),
-                const SizedBox(height: 24),
-              ],
+                  const SizedBox(height: 12),
+                  _ConditionReportsSection(lease: lease),
+                  const SizedBox(height: 12),
+                  _SectionCard(
+                    title: 'Reference',
+                    children: [
+                      _DetailRow(
+                        icon: Icons.tag,
+                        label: 'Lease Code',
+                        value: lease.code,
+                      ),
+                      if (lease.unit != null) ...[
+                        _DetailRow(
+                          icon: Icons.apartment,
+                          label: 'Unit',
+                          value: lease.unit!.name,
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
     );
   }
@@ -305,6 +312,126 @@ class _SectionCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ConditionReportsSection extends ConsumerWidget {
+  final LeaseModel lease;
+
+  const _ConditionReportsSection({required this.lease});
+
+  String _typeLabel(String type) {
+    switch (type) {
+      case 'CHECK_IN':
+        return 'Move-in Report';
+      case 'CHECK_OUT':
+        return 'Move-out Report';
+      case 'ROUTINE':
+        return 'Routine Report';
+      default:
+        return 'Condition Report';
+    }
+  }
+
+  (Color, Color) _statusColors(String status) {
+    switch (status) {
+      case 'SUBMITTED':
+        return (Colors.blue.shade50, Colors.blue.shade700);
+      case 'ACKNOWLEDGED':
+        return (Colors.green.shade50, Colors.green.shade700);
+      case 'DISPUTED':
+        return (Colors.orange.shade50, Colors.orange.shade700);
+      default:
+        return (Colors.grey.shade100, Colors.grey.shade600);
+    }
+  }
+
+  String _statusLabel(String status) {
+    switch (status) {
+      case 'SUBMITTED':
+        return 'Pending Review';
+      case 'ACKNOWLEDGED':
+        return 'Approved';
+      case 'DISPUTED':
+        return 'Disputed';
+      default:
+        return status;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final checklistsAsync = ref.watch(checklistsProvider);
+
+    return checklistsAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (checklists) {
+        if (checklists.isEmpty) return const SizedBox.shrink();
+        return _SectionCard(
+          title: 'Unit Condition Reports',
+          children: checklists.map((checklist) {
+            final (statusBg, statusText) = _statusColors(checklist.status);
+            return InkWell(
+              onTap: () async {
+                await Haptics.vibrate(HapticsType.selection);
+                if (context.mounted) {
+                  context.push('/unit-condition-reports/${checklist.id}');
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.assignment_outlined,
+                      size: 18,
+                      color: Colors.grey.shade500,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _typeLabel(checklist.type),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusBg,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        _statusLabel(checklist.status),
+                        style: TextStyle(
+                          color: statusText,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 18,
+                      color: Colors.grey.shade400,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        );
+      },
     );
   }
 }

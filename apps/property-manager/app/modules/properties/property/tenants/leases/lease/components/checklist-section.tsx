@@ -155,7 +155,7 @@ function ChecklistRow({
 								: pendingCount > 0
 									? `${pendingCount} of ${totalItems} items need attention`
 									: `${totalItems} items`}
-						{checklist.submitted_at
+						{checklist.status === 'SUBMITTED' && checklist.submitted_at
 							? ` · Submitted ${localizedDayjs(checklist.submitted_at).format('MMM D, YYYY')}`
 							: ''}
 					</TypographyMuted>

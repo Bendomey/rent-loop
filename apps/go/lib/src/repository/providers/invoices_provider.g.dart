@@ -13,8 +13,9 @@ String _$invoicesHash() => r'a7129304b918a15a725be1ebdde6c44b196fe061';
 final invoicesProvider = FutureProvider<List<InvoiceModel>>.internal(
   invoices,
   name: r'invoicesProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$invoicesHash,
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$invoicesHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
