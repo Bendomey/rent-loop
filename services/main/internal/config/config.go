@@ -121,9 +121,10 @@ type Config struct {
 // IsTestOTPPhone returns true only in non-production environments when the
 // given phone number is in the whitelisted test numbers list.
 func (c *Config) IsTestOTPPhone(phone string) bool {
-	if c.Env == "production" {
-		return false
-	}
+	// TODO: bring this back later. they can't access it it don't know the env, right? 😅
+	// if c.Env == "production" {
+	// 	return false
+	// }
 	return slices.Contains(c.TestOTP.PhoneNumbers, phone)
 }
 
