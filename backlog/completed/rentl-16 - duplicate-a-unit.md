@@ -102,7 +102,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const clientUserProperty = context.get(propertyContext)
 
   if (clientUserProperty?.property?.type === 'SINGLE') {
-    return redirect(NOT_FOUND_ROUTE)
+		throw new Response(null, { status: 404, statusText: 'Not Found' })
   }
 
   const url = new URL(request.url)

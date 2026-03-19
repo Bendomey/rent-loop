@@ -13,31 +13,36 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const authToken = authSession.get('authToken')
 
-	const tenant = await getPropertyTenantForServer(
-		{
-			tenant_id: params.tenantId,
-			property_id: params.propertyId,
-		},
-		{
-			authToken,
-			baseUrl,
-		},
-	)
+	try {
+		const tenant = await getPropertyTenantForServer(
+			{
+				tenant_id: params.tenantId,
+				property_id: params.propertyId,
+			},
+			{
+				authToken,
+				baseUrl,
+			},
+		)
 
-	return {
-		origin: getDomainUrl(request),
-		clientUserProperty,
-		tenant,
+		return {
+			origin: getDomainUrl(request),
+			clientUserProperty,
+			tenant,
+		}
+	} catch {
+		throw new Response(null, { status: 404, statusText: 'Not Found' })
 	}
 }
 
 export const handle = {
-	breadcrumb: 'Domey Benjamin',
+	breadcrumb: (data: Awaited<ReturnType<typeof loader>>) =>
+		data?.tenant?.last_name ?? 'Tenant',
 }
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `Tenant Name | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
+		title: `${loaderData?.tenant?.last_name ?? 'Tenant'} | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,

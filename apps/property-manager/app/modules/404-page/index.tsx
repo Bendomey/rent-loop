@@ -1,5 +1,4 @@
 import { Link } from 'react-router'
-import { Image } from '~/components/Image'
 import { APP_NAME } from '~/lib/constants'
 
 interface Props {
@@ -8,10 +7,35 @@ interface Props {
 	message?: string
 }
 
-export const NotFoundModule = ({ status = 404, title, message }: Props) => {
+export function NotFoundModule({ status = 404, title, message }: Props) {
 	return (
-		<div className="grid h-[100dvh] grid-cols-1 grid-rows-[1fr,auto,1fr] bg-white lg:h-[100vh] lg:grid-cols-[max(50%,36rem),1fr]">
-			<header className="mx-auto w-full max-w-7xl px-6 pt-6 sm:pt-10 lg:col-span-2 lg:col-start-1 lg:row-start-1 lg:px-8">
+		<>
+			<main className="grid min-h-full place-items-center bg-white px-6 py-24 sm:py-32 lg:px-8">
+				<div className="text-center">
+					<p className="text-base font-semibold text-rose-600">{status}</p>
+					<h1 className="mt-4 text-5xl font-semibold tracking-tight text-balance text-gray-900 sm:text-7xl">
+						{title ?? 'Page not found'}
+					</h1>
+					<p className="mt-6 text-lg font-light text-pretty text-gray-500 sm:text-xl/8">
+						{message || 'Sorry, we couldn’t find the page you’re looking for.'}
+					</p>
+					<div className="mt-10 flex items-center justify-center gap-x-6">
+						<Link
+							to="/"
+							className="rounded-md bg-rose-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-rose-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600"
+						>
+							Go back home
+						</Link>
+						<button
+							onClick={() => window?.Tawk_API?.toggle()}
+							className="cursor-pointer text-sm font-semibold text-gray-900"
+						>
+							Contact support <span aria-hidden="true">&rarr;</span>
+						</button>
+					</div>
+				</div>
+			</main>
+			<footer className="mx-auto flex items-end justify-center">
 				<Link prefetch="intent" to="/" className="-m-1.5 p-1.5">
 					<div className="flex flex-row items-end">
 						<span className="text-4xl font-extrabold text-rose-700">
@@ -20,59 +44,7 @@ export const NotFoundModule = ({ status = 404, title, message }: Props) => {
 						<span className="text-4xl font-extrabold">{APP_NAME.slice(4)}</span>
 					</div>
 				</Link>
-			</header>
-			<main className="mx-auto w-full max-w-7xl px-6 py-24 sm:py-32 lg:col-span-2 lg:col-start-1 lg:row-start-2 lg:px-8">
-				<div className="max-w-lg">
-					<p className="text-base leading-8 font-semibold text-rose-600">
-						{status}
-					</p>
-					<h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-						{title ?? 'Page not found'}
-					</h1>
-					<p className="mt-6 text-base leading-7 text-gray-600">
-						{message || 'Sorry, we couldn’t find the page you’re looking for.'}
-					</p>
-					<div className="mt-10">
-						<Link
-							to="/"
-							prefetch="intent"
-							className="text-sm leading-7 font-semibold text-rose-600"
-						>
-							<span aria-hidden="true">&larr;</span> Back to home
-						</Link>
-					</div>
-				</div>
-			</main>
-			<footer className="self-end lg:col-span-2 lg:col-start-1 lg:row-start-3">
-				<div className="border-t border-gray-100 bg-gray-50 py-10">
-					<nav className="mx-auto flex w-full max-w-7xl items-center gap-x-4 px-6 text-sm leading-7 text-gray-600 lg:px-8">
-						<a href="#">Contact support</a>
-						<svg
-							viewBox="0 0 2 2"
-							aria-hidden="true"
-							className="h-0.5 w-0.5 fill-gray-300"
-						>
-							<circle cx={1} cy={1} r={1} />
-						</svg>
-						<a href="#">Status</a>
-						<svg
-							viewBox="0 0 2 2"
-							aria-hidden="true"
-							className="h-0.5 w-0.5 fill-gray-300"
-						>
-							<circle cx={1} cy={1} r={1} />
-						</svg>
-						<a href="#">Twitter</a>
-					</nav>
-				</div>
 			</footer>
-			<div className="hidden lg:relative lg:col-start-2 lg:row-start-1 lg:row-end-4 lg:block">
-				<Image
-					src="https://images.unsplash.com/photo-1470847355775-e0e3c35a9a2c?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1825&q=80"
-					alt=""
-					className="absolute inset-0 h-full w-full object-cover"
-				/>
-			</div>
-		</div>
+		</>
 	)
 }

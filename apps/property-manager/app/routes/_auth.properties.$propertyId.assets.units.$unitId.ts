@@ -12,22 +12,26 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const authToken = authSession.get('authToken')
 
-	const unit = await getPropertyUnitForServer(
-		{
-			property_id: params.propertyId,
-			unit_id: params.unitId,
-			populate: ['Property', 'PropertyBlock'],
-		},
-		{
-			authToken,
-			baseUrl,
-		},
-	)
+	try {
+		const unit = await getPropertyUnitForServer(
+			{
+				property_id: params.propertyId,
+				unit_id: params.unitId,
+				populate: ['Property', 'PropertyBlock'],
+			},
+			{
+				authToken,
+				baseUrl,
+			},
+		)
 
-	return {
-		origin: getDomainUrl(request),
-		unit,
-		clientUserProperty,
+		return {
+			origin: getDomainUrl(request),
+			unit,
+			clientUserProperty,
+		}
+	} catch {
+		throw new Response(null, { status: 404, statusText: 'Not Found' })
 	}
 }
 
