@@ -405,10 +405,10 @@ func (s *leaseChecklistService) SubmitLeaseChecklist(
 		_ = s.notificationService.SendToTenantAccount(
 			context.Background(),
 			tenantAccount.ID.String(),
-			"Checklist submitted for review",
+			"Report submitted for review",
 			fmt.Sprintf(
-				"Your landlord has submitted a %s checklist for your review. Please review and acknowledge.",
-				checklist.Type,
+				"Your landlord has submitted a %s report for your review. Please review and respond.",
+				lib.LeaseChecklistTypeLabel(checklist.Type),
 			),
 			map[string]string{
 				"type":           "CHECKLIST_SUBMITTED",
