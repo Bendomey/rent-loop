@@ -6,6 +6,7 @@ import { MembersController } from './controller'
 import RemoveMemberModule from './remove'
 import { useGetClientUserProperties } from '~/api/client-user-properties'
 import { DataTable } from '~/components/datatable'
+import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
@@ -114,18 +115,20 @@ export function PropertyMembersModule() {
 					}
 
 					return (
-						<Button
-							variant="ghost"
-							className="flex size-8 text-red-600 hover:bg-red-100 hover:text-red-600"
-							size="icon"
-							onClick={() => {
-								setSelectedMember(row.original?.client_user ?? undefined)
-								setOpenRemoveMemberModal(true)
-							}}
-						>
-							<Trash />
-							<span className="sr-only">Remove Member</span>
-						</Button>
+						<PropertyPermissionGuard roles={['MANAGER']}>
+							<Button
+								variant="ghost"
+								className="flex size-8 text-red-600 hover:bg-red-100 hover:text-red-600"
+								size="icon"
+								onClick={() => {
+									setSelectedMember(row.original?.client_user ?? undefined)
+									setOpenRemoveMemberModal(true)
+								}}
+							>
+								<Trash />
+								<span className="sr-only">Remove Member</span>
+							</Button>
+						</PropertyPermissionGuard>
 					)
 				},
 			},

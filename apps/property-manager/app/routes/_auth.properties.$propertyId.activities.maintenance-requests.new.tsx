@@ -6,6 +6,11 @@ import { NewPropertyActivitiesMaintenanceRequestModule } from '~/modules'
 
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const clientUserProperty = context.get(propertyContext)
+
+	if (clientUserProperty?.role !== 'MANAGER') {
+		throw new Response(null, { status: 403, statusText: 'Unauthorized' })
+	}
+
 	return {
 		origin: getDomainUrl(request),
 		clientUserProperty,

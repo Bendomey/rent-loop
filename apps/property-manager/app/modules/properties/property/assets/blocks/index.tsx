@@ -13,6 +13,7 @@ import DeletePropertyBlockModal from './delete'
 import { useGetPropertyBlocks } from '~/api/blocks'
 import { GridElement } from '~/components/Grid'
 import { Image } from '~/components/Image'
+import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { ButtonGroup } from '~/components/ui/button-group'
@@ -156,28 +157,30 @@ export function PropertyAssetBlocksModule() {
 												</Button>
 											</DropdownMenuTrigger>
 											<DropdownMenuContent align="end" className="w-52">
-												<DropdownMenuGroup>
-													<DropdownMenuItem
-														onClick={() =>
-															navigate(
-																`/properties/${clientUserProperty?.property_id}/assets/blocks/${data.id}/edit`,
-															)
-														}
-													>
-														<Pencil />
-														Edit
-													</DropdownMenuItem>
-													<DropdownMenuItem
-														variant="destructive"
-														onClick={() => {
-															setSelectedPropertyBlock(data)
-															setOpenDeletePropertyBlockModal(true)
-														}}
-													>
-														<Trash />
-														Delete
-													</DropdownMenuItem>
-												</DropdownMenuGroup>
+												<PropertyPermissionGuard roles={['MANAGER']}>
+													<DropdownMenuGroup>
+														<DropdownMenuItem
+															onClick={() =>
+																navigate(
+																	`/properties/${clientUserProperty?.property_id}/assets/blocks/${data.id}/edit`,
+																)
+															}
+														>
+															<Pencil />
+															Edit
+														</DropdownMenuItem>
+														<DropdownMenuItem
+															variant="destructive"
+															onClick={() => {
+																setSelectedPropertyBlock(data)
+																setOpenDeletePropertyBlockModal(true)
+															}}
+														>
+															<Trash />
+															Delete
+														</DropdownMenuItem>
+													</DropdownMenuGroup>
+												</PropertyPermissionGuard>
 											</DropdownMenuContent>
 										</DropdownMenu>
 									</ButtonGroup>

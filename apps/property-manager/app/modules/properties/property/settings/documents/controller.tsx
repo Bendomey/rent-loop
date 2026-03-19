@@ -1,3 +1,4 @@
+import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { SearchInput } from '~/components/search'
 import { ImportDocumentButton } from '~/modules/settings/documents/components/import-document-button'
 import {
@@ -18,13 +19,15 @@ export const PropertyDocumentsController = ({
 				<div className="flex items-center gap-2 text-sm">
 					<SearchInput placeholder="Search documents..." />
 				</div>
-				<div className="flex items-center justify-end gap-2">
-					<ImportDocumentButton property={property} />
-					<AddDocumentButton
-						property={property}
-						documentTemplates={documentTemplates}
-					/>
-				</div>
+				<PropertyPermissionGuard roles={['MANAGER']}>
+					<div className="flex items-center justify-end gap-2">
+						<ImportDocumentButton property={property} />
+						<AddDocumentButton
+							property={property}
+							documentTemplates={documentTemplates}
+						/>
+					</div>
+				</PropertyPermissionGuard>
 			</div>
 		</div>
 	)

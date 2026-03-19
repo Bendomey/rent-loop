@@ -2,6 +2,7 @@ import { Plus, RotateCw, Search, ToggleLeft } from 'lucide-react'
 import { useState } from 'react'
 import AddMemberModule from './add'
 import { FilterSet } from '~/components/filter-set'
+import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Button } from '~/components/ui/button'
 import {
 	InputGroup,
@@ -62,14 +63,16 @@ export const MembersController = () => {
 					</InputGroup>
 				</div>
 				<div className="flex items-center justify-end gap-2">
-					<Button
-						variant="default"
-						size="sm"
-						onClick={() => setOpenAddMemberModal(true)}
-					>
-						<Plus className="size-4" />
-						Add Member
-					</Button>
+					<PropertyPermissionGuard roles={['MANAGER']}>
+						<Button
+							variant="default"
+							size="sm"
+							onClick={() => setOpenAddMemberModal(true)}
+						>
+							<Plus className="size-4" />
+							Add Member
+						</Button>
+					</PropertyPermissionGuard>
 					<Button variant="outline" size="sm">
 						<RotateCw className="size-4" />
 						Refresh
