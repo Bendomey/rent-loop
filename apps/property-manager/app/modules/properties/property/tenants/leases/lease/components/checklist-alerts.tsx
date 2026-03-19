@@ -14,10 +14,11 @@ import {
 interface Props {
 	lease: Lease
 	canEdit: boolean
+	propertyId: string
 }
 
-export function ChecklistAlerts({ lease, canEdit }: Props) {
-	const { data, isSuccess } = useGetLeaseChecklists(lease.id, {
+export function ChecklistAlerts({ lease, canEdit, propertyId }: Props) {
+	const { data, isSuccess } = useGetLeaseChecklists(propertyId, lease.id, {
 		populate: ['Items', 'Acknowledgments'],
 	})
 	const [createType, setCreateType] = useState<LeaseChecklistType | null>(null)
@@ -123,6 +124,7 @@ export function ChecklistAlerts({ lease, canEdit }: Props) {
 			{createType && (
 				<CreateChecklistDialog
 					leaseId={lease.id}
+					propertyId={propertyId}
 					type={createType}
 					opened={!!createType}
 					setOpened={(open) => !open && setCreateType(null)}
@@ -132,6 +134,7 @@ export function ChecklistAlerts({ lease, canEdit }: Props) {
 			{viewChecklist && (
 				<ChecklistModal
 					leaseId={lease.id}
+					propertyId={propertyId}
 					checklist={viewChecklist}
 					canEdit={canEdit}
 					opened={!!viewChecklist}

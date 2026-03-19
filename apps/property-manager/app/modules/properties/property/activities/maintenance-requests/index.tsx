@@ -84,7 +84,6 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 
 	const columnParams = (status: MaintenanceRequestStatus) => ({
 		filters: {
-			property_id: propertyId,
 			status,
 			priority: priority as MaintenanceRequestPriority | undefined,
 			category: category as MaintenanceRequestCategory | undefined,
@@ -96,17 +95,24 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 		populate: ['Unit', 'AssignedWorker', 'AssignedManager'],
 	})
 
-	const newQuery = useGetMaintenanceRequestsInfinite(columnParams('NEW'))
+	const newQuery = useGetMaintenanceRequestsInfinite(
+		propertyId,
+		columnParams('NEW'),
+	)
 	const inProgressQuery = useGetMaintenanceRequestsInfinite(
+		propertyId,
 		columnParams('IN_PROGRESS'),
 	)
 	const inReviewQuery = useGetMaintenanceRequestsInfinite(
+		propertyId,
 		columnParams('IN_REVIEW'),
 	)
 	const resolvedQuery = useGetMaintenanceRequestsInfinite(
+		propertyId,
 		columnParams('RESOLVED'),
 	)
 	const canceledQuery = useGetMaintenanceRequestsInfinite(
+		propertyId,
 		columnParams('CANCELED'),
 	)
 
@@ -189,7 +195,7 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 		}
 
 		updateStatus.mutate(
-			{ id: draggedItem.id, status: targetColumn },
+			{ id: draggedItem.id, property_id: propertyId, status: targetColumn },
 			{
 				onError: (err) => {
 					toast.error(
@@ -216,11 +222,16 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 		try {
 			await updateStatus.mutateAsync({
 				id: item.id,
+				property_id: propertyId,
 				status: targetColumn,
 				cancellation_reason: isCanceled ? note || undefined : undefined,
 			})
 			if (note) {
-				await createComment.mutateAsync({ id: item.id, content: note })
+				await createComment.mutateAsync({
+					id: item.id,
+					property_id: propertyId,
+					content: note,
+				})
 			}
 			invalidateColumns(item.status, targetColumn)
 			setPendingChange(null)

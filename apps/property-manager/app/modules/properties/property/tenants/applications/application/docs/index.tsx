@@ -15,6 +15,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
+import { safeString } from '~/lib/strings'
 import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.applications.$applicationId.docs'
 
@@ -31,7 +32,7 @@ export function PropertyTenantApplicationDocs() {
 	const { mutateAsync: deleteDocument, isPending: isDeletingDocument } =
 		useDeleteDocument()
 
-	const property_id = clientUserProperty?.property?.id
+	const property_id = clientUserProperty?.property_id
 
 	const signatures = tenantApplication.lease_agreement_document_signatures ?? []
 	const managerSignature = signatures.find((s) => s.role === 'PROPERTY_MANAGER')
@@ -69,6 +70,7 @@ export function PropertyTenantApplicationDocs() {
 
 		await updateTenantApplication({
 			id: applicationId,
+			property_id: clientUserProperty?.property_id ?? '',
 			data: {
 				lease_agreement_document_mode: null,
 				lease_agreement_document_url: null,
@@ -120,7 +122,7 @@ export function PropertyTenantApplicationDocs() {
 			<AddDocumentModal
 				open={open}
 				onOpenChange={setOpen}
-				propertyId={property_id}
+				propertyId={safeString(property_id)}
 				application={tenantApplication}
 				attachedDoc={attachedDoc}
 				documentTemplates={documentTemplates}

@@ -123,7 +123,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 			return
 		}
 		updateStatus.mutate(
-			{ id: mr.id, status },
+			{ id: mr.id, property_id: propertyId, status },
 			{
 				onSuccess: () => {
 					toast.success('Status updated')
@@ -149,11 +149,16 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 		try {
 			await updateStatus.mutateAsync({
 				id: mr.id,
+				property_id: propertyId,
 				status: pendingStatus,
 				cancellation_reason:
 					pendingStatus === 'CANCELED' ? note || undefined : undefined,
 			})
-			await createComment.mutateAsync({ id: mr.id, content: note })
+			await createComment.mutateAsync({
+				id: mr.id,
+				property_id: propertyId,
+				content: note,
+			})
 			invalidate()
 			invalidateComments()
 			setStatusNote('')
@@ -168,7 +173,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 
 	const handlePriorityChange = (priority: MaintenanceRequestPriority) => {
 		updateRequest.mutate(
-			{ id: mr.id, priority },
+			{ id: mr.id, property_id: propertyId, priority },
 			{
 				onSuccess: () => {
 					toast.success('Priority updated')
@@ -184,7 +189,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 
 	const handleCategoryChange = (category: MaintenanceRequestCategory) => {
 		updateRequest.mutate(
-			{ id: mr.id, category },
+			{ id: mr.id, property_id: propertyId, category },
 			{
 				onSuccess: () => {
 					toast.success('Category updated')
@@ -202,7 +207,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 		visibility: MaintenanceRequest['visibility'],
 	) => {
 		updateRequest.mutate(
-			{ id: mr.id, visibility },
+			{ id: mr.id, property_id: propertyId, visibility },
 			{
 				onSuccess: () => {
 					toast.success('Visibility updated')
@@ -218,7 +223,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 
 	const handleWorkerChange = (worker_id: string) => {
 		assignWorker.mutate(
-			{ id: mr.id, worker_id },
+			{ id: mr.id, property_id: propertyId, worker_id },
 			{
 				onSuccess: () => {
 					toast.success('Worker assigned')
@@ -234,7 +239,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 
 	const handleManagerChange = (manager_id: string) => {
 		assignManager.mutate(
-			{ id: mr.id, manager_id },
+			{ id: mr.id, property_id: propertyId, manager_id },
 			{
 				onSuccess: () => {
 					toast.success('Manager assigned')

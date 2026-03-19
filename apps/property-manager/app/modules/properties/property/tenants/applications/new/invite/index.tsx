@@ -119,6 +119,7 @@ function InviteTenantModal({ opened, setOpened, data, admin_id }: Props) {
 			mutate(
 				{
 					unit_id: data.desired_unit_id,
+					property_id: property_id,
 					email: data.email,
 					phone: data.phone,
 				},

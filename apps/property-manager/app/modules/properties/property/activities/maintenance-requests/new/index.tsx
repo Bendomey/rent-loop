@@ -96,6 +96,7 @@ export function NewPropertyActivitiesMaintenanceRequestModule() {
 				category: values.category,
 				visibility: values.visibility,
 				unit_id: values.unit_id,
+				property_id: resolvedPropertyId,
 				attachments: values.attachments ?? [],
 			}
 			await createRequest.mutateAsync(input)

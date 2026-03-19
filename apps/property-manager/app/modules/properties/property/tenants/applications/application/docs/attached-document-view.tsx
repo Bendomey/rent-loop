@@ -87,12 +87,15 @@ export function AttachedDocumentView({
 	})
 
 	const documentId = tenantApplication.lease_agreement_document_id
-	const { data: signingTokens, isPending: isLoadingTokens } = useSigningTokens({
-		filters: {
-			document_id: documentId ?? undefined,
-			tenant_application_id: applicationId,
+	const { data: signingTokens, isPending: isLoadingTokens } = useSigningTokens(
+		safeString(propertyId),
+		{
+			filters: {
+				document_id: documentId ?? undefined,
+				tenant_application_id: applicationId,
+			},
 		},
-	})
+	)
 
 	const tenantToken =
 		signingTokens?.rows?.find((t) => t.role === 'TENANT') ?? null
@@ -271,6 +274,7 @@ export function AttachedDocumentView({
 									existingToken={tenantToken}
 									documentId={safeString(documentId)}
 									role="TENANT"
+									propertyId={safeString(propertyId)}
 									tenantApplicationId={applicationId}
 								/>
 							)}
@@ -294,6 +298,7 @@ export function AttachedDocumentView({
 											<PromptSignatureButton
 												existingToken={witnessToken}
 												documentId={safeString(documentId)}
+												propertyId={safeString(propertyId)}
 												role={
 													entry.role === 'pm_witness'
 														? 'PM_WITNESS'

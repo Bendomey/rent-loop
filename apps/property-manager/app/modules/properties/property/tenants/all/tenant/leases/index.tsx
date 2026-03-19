@@ -29,9 +29,10 @@ export function TenantLeasesModule() {
 	const status = searchParams.get('status') ?? undefined
 
 	const { data, isPending, isRefetching, error, refetch } = useGetTenantLeases(
+		propertyId,
 		safeString(tenantId),
 		{
-			filters: { status, property_id: propertyId },
+			filters: { status },
 			pagination: { page, per },
 			populate: ['Unit'],
 			sorter: { sort: 'desc', sort_by: 'created_at' },

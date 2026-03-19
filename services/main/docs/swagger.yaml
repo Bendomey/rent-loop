@@ -8495,9 +8495,6 @@ paths:
         name: priority
         type: string
       - in: query
-        name: property_id
-        type: string
-      - in: query
         name: query
         type: string
       - collectionFormat: csv

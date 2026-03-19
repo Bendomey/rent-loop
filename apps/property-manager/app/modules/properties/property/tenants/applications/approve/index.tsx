@@ -20,9 +20,15 @@ interface Props {
 	opened: boolean
 	setOpened: Dispatch<SetStateAction<boolean>>
 	refetch?: VoidFunction
+	propertyId: string
 }
 
-function ApproveTenantApplicationModal({ opened, setOpened, data }: Props) {
+function ApproveTenantApplicationModal({
+	opened,
+	setOpened,
+	data,
+	propertyId,
+}: Props) {
 	if (!data) return null
 
 	return (
@@ -38,7 +44,11 @@ function ApproveTenantApplicationModal({ opened, setOpened, data }: Props) {
 				onInteractOutside={(e) => e.preventDefault()}
 				onEscapeKeyDown={(e) => e.preventDefault()}
 			>
-				<ApprovalModalContent data={data} onClose={() => setOpened(false)} />
+				<ApprovalModalContent
+					propertyId={propertyId}
+					data={data}
+					onClose={() => setOpened(false)}
+				/>
 			</DialogContent>
 		</Dialog>
 	)
@@ -47,9 +57,11 @@ function ApproveTenantApplicationModal({ opened, setOpened, data }: Props) {
 function ApprovalModalContent({
 	data,
 	onClose,
+	propertyId,
 }: {
 	data: TenantApplication
 	onClose: () => void
+	propertyId: string
 }) {
 	const name = [data.first_name, data.other_names, data.last_name]
 		.filter(Boolean)
@@ -58,6 +70,7 @@ function ApprovalModalContent({
 	const { state, start, retry, reset, description, progress } =
 		useApprovalPipeline({
 			application: data,
+			propertyId,
 			onSuccess: () => {
 				toast.success(`${name}'s application was approved successfully.`)
 				onClose()

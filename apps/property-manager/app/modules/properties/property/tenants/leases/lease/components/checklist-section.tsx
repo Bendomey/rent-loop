@@ -18,6 +18,7 @@ import {
 interface Props {
 	leaseId: string
 	canEdit: boolean
+	propertyId: string
 }
 
 const CHECKLIST_TYPES: LeaseChecklistType[] = [
@@ -26,8 +27,8 @@ const CHECKLIST_TYPES: LeaseChecklistType[] = [
 	'ROUTINE',
 ]
 
-export function ChecklistSection({ leaseId, canEdit }: Props) {
-	const { data, isLoading } = useGetLeaseChecklists(leaseId, {
+export function ChecklistSection({ leaseId, canEdit, propertyId }: Props) {
+	const { data, isLoading } = useGetLeaseChecklists(propertyId, leaseId, {
 		populate: ['Items', 'Acknowledgments'],
 	})
 	const [createType, setCreateType] = useState<LeaseChecklistType | null>(null)
@@ -100,6 +101,7 @@ export function ChecklistSection({ leaseId, canEdit }: Props) {
 			{createType && (
 				<CreateChecklistDialog
 					leaseId={leaseId}
+					propertyId={propertyId}
 					type={createType}
 					opened={!!createType}
 					setOpened={(open) => !open && setCreateType(null)}
@@ -110,6 +112,7 @@ export function ChecklistSection({ leaseId, canEdit }: Props) {
 			{viewChecklist && (
 				<ChecklistModal
 					leaseId={leaseId}
+					propertyId={propertyId}
 					checklist={viewChecklist}
 					canEdit={canEdit}
 					opened={!!viewChecklist}
@@ -136,7 +139,7 @@ function ChecklistRow({
 		<button
 			type="button"
 			onClick={onView}
-			className="hover:bg-muted/50 cursor-pointer flex w-full items-center justify-between gap-3 rounded-md border px-3 py-2.5 text-left transition-colors"
+			className="hover:bg-muted/50 flex w-full cursor-pointer items-center justify-between gap-3 rounded-md border px-3 py-2.5 text-left transition-colors"
 		>
 			<div className="flex min-w-0 items-center gap-2">
 				<ClipboardListIcon className="text-muted-foreground size-4 shrink-0" />

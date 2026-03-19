@@ -22,6 +22,8 @@ import {
 	formatAmount,
 } from '~/lib/format-amount'
 import { getPaymentFrequencyLabel } from '~/lib/properties.utils'
+import { safeString } from '~/lib/strings'
+import { useProperty } from '~/providers/property-provider'
 
 interface FieldDisplayProps {
 	label: string
@@ -39,6 +41,8 @@ function FieldDisplay({ label, value }: FieldDisplayProps) {
 
 export function PropertyTenantApplicationFinancial() {
 	const { tenantApplication } = useTenantApplicationContext()
+	const { clientUserProperty } = useProperty()
+
 	const revalidator = useRevalidator()
 
 	const unit = tenantApplication.desired_unit
@@ -91,6 +95,7 @@ export function PropertyTenantApplicationFinancial() {
 	const handleSave = () => {
 		mutate(
 			{
+				property_id: safeString(clientUserProperty?.property_id),
 				id: tenantApplication.id,
 				data: {
 					rent_fee: convertCedisToPesewas(rentAmount),
@@ -206,6 +211,7 @@ export function PropertyTenantApplicationFinancial() {
 			</Card>
 
 			<InitialPaymentSetup
+				propertyId={safeString(clientUserProperty?.property_id)}
 				applicationId={tenantApplication.id}
 				existingInvoice={tenantApplication.application_payment_invoice ?? null}
 				hasFinancialChanges={hasFinancialChanges}

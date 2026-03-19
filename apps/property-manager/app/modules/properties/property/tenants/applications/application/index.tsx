@@ -13,10 +13,12 @@ import {
 } from '~/components/ui/tooltip'
 
 import { localizedDayjs } from '~/lib/date'
+import { safeString } from '~/lib/strings'
 import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.applications.$applicationId'
 
 export function PropertyTenantApplicationContainer() {
-	const { tenantApplication } = useLoaderData<typeof loader>()
+	const { tenantApplication, clientUserProperty } =
+		useLoaderData<typeof loader>()
 	const [openCancelModal, setOpenCancelModal] = useState(false)
 	const [openApproveModal, setOpenApproveModal] = useState(false)
 
@@ -124,11 +126,13 @@ export function PropertyTenantApplicationContainer() {
 				opened={openCancelModal}
 				setOpened={setOpenCancelModal}
 				data={tenantApplication}
+				propertyId={safeString(clientUserProperty?.property_id)}
 			/>
 			<ApproveTenantApplicationModal
 				opened={openApproveModal}
 				setOpened={setOpenApproveModal}
 				data={tenantApplication}
+				propertyId={safeString(clientUserProperty?.property_id)}
 			/>
 		</div>
 	)

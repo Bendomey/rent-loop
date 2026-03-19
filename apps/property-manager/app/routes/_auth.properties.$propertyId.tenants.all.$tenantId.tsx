@@ -16,6 +16,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const tenant = await getPropertyTenantForServer(
 		{
 			tenant_id: params.tenantId,
+			property_id: params.propertyId,
 		},
 		{
 			authToken,

@@ -55,6 +55,7 @@ export function LeaseDocumentModule() {
 		updateTenantApplication.mutate(
 			{
 				id: tenantApplication.id,
+				property_id: tenantApplication.desired_unit.property_id,
 				data: { lease_agreement_document_status: 'FINALIZED' },
 			},
 			{
@@ -77,6 +78,7 @@ export function LeaseDocumentModule() {
 		updateTenantApplication.mutate(
 			{
 				id: tenantApplication.id,
+				property_id: tenantApplication.desired_unit.property_id,
 				data: { lease_agreement_document_status: 'DRAFT' },
 			},
 			{

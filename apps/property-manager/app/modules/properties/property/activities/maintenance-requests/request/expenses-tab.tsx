@@ -66,7 +66,7 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 		isLoading,
 		isError,
 		refetch,
-	} = useGetMaintenanceRequestExpenses(requestId, {
+	} = useGetMaintenanceRequestExpenses(propertyId, requestId, {
 		pagination: { page: 1, per: 100 },
 		filters: {},
 	})
@@ -97,7 +97,7 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 			return
 		}
 		createExpense.mutate(
-			{ id: requestId, ...values, amount },
+			{ id: requestId, property_id: propertyId, ...values, amount },
 			{
 				onSuccess: () => {
 					toast.success('Expense added')
@@ -115,7 +115,7 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 
 	const handleDelete = (expenseId: string) => {
 		deleteExpense.mutate(
-			{ id: requestId, expense_id: expenseId },
+			{ id: requestId, property_id: propertyId, expense_id: expenseId },
 			{
 				onSuccess: () => {
 					toast.success('Expense removed')
@@ -130,21 +130,24 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 	}
 
 	const handleGenerateInvoice = () => {
-		generateInvoice.mutate(requestId, {
-			onSuccess: (invoiceId) => {
-				toast.success('Invoice draft created')
-				invalidate()
-				if (invoiceId) {
-					void queryClient.invalidateQueries({
-						queryKey: [QUERY_KEYS.INVOICES],
-					})
-				}
+		generateInvoice.mutate(
+			{ property_id: propertyId, id: requestId },
+			{
+				onSuccess: (invoiceId) => {
+					toast.success('Invoice draft created')
+					invalidate()
+					if (invoiceId) {
+						void queryClient.invalidateQueries({
+							queryKey: [QUERY_KEYS.INVOICES],
+						})
+					}
+				},
+				onError: (err) =>
+					toast.error(
+						err instanceof Error ? err.message : 'Failed to generate invoice',
+					),
 			},
-			onError: (err) =>
-				toast.error(
-					err instanceof Error ? err.message : 'Failed to generate invoice',
-				),
-		})
+		)
 	}
 
 	const billableExpenses =

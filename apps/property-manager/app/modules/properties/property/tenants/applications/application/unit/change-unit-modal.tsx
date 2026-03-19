@@ -58,6 +58,7 @@ export function ChangeUnitModal({
 		mutate(
 			{
 				id: applicationId,
+				property_id: propertyId,
 				data: {
 					desired_unit_id: selectedUnitId,
 					rent_fee: unit?.rent_fee,

@@ -8,13 +8,14 @@ import { fetchClient } from '~/lib/transport'
  */
 
 const getInvoices = async (
+	propertyId: string,
 	props: FetchMultipleDataInputParams<FetchInvoiceFilter>,
 ) => {
 	try {
 		const params = getQueryParams<FetchInvoiceFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<Invoice>>
-		>(`/v1/admin/invoices?${params.toString()}`)
+		>(`/v1/admin/properties/${propertyId}/invoices?${params.toString()}`)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -29,20 +30,28 @@ const getInvoices = async (
 }
 
 export const useGetInvoices = (
+	propertyId: string,
 	query: FetchMultipleDataInputParams<FetchInvoiceFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.INVOICES, query],
-		queryFn: () => getInvoices(query),
+		queryKey: [QUERY_KEYS.INVOICES, propertyId, query],
+		queryFn: () => getInvoices(propertyId, query),
+		enabled: !!propertyId,
 	})
 
 /**
  * Void an invoice
  */
-const voidInvoice = async (id: string) => {
+const voidInvoice = async ({
+	property_id,
+	id,
+}: {
+	property_id: string
+	id: string
+}) => {
 	try {
 		const response = await fetchClient<ApiResponse<Invoice>>(
-			`/v1/admin/invoices/${id}/void`,
+			`/v1/admin/properties/${property_id}/invoices/${id}/void`,
 			{ method: 'PATCH' },
 		)
 		return response.parsedBody.data
@@ -62,9 +71,17 @@ export const useVoidInvoice = () => useMutation({ mutationFn: voidInvoice })
 /**
  * Delete an invoice (must be DRAFT or VOID status)
  */
-const deleteInvoice = async (id: string) => {
+const deleteInvoice = async ({
+	property_id,
+	id,
+}: {
+	property_id: string
+	id: string
+}) => {
 	try {
-		await fetchClient(`/v1/admin/invoices/${id}`, { method: 'DELETE' })
+		await fetchClient(`/v1/admin/properties/${property_id}/invoices/${id}`, {
+			method: 'DELETE',
+		})
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()

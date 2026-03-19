@@ -89,8 +89,12 @@ export function LeaseDetailModule() {
 	const canEditChecklist = managerPermission === PermissionState.AUTHORIZED
 
 	return (
-		<div className="flex flex-col mx-auto max-w-6xl">
-			<ChecklistAlerts lease={lease} canEdit={canEditChecklist} />
+		<div className="mx-auto flex max-w-6xl flex-col">
+			<ChecklistAlerts
+				lease={lease}
+				canEdit={canEditChecklist}
+				propertyId={propertyId}
+			/>
 			<div className="m-5 grid grid-cols-12 gap-6">
 				{/* Sidebar */}
 				<div className="col-span-12 lg:col-span-4">
@@ -167,7 +171,9 @@ export function LeaseDetailModule() {
 							<div className="flex items-center gap-2">
 								<CalendarDays className="text-muted-foreground size-4 shrink-0" />
 								<div>
-									<TypographyMuted className="text-xs">Created On</TypographyMuted>
+									<TypographyMuted className="text-xs">
+										Created On
+									</TypographyMuted>
 									<p className="text-sm">
 										{localizedDayjs(lease.created_at).format('LL')}
 									</p>
@@ -178,7 +184,9 @@ export function LeaseDetailModule() {
 							<div className="flex items-center gap-2">
 								<CalendarDays className="text-muted-foreground size-4 shrink-0" />
 								<div>
-									<TypographyMuted className="text-xs">Updated On</TypographyMuted>
+									<TypographyMuted className="text-xs">
+										Updated On
+									</TypographyMuted>
 									<p className="text-sm">
 										{localizedDayjs(lease.updated_at).format('LL')}
 									</p>
@@ -277,19 +285,25 @@ export function LeaseDetailModule() {
 											{lease.cancelled_at && (
 												<DetailRow
 													label="Cancelled At"
-													value={localizedDayjs(lease.cancelled_at).format('LL')}
+													value={localizedDayjs(lease.cancelled_at).format(
+														'LL',
+													)}
 												/>
 											)}
 											{lease.terminated_at && (
 												<DetailRow
 													label="Terminated At"
-													value={localizedDayjs(lease.terminated_at).format('LL')}
+													value={localizedDayjs(lease.terminated_at).format(
+														'LL',
+													)}
 												/>
 											)}
 											{lease.completed_at && (
 												<DetailRow
 													label="Completed At"
-													value={localizedDayjs(lease.completed_at).format('LL')}
+													value={localizedDayjs(lease.completed_at).format(
+														'LL',
+													)}
 												/>
 											)}
 										</div>
@@ -362,6 +376,7 @@ export function LeaseDetailModule() {
 									<ChecklistSection
 										leaseId={lease.id}
 										canEdit={canEditChecklist}
+										propertyId={propertyId}
 									/>
 								</CardContent>
 							</Card>
@@ -416,7 +431,10 @@ export function LeaseDetailModule() {
 														label="ID Type"
 														value={tenant.id_type?.replace(/_/g, ' ') ?? '—'}
 													/>
-													<DetailRow label="ID Number" value={tenant.id_number} />
+													<DetailRow
+														label="ID Number"
+														value={tenant.id_number}
+													/>
 													{tenant.id_front_url && (
 														<div className="flex flex-col gap-0.5">
 															<TypographyMuted className="text-xs">

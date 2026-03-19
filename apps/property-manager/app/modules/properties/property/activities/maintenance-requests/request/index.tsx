@@ -19,10 +19,12 @@ import type { loader } from '~/routes/_auth.properties.$propertyId.activities.ma
 function InlineTitle({
 	value,
 	requestId,
+	propertyId,
 	disabled,
 }: {
 	value: string
 	requestId: string
+	propertyId: string
 	disabled: boolean
 }) {
 	const [editing, setEditing] = useState(false)
@@ -55,7 +57,7 @@ function InlineTitle({
 			return
 		}
 		update.mutate(
-			{ id: requestId, title: trimmed },
+			{ id: requestId, property_id: propertyId, title: trimmed },
 			{
 				onSuccess: () => {
 					void revalidator.revalidate()
@@ -110,10 +112,12 @@ function InlineTitle({
 function InlineDescription({
 	value,
 	requestId,
+	propertyId,
 	disabled,
 }: {
 	value: string
 	requestId: string
+	propertyId: string
 	disabled: boolean
 }) {
 	const [editing, setEditing] = useState(false)
@@ -146,7 +150,7 @@ function InlineDescription({
 			return
 		}
 		update.mutate(
-			{ id: requestId, description: trimmed },
+			{ id: requestId, property_id: propertyId, description: trimmed },
 			{
 				onSuccess: () => {
 					void revaldator.revalidate()
@@ -291,6 +295,7 @@ export function MaintenanceRequestDetailModule() {
 					<InlineTitle
 						value={request.title}
 						requestId={request.id}
+						propertyId={propertyId}
 						disabled={isLocked}
 					/>
 					<TypographyMuted className="text-xs">
@@ -304,6 +309,7 @@ export function MaintenanceRequestDetailModule() {
 					<InlineDescription
 						value={request.description}
 						requestId={request.id}
+						propertyId={propertyId}
 						disabled={isLocked}
 					/>
 				</div>
@@ -319,10 +325,14 @@ export function MaintenanceRequestDetailModule() {
 						<TabsTrigger value="expenses">Expenses</TabsTrigger>
 					</TabsList>
 					<TabsContent value="history" className="mt-4">
-						<ActivityTab requestId={request.id} mr={request} />
+						<ActivityTab
+							requestId={request.id}
+							propertyId={propertyId}
+							mr={request}
+						/>
 					</TabsContent>
 					<TabsContent value="comments" className="mt-4">
-						<CommentsTab requestId={request.id} />
+						<CommentsTab requestId={request.id} propertyId={propertyId} />
 					</TabsContent>
 					<TabsContent value="expenses" className="mt-4">
 						<ExpensesTab requestId={request.id} propertyId={propertyId} />

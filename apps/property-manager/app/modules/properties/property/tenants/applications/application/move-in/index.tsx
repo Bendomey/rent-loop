@@ -107,6 +107,7 @@ export function PropertyTenantApplicationMoveIn() {
 		mutate(
 			{
 				id: application.id,
+				property_id: application.desired_unit.property_id,
 				data: {
 					desired_move_in_date: data.desired_move_in_date
 						? (data.desired_move_in_date.toISOString() as unknown as Date)

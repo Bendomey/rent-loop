@@ -15,7 +15,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 
 	try {
 		const lease = await getLeaseForServer(
-			{ lease_id: params.leaseId },
+			{ lease_id: params.leaseId, property_id: params.propertyId },
 			{ authToken, baseUrl },
 		)
 		return {

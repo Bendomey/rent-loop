@@ -7,13 +7,16 @@ import { fetchClient } from '~/lib/transport'
  * GET maintenance requests (paginated)
  */
 const getMaintenanceRequests = async (
+	propertyId: string,
 	props: FetchMultipleDataInputParams<FetchMaintenanceRequestFilter>,
 ) => {
 	try {
 		const params = getQueryParams<FetchMaintenanceRequestFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<MaintenanceRequest>>
-		>(`/v1/admin/maintenance-requests?${params.toString()}`)
+		>(
+			`/v1/admin/properties/${propertyId}/maintenance-requests?${params.toString()}`,
+		)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -28,20 +31,23 @@ const getMaintenanceRequests = async (
 }
 
 export const useGetMaintenanceRequests = (
+	propertyId: string,
 	query: FetchMultipleDataInputParams<FetchMaintenanceRequestFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.MAINTENANCE_REQUESTS, query],
-		queryFn: () => getMaintenanceRequests(query),
+		queryKey: [QUERY_KEYS.MAINTENANCE_REQUESTS, propertyId, query],
+		queryFn: () => getMaintenanceRequests(propertyId, query),
+		enabled: !!propertyId,
 	})
 
 export const useGetMaintenanceRequestsInfinite = (
+	propertyId: string,
 	query: FetchMultipleDataInputParams<FetchMaintenanceRequestFilter>,
 ) =>
 	useInfiniteQuery({
-		queryKey: [QUERY_KEYS.MAINTENANCE_REQUESTS, query],
+		queryKey: [QUERY_KEYS.MAINTENANCE_REQUESTS, propertyId, query],
 		queryFn: ({ pageParam }: { pageParam: number }) =>
-			getMaintenanceRequests({
+			getMaintenanceRequests(propertyId, {
 				...query,
 				pagination: {
 					...query.pagination,
@@ -58,6 +64,7 @@ export const useGetMaintenanceRequestsInfinite = (
  * Create a maintenance request
  */
 export interface CreateMaintenanceRequestInput {
+	property_id: string
 	title: string
 	description: string
 	priority: MaintenanceRequestPriority
@@ -67,12 +74,13 @@ export interface CreateMaintenanceRequestInput {
 	attachments: Array<string>
 }
 
-const createMaintenanceRequest = async (
-	input: CreateMaintenanceRequestInput,
-) => {
+const createMaintenanceRequest = async ({
+	property_id,
+	...input
+}: CreateMaintenanceRequestInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<MaintenanceRequest>>(
-			`/v1/admin/maintenance-requests`,
+			`/v1/admin/properties/${property_id}/maintenance-requests`,
 			{
 				method: 'POST',
 				body: JSON.stringify(input),
@@ -98,6 +106,7 @@ export const useCreateMaintenanceRequest = () =>
  * Update a maintenance request's fields
  */
 export interface UpdateMaintenanceRequestInput {
+	property_id: string
 	id: string
 	title?: string
 	description?: string
@@ -107,12 +116,13 @@ export interface UpdateMaintenanceRequestInput {
 }
 
 const updateMaintenanceRequest = async ({
+	property_id,
 	id,
 	...data
 }: UpdateMaintenanceRequestInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<MaintenanceRequest>>(
-			`/v1/admin/maintenance-requests/${id}`,
+			`/v1/admin/properties/${property_id}/maintenance-requests/${id}`,
 			{ method: 'PATCH', body: JSON.stringify(data) },
 		)
 		return response.parsedBody.data
@@ -135,21 +145,26 @@ export const useUpdateMaintenanceRequest = () =>
  * Update a maintenance request's status
  */
 export interface UpdateMaintenanceRequestStatusInput {
+	property_id: string
 	id: string
 	status: MaintenanceRequestStatus
 	cancellation_reason?: string
 }
 
 const updateMaintenanceRequestStatus = async ({
+	property_id,
 	id,
 	status,
 	cancellation_reason,
 }: UpdateMaintenanceRequestStatusInput) => {
 	try {
-		await fetchClient(`/v1/admin/maintenance-requests/${id}/status`, {
-			method: 'PATCH',
-			body: JSON.stringify({ status, cancellation_reason }),
-		})
+		await fetchClient(
+			`/v1/admin/properties/${property_id}/maintenance-requests/${id}/status`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify({ status, cancellation_reason }),
+			},
+		)
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
@@ -169,19 +184,24 @@ export const useUpdateMaintenanceRequestStatus = () =>
  * Assign a worker to a maintenance request
  */
 export interface AssignMaintenanceWorkerInput {
+	property_id: string
 	id: string
 	worker_id: string
 }
 
 const assignWorker = async ({
+	property_id,
 	id,
 	worker_id,
 }: AssignMaintenanceWorkerInput) => {
 	try {
-		await fetchClient(`/v1/admin/maintenance-requests/${id}/assign-worker`, {
-			method: 'POST',
-			body: JSON.stringify({ worker_id }),
-		})
+		await fetchClient(
+			`/v1/admin/properties/${property_id}/maintenance-requests/${id}/assign-worker`,
+			{
+				method: 'POST',
+				body: JSON.stringify({ worker_id }),
+			},
+		)
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
@@ -200,19 +220,24 @@ export const useAssignWorker = () => useMutation({ mutationFn: assignWorker })
  * Assign a manager to a maintenance request
  */
 export interface AssignMaintenanceManagerInput {
+	property_id: string
 	id: string
 	manager_id: string
 }
 
 const assignManager = async ({
+	property_id,
 	id,
 	manager_id,
 }: AssignMaintenanceManagerInput) => {
 	try {
-		await fetchClient(`/v1/admin/maintenance-requests/${id}/assign-manager`, {
-			method: 'POST',
-			body: JSON.stringify({ manager_id }),
-		})
+		await fetchClient(
+			`/v1/admin/properties/${property_id}/maintenance-requests/${id}/assign-manager`,
+			{
+				method: 'POST',
+				body: JSON.stringify({ manager_id }),
+			},
+		)
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
@@ -231,6 +256,7 @@ export const useAssignManager = () => useMutation({ mutationFn: assignManager })
  * GET activity logs for a maintenance request (paginated)
  */
 const getMaintenanceRequestActivityLogs = async (
+	propertyId: string,
 	id: string,
 	query: FetchMultipleDataInputParams<FetchMaintenanceRequestActivityLogFilter>,
 ) => {
@@ -239,7 +265,9 @@ const getMaintenanceRequestActivityLogs = async (
 			getQueryParams<FetchMaintenanceRequestActivityLogFilter>(query)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<MaintenanceRequestActivityLog>>
-		>(`/v1/admin/maintenance-requests/${id}/activity_logs?${params.toString()}`)
+		>(
+			`/v1/admin/properties/${propertyId}/maintenance-requests/${id}/activity_logs?${params.toString()}`,
+		)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -254,19 +282,27 @@ const getMaintenanceRequestActivityLogs = async (
 }
 
 export const useGetMaintenanceRequestActivityLogs = (
+	propertyId: string,
 	id: string,
 	query: FetchMultipleDataInputParams<FetchMaintenanceRequestActivityLogFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.MAINTENANCE_REQUESTS, id, 'activity_logs', query],
-		queryFn: () => getMaintenanceRequestActivityLogs(id, query),
-		enabled: !!id,
+		queryKey: [
+			QUERY_KEYS.MAINTENANCE_REQUESTS,
+			propertyId,
+			id,
+			'activity_logs',
+			query,
+		],
+		queryFn: () => getMaintenanceRequestActivityLogs(propertyId, id, query),
+		enabled: !!id && !!propertyId,
 	})
 
 /**
  * GET expenses for a maintenance request (paginated)
  */
 const getMaintenanceRequestExpenses = async (
+	propertyId: string,
 	id: string,
 	query: FetchMultipleDataInputParams<FetchMaintenanceExpenseFilter>,
 ) => {
@@ -274,7 +310,9 @@ const getMaintenanceRequestExpenses = async (
 		const params = getQueryParams<FetchMaintenanceExpenseFilter>(query)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<MaintenanceExpense>>
-		>(`/v1/admin/maintenance-requests/${id}/expenses?${params.toString()}`)
+		>(
+			`/v1/admin/properties/${propertyId}/maintenance-requests/${id}/expenses?${params.toString()}`,
+		)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -289,19 +327,27 @@ const getMaintenanceRequestExpenses = async (
 }
 
 export const useGetMaintenanceRequestExpenses = (
+	propertyId: string,
 	id: string,
 	query: FetchMultipleDataInputParams<FetchMaintenanceExpenseFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.MAINTENANCE_REQUESTS, id, 'expenses', query],
-		queryFn: () => getMaintenanceRequestExpenses(id, query),
-		enabled: !!id,
+		queryKey: [
+			QUERY_KEYS.MAINTENANCE_REQUESTS,
+			propertyId,
+			id,
+			'expenses',
+			query,
+		],
+		queryFn: () => getMaintenanceRequestExpenses(propertyId, id, query),
+		enabled: !!id && !!propertyId,
 	})
 
 /**
  * POST an expense to a maintenance request
  */
 export interface CreateMaintenanceExpenseInput {
+	property_id: string
 	id: string
 	description: string
 	amount: number
@@ -311,12 +357,13 @@ export interface CreateMaintenanceExpenseInput {
 }
 
 const createMaintenanceExpense = async ({
+	property_id,
 	id,
 	...data
 }: CreateMaintenanceExpenseInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<MaintenanceExpense>>(
-			`/v1/admin/maintenance-requests/${id}/expenses`,
+			`/v1/admin/properties/${property_id}/maintenance-requests/${id}/expenses`,
 			{ method: 'POST', body: JSON.stringify(data) },
 		)
 		return response.parsedBody.data
@@ -339,17 +386,19 @@ export const useCreateMaintenanceExpense = () =>
  * DELETE an expense from a maintenance request
  */
 export interface DeleteMaintenanceExpenseInput {
+	property_id: string
 	id: string
 	expense_id: string
 }
 
 const deleteMaintenanceExpense = async ({
+	property_id,
 	id,
 	expense_id,
 }: DeleteMaintenanceExpenseInput) => {
 	try {
 		await fetchClient(
-			`/v1/admin/maintenance-requests/${id}/expenses/${expense_id}`,
+			`/v1/admin/properties/${property_id}/maintenance-requests/${id}/expenses/${expense_id}`,
 			{ method: 'DELETE' },
 		)
 	} catch (error: unknown) {
@@ -370,10 +419,16 @@ export const useDeleteMaintenanceExpense = () =>
 /**
  * Generate a draft invoice from billable expenses
  */
-const generateMaintenanceInvoice = async (id: string) => {
+const generateMaintenanceInvoice = async ({
+	property_id,
+	id,
+}: {
+	property_id: string
+	id: string
+}) => {
 	try {
 		const response = await fetchClient<ApiResponse<string>>(
-			`/v1/admin/maintenance-requests/${id}/expenses:invoice`,
+			`/v1/admin/properties/${property_id}/maintenance-requests/${id}/expenses:invoice`,
 			{ method: 'POST' },
 		)
 		return response.parsedBody.data
@@ -396,6 +451,7 @@ export const useGenerateMaintenanceInvoice = () =>
  * GET comments for a maintenance request (paginated)
  */
 const getMaintenanceRequestComments = async (
+	propertyId: string,
 	id: string,
 	query: FetchMultipleDataInputParams<FetchMaintenanceRequestCommentFilter>,
 ) => {
@@ -403,7 +459,9 @@ const getMaintenanceRequestComments = async (
 		const params = getQueryParams<FetchMaintenanceRequestCommentFilter>(query)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<MaintenanceRequestComment>>
-		>(`/v1/admin/maintenance-requests/${id}/comments?${params.toString()}`)
+		>(
+			`/v1/admin/properties/${propertyId}/maintenance-requests/${id}/comments?${params.toString()}`,
+		)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -418,30 +476,39 @@ const getMaintenanceRequestComments = async (
 }
 
 export const useGetMaintenanceRequestComments = (
+	propertyId: string,
 	id: string,
 	query: FetchMultipleDataInputParams<FetchMaintenanceRequestCommentFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.MAINTENANCE_REQUESTS, id, 'comments', query],
-		queryFn: () => getMaintenanceRequestComments(id, query),
-		enabled: !!id,
+		queryKey: [
+			QUERY_KEYS.MAINTENANCE_REQUESTS,
+			propertyId,
+			id,
+			'comments',
+			query,
+		],
+		queryFn: () => getMaintenanceRequestComments(propertyId, id, query),
+		enabled: !!id && !!propertyId,
 	})
 
 /**
  * CREATE a comment on a maintenance request
  */
 export interface CreateMaintenanceRequestCommentInput {
+	property_id: string
 	id: string
 	content: string
 }
 
 const createMaintenanceRequestComment = async ({
+	property_id,
 	id,
 	content,
 }: CreateMaintenanceRequestCommentInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<MaintenanceRequestComment>>(
-			`/v1/admin/maintenance-requests/${id}/comments`,
+			`/v1/admin/properties/${property_id}/maintenance-requests/${id}/comments`,
 			{ method: 'POST', body: JSON.stringify({ content }) },
 		)
 		return response.parsedBody.data
@@ -464,19 +531,21 @@ export const useCreateMaintenanceRequestComment = () =>
  * UPDATE a comment on a maintenance request
  */
 export interface UpdateMaintenanceRequestCommentInput {
+	property_id: string
 	id: string
 	comment_id: string
 	content: string
 }
 
 const updateMaintenanceRequestComment = async ({
+	property_id,
 	id,
 	comment_id,
 	content,
 }: UpdateMaintenanceRequestCommentInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<MaintenanceRequestComment>>(
-			`/v1/admin/maintenance-requests/${id}/comments/${comment_id}`,
+			`/v1/admin/properties/${property_id}/maintenance-requests/${id}/comments/${comment_id}`,
 			{ method: 'PATCH', body: JSON.stringify({ content }) },
 		)
 		return response.parsedBody.data
@@ -499,17 +568,19 @@ export const useUpdateMaintenanceRequestComment = () =>
  * DELETE a comment on a maintenance request
  */
 export interface DeleteMaintenanceRequestCommentInput {
+	property_id: string
 	id: string
 	comment_id: string
 }
 
 const deleteMaintenanceRequestComment = async ({
+	property_id,
 	id,
 	comment_id,
 }: DeleteMaintenanceRequestCommentInput) => {
 	try {
 		await fetchClient(
-			`/v1/admin/maintenance-requests/${id}/comments/${comment_id}`,
+			`/v1/admin/properties/${property_id}/maintenance-requests/${id}/comments/${comment_id}`,
 			{ method: 'DELETE' },
 		)
 	} catch (error: unknown) {

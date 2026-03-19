@@ -300,7 +300,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 					})
 
 					// payments
-					r.Route("/v1/admin/payments/{payment_id}", func(r chi.Router) {
+					r.Route("/payments/{payment_id}", func(r chi.Router) {
 						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 							Patch("/verify", handlers.PaymentHandler.VerifyPayment)
 					})

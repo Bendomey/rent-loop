@@ -158,7 +158,6 @@ type ListMaintenanceRequestsQuery struct {
 	Category          *string  `json:"category"            query:"category"            description:"Filter by category (PLUMBING, ELECTRICAL, HVAC, OTHER)"`
 	AssignedWorkerID  *string  `json:"assigned_worker_id"  query:"assigned_worker_id"  description:"Filter by assigned worker UUID"`
 	AssignedManagerID *string  `json:"assigned_manager_id" query:"assigned_manager_id" description:"Filter by assigned manager UUID"`
-	PropertyID        *string  `json:"property_id"         query:"property_id"         description:"Filter by property UUID"                                            validate:"omitempty,uuid4"`
 	UnitID            *string  `json:"unit_id"             query:"unit_id"             description:"Filter by unit UUID"                                                validate:"omitempty,uuid4"`
 	LeaseID           *string  `json:"lease_id"            query:"lease_id"            description:"Filter by lease UUID"                                               validate:"omitempty,uuid4"`
 }
@@ -191,6 +190,7 @@ func (h *MaintenanceRequestHandler) List(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	propertyID := chi.URLParam(r, "property_id")
 	clientID := currentUser.ClientID
 	filters := repository.ListMaintenanceRequestsFilter{
 		ClientID:          &clientID,
@@ -199,7 +199,7 @@ func (h *MaintenanceRequestHandler) List(w http.ResponseWriter, r *http.Request)
 		Category:          lib.NullOrString(r.URL.Query().Get("category")),
 		AssignedWorkerID:  lib.NullOrString(r.URL.Query().Get("assigned_worker_id")),
 		AssignedManagerID: lib.NullOrString(r.URL.Query().Get("assigned_manager_id")),
-		PropertyID:        lib.NullOrString(r.URL.Query().Get("property_id")),
+		PropertyID:        &propertyID,
 		UnitID:            lib.NullOrString(r.URL.Query().Get("unit_id")),
 		LeaseID:           lib.NullOrString(r.URL.Query().Get("lease_id")),
 	}
