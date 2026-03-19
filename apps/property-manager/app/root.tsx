@@ -117,10 +117,10 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 	if (isRouteErrorResponse(error)) {
 		status = error.status
 		if (error.status === 403) {
-			message = 'Unauthorized'
+			message = 'Forbidden'
 			details = "You don't have permission to access this page."
 		} else if (error.status === 404) {
-			message = '404'
+			message = 'Not Found'
 			details = 'The requested page could not be found.'
 		} else {
 			message = 'Error'
@@ -128,19 +128,8 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 		}
 	} else if (import.meta.env.DEV && error && error instanceof Error) {
 		message = error.message
-		details = error.stack || message
+		details = error.stack || details
 	}
 
-	// return (
-	// 	<main className="container mx-auto p-4 pt-16 bg-amber-200">
-	// 		<h1>{message}</h1>
-	// 		<p>{details}</p>
-	// 		{stack && (
-	// 			<pre className="w-full overflow-x-auto p-4">
-	// 				<code>{stack}</code>
-	// 			</pre>
-	// 		)}
-	// 	</main>
-	// )
 	return <NotFoundModule status={status} title={message} message={details} />
 }

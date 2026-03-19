@@ -10,7 +10,8 @@
     "types:check": "react-router typegen && tsc",
     "lint": "eslint .",
     "lint:ci": "eslint . --quiet",
-    "format": "prettier --write \"**/*.+(js|jsx|json|yml|yaml|css|less|scss|ts|tsx|md|gql|graphql|mdx|vue)\""
+    "format": "prettier --write \"**/*.+(js|jsx|json|yml|yaml|css|less|scss|ts|tsx|md|gql|graphql|mdx|vue)\"",
+    "quality": "npm run types:check && npm run format && npm run lint --fix"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.985.0",
