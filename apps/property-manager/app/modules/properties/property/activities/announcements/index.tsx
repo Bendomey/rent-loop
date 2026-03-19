@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { useGetPropertyAnnouncements } from '~/api/announcements'
 import { DataTable } from '~/components/datatable'
+import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -141,12 +142,14 @@ export function PropertyActivitiesAnnouncementsModule() {
 						Manage announcements for your tenants.
 					</p>
 				</div>
-				<Link to={`/properties/${propertyId}/activities/announcements/new`}>
-					<Button size="sm">
-						<Plus className="size-4" />
-						New Announcement
-					</Button>
-				</Link>
+				<PropertyPermissionGuard roles={['MANAGER']}>
+					<Link to={`/properties/${propertyId}/activities/announcements/new`}>
+						<Button size="sm">
+							<Plus className="size-4" />
+							New Announcement
+						</Button>
+					</Link>
+				</PropertyPermissionGuard>
 			</div>
 
 			<DataTable

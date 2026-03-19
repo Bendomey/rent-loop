@@ -1,7 +1,10 @@
 import { Edit } from 'lucide-react'
 import { useState } from 'react'
 import ConfirmDeletePropertyModule from './delete'
-import { PermissionGuard } from '~/components/permissions/permission-guard'
+import {
+	PermissionGuard,
+	PropertyPermissionGuard,
+} from '~/components/permissions/permission-guard'
 import { Button } from '~/components/ui/button'
 import { Field, FieldDescription, FieldLabel } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
@@ -32,13 +35,15 @@ export function PropertyGeneralSettingsModule() {
 			<section className="bg-card grid gap-6 rounded-xl border p-3 shadow-sm md:p-6 lg:-space-y-2">
 				<div className="flex items-center justify-between max-md:items-start max-sm:flex-col max-sm:gap-2">
 					<TypographyH3>Basic Property Details</TypographyH3>
-					<Button
-						variant="outline"
-						size="sm"
-						className="flex items-center gap-2 underline"
-					>
-						<Edit className="size-4" /> Edit Details
-					</Button>
+					<PropertyPermissionGuard roles={['MANAGER']}>
+						<Button
+							variant="outline"
+							size="sm"
+							className="flex items-center gap-2 underline"
+						>
+							<Edit className="size-4" /> Edit Details
+						</Button>
+					</PropertyPermissionGuard>
 				</div>
 				<Separator />
 				<div className="grid gap-3 sm:grid-cols-3 sm:items-center">
@@ -90,13 +95,15 @@ export function PropertyGeneralSettingsModule() {
 							automatically.
 						</FieldDescription>
 					</div>
-					<Button
-						variant="outline"
-						size="sm"
-						className="flex items-center gap-2 underline"
-					>
-						<Edit className="size-4" /> Edit Address
-					</Button>
+					<PropertyPermissionGuard roles={['MANAGER']}>
+						<Button
+							variant="outline"
+							size="sm"
+							className="flex items-center gap-2 underline"
+						>
+							<Edit className="size-4" /> Edit Address
+						</Button>
+					</PropertyPermissionGuard>
 				</div>
 				<Separator />
 
@@ -162,7 +169,9 @@ export function PropertyGeneralSettingsModule() {
 							issues.
 						</FieldDescription>
 					</Field>
-					<Switch id="support_access" />
+					<PropertyPermissionGuard roles={['MANAGER']}>
+						<Switch id="support_access" />
+					</PropertyPermissionGuard>
 				</div>
 
 				<PermissionGuard roles={['OWNER']}>

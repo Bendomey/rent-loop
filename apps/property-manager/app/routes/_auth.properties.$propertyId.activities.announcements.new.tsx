@@ -2,6 +2,7 @@ import type { Route } from './+types/_auth.properties.$propertyId.activities.ann
 import { getPropertyAnnouncementForServer } from '~/api/announcements/server'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
+import { propertyContext } from '~/lib/actions/property.context.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { NewPropertyAnnouncementModule } from '~/modules'
@@ -18,7 +19,12 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 	})
 }
 
-export async function loader({ request, params }: Route.LoaderArgs) {
+export async function loader({ request, params, context }: Route.LoaderArgs) {
+	const clientUserProperty = context.get(propertyContext)
+	if (clientUserProperty?.role !== 'MANAGER') {
+		throw new Response(null, { status: 403, statusText: 'Unauthorized' })
+	}
+
 	const origin = getDomainUrl(request)
 	const sourceId = new URL(request.url).searchParams.get('announcement_id')
 
