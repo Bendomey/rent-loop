@@ -9,91 +9,97 @@ class NavigationLoader extends ConsumerStatefulWidget {
 }
 
 class _NavigationLoader extends ConsumerState<NavigationLoader> {
+  bool _retrying = false;
+
   @override
   void initState() {
     super.initState();
-    // Kick off initialization after a brief branding delay.
     Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        ref.read(appStartupNotifierProvider.notifier).init();
-      }
+      if (mounted) ref.read(appStartupNotifierProvider.notifier).init();
     });
+  }
+
+  Future<void> _retry() async {
+    setState(() => _retrying = true);
+    await ref.read(appStartupNotifierProvider.notifier).init();
+    if (mounted) setState(() => _retrying = false);
   }
 
   @override
   Widget build(BuildContext context) {
     final startup = ref.watch(appStartupNotifierProvider);
 
-    // GoRouter redirect guard handles all navigation once status changes.
-    // This widget only needs to render the appropriate loading/error UI.
+    final showError = startup.status == AppStartupStatus.error && !_retrying;
+
+    final body = showError
+        ? _ErrorState(
+            key: const ValueKey('error'),
+            message: startup.errorMessage ?? 'An error occurred',
+            onRetry: _retry,
+          )
+        : const _LoadingState(key: ValueKey('loading'));
+
     return Scaffold(
-      body: startup.status == AppStartupStatus.error
-          ? _ErrorState(
-              message: startup.errorMessage ?? 'An error occurred',
-              onRetry: () =>
-                  ref.read(appStartupNotifierProvider.notifier).init(),
-            )
-          : const _LoadingState(),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 400),
+        switchInCurve: Curves.easeOut,
+        switchOutCurve: Curves.easeIn,
+        child: body,
+      ),
     );
   }
 }
 
 class _LoadingState extends StatelessWidget {
-  const _LoadingState();
+  const _LoadingState({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
+    final primary = Theme.of(context).colorScheme.primary;
 
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(height: screenHeight * 0.1),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+    return Stack(
+      children: [
+        Center(
+          child: RichText(
+            text: TextSpan(
               children: [
-                Icon(
-                  Icons.home_work_rounded,
-                  size: screenHeight * 0.045,
-                  color: Theme.of(context).primaryColor,
+                const TextSpan(
+                  text: 'rent',
+                  style: TextStyle(
+                    // fontFamily: 'Inter',
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    letterSpacing: -1,
+                  ),
                 ),
-                const SizedBox(width: 8),
-                RichText(
-                  text: TextSpan(
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: MediaQuery.textScalerOf(context)
-                          .clamp(minScaleFactor: 0.5, maxScaleFactor: 1.0)
-                          .scale(screenHeight * 0.045),
-                      fontFamily: 'Inter',
-                    ),
-                    children: [
-                      const TextSpan(
-                        text: 'Rent',
-                        style: TextStyle(color: Colors.black87),
-                      ),
-                      TextSpan(
-                        text: 'loop',
-                        style: TextStyle(color: Theme.of(context).primaryColor),
-                      ),
-                    ],
+                TextSpan(
+                  text: 'loop',
+                  style: TextStyle(
+                    // fontFamily: 'Inter',
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    color: primary,
+                    letterSpacing: -1,
                   ),
                 ),
               ],
             ),
-            SizedBox(height: screenHeight * 0.04),
-            LoadingAnimationWidget.horizontalRotatingDots(
-              color: Theme.of(context).primaryColor,
-              size: screenWidth * 0.1,
-            ),
-            SizedBox(height: screenHeight * 0.05),
-          ],
+          ),
         ),
-      ),
+        Positioned(
+          bottom: MediaQuery.of(context).size.height * 0.12,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 3, color: primary),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -102,95 +108,91 @@ class _ErrorState extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
 
-  const _ErrorState({required this.message, required this.onRetry});
+  const _ErrorState({super.key, required this.message, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
+    final hPad = screenWidth * 0.08;
 
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: screenWidth * 0.1,
-          vertical: screenHeight * 0.05,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            SizedBox(height: screenHeight * 0.35),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: hPad),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Spacer(),
+          // Wordmark
+          RichText(
+            text: TextSpan(
               children: [
-                Icon(
-                  Icons.home_work_rounded,
-                  size: screenHeight * 0.045,
-                  color: Theme.of(context).primaryColor,
+                const TextSpan(
+                  text: 'rent',
+                  style: TextStyle(
+                    fontSize: 45,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    letterSpacing: -1,
+                  ),
                 ),
-                const SizedBox(width: 8),
-                RichText(
-                  text: TextSpan(
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: MediaQuery.textScalerOf(context)
-                          .clamp(minScaleFactor: 0.5, maxScaleFactor: 1.0)
-                          .scale(screenHeight * 0.045),
-                      fontFamily: 'Inter',
-                    ),
-                    children: [
-                      const TextSpan(
-                        text: 'Rent',
-                        style: TextStyle(color: Colors.black87),
-                      ),
-                      TextSpan(
-                        text: 'Loop',
-                        style: TextStyle(color: Theme.of(context).primaryColor),
-                      ),
-                    ],
+                TextSpan(
+                  text: 'loop',
+                  style: TextStyle(
+                    fontSize: 45,
+                    fontWeight: FontWeight.bold,
+                    color: primary,
+                    letterSpacing: -1,
                   ),
                 ),
               ],
             ),
-            SizedBox(height: screenHeight * 0.04),
-            Icon(
-              Icons.error_outline,
-              size: screenWidth * 0.15,
-              color: Colors.red[400],
+          ),
+          SizedBox(height: screenHeight * 0.03),
+          // Heading
+          const Text(
+            'Something went wrong.',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              color: Colors.black,
+              letterSpacing: -0.5,
+              height: 1.2,
             ),
-            SizedBox(height: screenHeight * 0.02),
-            Text(
-              message,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.grey[800],
-                fontSize: screenHeight * 0.018,
-              ),
-              textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          // Message
+          Text(
+            message,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+              color: Colors.grey.shade500,
+              height: 1.5,
             ),
-            SizedBox(height: screenHeight * 0.03),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: onRetry,
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
-                  backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(screenWidth * 0.03),
-                  ),
+          ),
+          const Spacer(),
+          // Retry button
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: FilledButton(
+              onPressed: onRetry,
+              style: FilledButton.styleFrom(
+                backgroundColor: primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(80),
                 ),
-                child: Text(
-                  'Retry',
-                  style: TextStyle(
-                    fontSize: screenHeight * 0.018,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+              ),
+              child: const Text(
+                'Try again',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
               ),
             ),
-          ],
-        ),
+          ),
+          SizedBox(height: screenHeight * 0.06),
+        ],
       ),
     );
   }

@@ -141,7 +141,7 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                                 letterSpacing: 1.2,
                               ),
                           decoration: InputDecoration(
-                            hintText: '24 XXX XXXX',
+                            hintText: 'Phone number',
                             hintStyle: TextStyle(
                               color: Colors.grey.shade400,
                               fontWeight: FontWeight.w400,
