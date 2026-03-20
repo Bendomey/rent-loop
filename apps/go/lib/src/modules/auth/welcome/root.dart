@@ -27,6 +27,7 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen>
   String _displayedText = '';
   bool _isDeleting = false;
   Timer? _timer;
+  bool _active = true;
 
   // Entrance animations
   late final AnimationController _textCtrl;
@@ -74,6 +75,7 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen>
 
   @override
   void dispose() {
+    _active = false;
     _timer?.cancel();
     _textCtrl.dispose();
     _buttonsCtrl.dispose();
@@ -86,7 +88,7 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen>
     if (!_isDeleting) {
       if (_displayedText.length < phrase.length) {
         _timer = Timer(const Duration(milliseconds: 55), () {
-          if (!mounted) return;
+          if (!_active || !mounted) return;
           setState(() {
             _displayedText = phrase.substring(0, _displayedText.length + 1);
           });
@@ -99,7 +101,7 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen>
           _buttonsCtrl.forward();
         }
         _timer = Timer(const Duration(milliseconds: 1600), () {
-          if (!mounted) return;
+          if (!_active || !mounted) return;
           setState(() => _isDeleting = true);
           _scheduleNext();
         });
@@ -107,7 +109,7 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen>
     } else {
       if (_displayedText.isNotEmpty) {
         _timer = Timer(const Duration(milliseconds: 16), () {
-          if (!mounted) return;
+          if (!_active || !mounted) return;
           setState(() {
             _displayedText = _displayedText.substring(
               0,
@@ -119,7 +121,7 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen>
         });
       } else {
         _timer = Timer(const Duration(milliseconds: 350), () {
-          if (!mounted) return;
+          if (!_active || !mounted) return;
           setState(() {
             _isDeleting = false;
             _phraseIndex = (_phraseIndex + 1) % _phrases.length;
