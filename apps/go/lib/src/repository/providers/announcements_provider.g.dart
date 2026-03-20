@@ -39,15 +39,21 @@ class AnnouncementsFamily extends Family<AsyncValue<List<AnnouncementModel>>> {
   const AnnouncementsFamily();
 
   /// See also [announcements].
-  AnnouncementsProvider call(AnnouncementQuery query) {
-    return AnnouncementsProvider(query);
+  AnnouncementsProvider call(
+    AnnouncementQuery query,
+  ) {
+    return AnnouncementsProvider(
+      query,
+    );
   }
 
   @override
   AnnouncementsProvider getProviderOverride(
     covariant AnnouncementsProvider provider,
   ) {
-    return call(provider.query);
+    return call(
+      provider.query,
+    );
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -68,19 +74,24 @@ class AnnouncementsFamily extends Family<AsyncValue<List<AnnouncementModel>>> {
 /// See also [announcements].
 class AnnouncementsProvider extends FutureProvider<List<AnnouncementModel>> {
   /// See also [announcements].
-  AnnouncementsProvider(AnnouncementQuery query)
-    : this._internal(
-        (ref) => announcements(ref as AnnouncementsRef, query),
-        from: announcementsProvider,
-        name: r'announcementsProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$announcementsHash,
-        dependencies: AnnouncementsFamily._dependencies,
-        allTransitiveDependencies:
-            AnnouncementsFamily._allTransitiveDependencies,
-        query: query,
-      );
+  AnnouncementsProvider(
+    AnnouncementQuery query,
+  ) : this._internal(
+          (ref) => announcements(
+            ref as AnnouncementsRef,
+            query,
+          ),
+          from: announcementsProvider,
+          name: r'announcementsProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$announcementsHash,
+          dependencies: AnnouncementsFamily._dependencies,
+          allTransitiveDependencies:
+              AnnouncementsFamily._allTransitiveDependencies,
+          query: query,
+        );
 
   AnnouncementsProvider._internal(
     super._createNotifier, {
@@ -97,7 +108,7 @@ class AnnouncementsProvider extends FutureProvider<List<AnnouncementModel>> {
   @override
   Override overrideWith(
     FutureOr<List<AnnouncementModel>> Function(AnnouncementsRef provider)
-    create,
+        create,
   ) {
     return ProviderOverride(
       origin: this,
@@ -177,14 +188,14 @@ String _$announcementTotalNotifierHash() =>
 @ProviderFor(AnnouncementTotalNotifier)
 final announcementTotalNotifierProvider =
     NotifierProvider<AnnouncementTotalNotifier, int>.internal(
-      AnnouncementTotalNotifier.new,
-      name: r'announcementTotalNotifierProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$announcementTotalNotifierHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+  AnnouncementTotalNotifier.new,
+  name: r'announcementTotalNotifierProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$announcementTotalNotifierHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
 typedef _$AnnouncementTotalNotifier = Notifier<int>;
 // ignore_for_file: type=lint

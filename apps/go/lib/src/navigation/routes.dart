@@ -168,6 +168,27 @@ GoRouter buildRoutes(WidgetRef ref, Listenable refreshListenable) {
         },
       ),
       GoRoute(
+        path: '/more/profile',
+        name: 'Profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/more/unit-details/:unitId',
+        name: 'UnitDetails',
+        builder: (context, state) {
+          final unitId = state.pathParameters['unitId']!;
+          return UnitDetailsScreen(unitId: unitId);
+        },
+      ),
+      GoRoute(
+        path: '/more/tenant-application/:applicationId',
+        name: 'TenantApplicationDetails',
+        builder: (context, state) {
+          final applicationId = state.pathParameters['applicationId']!;
+          return TenantApplicationDetailsScreen(applicationId: applicationId);
+        },
+      ),
+      GoRoute(
         path: '/maintenance/new',
         name: "NewMaintenanceRequest",
         builder: (context, state) => const NewMaintenanceScreen(),

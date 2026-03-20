@@ -1,27 +1,29 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'current_lease_notifier.dart';
+part of 'tenant_application.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$currentLeaseNotifierHash() =>
-    r'a8aff1c95dd7af3edaf1cddc39544101f2c43e4a';
+String _$tenantApplicationApiHash() =>
+    r'50b8b9cb814b372ac6ab635d49ced1fa0fd0ea46';
 
-/// See also [CurrentLeaseNotifier].
-@ProviderFor(CurrentLeaseNotifier)
-final currentLeaseNotifierProvider =
-    NotifierProvider<CurrentLeaseNotifier, LeaseModel?>.internal(
-  CurrentLeaseNotifier.new,
-  name: r'currentLeaseNotifierProvider',
+/// See also [tenantApplicationApi].
+@ProviderFor(tenantApplicationApi)
+final tenantApplicationApiProvider =
+    AutoDisposeProvider<TenantApplicationApi>.internal(
+  tenantApplicationApi,
+  name: r'tenantApplicationApiProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$currentLeaseNotifierHash,
+      : _$tenantApplicationApiHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$CurrentLeaseNotifier = Notifier<LeaseModel?>;
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef TenantApplicationApiRef = AutoDisposeProviderRef<TenantApplicationApi>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

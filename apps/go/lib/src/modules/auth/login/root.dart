@@ -14,11 +14,19 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreen extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
+  final _focusNode = FocusNode();
   String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
     _phoneController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -42,25 +50,25 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final sendOtpState = ref.watch(sendOtpNotifierProvider);
     final isLoading = sendOtpState.status.isLoading();
 
     ref.listen(sendOtpNotifierProvider, (prev, next) {
-      if (next.status.isFailed()) {
-        Haptics.vibrate(HapticsType.error);
-      }
+      if (next.status.isFailed()) Haptics.vibrate(HapticsType.error);
     });
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.black87),
           onPressed: () async {
             await Haptics.vibrate(HapticsType.selection);
             if (context.mounted) context.go('/auth');
@@ -75,81 +83,96 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: screenHeight * 0.04),
+                SizedBox(height: screenHeight * 0.03),
+
                 // Title
-                Text(
-                  'Enter your phone number',
-                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: Colors.black87,
-                    fontSize: 28,
+                const Text(
+                  'Enter your\nphone number',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    letterSpacing: -0.5,
+                    height: 1.15,
                   ),
                 ),
-                SizedBox(height: screenHeight * 0.015),
+                const SizedBox(height: 10),
+
                 // Subtitle
                 Text(
-                  'We\'ll send you a verification code to confirm your identity.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey.shade600,
-                    height: 1.2,
+                  "We'll send a verification code to confirm it's you.",
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.grey.shade500,
+                    height: 1.5,
                   ),
                 ),
+
                 SizedBox(height: screenHeight * 0.05),
-                // Phone Input
+
+                // Phone input
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade200),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: _focusNode.hasFocus
+                          ? primary
+                          : Colors.grey.shade200,
+                      width: _focusNode.hasFocus ? 1.5 : 1,
+                    ),
                   ),
                   child: Row(
                     children: [
-                      // Country Code
-                      Container(
+                      // Country code
+                      Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 18,
                         ),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            right: BorderSide(color: Colors.grey.shade200),
-                          ),
-                        ),
                         child: Row(
                           children: [
-                            Text('🇬🇭', style: TextStyle(fontSize: 24)),
+                            const Text('🇬🇭', style: TextStyle(fontSize: 20)),
                             const SizedBox(width: 8),
-                            Text(
+                            const Text(
                               '+233',
-                              style: Theme.of(context).textTheme.bodyLarge
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black87,
-                                  ),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Container(
+                              width: 1,
+                              height: 18,
+                              color: Colors.grey.shade300,
                             ),
                           ],
                         ),
                       ),
-                      // Phone Number Input
+                      // Number field
                       Expanded(
                         child: TextFormField(
                           controller: _phoneController,
+                          focusNode: _focusNode,
                           keyboardType: TextInputType.phone,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 1.2,
-                              ),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 1.2,
+                          ),
                           decoration: InputDecoration(
-                            hintText: 'Phone number',
+                            hintText: '00 000 0000',
                             hintStyle: TextStyle(
                               color: Colors.grey.shade400,
                               fontWeight: FontWeight.w400,
+                              letterSpacing: 1.2,
                             ),
                             border: InputBorder.none,
                             errorStyle: const TextStyle(height: 0, fontSize: 0),
                             contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
+                              horizontal: 12,
                               vertical: 18,
                             ),
                           ),
@@ -174,9 +197,8 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
 
                             if (result != _errorText) {
                               WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (mounted) {
+                                if (mounted)
                                   setState(() => _errorText = result);
-                                }
                               });
                             }
                             return result;
@@ -186,111 +208,56 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                     ],
                   ),
                 ),
+
+                // Validation error
                 if (_errorText != null) ...[
                   const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: Text(
-                      _errorText!,
-                      style: TextStyle(
-                        color: Colors.red.shade700,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
+                  Text(
+                    _errorText!,
+                    style: TextStyle(
+                      color: Colors.red.shade600,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
-                SizedBox(height: screenHeight * 0.03),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.secondary.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: RichText(
-                          text: TextSpan(
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: Colors.grey.shade800,
-                                  height: 1.2,
-                                ),
-                            children: [
-                              const TextSpan(
-                                text: 'By continuing, you agree to our ',
-                              ),
-                              WidgetSpan(
-                                child: GestureDetector(
-                                  onTap: () => launchUrl(
-                                    Uri.parse('$WEBSITE/terms'),
-                                    mode: LaunchMode.externalApplication,
-                                  ),
-                                  child: Text(
-                                    'Terms and Conditions',
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: Theme.of(context).primaryColor,
-                                          fontWeight: FontWeight.w600,
-                                          height: 1.2,
-                                          decoration: TextDecoration.underline,
-                                          decorationColor: Theme.of(
-                                            context,
-                                          ).primaryColor,
-                                        ),
-                                  ),
-                                ),
-                              ),
-                              const TextSpan(text: '.'),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+
+                // API error
                 if (sendOtpState.status.isFailed() &&
                     sendOtpState.errorMessage != null) ...[
-                  SizedBox(height: screenHeight * 0.02),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: Text(
-                      sendOtpState.errorMessage!,
-                      style: TextStyle(
-                        color: Colors.red.shade700,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
+                  const SizedBox(height: 8),
+                  Text(
+                    sendOtpState.errorMessage!,
+                    style: TextStyle(
+                      color: Colors.red.shade600,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
-                SizedBox(height: screenHeight * 0.05),
-                // Continue Button
+
+                SizedBox(height: screenHeight * 0.04),
+
+                // Continue button
                 SizedBox(
                   width: double.infinity,
                   height: 56,
                   child: FilledButton(
                     onPressed: isLoading ? null : _handleContinue,
                     style: FilledButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
+                      backgroundColor: primary,
                       foregroundColor: Colors.white,
-                      disabledBackgroundColor: Colors.grey.shade300,
+                      disabledBackgroundColor: Colors.grey.shade200,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(80),
                       ),
                     ),
                     child: isLoading
-                        ? SizedBox(
-                            height: 24,
-                            width: 24,
+                        ? const SizedBox(
+                            height: 22,
+                            width: 22,
                             child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
+                              strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
                                 Colors.white,
                               ),
@@ -299,10 +266,47 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                         : const Text(
                             'Continue',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 17,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
+                  ),
+                ),
+
+                SizedBox(height: screenHeight * 0.025),
+
+                // Terms
+                Center(
+                  child: RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade400,
+                        height: 1.5,
+                      ),
+                      children: [
+                        const TextSpan(text: 'By continuing you agree to our '),
+                        WidgetSpan(
+                          child: GestureDetector(
+                            onTap: () => launchUrl(
+                              Uri.parse('$WEBSITE/terms'),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                            child: Text(
+                              'Terms & Conditions',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: primary,
+                                fontWeight: FontWeight.w600,
+                                height: 1.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const TextSpan(text: '.'),
+                      ],
+                    ),
                   ),
                 ),
               ],

@@ -33,19 +33,19 @@ class _MoreScreen extends ConsumerState<MoreScreen> {
             child: Column(
               children: [
                 const UserCardWidget(),
-                // Padding(
-                //   padding: const EdgeInsets.only(top: 20),
-                //   child: SizedBox(
-                //     height: 50,
-                //     child: FilledButton(
-                //       onPressed: () => context.push('/more/profile'),
-                //       child: const Text(
-                //         'Edit profile',
-                //         style: TextStyle(fontSize: 17),
-                //       ),
-                //     ),
-                //   ),
-                // ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: SizedBox(
+                    height: 50,
+                    child: FilledButton(
+                      onPressed: () => context.push('/more/profile'),
+                      child: const Text(
+                        'View profile',
+                        style: TextStyle(fontSize: 17),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

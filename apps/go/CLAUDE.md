@@ -116,6 +116,32 @@ Material Design 3. Primary color: `Color.fromARGB(255, 230, 2, 63)` (red). Font:
 
 Haptic feedback (`haptic_feedback` package) is used throughout on button taps and form submissions.
 
+### Loading States — Skeleton Loaders (REQUIRED)
+
+**ALWAYS use shimmer skeleton loaders instead of `CircularProgressIndicator` for data-fetching screens.**
+
+- Import `package:shimmer/shimmer.dart`
+- Use `Shimmer.fromColors(baseColor: Colors.grey.shade200, highlightColor: Colors.grey.shade50, child: ...)` as the wrapper
+- The skeleton should mirror the actual layout: same sections, same rough dimensions
+- Use the conditional pattern (not `.when()`) so skeletons only show on initial load, not on pull-to-refresh:
+
+```dart
+if (!dataAsync.hasValue && dataAsync.isLoading) {
+  return const _MyScreenSkeleton();
+}
+if (dataAsync.hasError && !dataAsync.hasValue) {
+  return /* error widget */;
+}
+final data = dataAsync.value!;
+return RefreshIndicator(
+  onRefresh: () => ref.refresh(myProvider.future),
+  child: /* actual content */,
+);
+```
+
+- **All list/detail screens must also have pull-to-refresh** using `RefreshIndicator` wrapping the `ListView`, with `onRefresh: () => ref.refresh(myProvider.future)`
+- See `home_skeleton.dart` and `unit_details/root.dart` for reference implementations
+
 ### Splash / Auth Init
 
 `lib/src/navigation/splash.dart` handles startup:

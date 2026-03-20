@@ -15,3 +15,6 @@ export 'main/more/lease_details/root.dart';
 export 'main/more/announcements/root.dart';
 export 'main/more/delete_account/root.dart';
 export 'main/more/unit_condition_reports/root.dart';
+export 'main/more/unit_details/root.dart';
+export 'main/more/tenant_application_details/root.dart';
+export 'main/more/profile/root.dart';

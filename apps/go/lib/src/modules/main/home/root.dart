@@ -48,7 +48,7 @@ class _HomeContent extends ConsumerWidget {
     return ListView(
       children: [
         LeaseSelectorBar(leases: leases),
-        const SizedBox(height: 20),
+        const SizedBox(height: 10),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Text(

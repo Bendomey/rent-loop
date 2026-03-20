@@ -95,7 +95,7 @@ class _LoadingState extends StatelessWidget {
             child: SizedBox(
               width: 20,
               height: 20,
-              child: CircularProgressIndicator(strokeWidth: 3, color: primary),
+              child: CircularProgressIndicator(strokeWidth: 2, color: primary),
             ),
           ),
         ),

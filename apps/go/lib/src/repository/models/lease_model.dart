@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'tenant_application_model.dart';
 
 part 'lease_model.g.dart';
 
@@ -50,7 +51,11 @@ class LeaseModel {
   final String? leaseAgreementDocumentUrl;
   @JsonKey(name: 'created_at')
   final String? createdAt;
+  @JsonKey(name: 'unit_id')
+  final String unitId;
   final LeaseUnitModel? unit;
+  @JsonKey(name: 'tenant_application')
+  final TenantApplicationModel? tenantApplication;
 
   LeaseModel({
     required this.id,
@@ -58,6 +63,7 @@ class LeaseModel {
     required this.status,
     required this.rentFee,
     required this.rentFeeCurrency,
+    required this.unitId,
     this.paymentFrequency,
     this.moveInDate,
     this.activatedAt,
@@ -68,6 +74,7 @@ class LeaseModel {
     this.leaseAgreementDocumentUrl,
     this.createdAt,
     this.unit,
+    this.tenantApplication,
   });
 
   factory LeaseModel.fromJson(Map<String, dynamic> json) =>

@@ -4,6 +4,7 @@ import 'package:rentloop_go/src/lib/launch_external_site.dart';
 import 'package:rentloop_go/src/lib/money.dart';
 import 'package:rentloop_go/src/lib/payment_frequency.dart';
 import 'package:rentloop_go/src/repository/models/lease_model.dart';
+import 'package:rentloop_go/src/repository/models/tenant_application_model.dart';
 import 'package:rentloop_go/src/repository/providers/checklists_provider.dart';
 
 class LeaseDetailsScreen extends ConsumerWidget {
@@ -126,6 +127,12 @@ class LeaseDetailsScreen extends ConsumerWidget {
                   ],
                   const SizedBox(height: 12),
                   _ConditionReportsSection(lease: lease),
+                  // Tenant Application card
+                  if (lease.tenantApplication != null) ...[
+                    const SizedBox(height: 12),
+                    _ApplicationCard(application: lease.tenantApplication!),
+                  ],
+
                   const SizedBox(height: 12),
                   _SectionCard(
                     title: 'Reference',
@@ -136,10 +143,18 @@ class LeaseDetailsScreen extends ConsumerWidget {
                         value: lease.code,
                       ),
                       if (lease.unit != null) ...[
-                        _DetailRow(
+                        _ClickableDetailRow(
                           icon: Icons.apartment,
                           label: 'Unit',
                           value: lease.unit!.name,
+                          onTap: () async {
+                            await Haptics.vibrate(HapticsType.selection);
+                            if (context.mounted) {
+                              context.push(
+                                '/more/unit-details/${lease.unitId}',
+                              );
+                            }
+                          },
                         ),
                       ],
                     ],
@@ -305,6 +320,7 @@ class _SectionCard extends StatelessWidget {
           child: ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
             itemCount: children.length,
             separatorBuilder: (_, __) =>
                 Divider(height: 0, color: Colors.grey.shade100),
@@ -471,6 +487,175 @@ class _DetailRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ClickableDetailRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final VoidCallback onTap;
+
+  const _ClickableDetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: Colors.grey.shade500),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
+              ),
+            ),
+            Text(
+              value,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(width: 6),
+            Icon(Icons.chevron_right, size: 16, color: Colors.grey.shade400),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ApplicationCard extends StatelessWidget {
+  final TenantApplicationModel application;
+
+  const _ApplicationCard({required this.application});
+
+  (Color, Color) _statusColors(String status) {
+    final s = status.toLowerCase();
+    if (s.contains('completed')) {
+      return (Colors.green.shade50, Colors.green.shade700);
+    }
+    if (s.contains('cancelled')) {
+      return (Colors.red.shade50, Colors.red.shade700);
+    }
+    return (Colors.orange.shade50, Colors.orange.shade700);
+  }
+
+  String _statusLabel(String status) {
+    if (status.contains('.')) return status.split('.').last;
+    return status;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final (statusBg, statusText) = _statusColors(application.status);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            'Application',
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+        InkWell(
+          onTap: () async {
+            await Haptics.vibrate(HapticsType.selection);
+            if (context.mounted) {
+              context.push('/more/tenant-application/${application.id}');
+            }
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade100),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: statusBg,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.assignment_outlined,
+                    size: 18,
+                    color: statusText,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        application.code,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Tenant Application',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusBg,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _statusLabel(application.status),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: statusText,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Colors.grey.shade400,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
