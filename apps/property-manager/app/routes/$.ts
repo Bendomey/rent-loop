@@ -1,3 +1,4 @@
+import { data } from 'react-router'
 import type { Route } from './+types/$'
 import { APP_NAME } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
@@ -5,9 +6,7 @@ import { getSocialMetas } from '~/lib/seo'
 import { NotFoundModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
-	return {
-		origin: getDomainUrl(request),
-	}
+	return data({ origin: getDomainUrl(request) }, { status: 404 })
 }
 
 export function meta({ loaderData, location }: Route.MetaArgs) {

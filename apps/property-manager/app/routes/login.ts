@@ -95,7 +95,7 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 		origin: loaderData.origin,
 	})
 
-	return meta
+	return [...meta, { name: 'robots', content: 'noindex, nofollow' }]
 }
 
 export default LoginModule
