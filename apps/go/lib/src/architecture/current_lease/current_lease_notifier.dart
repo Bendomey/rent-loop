@@ -1,4 +1,5 @@
 import 'package:rentloop_go/src/architecture/architecture.dart';
+import 'package:rentloop_go/src/lib/analytics_service.dart';
 import 'package:rentloop_go/src/repository/models/lease_model.dart';
 
 part 'current_lease_notifier.g.dart';
@@ -45,6 +46,7 @@ class CurrentLeaseNotifier extends _$CurrentLeaseNotifier {
   Future<void> setLease(LeaseModel lease) async {
     await ref.read(leaseIdManagerProvider).save(lease.id);
     state = lease;
+    await AnalyticsService.logEvent('lease_switched', parameters: {'lease_id': lease.id});
   }
 
   void clear() {

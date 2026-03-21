@@ -1,6 +1,7 @@
 import 'package:rentloop_go/src/api/checklist.dart';
 import 'package:rentloop_go/src/api/root.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
+import 'package:rentloop_go/src/lib/analytics_service.dart';
 import 'package:rentloop_go/src/lib/api_error_messages.dart';
 import 'package:rentloop_go/src/repository/api_state.dart';
 import 'package:rentloop_go/src/repository/providers/checklists_provider.dart';
@@ -35,6 +36,10 @@ class AcknowledgeChecklistNotifier extends _$AcknowledgeChecklistNotifier {
           );
       ref.invalidate(checklistsProvider);
       ref.invalidate(singleChecklistProvider);
+      await AnalyticsService.logEvent(
+        'checklist_acknowledged',
+        parameters: {'checklist_id': checklistId, 'action': action},
+      );
       state = AcknowledgeChecklistState(status: ApiStatus.success);
       return true;
     } on ApiException catch (e) {

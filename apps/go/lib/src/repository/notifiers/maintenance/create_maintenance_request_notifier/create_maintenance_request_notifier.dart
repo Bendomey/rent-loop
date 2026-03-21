@@ -1,6 +1,7 @@
 import 'package:rentloop_go/src/api/maintenance.dart';
 import 'package:rentloop_go/src/api/root.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
+import 'package:rentloop_go/src/lib/analytics_service.dart';
 import 'package:rentloop_go/src/lib/api_error_messages.dart';
 import 'package:rentloop_go/src/repository/api_state.dart';
 import 'package:rentloop_go/src/repository/notifiers/maintenance/maintenance_requests_notifier/maintenance_requests_notifier.dart';
@@ -41,6 +42,10 @@ class CreateMaintenanceRequestNotifier
       // Refresh the list from the first page and update the badge count.
       ref.read(maintenanceRequestsNotifierProvider.notifier).loadFirstPage();
       ref.invalidate(mrStatsProvider);
+      await AnalyticsService.logEvent(
+        'maintenance_request_submitted',
+        parameters: {'mr_id': mr.id, 'category': category, 'priority': priority},
+      );
       state = CreateMaintenanceRequestState(status: ApiStatus.success);
       return mr.id;
     } on ApiException catch (e) {

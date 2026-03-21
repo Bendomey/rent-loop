@@ -4,6 +4,7 @@ import 'package:rentloop_go/src/api/lease.dart';
 import 'package:rentloop_go/src/api/notification.dart';
 import 'package:rentloop_go/src/api/tenant_account.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
+import 'package:rentloop_go/src/lib/analytics_service.dart';
 import 'package:rentloop_go/src/repository/models/tenant_account_model.dart';
 
 part 'app_startup_notifier.g.dart';
@@ -45,6 +46,7 @@ class AppStartupNotifier extends _$AppStartupNotifier {
 
       final tenantAccount = await ref.read(tenantAccountApiProvider).getMe();
       ref.read(currentUserNotifierProvider.notifier).setUser(tenantAccount);
+      await AnalyticsService.setUserId(tenantAccount.id);
       await _fetchLeases();
 
       state = const AppStartupState(status: AppStartupStatus.ready);
@@ -60,6 +62,7 @@ class AppStartupNotifier extends _$AppStartupNotifier {
   Future<void> completeLogin(TenantAccountModel account) async {
     state = const AppStartupState(status: AppStartupStatus.loading);
     ref.read(currentUserNotifierProvider.notifier).setUser(account);
+    await AnalyticsService.setUserId(account.id);
     await _fetchLeases();
     state = const AppStartupState(status: AppStartupStatus.ready);
   }
@@ -79,6 +82,8 @@ class AppStartupNotifier extends _$AppStartupNotifier {
     await ref.read(leaseIdManagerProvider).remove();
     ref.read(currentUserNotifierProvider.notifier).clear();
     ref.read(currentLeaseNotifierProvider.notifier).clear();
+    await AnalyticsService.logEvent('logout');
+    await AnalyticsService.setUserId(null);
     state = const AppStartupState(status: AppStartupStatus.unauthenticated);
   }
 

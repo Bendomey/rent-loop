@@ -5,6 +5,7 @@ import 'main_navigator.dart';
 import 'notification_handler.dart';
 
 import 'package:flutter/widgets.dart';
+import 'package:rentloop_go/src/lib/analytics_service.dart';
 
 late GlobalKey<NavigatorState> navigatorKey;
 late GlobalKey<NavigatorState> shellNavigatorKey;
@@ -15,8 +16,7 @@ GoRouter buildRoutes(WidgetRef ref, Listenable refreshListenable) {
 
   final router = GoRouter(
     observers: [
-      // Track page views with Firebase Analytics
-      // AnalyticsService.observer,
+      AnalyticsService.observer,
     ],
     navigatorKey: navigatorKey,
     restorationScopeId: 'rentloop-router',

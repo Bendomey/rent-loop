@@ -9,8 +9,8 @@ const API_BASE_URL = isStaging
     : 'https://rentloop-api-staging.fly.dev';
 
 const WEBSITE = isStaging
-    ? 'https://rentloop.fly.dev'
-    : 'https://rentloop.fly.dev';
+    ? 'https://rentloopapp.com'
+    : 'https://rentloopapp.com';
 
 const SENTRY_DSN = '';
 //TODO: paste rentloop_go sentry dsn

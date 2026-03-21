@@ -2,6 +2,7 @@ import 'package:rentloop_go/src/api/auth.dart';
 import 'package:rentloop_go/src/api/root.dart';
 import 'package:rentloop_go/src/api/tenant_account.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
+import 'package:rentloop_go/src/lib/analytics_service.dart';
 import 'package:rentloop_go/src/lib/api_error_messages.dart';
 import 'package:rentloop_go/src/repository/api_state.dart';
 
@@ -28,6 +29,7 @@ class VerifyOtpNotifier extends _$VerifyOtpNotifier {
       await ref
           .read(appStartupNotifierProvider.notifier)
           .completeLogin(tenantAccount);
+      await AnalyticsService.logEvent('login');
       state = VerifyOtpState(status: ApiStatus.success);
       return true;
     } on ApiException catch (e) {
