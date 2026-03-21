@@ -5,8 +5,8 @@ export const APP_DOMAIN =
 
 export const PROPERTY_MANAGER_APP_URL =
 	NODE_ENV === 'production'
-		? 'https://rentloop-property-manager-staging.fly.dev' // https://app.rentloopapp.com
-		: 'https://rentloop-property-manager-staging.fly.dev'
+		? 'https://pm.rentloopapp.com'
+		: 'https://pm.rentloopapp.com'
 
 export const COMING_SOON_ROUTE = '/coming-soon'
 

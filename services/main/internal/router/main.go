@@ -70,14 +70,13 @@ func New(appCtx pkg.AppContext, handlers handlers.Handlers) *chi.Mux {
 
 		// for more ideas, see: https://developer.github.com/v3/#cross-origin-resource-sharing
 		r.Use(cors.Handler(cors.Options{
-			// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
 			AllowedOrigins: []string{
 				"http://localhost:*",
 				"https://rentloopapp.com",
 				"https://www.rentloopapp.com",
 				"https://rentloop.fly.dev",
 				"https://rentloop-property-manager-staging.fly.dev",
-				"https://property-manager.rentloopapp.com",
+				"https://pm.rentloopapp.com",
 			},
 			// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
 			AllowedMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},

@@ -5,8 +5,8 @@ const ENVIRONMENT = AppENV.staging;
 
 const isStaging = ENVIRONMENT == AppENV.staging;
 const API_BASE_URL = isStaging
-    ? 'https://rentloop-api-staging.fly.dev'
-    : 'https://rentloop-api-staging.fly.dev';
+    ? 'https://api.rentloopapp.com'
+    : 'https://api.rentloopapp.com';
 
 const WEBSITE = isStaging
     ? 'https://rentloopapp.com'
@@ -16,5 +16,5 @@ const SENTRY_DSN = '';
 //TODO: paste rentloop_go sentry dsn
 
 const R2_UPLOAD_URL = isStaging
-    ? 'https://rentloop-property-manager-staging.fly.dev/api/r2/upload'
-    : 'https://rentloop-property-manager-staging.fly.dev/api/r2/upload';
+    ? 'https://pm.rentloopapp.com/api/r2/upload'
+    : 'https://pm.rentloopapp.com/api/r2/upload';

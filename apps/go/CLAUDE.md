@@ -286,7 +286,7 @@ API errors are translated to user-facing strings in `lib/src/lib/api_error_messa
 
 ## REST API Reference
 
-Full docs: **https://rentloop-api-staging.fly.dev/swagger/index.html**
+Full docs: **https://api.rentloopapp.com/swagger/index.html**
 
 Auth: `Authorization: Bearer <jwt>` header on all protected routes.
 
