@@ -105,51 +105,6 @@ export function Home() {
 			<WaitlistModal open={waitlistOpen} onOpenChange={setWaitlistOpen} />
 
 			<div className="pb-24">
-				<div className="mx-auto max-w-7xl px-6 lg:px-8">
-					<h2 className="text-center text-lg/8 font-semibold text-gray-900">
-						Trusted by the Ghana's most innovative companies
-					</h2>
-					<div className="mx-auto mt-10 grid max-w-lg grid-cols-4 items-center gap-x-8 gap-y-10 sm:max-w-xl sm:grid-cols-6 sm:gap-x-10 lg:mx-0 lg:max-w-none lg:grid-cols-5">
-						<img
-							alt="Transistor"
-							src="https://tailwindcss.com/plus-assets/img/logos/158x48/transistor-logo-gray-900.svg"
-							width={158}
-							height={48}
-							className="col-span-2 max-h-12 w-full object-contain lg:col-span-1"
-						/>
-						<img
-							alt="Reform"
-							src="https://tailwindcss.com/plus-assets/img/logos/158x48/reform-logo-gray-900.svg"
-							width={158}
-							height={48}
-							className="col-span-2 max-h-12 w-full object-contain lg:col-span-1"
-						/>
-						<img
-							alt="Tuple"
-							src="https://tailwindcss.com/plus-assets/img/logos/158x48/tuple-logo-gray-900.svg"
-							width={158}
-							height={48}
-							className="col-span-2 max-h-12 w-full object-contain lg:col-span-1"
-						/>
-						<img
-							alt="SavvyCal"
-							src="https://tailwindcss.com/plus-assets/img/logos/158x48/savvycal-logo-gray-900.svg"
-							width={158}
-							height={48}
-							className="col-span-2 max-h-12 w-full object-contain sm:col-start-2 lg:col-span-1"
-						/>
-						<img
-							alt="Statamic"
-							src="https://tailwindcss.com/plus-assets/img/logos/158x48/statamic-logo-gray-900.svg"
-							width={158}
-							height={48}
-							className="col-span-2 col-start-2 max-h-12 w-full object-contain sm:col-start-auto lg:col-span-1"
-						/>
-					</div>
-				</div>
-			</div>
-
-			<div className="pb-24">
 				<div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
 					<h2 className="text-center text-base/7 font-semibold text-rose-600">
 						Rent faster
@@ -173,7 +128,7 @@ export function Home() {
 								<div className="@container relative min-h-120 w-full grow max-lg:mx-auto max-lg:max-w-sm">
 									<div className="absolute inset-x-10 top-10 bottom-0 overflow-hidden rounded-t-[12cqw] border-x-[3cqw] border-t-[3cqw] border-gray-700 bg-gray-900 shadow-2xl">
 										<img
-											alt=""
+											alt="Rentloop tenant mobile app interface"
 											src="/images/tenant-app.png"
 											className="size-full object-cover object-top"
 										/>
@@ -196,7 +151,7 @@ export function Home() {
 								</div>
 								<div className="flex flex-1 items-center justify-center px-8 max-lg:pt-10 max-lg:pb-12 sm:px-10 lg:pb-2">
 									<img
-										alt=""
+										alt="Property performance analytics dashboard"
 										src="/images/bento-03-performance.png"
 										className="w-full max-lg:max-w-xs"
 									/>
@@ -218,7 +173,7 @@ export function Home() {
 								</div>
 								<div className="@container flex flex-1 items-center max-lg:py-6 lg:pb-2">
 									<img
-										alt=""
+										alt="Data security and encryption illustration"
 										src="/images/bento-03-security.png"
 										className="h-[min(152px,40cqw)] object-cover"
 									/>
@@ -241,7 +196,7 @@ export function Home() {
 								<div className="@container relative min-h-120 w-full grow max-lg:mx-auto max-lg:max-w-sm">
 									<div className="absolute inset-x-10 top-10 bottom-0 overflow-hidden rounded-t-[12cqw] border-x-[3cqw] border-t-[3cqw] border-gray-700 bg-gray-900 shadow-2xl">
 										<img
-											alt=""
+											alt="Maintenance request tracking interface"
 											src="/images/maintenance-requests.png"
 											className="size-full object-cover object-top"
 										/>

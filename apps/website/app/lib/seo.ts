@@ -45,6 +45,8 @@ export function getSocialMetas({
 			? description.slice(0, MAX_LENGTH_META_DESCRIPTION) + '...'
 			: description.slice(0, MAX_LENGTH_META_DESCRIPTION)
 
+	const fullUrl = url.startsWith('http') ? url : `https://${url}`
+
 	const metas = [
 		{ title },
 		{ name: 'title', content: title },
@@ -55,8 +57,8 @@ export function getSocialMetas({
 		},
 		{ name: 'robots', content: 'index, follow' },
 		{ name: 'author', content: 'RentLoop' },
-		{ rel: 'canonical', href: url },
-		{ name: 'og:url', content: url },
+		{ tagName: 'link', rel: 'canonical', href: fullUrl },
+		{ name: 'og:url', content: fullUrl },
 		{ name: 'og:site_name', content: capitalize(APP_NAME) },
 		{ name: 'og:type', content: 'website' },
 		{ name: 'og:title', content: title },
@@ -68,7 +70,7 @@ export function getSocialMetas({
 		},
 		{ name: 'twitter:creator', content: '@rentloopgh' },
 		{ name: 'twitter:site', content: '@rentloopgh' },
-		{ name: 'twitter:url', content: url },
+		{ name: 'twitter:url', content: fullUrl },
 		{ name: 'twitter:title', content: title },
 		{ name: 'twitter:description', content: truncateDescription },
 		...twitterImages,
