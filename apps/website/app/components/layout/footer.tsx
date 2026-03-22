@@ -4,7 +4,7 @@ import { APP_NAME } from '~/lib/constants'
 const navigation = {
 	main: [
 		// { name: 'About', href: '#' },
-		{ name: 'Blog', href: '#' },
+		{ name: 'Blog', href: '/blog' },
 		{ name: 'Pricing', href: '/pricing' },
 		{ name: 'Features', href: '/#features' },
 		// { name: 'Partners', href: '#' },

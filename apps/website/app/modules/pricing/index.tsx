@@ -48,7 +48,7 @@ export function PricingModule() {
 			{/* Auto-calculation callout */}
 			<div className="pb-10">
 				<div className="mx-auto max-w-7xl px-6 lg:px-8">
-					<div className="mx-auto max-w-4xl rounded-2xl bg-rose-50 px-8 py-6 ring-1 ring-rose-100 flex items-start gap-4">
+					<div className="mx-auto flex max-w-4xl items-start gap-4 rounded-2xl bg-rose-50 px-8 py-6 ring-1 ring-rose-100">
 						<ArrowPathIcon className="mt-0.5 size-6 shrink-0 text-rose-600" />
 						<div>
 							<p className="text-sm font-semibold text-gray-900">
@@ -68,7 +68,7 @@ export function PricingModule() {
 			{/* Pricing tiers — billing reference */}
 			<div className="pb-16">
 				<div className="mx-auto max-w-7xl px-6 lg:px-8">
-					<p className="mb-8 text-center text-sm font-medium text-gray-500 uppercase tracking-wide">
+					<p className="mb-8 text-center text-sm font-medium tracking-wide text-gray-500 uppercase">
 						Billing rates by unit count
 					</p>
 					<div className="mx-auto grid max-w-md grid-cols-1 gap-8 lg:max-w-4xl lg:grid-cols-3">
@@ -77,7 +77,7 @@ export function PricingModule() {
 								key={tier.name}
 								className={`relative flex flex-col rounded-2xl p-8 ${
 									tier.highlighted
-										? 'bg-white ring-2 ring-rose-600 shadow-lg'
+										? 'bg-white shadow-lg ring-2 ring-rose-600'
 										: 'bg-white ring-1 ring-gray-200'
 								}`}
 							>
@@ -150,8 +150,7 @@ export function PricingModule() {
 			<div className="mx-auto max-w-7xl px-6 pb-24 lg:px-8">
 				<div className="mx-auto max-w-4xl">
 					<h2 className="text-center text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
-						Billing{' '}
-						<span className="font-[Shantell] text-rose-600">FAQ</span>
+						Billing <span className="font-[Shantell] text-rose-600">FAQ</span>
 					</h2>
 					<dl className="mt-16">
 						{faqs.map((faq) => (
@@ -208,7 +207,8 @@ const tiers = [
 		range: 'Up to 5 units',
 		price: 'GH₵ 0',
 		priceSuffix: '/month',
-		description: 'Automatically applied when your portfolio has 5 units or fewer.',
+		description:
+			'Automatically applied when your portfolio has 5 units or fewer.',
 		highlighted: false,
 	},
 	{
@@ -216,7 +216,8 @@ const tiers = [
 		range: '6 – 100 units',
 		price: 'GH₵ 10',
 		priceSuffix: '/unit/month',
-		description: 'Applied automatically once you add a 6th unit to your portfolio.',
+		description:
+			'Applied automatically once you add a 6th unit to your portfolio.',
 		highlighted: true,
 	},
 	{

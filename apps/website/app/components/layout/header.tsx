@@ -8,7 +8,7 @@ import { APP_NAME, PROPERTY_MANAGER_APP_URL } from '~/lib/constants'
 const navigation = [
 	{ name: 'Features', href: '/#features' },
 	{ name: 'Pricing', href: '/pricing' },
-	{ name: 'Blog', href: '#' },
+	{ name: 'Blog', href: '/blog' },
 ]
 
 export function Header() {

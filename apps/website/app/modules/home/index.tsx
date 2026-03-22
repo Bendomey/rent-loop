@@ -5,8 +5,8 @@ import {
 } from '@headlessui/react'
 import { MinusSmallIcon, PlusSmallIcon } from '@heroicons/react/24/outline'
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { WaitlistModal } from '~/components/blocks/WaitlistModal'
-import { ExternalLink } from '~/components/layout/ExternalLink'
 import { Footer } from '~/components/layout/footer'
 import { Header } from '~/components/layout/header'
 import { Button } from '~/components/ui/button'
@@ -79,12 +79,12 @@ export function Home() {
 								>
 									Join our waitlist
 								</Button>
-								<ExternalLink
-									href="https://www.figma.com/deck/sXisOhunysygVntfoVziUr/Rentloop-Pitch-Deck"
-									className="text-sm/6 font-semibold text-gray-900"
+								<Link
+									to="/blog/what-is-rentloop"
+									className="text-sm/6 font-semibold text-gray-900 hover:text-rose-600"
 								>
 									Learn more <span aria-hidden="true">→</span>
-								</ExternalLink>
+								</Link>
 							</div>
 						</div>
 						<div className="mt-16 flow-root sm:mt-24">
@@ -104,7 +104,7 @@ export function Home() {
 
 			<WaitlistModal open={waitlistOpen} onOpenChange={setWaitlistOpen} />
 
-			<div id="features" className="pb-24 scroll-mt-20">
+			<div id="features" className="scroll-mt-20 pb-24">
 				<div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
 					<h2 className="text-center text-base/7 font-semibold text-rose-600">
 						Rent faster
