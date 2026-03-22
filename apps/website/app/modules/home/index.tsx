@@ -104,7 +104,7 @@ export function Home() {
 
 			<WaitlistModal open={waitlistOpen} onOpenChange={setWaitlistOpen} />
 
-			<div className="pb-24">
+			<div id="features" className="pb-24 scroll-mt-20">
 				<div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
 					<h2 className="text-center text-base/7 font-semibold text-rose-600">
 						Rent faster
@@ -209,7 +209,7 @@ export function Home() {
 				</div>
 			</div>
 
-			<div className="mx-auto max-w-7xl px-6 pb-24 lg:px-8">
+			<div id="faqs" className="mx-auto max-w-7xl px-6 pb-24 lg:px-8">
 				<div className="mx-auto max-w-4xl">
 					<h2 className="text-center text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
 						Common{' '}

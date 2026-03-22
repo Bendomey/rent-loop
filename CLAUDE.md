@@ -105,6 +105,19 @@ Backend REST API Swagger docs (staging):
 Use `WebFetch` on this URL to look up available endpoints, request/response
 shapes, and required fields before writing any new API calls.
 
+## Adding New Public Pages (Website)
+
+When adding a new publicly accessible page to `apps/website`:
+
+1. **Sitemap** — Register the route in `apps/website/app/routes/sitemap[.]xml.tsx`
+   - Public marketing pages: `priority: '0.8'`, `changefreq: 'monthly'`
+   - Legal/static pages: `priority: '0.3'`, `changefreq: 'yearly'`
+   - Skip routes that require authentication or are not meant for search engines
+
+2. **SEO meta** — The route file must export a `meta` function that calls `getSocialMetas()` from `~/lib/seo` with a page-specific `title` and `description`
+
+3. **robots.txt** — No changes needed for public pages; `apps/website/public/robots.txt` already allows all paths except `/api/`
+
 ## Deployment
 
 - **Platform:** Fly.io

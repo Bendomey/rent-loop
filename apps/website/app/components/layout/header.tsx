@@ -6,8 +6,8 @@ import { ExternalLink } from '~/components/layout/ExternalLink'
 import { APP_NAME, PROPERTY_MANAGER_APP_URL } from '~/lib/constants'
 
 const navigation = [
-	{ name: 'Features', href: '#' },
-	{ name: 'Pricing', href: '#' },
+	{ name: 'Features', href: '/#features' },
+	{ name: 'Pricing', href: '/pricing' },
 	{ name: 'Blog', href: '#' },
 ]
 

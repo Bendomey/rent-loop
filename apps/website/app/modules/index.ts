@@ -1,4 +1,5 @@
 export * from './home'
+export * from './pricing'
 
 export * from './legal/terms'
 export * from './legal/privacy-policy'

@@ -7,9 +7,9 @@ export async function loader() {
 	// Add all your routes here
 	const routes = [
 		{ url: '/', priority: '1.0', changefreq: 'weekly' },
-		// Add more routes as your site grows
-		// { url: "/about", priority: "0.8", changefreq: "monthly" },
-		// { url: "/contact", priority: "0.8", changefreq: "monthly" },
+		{ url: '/pricing', priority: '0.8', changefreq: 'monthly' },
+		{ url: '/terms', priority: '0.3', changefreq: 'yearly' },
+		{ url: '/privacy-policy', priority: '0.3', changefreq: 'yearly' },
 	]
 
 	const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
