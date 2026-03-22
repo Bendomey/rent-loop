@@ -185,7 +185,7 @@ export function PropertyAssetUnitsModule() {
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<a
-								href={ASSET_MANAGEMENT_GUIDE_URL}
+								href={`${ASSET_MANAGEMENT_GUIDE_URL}#what-are-units`}
 								target="_blank"
 								rel="noopener noreferrer"
 							>
@@ -221,7 +221,7 @@ export function PropertyAssetUnitsModule() {
 						message: 'No units found',
 						description:
 							'Units are the individual spaces your tenants rent. Add your first unit to get started.',
-						learnMoreUrl: ASSET_MANAGEMENT_GUIDE_URL,
+						learnMoreUrl: `${ASSET_MANAGEMENT_GUIDE_URL}#what-are-units`,
 					}}
 					refetch={refetch}
 				/>

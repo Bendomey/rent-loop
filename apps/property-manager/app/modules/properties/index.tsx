@@ -158,7 +158,7 @@ export function PropertiesModule() {
 						message: 'No properties found',
 						description:
 							"You haven't added any properties yet. Properties are the top level of your portfolio.",
-						learnMoreUrl: ASSET_MANAGEMENT_GUIDE_URL,
+						learnMoreUrl: `${ASSET_MANAGEMENT_GUIDE_URL}#what-is-a-property`,
 					}}
 				/>
 			</div>

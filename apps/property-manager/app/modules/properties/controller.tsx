@@ -62,7 +62,7 @@ export const PropertiesController = ({
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<a
-									href={ASSET_MANAGEMENT_GUIDE_URL}
+									href={`${ASSET_MANAGEMENT_GUIDE_URL}#what-is-a-property`}
 									target="_blank"
 									rel="noopener noreferrer"
 								>

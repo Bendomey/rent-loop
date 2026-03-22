@@ -87,7 +87,7 @@ export function PropertyAssetBlocksModule() {
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<a
-								href={ASSET_MANAGEMENT_GUIDE_URL}
+								href={`${ASSET_MANAGEMENT_GUIDE_URL}#what-are-blocks`}
 								target="_blank"
 								rel="noopener noreferrer"
 							>
@@ -226,7 +226,7 @@ export function PropertyAssetBlocksModule() {
 						message: 'No blocks found',
 						description:
 							'Blocks help you organise units within this property — think buildings, wings, or floors.',
-						learnMoreUrl: ASSET_MANAGEMENT_GUIDE_URL,
+						learnMoreUrl: `${ASSET_MANAGEMENT_GUIDE_URL}#what-are-blocks`,
 					}}
 					refetch={refetch}
 				/>
