@@ -2,6 +2,7 @@ import dayjs from 'dayjs'
 import {
 	Building,
 	Clock,
+	Info,
 	MoreHorizontalIcon,
 	Pencil,
 	Trash,
@@ -32,8 +33,16 @@ import {
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
-import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import {
+	ASSET_MANAGEMENT_GUIDE_URL,
+	PAGINATION_DEFAULTS,
+} from '~/lib/constants'
 import { safeString } from '~/lib/strings'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '~/components/ui/tooltip'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyAssetBlocksModule() {
@@ -73,7 +82,21 @@ export function PropertyAssetBlocksModule() {
 	return (
 		<div className="m-6 space-y-3">
 			<div>
-				<TypographyH4 className="mb-1">Manage Blocks</TypographyH4>
+				<div className="flex items-center gap-2">
+					<TypographyH4 className="mb-1">Manage Blocks</TypographyH4>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<a
+								href={ASSET_MANAGEMENT_GUIDE_URL}
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								<Info className="text-muted-foreground size-4 transition-colors hover:text-rose-600" />
+							</a>
+						</TooltipTrigger>
+						<TooltipContent>Learn more about blocks</TooltipContent>
+					</Tooltip>
+				</div>
 				<TypographyMuted>
 					Manage all blocks under this property.
 				</TypographyMuted>
@@ -202,7 +225,8 @@ export function PropertyAssetBlocksModule() {
 					empty={{
 						message: 'No blocks found',
 						description:
-							"Try adjusting your search to find what you're looking for.",
+							'Blocks help you organise units within this property — think buildings, wings, or floors.',
+						learnMoreUrl: ASSET_MANAGEMENT_GUIDE_URL,
 					}}
 					refetch={refetch}
 				/>

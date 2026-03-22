@@ -21,10 +21,21 @@ export const blogPosts: BlogPostEntry[] = [
 			description:
 				'A detailed introduction to Rentloop — the smart property management platform built for the Ghana rental market.',
 			date: '2026-03-22',
-			author: 'Rentloop Team',
+			author: 'Marketing Team',
 			slug: 'what-is-rentloop',
 		},
 		component: () => import('./what-is-rentloop.mdx'),
+	},
+	{
+		meta: {
+			title: 'Understanding Asset Management in Rentloop',
+			description:
+				'Learn how Rentloop organises your rental portfolio with properties, blocks, and units — and how billing scales with your unit count.',
+			date: '2026-03-22',
+			author: 'Marketing Team',
+			slug: 'understanding-asset-management',
+		},
+		component: () => import('./understanding-asset-management.mdx'),
 	},
 ]
 

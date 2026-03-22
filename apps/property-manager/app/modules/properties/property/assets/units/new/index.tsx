@@ -46,6 +46,7 @@ import {
 } from '~/components/ui/typography'
 import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
 import { useUploadObject } from '~/hooks/use-upload-object'
+import { ASSET_MANAGEMENT_GUIDE_URL } from '~/lib/constants'
 import { convertPesewasToCedis } from '~/lib/format-amount'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
@@ -301,6 +302,16 @@ export function NewPropertyAssetUnitsModule() {
 					<div className="mb-3 space-y-1">
 						<Label>Unit Type</Label>
 						<TypographyMuted>What kind of space is this unit?</TypographyMuted>
+						<p className="text-muted-foreground text-xs">
+							<a
+								href={`${ASSET_MANAGEMENT_GUIDE_URL}#what-are-units`}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="text-rose-600 hover:underline"
+							>
+								See how unit types work
+							</a>
+						</p>
 					</div>
 					<div className="flex flex-col gap-2">
 						{unitTypes.map((model) => {

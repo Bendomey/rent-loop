@@ -1,9 +1,15 @@
-import { Plus, RotateCw, ToggleLeft } from 'lucide-react'
+import { Info, Plus, RotateCw, ToggleLeft } from 'lucide-react'
 import { Link } from 'react-router'
 import { FilterSet } from '~/components/filter-set'
 import { SearchInput } from '~/components/search'
 import { Button } from '~/components/ui/button'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '~/components/ui/tooltip'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
+import { ASSET_MANAGEMENT_GUIDE_URL } from '~/lib/constants'
 import { cn } from '~/lib/utils'
 
 const filters: Array<Filter> = [
@@ -51,7 +57,21 @@ export const PropertiesController = ({
 		<div className="flex w-full flex-col gap-2">
 			<div className="flex flex-row items-center justify-between">
 				<div>
-					<TypographyH4>My Properties</TypographyH4>
+					<div className="flex items-center gap-2">
+						<TypographyH4>My Properties</TypographyH4>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<a
+									href={ASSET_MANAGEMENT_GUIDE_URL}
+									target="_blank"
+									rel="noopener noreferrer"
+								>
+									<Info className="text-muted-foreground size-4 transition-colors hover:text-rose-600" />
+								</a>
+							</TooltipTrigger>
+							<TooltipContent>Learn more about properties</TooltipContent>
+						</Tooltip>
+					</div>
 					<TypographyMuted>
 						Manage the properties you own or oversee.
 					</TypographyMuted>

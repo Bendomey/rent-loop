@@ -7,7 +7,10 @@ import { useGetMyProperties } from '~/api/properties'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
-import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import {
+	ASSET_MANAGEMENT_GUIDE_URL,
+	PAGINATION_DEFAULTS,
+} from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 
 export function PropertiesModule() {
@@ -154,7 +157,8 @@ export function PropertiesModule() {
 					empty={{
 						message: 'No properties found',
 						description:
-							"Try adjusting your search to find what you're looking for.",
+							"You haven't added any properties yet. Properties are the top level of your portfolio.",
+						learnMoreUrl: ASSET_MANAGEMENT_GUIDE_URL,
 					}}
 				/>
 			</div>

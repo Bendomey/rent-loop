@@ -27,6 +27,7 @@ import {
 	TypographySmall,
 } from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
+import { ASSET_MANAGEMENT_GUIDE_URL } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
@@ -133,6 +134,16 @@ export function NewPropertyAssetBlocksModule() {
 						We break down property assets into blocks to better organize and
 						manage them.
 					</TypographyMuted>
+					<p className="text-muted-foreground text-xs">
+						<a
+							href={`${ASSET_MANAGEMENT_GUIDE_URL}#what-are-blocks`}
+							target="_blank"
+							rel="noopener noreferrer"
+							className="text-rose-600 hover:underline"
+						>
+							Learn more about blocks
+						</a>
+					</p>
 				</div>
 
 				<FieldGroup>

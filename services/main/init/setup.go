@@ -43,11 +43,11 @@ func Setup(isInit bool) {
 	})
 
 	if dbErr != nil {
-		logger.Info("connecting to myles db errored out: ", dbErr)
+		logger.Info("connecting to Rentloop db errored out: ", dbErr)
 		os.Exit(1)
 	}
 
-	logger.Info("======== Myles DB connected successfully ==========")
+	logger.Info("======== Rentloop DB connected successfully ==========")
 
 	logger.Info("======== Tables Migration Starting ==========")
 

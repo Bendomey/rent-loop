@@ -1,5 +1,12 @@
 import dayjs from 'dayjs'
-import { CircleCheck, Copy, EllipsisVertical, Eye, Users } from 'lucide-react'
+import {
+	CircleCheck,
+	Copy,
+	EllipsisVertical,
+	Eye,
+	Info,
+	Users,
+} from 'lucide-react'
 import { useMemo } from 'react'
 import { useSearchParams, useNavigate } from 'react-router'
 import { PropertyAssetUnitsController } from './controller'
@@ -24,8 +31,16 @@ import {
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
-import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import {
+	ASSET_MANAGEMENT_GUIDE_URL,
+	PAGINATION_DEFAULTS,
+} from '~/lib/constants'
 import { safeString } from '~/lib/strings'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '~/components/ui/tooltip'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyAssetUnitsModule() {
@@ -165,7 +180,21 @@ export function PropertyAssetUnitsModule() {
 	return (
 		<div className="mx-6 my-6 flex flex-col gap-4 sm:gap-6">
 			<div>
-				<TypographyH4 className="mb-1">Manage Units</TypographyH4>
+				<div className="flex items-center gap-2">
+					<TypographyH4 className="mb-1">Manage Units</TypographyH4>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<a
+								href={ASSET_MANAGEMENT_GUIDE_URL}
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								<Info className="text-muted-foreground size-4 transition-colors hover:text-rose-600" />
+							</a>
+						</TooltipTrigger>
+						<TooltipContent>Learn more about units</TooltipContent>
+					</Tooltip>
+				</div>
 				<TypographyMuted>Manage all units under this property.</TypographyMuted>
 			</div>
 
@@ -191,7 +220,8 @@ export function PropertyAssetUnitsModule() {
 					empty={{
 						message: 'No units found',
 						description:
-							"Try adjusting your search to find what you're looking for.",
+							'Units are the individual spaces your tenants rent. Add your first unit to get started.',
+						learnMoreUrl: ASSET_MANAGEMENT_GUIDE_URL,
 					}}
 					refetch={refetch}
 				/>

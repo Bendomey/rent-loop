@@ -75,7 +75,3 @@ We love our contributors! Here's how you can contribute:
 <a href="https://github.com/Bendomey/rent-loop/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=Bendomey/rent-loop" />
 </a>
-
-## Authors
-
-Managed by the creators of [Myles Pudo](https://www.mylespudo.com/)

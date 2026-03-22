@@ -1,10 +1,11 @@
 export const NODE_ENV = process.env.NODE_ENV
 export const APP_NAME = 'rentloop'
 export const APP_DOMAIN =
-	NODE_ENV === 'production' ? 'rentloop.app' : 'localhost'
+	NODE_ENV === 'production' ? 'pm.rentloopapp.com' : 'localhost'
 
-export const GITHUB_REPO_URL = 'https://github.com/Bendomey/rent-loop'
-export const MYLES_PUDO_URL = 'https://mylespudo.com'
+export const WEBSITE_URL = `https://rentloopapp.com`
+
+export const ASSET_MANAGEMENT_GUIDE_URL = `${WEBSITE_URL}/blog/understanding-asset-management`
 
 export const USER_CIPHER = 'rentloop-account'
 

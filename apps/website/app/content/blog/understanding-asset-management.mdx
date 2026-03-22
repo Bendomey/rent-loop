@@ -1,0 +1,128 @@
+---
+title: 'Understanding Asset Management in Rentloop'
+description: 'Learn how Rentloop organises your rental portfolio with properties, blocks, and units — and how billing scales with your unit count.'
+date: '2026-03-22'
+author: 'Rentloop Team'
+slug: 'understanding-asset-management'
+---
+
+When you start managing rentals in Rentloop, the first thing to understand is how your portfolio is organised. Rentloop uses a three-level hierarchy: **Properties → Blocks → Units**. Once this clicks, everything else — from adding tenants to understanding your bill — makes complete sense.
+
+## The Three Levels at a Glance
+
+- **Property** — a physical location you own or manage
+- **Block** — a building, wing, or section within that property
+- **Unit** — the individual rentable space a tenant actually occupies
+
+Every unit belongs to a block, and every block belongs to a property. This structure is flexible enough to represent a single family home or a 200-unit apartment complex in exactly the same system.
+
+## Two Types of Properties
+
+When you create a property in Rentloop, the first decision is its type.
+
+### Single Property
+
+A **Single** property is a complete housing space rented to one family or tenant as a whole. Think of a standalone house, a villa, a compound, or a self-contained bungalow.
+
+When you create a Single property, Rentloop automatically creates the underlying block and unit for you. You don't need to manage blocks or set up units manually — the property is effectively the unit. This keeps things simple for landlords who own and rent individual houses without complex internal structure.
+
+### Multi Property
+
+A **Multi** property is divided into separate spaces rented by multiple tenants independently. This covers apartment complexes, hostels, office buildings, mixed-use developments, and any property where multiple people rent different parts of the same place.
+
+With a Multi property, you manually add blocks and units to match your physical layout. This gives you full control over how your portfolio is structured.
+
+## What is a Property?
+
+In Rentloop, a property represents a **physical location** — typically a site or address where your rental assets sit. One property can contain a single building or multiple buildings at the same location.
+
+Some examples:
+
+- A **single family house** in East Legon — one property, one rentable unit
+- An **apartment complex** in Cantonments with two towers — one property, two blocks, dozens of units
+- A **hostel** near a university campus — one property, multiple floors or sections as blocks, individual rooms as units
+- An **office park** — one property, multiple office blocks, individual offices as units
+
+The key idea is that a property is what you'd describe as a single site or address in the real world.
+
+## What are Blocks?
+
+Blocks are how you **organise units within a Multi property**. They map to the physical divisions of your property — buildings, towers, wings, floors, or any meaningful grouping.
+
+For example:
+
+- An apartment complex might have **Block A** and **Block B** — two separate buildings
+- A large hostel might have **Ground Floor** and **First Floor** as blocks
+- A shopping complex might organise blocks by section — **North Wing** and **South Wing**
+
+Each block has its own name, description, status (Active, Inactive, or Maintenance), and shows a count of its units. From the blocks listing page, you can drill into each block to view and manage its units directly.
+
+For Single properties, Rentloop creates a hidden "Main" block automatically. You never see or interact with it — it's just infrastructure to keep the data model consistent.
+
+## What are Units?
+
+Units are the **actual spaces tenants rent**. Each unit belongs to a block, has its own configuration, and is billed individually.
+
+Rentloop supports five unit types to cover both residential and commercial rentals:
+
+- **Apartment** — a multi-room unit inside a shared building, with separate living and sleeping areas
+- **House** — a standalone building with its own entrance, yard, or compound
+- **Studio** — a single open-plan room combining bedroom and living space
+- **Office** — a workspace for professional or business use
+- **Retail** — a shopfront or commercial space for selling goods or services
+
+Each unit has its own:
+
+- **Status** — Draft, Available, Occupied, or Maintenance
+- **Rent fee** — with support for GHS, USD, or EUR
+- **Payment frequency** — Daily, Weekly, Monthly, Quarterly, Biannual, or Annual
+- **Max occupants** — the number of people allowed in the unit
+- **Features and description** — so tenants know exactly what they're renting
+
+Units can be duplicated with one click, which is useful when you have many similar units in the same block.
+
+## How Billing is Based on Units
+
+Here is the most important thing to understand about Rentloop pricing: **you are billed per unit, not per property or block**.
+
+Properties and blocks are free organisational containers — you can create as many as you need. What determines your billing tier is the **total number of units** across your entire portfolio.
+
+A few examples to make this concrete:
+
+| Scenario                               | Properties | Blocks   | Units | Monthly Cost |
+| -------------------------------------- | ---------- | -------- | ----- | ------------ |
+| Landlord renting out a single house    | 1          | 1 (auto) | 1     | Free         |
+| 4 houses in different locations        | 4          | 4 (auto) | 4     | Free         |
+| Small apartment block with 8 units     | 1          | 1        | 8     | GH₵ 80       |
+| Two apartment complexes, 30 units each | 2          | 4        | 60    | GH₵ 600      |
+| Large hostel with 120 rooms            | 1          | 6        | 120   | GH₵ 960      |
+
+Your first 5 units are free. Once you go beyond that, you start paying for your units. Up to 100 units, you pay GH₵ 10 per unit per month. Beyond 100, that drops to GH₵ 8 per unit per month. For portfolios above 200 units, reach out for a custom plan.
+
+See the full [pricing breakdown](/pricing) for details.
+
+## Real-World Examples
+
+### The Individual Landlord
+
+Kofi owns three houses in Accra, each rented to a different family. He creates three **Single** properties in Rentloop. Each auto-creates its own unit. He manages all three from one dashboard — tracking rent payments, maintenance requests, and lease documents — paying nothing since his total is under 5 units.
+
+### The Apartment Complex Owner
+
+Ama owns a complex in Tema with two buildings. Building A has 12 apartments and Building B has 18 apartments. She creates one **Multi** property, adds two blocks (Block A and Block B), and adds units to each. Her 30 total units bill at GH₵ 10 per unit per month.
+
+### The Mixed-Use Developer
+
+A developer manages an office park with three sections: a commercial ground floor (8 retail units), a first floor of offices (12 units), and a second floor of studios (10 units). One **Multi** property, three blocks, 30 units across residential and commercial types — all managed in a single property dashboard.
+
+### The University Hostel
+
+A hostel operator has 150 rooms across 5 floors. One **Multi** property, five blocks (one per floor), 30 units per floor. At 150 units total, the portfolio falls in the 101–200 range, so all 150 units bill at GH₵ 8 — GH₵ 1,200 per month. Rentloop applies the right rate automatically.
+
+## Getting Started
+
+Setting up your portfolio in Rentloop takes minutes. When you create a property, the wizard walks you through choosing Single or Multi, adding your property details and address, and getting to the dashboard.
+
+From there, Multi properties let you add blocks and units one by one — or duplicate existing units to speed things up. Your billing updates automatically as you grow.
+
+[Create your account](https://pm.rentloopapp.com/apply) and start building your portfolio today. The first 5 units are free, forever.

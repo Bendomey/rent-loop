@@ -1,4 +1,4 @@
-import { Cloud } from 'lucide-react'
+import { Cloud, ExternalLink } from 'lucide-react'
 import { Button } from '~/components/ui/button'
 import {
 	Empty,
@@ -17,6 +17,7 @@ export interface EmptyOutlineProps {
 		label: string
 		onClick: () => void
 	}
+	learnMoreUrl?: string
 	className?: string
 }
 
@@ -24,6 +25,7 @@ export function EmptyOutline({
 	message = 'No data available',
 	description = 'There is currently no data to display.',
 	button,
+	learnMoreUrl,
 	className = 'h-96',
 }: EmptyOutlineProps) {
 	return (
@@ -34,6 +36,17 @@ export function EmptyOutline({
 				</EmptyMedia>
 				<EmptyTitle>{message}</EmptyTitle>
 				<EmptyDescription>{description}</EmptyDescription>
+				{learnMoreUrl ? (
+					<a
+						href={learnMoreUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="mt-2 inline-flex items-center gap-1 text-sm text-rose-600 hover:underline"
+					>
+						Learn how this works
+						<ExternalLink className="size-3" />
+					</a>
+				) : null}
 			</EmptyHeader>
 			<EmptyContent>
 				{button ? (

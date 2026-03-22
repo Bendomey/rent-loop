@@ -19,6 +19,7 @@ import {
 	TypographyMuted,
 	TypographySmall,
 } from '~/components/ui/typography'
+import { ASSET_MANAGEMENT_GUIDE_URL } from '~/lib/constants'
 import { cn } from '~/lib/utils'
 
 const ValidationSchema = z.object({
@@ -105,6 +106,17 @@ export function Step0() {
 				<TypographyMuted className="">
 					Choose the category that best matches your property's layout or use.
 				</TypographyMuted>
+				<p className="text-muted-foreground text-xs">
+					Not sure which to choose?{' '}
+					<a
+						href={`${ASSET_MANAGEMENT_GUIDE_URL}#two-types-of-properties`}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="text-rose-600 hover:underline"
+					>
+						Learn about property types
+					</a>
+				</p>
 			</div>
 
 			<div>
