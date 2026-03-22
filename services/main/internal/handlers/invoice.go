@@ -13,13 +13,19 @@ import (
 )
 
 type InvoiceHandler struct {
-	appCtx   pkg.AppContext
-	service  services.InvoiceService
-	services services.Services
+	appCtx               pkg.AppContext
+	service              services.InvoiceService
+	services             services.Services
+	tenantAccountService services.TenantAccountService
 }
 
 func NewInvoiceHandler(appCtx pkg.AppContext, services services.Services) InvoiceHandler {
-	return InvoiceHandler{appCtx: appCtx, service: services.InvoiceService, services: services}
+	return InvoiceHandler{
+		appCtx:               appCtx,
+		service:              services.InvoiceService,
+		services:             services,
+		tenantAccountService: services.TenantAccountService,
+	}
 }
 
 type UpdateInvoiceRequest struct {
@@ -378,4 +384,208 @@ func (h *InvoiceHandler) RemoveLineItem(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+type TenantListInvoicesQuery struct {
+	lib.FilterQueryInput
+	ContextTenantApplicationID *string `json:"context_tenant_application_id" query:"context_tenant_application_id" validate:"omitempty,uuid4"`
+	Status                     *string `json:"status"                        query:"status"                        validate:"omitempty,oneof=DRAFT ISSUED PARTIALLY_PAID PAID VOID"`
+	Active                     *bool   `json:"active"                        query:"active"                        validate:"omitempty"`
+}
+
+// TenantListInvoices godoc
+//
+//	@Summary		List invoices for a lease (Tenant)
+//	@Description	List invoices for a specific lease scoped to the authenticated tenant. Returns both LEASE_RENT and TENANT_APPLICATION invoices.
+//	@Tags			Invoice
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			lease_id	path		string																								true	"Lease ID"
+//	@Param			q			query		TenantListInvoicesQuery																				true	"Query parameters"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.OutputInvoice,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Invoices"
+//	@Failure		400			{object}	lib.HTTPError																						"Invalid query parameters"
+//	@Failure		401			{object}	string																								"Invalid or absent authentication token"
+//	@Failure		500			{object}	string																								"An unexpected error occurred"
+//	@Router			/api/v1/leases/{lease_id}/invoices [get]
+func (h *InvoiceHandler) TenantListInvoices(w http.ResponseWriter, r *http.Request) {
+	tenantAccount, ok := lib.TenantAccountFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	account, err := h.tenantAccountService.GetMe(r.Context(), tenantAccount.ID)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	query := TenantListInvoicesQuery{
+		ContextTenantApplicationID: lib.NullOrString(r.URL.Query().Get("context_tenant_application_id")),
+		Status:                     lib.NullOrString(r.URL.Query().Get("status")),
+		Active:                     lib.NullOrBool(r.URL.Query().Get("active")),
+	}
+
+	if !lib.ValidateRequest(h.appCtx.Validator, query, w) {
+		return
+	}
+
+	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
+	if filterErr != nil {
+		HandleErrorResponse(w, filterErr)
+		return
+	}
+
+	if !lib.ValidateRequest(h.appCtx.Validator, filterQuery, w) {
+		return
+	}
+
+	leaseID := chi.URLParam(r, "lease_id")
+
+	input := repository.TenantListInvoicesFilter{
+		FilterQuery:         *filterQuery,
+		TenantID:            account.TenantId,
+		LeaseID:             leaseID,
+		TenantApplicationID: query.ContextTenantApplicationID,
+		Status:              query.Status,
+		Active:              query.Active,
+	}
+
+	invoices, count, err := h.service.TenantListInvoices(r.Context(), input)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	data := make([]interface{}, len(*invoices))
+	for i, invoice := range *invoices {
+		data[i] = transformations.DBInvoiceToRest(&invoice)
+	}
+
+	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, data, count))
+}
+
+// TenantGetInvoice godoc
+//
+//	@Summary		Get a single invoice (Tenant)
+//	@Description	Get a single invoice by ID, scoped to the authenticated tenant. Returns line items and payments.
+//	@Tags			Invoice
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			lease_id	path		string	true	"Lease ID"
+//	@Param			invoice_id	path		string	true	"Invoice ID"
+//	@Success		200			{object}	object{data=transformations.OutputInvoice}
+//	@Failure		401			{object}	string			"Invalid or absent authentication token"
+//	@Failure		403			{object}	string			"Forbidden"
+//	@Failure		404			{object}	lib.HTTPError	"Invoice not found"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/leases/{lease_id}/invoices/{invoice_id} [get]
+func (h *InvoiceHandler) TenantGetInvoice(w http.ResponseWriter, r *http.Request) {
+	tenantAccount, ok := lib.TenantAccountFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	account, err := h.tenantAccountService.GetMe(r.Context(), tenantAccount.ID)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	invoiceID := chi.URLParam(r, "invoice_id")
+	populate := []string{"LineItems", "Payments"}
+
+	invoice, err := h.service.GetByQuery(r.Context(), repository.GetInvoiceQuery{
+		Query:    map[string]any{"id": invoiceID},
+		Populate: &populate,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	if invoice.PayerTenantID == nil || *invoice.PayerTenantID != account.TenantId {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBInvoiceToRest(invoice),
+	})
+}
+
+// TenantListPaymentAccounts godoc
+//
+//	@Summary		List payment accounts for a lease's property manager (Tenant)
+//	@Description	Returns active payment accounts belonging to the property manager (client) of the unit associated with the lease. Used by tenants to know where to send payments.
+//	@Tags			PaymentAccount
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			lease_id	path		string	true	"Lease ID"
+//	@Success		200			{object}	object{data=[]transformations.OutputPaymentAccount}
+//	@Failure		401			{object}	string			"Invalid or absent authentication token"
+//	@Failure		403			{object}	string			"Forbidden"
+//	@Failure		404			{object}	lib.HTTPError	"Lease not found"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/leases/{lease_id}/payment-accounts [get]
+func (h *InvoiceHandler) TenantListPaymentAccounts(w http.ResponseWriter, r *http.Request) {
+	tenantAccount, ok := lib.TenantAccountFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	account, err := h.tenantAccountService.GetMe(r.Context(), tenantAccount.ID)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	leaseID := chi.URLParam(r, "lease_id")
+
+	// Fetch lease with unit and property to resolve the client (property manager)
+	lease, err := h.services.LeaseService.GetByIDWithPopulate(r.Context(), repository.GetLeaseQuery{
+		ID:       leaseID,
+		Populate: &[]string{"Unit.Property"},
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	// Verify the authenticated tenant owns this lease
+	if lease.TenantId != account.TenantId {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	clientID := lease.Unit.Property.ClientID
+	activeStatus := "ACTIVE"
+	ownerTypes := []string{"PROPERTY_OWNER"}
+
+	paymentAccounts, err := h.services.PaymentAccountService.ListPaymentAccounts(
+		r.Context(),
+		repository.ListPaymentAccountsFilter{
+			ClientID:   &clientID,
+			Status:     &activeStatus,
+			OwnerTypes: &ownerTypes,
+		},
+	)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	data := make([]any, len(paymentAccounts))
+	for i, pa := range paymentAccounts {
+		data[i] = transformations.DBPaymentAccountToRest(&pa)
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": data,
+	})
 }

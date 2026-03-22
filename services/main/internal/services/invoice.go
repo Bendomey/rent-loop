@@ -25,6 +25,10 @@ type InvoiceService interface {
 	DeleteInvoice(context context.Context, invoiceID string) error
 	GetByQuery(context context.Context, query repository.GetInvoiceQuery) (*models.Invoice, error)
 	ListInvoices(context context.Context, filterQuery repository.ListInvoicesFilter) (*[]models.Invoice, int64, error)
+	TenantListInvoices(
+		ctx context.Context,
+		filter repository.TenantListInvoicesFilter,
+	) (*[]models.Invoice, int64, error)
 	AddLineItem(context context.Context, input AddLineItemInput) (*models.InvoiceLineItem, error)
 	RemoveLineItem(context context.Context, input RemoveLineItemInput) error
 	GetLineItems(context context.Context, invoiceID string) ([]models.InvoiceLineItem, error)
@@ -527,6 +531,35 @@ func (s *invoiceService) ListInvoices(
 			Err: countErr,
 			Metadata: map[string]string{
 				"function": "ListInvoices",
+				"action":   "counting invoices",
+			},
+		})
+	}
+
+	return invoices, count, nil
+}
+
+func (s *invoiceService) TenantListInvoices(
+	ctx context.Context,
+	filter repository.TenantListInvoicesFilter,
+) (*[]models.Invoice, int64, error) {
+	invoices, err := s.repo.TenantList(ctx, filter)
+	if err != nil {
+		return nil, 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "TenantListInvoices",
+				"action":   "listing invoices",
+			},
+		})
+	}
+
+	count, countErr := s.repo.TenantCount(ctx, filter)
+	if countErr != nil {
+		return nil, 0, pkg.InternalServerError(countErr.Error(), &pkg.RentLoopErrorParams{
+			Err: countErr,
+			Metadata: map[string]string{
+				"function": "TenantListInvoices",
 				"action":   "counting invoices",
 			},
 		})

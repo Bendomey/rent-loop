@@ -11977,6 +11977,162 @@ paths:
       summary: 'Tenant: acknowledge or dispute checklist'
       tags:
       - LeaseChecklist
+  /api/v1/leases/{lease_id}/invoices:
+    get:
+      consumes:
+      - application/json
+      description: List invoices for a specific lease scoped to the authenticated
+        tenant. Returns both LEASE_RENT and TENANT_APPLICATION invoices.
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - in: query
+        name: active
+        type: boolean
+      - in: query
+        name: context_tenant_application_id
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - DRAFT
+        - ISSUED
+        - PARTIALLY_PAID
+        - PAID
+        - VOID
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invoices
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputInvoice'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List invoices for a lease (Tenant)
+      tags:
+      - Invoice
+  /api/v1/leases/{lease_id}/invoices/{invoice_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a single invoice by ID, scoped to the authenticated tenant.
+        Returns line items and payments.
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputInvoice'
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "404":
+          description: Invoice not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get a single invoice (Tenant)
+      tags:
+      - Invoice
   /api/v1/leases/{lease_id}/maintenance-requests:
     get:
       consumes:
@@ -12226,6 +12382,52 @@ paths:
       summary: Get maintenance request stats (Tenant)
       tags:
       - MaintenanceRequests
+  /api/v1/leases/{lease_id}/payment-accounts:
+    get:
+      consumes:
+      - application/json
+      description: Returns active payment accounts belonging to the property manager
+        (client) of the unit associated with the lease. Used by tenants to know where
+        to send payments.
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/transformations.OutputPaymentAccount'
+                type: array
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "404":
+          description: Lease not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List payment accounts for a lease's property manager (Tenant)
+      tags:
+      - PaymentAccount
   /api/v1/payments/offline:
     post:
       consumes:
