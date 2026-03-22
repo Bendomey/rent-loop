@@ -1,8 +1,18 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { useParams } from 'react-router'
-import { getBlogPostBySlug } from '~/content/blog'
 import { Footer } from '~/components/layout/footer'
 import { Header } from '~/components/layout/header'
+import { getBlogPostBySlug } from '~/content/blog'
+
+function ScrollToHash() {
+	useEffect(() => {
+		const { hash } = window.location
+		if (!hash) return
+		const el = document.querySelector(hash)
+		if (el) el.scrollIntoView({ behavior: 'smooth' })
+	}, [])
+	return null
+}
 
 export function BlogPostModule() {
 	const { slug } = useParams<{ slug: string }>()
@@ -53,6 +63,7 @@ export function BlogPostModule() {
 					>
 						<div className="prose prose-gray prose-headings:font-semibold prose-a:text-rose-600 prose-a:no-underline hover:prose-a:underline max-w-none">
 							<PostContent />
+							<ScrollToHash />
 						</div>
 					</Suspense>
 				</div>
