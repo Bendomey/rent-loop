@@ -3,6 +3,26 @@ package lib
 const SUPPORT_DETAILS_TEMPLATE = `If you have any questions, feel free to contact us at {{support_email}} / {{support_phone}}.`
 
 const (
+	CLIENT_APPLICATION_ADMIN_NOTIFICATION_SUBJECT = "New Property Manager Application Received"
+	CLIENT_APPLICATION_ADMIN_NOTIFICATION_BODY    = `Hi Team,
+
+A new property manager application has been submitted on Rentloop.
+
+Applicant Details:
+- Name: {{applicant_name}}
+- Email: {{applicant_email}}
+- Phone: {{applicant_phone}}
+- Type: {{applicant_type}}
+- Sub-Type: {{applicant_sub_type}}
+- City: {{applicant_city}}, {{applicant_region}}
+
+Please review the application in the admin dashboard.
+
+The Rentloop System
+`
+)
+
+const (
 	CLIENT_APPLICATION_SUBMITTED_SUBJECT = "Your Rentloop Application Received"
 	CLIENT_APPLICATION_SUBMITTED_BODY    = `Hi {{owner_name}},
 

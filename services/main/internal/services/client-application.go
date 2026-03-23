@@ -152,6 +152,21 @@ func (s *clientApplicationService) CreateClientApplication(
 		TextBody:  message,
 	})
 
+	adminMessage := lib.CLIENT_APPLICATION_ADMIN_NOTIFICATION_BODY
+	adminMessage = strings.ReplaceAll(adminMessage, "{{applicant_name}}", input.ContactName)
+	adminMessage = strings.ReplaceAll(adminMessage, "{{applicant_email}}", input.ContactEmail)
+	adminMessage = strings.ReplaceAll(adminMessage, "{{applicant_phone}}", input.ContactPhoneNumber)
+	adminMessage = strings.ReplaceAll(adminMessage, "{{applicant_type}}", input.Type)
+	adminMessage = strings.ReplaceAll(adminMessage, "{{applicant_sub_type}}", input.SubType)
+	adminMessage = strings.ReplaceAll(adminMessage, "{{applicant_city}}", input.City)
+	adminMessage = strings.ReplaceAll(adminMessage, "{{applicant_region}}", input.Region)
+
+	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+		Recipient: "rentloopapp@gmail.com",
+		Subject:   lib.CLIENT_APPLICATION_ADMIN_NOTIFICATION_SUBJECT,
+		TextBody:  adminMessage,
+	})
+
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
 		Recipient: input.ContactPhoneNumber,
 		Message:   message,
