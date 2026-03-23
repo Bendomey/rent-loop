@@ -7,7 +7,7 @@ part of 'create_maintenance_request_notifier.dart';
 // **************************************************************************
 
 String _$createMaintenanceRequestNotifierHash() =>
-    r'7fd91c0b9ef7a30d6dabbaf90e8e91afac61b3fa';
+    r'270e6e5ea8c5557e7647514e081c17cbf0b8e51e';
 
 /// See also [CreateMaintenanceRequestNotifier].
 @ProviderFor(CreateMaintenanceRequestNotifier)

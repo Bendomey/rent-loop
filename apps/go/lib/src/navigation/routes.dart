@@ -15,9 +15,7 @@ GoRouter buildRoutes(WidgetRef ref, Listenable refreshListenable) {
   navigatorKey = GlobalKey();
 
   final router = GoRouter(
-    observers: [
-      AnalyticsService.observer,
-    ],
+    observers: [AnalyticsService.observer],
     navigatorKey: navigatorKey,
     restorationScopeId: 'rentloop-router',
     initialLocation: '/splash',
@@ -116,6 +114,7 @@ GoRouter buildRoutes(WidgetRef ref, Listenable refreshListenable) {
               ),
             ],
           ),
+          // Invoice detail is registered outside the shell so it has a back button
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -186,6 +185,14 @@ GoRouter buildRoutes(WidgetRef ref, Listenable refreshListenable) {
         builder: (context, state) {
           final applicationId = state.pathParameters['applicationId']!;
           return TenantApplicationDetailsScreen(applicationId: applicationId);
+        },
+      ),
+      GoRoute(
+        path: '/payments/:invoiceId',
+        name: 'InvoiceDetail',
+        builder: (context, state) {
+          final invoiceId = state.pathParameters['invoiceId']!;
+          return InvoiceDetailScreen(invoiceId: invoiceId);
         },
       ),
       GoRoute(

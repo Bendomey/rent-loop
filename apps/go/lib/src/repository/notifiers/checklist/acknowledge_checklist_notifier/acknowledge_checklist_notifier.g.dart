@@ -7,7 +7,7 @@ part of 'acknowledge_checklist_notifier.dart';
 // **************************************************************************
 
 String _$acknowledgeChecklistNotifierHash() =>
-    r'97d8717ff5c1fd4d17e9f90426ef68ea0fd2bc1a';
+    r'2028a2d502cc3e5a5e85ae1e0a1ef275eac3f4b7';
 
 /// See also [AcknowledgeChecklistNotifier].
 @ProviderFor(AcknowledgeChecklistNotifier)

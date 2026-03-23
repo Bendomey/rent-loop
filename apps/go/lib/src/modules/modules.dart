@@ -5,6 +5,7 @@ export 'auth/verify/root.dart';
 export 'main/home/root.dart';
 
 export 'main/payments/root.dart';
+export 'main/payments/invoice_detail.dart';
 
 export 'main/maintenance/root.dart';
 export 'main/maintenance_details/root.dart';

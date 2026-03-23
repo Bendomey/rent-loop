@@ -16,23 +16,27 @@ class PaymentsScreen extends ConsumerWidget {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         title: Text(
-          'Payment Overview',
+          'Payments',
           style: Theme.of(
             context,
           ).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w700),
         ),
-        actions: [
-          IconButton(
-            onPressed: () => ref.invalidate(invoicesProvider),
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
-          ),
-        ],
       ),
-      body: invoicesAsync.when(
-        loading: () => _buildShimmer(),
-        error: (_, __) => _buildError(context, ref),
-        data: (invoices) => _buildContent(context, ref, invoices),
+      body: Builder(
+        builder: (_) {
+          if (!invoicesAsync.hasValue && invoicesAsync.isLoading) {
+            return _buildShimmer();
+          }
+          if (invoicesAsync.hasError && !invoicesAsync.hasValue) {
+            return _buildError(context, ref);
+          }
+          return _buildContent(
+            context,
+            ref,
+            invoicesAsync.value ?? [],
+            invoicesAsync,
+          );
+        },
       ),
     );
   }
@@ -41,10 +45,9 @@ class PaymentsScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     List<InvoiceModel> invoices,
+    AsyncValue<List<InvoiceModel>> invoicesAsync,
   ) {
-    final outstanding = invoices
-        .where((i) => i.status == 'ISSUED' || i.status == 'PARTIALLY_PAID')
-        .toList();
+    final outstanding = invoices.where((i) => i.isOutstanding).toList();
     final paid = invoices.where((i) => i.status == 'PAID').toList();
 
     final totalOutstanding = outstanding.fold<int>(
@@ -55,30 +58,34 @@ class PaymentsScreen extends ConsumerWidget {
         ? outstanding.first.currency
         : (invoices.isNotEmpty ? invoices.first.currency : 'GHS');
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _BalanceCard(
-            totalOutstanding: totalOutstanding,
-            currency: currency,
-            outstandingCount: outstanding.length,
-          ),
-          const SizedBox(height: 24),
-          _SectionTitle(title: 'Outstanding (${outstanding.length})'),
-          const SizedBox(height: 8),
-          if (outstanding.isEmpty)
-            _EmptySection(
-              icon: Icons.check_circle_outline,
-              message: 'No outstanding invoices',
-              color: Colors.green,
-            )
-          else
-            ...outstanding.map((invoice) => _InvoiceCard(invoice: invoice)),
-          const SizedBox(height: 24),
-          _PaidSection(invoices: paid),
-          const SizedBox(height: 32),
-        ],
+    return RefreshIndicator(
+      onRefresh: () => ref.refresh(invoicesProvider.future),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _BalanceCard(
+              totalOutstanding: totalOutstanding,
+              currency: currency,
+              outstandingCount: outstanding.length,
+            ),
+            const SizedBox(height: 24),
+            _SectionTitle(title: 'Outstanding (${outstanding.length})'),
+            const SizedBox(height: 8),
+            if (outstanding.isEmpty)
+              _EmptySection(
+                icon: Icons.check_circle_outline,
+                message: 'No outstanding invoices',
+                color: Colors.green,
+              )
+            else
+              ...outstanding.map((invoice) => _InvoiceCard(invoice: invoice)),
+            const SizedBox(height: 24),
+            _PaidSection(invoices: paid),
+            const SizedBox(height: 32),
+          ],
+        ),
       ),
     );
   }
@@ -103,7 +110,7 @@ class PaymentsScreen extends ConsumerWidget {
               3,
               (_) => Container(
                 margin: const EdgeInsets.only(bottom: 12),
-                height: 90,
+                height: 110,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
@@ -245,75 +252,106 @@ class _InvoiceCard extends StatelessWidget {
       '#,##0.00',
     ).format(invoice.totalAmount / 100);
     final (statusColor, statusLabel) = _statusStyle(invoice.status);
+    final days = invoice.daysUntilDue;
+    final (bannerColor, bannerLabel) = _dueBannerStyle(days, invoice.status);
 
-    String? dueDateLabel;
-    if (invoice.dueDate != null) {
-      final due = DateTime.tryParse(invoice.dueDate!)?.toLocal();
-      if (due != null) {
-        dueDateLabel = 'Due ${DateFormat('MMM d, yyyy').format(due)}';
-      }
-    }
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade100),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  invoice.code,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                  ),
-                ),
-                if (dueDateLabel != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    dueDateLabel,
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${invoice.currency} $formatted',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 4),
+    return GestureDetector(
+      onTap: () => context.push('/payments/${invoice.id}'),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade100),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Due date banner (only for outstanding with a due date)
+            if (bannerLabel != null)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20),
+                  color: bannerColor!.withValues(alpha: 0.1),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
                 ),
                 child: Text(
-                  statusLabel,
+                  bannerLabel,
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: statusColor,
+                    color: bannerColor,
                   ),
                 ),
               ),
-            ],
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          invoice.code,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        _ContextBadge(invoice: invoice),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${invoice.currency} $formatted',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          statusLabel,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: statusColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right,
+                    color: Colors.grey.shade400,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -325,6 +363,84 @@ class _InvoiceCard extends StatelessWidget {
       'VOID' => (Colors.grey.shade500, 'VOID'),
       _ => (Colors.red.shade700, 'UNPAID'),
     };
+  }
+
+  (Color?, String?) _dueBannerStyle(int? days, String status) {
+    if (status == 'PAID' || status == 'VOID') return (null, null);
+    if (days == null) return (null, null);
+    if (days < 0) {
+      return (
+        Colors.red.shade700,
+        'Overdue by ${-days} day${-days == 1 ? '' : 's'}',
+      );
+    }
+    if (days == 0) return (Colors.red.shade700, 'Due today');
+    if (days <= 3)
+      return (Colors.red.shade600, 'Due in $days day${days == 1 ? '' : 's'}');
+    if (days <= 7) return (Colors.orange.shade700, 'Due in $days days');
+    return (null, null);
+  }
+}
+
+class _ContextBadge extends StatelessWidget {
+  final InvoiceModel invoice;
+  const _ContextBadge({required this.invoice});
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, onTap) = _resolveContext(context, invoice);
+
+    final badge = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+      ),
+    );
+
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            badge,
+            const SizedBox(width: 2),
+            Icon(Icons.open_in_new, size: 11, color: Colors.grey.shade500),
+          ],
+        ),
+      );
+    }
+    return badge;
+  }
+
+  (String, VoidCallback?) _resolveContext(
+    BuildContext context,
+    InvoiceModel invoice,
+  ) {
+    switch (invoice.contextType) {
+      case 'LEASE_RENT':
+        return ('Rent', () => context.push('/more/lease-details'));
+      case 'TENANT_APPLICATION':
+        final appId = invoice.contextTenantApplicationId;
+        if (appId != null) {
+          return (
+            'Application',
+            () => context.push('/more/tenant-application/$appId'),
+          );
+        }
+        return ('Application', null);
+      case 'MAINTENANCE':
+        return ('Maintenance', null);
+      case 'GENERAL_EXPENSE':
+        return ('Expense', null);
+      default:
+        return (invoice.contextType, null);
+    }
   }
 }
 

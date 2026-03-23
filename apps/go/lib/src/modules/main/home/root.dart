@@ -61,7 +61,7 @@ class _HomeContent extends ConsumerWidget {
         const ChecklistReviewCard(),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          child: UplomingPaymentCard(),
+          child: UpcomingPaymentCard(),
         ),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 10),
