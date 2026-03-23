@@ -46,7 +46,10 @@ class CurrentLeaseNotifier extends _$CurrentLeaseNotifier {
   Future<void> setLease(LeaseModel lease) async {
     await ref.read(leaseIdManagerProvider).save(lease.id);
     state = lease;
-    await AnalyticsService.logEvent('lease_switched', parameters: {'lease_id': lease.id});
+    await AnalyticsService.logEvent(
+      'lease_switched',
+      parameters: {'lease_id': lease.id},
+    );
   }
 
   void clear() {

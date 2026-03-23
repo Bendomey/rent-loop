@@ -44,7 +44,11 @@ class CreateMaintenanceRequestNotifier
       ref.invalidate(mrStatsProvider);
       await AnalyticsService.logEvent(
         'maintenance_request_submitted',
-        parameters: {'mr_id': mr.id, 'category': category, 'priority': priority},
+        parameters: {
+          'mr_id': mr.id,
+          'category': category,
+          'priority': priority,
+        },
       );
       state = CreateMaintenanceRequestState(status: ApiStatus.success);
       return mr.id;
