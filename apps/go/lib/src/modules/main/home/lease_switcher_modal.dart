@@ -13,7 +13,7 @@ void showLeaseSwitcherModal(
 ) {
   showCupertinoModalBottomSheet(
     context: context,
-    builder: (context) => Container(
+    builder: (context) => SizedBox(
       height: MediaQuery.of(context).size.height * 0.8,
       child: CupertinoPageScaffold(
         navigationBar: CupertinoNavigationBar(

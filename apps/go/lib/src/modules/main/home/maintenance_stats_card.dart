@@ -170,22 +170,22 @@ class MaintenanceStatsCard extends ConsumerWidget {
                 );
               },
             ),
-            const SizedBox(height: 5),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () async {
-                    await Haptics.vibrate(HapticsType.selection);
-                    if (context.mounted) {
-                      context.push('/maintenance/new');
-                    }
-                  },
-                  child: Text("Report an Issue"),
-                ),
-              ),
-            ),
+            // const SizedBox(height: 5),
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(horizontal: 10),
+            //   child: SizedBox(
+            //     width: double.infinity,
+            //     child: FilledButton(
+            //       onPressed: () async {
+            //         await Haptics.vibrate(HapticsType.selection);
+            //         if (context.mounted) {
+            //           context.push('/maintenance/new');
+            //         }
+            //       },
+            //       child: Text("Report an Issue"),
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ),

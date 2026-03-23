@@ -44,6 +44,16 @@ class InvoiceApi extends AbstractApi {
         .toList();
   }
 
+  /// Get invoice stats grouped by status for the active lease.
+  Future<Map<String, dynamic>> getInvoiceStats(String leaseId) async {
+    final response = await execute(
+      method: 'GET',
+      path: '/api/v1/leases/$leaseId/invoices/stats',
+    );
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return json['data'] as Map<String, dynamic>;
+  }
+
   /// Get a single invoice with line items and payments populated.
   Future<InvoiceModel> getInvoice(String leaseId, String invoiceId) async {
     final response = await execute(

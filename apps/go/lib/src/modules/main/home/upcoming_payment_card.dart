@@ -12,7 +12,7 @@ class UpcomingPaymentCard extends ConsumerWidget {
     final invoiceAsync = ref.watch(nextOutstandingInvoiceProvider);
 
     if (!invoiceAsync.hasValue && invoiceAsync.isLoading) {
-      return _UpcomingPaymentSkeleton();
+      return const SizedBox.shrink();
     }
 
     final invoice = invoiceAsync.valueOrNull;
@@ -162,14 +162,16 @@ class _InvoicePreview extends StatelessWidget {
 
   (Color, String) _dueBannerStyle(int? days) {
     if (days == null) return (Colors.grey, 'No due date set');
-    if (days < 0)
+    if (days < 0) {
       return (
         Colors.red.shade700,
         'Overdue by ${-days} day${-days == 1 ? '' : 's'}',
       );
+    }
     if (days == 0) return (Colors.red.shade700, 'Due today');
-    if (days <= 3)
+    if (days <= 3) {
       return (Colors.red.shade600, 'Due in $days day${days == 1 ? '' : 's'}');
+    }
     if (days <= 7) return (Colors.orange.shade700, 'Due in $days days');
     return (Colors.green.shade700, 'Due in $days days');
   }
@@ -190,22 +192,5 @@ class _InvoicePreview extends StatelessWidget {
       'GENERAL_EXPENSE' => 'Expense',
       _ => contextType,
     };
-  }
-}
-
-class _UpcomingPaymentSkeleton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey.shade200,
-      highlightColor: Colors.grey.shade50,
-      child: Container(
-        height: 160,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    );
   }
 }

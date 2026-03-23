@@ -49,6 +49,25 @@ final nextOutstandingInvoiceProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef NextOutstandingInvoiceRef = AutoDisposeFutureProviderRef<InvoiceModel?>;
+String _$invoiceStatsHash() => r'5bf424d20b76e10234409476bb340529bfd8e2af';
+
+/// Fetches invoice stats (counts + amounts grouped by status) for the active lease.
+/// Used by the home screen payment summary card.
+///
+/// Copied from [invoiceStats].
+@ProviderFor(invoiceStats)
+final invoiceStatsProvider = FutureProvider<Map<String, dynamic>>.internal(
+  invoiceStats,
+  name: r'invoiceStatsProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$invoiceStatsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef InvoiceStatsRef = FutureProviderRef<Map<String, dynamic>>;
 String _$invoiceDetailHash() => r'3dd246349949320c289cf8a3595312d5dd3433a9';
 
 /// Copied from Dart SDK

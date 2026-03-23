@@ -4,8 +4,12 @@ import 'package:rentloop_go/src/repository/models/lease_model.dart';
 import 'package:rentloop_go/src/repository/providers/leases_provider.dart';
 import 'announcements_card.dart';
 import 'checklist_review_card.dart';
+import 'lease_overview_card.dart';
 import 'lease_selector_bar.dart';
 import 'maintenance_stats_card.dart';
+import 'payment_summary_card.dart';
+import 'quick_actions_card.dart';
+import 'unit_info_card.dart';
 import 'upcoming_payment_card.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -50,19 +54,39 @@ class _HomeContent extends ConsumerWidget {
         LeaseSelectorBar(leases: leases),
         const SizedBox(height: 10),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 30),
           child: Text(
             'Welcome back, ${currentUser?.tenant?.firstName ?? 'tenant'}!',
             style: Theme.of(context).textTheme.displaySmall,
           ),
         ),
-        const SizedBox(height: 5),
         const AnnouncementsCard(),
         const ChecklistReviewCard(),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           child: UpcomingPaymentCard(),
         ),
+
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 10),
+          child: LeaseOverviewCard(),
+        ),
+        const SizedBox(height: 10),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 10),
+          child: UnitInfoCard(),
+        ),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 10),
+          child: QuickActionsCard(),
+        ),
+        const SizedBox(height: 10),
+        const SizedBox(height: 10),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 10),
+          child: PaymentSummaryCard(),
+        ),
+        const SizedBox(height: 10),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 10),
           child: MaintenanceStatsCard(),

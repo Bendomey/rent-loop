@@ -41,6 +41,16 @@ Future<InvoiceModel?> nextOutstandingInvoice(
   return invoices.firstOrNull;
 }
 
+/// Fetches invoice stats (counts + amounts grouped by status) for the active lease.
+/// Used by the home screen payment summary card.
+@Riverpod(keepAlive: true)
+Future<Map<String, dynamic>> invoiceStats(InvoiceStatsRef ref) async {
+  final activeLease = ref.watch(currentLeaseNotifierProvider);
+  if (activeLease == null) return {};
+
+  return ref.read(invoiceApiProvider).getInvoiceStats(activeLease.id);
+}
+
 /// Fetches a single invoice with full line items and payments detail.
 @riverpod
 Future<InvoiceModel> invoiceDetail(
