@@ -5134,7 +5134,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
                         "name": "status",
                         "in": "query"
                     }
@@ -12507,14 +12511,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "DRAFT",
-                            "ISSUED",
-                            "PARTIALLY_PAID",
-                            "PAID",
-                            "VOID"
-                        ],
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
                         "name": "status",
                         "in": "query"
                     }

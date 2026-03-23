@@ -7081,9 +7081,12 @@ paths:
       - in: query
         name: start_date
         type: string
-      - in: query
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
         name: status
-        type: string
+        type: array
       produces:
       - application/json
       responses:
@@ -12042,15 +12045,12 @@ paths:
       - in: query
         name: start_date
         type: string
-      - enum:
-        - DRAFT
-        - ISSUED
-        - PARTIALLY_PAID
-        - PAID
-        - VOID
+      - collectionFormat: csv
         in: query
+        items:
+          type: string
         name: status
-        type: string
+        type: array
       produces:
       - application/json
       responses:

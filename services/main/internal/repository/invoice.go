@@ -82,7 +82,7 @@ type ListInvoicesFilter struct {
 	PayeeType                  *string
 	PayeeClientID              *string
 	ContextType                *string
-	Status                     *string
+	Status                     *[]string
 	Active                     *bool
 	PropertyID                 *string
 	ContextLeaseID             *string
@@ -98,7 +98,7 @@ type TenantListInvoicesFilter struct {
 	TenantID            string
 	LeaseID             string
 	TenantApplicationID *string
-	Status              *string
+	Status              *[]string
 	Active              *bool
 }
 
@@ -268,12 +268,12 @@ func invoiceContextTypeScope(contextType *string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func invoiceStatusScope(status *string) func(db *gorm.DB) *gorm.DB {
+func invoiceStatusScope(statuses *[]string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if status == nil {
+		if statuses == nil || len(*statuses) == 0 {
 			return db
 		}
-		return db.Where("invoices.status = ?", *status)
+		return db.Where("invoices.status IN ?", *statuses)
 	}
 }
 

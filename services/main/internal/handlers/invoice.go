@@ -160,14 +160,14 @@ func (h *InvoiceHandler) GetInvoiceByID(w http.ResponseWriter, r *http.Request) 
 
 type ListInvoicesQuery struct {
 	lib.FilterQueryInput
-	PayerType     *string `json:"payer_type"      query:"payer_type"`
-	PayerClientID *string `json:"payer_client_id" query:"payer_client_id"`
-	PayerTenantID *string `json:"payer_tenant_id" query:"payer_tenant_id"`
-	PayeeType     *string `json:"payee_type"      query:"payee_type"`
-	PayeeClientID *string `json:"payee_client_id" query:"payee_client_id"`
-	ContextType   *string `json:"context_type"    query:"context_type"`
-	Status        *string `json:"status"          query:"status"`
-	Active        *bool   `json:"active"          query:"active"          description:"Filter invoices by active status. true for active invoices, false for VOID invoices"`
+	PayerType     *string   `json:"payer_type"      query:"payer_type"`
+	PayerClientID *string   `json:"payer_client_id" query:"payer_client_id"`
+	PayerTenantID *string   `json:"payer_tenant_id" query:"payer_tenant_id"`
+	PayeeType     *string   `json:"payee_type"      query:"payee_type"`
+	PayeeClientID *string   `json:"payee_client_id" query:"payee_client_id"`
+	ContextType   *string   `json:"context_type"    query:"context_type"`
+	Status        *[]string `json:"status"          query:"status"          validate:"omitempty,dive,oneof=DRAFT ISSUED PARTIALLY_PAID PAID VOID"`
+	Active        *bool     `json:"active"          query:"active"                                                                                description:"Filter invoices by active status. true for active invoices, false for VOID invoices"`
 }
 
 // ListInvoices godoc
@@ -205,7 +205,7 @@ func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 		PayeeType:     lib.NullOrString(r.URL.Query().Get("payee_type")),
 		PayeeClientID: lib.NullOrString(r.URL.Query().Get("payee_client_id")),
 		ContextType:   lib.NullOrString(r.URL.Query().Get("context_type")),
-		Status:        lib.NullOrString(r.URL.Query().Get("status")),
+		Status:        lib.NullOrStringArray(r.URL.Query()["status"]),
 		Active:        lib.NullOrBool(r.URL.Query().Get("active")),
 		PropertyID:    lib.NullOrString(chi.URLParam(r, "property_id")),
 	}
@@ -388,9 +388,9 @@ func (h *InvoiceHandler) RemoveLineItem(w http.ResponseWriter, r *http.Request) 
 
 type TenantListInvoicesQuery struct {
 	lib.FilterQueryInput
-	ContextTenantApplicationID *string `json:"context_tenant_application_id" query:"context_tenant_application_id" validate:"omitempty,uuid4"`
-	Status                     *string `json:"status"                        query:"status"                        validate:"omitempty,oneof=DRAFT ISSUED PARTIALLY_PAID PAID VOID"`
-	Active                     *bool   `json:"active"                        query:"active"                        validate:"omitempty"`
+	ContextTenantApplicationID *string   `json:"context_tenant_application_id" query:"context_tenant_application_id" validate:"omitempty,uuid4"`
+	Status                     *[]string `json:"status"                        query:"status"                        validate:"omitempty,dive,oneof=DRAFT ISSUED PARTIALLY_PAID PAID VOID"`
+	Active                     *bool     `json:"active"                        query:"active"                        validate:"omitempty"`
 }
 
 // TenantListInvoices godoc
@@ -423,7 +423,7 @@ func (h *InvoiceHandler) TenantListInvoices(w http.ResponseWriter, r *http.Reque
 
 	query := TenantListInvoicesQuery{
 		ContextTenantApplicationID: lib.NullOrString(r.URL.Query().Get("context_tenant_application_id")),
-		Status:                     lib.NullOrString(r.URL.Query().Get("status")),
+		Status:                     lib.NullOrStringArray(r.URL.Query()["status"]),
 		Active:                     lib.NullOrBool(r.URL.Query().Get("active")),
 	}
 

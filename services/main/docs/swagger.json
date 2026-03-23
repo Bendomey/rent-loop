@@ -5126,7 +5126,11 @@
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
                         "name": "status",
                         "in": "query"
                     }
@@ -12499,14 +12503,11 @@
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            "DRAFT",
-                            "ISSUED",
-                            "PARTIALLY_PAID",
-                            "PAID",
-                            "VOID"
-                        ],
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
                         "name": "status",
                         "in": "query"
                     }
