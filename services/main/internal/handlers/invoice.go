@@ -495,6 +495,20 @@ func (h *InvoiceHandler) TenantGetInvoice(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	leaseID := chi.URLParam(r, "lease_id")
+	lease, err := h.services.LeaseService.GetByIDWithPopulate(r.Context(), repository.GetLeaseQuery{
+		ID: leaseID,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	if lease.TenantId != account.TenantId {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
 	invoiceID := chi.URLParam(r, "invoice_id")
 	populate := []string{"LineItems", "Payments"}
 
@@ -507,7 +521,10 @@ func (h *InvoiceHandler) TenantGetInvoice(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if invoice.PayerTenantID == nil || *invoice.PayerTenantID != account.TenantId {
+	ownedByTenant := (invoice.PayerTenantID != nil && *invoice.PayerTenantID == account.TenantId) ||
+		(invoice.ContextTenantApplicationID != nil && *invoice.ContextTenantApplicationID == lease.TenantApplicationId)
+
+	if !ownedByTenant {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
