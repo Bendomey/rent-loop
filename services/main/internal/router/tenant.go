@@ -68,6 +68,7 @@ func NewTenantAccountRouter(appCtx pkg.AppContext, handlers handlers.Handlers) f
 
 			// tenant invoices
 			r.Get("/v1/leases/{lease_id}/invoices", handlers.InvoiceHandler.TenantListInvoices)
+			r.Get("/v1/leases/{lease_id}/invoices/stats", handlers.InvoiceHandler.TenantInvoiceStats)
 			r.Get("/v1/leases/{lease_id}/invoices/{invoice_id}", handlers.InvoiceHandler.TenantGetInvoice)
 
 			// tenant payment accounts (for the lease's property manager)

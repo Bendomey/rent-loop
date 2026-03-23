@@ -17,12 +17,24 @@ type InvoiceRepository interface {
 	Count(context context.Context, filterQuery ListInvoicesFilter) (int64, error)
 	TenantList(ctx context.Context, filter TenantListInvoicesFilter) (*[]models.Invoice, error)
 	TenantCount(ctx context.Context, filter TenantListInvoicesFilter) (int64, error)
+	TenantStatsByStatus(
+		ctx context.Context,
+		tenantID, leaseID string,
+		tenantApplicationID *string,
+	) ([]InvoiceStatusStat, error)
 	Delete(context context.Context, invoiceID string) error
 	CreateLineItem(context context.Context, lineItem *models.InvoiceLineItem) error
 	GetLineItem(context context.Context, lineItemID string) (*models.InvoiceLineItem, error)
 	GetLineItems(context context.Context, invoiceID string) ([]models.InvoiceLineItem, error)
 	DeleteLineItem(context context.Context, lineItemID string) error
 	ListForReminders(ctx context.Context) (*[]models.Invoice, error)
+}
+
+// InvoiceStatusStat holds the count and total amount for a single invoice status.
+type InvoiceStatusStat struct {
+	Status      string
+	Count       int64
+	TotalAmount int64
 }
 
 type invoiceRepository struct {
@@ -211,6 +223,26 @@ func (r *invoiceRepository) TenantCount(ctx context.Context, filter TenantListIn
 	}
 
 	return count, nil
+}
+
+func (r *invoiceRepository) TenantStatsByStatus(
+	ctx context.Context,
+	tenantID, leaseID string,
+	tenantApplicationID *string,
+) ([]InvoiceStatusStat, error) {
+	var results []InvoiceStatusStat
+
+	err := r.DB.WithContext(ctx).
+		Model(&models.Invoice{}).
+		Select("status, COUNT(*) as count, COALESCE(SUM(total_amount), 0) as total_amount").
+		Scopes(invoiceTenantOwnerContextScope(&tenantID, &leaseID, tenantApplicationID)).
+		Group("status").
+		Find(&results).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }
 
 // Invoice filter scopes

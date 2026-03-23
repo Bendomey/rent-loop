@@ -147,3 +147,12 @@ func DBInvoiceLineItemToRest(i *models.InvoiceLineItem) any {
 
 	return data
 }
+
+// InvoiceStatsResponse is the response shape for the tenant invoice stats endpoint.
+type InvoiceStatsResponse struct {
+	IssuedCount        int64 `json:"issued_count"         example:"2"`
+	PartiallyPaidCount int64 `json:"partially_paid_count" example:"1"`
+	PaidCount          int64 `json:"paid_count"           example:"5"`
+	OutstandingAmount  int64 `json:"outstanding_amount"   example:"170000"`
+	PaidAmount         int64 `json:"paid_amount"          example:"600000"`
+}

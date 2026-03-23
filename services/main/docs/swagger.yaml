@@ -2024,6 +2024,24 @@ definitions:
         format: date-time
         type: string
     type: object
+  transformations.InvoiceStatsResponse:
+    properties:
+      issued_count:
+        example: 2
+        type: integer
+      outstanding_amount:
+        example: 170000
+        type: integer
+      paid_amount:
+        example: 600000
+        type: integer
+      paid_count:
+        example: 5
+        type: integer
+      partially_paid_count:
+        example: 1
+        type: integer
+    type: object
   transformations.MaintenanceRequestStatsResponse:
     properties:
       canceled:
@@ -12131,6 +12149,41 @@ paths:
       security:
       - BearerAuth: []
       summary: Get a single invoice (Tenant)
+      tags:
+      - Invoice
+  /api/v1/leases/{lease_id}/invoices/stats:
+    get:
+      consumes:
+      - application/json
+      description: Returns invoice counts and amounts grouped by status for the authenticated
+        tenant's lease.
+      parameters:
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invoice stats
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.InvoiceStatsResponse'
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get invoice stats for a lease (Tenant)
       tags:
       - Invoice
   /api/v1/leases/{lease_id}/maintenance-requests:

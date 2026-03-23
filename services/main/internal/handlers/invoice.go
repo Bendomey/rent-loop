@@ -466,6 +466,75 @@ func (h *InvoiceHandler) TenantListInvoices(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, data, count))
 }
 
+// TenantInvoiceStats godoc
+//
+//	@Summary		Get invoice stats for a lease (Tenant)
+//	@Description	Returns invoice counts and amounts grouped by status for the authenticated tenant's lease.
+//	@Tags			Invoice
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			lease_id	path		string												true	"Lease ID"
+//	@Success		200			{object}	object{data=transformations.InvoiceStatsResponse}	"Invoice stats"
+//	@Failure		401			{object}	string												"Invalid or absent authentication token"
+//	@Failure		500			{object}	string												"An unexpected error occurred"
+//	@Router			/api/v1/leases/{lease_id}/invoices/stats [get]
+func (h *InvoiceHandler) TenantInvoiceStats(w http.ResponseWriter, r *http.Request) {
+	tenantAccount, ok := lib.TenantAccountFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	account, err := h.tenantAccountService.GetMe(r.Context(), tenantAccount.ID)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	leaseID := chi.URLParam(r, "lease_id")
+	lease, err := h.services.LeaseService.GetByIDWithPopulate(r.Context(), repository.GetLeaseQuery{
+		ID: leaseID,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	if lease.TenantId != account.TenantId {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	var tenantApplicationID *string
+	if lease.TenantApplicationId != "" {
+		tenantApplicationID = &lease.TenantApplicationId
+	}
+
+	stats, err := h.service.TenantInvoiceStats(r.Context(), account.TenantId, leaseID, tenantApplicationID)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	resp := transformations.InvoiceStatsResponse{}
+	for _, s := range stats {
+		switch s.Status {
+		case "ISSUED":
+			resp.IssuedCount = s.Count
+			resp.OutstandingAmount += s.TotalAmount
+		case "PARTIALLY_PAID":
+			resp.PartiallyPaidCount = s.Count
+			resp.OutstandingAmount += s.TotalAmount
+		case "PAID":
+			resp.PaidCount = s.Count
+			resp.PaidAmount = s.TotalAmount
+		}
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{"data": resp})
+}
+
 // TenantGetInvoice godoc
 //
 //	@Summary		Get a single invoice (Tenant)

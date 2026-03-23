@@ -12564,6 +12564,60 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/leases/{lease_id}/invoices/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns invoice counts and amounts grouped by status for the authenticated tenant's lease.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Get invoice stats for a lease (Tenant)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lease ID",
+                        "name": "lease_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoice stats",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.InvoiceStatsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/leases/{lease_id}/invoices/{invoice_id}": {
             "get": {
                 "security": [
@@ -16960,6 +17014,31 @@ const docTemplate = `{
                     "type": "string",
                     "format": "date-time",
                     "example": "2023-01-01T00:00:00Z"
+                }
+            }
+        },
+        "transformations.InvoiceStatsResponse": {
+            "type": "object",
+            "properties": {
+                "issued_count": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "outstanding_amount": {
+                    "type": "integer",
+                    "example": 170000
+                },
+                "paid_amount": {
+                    "type": "integer",
+                    "example": 600000
+                },
+                "paid_count": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "partially_paid_count": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },

@@ -29,6 +29,11 @@ type InvoiceService interface {
 		ctx context.Context,
 		filter repository.TenantListInvoicesFilter,
 	) (*[]models.Invoice, int64, error)
+	TenantInvoiceStats(
+		ctx context.Context,
+		tenantID, leaseID string,
+		tenantApplicationID *string,
+	) ([]repository.InvoiceStatusStat, error)
 	AddLineItem(context context.Context, input AddLineItemInput) (*models.InvoiceLineItem, error)
 	RemoveLineItem(context context.Context, input RemoveLineItemInput) error
 	GetLineItems(context context.Context, invoiceID string) ([]models.InvoiceLineItem, error)
@@ -566,6 +571,24 @@ func (s *invoiceService) TenantListInvoices(
 	}
 
 	return invoices, count, nil
+}
+
+func (s *invoiceService) TenantInvoiceStats(
+	ctx context.Context,
+	tenantID, leaseID string,
+	tenantApplicationID *string,
+) ([]repository.InvoiceStatusStat, error) {
+	stats, err := s.repo.TenantStatsByStatus(ctx, tenantID, leaseID, tenantApplicationID)
+	if err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "TenantInvoiceStats",
+				"action":   "counting invoices by status",
+			},
+		})
+	}
+	return stats, nil
 }
 
 type AddLineItemInput struct {
