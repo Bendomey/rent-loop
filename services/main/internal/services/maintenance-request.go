@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
@@ -194,7 +195,10 @@ func (s *maintenanceRequestService) CreateByTenant(
 	ctx context.Context,
 	input CreateMaintenanceRequestByTenantInput,
 ) (*models.MaintenanceRequest, error) {
-	lease, err := s.leaseRepo.GetOneWithPopulate(ctx, repository.GetLeaseQuery{ID: input.LeaseID})
+	lease, err := s.leaseRepo.GetOneWithPopulate(ctx, repository.GetLeaseQuery{
+		ID:       input.LeaseID,
+		Populate: &[]string{"ActivatedBy", "Unit", "Tenant"},
+	})
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, pkg.NotFoundError("lease not found", nil)
@@ -236,6 +240,24 @@ func (s *maintenanceRequestService) CreateByTenant(
 			},
 		})
 	}
+
+	go func() {
+		if lease.ActivatedById == nil || lease.ActivatedBy == nil || lease.ActivatedBy.Email == "" {
+			return
+		}
+		message := strings.NewReplacer(
+			"{{tenant_name}}", lease.Tenant.FirstName,
+			"{{unit_name}}", lease.Unit.Name,
+			"{{title}}", mr.Title,
+			"{{category}}", mr.Category,
+			"{{priority}}", mr.Priority,
+		).Replace(lib.ApplyGlobalVariableTemplate(s.appCtx.Config, lib.PM_MAINTENANCE_REQUEST_CREATED_BODY))
+		pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+			Recipient: lease.ActivatedBy.Email,
+			Subject:   lib.PM_MAINTENANCE_REQUEST_CREATED_SUBJECT,
+			TextBody:  message,
+		})
+	}()
 
 	return mr, nil
 }

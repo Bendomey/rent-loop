@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
@@ -436,8 +437,9 @@ func (s *leaseChecklistService) AcknowledgeLeaseChecklist(
 	input AcknowledgeLeaseChecklistInput,
 ) (*models.LeaseChecklist, error) {
 	checklist, err := s.repo.GetOneWithPopulate(ctx, repository.GetLeaseCheckListQuery{
-		ID:      input.ChecklistID,
-		LeaseID: input.LeaseID,
+		ID:       input.ChecklistID,
+		LeaseID:  input.LeaseID,
+		Populate: &[]string{"CreatedBy"},
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -516,6 +518,31 @@ func (s *leaseChecklistService) AcknowledgeLeaseChecklist(
 			},
 		})
 	}
+
+	go func() {
+		if checklist.CreatedBy.Email == "" {
+			return
+		}
+		bgCtx := context.Background()
+		lease, leaseErr := s.leaseRepo.GetOneWithPopulate(bgCtx, repository.GetLeaseQuery{
+			ID:       input.LeaseID,
+			Populate: &[]string{"Unit", "Tenant"},
+		})
+		if leaseErr != nil {
+			return
+		}
+		message := strings.NewReplacer(
+			"{{tenant_name}}", lease.Tenant.FirstName,
+			"{{unit_name}}", lease.Unit.Name,
+			"{{checklist_type}}", checklist.Type,
+			"{{action}}", input.Action,
+		).Replace(lib.ApplyGlobalVariableTemplate(s.appCtx.Config, lib.PM_CHECKLIST_ACKNOWLEDGED_BODY))
+		pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+			Recipient: checklist.CreatedBy.Email,
+			Subject:   lib.PM_CHECKLIST_ACKNOWLEDGED_SUBJECT,
+			TextBody:  message,
+		})
+	}()
 
 	return checklist, nil
 }

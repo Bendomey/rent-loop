@@ -32,31 +32,37 @@ type PaymentService interface {
 }
 
 type paymentService struct {
-	appCtx                pkg.AppContext
-	repo                  repository.PaymentRepository
-	paymentAccountService PaymentAccountService
-	invoiceService        InvoiceService
-	accountingService     AccountingService
-	notificationService   NotificationService
+	appCtx                   pkg.AppContext
+	repo                     repository.PaymentRepository
+	paymentAccountService    PaymentAccountService
+	invoiceService           InvoiceService
+	accountingService        AccountingService
+	notificationService      NotificationService
+	leaseService             LeaseService
+	tenantApplicationService TenantApplicationService
 }
 
 type PaymentServiceDeps struct {
-	AppCtx                pkg.AppContext
-	Repo                  repository.PaymentRepository
-	PaymentAccountService PaymentAccountService
-	InvoiceService        InvoiceService
-	AccountingService     AccountingService
-	NotificationService   NotificationService
+	AppCtx                   pkg.AppContext
+	Repo                     repository.PaymentRepository
+	PaymentAccountService    PaymentAccountService
+	InvoiceService           InvoiceService
+	AccountingService        AccountingService
+	NotificationService      NotificationService
+	LeaseService             LeaseService
+	TenantApplicationService TenantApplicationService
 }
 
 func NewPaymentService(deps PaymentServiceDeps) PaymentService {
 	return &paymentService{
-		appCtx:                deps.AppCtx,
-		repo:                  deps.Repo,
-		paymentAccountService: deps.PaymentAccountService,
-		invoiceService:        deps.InvoiceService,
-		accountingService:     deps.AccountingService,
-		notificationService:   deps.NotificationService,
+		appCtx:                   deps.AppCtx,
+		repo:                     deps.Repo,
+		paymentAccountService:    deps.PaymentAccountService,
+		invoiceService:           deps.InvoiceService,
+		accountingService:        deps.AccountingService,
+		notificationService:      deps.NotificationService,
+		leaseService:             deps.LeaseService,
+		tenantApplicationService: deps.TenantApplicationService,
 	}
 }
 
@@ -224,6 +230,52 @@ func (s *paymentService) CreateOfflinePayment(
 			},
 		})
 	}
+
+	go func() {
+		bgCtx := context.Background()
+		if invoice.ContextLeaseID != nil && s.leaseService != nil {
+			lease, leaseErr := s.leaseService.GetByIDWithPopulate(bgCtx, repository.GetLeaseQuery{
+				ID:       *invoice.ContextLeaseID,
+				Populate: &[]string{"ActivatedBy", "Unit", "Tenant"},
+			})
+			if leaseErr != nil || lease.ActivatedById == nil || lease.ActivatedBy == nil ||
+				lease.ActivatedBy.Email == "" {
+				return
+			}
+			message := strings.NewReplacer(
+				"{{tenant_name}}", lease.Tenant.FirstName,
+				"{{unit_name}}", lease.Unit.Name,
+				"{{invoice_code}}", invoice.Code,
+				"{{amount}}", lib.FormatAmount(lib.PesewasToCedis(invoice.TotalAmount)),
+				"{{currency}}", invoice.Currency,
+			).Replace(lib.ApplyGlobalVariableTemplate(s.appCtx.Config, lib.PM_OFFLINE_PAYMENT_SUBMITTED_BODY))
+			pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+				Recipient: lease.ActivatedBy.Email,
+				Subject:   lib.PM_OFFLINE_PAYMENT_SUBMITTED_SUBJECT,
+				TextBody:  message,
+			})
+		} else if invoice.ContextTenantApplicationID != nil && s.tenantApplicationService != nil {
+			ta, taErr := s.tenantApplicationService.GetOneTenantApplication(bgCtx, repository.GetTenantApplicationQuery{
+				TenantApplicationID: *invoice.ContextTenantApplicationID,
+				Populate:            &[]string{"CreatedBy"},
+			})
+			if taErr != nil || ta.CreatedBy.Email == "" {
+				return
+			}
+			message := strings.NewReplacer(
+				"{{tenant_name}}", ta.FirstName+" "+ta.LastName,
+				"{{unit_name}}", "",
+				"{{invoice_code}}", invoice.Code,
+				"{{amount}}", lib.FormatAmount(lib.PesewasToCedis(invoice.TotalAmount)),
+				"{{currency}}", invoice.Currency,
+			).Replace(lib.ApplyGlobalVariableTemplate(s.appCtx.Config, lib.PM_OFFLINE_PAYMENT_SUBMITTED_BODY))
+			pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+				Recipient: ta.CreatedBy.Email,
+				Subject:   lib.PM_OFFLINE_PAYMENT_SUBMITTED_SUBJECT,
+				TextBody:  message,
+			})
+		}
+	}()
 
 	return &payment, nil
 }

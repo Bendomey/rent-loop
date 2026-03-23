@@ -504,3 +504,69 @@ The Rentloop Team
 `
 	WAITLIST_JOINED_SMS_BODY = `Hi {{full_name}}, you're on the waitlist! We'll let you know when we launch. Stay tuned.`
 )
+
+const (
+	PM_MAINTENANCE_REQUEST_CREATED_SUBJECT = "New Maintenance Request Submitted"
+	PM_MAINTENANCE_REQUEST_CREATED_BODY    = `Hi,
+
+A tenant has submitted a new maintenance request for one of your units.
+
+Tenant: {{tenant_name}}
+Unit: {{unit_name}}
+Title: {{title}}
+Category: {{category}}
+Priority: {{priority}}
+
+Please log in to your Rentloop dashboard to review and manage this request.
+
+Dashboard: {{property_manager_portal_url}}
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop Team
+`
+)
+
+const (
+	PM_OFFLINE_PAYMENT_SUBMITTED_SUBJECT = "Tenant Has Made Some Payments"
+	PM_OFFLINE_PAYMENT_SUBMITTED_BODY    = `Hi,
+
+A tenant has submitted an offline payment that is pending your verification.
+
+Tenant: {{tenant_name}}
+Unit: {{unit_name}}
+Invoice: {{invoice_code}}
+Amount: {{currency}} {{amount}}
+
+Please log in to your Rentloop dashboard to verify this payment.
+
+Dashboard: {{property_manager_portal_url}}
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop Team
+`
+)
+
+const (
+	PM_CHECKLIST_ACKNOWLEDGED_SUBJECT = "Tenant Has Responded to a Unit Report"
+	PM_CHECKLIST_ACKNOWLEDGED_BODY    = `Hi,
+
+A tenant has responded to a {{checklist_type}} checklist for one of your units.
+
+Tenant: {{tenant_name}}
+Unit: {{unit_name}}
+Response: {{action}}
+
+Please log in to your Rentloop dashboard to review the checklist response.
+
+Dashboard: {{property_manager_portal_url}}
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop Team
+`
+)
