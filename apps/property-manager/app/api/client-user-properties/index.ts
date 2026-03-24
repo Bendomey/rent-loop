@@ -107,3 +107,62 @@ const clientUserPropertyUnlink = async ({
 }
 export const useUnlinkClientUserProperty = () =>
 	useMutation({ mutationFn: clientUserPropertyUnlink })
+
+/**
+ * Link a client user to multiple properties (user-centric)
+ * POST /v1/admin/client-users/{id}/properties:link
+ */
+export const linkClientUserToProperties = async ({
+	client_user_id,
+	property_ids,
+	role,
+}: {
+	client_user_id: string
+	property_ids: string[]
+	role: ClientUserProperty['role']
+}) => {
+	try {
+		const response = await fetchClient<ApiResponse<ClientUserProperty>>(
+			`/v1/admin/client-users/${client_user_id}/properties:link`,
+			{
+				method: 'POST',
+				body: JSON.stringify({ property_ids, role }),
+			},
+		)
+		return response.parsedBody.data
+	} catch (error) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+
+/**
+ * Unlink a client user from multiple properties (user-centric)
+ * DELETE /v1/admin/client-users/{id}/properties:unlink
+ */
+export const unlinkClientUserFromProperties = async ({
+	client_user_id,
+	property_ids,
+}: {
+	client_user_id: string
+	property_ids: string[]
+}) => {
+	try {
+		await fetchClient<boolean>(
+			`/v1/admin/client-users/${client_user_id}/properties:unlink`,
+			{
+				method: 'DELETE',
+				body: JSON.stringify({ property_ids }),
+			},
+		)
+	} catch (error) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}

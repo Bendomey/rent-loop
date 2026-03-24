@@ -5324,6 +5324,57 @@ paths:
       summary: Get client user with populate (Admin)
       tags:
       - ClientUsers
+    patch:
+      consumes:
+      - application/json
+      description: Update client user name and phone number by ID
+      parameters:
+      - description: Client User ID
+        in: path
+        name: client_user_id
+        required: true
+        type: string
+      - description: Update Client User Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateClientUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientUser'
+            type: object
+        "400":
+          description: Error occurred when updating client user
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Client user not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error occured
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update client user by ID (Admin/Owner)
+      tags:
+      - ClientUsers
   /api/v1/admin/client-users/{client_user_id}/activate:
     post:
       consumes:

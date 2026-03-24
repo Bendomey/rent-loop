@@ -596,3 +596,52 @@ func (h *ClientUserHandler) UpdateClientUserPassword(w http.ResponseWriter, r *h
 		"data": transformations.DBClientUserToRest(updatedClientUser),
 	})
 }
+
+// UpdateClientUserByID godoc
+//
+//	@Summary		Update client user by ID (Admin/Owner)
+//	@Description	Update client user name and phone number by ID
+//	@Tags			ClientUsers
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			client_user_id	path		string					true	"Client User ID"
+//	@Param			body			body		UpdateClientUserRequest	true	"Update Client User Request Body"
+//	@Success		200				{object}	object{data=transformations.OutputClientUser}
+//	@Failure		400				{object}	lib.HTTPError	"Error occurred when updating client user"
+//	@Failure		401				{object}	string			"Invalid or absent authentication token"
+//	@Failure		404				{object}	lib.HTTPError	"Client user not found"
+//	@Failure		422				{object}	lib.HTTPError	"Validation error occured"
+//	@Failure		500				{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/admin/client-users/{client_user_id} [patch]
+func (h *ClientUserHandler) UpdateClientUserByID(w http.ResponseWriter, r *http.Request) {
+	clientUserID := chi.URLParam(r, "client_user_id")
+
+	var body UpdateClientUserRequest
+
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	input := services.UpdateClientUserInput{
+		ClientUserID: clientUserID,
+		Name:         body.Name,
+		PhoneNumber:  body.PhoneNumber,
+	}
+
+	clientUser, err := h.service.UpdateClientUser(r.Context(), input)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBClientUserToRest(clientUser),
+	})
+}

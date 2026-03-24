@@ -7,7 +7,7 @@ import {
 	User,
 } from 'lucide-react'
 import { useMemo } from 'react'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { MembersController } from './controller'
 import { ClientUserStatus } from './status'
 import { useGetClientUsers } from '~/api/client-users'
@@ -148,7 +148,11 @@ export function MembersModule() {
 										{row.original.role !== 'OWNER' ||
 										currentUser?.role === 'OWNER' ? (
 											<>
-												<DropdownMenuItem>Edit</DropdownMenuItem>
+												<DropdownMenuItem asChild>
+													<Link to={`/settings/members/${row.original.id}`}>
+														Edit
+													</Link>
+												</DropdownMenuItem>
 												<DropdownMenuSeparator />
 												<ClientUserStatus
 													clientUser={row.original}

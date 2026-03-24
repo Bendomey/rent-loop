@@ -134,3 +134,58 @@ const activateClientUser = async (id: string) => {
 
 export const useActivateClientUser = () =>
 	useMutation({ mutationFn: activateClientUser })
+
+/**
+ * GET client user by ID (server-side)
+ */
+export const getClientUserForServer = async (
+	id: string,
+	apiConfig: ApiConfigForServerConfig,
+) => {
+	try {
+		const response = await fetchServer<ApiResponse<ClientUser>>(
+			`${apiConfig.baseUrl}/v1/admin/client-users/${id}`,
+			{ method: 'GET', ...apiConfig },
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+
+/**
+ * PATCH update client user by ID
+ */
+const updateClientUser = async ({
+	id,
+	name,
+	phoneNumber,
+}: {
+	id: string
+	name?: string
+	phoneNumber?: string
+}) => {
+	try {
+		const response = await fetchClient<ApiResponse<ClientUser>>(
+			`/v1/admin/client-users/${id}`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify({ name, phoneNumber }),
+			},
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+
+export const useUpdateClientUser = () =>
+	useMutation({ mutationFn: updateClientUser })
