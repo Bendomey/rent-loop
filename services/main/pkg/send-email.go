@@ -49,7 +49,7 @@ func SendEmail(cfg config.Config, input SendEmailInput) error {
 	client := resend.NewClient(cfg.ResendAPIKey)
 
 	params := &resend.SendEmailRequest{
-		From:    "Rentloop Notifications <noreply@notifications.mfoni.app>",
+		From:    "Rentloop Notifications <noreply@notifications.rentloopapp.com>",
 		To:      []string{input.Recipient},
 		Html:    lib.ApplyGlobalVariableTemplate(cfg, input.HtmlBody),
 		Subject: input.Subject,
@@ -111,7 +111,7 @@ func SendBulkEmail(ctx context.Context, cfg config.Config, recipients []BulkEmai
 		params := make([]*resend.SendEmailRequest, 0, len(chunk))
 		for _, r := range chunk {
 			params = append(params, &resend.SendEmailRequest{
-				From:    "Rentloop Notifications <noreply@notifications.mfoni.app>",
+				From:    "Rentloop Notifications <noreply@notifications.rentloopapp.com>",
 				To:      []string{r.To},
 				Subject: r.Subject,
 				Html:    lib.ApplyGlobalVariableTemplate(cfg, r.HtmlBody),

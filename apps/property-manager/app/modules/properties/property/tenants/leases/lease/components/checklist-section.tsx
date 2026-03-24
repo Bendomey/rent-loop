@@ -5,6 +5,13 @@ import { CreateChecklistDialog } from './create-checklist-dialog'
 import { useGetLeaseChecklists } from '~/api/lease-checklists'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuGroup,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu'
 import { Separator } from '~/components/ui/separator'
 import { Skeleton } from '~/components/ui/skeleton'
 import { TypographyMuted } from '~/components/ui/typography'
@@ -65,14 +72,30 @@ export function ChecklistSection({ leaseId, canEdit, propertyId }: Props) {
 						No inspection reports yet.
 					</TypographyMuted>
 					{canEdit && (
-						<Button
-							size="sm"
-							variant="outline"
-							onClick={() => setCreateType('CHECK_IN')}
-						>
-							<PlusIcon className="mr-1 size-3.5" />
-							Create Move-In Report
-						</Button>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button size="sm" variant="outline">
+									<PlusIcon className="mr-1 size-3.5" />
+									Create Report
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end" className="w-44">
+								<DropdownMenuGroup>
+									<DropdownMenuItem onClick={() => setCreateType('CHECK_IN')}>
+										<ClipboardListIcon className="text-muted-foreground size-4 shrink-0" />
+										Move In
+									</DropdownMenuItem>
+									<DropdownMenuItem onClick={() => setCreateType('CHECK_OUT')}>
+										<ClipboardListIcon className="text-muted-foreground size-4 shrink-0" />
+										Move Out
+									</DropdownMenuItem>
+									<DropdownMenuItem onClick={() => setCreateType('ROUTINE')}>
+										<ClipboardListIcon className="text-muted-foreground size-4 shrink-0" />
+										Routine Inspection
+									</DropdownMenuItem>
+								</DropdownMenuGroup>
+							</DropdownMenuContent>
+						</DropdownMenu>
 					)}
 				</div>
 			) : (

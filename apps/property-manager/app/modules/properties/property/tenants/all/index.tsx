@@ -4,15 +4,8 @@ import { PropertyTenantsController } from './controller'
 import { useGetPropertyTenants } from '~/api/tenants'
 import { GridElement } from '~/components/Grid'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
-import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
-import {
-	Card,
-	CardContent,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from '~/components/ui/card'
+import { Card, CardContent, CardFooter, CardTitle } from '~/components/ui/card'
 import { Separator } from '~/components/ui/separator'
 import {
 	TypographyH4,
@@ -74,7 +67,7 @@ export function PropertyTenantsModule() {
 
 						return (
 							<Card key={tenant.id} className="shadow-none">
-								<CardHeader className="flex items-start justify-between gap-3">
+								{/* <CardHeader className="flex items-start justify-between gap-3">
 									<CardTitle>
 										<Badge
 											variant={
@@ -85,7 +78,7 @@ export function PropertyTenantsModule() {
 											{tenant.status === 'ACTIVE' ? 'Active' : 'Expired'}
 										</Badge>
 									</CardTitle>
-								</CardHeader>
+								</CardHeader> */}
 
 								<CardContent className="space-y-3">
 									<div className="flex flex-col items-center gap-3">
