@@ -17,21 +17,6 @@ const filters: Array<Filter> = [
 		},
 		Icon: ToggleLeft,
 	},
-	{
-		id: 2,
-		type: 'selector',
-		selectType: 'multi',
-		label: 'Property',
-		value: {
-			options: [
-				{ label: 'Sunset Apartments', value: 'property_1' },
-				{ label: 'Greenfield Villas', value: 'property_2' },
-			],
-			urlParam: 'property',
-			defaultValues: [],
-		},
-		Icon: Home,
-	},
 ]
 
 export const BillingsController = () => {

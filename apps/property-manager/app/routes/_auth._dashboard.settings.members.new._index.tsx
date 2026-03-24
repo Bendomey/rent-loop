@@ -1,5 +1,6 @@
 import { redirect } from 'react-router'
 import type { Route } from './+types/_auth._dashboard.settings.members.new._index'
+import { linkClientUserPropertyForServer } from '~/api/client-user-properties/server'
 import { createClientUser } from '~/api/client-users'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
@@ -28,6 +29,13 @@ export async function action({ request }: Route.ActionArgs) {
 	const phone = formData.get('phone') as string
 	const email = formData.get('email') as string
 	const role = formData.get('role') as ClientUser['role']
+	const propertyAssignmentsRaw = formData.get('property_assignments') as string
+	const propertyAssignments: {
+		property_id: string
+		role: ClientUserProperty['role']
+	}[] = propertyAssignmentsRaw ? JSON.parse(propertyAssignmentsRaw) : []
+
+	const apiConfig = { baseUrl, authToken: authSession.get('authToken') }
 
 	try {
 		const member = await createClientUser(
@@ -37,15 +45,24 @@ export async function action({ request }: Route.ActionArgs) {
 				email,
 				role,
 			}),
-			{
-				baseUrl,
-				authToken: authSession.get('authToken'),
-			},
+			apiConfig,
 		)
 
 		if (!member) {
 			throw new Error('Member creation returned no data')
 		}
+
+		if (propertyAssignments.length > 0) {
+			await Promise.all(
+				propertyAssignments.map(({ property_id, role: propertyRole }) =>
+					linkClientUserPropertyForServer(
+						{ property_id, role: propertyRole, client_user_ids: [member.id] },
+						apiConfig,
+					),
+				),
+			)
+		}
+
 		return redirect('/settings/members')
 	} catch (e) {
 		if (e instanceof Error) {

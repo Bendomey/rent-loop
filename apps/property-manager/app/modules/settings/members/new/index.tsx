@@ -1,16 +1,17 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { HelpCircle, Mail, Phone } from 'lucide-react'
+import { Check, HelpCircle, Mail, Phone } from 'lucide-react'
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useFieldArray, useForm } from 'react-hook-form'
 import { Link, useFetcher } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import type { CreateClientUserInput } from '~/api/client-users'
+import { useGetMyProperties } from '~/api/properties'
 import { Button } from '~/components/ui/button'
 import { FieldGroup } from '~/components/ui/field'
 import {
 	Form,
 	FormControl,
+	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -39,7 +40,11 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from '~/components/ui/tooltip'
-import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
+import {
+	TypographyH2,
+	TypographyH4,
+	TypographyMuted,
+} from '~/components/ui/typography'
 
 const ValidationSchema = z.object({
 	role: z.enum(['ADMIN', 'STAFF'], {
@@ -52,6 +57,15 @@ const ValidationSchema = z.object({
 		.string({ error: 'Contact phone number is required' })
 		.min(9, 'Please enter a valid support phone number'),
 	email: z.email('Please enter a valid support email address'),
+	property_assignments: z
+		.array(
+			z.object({
+				property_id: z.string(),
+				name: z.string(),
+				role: z.enum(['MANAGER', 'STAFF']),
+			}),
+		)
+		.min(1, 'Please assign at least one property'),
 })
 
 export type FormSchema = z.infer<typeof ValidationSchema>
@@ -59,14 +73,28 @@ export type FormSchema = z.infer<typeof ValidationSchema>
 export function NewMemberModule() {
 	const createFetcher = useFetcher<{ error: string }>()
 
+	const { data: myProperties } = useGetMyProperties({
+		pagination: { page: 1, per: 100 },
+		populate: ['Property'],
+		sorter: { sort: 'asc', sort_by: 'created_at' },
+	})
+
 	const rhfMethods = useForm<FormSchema>({
 		defaultValues: {
 			name: '',
 			phone: '',
 			email: '',
-			role: 'STAFF',
+			role: 'ADMIN',
+			property_assignments: [],
 		},
 		resolver: zodResolver(ValidationSchema),
+	})
+
+	const { handleSubmit, control, getValues } = rhfMethods
+
+	const { fields, append, remove } = useFieldArray({
+		control,
+		name: 'property_assignments',
 	})
 
 	useEffect(() => {
@@ -74,18 +102,50 @@ export function NewMemberModule() {
 			toast.error(createFetcher?.data?.error)
 		}
 	}, [createFetcher?.data])
-	const { handleSubmit, control, getValues } = rhfMethods
 
-	const onSubmit = async (data: Partial<CreateClientUserInput>) => {
+	const toggleProperty = (propertyId: string, name: string) => {
+		const index = fields.findIndex((f) => f.property_id === propertyId)
+		if (index !== -1) {
+			remove(index)
+		} else {
+			append({ property_id: propertyId, name, role: 'MANAGER' })
+		}
+	}
+
+	const updatePropertyRole = (
+		propertyId: string,
+		role: 'MANAGER' | 'STAFF',
+	) => {
+		const index = fields.findIndex((f) => f.property_id === propertyId)
+		if (index !== -1) {
+			rhfMethods.setValue(`property_assignments.${index}.role`, role)
+		}
+	}
+
+	const onSubmit = async (data: FormSchema) => {
 		const updatedData = { ...data }
 		if (getValues('phone')) {
 			updatedData.phone = `+233${getValues('phone').slice(-9)}`
 		}
-		await createFetcher.submit(updatedData, {
-			method: 'POST',
-			action: '/settings/members/new',
-		})
+		await createFetcher.submit(
+			{
+				...updatedData,
+				property_assignments: JSON.stringify(
+					data.property_assignments.map(({ property_id, role }) => ({
+						property_id,
+						role,
+					})),
+				),
+			},
+			{
+				method: 'POST',
+				action: '/settings/members/new',
+			},
+		)
 	}
+
+	const properties = myProperties?.rows ?? []
+
 	return (
 		<Form {...rhfMethods}>
 			<form
@@ -212,7 +272,7 @@ export function NewMemberModule() {
 									<FormLabel htmlFor="role">Role</FormLabel>
 									<FormControl>
 										<Select onValueChange={field.onChange} value={field.value}>
-											<SelectTrigger className="w-[180px]" id="role">
+											<SelectTrigger className="w-full" id="role">
 												<SelectValue placeholder="Select a role" />
 											</SelectTrigger>
 											<SelectContent>
@@ -227,12 +287,102 @@ export function NewMemberModule() {
 											</SelectContent>
 										</Select>
 									</FormControl>
+									<FormDescription className="text-xs">
+										Admins have full access to all features and settings, while
+										Staff have limited access based on permissions set by
+										Admins. Choose the appropriate role for the member you are
+										inviting. You can always change their role later if needed.
+									</FormDescription>
 									<FormMessage />
 								</FormItem>
 							)}
 						/>
 					</FieldGroup>
 				</FieldGroup>
+
+				<Separator className="my-10" />
+
+				<FormField
+					name="property_assignments"
+					control={control}
+					render={() => (
+						<FormItem>
+							<TypographyH4>Assign Properties to Member</TypographyH4>
+							<TypographyMuted>
+								Member will have access to all properties you select here.
+							</TypographyMuted>
+
+							{properties.length > 0 && (
+								<div className="mt-4 flex flex-wrap gap-2">
+									{properties.map((item: ClientUserProperty) => {
+										if (!item.property) return null
+										const selected = fields.find(
+											(f) => f.property_id === item.property_id,
+										)
+										const isSelected = Boolean(selected)
+
+										if (isSelected && selected) {
+											return (
+												<div
+													key={item.property_id}
+													className="border-primary bg-primary text-primary-foreground flex items-center overflow-hidden rounded-full border text-sm shadow-xs"
+												>
+													<button
+														type="button"
+														onClick={() =>
+															toggleProperty(
+																item.property_id,
+																item.property!.name,
+															)
+														}
+														className="text-primary-foreground hover:bg-primary/80 flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors dark:text-white"
+													>
+														<Check className="h-3 w-3" />
+														{item.property.name}
+													</button>
+													<div className="bg-primary-foreground/30 h-5 w-px dark:bg-gray-300" />
+													<Select
+														value={selected.role}
+														onValueChange={(value) =>
+															updatePropertyRole(
+																item.property_id,
+																value as 'MANAGER' | 'STAFF',
+															)
+														}
+													>
+														<SelectTrigger className="text-primary-foreground dark:hover:bg-primary/80 [&_*]:text-primary-foreground [&_svg:not([class*='text-'])]:text-primary-foreground h-auto rounded-none border-0 bg-transparent px-2.5 py-1.5 text-xs shadow-none focus:ring-0 dark:bg-transparent dark:text-white dark:[&_*]:text-white">
+															<SelectValue />
+														</SelectTrigger>
+														<SelectContent>
+															<SelectItem value="MANAGER">Manager</SelectItem>
+															<SelectItem value="STAFF">Staff</SelectItem>
+														</SelectContent>
+													</Select>
+												</div>
+											)
+										}
+
+										return (
+											<Button
+												key={item.property_id}
+												type="button"
+												variant="outline"
+												size="sm"
+												className="rounded-full"
+												onClick={() =>
+													toggleProperty(item.property_id, item.property!.name)
+												}
+											>
+												{item.property.name}
+											</Button>
+										)
+									})}
+								</div>
+							)}
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
 
 				<div className="mt-10 flex justify-end border-t pt-5">
 					<div className="flex items-center gap-x-2">
