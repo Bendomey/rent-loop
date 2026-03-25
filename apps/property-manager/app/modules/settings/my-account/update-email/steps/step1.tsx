@@ -128,13 +128,14 @@ export function Step1() {
 						className="w-full"
 					/>
 				</div>
-
-				<div className="mt-4 flex justify-center">
+				{!isOtpSent ? (
+					<div className="mt-4 flex justify-center">
 					<Button disabled={isSendingOtp} onClick={handleSendOtp} variant="outline" size="sm">
 						{isSendingOtp ? <Spinner /> : null}
 						Send OTP
 					</Button>
 				</div>
+				) : null}
 
 				{isOtpSent && (
 					<>
