@@ -169,12 +169,14 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		})
 	}
 
-	message := strings.NewReplacer(
+	r := strings.NewReplacer(
 		"{{applicant_name}}", tenantApplication.FirstName,
 		"{{unit_name}}", unit.Name,
 		"{{application_code}}", tenantApplication.Code,
 		"{{submission_date}}", tenantApplication.CreatedAt.Format("2006-01-02 at 03:04 PM"),
-	).Replace(lib.TENANT_APPLICATION_SUBMITTED_BODY)
+	)
+	message := r.Replace(lib.TENANT_APPLICATION_SUBMITTED_BODY)
+	smsMessage := r.Replace(lib.TENANT_APPLICATION_SUBMITTED_SMS_BODY)
 
 	if input.Email != nil {
 		go pkg.SendEmail(
@@ -191,7 +193,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: input.Phone,
-			Message:   message,
+			Message:   smsMessage,
 		},
 	)
 
@@ -228,6 +230,7 @@ func (s *tenantApplicationService) InviteTenant(ctx context.Context, input Invit
 	)
 
 	message := r.Replace(lib.TENANT_INVITED_BODY)
+	smsMessage := r.Replace(lib.TENANT_INVITED_SMS_BODY)
 
 	if input.Email != nil {
 		go pkg.SendEmail(
@@ -245,7 +248,7 @@ func (s *tenantApplicationService) InviteTenant(ctx context.Context, input Invit
 			context.Background(),
 			gatekeeper.SendSMSInput{
 				Recipient: *input.Phone,
-				Message:   message,
+				Message:   smsMessage,
 			},
 		)
 	}
@@ -645,11 +648,13 @@ func (s *tenantApplicationService) CancelTenantApplication(
 		})
 	}
 
-	message := strings.NewReplacer(
+	r := strings.NewReplacer(
 		"{{applicant_name}}", tenantApplication.FirstName,
 		"{{application_code}}", tenantApplication.Code,
 		"{{reason}}", input.Reason,
-	).Replace(lib.TENANT_CANCELLED_BODY)
+	)
+	message := r.Replace(lib.TENANT_CANCELLED_BODY)
+	smsMessage := r.Replace(lib.TENANT_CANCELLED_SMS_BODY)
 
 	if tenantApplication.Email != nil {
 		go pkg.SendEmail(
@@ -666,7 +671,7 @@ func (s *tenantApplicationService) CancelTenantApplication(
 		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: tenantApplication.Phone,
-			Message:   message,
+			Message:   smsMessage,
 		},
 	)
 
@@ -876,12 +881,14 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 	}
 
 	// send email
-	message := strings.NewReplacer(
+	r := strings.NewReplacer(
 		"{{applicant_name}}", tenantApplication.FirstName,
 		"{{unit_name}}", unit.Name,
 		"{{application_code}}", tenantApplication.Code,
 		"{{phone_number}}", tenantAccount.PhoneNumber,
-	).Replace(lib.TENANT_APPLICATION_APPROVED_BODY)
+	)
+	message := r.Replace(lib.TENANT_APPLICATION_APPROVED_BODY)
+	smsMessage := r.Replace(lib.TENANT_APPLICATION_APPROVED_SMS_BODY)
 
 	if tenantApplication.Email != nil {
 		go pkg.SendEmail(
@@ -898,7 +905,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: tenantApplication.Phone,
-			Message:   message,
+			Message:   smsMessage,
 		},
 	)
 

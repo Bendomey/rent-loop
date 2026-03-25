@@ -146,6 +146,9 @@ func (s *clientApplicationService) CreateClientApplication(
 	message := lib.CLIENT_APPLICATION_SUBMITTED_BODY
 	message = strings.ReplaceAll(message, "{{owner_name}}", input.ContactName)
 
+	smsMessage := lib.CLIENT_APPLICATION_SUBMITTED_SMS_BODY
+	smsMessage = strings.ReplaceAll(smsMessage, "{{owner_name}}", input.ContactName)
+
 	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 		Recipient: input.ContactEmail,
 		Subject:   lib.CLIENT_APPLICATION_SUBMITTED_SUBJECT,
@@ -169,7 +172,7 @@ func (s *clientApplicationService) CreateClientApplication(
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
 		Recipient: input.ContactPhoneNumber,
-		Message:   message,
+		Message:   smsMessage,
 	})
 
 	return &clientApplication, nil
@@ -216,10 +219,12 @@ func (s *clientApplicationService) RejectClientApplication(
 		})
 	}
 
-	message := strings.NewReplacer(
+	r := strings.NewReplacer(
 		"{{owner_name}}", clientApplication.ContactName,
 		"{{rejection_reason}}", input.Reason,
-	).Replace(lib.CLIENT_APPLICATION_REJECTED_BODY)
+	)
+	message := r.Replace(lib.CLIENT_APPLICATION_REJECTED_BODY)
+	smsMessage := r.Replace(lib.CLIENT_APPLICATION_REJECTED_SMS_BODY)
 
 	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 		Recipient: clientApplication.ContactEmail,
@@ -229,7 +234,7 @@ func (s *clientApplicationService) RejectClientApplication(
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
 		Recipient: clientApplication.ContactPhoneNumber,
-		Message:   message,
+		Message:   smsMessage,
 	})
 
 	return clientApplication, nil
@@ -337,11 +342,13 @@ func (s *clientApplicationService) ApproveClientApplication(
 		})
 	}
 
-	message := strings.NewReplacer(
+	r := strings.NewReplacer(
 		"{{owner_name}}", clientApplication.ContactName,
 		"{{email}}", clientApplication.ContactEmail,
 		"{{password}}", password,
-	).Replace(lib.CLIENT_APPLICATION_ACCEPTED_BODY)
+	)
+	message := r.Replace(lib.CLIENT_APPLICATION_ACCEPTED_BODY)
+	smsMessage := r.Replace(lib.CLIENT_APPLICATION_ACCEPTED_SMS_BODY)
 
 	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 		Recipient: clientApplication.ContactEmail,
@@ -351,7 +358,7 @@ func (s *clientApplicationService) ApproveClientApplication(
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
 		Recipient: clientApplication.ContactPhoneNumber,
-		Message:   message,
+		Message:   smsMessage,
 	})
 
 	return clientApplication, nil
