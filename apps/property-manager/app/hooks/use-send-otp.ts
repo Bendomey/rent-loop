@@ -55,7 +55,6 @@ export const useSendOtp = (options?: UseSendOtpOptions) => {
 				toast.error('Invalid email address')
 				return
 			}
-console.log('Sending OTP to email:', email)
 			mutate(
 				{ channel: ['EMAIL'], email },
 				{
