@@ -1,5 +1,5 @@
 import { Separator } from '@radix-ui/react-separator'
-import { Plus } from 'lucide-react'
+import { Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 import UpdatePasswordModal from './components/update-password'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
@@ -17,20 +17,23 @@ import { TypographyH3, TypographyP } from '~/components/ui/typography'
 import { useAuth } from '~/providers/auth-provider'
 import { UpdateClientEmail } from './update-email'
 import { useSendOtp } from '~/hooks/use-send-otp'
+import { Label } from '~/components/ui/label'
+import { safeString } from '~/lib/strings'
+import UpdateClientProfileModal from './components/update-name'
 
 export function MyAccountSettingsModule() {
 	const [openUpdatePasswordModal, setOpenUpdatePasswordModal] = useState(false)
 	const [openUpdateClientEmailModal, setOpenUpdateClientEmailModal] = useState(false)
+	const [openUpdateClientProfileModal, setOpenUpdateClientProfileModal] = useState(false)
 	const { currentUser } = useAuth()
 	const { sendOtp, isSendingOtp } = useSendOtp()
 	
-
 	return (
-<div className="px-4 py-4">
+<div className="px-4 py-4 mx-auto max-w-4xl">
 			<TypographyH3 className="">My Profile</TypographyH3>
 			<Separator className="bg-muted mt-2 mb-4 h-0.5" />
 
-			<section className="mx-auto mb-5 space-y-10">
+			<section className="mx-auto mb-5 space-y-10 md:flex md:justify-between ">
 				<div className="mb-8 flex items-center">
 					<Avatar className="size-20">
 						<AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
@@ -52,33 +55,34 @@ export function MyAccountSettingsModule() {
 					</div>
 				</div>
 
-				<div>
-					<FieldGroup className="grid grid-cols-1 gap-4 md:grid-cols-2">
-						<Field>
-							<FieldLabel htmlFor="first_name">First Name</FieldLabel>
-							<Input
-								id="first_name"
-								type="text"
-								placeholder="Enter your first name"
-								value="John"
-								required
-							/>
-						</Field>
-						<Field>
-							<FieldLabel htmlFor="last_name">Last Name</FieldLabel>
-							<Input
-								id="last_name"
-								type="text"
-								placeholder="Enter your last name"
-								value="Doe"
-								required
-							/>
-						</Field>
-					</FieldGroup>
-				</div>
+				<div className="relative md:w-md">
+	<FieldGroup className="space-y-4">
+		<Field>
+			<FieldLabel htmlFor="full_name">Full Name</FieldLabel>
+			<Input
+				id="full_name"
+				type="text"
+				placeholder="Enter your full name"
+				value={safeString(currentUser?.name)}
+				disabled
+			/>
+		</Field>
+	</FieldGroup>
+
+	<Button
+		type="button"
+		variant="ghost"
+		size="sm"
+		className="absolute top-0 right-0 gap-1.5 text-xs"
+		onClick={() => setOpenUpdateClientProfileModal(true)}
+	>
+		<Pencil className="size-3.5" />
+		Edit
+	</Button>
+</div>
 			</section>
 
-			<TypographyH3 className="mt-10">Account Security</TypographyH3>
+			<TypographyH3 className="mt-5">Account Security</TypographyH3>
 			<Separator className="bg-muted mt-2 mb-4 h-0.5" />
 
 			<section className="mx-auto mb-5 space-y-6">
@@ -97,7 +101,7 @@ export function MyAccountSettingsModule() {
 						sendOtp({ channel: 'EMAIL', email: currentUser?.email ?? '' })
 						setOpenUpdateClientEmailModal(true)
 					}}>
-						Change email
+						{isSendingOtp ? 'Sending...' : 'Change email'}
 					</Button>
 				</div>
 
@@ -174,6 +178,7 @@ export function MyAccountSettingsModule() {
 			</section> */}
 
 
+			<UpdateClientProfileModal opened={openUpdateClientProfileModal} setOpened={setOpenUpdateClientProfileModal} client={currentUser}/>
 			<UpdatePasswordModal opened={openUpdatePasswordModal} setOpened={setOpenUpdatePasswordModal} />
 			<UpdateClientEmail opened={openUpdateClientEmailModal} setOpened={setOpenUpdateClientEmailModal} />
 		</div>
