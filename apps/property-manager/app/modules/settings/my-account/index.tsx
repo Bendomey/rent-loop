@@ -14,12 +14,19 @@ import {
 import { Input } from '~/components/ui/input'
 import { Switch } from '~/components/ui/switch'
 import { TypographyH3, TypographyP } from '~/components/ui/typography'
+import { useAuth } from '~/providers/auth-provider'
+import { UpdateClientEmail } from './update-email'
+import { useSendOtp } from '~/hooks/use-send-otp'
 
 export function MyAccountSettingsModule() {
 	const [openUpdatePasswordModal, setOpenUpdatePasswordModal] = useState(false)
+	const [openUpdateClientEmailModal, setOpenUpdateClientEmailModal] = useState(false)
+	const { currentUser } = useAuth()
+	const { sendOtp, isSendingOtp } = useSendOtp()
+	
 
 	return (
-		<div className="px-4 py-4">
+<div className="px-4 py-4">
 			<TypographyH3 className="">My Profile</TypographyH3>
 			<Separator className="bg-muted mt-2 mb-4 h-0.5" />
 
@@ -35,10 +42,7 @@ export function MyAccountSettingsModule() {
 							<Button variant="outline" size="sm">
 								<Plus /> Change Image
 							</Button>
-							<Button
-								variant="default"
-								className="bg-rose-600 hover:bg-rose-700"
-							>
+							<Button variant="default" className="bg-rose-600 hover:bg-rose-700">
 								Remove Image
 							</Button>
 						</div>
@@ -83,18 +87,21 @@ export function MyAccountSettingsModule() {
 						<FieldLabel htmlFor="email">Email</FieldLabel>
 						<Input
 							id="email"
-							type="text"
+							type="email"
 							placeholder="account@email.com"
+							value={currentUser?.email ?? ''}
 							disabled
 						/>
 					</Field>
-
-					<Button size="sm" variant="secondary">
+					<Button size="sm" variant="secondary" onClick={() => {
+						sendOtp({ channel: 'EMAIL', email: currentUser?.email ?? '' })
+						setOpenUpdateClientEmailModal(true)
+					}}>
 						Change email
 					</Button>
 				</div>
 
-				<div className="mb-6 flex items-center justify-between">
+				<div className="mb-6 flex items-baseline-last justify-between">
 					<Field className="w-2/5">
 						<FieldLabel htmlFor="password">Password</FieldLabel>
 						<Input
@@ -104,18 +111,11 @@ export function MyAccountSettingsModule() {
 							disabled
 						/>
 					</Field>
-					<Button
-						size="sm"
-						variant="secondary"
-						onClick={() => {
-							setOpenUpdatePasswordModal(true)
-						}}
-					>
+					<Button size="sm" variant="secondary" onClick={() => setOpenUpdatePasswordModal(true)}>
 						Change password
 					</Button>
 				</div>
-
-				<div className="">
+					{/* <div className="">
 					<Field orientation="horizontal" className="flex items-baseline-last">
 						<FieldContent>
 							<FieldLabel htmlFor="2fa">2-Step Verifications</FieldLabel>
@@ -126,10 +126,10 @@ export function MyAccountSettingsModule() {
 						</FieldContent>
 						<Switch id="2fa" checked />
 					</Field>
-				</div>
+				</div> */}
 			</section>
 
-			<TypographyH3 className="mt-12">Support Access</TypographyH3>
+			{/* <TypographyH3 className="mt-12">Support Access</TypographyH3>
 			<Separator className="bg-muted mt-2 mb-4 h-0.5" />
 
 			<section className="mx-auto mb-5 space-y-6">
@@ -171,12 +171,11 @@ export function MyAccountSettingsModule() {
 						Delete Account
 					</Button>
 				</div>
-			</section>
+			</section> */}
 
-			<UpdatePasswordModal
-				opened={openUpdatePasswordModal}
-				setOpened={setOpenUpdatePasswordModal}
-			/>
+
+			<UpdatePasswordModal opened={openUpdatePasswordModal} setOpened={setOpenUpdatePasswordModal} />
+			<UpdateClientEmail opened={openUpdateClientEmailModal} setOpened={setOpenUpdateClientEmailModal} />
 		</div>
 	)
 }
