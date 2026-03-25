@@ -20,6 +20,7 @@ import { useSendOtp } from '~/hooks/use-send-otp'
 import { Label } from '~/components/ui/label'
 import { safeString } from '~/lib/strings'
 import UpdateClientProfileModal from './components/update-name'
+import { getNameInitials } from '~/lib/misc'
 
 export function MyAccountSettingsModule() {
 	const [openUpdatePasswordModal, setOpenUpdatePasswordModal] = useState(false)
@@ -31,18 +32,20 @@ export function MyAccountSettingsModule() {
 	const { sendOtp, isSendingOtp } = useSendOtp()
 
 	return (
-		<div className="mx-auto max-w-4xl px-4 py-4">
+		<div className="mx-auto max-w-3xl px-4 py-4">
 			<TypographyH3 className="">My Profile</TypographyH3>
 			<Separator className="bg-muted mt-2 mb-4 h-0.5" />
 
-			<section className="mx-auto mb-5 space-y-10 md:flex md:justify-between">
+			<section className="mx-auto mb-5 space-y-10">
 				<div className="mb-8 flex items-center">
 					<Avatar className="size-20">
-						<AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-						<AvatarFallback>CN</AvatarFallback>
+						{/* <AvatarImage src="https://github.com/shadcn.png" alt="profile image" /> */}
+						<AvatarFallback className="bg-rose-500 text-white">
+							{getNameInitials(safeString(currentUser?.name))}
+						</AvatarFallback>
 					</Avatar>
 
-					<div className="ml-3.5 flex flex-col">
+					{/* <div className="ml-3.5 flex flex-col">
 						<div className="flex flex-wrap items-center gap-3 md:flex-row">
 							<Button variant="outline" size="sm">
 								<Plus /> Change Image
@@ -57,11 +60,11 @@ export function MyAccountSettingsModule() {
 						<TypographyP className="!mt-2 text-xs text-gray-400">
 							We support PNGs, JPEGs, and GIFs under 2MB
 						</TypographyP>
-					</div>
+					</div> */}
 				</div>
 
-				<div className="relative md:w-md">
-					<FieldGroup className="space-y-4">
+				<div className="flex items-baseline-last justify-between">
+					<FieldGroup className="w-2/5 space-y-4">
 						<Field>
 							<FieldLabel htmlFor="full_name">Full Name</FieldLabel>
 							<Input
@@ -76,18 +79,16 @@ export function MyAccountSettingsModule() {
 
 					<Button
 						type="button"
-						variant="ghost"
+						variant="secondary"
 						size="sm"
-						className="absolute top-0 right-0 gap-1.5 text-xs"
 						onClick={() => setOpenUpdateClientProfileModal(true)}
 					>
-						<Pencil className="size-3.5" />
-						Edit
+						Change Name
 					</Button>
 				</div>
 			</section>
 
-			<TypographyH3 className="mt-5">Account Security</TypographyH3>
+			<TypographyH3 className="mt-8">Account Security</TypographyH3>
 			<Separator className="bg-muted mt-2 mb-4 h-0.5" />
 
 			<section className="mx-auto mb-5 space-y-6">
