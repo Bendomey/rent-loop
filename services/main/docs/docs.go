@@ -16401,7 +16401,22 @@ const docTemplate = `{
             }
         },
         "handlers.UpdateClientUserRequest": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "example": "John Doe"
+                },
+                "phoneNumber": {
+                    "type": "string",
+                    "example": "+233281234569"
+                }
+            }
         },
         "handlers.UpdateCommentBody": {
             "type": "object",

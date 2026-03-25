@@ -1468,6 +1468,17 @@ definitions:
     - old_password
     type: object
   handlers.UpdateClientUserRequest:
+    properties:
+      email:
+        example: john@example.com
+        type: string
+      name:
+        example: John Doe
+        minLength: 2
+        type: string
+      phoneNumber:
+        example: "+233281234569"
+        type: string
     type: object
   handlers.UpdateCommentBody:
     properties:
