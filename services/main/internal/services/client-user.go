@@ -582,8 +582,9 @@ func (s *clientUserService) DeactivateClientUser(
 
 type UpdateClientUserInput struct {
 	ClientUserID string
-	Name         *string
-	PhoneNumber  *string
+	Name         lib.Optional[string]
+	PhoneNumber  lib.Optional[string]
+	Email        lib.Optional[string]
 }
 
 func (s *clientUserService) UpdateClientUser(
@@ -606,12 +607,30 @@ func (s *clientUserService) UpdateClientUser(
 		})
 	}
 
-	if input.Name != nil {
-		clientUser.Name = *input.Name
+	if input.Name.IsSet && input.Name.Value != nil {
+		clientUser.Name = *input.Name.Value
 	}
 
-	if input.PhoneNumber != nil {
-		clientUser.PhoneNumber = *input.PhoneNumber
+	if input.PhoneNumber.IsSet && input.PhoneNumber.Value != nil {
+		clientUser.PhoneNumber = *input.PhoneNumber.Value
+	}
+
+	if input.Email.IsSet && input.Email.Value != nil {
+		newEmail := *input.Email.Value
+		existing, emailErr := s.repo.GetByEmail(ctx, newEmail)
+		if emailErr != nil && !errors.Is(emailErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.InternalServerError(emailErr.Error(), &pkg.RentLoopErrorParams{
+				Err: emailErr,
+				Metadata: map[string]string{
+					"function": "UpdateClientUser",
+					"action":   "checking existing client user by email",
+				},
+			})
+		}
+		if existing != nil && existing.ID != clientUser.ID {
+			return nil, errors.New("email already in use")
+		}
+		clientUser.Email = newEmail
 	}
 
 	updateClientUserErr := s.repo.Update(ctx, clientUser)

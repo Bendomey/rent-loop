@@ -2901,6 +2901,87 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update the client's type, sub type, or company details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Update client details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Client Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateClientRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClient"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating client",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Client not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error occurred",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/documents": {
             "get": {
                 "security": [
@@ -7410,6 +7491,11 @@ const docTemplate = `{
                         },
                         "collectionFormat": "csv",
                         "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "tenant_id",
                         "in": "query"
                     },
                     {
@@ -16232,6 +16318,69 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.UpdateClientRequest": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "minLength": 5
+                },
+                "city": {
+                    "type": "string",
+                    "minLength": 2
+                },
+                "country": {
+                    "type": "string",
+                    "minLength": 2
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 2
+                },
+                "region": {
+                    "type": "string",
+                    "minLength": 2
+                },
+                "registration_number": {
+                    "type": "string"
+                },
+                "sub_type": {
+                    "type": "string",
+                    "enum": [
+                        "LANDLORD",
+                        "PROPERTY_MANAGER",
+                        "DEVELOPER",
+                        "AGENCY"
+                    ]
+                },
+                "support_email": {
+                    "type": "string"
+                },
+                "support_phone": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "INDIVIDUAL",
+                        "COMPANY"
+                    ]
+                },
+                "website_url": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.UpdateClientUserPasswordRequest": {
             "type": "object",
             "required": [
@@ -16254,6 +16403,10 @@ const docTemplate = `{
         "handlers.UpdateClientUserRequest": {
             "type": "object",
             "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john@example.com"
+                },
                 "name": {
                     "type": "string",
                     "minLength": 2,

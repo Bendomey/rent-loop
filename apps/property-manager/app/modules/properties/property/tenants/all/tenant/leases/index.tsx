@@ -5,6 +5,7 @@ import { Link, useParams, useSearchParams } from 'react-router'
 import { useGetTenantLeases } from '~/api/leases'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
+import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
@@ -133,27 +134,35 @@ export function TenantLeasesModule() {
 	)
 
 	return (
-		<div className="mt-3 flex flex-col gap-4">
-			<DataTable
-				columns={columns}
-				isLoading={isLoading}
-				refetch={refetch}
-				error={error ? 'Failed to load leases.' : undefined}
-				dataResponse={{
-					rows: data?.rows ?? [],
-					total: data?.meta?.total ?? 0,
-					page,
-					page_size: per,
-					order: data?.meta?.order ?? 'desc',
-					order_by: data?.meta?.order_by ?? 'created_at',
-					has_prev_page: data?.meta?.has_prev_page ?? false,
-					has_next_page: data?.meta?.has_next_page ?? false,
-				}}
-				empty={{
-					message: 'No leases found',
-					description: "This tenant's lease history will appear here.",
-				}}
-			/>
+		<div className="mx-auto my-2 flex flex-col gap-4 sm:gap-6">
+			<div className="space-y-1">
+				<TypographyH4>Tenant Leases</TypographyH4>
+				<TypographyMuted>
+					Track and manage tenant leases for your property efficiently.
+				</TypographyMuted>
+			</div>
+			<div className="mt-3 flex flex-col gap-4">
+				<DataTable
+					columns={columns}
+					isLoading={isLoading}
+					refetch={refetch}
+					error={error ? 'Failed to load leases.' : undefined}
+					dataResponse={{
+						rows: data?.rows ?? [],
+						total: data?.meta?.total ?? 0,
+						page,
+						page_size: per,
+						order: data?.meta?.order ?? 'desc',
+						order_by: data?.meta?.order_by ?? 'created_at',
+						has_prev_page: data?.meta?.has_prev_page ?? false,
+						has_next_page: data?.meta?.has_next_page ?? false,
+					}}
+					empty={{
+						message: 'No leases found',
+						description: "This tenant's lease history will appear here.",
+					}}
+				/>
+			</div>
 		</div>
 	)
 }

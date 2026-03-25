@@ -1,5 +1,7 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { fetchClient, fetchServer } from '~/lib/transport'
+
+export const CURRENT_USER_QUERY_KEY = ['current-user']
 
 export interface LoginClientUserInput {
 	email: string
@@ -59,6 +61,21 @@ export const getCurrentUser = async (apiConfig?: ApiConfigForServerConfig) => {
 		}
 	}
 }
+
+const getCurrentUserClient = async () => {
+	const response = await fetchClient<ApiResponse<ClientUser>>(
+		`/v1/admin/client-users/me?populate=Client`,
+		{ method: 'GET' },
+	)
+	return response.parsedBody.data
+}
+
+export const useGetCurrentUser = (initialData?: ClientUser) =>
+	useQuery({
+		queryKey: CURRENT_USER_QUERY_KEY,
+		queryFn: getCurrentUserClient,
+		initialData,
+	})
 
 export interface SendForgotPasswordLinkInput {
 	email: string

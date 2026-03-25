@@ -11,6 +11,7 @@ import (
 type ClientRepository interface {
 	GetByID(context context.Context, id string) (*models.Client, error)
 	Create(context context.Context, client *models.Client) error
+	Update(context context.Context, client *models.Client) error
 }
 
 type clientRepository struct {
@@ -24,6 +25,11 @@ func NewClientRepository(DB *gorm.DB) ClientRepository {
 func (r *clientRepository) Create(ctx context.Context, client *models.Client) error {
 	db := lib.ResolveDB(ctx, r.DB)
 	return db.WithContext(ctx).Create(client).Error
+}
+
+func (r *clientRepository) Update(ctx context.Context, client *models.Client) error {
+	db := lib.ResolveDB(ctx, r.DB)
+	return db.WithContext(ctx).Save(client).Error
 }
 
 func (r *clientRepository) GetByID(ctx context.Context, id string) (*models.Client, error) {

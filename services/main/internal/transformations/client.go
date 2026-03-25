@@ -43,6 +43,8 @@ func DBClientToRestClient(i *models.Client) interface{} {
 		"city":                  i.City,
 		"latitude":              i.Latitude,
 		"longitude":             i.Longitude,
+		"description":           i.Description,
+		"registration_number":   i.RegistrationNumber,
 		"website_url":           i.WebsiteUrl,
 		"support_phone":         i.SupportPhone,
 		"support_email":         i.SupportEmail,
