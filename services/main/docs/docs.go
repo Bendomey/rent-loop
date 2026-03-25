@@ -7495,6 +7495,11 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "name": "tenant_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "unit_id",
                         "in": "query"
                     }
@@ -16396,18 +16401,7 @@ const docTemplate = `{
             }
         },
         "handlers.UpdateClientUserRequest": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "minLength": 2,
-                    "example": "John Doe"
-                },
-                "phoneNumber": {
-                    "type": "string",
-                    "example": "+233281234569"
-                }
-            }
+            "type": "object"
         },
         "handlers.UpdateCommentBody": {
             "type": "object",

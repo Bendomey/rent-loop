@@ -485,8 +485,9 @@ func (h *ClientUserHandler) ActivateClientUser(w http.ResponseWriter, r *http.Re
 }
 
 type UpdateClientUserRequest struct {
-	Name        *string `json:"name"        validate:"omitempty,min=2" example:"John Doe"`
-	PhoneNumber *string `json:"phoneNumber" validate:"omitempty,e164"  example:"+233281234569"`
+	Name        lib.Optional[string] `json:"name"        validate:"omitempty,min=2" example:"John Doe"`
+	PhoneNumber lib.Optional[string] `json:"phoneNumber" validate:"omitempty,e164"  example:"+233281234569"`
+	Email       lib.Optional[string] `json:"email"       validate:"omitempty,email" example:"john@example.com"`
 }
 
 // UpdateClientUserSelf godoc
@@ -528,6 +529,7 @@ func (h *ClientUserHandler) UpdateClientUserSelf(w http.ResponseWriter, r *http.
 		ClientUserID: currentClientUser.ID,
 		Name:         body.Name,
 		PhoneNumber:  body.PhoneNumber,
+		Email:        body.Email,
 	}
 
 	clientUser, err := h.service.UpdateClientUser(r.Context(), input)
@@ -633,6 +635,7 @@ func (h *ClientUserHandler) UpdateClientUserByID(w http.ResponseWriter, r *http.
 		ClientUserID: clientUserID,
 		Name:         body.Name,
 		PhoneNumber:  body.PhoneNumber,
+		Email:        body.Email,
 	}
 
 	clientUser, err := h.service.UpdateClientUser(r.Context(), input)

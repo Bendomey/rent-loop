@@ -1468,14 +1468,6 @@ definitions:
     - old_password
     type: object
   handlers.UpdateClientUserRequest:
-    properties:
-      name:
-        example: John Doe
-        minLength: 2
-        type: string
-      phoneNumber:
-        example: "+233281234569"
-        type: string
     type: object
   handlers.UpdateCommentBody:
     properties:
@@ -8682,6 +8674,9 @@ paths:
           type: string
         name: status
         type: array
+      - in: query
+        name: tenant_id
+        type: string
       - in: query
         name: unit_id
         type: string
