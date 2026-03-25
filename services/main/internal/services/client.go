@@ -21,6 +21,12 @@ type UpdateClientInput struct {
 	WebsiteUrl         lib.Optional[string]
 	SupportPhone       lib.Optional[string]
 	SupportEmail       lib.Optional[string]
+	Address            *string
+	Country            *string
+	Region             *string
+	City               *string
+	Latitude           *float64
+	Longitude          *float64
 }
 
 type ClientService interface {
@@ -136,6 +142,30 @@ func (s *clientService) UpdateClient(ctx context.Context, input UpdateClientInpu
 
 	if input.SupportEmail.IsSet {
 		client.SupportEmail = input.SupportEmail.Ptr()
+	}
+
+	if input.Address != nil {
+		client.Address = *input.Address
+	}
+
+	if input.Country != nil {
+		client.Country = *input.Country
+	}
+
+	if input.Region != nil {
+		client.Region = *input.Region
+	}
+
+	if input.City != nil {
+		client.City = *input.City
+	}
+
+	if input.Latitude != nil {
+		client.Latitude = *input.Latitude
+	}
+
+	if input.Longitude != nil {
+		client.Longitude = *input.Longitude
 	}
 
 	if updateErr := s.repo.Update(ctx, client); updateErr != nil {

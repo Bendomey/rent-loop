@@ -28,11 +28,17 @@ type UpdateClientRequest struct {
 	Type               *string              `json:"type"                validate:"omitempty,oneof=INDIVIDUAL COMPANY"`
 	SubType            *string              `json:"sub_type"            validate:"omitempty,oneof=LANDLORD PROPERTY_MANAGER DEVELOPER AGENCY"`
 	Name               *string              `json:"name"                validate:"omitempty,min=2"`
-	Description        lib.Optional[string] `json:"description"         validate:"omitempty,max=500"  swaggertype:"string"`
-	RegistrationNumber lib.Optional[string] `json:"registration_number"                               swaggertype:"string"`
-	WebsiteUrl         lib.Optional[string] `json:"website_url"         validate:"omitempty,url"       swaggertype:"string"`
-	SupportPhone       lib.Optional[string] `json:"support_phone"                                     swaggertype:"string"`
-	SupportEmail       lib.Optional[string] `json:"support_email"       validate:"omitempty,email"     swaggertype:"string"`
+	Description        lib.Optional[string] `json:"description"         validate:"omitempty,max=500"                                          swaggertype:"string"`
+	RegistrationNumber lib.Optional[string] `json:"registration_number"                                                                       swaggertype:"string"`
+	WebsiteUrl         lib.Optional[string] `json:"website_url"         validate:"omitempty,url"                                              swaggertype:"string"`
+	SupportPhone       lib.Optional[string] `json:"support_phone"                                                                             swaggertype:"string"`
+	SupportEmail       lib.Optional[string] `json:"support_email"       validate:"omitempty,email"                                            swaggertype:"string"`
+	Address            *string              `json:"address"             validate:"omitempty,min=5"`
+	Country            *string              `json:"country"             validate:"omitempty,min=2"`
+	Region             *string              `json:"region"              validate:"omitempty,min=2"`
+	City               *string              `json:"city"                validate:"omitempty,min=2"`
+	Latitude           *float64             `json:"latitude"`
+	Longitude          *float64             `json:"longitude"`
 }
 
 // UpdateClient godoc
@@ -88,8 +94,13 @@ func (h *clientHandler) UpdateClient(w http.ResponseWriter, r *http.Request) {
 		WebsiteUrl:         body.WebsiteUrl,
 		SupportPhone:       body.SupportPhone,
 		SupportEmail:       body.SupportEmail,
+		Address:            body.Address,
+		Country:            body.Country,
+		Region:             body.Region,
+		City:               body.City,
+		Latitude:           body.Latitude,
+		Longitude:          body.Longitude,
 	}
-	// (Optional fields pass through as lib.Optional[string] — the service checks .IsSet)
 
 	client, err := h.service.UpdateClient(r.Context(), input)
 	if err != nil {

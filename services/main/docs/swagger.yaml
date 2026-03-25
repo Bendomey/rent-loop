@@ -1410,10 +1410,26 @@ definitions:
     type: object
   handlers.UpdateClientRequest:
     properties:
+      address:
+        minLength: 5
+        type: string
+      city:
+        minLength: 2
+        type: string
+      country:
+        minLength: 2
+        type: string
       description:
         maxLength: 500
         type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
       name:
+        minLength: 2
+        type: string
+      region:
         minLength: 2
         type: string
       registration_number:

@@ -16316,11 +16316,33 @@ const docTemplate = `{
         "handlers.UpdateClientRequest": {
             "type": "object",
             "properties": {
+                "address": {
+                    "type": "string",
+                    "minLength": 5
+                },
+                "city": {
+                    "type": "string",
+                    "minLength": 2
+                },
+                "country": {
+                    "type": "string",
+                    "minLength": 2
+                },
                 "description": {
                     "type": "string",
                     "maxLength": 500
                 },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
                 "name": {
+                    "type": "string",
+                    "minLength": 2
+                },
+                "region": {
                     "type": "string",
                     "minLength": 2
                 },
