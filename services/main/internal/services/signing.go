@@ -309,14 +309,20 @@ func (s *signingService) sendSigningTokenNotification(
 
 	subject := lib.SIGNING_TOKEN_INVITE_SUBJECT
 	body := lib.SIGNING_TOKEN_INVITE_BODY
+	smsBody := lib.SIGNING_TOKEN_INVITE_SMS_BODY
 	if isResend {
 		subject = lib.SIGNING_TOKEN_RESENT_SUBJECT
 		body = lib.SIGNING_TOKEN_RESENT_BODY
+		smsBody = lib.SIGNING_TOKEN_RESENT_SMS_BODY
 	}
 
 	message := strings.ReplaceAll(body, "{{signer_name}}", signerName)
 	message = strings.ReplaceAll(message, "{{token}}", token.Token)
 	message = strings.ReplaceAll(message, "{{expires_at}}", expiresAt)
+
+	smsMessage := strings.ReplaceAll(smsBody, "{{signer_name}}", signerName)
+	smsMessage = strings.ReplaceAll(smsMessage, "{{token}}", token.Token)
+	smsMessage = strings.ReplaceAll(smsMessage, "{{expires_at}}", expiresAt)
 
 	if token.SignerEmail != nil {
 		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
@@ -329,7 +335,7 @@ func (s *signingService) sendSigningTokenNotification(
 	if token.SignerPhone != nil {
 		go s.appCtx.Clients.GatekeeperAPI.SendSMS(context.Background(), gatekeeper.SendSMSInput{
 			Recipient: *token.SignerPhone,
-			Message:   message,
+			Message:   smsMessage,
 		})
 	}
 }

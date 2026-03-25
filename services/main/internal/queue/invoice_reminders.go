@@ -73,7 +73,7 @@ func handleInvoiceReminder(
 			daysUntilDue := int(dueDate.Sub(nowDate).Hours() / 24)
 
 			var reminderKey string
-			var subject, bodyTemplate string
+			var subject, bodyTemplate, smsBodyTemplate string
 
 			if daysUntilDue == 1 {
 				// Pre-due: due tomorrow (next calendar day)
@@ -81,6 +81,7 @@ func handleInvoiceReminder(
 					reminderKey = "pre_due_1d"
 					subject = lib.INVOICE_PRE_DUE_1D_SUBJECT
 					bodyTemplate = lib.INVOICE_PRE_DUE_1D_BODY
+					smsBodyTemplate = lib.INVOICE_PRE_DUE_1D_SMS_BODY
 				}
 			} else if daysUntilDue < 0 {
 				// Overdue: find highest applicable unsent threshold based on full calendar days past due
@@ -88,7 +89,7 @@ func handleInvoiceReminder(
 				for _, threshold := range overdueThresholds {
 					if daysPastDue >= threshold.days && !slices.Contains(invoice.RemindersSent, threshold.key) {
 						reminderKey = threshold.key
-						subject, bodyTemplate = overdueTemplate(threshold.key)
+						subject, bodyTemplate, smsBodyTemplate = overdueTemplate(threshold.key)
 						break
 					}
 				}
@@ -111,14 +112,16 @@ func handleInvoiceReminder(
 				unitName = invoice.ContextLease.Unit.Name
 			}
 
-			message := strings.NewReplacer(
+			r := strings.NewReplacer(
 				"{{tenant_name}}", tenant.FirstName,
 				"{{invoice_code}}", invoice.Code,
 				"{{unit_name}}", unitName,
 				"{{currency}}", invoice.Currency,
 				"{{amount}}", lib.FormatAmount(lib.PesewasToCedis(int64(invoice.TotalAmount))),
 				"{{due_date}}", invoice.DueDate.Format("2 Jan 2006"),
-			).Replace(bodyTemplate)
+			)
+			message := r.Replace(bodyTemplate)
+			smsMessage := r.Replace(smsBodyTemplate)
 
 			channelSucceeded := false
 
@@ -138,7 +141,7 @@ func handleInvoiceReminder(
 
 			if err := appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
 				Recipient: tenant.Phone,
-				Message:   message,
+				Message:   smsMessage,
 			}); err != nil {
 				log.WithError(err).
 					WithField("invoice_id", invoice.ID.String()).
@@ -194,17 +197,17 @@ func handleInvoiceReminder(
 	}
 }
 
-func overdueTemplate(key string) (subject, body string) {
+func overdueTemplate(key string) (subject, body, smsBody string) {
 	switch key {
 	case "overdue_1d":
-		return lib.INVOICE_OVERDUE_1D_SUBJECT, lib.INVOICE_OVERDUE_1D_BODY
+		return lib.INVOICE_OVERDUE_1D_SUBJECT, lib.INVOICE_OVERDUE_1D_BODY, lib.INVOICE_OVERDUE_1D_SMS_BODY
 	case "overdue_3d":
-		return lib.INVOICE_OVERDUE_3D_SUBJECT, lib.INVOICE_OVERDUE_3D_BODY
+		return lib.INVOICE_OVERDUE_3D_SUBJECT, lib.INVOICE_OVERDUE_3D_BODY, lib.INVOICE_OVERDUE_3D_SMS_BODY
 	case "overdue_7d":
-		return lib.INVOICE_OVERDUE_7D_SUBJECT, lib.INVOICE_OVERDUE_7D_BODY
+		return lib.INVOICE_OVERDUE_7D_SUBJECT, lib.INVOICE_OVERDUE_7D_BODY, lib.INVOICE_OVERDUE_7D_SMS_BODY
 	case "overdue_14d":
-		return lib.INVOICE_OVERDUE_14D_SUBJECT, lib.INVOICE_OVERDUE_14D_BODY
+		return lib.INVOICE_OVERDUE_14D_SUBJECT, lib.INVOICE_OVERDUE_14D_BODY, lib.INVOICE_OVERDUE_14D_SMS_BODY
 	default:
-		return lib.INVOICE_OVERDUE_1D_SUBJECT, lib.INVOICE_OVERDUE_1D_BODY
+		return lib.INVOICE_OVERDUE_1D_SUBJECT, lib.INVOICE_OVERDUE_1D_BODY, lib.INVOICE_OVERDUE_1D_SMS_BODY
 	}
 }

@@ -150,6 +150,7 @@ func (s *clientUserService) CreateClientUser(
 		"{{password}}", password,
 	)
 	message := r.Replace(lib.CLIENT_USER_ADDED_BODY)
+	smsMessage := r.Replace(lib.CLIENT_USER_ADDED_SMS_BODY)
 
 	go pkg.SendEmail(
 		s.appCtx.Config,
@@ -164,7 +165,7 @@ func (s *clientUserService) CreateClientUser(
 		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: input.Phone,
-			Message:   message,
+			Message:   smsMessage,
 		},
 	)
 
@@ -489,6 +490,7 @@ func (s *clientUserService) ActivateClientUser(
 		"{{name}}", clientUserToBeActivated.Name,
 	)
 	message := r.Replace(lib.CLIENT_USER_ACTIVATED_BODY)
+	smsMessage := r.Replace(lib.CLIENT_USER_ACTIVATED_SMS_BODY)
 
 	go pkg.SendEmail(
 		s.appCtx.Config,
@@ -503,7 +505,7 @@ func (s *clientUserService) ActivateClientUser(
 		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: clientUserToBeActivated.PhoneNumber,
-			Message:   message,
+			Message:   smsMessage,
 		},
 	)
 
@@ -559,6 +561,7 @@ func (s *clientUserService) DeactivateClientUser(
 		"{{reason}}", input.Reason,
 	)
 	message := r.Replace(lib.CLIENT_USER_DEACTIVATED_BODY)
+	smsMessage := r.Replace(lib.CLIENT_USER_DEACTIVATED_SMS_BODY)
 
 	go pkg.SendEmail(
 		s.appCtx.Config,
@@ -573,7 +576,7 @@ func (s *clientUserService) DeactivateClientUser(
 		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: clientUserToBeDeactivated.PhoneNumber,
-			Message:   message,
+			Message:   smsMessage,
 		},
 	)
 
@@ -716,6 +719,7 @@ func (s *clientUserService) UpateClientUserPassword(
 		"{{name}}", clientUser.Name,
 	)
 	message := r.Replace(lib.CLIENT_USER_PASSWORD_UPDATED_BODY)
+	smsMessage := r.Replace(lib.CLIENT_USER_PASSWORD_UPDATED_SMS_BODY)
 
 	go pkg.SendEmail(
 		s.appCtx.Config,
@@ -730,7 +734,7 @@ func (s *clientUserService) UpateClientUserPassword(
 		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: clientUser.PhoneNumber,
-			Message:   message,
+			Message:   smsMessage,
 		},
 	)
 

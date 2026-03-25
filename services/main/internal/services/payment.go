@@ -529,13 +529,15 @@ func (s *paymentService) VerifyOfflinePayment(
 		if payment.Invoice.ContextLease != nil {
 			unitName = payment.Invoice.ContextLease.Unit.Name
 		}
-		message := strings.NewReplacer(
+		r := strings.NewReplacer(
 			"{{tenant_name}}", tenant.FirstName,
 			"{{invoice_code}}", payment.Invoice.Code,
 			"{{unit_name}}", unitName,
 			"{{currency}}", payment.Invoice.Currency,
 			"{{amount}}", lib.FormatAmount(lib.PesewasToCedis(int64(payment.Invoice.TotalAmount))),
-		).Replace(lib.INVOICE_PAID_BODY)
+		)
+		message := r.Replace(lib.INVOICE_PAID_BODY)
+		smsMessage := r.Replace(lib.INVOICE_PAID_SMS_BODY)
 
 		if tenant.Email != nil {
 			go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
@@ -548,7 +550,7 @@ func (s *paymentService) VerifyOfflinePayment(
 		go func() {
 			if err := s.appCtx.Clients.GatekeeperAPI.SendSMS(context.Background(), gatekeeper.SendSMSInput{
 				Recipient: tenant.Phone,
-				Message:   message,
+				Message:   smsMessage,
 			}); err != nil {
 				logrus.Errorf(
 					"failed to send invoice paid SMS for invoice %s to tenant %s: %v",
