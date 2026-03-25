@@ -1,8 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { createContext, useContext, useEffect, useState, useRef } from 'react'
-import { useFetcher } from 'react-router'
+import { useFetcher, useSubmit } from 'react-router'
 import { toast } from 'sonner'
-import { CURRENT_USER_QUERY_KEY, useUpdateClientUserMe, type UpdateClientUserMeInput } from '~/api/auth'
+import { useUpdateClientUserMe, type UpdateClientUserMeInput } from '~/api/auth'
 import { BlockNavigationDialog } from '~/components/block-navigation-dialog'
 import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
 
@@ -57,13 +57,12 @@ export function UpdateClientEmailProvider({
 		>
 	>({ email: initialEmail ?? '' })
 	const bypassBlockerRef = useRef(false)
+	const logOutSubmit = useSubmit()
 
 	const goBack = () => setStepCount((prev) => (prev > 0 ? prev - 1 : prev))
 	const goNext = () => setStepCount((prev) => prev + 1)
 	const goToPage = (page: number) => setStepCount(page)
 	const closeModal = () => setOpened(false)
-
-	const queryClient = useQueryClient()
 
 	// where there is an error in the action data, show an error toast
 	useEffect(() => {
@@ -119,10 +118,12 @@ export function UpdateClientEmailProvider({
 					},
 					onSuccess: () => {
 						toast.success('Client user details updated successfully')
-						 void queryClient.invalidateQueries({
-							queryKey: CURRENT_USER_QUERY_KEY,
-						})
-						resolve()
+						bypassBlockerRef.current = true
+						setFormData({})
+						setTimeout(() => {
+							void logOutSubmit(null, { method: 'post', action: '/logout' })
+						}, 0)
+						void resolve()
 					},
 				},
 			)

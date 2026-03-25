@@ -1,4 +1,8 @@
+import type { Dispatch, SetStateAction } from 'react'
 import { UpdateClientEmailProvider, useUpdateClientEmailContext } from './context'
+import { Step0 } from './steps/step0'
+import { Step1 } from './steps/step1'
+import { Step2 } from './steps/step2'
 import {
 	AlertDialog,
 	AlertDialogContent,
@@ -6,13 +10,8 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from '~/components/ui/alert-dialog'
-import { Button } from '~/components/ui/button'
-import { Step0 } from './steps/step0'
-import { Step1 } from './steps/step1'
-import { TypographyH3, TypographyMuted } from '~/components/ui/typography'
-import type { Dispatch, SetStateAction } from 'react'
+import { TypographyMuted } from '~/components/ui/typography'
 import { useAuth } from '~/providers/auth-provider'
-import { Step2 } from './steps/step2'
 
 interface Props {
 	opened: boolean
