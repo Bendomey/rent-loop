@@ -23,8 +23,11 @@ import { getErrorMessage } from '~/lib/error-messages'
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function Step1() {
-	const { goBack, goNext, onSubmit, updateFormData, formData } = useUpdateClientEmailContext()
-	const [newEmail, setNewEmail] = useState(formData.newEmail ?? formData.email ?? '')
+	const { goBack, goNext, onSubmit, updateFormData, formData } =
+		useUpdateClientEmailContext()
+	const [newEmail, setNewEmail] = useState(
+		formData.newEmail ?? formData.email ?? '',
+	)
 	const [otp, setOtp] = useState('')
 	const [otpError, setOtpError] = useState('')
 	const [emailError, setEmailError] = useState('')
@@ -38,18 +41,21 @@ export function Step1() {
 
 	useEffect(() => {
 		if (resendCountdown <= 0) return
-		const timer = window.setTimeout(() => setResendCountdown((s) => s - 1), 1000)
+		const timer = window.setTimeout(
+			() => setResendCountdown((s) => s - 1),
+			1000,
+		)
 		return () => window.clearTimeout(timer)
 	}, [resendCountdown])
 
-    useEffect(() => {
-        if (isOtpComplete) {
-            void handleVerify()
-        }
-        setOtpError('')
-        setEmailError('')
-    }, [isOtpComplete])
-    
+	useEffect(() => {
+		if (isOtpComplete) {
+			void handleVerify()
+		}
+		setOtpError('')
+		setEmailError('')
+	}, [isOtpComplete])
+
 	const handleSendOtp = () => {
 		if (!emailRegex.test(newEmail)) {
 			setOtpError('Please enter a valid email address to send OTP')
@@ -95,15 +101,15 @@ export function Step1() {
 						setOtpError('')
 						goNext()
 					} catch (e: unknown) {
-					if (e instanceof Error) {
-						const error = getErrorMessage(
-							e.message,
-							`Failed to update email, please try again.`,
-						)
-						toast.error(error)
-						setEmailError(error)
+						if (e instanceof Error) {
+							const error = getErrorMessage(
+								e.message,
+								`Failed to update email, please try again.`,
+							)
+							toast.error(error)
+							setEmailError(error)
+						}
 					}
-				}
 				},
 			},
 		)
@@ -113,9 +119,12 @@ export function Step1() {
 		<div className="mx-auto flex w-full items-center justify-center md:max-w-2xl">
 			<div className="w-full max-w-xl rounded-2xl border bg-white p-10 shadow-sm md:p-8">
 				<div className="space-y-2 text-center">
-					<TypographyH2 className="text-lg font-semibold">Enter new email</TypographyH2>
+					<TypographyH2 className="text-lg font-semibold">
+						Enter new email
+					</TypographyH2>
 					<TypographyMuted>
-						Send a one-time code to your new email and verify to complete the update.
+						Send a one-time code to your new email and verify to complete the
+						update.
 					</TypographyMuted>
 				</div>
 
@@ -130,11 +139,16 @@ export function Step1() {
 				</div>
 				{!isOtpSent ? (
 					<div className="mt-4 flex justify-center">
-					<Button disabled={isSendingOtp} onClick={handleSendOtp} variant="outline" size="sm">
-						{isSendingOtp ? <Spinner /> : null}
-						Send OTP
-					</Button>
-				</div>
+						<Button
+							disabled={isSendingOtp}
+							onClick={handleSendOtp}
+							variant="outline"
+							size="sm"
+						>
+							{isSendingOtp ? <Spinner /> : null}
+							Send OTP
+						</Button>
+					</div>
 				) : null}
 
 				{isOtpSent && (
@@ -158,15 +172,28 @@ export function Step1() {
 						</div>
 
 						<div className="mt-4 flex justify-center">
-							<Button onClick={handleResend} disabled={!canResend || isSendingOtp} variant="ghost" size="sm">
+							<Button
+								onClick={handleResend}
+								disabled={!canResend || isSendingOtp}
+								variant="ghost"
+								size="sm"
+							>
 								{canResend ? 'Resend code' : `Resend in ${resendCountdown}s`}
 							</Button>
 						</div>
 					</>
 				)}
 
-				{otpError && <TypographySmall className="text-destructive mt-3">{otpError}</TypographySmall>}
-				{emailError && <TypographySmall className="text-destructive mt-3">{emailError}</TypographySmall>}
+				{otpError && (
+					<TypographySmall className="text-destructive mt-3">
+						{otpError}
+					</TypographySmall>
+				)}
+				{emailError && (
+					<TypographySmall className="text-destructive mt-3">
+						{emailError}
+					</TypographySmall>
+				)}
 
 				<div className="mt-8 flex items-center justify-between">
 					<Button type="button" variant="outline" onClick={goBack} size="lg">

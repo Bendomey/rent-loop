@@ -229,8 +229,6 @@ export const verifyOtpCode = async (props: VerifyOtpCodeInput) => {
 
 export const useVerifyOtpCode = () => useMutation({ mutationFn: verifyOtpCode })
 
-
-
 /**
  * PATCH Update personal details
  */
@@ -243,7 +241,7 @@ export interface UpdateClientUserMeInput {
 const updateClientUserMe = async ({
 	name,
 	phoneNumber,
-	email
+	email,
 }: UpdateClientUserMeInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<ClientUser>>(

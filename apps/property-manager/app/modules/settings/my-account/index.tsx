@@ -23,17 +23,19 @@ import UpdateClientProfileModal from './components/update-name'
 
 export function MyAccountSettingsModule() {
 	const [openUpdatePasswordModal, setOpenUpdatePasswordModal] = useState(false)
-	const [openUpdateClientEmailModal, setOpenUpdateClientEmailModal] = useState(false)
-	const [openUpdateClientProfileModal, setOpenUpdateClientProfileModal] = useState(false)
+	const [openUpdateClientEmailModal, setOpenUpdateClientEmailModal] =
+		useState(false)
+	const [openUpdateClientProfileModal, setOpenUpdateClientProfileModal] =
+		useState(false)
 	const { currentUser } = useAuth()
 	const { sendOtp, isSendingOtp } = useSendOtp()
-	
+
 	return (
-<div className="px-4 py-4 mx-auto max-w-4xl">
+		<div className="mx-auto max-w-4xl px-4 py-4">
 			<TypographyH3 className="">My Profile</TypographyH3>
 			<Separator className="bg-muted mt-2 mb-4 h-0.5" />
 
-			<section className="mx-auto mb-5 space-y-10 md:flex md:justify-between ">
+			<section className="mx-auto mb-5 space-y-10 md:flex md:justify-between">
 				<div className="mb-8 flex items-center">
 					<Avatar className="size-20">
 						<AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
@@ -45,7 +47,10 @@ export function MyAccountSettingsModule() {
 							<Button variant="outline" size="sm">
 								<Plus /> Change Image
 							</Button>
-							<Button variant="default" className="bg-rose-600 hover:bg-rose-700">
+							<Button
+								variant="default"
+								className="bg-rose-600 hover:bg-rose-700"
+							>
 								Remove Image
 							</Button>
 						</div>
@@ -56,30 +61,30 @@ export function MyAccountSettingsModule() {
 				</div>
 
 				<div className="relative md:w-md">
-	<FieldGroup className="space-y-4">
-		<Field>
-			<FieldLabel htmlFor="full_name">Full Name</FieldLabel>
-			<Input
-				id="full_name"
-				type="text"
-				placeholder="Enter your full name"
-				value={safeString(currentUser?.name)}
-				disabled
-			/>
-		</Field>
-	</FieldGroup>
+					<FieldGroup className="space-y-4">
+						<Field>
+							<FieldLabel htmlFor="full_name">Full Name</FieldLabel>
+							<Input
+								id="full_name"
+								type="text"
+								placeholder="Enter your full name"
+								value={safeString(currentUser?.name)}
+								disabled
+							/>
+						</Field>
+					</FieldGroup>
 
-	<Button
-		type="button"
-		variant="ghost"
-		size="sm"
-		className="absolute top-0 right-0 gap-1.5 text-xs"
-		onClick={() => setOpenUpdateClientProfileModal(true)}
-	>
-		<Pencil className="size-3.5" />
-		Edit
-	</Button>
-</div>
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						className="absolute top-0 right-0 gap-1.5 text-xs"
+						onClick={() => setOpenUpdateClientProfileModal(true)}
+					>
+						<Pencil className="size-3.5" />
+						Edit
+					</Button>
+				</div>
 			</section>
 
 			<TypographyH3 className="mt-5">Account Security</TypographyH3>
@@ -97,10 +102,14 @@ export function MyAccountSettingsModule() {
 							disabled
 						/>
 					</Field>
-					<Button size="sm" variant="secondary" onClick={() => {
-						sendOtp({ channel: 'EMAIL', email: currentUser?.email ?? '' })
-						setOpenUpdateClientEmailModal(true)
-					}}>
+					<Button
+						size="sm"
+						variant="secondary"
+						onClick={() => {
+							sendOtp({ channel: 'EMAIL', email: currentUser?.email ?? '' })
+							setOpenUpdateClientEmailModal(true)
+						}}
+					>
 						{isSendingOtp ? 'Sending...' : 'Change email'}
 					</Button>
 				</div>
@@ -115,11 +124,15 @@ export function MyAccountSettingsModule() {
 							disabled
 						/>
 					</Field>
-					<Button size="sm" variant="secondary" onClick={() => setOpenUpdatePasswordModal(true)}>
+					<Button
+						size="sm"
+						variant="secondary"
+						onClick={() => setOpenUpdatePasswordModal(true)}
+					>
 						Change password
 					</Button>
 				</div>
-					{/* <div className="">
+				{/* <div className="">
 					<Field orientation="horizontal" className="flex items-baseline-last">
 						<FieldContent>
 							<FieldLabel htmlFor="2fa">2-Step Verifications</FieldLabel>
@@ -177,10 +190,19 @@ export function MyAccountSettingsModule() {
 				</div>
 			</section> */}
 
-
-			<UpdateClientProfileModal opened={openUpdateClientProfileModal} setOpened={setOpenUpdateClientProfileModal} client={currentUser}/>
-			<UpdatePasswordModal opened={openUpdatePasswordModal} setOpened={setOpenUpdatePasswordModal} />
-			<UpdateClientEmail opened={openUpdateClientEmailModal} setOpened={setOpenUpdateClientEmailModal} />
+			<UpdateClientProfileModal
+				opened={openUpdateClientProfileModal}
+				setOpened={setOpenUpdateClientProfileModal}
+				client={currentUser}
+			/>
+			<UpdatePasswordModal
+				opened={openUpdatePasswordModal}
+				setOpened={setOpenUpdatePasswordModal}
+			/>
+			<UpdateClientEmail
+				opened={openUpdateClientEmailModal}
+				setOpened={setOpenUpdateClientEmailModal}
+			/>
 		</div>
 	)
 }

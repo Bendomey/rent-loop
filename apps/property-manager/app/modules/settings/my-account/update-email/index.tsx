@@ -1,5 +1,8 @@
 import type { Dispatch, SetStateAction } from 'react'
-import { UpdateClientEmailProvider, useUpdateClientEmailContext } from './context'
+import {
+	UpdateClientEmailProvider,
+	useUpdateClientEmailContext,
+} from './context'
 import { Step0 } from './steps/step0'
 import { Step1 } from './steps/step1'
 import { Step2 } from './steps/step2'
@@ -22,7 +25,10 @@ export function UpdateClientEmail({ opened, setOpened }: Props) {
 	const { currentUser } = useAuth()
 
 	return (
-		<UpdateClientEmailProvider initialEmail={currentUser?.email} setOpened={setOpened}>
+		<UpdateClientEmailProvider
+			initialEmail={currentUser?.email}
+			setOpened={setOpened}
+		>
 			<AlertDialog open={opened} onOpenChange={setOpened}>
 				<AlertDialogContent className="rounded-xl">
 					<AlertDialogHeader>
@@ -51,10 +57,17 @@ function StepRouter() {
 	return (
 		<>
 			<div className="mb-4 rounded-md border bg-slate-50 p-3 text-sm">
-				<div className="font-semibold">Step {Math.min(stepCount + 1, steps.length)} of {steps.length}</div>
-				<div className="text-xs text-slate-500">{steps[Math.min(stepCount, steps.length - 1)]}</div>
+				<div className="font-semibold">
+					Step {Math.min(stepCount + 1, steps.length)} of {steps.length}
+				</div>
+				<div className="text-xs text-slate-500">
+					{steps[Math.min(stepCount, steps.length - 1)]}
+				</div>
 				<div className="mt-2 h-2 w-full rounded-full bg-slate-200">
-					<div className="h-full rounded-full bg-rose-600" style={{ width: `${progress}%` }} />
+					<div
+						className="h-full rounded-full bg-rose-600"
+						style={{ width: `${progress}%` }}
+					/>
 				</div>
 			</div>
 

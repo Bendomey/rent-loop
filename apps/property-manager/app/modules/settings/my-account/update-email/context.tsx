@@ -12,23 +12,31 @@ interface UpdateClientEmailContextType {
 	goBack: () => void
 	goNext: () => void
 	closeModal: () => void
-	updateFormData: (data: Partial<UpdateClientUserMeInput & {
-		newEmail?: string
-		currentEmailVerified?: boolean
-		newEmailVerified?: boolean
-	}>) => void
-	formData: Partial<UpdateClientUserMeInput & {
-		newEmail?: string
-		currentEmailVerified?: boolean
-		newEmailVerified?: boolean
-	}>
-	isSubmitting: boolean
-	onSubmit: (
-		data: Partial<UpdateClientUserMeInput & {
+	updateFormData: (
+		data: Partial<
+			UpdateClientUserMeInput & {
+				newEmail?: string
+				currentEmailVerified?: boolean
+				newEmailVerified?: boolean
+			}
+		>,
+	) => void
+	formData: Partial<
+		UpdateClientUserMeInput & {
 			newEmail?: string
 			currentEmailVerified?: boolean
 			newEmailVerified?: boolean
-		}>,
+		}
+	>
+	isSubmitting: boolean
+	onSubmit: (
+		data: Partial<
+			UpdateClientUserMeInput & {
+				newEmail?: string
+				currentEmailVerified?: boolean
+				newEmailVerified?: boolean
+			}
+		>,
 	) => Promise<void>
 }
 
@@ -79,11 +87,13 @@ export function UpdateClientEmailProvider({
 	)
 
 	const updateFormData = (
-		data: Partial<UpdateClientUserMeInput & {
-			newEmail?: string
-			currentEmailVerified?: boolean
-			newEmailVerified?: boolean
-		}>,
+		data: Partial<
+			UpdateClientUserMeInput & {
+				newEmail?: string
+				currentEmailVerified?: boolean
+				newEmailVerified?: boolean
+			}
+		>,
 	) => {
 		setFormData((prev) => ({
 			...prev,
@@ -91,11 +101,8 @@ export function UpdateClientEmailProvider({
 		}))
 	}
 	const { mutate, isPending } = useUpdateClientUserMe()
-	
 
-	const onSubmit = async (
-		data: Partial<UpdateClientUserMeInput>,
-	) => {
+	const onSubmit = async (data: Partial<UpdateClientUserMeInput>) => {
 		const updatedData = { ...data }
 
 		if (formData.phoneNumber) {
@@ -112,7 +119,9 @@ export function UpdateClientEmailProvider({
 				{
 					onError: (e: unknown) => {
 						if (e instanceof Error) {
-							toast.error('Failed to update client user details. Try again later.')
+							toast.error(
+								'Failed to update client user details. Try again later.',
+							)
 						}
 						reject(e)
 					},

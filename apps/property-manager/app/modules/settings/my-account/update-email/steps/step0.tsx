@@ -36,7 +36,10 @@ export function Step0() {
 
 	useEffect(() => {
 		if (resendCountdown <= 0) return
-		const handle = window.setTimeout(() => setResendCountdown((s) => s - 1), 1000)
+		const handle = window.setTimeout(
+			() => setResendCountdown((s) => s - 1),
+			1000,
+		)
 		return () => window.clearTimeout(handle)
 	}, [resendCountdown])
 
@@ -68,7 +71,8 @@ export function Step0() {
 			{ code: otp, email: currentEmail },
 			{
 				onError: (e: unknown) => {
-					const message = e instanceof Error ? e.message : 'Failed to verify OTP.'
+					const message =
+						e instanceof Error ? e.message : 'Failed to verify OTP.'
 					setOtpError(message)
 					toast.error(message)
 				},
@@ -85,10 +89,14 @@ export function Step0() {
 		<div className="mx-auto flex w-full items-center justify-center md:max-w-2xl">
 			<div className="w-full max-w-xl rounded-2xl border bg-white p-10 shadow-sm md:p-8">
 				<div className="space-y-2 text-center">
-					<TypographyH2 className="text-lg font-semibold">Verify current email</TypographyH2>
+					<TypographyH2 className="text-lg font-semibold">
+						Verify current email
+					</TypographyH2>
 					<TypographyMuted>
 						Enter the 6-digit verification code sent to{' '}
-						<span className="font-medium text-zinc-900">{currentEmail || 'your registered email'}</span>
+						<span className="font-medium text-zinc-900">
+							{currentEmail || 'your registered email'}
+						</span>
 					</TypographyMuted>
 				</div>
 
@@ -110,7 +118,11 @@ export function Step0() {
 					</InputOTP>
 				</div>
 
-				{otpError && <TypographySmall className="text-destructive mt-3">{otpError}</TypographySmall>}
+				{otpError && (
+					<TypographySmall className="text-destructive mt-3">
+						{otpError}
+					</TypographySmall>
+				)}
 
 				<div className="mt-6 flex justify-center">
 					<Button
@@ -127,7 +139,12 @@ export function Step0() {
 				</div>
 
 				<div className="mt-8 flex items-center justify-between">
-					<Button type="button" variant="outline" onClick={closeModal} size="lg">
+					<Button
+						type="button"
+						variant="outline"
+						onClick={closeModal}
+						size="lg"
+					>
 						<ArrowLeft className="mr-2 h-4 w-4" />
 						Back
 					</Button>
