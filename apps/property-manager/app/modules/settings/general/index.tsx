@@ -1,22 +1,834 @@
-import { Edit } from 'lucide-react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useQueryClient } from '@tanstack/react-query'
+import {
+	ArrowLeftRight,
+	Building2,
+	CircleUserRound,
+	Pencil,
+	TriangleAlert,
+} from 'lucide-react'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { useLoaderData } from 'react-router'
+import { toast } from 'sonner'
+import { z } from 'zod'
+import { CURRENT_USER_QUERY_KEY, useGetCurrentUser } from '~/api/auth'
+import { useUpdateClient } from '~/api/clients'
+import {
+	AddressInput,
+	AddressSchema,
+	type AddressInputSchema,
+} from '~/components/address-input'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '~/components/ui/alert-dialog'
+import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
-import { Field, FieldDescription, FieldLabel } from '~/components/ui/field'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from '~/components/ui/dialog'
+import {
+	Field,
+	FieldError,
+	FieldGroup,
+	FieldLabel,
+} from '~/components/ui/field'
+import {
+	Form,
+	FormControl,
+	FormDescription,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { Separator } from '~/components/ui/separator'
+import { Spinner } from '~/components/ui/spinner'
+import { Textarea } from '~/components/ui/textarea'
 import {
 	TypographyH3,
 	TypographyH4,
 	TypographyMuted,
 } from '~/components/ui/typography'
-import { useAuth } from '~/providers/auth-provider'
+import { getErrorMessage } from '~/lib/error-messages'
+import { safeString } from '~/lib/strings'
+import type { loader } from '~/routes/_auth._dashboard.settings.general'
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const subTypeOptions: Array<{
+	label: string
+	value: 'PROPERTY_MANAGER' | 'DEVELOPER' | 'AGENCY'
+}> = [
+	{ label: 'Property Manager', value: 'PROPERTY_MANAGER' },
+	{ label: 'Developer', value: 'DEVELOPER' },
+	{ label: 'Agency', value: 'AGENCY' },
+]
+
+function useClientMutation(
+	clientId: string,
+	successMessage: string,
+	onSuccess: () => void,
+) {
+	const { mutate, isPending } = useUpdateClient()
+
+	const submit = (
+		data: Parameters<typeof mutate>[0],
+		opts?: { onError?: (e: unknown) => void },
+	) => {
+		mutate(data, {
+			onSuccess: () => {
+				toast.success(successMessage)
+				onSuccess()
+			},
+			onError: (e: unknown) => {
+				if (opts?.onError) {
+					opts.onError(e)
+					return
+				}
+				toast.error(
+					getErrorMessage(
+						e instanceof Error ? e.message : 'Unknown error',
+						'Something went wrong. Please try again.',
+					),
+				)
+			},
+		})
+	}
+
+	return { submit, isPending, clientId }
+}
+
+// ---------------------------------------------------------------------------
+// Edit Profile dialog
+// ---------------------------------------------------------------------------
+
+const editProfileSchema = z.object({
+	name: z.string().min(2, 'Name must be at least 2 characters'),
+	sub_type: z
+		.enum(['PROPERTY_MANAGER', 'DEVELOPER', 'AGENCY'], {
+			error: 'Please select a sub type',
+		})
+		.optional(),
+})
+
+type EditProfileSchema = z.infer<typeof editProfileSchema>
+
+function EditProfileDialog({
+	client,
+	open,
+	onOpenChange,
+	onSuccess,
+}: {
+	client: NonNullable<Client>
+	open: boolean
+	onOpenChange: (v: boolean) => void
+	onSuccess: () => void
+}) {
+	const isCompany = client.type === 'COMPANY'
+	const currentSubType =
+		isCompany && client.sub_type !== 'LANDLORD'
+			? (client.sub_type as 'PROPERTY_MANAGER' | 'DEVELOPER' | 'AGENCY')
+			: undefined
+
+	const { submit, isPending } = useClientMutation(
+		client.id,
+		'Profile updated',
+		onSuccess,
+	)
+
+	const rhf = useForm<EditProfileSchema>({
+		resolver: zodResolver(editProfileSchema),
+		defaultValues: { name: client.name, sub_type: currentSubType },
+	})
+
+	const { control, handleSubmit, watch, setValue } = rhf
+
+	const onSubmit = (data: EditProfileSchema) => {
+		submit({
+			clientId: client.id,
+			name: data.name,
+			...(isCompany && data.sub_type ? { sub_type: data.sub_type } : {}),
+		})
+	}
+
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent className="max-w-sm rounded-xl">
+				<DialogHeader>
+					<DialogTitle>Edit Profile</DialogTitle>
+					<DialogDescription>
+						Update your name and account type.
+					</DialogDescription>
+				</DialogHeader>
+
+				<Form {...rhf}>
+					<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+						<FormField
+							name="name"
+							control={control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>
+										{isCompany ? 'Company Name' : 'Full Name'}
+									</FormLabel>
+									<FormControl>
+										<Input {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						{isCompany && (
+							<FormItem>
+								<FormLabel>Sub Type</FormLabel>
+								<div className="flex flex-wrap gap-2">
+									{subTypeOptions.map((opt) => {
+										const isSelected = watch('sub_type') === opt.value
+										return (
+											<Button
+												key={opt.value}
+												type="button"
+												variant={isSelected ? 'default' : 'outline'}
+												size="sm"
+												onClick={() =>
+													setValue('sub_type', opt.value, {
+														shouldDirty: true,
+														shouldValidate: true,
+													})
+												}
+											>
+												{opt.label}
+											</Button>
+										)
+									})}
+								</div>
+								<FormMessage>
+									{rhf.formState.errors.sub_type?.message}
+								</FormMessage>
+							</FormItem>
+						)}
+
+						<div className="flex justify-end gap-3 pt-1">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => onOpenChange(false)}
+							>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								disabled={isPending}
+								className="min-w-[80px]"
+							>
+								{isPending ? <Spinner /> : null}
+								Save
+							</Button>
+						</div>
+					</form>
+				</Form>
+			</DialogContent>
+		</Dialog>
+	)
+}
+
+// ---------------------------------------------------------------------------
+// Edit Company Details dialog
+// ---------------------------------------------------------------------------
+
+const editCompanySchema = z.object({
+	description: z.string().max(500, 'Max 500 characters').optional(),
+	registration_number: z.string().optional(),
+	support_email: z.string().email('Invalid email').optional().or(z.literal('')),
+	support_phone: z.string().optional(),
+	website_url: z.string().url('Invalid URL').optional().or(z.literal('')),
+})
+
+type EditCompanySchema = z.infer<typeof editCompanySchema>
+
+function EditCompanyDetailsDialog({
+	client,
+	open,
+	onOpenChange,
+	onSuccess,
+}: {
+	client: NonNullable<Client>
+	open: boolean
+	onOpenChange: (v: boolean) => void
+	onSuccess: () => void
+}) {
+	const { submit, isPending } = useClientMutation(
+		client.id,
+		'Company details updated',
+		onSuccess,
+	)
+
+	const rhf = useForm<EditCompanySchema>({
+		resolver: zodResolver(editCompanySchema),
+		defaultValues: {
+			description: safeString(client.description) || '',
+			registration_number: safeString(client.registration_number) || '',
+			support_email: safeString(client.support_email) || '',
+			support_phone: safeString(client.support_phone) || '',
+			website_url: safeString(client.website_url) || '',
+		},
+	})
+
+	const { control, handleSubmit } = rhf
+
+	const onSubmit = (data: EditCompanySchema) => {
+		submit({
+			clientId: client.id,
+			// Send null to clear a field when the user leaves it blank
+			description: data.description || null,
+			registration_number: data.registration_number || null,
+			support_email: data.support_email || null,
+			support_phone: data.support_phone || null,
+			website_url: data.website_url || null,
+		})
+	}
+
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent className="max-w-lg rounded-xl">
+				<DialogHeader>
+					<DialogTitle>Edit Company Details</DialogTitle>
+					<DialogDescription>
+						Leave a field blank to clear its value.
+					</DialogDescription>
+				</DialogHeader>
+
+				<Form {...rhf}>
+					<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+						<FormField
+							name="description"
+							control={control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>About</FormLabel>
+									<FormControl>
+										<Textarea
+											placeholder="About the company..."
+											rows={3}
+											{...field}
+										/>
+									</FormControl>
+									<FormDescription>Optional</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+							<FormField
+								name="registration_number"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Registration Number</FormLabel>
+										<FormControl>
+											<Input {...field} />
+										</FormControl>
+										<FormDescription>Optional</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								name="support_email"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Support Email</FormLabel>
+										<FormControl>
+											<Input type="email" {...field} />
+										</FormControl>
+										<FormDescription>Optional</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								name="support_phone"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Support Phone</FormLabel>
+										<FormControl>
+											<Input {...field} />
+										</FormControl>
+										<FormDescription>Optional</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								name="website_url"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Website</FormLabel>
+										<FormControl>
+											<Input placeholder="https://example.com" {...field} />
+										</FormControl>
+										<FormDescription>Optional</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</FieldGroup>
+
+						<div className="flex justify-end gap-3 pt-1">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => onOpenChange(false)}
+							>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								disabled={isPending}
+								className="min-w-[80px]"
+							>
+								{isPending ? <Spinner /> : null}
+								Save
+							</Button>
+						</div>
+					</form>
+				</Form>
+			</DialogContent>
+		</Dialog>
+	)
+}
+
+// ---------------------------------------------------------------------------
+// Edit Location dialog
+// ---------------------------------------------------------------------------
+
+const editLocationSchema = AddressSchema
+
+type EditLocationSchema = AddressInputSchema
+
+function EditLocationDialog({
+	client,
+	open,
+	onOpenChange,
+	onSuccess,
+}: {
+	client: NonNullable<Client>
+	open: boolean
+	onOpenChange: (v: boolean) => void
+	onSuccess: () => void
+}) {
+	const { submit, isPending } = useClientMutation(
+		client.id,
+		'Location updated',
+		onSuccess,
+	)
+
+	const rhf = useForm<EditLocationSchema>({
+		resolver: zodResolver(editLocationSchema),
+		defaultValues: {
+			addressSearch: safeString(client.address),
+			address: safeString(client.address),
+			city: safeString(client.city),
+			region: safeString(client.region),
+			country: safeString(client.country),
+			latitude: client.latitude,
+			longitude: client.longitude,
+		},
+	})
+
+	const { handleSubmit, formState } = rhf
+
+	const isAddressInvalid =
+		!!formState.errors.addressSearch ||
+		!!formState.errors.address ||
+		!!formState.errors.city ||
+		!!formState.errors.region ||
+		!!formState.errors.country ||
+		!!formState.errors.latitude ||
+		!!formState.errors.longitude
+
+	const onSubmit = (data: EditLocationSchema) => {
+		submit({
+			clientId: client.id,
+			address: data.address,
+			city: data.city,
+			region: data.region,
+			country: data.country,
+			latitude: data.latitude,
+			longitude: data.longitude,
+		})
+	}
+
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent className="max-w-sm rounded-xl">
+				<DialogHeader>
+					<DialogTitle>Edit Location</DialogTitle>
+					<DialogDescription>
+						Search and select your address to update location details.
+					</DialogDescription>
+				</DialogHeader>
+
+				<Form {...rhf}>
+					<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+						<FieldGroup>
+							<Field data-invalid={isAddressInvalid}>
+								<FieldLabel>Address</FieldLabel>
+								<AddressInput />
+								{isAddressInvalid && (
+									<FieldError
+										errors={[
+											{ message: 'Kindly select a location from the list' },
+										]}
+									/>
+								)}
+							</Field>
+						</FieldGroup>
+
+						<div className="flex justify-end gap-3 pt-1">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => onOpenChange(false)}
+							>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								disabled={isPending}
+								className="min-w-[80px]"
+							>
+								{isPending ? <Spinner /> : null}
+								Save
+							</Button>
+						</div>
+					</form>
+				</Form>
+			</DialogContent>
+		</Dialog>
+	)
+}
+
+// ---------------------------------------------------------------------------
+// Switch-to-Company form
+// ---------------------------------------------------------------------------
+
+const toCompanySchema = z.object({
+	name: z.string().min(2, 'Name must be at least 2 characters'),
+	sub_type: z.enum(['PROPERTY_MANAGER', 'DEVELOPER', 'AGENCY'], {
+		error: 'Please select a sub type',
+	}),
+	description: z.string().max(500, 'Max 500 characters').optional(),
+	registration_number: z.string().optional(),
+	support_email: z.string().email('Invalid email').optional().or(z.literal('')),
+	support_phone: z.string().optional(),
+	website_url: z.string().url('Invalid URL').optional().or(z.literal('')),
+})
+
+type ToCompanyFormSchema = z.infer<typeof toCompanySchema>
+
+function SwitchToCompanyForm({
+	currentName,
+	clientId,
+	onSuccess,
+}: {
+	currentName: string
+	clientId: string
+	onSuccess: () => void
+}) {
+	const { submit, isPending } = useClientMutation(
+		clientId,
+		'Account type updated to Company',
+		onSuccess,
+	)
+
+	const rhf = useForm<ToCompanyFormSchema>({
+		resolver: zodResolver(toCompanySchema),
+		defaultValues: { name: currentName },
+	})
+
+	const { control, handleSubmit, watch, setValue } = rhf
+
+	const onSubmit = (data: ToCompanyFormSchema) => {
+		submit({
+			clientId,
+			type: 'COMPANY',
+			sub_type: data.sub_type,
+			name: data.name,
+			description: data.description || null,
+			registration_number: data.registration_number || null,
+			support_email: data.support_email || null,
+			support_phone: data.support_phone || null,
+			website_url: data.website_url || null,
+		})
+	}
+
+	return (
+		<Form {...rhf}>
+			<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+				<FormField
+					name="name"
+					control={control}
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>Company Name</FormLabel>
+							<FormControl>
+								<Input {...field} />
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<FormItem>
+					<FormLabel>Sub Type</FormLabel>
+					<div className="flex flex-wrap gap-2">
+						{subTypeOptions.map((opt) => {
+							const isSelected = watch('sub_type') === opt.value
+							return (
+								<Button
+									key={opt.value}
+									type="button"
+									variant={isSelected ? 'default' : 'outline'}
+									size="sm"
+									onClick={() =>
+										setValue('sub_type', opt.value, {
+											shouldDirty: true,
+											shouldValidate: true,
+										})
+									}
+								>
+									{opt.label}
+								</Button>
+							)
+						})}
+					</div>
+					<FormMessage>{rhf.formState.errors.sub_type?.message}</FormMessage>
+				</FormItem>
+
+				<FormField
+					name="description"
+					control={control}
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>About</FormLabel>
+							<FormControl>
+								<Textarea
+									placeholder="About the company..."
+									rows={3}
+									{...field}
+								/>
+							</FormControl>
+							<FormDescription>Optional</FormDescription>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<FormField
+						name="registration_number"
+						control={control}
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Registration Number</FormLabel>
+								<FormControl>
+									<Input {...field} />
+								</FormControl>
+								<FormDescription>Optional</FormDescription>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+					<FormField
+						name="support_email"
+						control={control}
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Support Email</FormLabel>
+								<FormControl>
+									<Input type="email" {...field} />
+								</FormControl>
+								<FormDescription>Optional</FormDescription>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+					<FormField
+						name="support_phone"
+						control={control}
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Support Phone</FormLabel>
+								<FormControl>
+									<Input {...field} />
+								</FormControl>
+								<FormDescription>Optional</FormDescription>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+					<FormField
+						name="website_url"
+						control={control}
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Website</FormLabel>
+								<FormControl>
+									<Input placeholder="https://example.com" {...field} />
+								</FormControl>
+								<FormDescription>Optional</FormDescription>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				</FieldGroup>
+
+				<div className="flex justify-end gap-3 pt-2">
+					<Button type="submit" disabled={isPending} className="min-w-[120px]">
+						{isPending ? <Spinner /> : null}
+						Switch to Company
+					</Button>
+				</div>
+			</form>
+		</Form>
+	)
+}
+
+// ---------------------------------------------------------------------------
+// Switch-to-Individual form
+// ---------------------------------------------------------------------------
+
+const toIndividualSchema = z.object({
+	name: z.string().min(2, 'Name must be at least 2 characters'),
+})
+
+type ToIndividualFormSchema = z.infer<typeof toIndividualSchema>
+
+function SwitchToIndividualForm({
+	currentName,
+	clientId,
+	onSuccess,
+}: {
+	currentName: string
+	clientId: string
+	onSuccess: () => void
+}) {
+	const { submit, isPending } = useClientMutation(
+		clientId,
+		'Account type updated to Individual',
+		onSuccess,
+	)
+
+	const rhf = useForm<ToIndividualFormSchema>({
+		resolver: zodResolver(toIndividualSchema),
+		defaultValues: { name: currentName },
+	})
+
+	const { control, handleSubmit } = rhf
+
+	const onSubmit = (data: ToIndividualFormSchema) => {
+		submit({
+			clientId,
+			type: 'INDIVIDUAL',
+			sub_type: 'LANDLORD',
+			name: data.name,
+		})
+	}
+
+	return (
+		<Form {...rhf}>
+			<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+				<FormField
+					name="name"
+					control={control}
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>Full Name</FormLabel>
+							<FormControl>
+								<Input {...field} />
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<p className="text-muted-foreground text-sm">
+					Identity documents (ID type, number, expiry) are managed separately.
+					Contact support if you need to update them.
+				</p>
+
+				<div className="flex justify-end gap-3 pt-2">
+					<Button type="submit" disabled={isPending} className="min-w-[140px]">
+						{isPending ? <Spinner /> : null}
+						Switch to Individual
+					</Button>
+				</div>
+			</form>
+		</Form>
+	)
+}
+
+// ---------------------------------------------------------------------------
+// Main module
+// ---------------------------------------------------------------------------
 
 export function GeneralSettingsModule() {
-	const { currentUser } = useAuth()
+	const loaderData = useLoaderData<typeof loader>()
+	const queryClient = useQueryClient()
+	const { data: currentUser } = useGetCurrentUser(
+		loaderData.currentUser ?? undefined,
+	)
 
-	const isCompany = Boolean(currentUser?.client?.type === 'COMPANY')
+	const [showWarning, setShowWarning] = useState(false)
+	const [showSwitchForm, setShowSwitchForm] = useState(false)
+	const [showEditProfile, setShowEditProfile] = useState(false)
+	const [showEditCompany, setShowEditCompany] = useState(false)
+	const [showEditLocation, setShowEditLocation] = useState(false)
+
+	const client = currentUser?.client
+	const isCompany = client?.type === 'COMPANY'
+	const targetType = isCompany ? 'Individual' : 'Company'
+	const targetTypeIcon = isCompany ? CircleUserRound : Building2
+
+	const handleSwitchConfirmed = () => {
+		setShowWarning(false)
+		setShowSwitchForm(true)
+	}
+
+	const handleMutationSuccess = () => {
+		void queryClient.invalidateQueries({ queryKey: CURRENT_USER_QUERY_KEY })
+	}
+
+	const handleSwitchSuccess = () => {
+		setShowSwitchForm(false)
+		handleMutationSuccess()
+	}
+
 	return (
 		<div className="mx-auto max-w-4xl space-y-8 px-0 pt-0 pb-10 lg:px-4 lg:pt-1">
+			{/* Page header */}
 			<div className="space-y-1">
 				<TypographyH3>General Settings</TypographyH3>
 				<TypographyMuted>
@@ -26,194 +838,285 @@ export function GeneralSettingsModule() {
 
 			<Separator />
 
-			{/* Company Details */}
+			{/* Profile section */}
+			<section className="bg-card relative grid gap-8 rounded-xl border p-4 shadow-sm sm:grid-cols-3 sm:items-start md:p-6">
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					className="absolute top-3 right-3 gap-1.5 text-xs"
+					onClick={() => setShowEditProfile(true)}
+				>
+					<Pencil className="size-3.5" />
+					Edit
+				</Button>
+
+				<div className="space-y-2">
+					<TypographyH4 className="text-lg font-semibold">Profile</TypographyH4>
+					<TypographyMuted className="text-sm">
+						Your account name and ownership type.
+					</TypographyMuted>
+				</div>
+
+				<div className="space-y-5 sm:col-span-2">
+					<div className="space-y-1">
+						<Label className="text-sm font-medium">Name</Label>
+						<p className="text-foreground text-sm">
+							{safeString(client?.name)}
+						</p>
+					</div>
+
+					<div className="space-y-1">
+						<Label className="text-sm font-medium">Type</Label>
+						<div className="flex flex-wrap gap-2">
+							<Badge variant="outline" className="gap-1">
+								{isCompany ? (
+									<Building2 className="size-3" />
+								) : (
+									<CircleUserRound className="size-3" />
+								)}
+								{isCompany ? 'Company' : 'Individual'}
+							</Badge>
+							{client?.sub_type && (
+								<Badge variant="secondary">
+									{client.sub_type
+										.toLowerCase()
+										.replace(/_/g, ' ')
+										.replace(/\b\w/g, (c) => c.toUpperCase())}
+								</Badge>
+							)}
+						</div>
+					</div>
+
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						className="gap-2"
+						onClick={() => setShowWarning(true)}
+					>
+						<ArrowLeftRight className="size-4" />
+						Switch to {targetType}
+					</Button>
+				</div>
+			</section>
+
+			{/* Company Details — only for COMPANY */}
 			{isCompany && (
-				<section className="bg-card grid gap-6 rounded-xl border p-3 shadow-sm md:p-6 lg:-space-y-2">
-					<div className="flex items-center justify-between max-md:items-start max-sm:flex-col max-sm:gap-2">
-						<TypographyH3>Company Details</TypographyH3>
-						<Button
-							variant="outline"
-							size="sm"
-							className="flex items-center gap-2 underline"
-						>
-							<Edit className="size-4" /> Edit Details
-						</Button>
-					</div>
-					<Separator />
-					<div className="grid gap-3 sm:grid-cols-3 sm:items-center">
-						<FieldLabel htmlFor="owner_company_name">Company Name</FieldLabel>
-						<Field className="sm:col-span-2">
-							<Input
-								id="owner_company_name"
-								placeholder="Enter your company name"
-								disabled
-								value={currentUser?.client?.name ?? 'N/A'}
-							/>
-						</Field>
+				<section className="bg-card relative grid gap-8 rounded-xl border p-4 shadow-sm sm:grid-cols-3 sm:items-start md:p-6">
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						className="absolute top-3 right-3 gap-1.5 text-xs"
+						onClick={() => setShowEditCompany(true)}
+					>
+						<Pencil className="size-3.5" />
+						Edit
+					</Button>
+
+					<div className="space-y-2">
+						<TypographyH4 className="text-lg font-semibold">
+							Company Details
+						</TypographyH4>
+						<TypographyMuted className="text-sm">
+							Information about your company.
+						</TypographyMuted>
 					</div>
 
-					<div className="grid items-center gap-4 sm:grid-cols-3">
-						<FieldLabel htmlFor="description">Description</FieldLabel>
-						<Field className="sm:col-span-2">
-							<Input
-								id="description"
-								placeholder="Enter description (optional)"
-								disabled
-								value={currentUser?.client?.description ?? 'N/A'}
-							/>
-						</Field>
-					</div>
-
-					<div className="grid gap-3 sm:grid-cols-3 sm:items-center">
-						<FieldLabel htmlFor="email">Support Email</FieldLabel>
-						<Field className="sm:col-span-2">
-							<Input
-								id="email"
-								placeholder="support@example.com"
-								disabled
-								value={currentUser?.client?.support_email ?? 'N/A'}
-							/>
-						</Field>
-					</div>
-
-					<div className="grid gap-3 sm:grid-cols-3 sm:items-center">
-						<FieldLabel htmlFor="support_phone">Support Phone</FieldLabel>
-						<Field className="sm:col-span-2">
-							<Input
-								id="support_phone"
-								placeholder="(233) 277-456-7890"
-								disabled
-								value={currentUser?.client?.support_phone ?? 'N/A'}
-							/>
-						</Field>
-					</div>
-
-					<div className="grid gap-3 sm:grid-cols-3 sm:items-center">
-						<FieldLabel htmlFor="registration_number">
-							Registration Number
-						</FieldLabel>
-						<Field className="sm:col-span-2">
-							<Input
-								id="registration_number"
-								placeholder="Company registration number"
-								disabled
-								value={currentUser?.client?.registration_number ?? 'N/A'}
-							/>
-						</Field>
-					</div>
-
-					<div className="grid gap-3 sm:grid-cols-3 sm:items-center">
-						<FieldLabel htmlFor="website_url">Website</FieldLabel>
-						<Field className="sm:col-span-2">
-							<Input
-								id="website_url"
-								placeholder="https://example.com"
-								disabled
-								value={currentUser?.client?.website_url ?? 'N/A'}
-							/>
-						</Field>
+					<div className="space-y-5 sm:col-span-2">
+						<div className="grid gap-5 sm:grid-cols-2">
+							<div className="space-y-1">
+								<Label className="text-sm font-medium">Description</Label>
+								<p className="text-muted-foreground text-sm">
+									{safeString(client?.description) || '—'}
+								</p>
+							</div>
+							<div className="space-y-1">
+								<Label className="text-sm font-medium">
+									Registration Number
+								</Label>
+								<p className="text-muted-foreground text-sm">
+									{safeString(client?.registration_number) || '—'}
+								</p>
+							</div>
+							<div className="space-y-1">
+								<Label className="text-sm font-medium">Support Email</Label>
+								<p className="text-muted-foreground text-sm">
+									{safeString(client?.support_email) || '—'}
+								</p>
+							</div>
+							<div className="space-y-1">
+								<Label className="text-sm font-medium">Support Phone</Label>
+								<p className="text-muted-foreground text-sm">
+									{safeString(client?.support_phone) || '—'}
+								</p>
+							</div>
+							<div className="space-y-1 sm:col-span-2">
+								<Label className="text-sm font-medium">Website</Label>
+								<p className="text-muted-foreground text-sm">
+									{safeString(client?.website_url) || '—'}
+								</p>
+							</div>
+						</div>
 					</div>
 				</section>
 			)}
-			{/*  Type */}
-			<section className="bg-card grid gap-6 rounded-xl border p-3 shadow-sm md:p-6 lg:-space-y-2">
-				<div className="flex items-center justify-between max-md:items-start max-sm:flex-col max-sm:gap-2">
-					<TypographyH3>Property Owner Type </TypographyH3>
-					<Button
-						variant="outline"
-						size="sm"
-						className="flex items-center gap-2 underline"
-					>
-						<Edit className="size-4" /> Edit
-					</Button>
-				</div>
-				<Separator />
-				<div className="grid items-center gap-4 sm:grid-cols-3">
-					<FieldLabel htmlFor="type">Type</FieldLabel>
-					<Field className="sm:col-span-2">
-						<Input
-							id="type"
-							placeholder="COMPANY"
-							disabled
-							value={currentUser?.client?.type}
-						/>
-					</Field>
-				</div>
-				{isCompany && (
-					<div className="grid items-center gap-4 sm:grid-cols-3">
-						<FieldLabel htmlFor="sub_type">Sub Type</FieldLabel>
-						<Field className="sm:col-span-2">
-							<Input
-								id="sub_type"
-								placeholder="LANDLORD"
-								disabled
-								value={currentUser?.client?.sub_type}
-							/>
-						</Field>
-					</div>
-				)}
-			</section>
 
-			{/* Location */}
-			<section className="bg-card grid gap-8 rounded-xl border p-3 shadow-sm sm:grid-cols-3 sm:items-start md:p-6">
+			{/* Business Location */}
+			<section className="bg-card relative grid gap-8 rounded-xl border p-4 shadow-sm sm:grid-cols-3 sm:items-start md:p-6">
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					className="absolute top-3 right-3 gap-1.5 text-xs"
+					onClick={() => setShowEditLocation(true)}
+				>
+					<Pencil className="size-3.5" />
+					Edit
+				</Button>
+
 				<div className="space-y-2">
 					<TypographyH4 className="text-lg font-semibold">
 						Business Location
 					</TypographyH4>
-					<FieldDescription className="text-muted-foreground text-sm">
-						Update your company's official physical address.
-					</FieldDescription>
+					<TypographyMuted className="text-sm">
+						Your official physical address.
+					</TypographyMuted>
 				</div>
 
-				<div className="space-y-6 sm:col-span-2">
-					{/* Address */}
-					<Field className="space-y-2">
-						<div className="flex items-center justify-between max-md:items-start max-sm:flex-col max-sm:gap-2">
-							<FieldLabel className="font-medium">Address</FieldLabel>
-							<Button
-								variant="outline"
-								size="sm"
-								className="hover:bg-muted flex items-center gap-2 transition"
-							>
-								<Edit className="size-4" />
-								Edit Address
-							</Button>
-						</div>
+				<div className="space-y-5 sm:col-span-2">
+					<div className="space-y-1">
+						<Label className="text-sm font-medium">Address</Label>
+						<p className="text-muted-foreground text-sm">
+							{safeString(client?.address) || '—'}
+						</p>
+					</div>
 
-						<Input
-							id="address"
-							placeholder="Madina Estate, Pentecost School"
-							className="h-11"
-							disabled
-							value={currentUser?.client?.address}
-						/>
-					</Field>
-
-					{/* Country / Region / City */}
-					<div className="grid gap-6 sm:grid-cols-3">
+					<div className="grid gap-5 sm:grid-cols-3">
 						<div className="space-y-1">
 							<Label className="text-sm font-medium">Country</Label>
-							<TypographyMuted className="text-sm">
-								{currentUser?.client?.country}
-							</TypographyMuted>
+							<p className="text-muted-foreground text-sm">
+								{safeString(client?.country) || '—'}
+							</p>
 						</div>
-
 						<div className="space-y-1">
 							<Label className="text-sm font-medium">Region</Label>
-							<TypographyMuted className="text-sm">
-								{currentUser?.client?.region}
-							</TypographyMuted>
+							<p className="text-muted-foreground text-sm">
+								{safeString(client?.region) || '—'}
+							</p>
 						</div>
-
 						<div className="space-y-1">
 							<Label className="text-sm font-medium">City</Label>
-							<TypographyMuted className="text-sm">
-								{currentUser?.client?.city}
-							</TypographyMuted>
+							<p className="text-muted-foreground text-sm">
+								{safeString(client?.city) || '—'}
+							</p>
 						</div>
 					</div>
 				</div>
 			</section>
+
+			{/* ------------------------------------------------------------------ */}
+			{/* Dialogs                                                              */}
+			{/* ------------------------------------------------------------------ */}
+
+			{/* Edit Profile */}
+			{client && (
+				<EditProfileDialog
+					client={client}
+					open={showEditProfile}
+					onOpenChange={setShowEditProfile}
+					onSuccess={() => {
+						setShowEditProfile(false)
+						handleMutationSuccess()
+					}}
+				/>
+			)}
+
+			{/* Edit Company Details */}
+			{client && isCompany && (
+				<EditCompanyDetailsDialog
+					client={client}
+					open={showEditCompany}
+					onOpenChange={setShowEditCompany}
+					onSuccess={() => {
+						setShowEditCompany(false)
+						handleMutationSuccess()
+					}}
+				/>
+			)}
+
+			{/* Edit Location */}
+			{client && (
+				<EditLocationDialog
+					client={client}
+					open={showEditLocation}
+					onOpenChange={setShowEditLocation}
+					onSuccess={() => {
+						setShowEditLocation(false)
+						handleMutationSuccess()
+					}}
+				/>
+			)}
+
+			{/* Type switch warning */}
+			<AlertDialog open={showWarning} onOpenChange={setShowWarning}>
+				<AlertDialogContent className="rounded-xl">
+					<AlertDialogHeader>
+						<div className="flex items-center gap-2">
+							<TriangleAlert className="text-destructive size-5" />
+							<AlertDialogTitle>Switch to {targetType}?</AlertDialogTitle>
+						</div>
+						<AlertDialogDescription>
+							Some information specific to your current account type will be
+							permanently removed. This action cannot be undone.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							className="bg-destructive hover:bg-destructive/90 text-white"
+							onClick={handleSwitchConfirmed}
+						>
+							Continue
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+
+			{/* Switch form dialog */}
+			<Dialog open={showSwitchForm} onOpenChange={setShowSwitchForm}>
+				<DialogContent className="max-w-lg rounded-xl">
+					<DialogHeader>
+						<div className="flex items-center gap-2">
+							{(() => {
+								const Icon = targetTypeIcon
+								return <Icon className="size-5" />
+							})()}
+							<DialogTitle>Switch to {targetType}</DialogTitle>
+						</div>
+						<DialogDescription>
+							Fill in the details for your new account type. Common fields have
+							been pre-filled.
+						</DialogDescription>
+					</DialogHeader>
+
+					{client?.id &&
+						(isCompany ? (
+							<SwitchToIndividualForm
+								currentName={safeString(client.name)}
+								clientId={client.id}
+								onSuccess={handleSwitchSuccess}
+							/>
+						) : (
+							<SwitchToCompanyForm
+								currentName={safeString(client.name)}
+								clientId={client.id}
+								onSuccess={handleSwitchSuccess}
+							/>
+						))}
+				</DialogContent>
+			</Dialog>
 		</div>
 	)
 }
