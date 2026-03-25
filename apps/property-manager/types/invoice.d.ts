@@ -58,4 +58,5 @@ interface FetchInvoiceFilter {
 	payee_type?: string
 	payer_type?: string
 	status?: string
+	payer_tenant_id?: string
 }
