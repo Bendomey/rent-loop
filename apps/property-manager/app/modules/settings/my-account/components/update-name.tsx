@@ -73,6 +73,9 @@ export default function UpdateClientProfileModal({ client, opened, setOpened }: 
                 },
                 onSuccess: () => {
                     toast.success('Name updated successfully')
+                    void queryClient.invalidateQueries({
+                        queryKey: CURRENT_USER_QUERY_KEY,
+                    })
                     setOpened(false)
                 },
             },

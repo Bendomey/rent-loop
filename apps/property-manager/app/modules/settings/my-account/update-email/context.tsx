@@ -1,7 +1,8 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { useFetcher } from 'react-router'
 import { toast } from 'sonner'
-import { useUpdateClientUserMe, type UpdateClientUserMeInput } from '~/api/auth'
+import { CURRENT_USER_QUERY_KEY, useUpdateClientUserMe, type UpdateClientUserMeInput } from '~/api/auth'
 import { BlockNavigationDialog } from '~/components/block-navigation-dialog'
 import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
 
@@ -62,6 +63,8 @@ export function UpdateClientEmailProvider({
 	const goToPage = (page: number) => setStepCount(page)
 	const closeModal = () => setOpened(false)
 
+	const queryClient = useQueryClient()
+
 	// where there is an error in the action data, show an error toast
 	useEffect(() => {
 		if (createFetcher?.data?.error) {
@@ -88,7 +91,7 @@ export function UpdateClientEmailProvider({
 			...data,
 		}))
 	}
-		const { mutate, isPending } = useUpdateClientUserMe()
+	const { mutate, isPending } = useUpdateClientUserMe()
 	
 
 	const onSubmit = async (
@@ -116,6 +119,9 @@ export function UpdateClientEmailProvider({
 					},
 					onSuccess: () => {
 						toast.success('Client user details updated successfully')
+						 void queryClient.invalidateQueries({
+							queryKey: CURRENT_USER_QUERY_KEY,
+						})
 						resolve()
 					},
 				},
