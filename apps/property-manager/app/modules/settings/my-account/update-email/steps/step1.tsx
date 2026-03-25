@@ -18,6 +18,7 @@ import {
 	TypographySmall,
 } from '~/components/ui/typography'
 import { useSendOtp } from '~/hooks/use-send-otp'
+import { getErrorMessage } from '~/lib/error-messages'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -26,6 +27,7 @@ export function Step1() {
 	const [newEmail, setNewEmail] = useState(formData.newEmail ?? formData.email ?? '')
 	const [otp, setOtp] = useState('')
 	const [otpError, setOtpError] = useState('')
+	const [emailError, setEmailError] = useState('')
 	const [resendCountdown, setResendCountdown] = useState(0)
 	const [isOtpSent, setIsOtpSent] = useState(false)
 
@@ -45,6 +47,7 @@ export function Step1() {
             void handleVerify()
         }
         setOtpError('')
+        setEmailError('')
     }, [isOtpComplete])
     
 	const handleSendOtp = () => {
@@ -84,15 +87,23 @@ export function Step1() {
 					toast.error(message)
 				},
 				onSuccess: async () => {
+					setEmailError('')
 					updateFormData({ email: newEmail })
 					try {
 						await onSubmit({ email: newEmail })
 						toast.success('Email updated successfully')
 						setOtpError('')
 						goNext()
-					} catch (err) {
-						toast.error('Failed to update email, please try again.')
+					} catch (e: unknown) {
+					if (e instanceof Error) {
+						const error = getErrorMessage(
+							e.message,
+							`Failed to update email, please try again.`,
+						)
+						toast.error(error)
+						setEmailError(error)
 					}
+				}
 				},
 			},
 		)
@@ -154,6 +165,7 @@ export function Step1() {
 				)}
 
 				{otpError && <TypographySmall className="text-destructive mt-3">{otpError}</TypographySmall>}
+				{emailError && <TypographySmall className="text-destructive mt-3">{emailError}</TypographySmall>}
 
 				<div className="mt-8 flex items-center justify-between">
 					<Button type="button" variant="outline" onClick={goBack} size="lg">
