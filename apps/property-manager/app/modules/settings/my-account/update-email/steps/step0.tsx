@@ -47,6 +47,13 @@ export function Step0() {
 		sendOtp({ channel: 'EMAIL', email: currentEmail })
 	}
 
+	useEffect(() => {
+		if (isOtpComplete) {
+			void handleVerify()
+		}
+		setOtpError('')
+	}, [isOtpComplete])
+
 	const handleVerify = () => {
 		if (!currentEmail) {
 			setOtpError('No current email available to verify')

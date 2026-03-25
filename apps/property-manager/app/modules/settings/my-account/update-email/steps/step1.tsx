@@ -40,6 +40,13 @@ export function Step1() {
 		return () => window.clearTimeout(timer)
 	}, [resendCountdown])
 
+    useEffect(() => {
+        if (isOtpComplete) {
+            void handleVerify()
+        }
+        setOtpError('')
+    }, [isOtpComplete])
+    
 	const handleSendOtp = () => {
 		if (!emailRegex.test(newEmail)) {
 			setOtpError('Please enter a valid email address to send OTP')

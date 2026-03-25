@@ -12,6 +12,7 @@ import { Step1 } from './steps/step1'
 import { TypographyH3, TypographyMuted } from '~/components/ui/typography'
 import type { Dispatch, SetStateAction } from 'react'
 import { useAuth } from '~/providers/auth-provider'
+import { Step2 } from './steps/step2'
 
 interface Props {
 	opened: boolean
@@ -44,7 +45,7 @@ export function UpdateClientEmail({ opened, setOpened }: Props) {
 }
 
 function StepRouter() {
-	const { stepCount, closeModal } = useUpdateClientEmailContext()
+	const { stepCount } = useUpdateClientEmailContext()
 	const steps = ['Verify current email', 'Verify new email', 'Completed']
 	const progress = Math.min(100, ((stepCount + 1) / steps.length) * 100)
 
@@ -60,17 +61,7 @@ function StepRouter() {
 
 			{stepCount === 0 && <Step0 />}
 			{stepCount === 1 && <Step1 />}
-			{stepCount >= 2 && (
-				<div className="p-8 text-center">
-					<TypographyH3 className="text-lg font-semibold">Success</TypographyH3>
-					<TypographyMuted>Your email has been updated successfully.</TypographyMuted>
-					<div className="mt-6">
-						<Button onClick={closeModal} size="lg">
-							Close
-						</Button>
-					</div>
-				</div>
-			)}
+			{stepCount >= 2 && <Step2 />}
 		</>
 	)
 }
