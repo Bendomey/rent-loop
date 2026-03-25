@@ -11,6 +11,7 @@ type Handlers struct {
 	AdminHandler              AdminHandler
 	AnalyticsHandler          AnalyticsHandler
 	ClientApplicationHandler  ClientApplicationHandler
+	ClientHandler             ClientHandler
 	ClientUserHandler         ClientUserHandler
 	PropertyHandler           PropertyHandler
 	ClientUserPropertyHandler ClientUserPropertyHandler
@@ -39,6 +40,7 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 	analyticsHandler := NewAnalyticsHandler(appCtx)
 	adminHandler := NewAdminHandler(appCtx, services.AdminService)
 	clientApplicationHandler := NewClientApplicationHandler(appCtx, services.ClientApplicationService)
+	clientHandler := NewClientHandler(appCtx, services.ClientService)
 	clientUserHandler := NewClientUserHandler(appCtx, services.ClientUserService)
 	propertyHandler := NewPropertyHandler(appCtx, services.PropertyService)
 	clientUserPropertyHandler := NewClientUserPropertyHandler(appCtx, services.ClientUserPropertyService)
@@ -75,6 +77,7 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 		AuthHandler:               authHandler,
 		AnalyticsHandler:          analyticsHandler,
 		ClientApplicationHandler:  clientApplicationHandler,
+		ClientHandler:             clientHandler,
 		AdminHandler:              adminHandler,
 		ClientUserHandler:         clientUserHandler,
 		PropertyHandler:           propertyHandler,
