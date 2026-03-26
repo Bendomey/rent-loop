@@ -117,12 +117,12 @@ export function Step1() {
 
 	return (
 		<div className="mx-auto flex w-full items-center justify-center md:max-w-2xl">
-			<div className="w-full max-w-xl rounded-2xl border bg-white p-10 shadow-sm md:p-8">
+			<div className="w-full max-w-xl rounded-2xl border border-zinc-200 bg-white p-10 shadow-sm md:p-8 dark:border-zinc-700 dark:bg-zinc-900">
 				<div className="space-y-2 text-center">
-					<TypographyH2 className="text-lg font-semibold">
+					<TypographyH2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
 						Enter new email
 					</TypographyH2>
-					<TypographyMuted>
+					<TypographyMuted className="dark:text-zinc-400">
 						Send a one-time code to your new email and verify to complete the
 						update.
 					</TypographyMuted>

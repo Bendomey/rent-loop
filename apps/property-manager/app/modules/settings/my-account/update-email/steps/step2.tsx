@@ -7,8 +7,10 @@ export function Step2() {
 
 	return (
 		<div className="p-8 text-center">
-			<TypographyH3 className="text-lg font-semibold">Success</TypographyH3>
-			<TypographyMuted>
+			<TypographyH3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+				Success
+			</TypographyH3>
+			<TypographyMuted className="dark:text-zinc-400">
 				Your email has been updated successfully.
 			</TypographyMuted>
 			<div className="mt-6">

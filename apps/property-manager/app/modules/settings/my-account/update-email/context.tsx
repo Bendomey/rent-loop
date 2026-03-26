@@ -1,10 +1,7 @@
-import { useQueryClient } from '@tanstack/react-query'
-import { createContext, useContext, useEffect, useState, useRef } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { useFetcher, useSubmit } from 'react-router'
 import { toast } from 'sonner'
 import { useUpdateClientUserMe, type UpdateClientUserMeInput } from '~/api/auth'
-import { BlockNavigationDialog } from '~/components/block-navigation-dialog'
-import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
 
 interface UpdateClientEmailContextType {
 	stepCount: number
@@ -64,7 +61,6 @@ export function UpdateClientEmailProvider({
 			}
 		>
 	>({ email: initialEmail ?? '' })
-	const bypassBlockerRef = useRef(false)
 	const logOutSubmit = useSubmit()
 
 	const goBack = () => setStepCount((prev) => (prev > 0 ? prev - 1 : prev))
@@ -79,12 +75,7 @@ export function UpdateClientEmailProvider({
 		}
 	}, [createFetcher?.data])
 
-	const isDirty = Object.keys(formData).length > 0
 	const isSubmitting = createFetcher.state !== 'idle'
-
-	let blocker = useNavigationBlocker(
-		isSubmitting ? false : isDirty && !bypassBlockerRef.current,
-	)
 
 	const updateFormData = (
 		data: Partial<
@@ -127,8 +118,6 @@ export function UpdateClientEmailProvider({
 					},
 					onSuccess: () => {
 						toast.success('Client user details updated successfully')
-						bypassBlockerRef.current = true
-						setFormData({})
 						setTimeout(() => {
 							void logOutSubmit(null, { method: 'post', action: '/logout' })
 						}, 0)
@@ -154,7 +143,6 @@ export function UpdateClientEmailProvider({
 	return (
 		<UpdateClientEmailContext.Provider value={contextValue}>
 			{children}
-			<BlockNavigationDialog blocker={blocker} />
 		</UpdateClientEmailContext.Provider>
 	)
 }
