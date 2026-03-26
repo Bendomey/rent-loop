@@ -1,7 +1,9 @@
 import { Separator } from '@radix-ui/react-separator'
 import { Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
+import UpdateClientProfileModal from './components/update-name'
 import UpdatePasswordModal from './components/update-password'
+import { UpdateClientEmail } from './update-email'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
 import {
@@ -12,15 +14,13 @@ import {
 	FieldLabel,
 } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
+import { Label } from '~/components/ui/label'
 import { Switch } from '~/components/ui/switch'
 import { TypographyH3, TypographyP } from '~/components/ui/typography'
-import { useAuth } from '~/providers/auth-provider'
-import { UpdateClientEmail } from './update-email'
 import { useSendOtp } from '~/hooks/use-send-otp'
-import { Label } from '~/components/ui/label'
 import { safeString } from '~/lib/strings'
-import UpdateClientProfileModal from './components/update-name'
 import { getNameInitials } from '~/lib/misc'
+import { useAuth } from '~/providers/auth-provider'
 
 export function MyAccountSettingsModule() {
 	const [openUpdatePasswordModal, setOpenUpdatePasswordModal] = useState(false)

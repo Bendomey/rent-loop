@@ -1,4 +1,4 @@
-import { AlertTriangle, Calendar, CheckCircle, Clock, User } from 'lucide-react'
+import { Calendar, Clock, User } from 'lucide-react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { PropertyTenantMaintenanceRequestsController } from './controller'
 import { useGetMaintenanceRequests } from '~/api/maintenance-requests'
@@ -16,60 +16,13 @@ import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import {
 	CATEGORY_LABELS,
+	getStatusConfig,
 	PRIORITY_LABELS,
 	PRIORITY_STYLES,
 } from '~/lib/maintenance-request.utils'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
-
-// Status utilities
-const getStatusConfig = (status: MaintenanceRequest['status']) => {
-	switch (status) {
-		case 'NEW':
-			return {
-				variant: 'secondary' as const,
-				icon: AlertTriangle,
-				color: 'text-orange-600',
-				label: 'New',
-			}
-		case 'IN_PROGRESS':
-			return {
-				variant: 'default' as const,
-				icon: Clock,
-				color: 'text-blue-600',
-				label: 'In Progress',
-			}
-		case 'IN_REVIEW':
-			return {
-				variant: 'outline' as const,
-				icon: User,
-				color: 'text-purple-600',
-				label: 'In Review',
-			}
-		case 'RESOLVED':
-			return {
-				variant: 'default' as const,
-				icon: CheckCircle,
-				color: 'text-green-600',
-				label: 'Resolved',
-			}
-		case 'CANCELED':
-			return {
-				variant: 'destructive' as const,
-				icon: AlertTriangle,
-				color: 'text-red-600',
-				label: 'Canceled',
-			}
-		default:
-			return {
-				variant: 'secondary' as const,
-				icon: AlertTriangle,
-				color: 'text-gray-600',
-				label: status,
-			}
-	}
-}
 
 export function TenantMaintenanceRequestsModule() {
 	const [searchParams] = useSearchParams()
