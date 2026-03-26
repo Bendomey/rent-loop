@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { type Dispatch, type SetStateAction } from 'react'
 import { useForm } from 'react-hook-form'
+import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { CURRENT_USER_QUERY_KEY, useUpdateClientUserMe } from '~/api/auth'
@@ -47,6 +48,7 @@ export default function UpdateClientProfileModal({
 	setOpened,
 }: Props) {
 	const queryClient = useQueryClient()
+	const revalidator = useRevalidator()
 
 	const rhfMethods = useForm<FormSchema>({
 		defaultValues: {
@@ -80,6 +82,7 @@ export default function UpdateClientProfileModal({
 						queryKey: CURRENT_USER_QUERY_KEY,
 					})
 					setOpened(false)
+					void revalidator.revalidate()
 				},
 			},
 		)
