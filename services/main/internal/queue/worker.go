@@ -76,9 +76,10 @@ func RegisterScheduler(redisURL string) {
 
 	scheduler := asynq.NewScheduler(opt, nil)
 
-	// Every hour — catches Hourly leases on time; longer-frequency leases are
+	// TODO:  Hourly — catches Hourly leases on time;(bring this back when our redis resources support it)
+	// Every day at midnight longer-frequency leases are
 	// skipped naturally when NextBillingDate is still in the future.
-	if _, err = scheduler.Register("0 * * * *", asynq.NewTask(TypeLeaseRentInvoiceGeneration, nil), asynq.MaxRetry(1)); err != nil {
+	if _, err = scheduler.Register("0 0 * * *", asynq.NewTask(TypeLeaseRentInvoiceGeneration, nil), asynq.MaxRetry(1)); err != nil {
 		raven.CaptureError(err, nil)
 		log.Fatal("failed to register lease invoicing schedule:", err)
 	}
