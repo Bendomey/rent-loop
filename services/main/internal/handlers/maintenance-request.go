@@ -160,6 +160,7 @@ type ListMaintenanceRequestsQuery struct {
 	AssignedManagerID *string  `json:"assigned_manager_id" query:"assigned_manager_id" description:"Filter by assigned manager UUID"`
 	UnitID            *string  `json:"unit_id"             query:"unit_id"             description:"Filter by unit UUID"                                                validate:"omitempty,uuid4"`
 	LeaseID           *string  `json:"lease_id"            query:"lease_id"            description:"Filter by lease UUID"                                               validate:"omitempty,uuid4"`
+	TenantID          *string  `json:"tenant_id"           query:"tenant_id"           description:"Filter by tenant UUID"                                              validate:"omitempty,uuid4"`
 }
 
 // List godoc
@@ -202,6 +203,7 @@ func (h *MaintenanceRequestHandler) List(w http.ResponseWriter, r *http.Request)
 		PropertyID:        &propertyID,
 		UnitID:            lib.NullOrString(r.URL.Query().Get("unit_id")),
 		LeaseID:           lib.NullOrString(r.URL.Query().Get("lease_id")),
+		TenantID:          lib.NullOrString(r.URL.Query().Get("tenant_id")),
 	}
 
 	mrs, listErr := h.service.ListMaintenanceRequests(r.Context(), *filterQuery, filters)

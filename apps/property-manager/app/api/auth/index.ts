@@ -1,5 +1,7 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { fetchClient, fetchServer } from '~/lib/transport'
+
+export const CURRENT_USER_QUERY_KEY = ['current-user']
 
 export interface LoginClientUserInput {
 	email: string
@@ -59,6 +61,21 @@ export const getCurrentUser = async (apiConfig?: ApiConfigForServerConfig) => {
 		}
 	}
 }
+
+const getCurrentUserClient = async () => {
+	const response = await fetchClient<ApiResponse<ClientUser>>(
+		`/v1/admin/client-users/me?populate=Client`,
+		{ method: 'GET' },
+	)
+	return response.parsedBody.data
+}
+
+export const useGetCurrentUser = (initialData?: ClientUser) =>
+	useQuery({
+		queryKey: CURRENT_USER_QUERY_KEY,
+		queryFn: getCurrentUserClient,
+		initialData,
+	})
 
 export interface SendForgotPasswordLinkInput {
 	email: string
@@ -156,7 +173,7 @@ export const useUpdatePassword = () =>
 // request OTP code
 
 interface GetOtpCodeInput {
-	channel: OTP['channel']
+	channel: Array<OTP['channel']>
 	phone?: Maybe<string>
 	email?: Maybe<string>
 }
@@ -211,3 +228,38 @@ export const verifyOtpCode = async (props: VerifyOtpCodeInput) => {
 }
 
 export const useVerifyOtpCode = () => useMutation({ mutationFn: verifyOtpCode })
+
+/**
+ * PATCH Update personal details
+ */
+export interface UpdateClientUserMeInput {
+	name?: string
+	phoneNumber?: string
+	email?: string
+}
+
+const updateClientUserMe = async ({
+	name,
+	phoneNumber,
+	email,
+}: UpdateClientUserMeInput) => {
+	try {
+		const response = await fetchClient<ApiResponse<ClientUser>>(
+			`/v1/admin/client-users/me`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify({ name, phoneNumber, email }),
+			},
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+
+export const useUpdateClientUserMe = () =>
+	useMutation({ mutationFn: updateClientUserMe })

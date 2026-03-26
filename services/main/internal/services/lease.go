@@ -423,11 +423,13 @@ func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInp
 
 	startDate := lease.MoveInDate.Format("January 2, 2006")
 
-	message := strings.NewReplacer(
+	r := strings.NewReplacer(
 		"{{tenant_name}}", lease.Tenant.FirstName,
 		"{{unit_name}}", lease.Unit.Name,
 		"{{move_in_date}}", startDate,
-	).Replace(lib.LEASE_ACTIVATED_BODY)
+	)
+	message := r.Replace(lib.LEASE_ACTIVATED_BODY)
+	smsMessage := r.Replace(lib.LEASE_ACTIVATED_SMS_BODY)
 
 	if lease.Tenant.Email != nil {
 		go pkg.SendEmail(
@@ -444,7 +446,7 @@ func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInp
 		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: lease.Tenant.Phone,
-			Message:   message,
+			Message:   smsMessage,
 		},
 	)
 
@@ -551,13 +553,15 @@ func (s *leaseService) GenerateLeaseRentInvoice(ctx context.Context, leaseID str
 	currency := lease.RentFeeCurrency
 	amount := lib.FormatAmount(lib.PesewasToCedis(int64(lease.RentFee)))
 
-	message := strings.NewReplacer(
+	r := strings.NewReplacer(
 		"{{tenant_name}}", tenantName,
 		"{{unit_name}}", unitName,
 		"{{invoice_code}}", invoiceCode,
 		"{{currency}}", currency,
 		"{{amount}}", amount,
-	).Replace(lib.RENT_INVOICE_GENERATED_BODY)
+	)
+	message := r.Replace(lib.RENT_INVOICE_GENERATED_BODY)
+	smsMessage := r.Replace(lib.RENT_INVOICE_GENERATED_SMS_BODY)
 
 	if lease.Tenant.Email != nil {
 		go pkg.SendEmail(
@@ -574,7 +578,7 @@ func (s *leaseService) GenerateLeaseRentInvoice(ctx context.Context, leaseID str
 		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: lease.Tenant.Phone,
-			Message:   message,
+			Message:   smsMessage,
 		},
 	)
 
@@ -649,11 +653,13 @@ func (s *leaseService) CancelLease(ctx context.Context, input CancelLeaseInput) 
 		})
 	}
 
-	message := strings.NewReplacer(
+	r := strings.NewReplacer(
 		"{{tenant_name}}", lease.Tenant.FirstName,
 		"{{unit_name}}", lease.Unit.Name,
 		"{{cancellation_reason}}", input.CancellationReason,
-	).Replace(lib.LEASE_CANCELLED_BODY)
+	)
+	message := r.Replace(lib.LEASE_CANCELLED_BODY)
+	smsMessage := r.Replace(lib.LEASE_CANCELLED_SMS_BODY)
 
 	if lease.Tenant.Email != nil {
 		go pkg.SendEmail(
@@ -670,7 +676,7 @@ func (s *leaseService) CancelLease(ctx context.Context, input CancelLeaseInput) 
 		context.Background(),
 		gatekeeper.SendSMSInput{
 			Recipient: lease.Tenant.Phone,
-			Message:   message,
+			Message:   smsMessage,
 		},
 	)
 

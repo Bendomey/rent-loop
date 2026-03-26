@@ -37,29 +37,6 @@ export const TenantPaymentController = ({
 				},
 				Icon: ToggleLeft,
 			},
-			{
-				id: 2,
-				type: 'selector',
-				selectType: 'single',
-				label: 'Payment Method',
-				value: {
-					options: [
-						{
-							label: 'Processing',
-							value: 'Payment.Status.Processing',
-						},
-						{
-							label: 'Successful',
-							value: 'Payment.Status.Successful',
-						},
-						{ label: 'Expired', value: 'Payment.Status.Expired' },
-						{ label: 'Failed', value: 'Payment.Status.Failed' },
-					],
-					urlParam: 'payment_method',
-					defaultValues: [],
-				},
-				Icon: ToggleLeft,
-			},
 		],
 		[],
 	)

@@ -23,14 +23,15 @@ export const authMiddleware: MiddlewareFunction = async ({
 
 	const cacheKey = USER_CACHE_KEY.replace('{token}', authToken)
 	try {
-		const cached = userCache.get(cacheKey)
-		if (cached) {
-			const clientUserParsed = JSON.parse(cached as string)
-			context.set(userContext, {
-				clientUser: clientUserParsed,
-			})
-			return
-		}
+		// TODO: temporarily disable caching of user data
+		// const cached = userCache.get(cacheKey)
+		// if (cached) {
+		// 	const clientUserParsed = JSON.parse(cached as string)
+		// 	context.set(userContext, {
+		// 		clientUser: clientUserParsed,
+		// 	})
+		// 	return
+		// }
 
 		const clientUser = await getCurrentUser({
 			baseUrl,
@@ -41,7 +42,7 @@ export const authMiddleware: MiddlewareFunction = async ({
 			throw new Error('No user found')
 		}
 
-		userCache.set(cacheKey, JSON.stringify(clientUser))
+		// userCache.set(cacheKey, JSON.stringify(clientUser))
 		context.set(userContext, {
 			clientUser,
 		})

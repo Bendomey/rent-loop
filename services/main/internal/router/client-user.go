@@ -50,6 +50,12 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			// analytics
 			r.Get("/v1/admin/analytics/token", handlers.AnalyticsHandler.GetToken)
 
+			// clients
+			r.Route("/v1/admin/clients", func(r chi.Router) {
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
+					Patch("/{client_id}", handlers.ClientHandler.UpdateClient)
+			})
+
 			// client users
 			r.Route("/v1/admin/client-users", func(r chi.Router) {
 				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).

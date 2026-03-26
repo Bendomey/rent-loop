@@ -1,5 +1,5 @@
 import { Separator } from '@radix-ui/react-separator'
-import { Plus } from 'lucide-react'
+import { Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 import UpdatePasswordModal from './components/update-password'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
@@ -14,23 +14,38 @@ import {
 import { Input } from '~/components/ui/input'
 import { Switch } from '~/components/ui/switch'
 import { TypographyH3, TypographyP } from '~/components/ui/typography'
+import { useAuth } from '~/providers/auth-provider'
+import { UpdateClientEmail } from './update-email'
+import { useSendOtp } from '~/hooks/use-send-otp'
+import { Label } from '~/components/ui/label'
+import { safeString } from '~/lib/strings'
+import UpdateClientProfileModal from './components/update-name'
+import { getNameInitials } from '~/lib/misc'
 
 export function MyAccountSettingsModule() {
 	const [openUpdatePasswordModal, setOpenUpdatePasswordModal] = useState(false)
+	const [openUpdateClientEmailModal, setOpenUpdateClientEmailModal] =
+		useState(false)
+	const [openUpdateClientProfileModal, setOpenUpdateClientProfileModal] =
+		useState(false)
+	const { currentUser } = useAuth()
+	const { sendOtp, isSendingOtp } = useSendOtp()
 
 	return (
-		<div className="px-4 py-4">
+		<div className="mx-auto max-w-3xl px-4 py-4">
 			<TypographyH3 className="">My Profile</TypographyH3>
 			<Separator className="bg-muted mt-2 mb-4 h-0.5" />
 
 			<section className="mx-auto mb-5 space-y-10">
 				<div className="mb-8 flex items-center">
 					<Avatar className="size-20">
-						<AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-						<AvatarFallback>CN</AvatarFallback>
+						{/* <AvatarImage src="https://github.com/shadcn.png" alt="profile image" /> */}
+						<AvatarFallback className="bg-rose-500 text-white">
+							{getNameInitials(safeString(currentUser?.name))}
+						</AvatarFallback>
 					</Avatar>
 
-					<div className="ml-3.5 flex flex-col">
+					{/* <div className="ml-3.5 flex flex-col">
 						<div className="flex flex-wrap items-center gap-3 md:flex-row">
 							<Button variant="outline" size="sm">
 								<Plus /> Change Image
@@ -45,36 +60,35 @@ export function MyAccountSettingsModule() {
 						<TypographyP className="!mt-2 text-xs text-gray-400">
 							We support PNGs, JPEGs, and GIFs under 2MB
 						</TypographyP>
-					</div>
+					</div> */}
 				</div>
 
-				<div>
-					<FieldGroup className="grid grid-cols-1 gap-4 md:grid-cols-2">
+				<div className="flex items-baseline-last justify-between">
+					<FieldGroup className="w-2/5 space-y-4">
 						<Field>
-							<FieldLabel htmlFor="first_name">First Name</FieldLabel>
+							<FieldLabel htmlFor="full_name">Full Name</FieldLabel>
 							<Input
-								id="first_name"
+								id="full_name"
 								type="text"
-								placeholder="Enter your first name"
-								value="John"
-								required
-							/>
-						</Field>
-						<Field>
-							<FieldLabel htmlFor="last_name">Last Name</FieldLabel>
-							<Input
-								id="last_name"
-								type="text"
-								placeholder="Enter your last name"
-								value="Doe"
-								required
+								placeholder="Enter your full name"
+								value={safeString(currentUser?.name)}
+								disabled
 							/>
 						</Field>
 					</FieldGroup>
+
+					<Button
+						type="button"
+						variant="secondary"
+						size="sm"
+						onClick={() => setOpenUpdateClientProfileModal(true)}
+					>
+						Change Name
+					</Button>
 				</div>
 			</section>
 
-			<TypographyH3 className="mt-10">Account Security</TypographyH3>
+			<TypographyH3 className="mt-8">Account Security</TypographyH3>
 			<Separator className="bg-muted mt-2 mb-4 h-0.5" />
 
 			<section className="mx-auto mb-5 space-y-6">
@@ -83,18 +97,25 @@ export function MyAccountSettingsModule() {
 						<FieldLabel htmlFor="email">Email</FieldLabel>
 						<Input
 							id="email"
-							type="text"
+							type="email"
 							placeholder="account@email.com"
+							value={currentUser?.email ?? ''}
 							disabled
 						/>
 					</Field>
-
-					<Button size="sm" variant="secondary">
-						Change email
+					<Button
+						size="sm"
+						variant="secondary"
+						onClick={() => {
+							sendOtp({ channel: 'EMAIL', email: currentUser?.email ?? '' })
+							setOpenUpdateClientEmailModal(true)
+						}}
+					>
+						{isSendingOtp ? 'Sending...' : 'Change email'}
 					</Button>
 				</div>
 
-				<div className="mb-6 flex items-center justify-between">
+				<div className="mb-6 flex items-baseline-last justify-between">
 					<Field className="w-2/5">
 						<FieldLabel htmlFor="password">Password</FieldLabel>
 						<Input
@@ -107,15 +128,12 @@ export function MyAccountSettingsModule() {
 					<Button
 						size="sm"
 						variant="secondary"
-						onClick={() => {
-							setOpenUpdatePasswordModal(true)
-						}}
+						onClick={() => setOpenUpdatePasswordModal(true)}
 					>
 						Change password
 					</Button>
 				</div>
-
-				<div className="">
+				{/* <div className="">
 					<Field orientation="horizontal" className="flex items-baseline-last">
 						<FieldContent>
 							<FieldLabel htmlFor="2fa">2-Step Verifications</FieldLabel>
@@ -126,10 +144,10 @@ export function MyAccountSettingsModule() {
 						</FieldContent>
 						<Switch id="2fa" checked />
 					</Field>
-				</div>
+				</div> */}
 			</section>
 
-			<TypographyH3 className="mt-12">Support Access</TypographyH3>
+			{/* <TypographyH3 className="mt-12">Support Access</TypographyH3>
 			<Separator className="bg-muted mt-2 mb-4 h-0.5" />
 
 			<section className="mx-auto mb-5 space-y-6">
@@ -171,11 +189,20 @@ export function MyAccountSettingsModule() {
 						Delete Account
 					</Button>
 				</div>
-			</section>
+			</section> */}
 
+			<UpdateClientProfileModal
+				opened={openUpdateClientProfileModal}
+				setOpened={setOpenUpdateClientProfileModal}
+				client={currentUser}
+			/>
 			<UpdatePasswordModal
 				opened={openUpdatePasswordModal}
 				setOpened={setOpenUpdatePasswordModal}
+			/>
+			<UpdateClientEmail
+				opened={openUpdateClientEmailModal}
+				setOpened={setOpenUpdateClientEmailModal}
 			/>
 		</div>
 	)

@@ -1,16 +1,18 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import {
-	Building,
 	CircleCheck,
+	CircleDollarSign,
 	CircleX,
-	ClockAlert,
 	EllipsisVertical,
-	Loader,
+	Pencil,
+	Receipt,
+	Send,
 } from 'lucide-react'
 import { useMemo } from 'react'
-import { Link, useSearchParams } from 'react-router'
+import { Link, useParams, useSearchParams } from 'react-router'
 import { TenantPaymentSectionCards } from './cards'
 import { TenantPaymentController } from './controller'
+import { useGetInvoices } from '~/api/invoices'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -24,144 +26,18 @@ import {
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
-import { formatAmount } from '~/lib/format-amount'
+import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
+import { safeString } from '~/lib/strings'
 import {
-	getPaymentMethodLabel,
-	getPaymentStatusLabel,
-} from '~/lib/payment.utils'
+	getInvoiceContextTypeLabel,
+	getInvoiceStatusLabel,
+} from '~/lib/invoice'
 import { useProperty } from '~/providers/property-provider'
-
-const data = {
-	rows: [
-		{
-			id: 'pay_001',
-			amount: 2500,
-			reference: 'REF-2025-0001',
-			payment_method: 'MOMO',
-			status: 'SUCCESSFUL',
-			email: 'gideon@example.com',
-			unit: {
-				id: 'unit_101',
-				name: 'Unit 101',
-			},
-			successful_at: new Date('2025-01-05T10:15:00'),
-			failed_at: null,
-			expired_at: null,
-			currency: 'GHS',
-			created_at: new Date('2025-01-05T09:50:00'),
-			updated_at: new Date('2025-01-05T10:15:00'),
-		},
-		{
-			id: 'pay_002',
-			amount: 1800,
-			reference: 'REF-2025-0002',
-			payment_method: 'CARD',
-			status: 'PENDING',
-			email: 'ama@example.com',
-			unit: {
-				id: 'unit_102',
-				name: 'Unit 102',
-			},
-			successful_at: null,
-			failed_at: null,
-			expired_at: null,
-			currency: 'GHS',
-			created_at: new Date('2025-01-10T14:20:00'),
-			updated_at: new Date('2025-01-10T14:20:00'),
-		},
-		{
-			id: 'pay_003',
-			amount: 3000,
-			reference: 'REF-2025-0003',
-			payment_method: 'BANK_DIRECT',
-			status: 'SUCCESSFUL',
-			email: 'kwame@example.com',
-			unit: {
-				id: 'unit_201',
-				name: 'Unit 201',
-			},
-			successful_at: null,
-			failed_at: new Date('2025-01-12T11:05:00'),
-			expired_at: null,
-			currency: 'GHS',
-			created_at: new Date('2025-01-12T10:40:00'),
-			updated_at: new Date('2025-01-12T11:05:00'),
-		},
-		{
-			id: 'pay_004',
-			amount: 1500,
-			reference: 'REF-2025-0004',
-			payment_method: 'CHECK',
-			status: 'FAILED',
-			email: 'efua@example.com',
-			unit: {
-				id: 'unit_101',
-				name: 'Unit 311',
-			},
-			successful_at: null,
-			failed_at: null,
-			expired_at: new Date('2025-01-15T23:59:59'),
-			currency: 'GHS',
-			created_at: new Date('2025-01-13T08:30:00'),
-			updated_at: new Date('2025-01-15T23:59:59'),
-		},
-		{
-			id: 'pay_005',
-			amount: 4200,
-			reference: 'REF-2025-0005',
-			payment_method: 'MOMO',
-			status: 'SUCCESSFUL',
-			email: 'john@example.com',
-			unit: {
-				id: 'unit_101',
-				name: 'Unit 121',
-			},
-			successful_at: new Date('2025-01-18T16:45:00'),
-			failed_at: null,
-			expired_at: null,
-			currency: 'GHS',
-			created_at: new Date('2025-01-18T16:10:00'),
-			updated_at: new Date('2025-01-18T16:45:00'),
-		},
-		{
-			id: 'pay_006',
-			amount: 2000,
-			reference: 'REF-2025-0006',
-			payment_method: 'OFFLINE',
-			status: 'PENDING',
-			email: 'yaw@example.com',
-			tenant_id: 'tenant_006',
-			unit: {
-				id: 'unit_101',
-				name: 'Unit 122',
-			},
-			successful_at: null,
-			failed_at: null,
-			expired_at: null,
-			currency: 'GHS',
-			created_at: new Date('2025-01-20T09:00:00'),
-			updated_at: new Date('2025-01-20T09:00:00'),
-		},
-	] as Payment[],
-	meta: {
-		total: 150,
-		page: 1,
-		page_size: 50,
-		order: 'desc',
-		order_by: 'created_at',
-		has_prev_page: false,
-		has_next_page: true,
-	},
-}
-
-const isPending = false
-const isRefetching = false
-const error = null
-const refetch = () => {}
 
 export function TenantPaymentsModule() {
 	const [searchParams] = useSearchParams()
 	const { clientUserProperty } = useProperty()
+	const { tenantId } = useParams()
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -169,32 +45,43 @@ export function TenantPaymentsModule() {
 	const per = searchParams.get('pageSize')
 		? Number(searchParams.get('pageSize'))
 		: PAGINATION_DEFAULTS.PER_PAGE
-	const payment_method = searchParams.get('payment_method') ?? undefined
 	const status = searchParams.get('status') ?? undefined
+
+	const { data, isPending, isRefetching, error, refetch } = useGetInvoices(
+		safeString(clientUserProperty?.property_id),
+		{
+			filters: {
+				status: status,
+				payer_tenant_id: tenantId,
+			},
+			pagination: { page, per },
+			sorter: { sort: 'desc', sort_by: 'created_at' },
+		},
+	)
 
 	const isLoading = isPending || isRefetching
 
-	const columns: ColumnDef<Payment>[] = useMemo(() => {
+	const columns: ColumnDef<Invoice>[] = useMemo(() => {
 		return [
 			{
-				id: 'id',
+				id: 'drag',
 				header: () => null,
 				cell: () => {
-					return <Building />
+					return <Receipt className="text-muted-foreground size-5" />
 				},
 			},
 			{
-				accessorKey: 'unit',
-				header: 'Unit',
+				accessorKey: 'code',
+				header: 'Invoice #',
 				cell: ({ row }) => {
 					return (
 						<div className="">
 							<Link
-								to={`/properties/${clientUserProperty?.property_id}/financials/payments/${row.original.id}`}
+								to={`/properties/${clientUserProperty?.property_id}/financials/invoices/${row.original.id}`}
 								aria-label={`View details for application`}
 							>
-								<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-400">
-									{row.original.unit.name}
+								<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-500">
+									{row.original.code}
 								</span>
 							</Link>
 						</div>
@@ -203,31 +90,21 @@ export function TenantPaymentsModule() {
 				enableHiding: false,
 			},
 			{
-				accessorKey: 'amount',
+				accessorKey: 'total_amount',
 				header: 'Amount',
 				cell: ({ row }) => (
 					<span className="truncate text-xs font-semibold text-zinc-800 dark:text-white">
-						{formatAmount(row.original.amount) ?? 'N/A'}
+						{formatAmount(convertPesewasToCedis(row.original.total_amount)) ??
+							'N/A'}
 					</span>
 				),
 			},
 			{
-				accessorKey: 'payment_method',
-				header: 'Payment Method',
-				cell: ({ getValue }) => (
-					<Badge variant="outline" className="px-1.5">
-						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
-							{getPaymentMethodLabel(getValue<Payment['payment_method']>())}
-						</span>
-					</Badge>
-				),
-			},
-			{
-				accessorKey: 'reference',
-				header: 'Reference',
+				accessorKey: 'context_type',
+				header: 'Type',
 				cell: ({ getValue }) => (
 					<span className="truncate text-xs text-zinc-600 dark:text-white">
-						{getValue<string>() ?? 'N/A'}
+						{getInvoiceContextTypeLabel(getValue<Invoice['context_type']>())}
 					</span>
 				),
 			},
@@ -236,28 +113,42 @@ export function TenantPaymentsModule() {
 				header: 'Status',
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
-						{getValue<string>() === 'Payment.Status.Pending' ? (
-							<Loader className="text-yellow-600" />
-						) : getValue<string>() === 'Payment.Status.Successful' ? (
+						{getValue<string>() === 'DRAFT' ? (
+							<Pencil className="text-slate-600" />
+						) : getValue<string>() === 'ISSUED' ? (
+							<Send className="text-blue-600" />
+						) : getValue<string>() === 'PAID' ? (
 							<CircleCheck className="fill-green-600 text-white" />
-						) : getValue<string>() === 'Payment.Status.Expired' ? (
-							<ClockAlert className="text-red-600" />
+						) : getValue<string>() === 'PARTIALLY_PAID' ? (
+							<CircleDollarSign className="text-yellow-600" />
 						) : (
 							<CircleX className="fill-red-500 text-white" />
 						)}
-
-						{getPaymentStatusLabel(getValue<Payment['status']>())}
+						{getInvoiceStatusLabel(getValue<Invoice['status']>())}
 					</Badge>
 				),
 			},
-
+			{
+				accessorKey: 'due_date',
+				header: 'Due Date',
+				cell: ({ getValue }) => {
+					const date = getValue<Date | null>()
+					return (
+						<div className="min-w-32">
+							<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
+								{date ? localizedDayjs(date).format('LLL') : '—'}
+							</span>
+						</div>
+					)
+				},
+			},
 			{
 				accessorKey: 'created_at',
-				header: 'Payment Date',
+				header: 'Created On',
 				cell: ({ getValue }) => (
 					<div className="min-w-32">
 						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
-							{localizedDayjs(getValue<Date>()).format('DD/MM/YYYY hh:mm a')}
+							{localizedDayjs(getValue<Date>()).format('LLL')}
 						</span>
 					</div>
 				),
@@ -296,7 +187,7 @@ export function TenantPaymentsModule() {
 	return (
 		<div className="mx-auto my-2 flex flex-col gap-4 sm:gap-6">
 			<div className="space-y-1">
-				<TypographyH4>Tenant Payments</TypographyH4>
+				<TypographyH4>Tenant Invoices & Payments</TypographyH4>
 				<TypographyMuted>
 					Monitor tenant payments, track statuses, and manage overdue balances
 					efficiently.
@@ -318,8 +209,7 @@ export function TenantPaymentsModule() {
 							total: data?.meta?.total ?? 0,
 							page,
 							page_size: per,
-							order: 'desc',
-							// order: data?.meta?.order ?? 'desc',
+							order: data?.meta?.order ?? 'desc',
 							order_by: data?.meta?.order_by ?? 'created_at',
 							has_prev_page: data?.meta?.has_prev_page ?? false,
 							has_next_page: data?.meta?.has_next_page ?? false,

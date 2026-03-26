@@ -1408,6 +1408,51 @@ definitions:
         example: COMMUNITY
         type: string
     type: object
+  handlers.UpdateClientRequest:
+    properties:
+      address:
+        minLength: 5
+        type: string
+      city:
+        minLength: 2
+        type: string
+      country:
+        minLength: 2
+        type: string
+      description:
+        maxLength: 500
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      name:
+        minLength: 2
+        type: string
+      region:
+        minLength: 2
+        type: string
+      registration_number:
+        type: string
+      sub_type:
+        enum:
+        - LANDLORD
+        - PROPERTY_MANAGER
+        - DEVELOPER
+        - AGENCY
+        type: string
+      support_email:
+        type: string
+      support_phone:
+        type: string
+      type:
+        enum:
+        - INDIVIDUAL
+        - COMPANY
+        type: string
+      website_url:
+        type: string
+    type: object
   handlers.UpdateClientUserPasswordRequest:
     properties:
       new_password:
@@ -1424,6 +1469,9 @@ definitions:
     type: object
   handlers.UpdateClientUserRequest:
     properties:
+      email:
+        example: john@example.com
+        type: string
       name:
         example: John Doe
         minLength: 2
@@ -5775,6 +5823,58 @@ paths:
       summary: Resets the password for a client user (Admin)
       tags:
       - ClientUsers
+  /api/v1/admin/clients/{client_id}:
+    patch:
+      consumes:
+      - application/json
+      description: Update the client's type, sub type, or company details
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Update Client Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateClientRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClient'
+            type: object
+        "400":
+          description: Error occurred when updating client
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Client not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error occurred
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update client details
+      tags:
+      - Clients
   /api/v1/admin/clients/apply:
     post:
       consumes:
@@ -8585,6 +8685,9 @@ paths:
           type: string
         name: status
         type: array
+      - in: query
+        name: tenant_id
+        type: string
       - in: query
         name: unit_id
         type: string

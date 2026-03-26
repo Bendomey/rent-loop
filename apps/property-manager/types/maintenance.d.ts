@@ -83,6 +83,7 @@ interface FetchMaintenanceRequestFilter {
 	status?: MaintenanceRequestStatus
 	priority?: MaintenanceRequestPriority
 	category?: MaintenanceRequestCategory
+	tenant_id?: string
 	property_id?: string
 	unit_id?: string
 	assigned_worker_id?: string
