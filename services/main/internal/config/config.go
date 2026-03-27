@@ -74,14 +74,15 @@ type IChartOfAccounts struct {
 
 	// Liability Accounts
 	SecurityDepositsHeldID string
+	AccountsPayableID      string
 
 	// Income Accounts
 	RentalIncomeID             string
 	MaintenanceReimbursementID string
 	SubscriptionRevenueID      string
+	ExpenseIncomeID            string
 
 	// Expense Accounts
-	MaintenanceExpenseID        string
 	PropertyManagementExpenseID string
 }
 
@@ -200,14 +201,15 @@ func Load() Config {
 
 			// Liability Accounts
 			SecurityDepositsHeldID: getEnv("FINCORE_ACCOUNT_SECURITY_DEPOSITS", ""),
+			AccountsPayableID:      getEnv("FINCORE_ACCOUNT_PAYABLE", ""),
 
 			// Income Accounts
 			RentalIncomeID:             getEnv("FINCORE_ACCOUNT_RENTAL_INCOME", ""),
 			MaintenanceReimbursementID: getEnv("FINCORE_ACCOUNT_MAINTENANCE_REIMBURSEMENT", ""),
 			SubscriptionRevenueID:      getEnv("FINCORE_ACCOUNT_SUBSCRIPTION_REVENUE", ""),
+			ExpenseIncomeID:            getEnv("FINCORE_ACCOUNT_EXPENSE_INCOME", ""),
 
 			// Expense Accounts
-			MaintenanceExpenseID:        getEnv("FINCORE_ACCOUNT_MAINTENANCE_EXPENSE", ""),
 			PropertyManagementExpenseID: getEnv("FINCORE_ACCOUNT_PROPERTY_MGMT_EXPENSE", ""),
 		},
 	}

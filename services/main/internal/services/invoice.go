@@ -208,6 +208,8 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 					"context_type": invoice.ContextType,
 					"payer_type":   invoice.PayerType,
 					"payee_type":   invoice.PayeeType,
+					"client_id":    lib.SafeString(invoice.ClientID),
+					"property_id":  lib.SafeString(invoice.PropertyID),
 				},
 				Lines: journalLines,
 			})
@@ -490,6 +492,8 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, input VoidInvoiceInput
 				"context_type":    invoice.ContextType,
 				"payer_type":      invoice.PayerType,
 				"payee_type":      invoice.PayeeType,
+				"client_id":       lib.SafeString(invoice.ClientID),
+				"property_id":     lib.SafeString(invoice.PropertyID),
 				"is_reversal":     true,
 				"reversal_reason": "INVOICE_VOIDED",
 				"original_ref":    invoice.Code,
@@ -968,14 +972,56 @@ func buildSaasJournalEntry(
 	}
 }
 
-// buildExpenseJournalEntry builds journal entry lines for general expense invoices.
-// TODO: Implement when requirements are clarified
+// buildExpenseJournalEntry builds journal entry lines for general and maintenance expense invoices.
+//
+// When PayerType = EXTERNAL: no journal entry (external payer obligations are not tracked on our ledger).
+//
+// When PayeeType = EXTERNAL: platform will disburse to a vendor on the payer's behalf.
+//   - Debit: Property Management Expense (cost incurred)
+//   - Credit: Accounts Payable (liability owed to vendor)
+//
+// All other payees (RENTLOOP, PROPERTY_OWNER, TENANT): platform collects on behalf.
+//   - Debit: Accounts Receivable (payer owes)
+//   - Credit: Expense Income (income from facilitating the expense billing)
 func buildExpenseJournalEntry(
 	invoice *models.Invoice,
 	accounts config.IChartOfAccounts,
 ) []accounting.CreateJournalEntryLineRequest {
-	// TODO: Implement general expense invoice accounting
-	return []accounting.CreateJournalEntryLineRequest{}
+	if invoice.PayerType == "EXTERNAL" {
+		return []accounting.CreateJournalEntryLineRequest{}
+	}
+
+	if invoice.PayeeType == "EXTERNAL" {
+		return []accounting.CreateJournalEntryLineRequest{
+			{
+				AccountID: accounts.PropertyManagementExpenseID,
+				Debit:     invoice.SubTotal,
+				Credit:    0,
+				Notes:     lib.StringPointer(fmt.Sprintf("Expense incurred for invoice %s", invoice.Code)),
+			},
+			{
+				AccountID: accounts.AccountsPayableID,
+				Debit:     0,
+				Credit:    invoice.SubTotal,
+				Notes:     lib.StringPointer(fmt.Sprintf("Vendor payable for invoice %s", invoice.Code)),
+			},
+		}
+	}
+
+	return []accounting.CreateJournalEntryLineRequest{
+		{
+			AccountID: accounts.AccountsReceivableID,
+			Debit:     invoice.SubTotal,
+			Credit:    0,
+			Notes:     lib.StringPointer(fmt.Sprintf("Accounts receivable for expense invoice %s", invoice.Code)),
+		},
+		{
+			AccountID: accounts.ExpenseIncomeID,
+			Credit:    invoice.SubTotal,
+			Debit:     0,
+			Notes:     lib.StringPointer(fmt.Sprintf("Expense income for invoice %s", invoice.Code)),
+		},
+	}
 }
 
 // buildJournalEntryForInvoice routes to the appropriate journal entry builder based on context type.
@@ -990,9 +1036,7 @@ func buildJournalEntryForInvoice(
 		return buildLeaseRentJournalEntry(invoice, accounts)
 	case "SAAS_FEE":
 		return buildSaasJournalEntry(invoice, accounts)
-	case "GENERAL_EXPENSE":
-		return buildExpenseJournalEntry(invoice, accounts)
-	case "MAINTENANCE_EXPENSE":
+	case "GENERAL_EXPENSE", "MAINTENANCE_EXPENSE":
 		return buildExpenseJournalEntry(
 			invoice,
 			accounts,
@@ -1026,4 +1070,62 @@ func buildReversingJournalEntry(
 	}
 
 	return reversedLines
+}
+
+// buildPaymentJournalLines builds journal entry lines for a payment verification.
+//
+// The settlement entry mirrors the invoice creation entry:
+//
+//   - EXTERNAL payer: no entry was created at invoice time, so none here either.
+//
+//   - Expense invoice with EXTERNAL payee (Shape B — platform pays vendor):
+//     invoice debited PropertyManagementExpense and credited AccountsPayable.
+//     Settlement clears the payable: Debit AP / Credit Cash.
+//
+//   - All other invoices (Shape A — platform collects):
+//     invoice debited AR. Settlement: Debit Cash / Credit AR.
+func buildPaymentJournalLines(
+	invoice *models.Invoice,
+	paymentAmount int64,
+	accounts config.IChartOfAccounts,
+) []accounting.CreateJournalEntryLineRequest {
+	if invoice.PayerType == "EXTERNAL" {
+		return []accounting.CreateJournalEntryLineRequest{}
+	}
+
+	isExpenseContext := invoice.ContextType == "GENERAL_EXPENSE" || invoice.ContextType == "MAINTENANCE_EXPENSE"
+
+	if isExpenseContext && invoice.PayeeType == "EXTERNAL" {
+		// Platform disbursed to vendor — clear the accounts payable liability
+		return []accounting.CreateJournalEntryLineRequest{
+			{
+				AccountID: accounts.AccountsPayableID,
+				Debit:     paymentAmount,
+				Credit:    0,
+				Notes:     lib.StringPointer(fmt.Sprintf("Vendor payable settled for invoice %s", invoice.Code)),
+			},
+			{
+				AccountID: accounts.CashBankAccountID,
+				Debit:     0,
+				Credit:    paymentAmount,
+				Notes:     lib.StringPointer(fmt.Sprintf("Cash disbursed to vendor for invoice %s", invoice.Code)),
+			},
+		}
+	}
+
+	// Default: cash received, AR cleared
+	return []accounting.CreateJournalEntryLineRequest{
+		{
+			AccountID: accounts.CashBankAccountID,
+			Debit:     paymentAmount,
+			Credit:    0,
+			Notes:     lib.StringPointer(fmt.Sprintf("Cash receipt for invoice %s", invoice.Code)),
+		},
+		{
+			AccountID: accounts.AccountsReceivableID,
+			Debit:     0,
+			Credit:    paymentAmount,
+			Notes:     lib.StringPointer(fmt.Sprintf("AR reduction on payment for invoice %s", invoice.Code)),
+		},
+	}
 }
