@@ -272,13 +272,19 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 									r.Delete("/", handlers.MaintenanceRequestHandler.DeleteComment)
 								})
 							})
-							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-								Post("/expenses", handlers.MaintenanceRequestHandler.AddExpense)
-							r.Get("/expenses", handlers.MaintenanceRequestHandler.ListExpenses)
-							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-								Delete("/expenses/{expense_id}", handlers.MaintenanceRequestHandler.DeleteExpense)
-							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-								Post("/expenses:invoice", handlers.MaintenanceRequestHandler.GenerateExpenseInvoice)
+							r.Route("/expenses", func(r chi.Router) {
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Post("/", handlers.MaintenanceRequestHandler.AddExpense)
+								r.Get("/", handlers.MaintenanceRequestHandler.ListExpenses)
+
+								r.Route("/{expense_id}", func(r chi.Router) {
+									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+										Delete("/", handlers.MaintenanceRequestHandler.DeleteExpense)
+
+									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+										Post("/generate:invoice", handlers.MaintenanceRequestHandler.GenerateExpenseInvoice)
+								})
+							})
 						})
 					})
 

@@ -93,25 +93,14 @@ type ListInvoicesFilter struct {
 	PayerTenantID              *string
 	PayeeType                  *string
 	PayeeClientID              *string
+	PayeeTenantID              *string
 	ContextType                *string
 	Status                     *[]string
 	Active                     *bool
 	PropertyID                 *string
+	ClientID                   *string
 	ContextLeaseID             *string
 	ContextTenantApplicationID *string
-}
-
-// TenantListInvoicesFilter is used exclusively by tenant-scoped invoice list
-// endpoints. TENANT_APPLICATION invoices may not have payer_tenant_id set, so
-// the ownership + context check is expressed as a single OR-aware clause rather
-// than two independent AND conditions.
-type TenantListInvoicesFilter struct {
-	lib.FilterQuery
-	TenantID            string
-	LeaseID             string
-	TenantApplicationID *string
-	Status              *[]string
-	Active              *bool
 }
 
 func (r *invoiceRepository) List(ctx context.Context, filterQuery ListInvoicesFilter) (*[]models.Invoice, error) {
@@ -124,12 +113,14 @@ func (r *invoiceRepository) List(ctx context.Context, filterQuery ListInvoicesFi
 		invoicePayerTenantIDScope(filterQuery.PayerTenantID),
 		invoicePayeeTypeScope(filterQuery.PayeeType),
 		invoicePayeeClientIDScope(filterQuery.PayeeClientID),
+		invoicePayeeTenantIDScope(filterQuery.PayeeTenantID),
 		invoiceContextTypeScope(filterQuery.ContextType),
 		invoiceStatusScope(filterQuery.Status),
 		DateRangeScope("invoices", filterQuery.DateRange),
 		SearchScope("invoices", filterQuery.Search),
 		invoiceActiveScope(filterQuery.Active),
 		invoicePropertyIDScope(filterQuery.PropertyID),
+		invoiceClientIDScope(filterQuery.ClientID),
 		invoiceLeaseContextScope(filterQuery.ContextLeaseID, filterQuery.ContextTenantApplicationID),
 
 		PaginationScope(filterQuery.Page, filterQuery.PageSize),
@@ -162,10 +153,12 @@ func (r *invoiceRepository) Count(ctx context.Context, filterQuery ListInvoicesF
 			invoicePayerTenantIDScope(filterQuery.PayerTenantID),
 			invoicePayeeTypeScope(filterQuery.PayeeType),
 			invoicePayeeClientIDScope(filterQuery.PayeeClientID),
+			invoicePayeeTenantIDScope(filterQuery.PayeeTenantID),
 			invoiceContextTypeScope(filterQuery.ContextType),
 			invoiceStatusScope(filterQuery.Status),
 			invoiceActiveScope(filterQuery.Active),
 			invoicePropertyIDScope(filterQuery.PropertyID),
+			invoiceClientIDScope(filterQuery.ClientID),
 			invoiceLeaseContextScope(filterQuery.ContextLeaseID, filterQuery.ContextTenantApplicationID),
 
 			DateRangeScope("invoices", filterQuery.DateRange),
@@ -177,6 +170,19 @@ func (r *invoiceRepository) Count(ctx context.Context, filterQuery ListInvoicesF
 	}
 
 	return count, nil
+}
+
+// TenantListInvoicesFilter is used exclusively by tenant-scoped invoice list
+// endpoints. TENANT_APPLICATION invoices may not have payer_tenant_id set, so
+// the ownership + context check is expressed as a single OR-aware clause rather
+// than two independent AND conditions.
+type TenantListInvoicesFilter struct {
+	lib.FilterQuery
+	TenantID            string
+	LeaseID             string
+	TenantApplicationID *string
+	Status              *[]string
+	Active              *bool
 }
 
 func (r *invoiceRepository) TenantList(
@@ -291,6 +297,15 @@ func invoicePayeeClientIDScope(payeeClientID *string) func(db *gorm.DB) *gorm.DB
 	}
 }
 
+func invoicePayeeTenantIDScope(payeeTenantID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if payeeTenantID == nil {
+			return db
+		}
+		return db.Where("invoices.payee_tenant_id = ?", *payeeTenantID)
+	}
+}
+
 func invoiceContextTypeScope(contextType *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if contextType == nil {
@@ -314,27 +329,16 @@ func invoicePropertyIDScope(propertyID *string) func(db *gorm.DB) *gorm.DB {
 		if propertyID == nil {
 			return db
 		}
-		return db.Where(
-			`(
-				(invoices.context_type = 'TENANT_APPLICATION' AND EXISTS (
-					SELECT 1 FROM tenant_applications ta
-					JOIN units u ON u.id = ta.desired_unit_id
-					WHERE ta.id = invoices.context_tenant_application_id AND u.property_id = ?
-				))
-				OR (invoices.context_type = 'LEASE_RENT' AND EXISTS (
-					SELECT 1 FROM leases l
-					JOIN units u ON u.id = l.unit_id
-					WHERE l.id = invoices.context_lease_id AND u.property_id = ?
-				))
-				OR (invoices.context_type = 'MAINTENANCE' AND EXISTS (
-					SELECT 1 FROM maintenance_requests mr
-					JOIN units u ON u.id = mr.unit_id
-					WHERE mr.id = invoices.context_maintenance_request_id AND u.property_id = ?
-				))
-				OR (invoices.context_type IN ('SAAS_FEE', 'GENERAL_EXPENSE') AND invoices.payer_property_id = ?)
-			)`,
-			*propertyID, *propertyID, *propertyID, *propertyID,
-		)
+		return db.Where("invoices.property_id = ?", *propertyID)
+	}
+}
+
+func invoiceClientIDScope(clientID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if clientID == nil {
+			return db
+		}
+		return db.Where("invoices.client_id = ?", *clientID)
 	}
 }
 

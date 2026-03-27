@@ -64,16 +64,20 @@ type LineItemInput struct {
 }
 
 type CreateInvoiceInput struct {
+	ClientID                    *string
+	PropertyID                  *string
 	PayerType                   string
 	PayerClientID               *string
 	PayerPropertyID             *string
 	PayerTenantID               *string
 	PayeeType                   string
 	PayeeClientID               *string
+	PayeeTenantID               *string
 	ContextType                 string
 	ContextTenantApplicationID  *string
 	ContextLeaseID              *string
 	ContextMaintenanceRequestID *string
+	ContextExpenseID            *string
 	TotalAmount                 int64
 	Taxes                       int64
 	SubTotal                    int64
@@ -131,6 +135,8 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 
 	invoice := models.Invoice{
 		Code:                        code,
+		ClientID:                    input.ClientID,
+		PropertyID:                  input.PropertyID,
 		Status:                      input.Status,
 		PayerType:                   input.PayerType,
 		PayerClientID:               input.PayerClientID,
@@ -138,10 +144,12 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 		PayerTenantID:               input.PayerTenantID,
 		PayeeType:                   input.PayeeType,
 		PayeeClientID:               input.PayeeClientID,
+		PayeeTenantID:               input.PayeeTenantID,
 		ContextType:                 input.ContextType,
 		ContextTenantApplicationID:  input.ContextTenantApplicationID,
 		ContextLeaseID:              input.ContextLeaseID,
 		ContextMaintenanceRequestID: input.ContextMaintenanceRequestID,
+		ContextExpenseID:            input.ContextExpenseID,
 		TotalAmount:                 input.TotalAmount,
 		Taxes:                       input.Taxes,
 		SubTotal:                    input.SubTotal,
@@ -960,19 +968,9 @@ func buildSaasJournalEntry(
 	}
 }
 
-// buildMaintenanceJournalEntry builds journal entry lines for maintenance invoices.
+// buildExpenseJournalEntry builds journal entry lines for general expense invoices.
 // TODO: Implement when requirements are clarified
-func buildMaintenanceJournalEntry(
-	invoice *models.Invoice,
-	accounts config.IChartOfAccounts,
-) []accounting.CreateJournalEntryLineRequest {
-	// TODO: Implement maintenance invoice accounting
-	return []accounting.CreateJournalEntryLineRequest{}
-}
-
-// buildGeneralExpenseJournalEntry builds journal entry lines for general expense invoices.
-// TODO: Implement when requirements are clarified
-func buildGeneralExpenseJournalEntry(
+func buildExpenseJournalEntry(
 	invoice *models.Invoice,
 	accounts config.IChartOfAccounts,
 ) []accounting.CreateJournalEntryLineRequest {
@@ -992,10 +990,13 @@ func buildJournalEntryForInvoice(
 		return buildLeaseRentJournalEntry(invoice, accounts)
 	case "SAAS_FEE":
 		return buildSaasJournalEntry(invoice, accounts)
-	case "MAINTENANCE":
-		return buildMaintenanceJournalEntry(invoice, accounts)
 	case "GENERAL_EXPENSE":
-		return buildGeneralExpenseJournalEntry(invoice, accounts)
+		return buildExpenseJournalEntry(invoice, accounts)
+	case "MAINTENANCE_EXPENSE":
+		return buildExpenseJournalEntry(
+			invoice,
+			accounts,
+		)
 	default:
 		return []accounting.CreateJournalEntryLineRequest{}
 	}

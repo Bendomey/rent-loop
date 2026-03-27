@@ -80,6 +80,8 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.EnhanceLeaseChecklist(),
 		jobs.SeedChecklistTemplates(),
 		jobs.AddClientCompanyFields(),
+		jobs.AddInvoicePropertyClientPayeeTenant(),
+		jobs.DropExpenseInvoicePaidByBillable(),
 	})
 	m.Migrate()
 

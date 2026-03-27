@@ -77,9 +77,8 @@ type MaintenanceRequestService interface {
 	DeleteComment(ctx context.Context, id string) error
 	GenerateExpenseInvoice(
 		ctx context.Context,
-		maintenanceRequestID string,
-		actorClientID string,
-	) (*models.Invoice, error)
+		input GenerateExpenseInvoiceInput,
+	) ([]models.Invoice, error)
 	GetMaintenanceRequestStats(
 		ctx context.Context,
 		filters repository.ListMaintenanceRequestsFilter,
@@ -180,13 +179,11 @@ type UpdateMaintenanceCommentInput struct {
 }
 
 type AddMaintenanceExpenseInput struct {
-	RequestID        string
-	Description      string
-	Amount           int64
-	Currency         string
-	PaidBy           string
-	BillableToTenant bool
-	ClientUserID     string
+	RequestID    string
+	Description  string
+	Amount       int64
+	Currency     string
+	ClientUserID string
 }
 
 // --- Create ---
@@ -737,8 +734,6 @@ func (s *maintenanceRequestService) AddExpense(
 		Description:                 input.Description,
 		Amount:                      input.Amount,
 		Currency:                    currency,
-		PaidBy:                      input.PaidBy,
-		BillableToTenant:            input.BillableToTenant,
 		CreatedByClientUserID:       input.ClientUserID,
 	}
 
@@ -923,14 +918,30 @@ func (s *maintenanceRequestService) DeleteComment(ctx context.Context, id string
 
 // --- Invoice generation from expenses ---
 
+type GenerateExpenseInvoicePayerInput struct {
+	Amount    int64
+	PayeeType string // "TENANT" | "PROPERTY_OWNER" | "EXTERNAL"
+	PayerType string // "TENANT" | "PROPERTY_OWNER" | "EXTERNAL"
+}
+
+type GenerateExpenseInvoiceInput struct {
+	MaintenanceRequestID string
+	ExpenseID            string
+	ClientID             string
+	Payers               []GenerateExpenseInvoicePayerInput
+}
+
 func (s *maintenanceRequestService) GenerateExpenseInvoice(
 	ctx context.Context,
-	maintenanceRequestID string,
-	actorClientID string,
-) (*models.Invoice, error) {
+	input GenerateExpenseInvoiceInput,
+) ([]models.Invoice, error) {
+	if len(input.Payers) == 0 {
+		return nil, pkg.BadRequestError("at least one payer is required to generate an invoice", nil)
+	}
+
 	mr, err := s.repo.GetOneWithPopulate(ctx, repository.GetMaintenanceRequestQuery{
-		ID:       maintenanceRequestID,
-		Populate: &[]string{"Lease", "Lease.Tenant"},
+		ID:       input.MaintenanceRequestID,
+		Populate: &[]string{"Lease", "Lease.Tenant", "Unit", "Expenses"},
 	})
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -945,84 +956,105 @@ func (s *maintenanceRequestService) GenerateExpenseInvoice(
 		})
 	}
 
-	expenses, err := s.repo.GetUnbilledExpenses(ctx, maintenanceRequestID)
-	if err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "GenerateExpenseInvoice",
-				"action":   "fetching unbilled expenses",
-			},
-		})
+	// find expense to be invoiced
+	var expense *models.Expense
+	for _, exp := range mr.Expenses {
+		if exp.ID.String() == input.ExpenseID {
+			expense = &exp
+			break
+		}
 	}
 
-	if len(*expenses) == 0 {
-		return nil, pkg.BadRequestError("no unbilled billable expenses found for this maintenance request", nil)
+	if expense == nil {
+		return nil, pkg.NotFoundError("expense not found for this maintenance request", nil)
 	}
 
-	var lineItems []LineItemInput
-	var totalAmount int64
-	for _, exp := range *expenses {
-		lineItems = append(lineItems, LineItemInput{
-			Label:       exp.Description,
-			Category:    "EXPENSE",
-			Quantity:    1,
-			UnitAmount:  exp.Amount,
-			TotalAmount: exp.Amount,
-			Currency:    exp.Currency,
-		})
-		totalAmount += exp.Amount
+	// make sure full amount is covered by payers
+	var totalPayerAmount int64
+	for _, payer := range input.Payers {
+		totalPayerAmount += payer.Amount
 	}
 
-	// Resolve payer tenant: prefer preloaded Lease.Tenant, fall back to CreatedByTenantID.
-	// Reject invoice generation when no tenant can be resolved.
-	var tenantID string
-	if mr.Lease != nil && mr.Lease.TenantId != "" {
-		tenantID = mr.Lease.TenantId
-	} else if mr.CreatedByTenantID != nil {
-		tenantID = *mr.CreatedByTenantID
-	} else {
-		return nil, pkg.BadRequestError(
-			"cannot generate invoice: no tenant associated with this maintenance request",
-			nil,
-		)
+	if totalPayerAmount < expense.Amount {
+		return nil, pkg.BadRequestError("total payer amount must cover the full expense amount", nil)
+	}
+
+	lineItem := LineItemInput{
+		Label:       expense.Description,
+		Category:    "EXPENSE",
+		Quantity:    1,
+		UnitAmount:  expense.Amount,
+		TotalAmount: expense.Amount,
+		Currency:    expense.Currency,
+		Metadata: &map[string]any{
+			"mr": mr.ID.String(),
+		},
 	}
 
 	// Single transaction: invoice creation + expense linking are fully atomic
 	tx := s.appCtx.DB.Begin()
 	transCtx := lib.WithTransaction(ctx, tx)
 
-	mrID := mr.ID.String()
-	invoice, err := s.invoiceService.CreateInvoice(transCtx, CreateInvoiceInput{
-		PayerType:                   "TENANT",
-		PayerTenantID:               &tenantID,
-		PayeeType:                   "PROPERTY_OWNER",
-		PayeeClientID:               &actorClientID,
-		ContextType:                 "MAINTENANCE",
-		ContextMaintenanceRequestID: &mrID,
-		TotalAmount:                 totalAmount,
-		Currency:                    "GHS",
-		LineItems:                   lineItems,
-	})
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
+	var invoices []models.Invoice
 
-	invoiceID := invoice.ID.String()
-	for i := range *expenses {
-		exp := &(*expenses)[i]
-		exp.InvoiceID = &invoiceID
-		if updateErr := s.repo.UpdateExpense(transCtx, exp); updateErr != nil {
-			tx.Rollback()
-			return nil, pkg.InternalServerError("failed to link expenses to invoice", &pkg.RentLoopErrorParams{
-				Err: updateErr,
-				Metadata: map[string]string{
-					"function": "GenerateExpenseInvoice",
-					"action":   "linking expense to invoice",
-				},
-			})
+	for _, payer := range input.Payers {
+
+		if payer.PayeeType != "TENANT" && payer.PayeeType != "PROPERTY_OWNER" {
+			return nil, pkg.BadRequestError("invalid payee type: "+payer.PayeeType, nil)
 		}
+
+		createInvoiceInput := CreateInvoiceInput{
+			ClientID:         &input.ClientID,
+			PropertyID:       &mr.Unit.PropertyID,
+			PayerType:        payer.PayerType,
+			PayeeType:        payer.PayeeType,
+			ContextType:      "MAINTENANCE_EXPENSE",
+			ContextExpenseID: &input.ExpenseID,
+			TotalAmount:      payer.Amount,
+			Currency:         expense.Currency,
+			LineItems:        []LineItemInput{lineItem},
+		}
+
+		if payer.PayeeType == "TENANT" || payer.PayerType == "TENANT" {
+			var tenantID string
+
+			// Resolve payer tenant: prefer preloaded Lease.Tenant, fall back to CreatedByTenantID.
+			// Reject invoice generation when no tenant can be resolved.
+			if mr.Lease != nil && mr.Lease.TenantId != "" {
+				tenantID = mr.Lease.TenantId
+			} else if mr.CreatedByTenantID != nil {
+				tenantID = *mr.CreatedByTenantID
+			} else {
+				return nil, pkg.BadRequestError(
+					"cannot generate invoice: no tenant associated with this maintenance request",
+					nil,
+				)
+			}
+
+			if createInvoiceInput.PayerType == "TENANT" && tenantID != "" {
+				createInvoiceInput.PayerTenantID = &tenantID
+			}
+			if createInvoiceInput.PayeeType == "TENANT" && tenantID != "" {
+				createInvoiceInput.PayeeTenantID = &tenantID
+			}
+
+		}
+
+		if createInvoiceInput.PayerType == "PROPERTY_OWNER" {
+			createInvoiceInput.PayerClientID = &input.ClientID
+		}
+
+		if createInvoiceInput.PayeeType == "PROPERTY_OWNER" {
+			createInvoiceInput.PayeeClientID = &input.ClientID
+		}
+
+		invoice, err := s.invoiceService.CreateInvoice(transCtx, createInvoiceInput)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		invoices = append(invoices, *invoice)
 	}
 
 	if commitErr := tx.Commit().Error; commitErr != nil {
@@ -1036,7 +1068,7 @@ func (s *maintenanceRequestService) GenerateExpenseInvoice(
 		})
 	}
 
-	return invoice, nil
+	return invoices, nil
 }
 
 func (s *maintenanceRequestService) GetMaintenanceRequestStats(

@@ -8543,11 +8543,6 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "boolean",
-                        "name": "billable_to_tenant",
-                        "in": "query"
-                    },
-                    {
                         "type": "string",
                         "name": "end_date",
                         "in": "query"
@@ -8588,11 +8583,6 @@ const docTemplate = `{
                         "minimum": 0,
                         "type": "integer",
                         "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "paid_by",
                         "in": "query"
                     },
                     {
@@ -8823,14 +8813,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses:invoice": {
+        "/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses/{expense_id}/generate:invoice": {
             "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create a draft invoice from all unbilled, billable expenses on a maintenance request (Admin)",
+                "description": "Create one invoice per payer from a specific expense on a maintenance request (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -8840,7 +8830,7 @@ const docTemplate = `{
                 "tags": [
                     "MaintenanceRequests"
                 ],
-                "summary": "Generate a draft invoice from billable expenses",
+                "summary": "Generate invoices from a billable expense",
                 "parameters": [
                     {
                         "type": "string",
@@ -8855,22 +8845,41 @@ const docTemplate = `{
                         "name": "maintenance_request_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Expense ID",
+                        "name": "expense_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Payers for this expense",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.GenerateExpenseInvoiceBody"
+                        }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Invoice ID of the generated draft invoice",
+                        "description": "Generated invoices",
                         "schema": {
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "type": "string"
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/transformations.OutputInvoice"
+                                    }
                                 }
                             }
                         }
                     },
                     "400": {
-                        "description": "No billable expenses found or error generating invoice",
+                        "description": "Validation error or no payers provided",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -8882,7 +8891,13 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Maintenance request not found",
+                        "description": "Maintenance request or expense not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -14401,29 +14416,17 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "amount",
-                "description",
-                "paid_by"
+                "description"
             ],
             "properties": {
                 "amount": {
                     "type": "integer"
-                },
-                "billable_to_tenant": {
-                    "type": "boolean"
                 },
                 "currency": {
                     "type": "string"
                 },
                 "description": {
                     "type": "string"
-                },
-                "paid_by": {
-                    "type": "string",
-                    "enum": [
-                        "BUSINESS",
-                        "TENANT",
-                        "OWNER"
-                    ]
                 }
             }
         },
@@ -15827,6 +15830,50 @@ const docTemplate = `{
                 "expires_at": {
                     "type": "string",
                     "example": "2026-06-01T00:00:00Z"
+                }
+            }
+        },
+        "handlers.GenerateExpenseInvoiceBody": {
+            "type": "object",
+            "required": [
+                "payers"
+            ],
+            "properties": {
+                "payers": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/handlers.GenerateExpenseInvoicePayerBody"
+                    }
+                }
+            }
+        },
+        "handlers.GenerateExpenseInvoicePayerBody": {
+            "type": "object",
+            "required": [
+                "amount",
+                "payee_type",
+                "payer_type"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "payee_type": {
+                    "type": "string",
+                    "enum": [
+                        "TENANT",
+                        "PROPERTY_OWNER",
+                        "EXTERNAL"
+                    ]
+                },
+                "payer_type": {
+                    "type": "string",
+                    "enum": [
+                        "TENANT",
+                        "PROPERTY_OWNER",
+                        "EXTERNAL"
+                    ]
                 }
             }
         },
@@ -18529,9 +18576,6 @@ const docTemplate = `{
                 "amount": {
                     "type": "number"
                 },
-                "billable_to_tenant": {
-                    "type": "boolean"
-                },
                 "context_maintenance_request_id": {
                     "type": "string"
                 },
@@ -18553,15 +18597,6 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "invoice": {
-                    "$ref": "#/definitions/transformations.OutputInvoice"
-                },
-                "invoice_id": {
-                    "type": "string"
-                },
-                "paid_by": {
-                    "type": "string"
-                },
                 "updated_at": {
                     "type": "string"
                 }
@@ -18580,9 +18615,23 @@ const docTemplate = `{
                         "BANK"
                     ]
                 },
+                "client": {
+                    "$ref": "#/definitions/transformations.OutputClient"
+                },
+                "client_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
                 "code": {
                     "type": "string",
                     "example": "INV-2024-0001"
+                },
+                "context_expense": {
+                    "$ref": "#/definitions/transformations.OutputExpense"
+                },
+                "context_expense_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
                 },
                 "context_lease": {
                     "type": "object",
@@ -18644,6 +18693,13 @@ const docTemplate = `{
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
                 },
+                "payee_tenant": {
+                    "$ref": "#/definitions/transformations.OutputTenant"
+                },
+                "payee_tenant_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
                 "payee_type": {
                     "type": "string",
                     "example": "PROPERTY_OWNER"
@@ -18678,6 +18734,13 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/transformations.OutputPayment"
                     }
+                },
+                "property": {
+                    "$ref": "#/definitions/transformations.OutputProperty"
+                },
+                "property_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
                 },
                 "status": {
                     "type": "string",
