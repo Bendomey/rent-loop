@@ -76,16 +76,12 @@ type ListActivityLogsQuery struct {
 
 type ListExpensesQuery struct {
 	lib.FilterQueryInput
-	PaidBy           *string `json:"paid_by"            query:"paid_by"`
-	BillableToTenant *bool   `json:"billable_to_tenant" query:"billable_to_tenant"`
 }
 
 type AddExpenseBody struct {
-	Description      string `json:"description"        validate:"required"`
-	Amount           int64  `json:"amount"             validate:"required,gt=0"`
-	Currency         string `json:"currency"           validate:"omitempty"`
-	PaidBy           string `json:"paid_by"            validate:"required,oneof=BUSINESS TENANT OWNER"`
-	BillableToTenant bool   `json:"billable_to_tenant"`
+	Description string `json:"description" validate:"required"`
+	Amount      int64  `json:"amount"      validate:"required,gt=0"`
+	Currency    string `json:"currency"    validate:"omitempty"`
 }
 
 type TenantCreateMaintenanceRequestBody struct {
@@ -735,13 +731,11 @@ func (h *MaintenanceRequestHandler) AddExpense(w http.ResponseWriter, r *http.Re
 	}
 
 	expense, err := h.service.AddExpense(r.Context(), services.AddMaintenanceExpenseInput{
-		RequestID:        chi.URLParam(r, "maintenance_request_id"),
-		Description:      body.Description,
-		Amount:           body.Amount,
-		Currency:         body.Currency,
-		PaidBy:           body.PaidBy,
-		BillableToTenant: body.BillableToTenant,
-		ClientUserID:     currentUser.ID,
+		RequestID:    chi.URLParam(r, "maintenance_request_id"),
+		Description:  body.Description,
+		Amount:       body.Amount,
+		Currency:     body.Currency,
+		ClientUserID: currentUser.ID,
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)
@@ -784,8 +778,6 @@ func (h *MaintenanceRequestHandler) ListExpenses(w http.ResponseWriter, r *http.
 
 	filters := repository.ListMaintenanceExpensesFilter{
 		MaintenanceRequestID: chi.URLParam(r, "maintenance_request_id"),
-		PaidBy:               lib.NullOrString(r.URL.Query().Get("paid_by")),
-		BillableToTenant:     lib.NullOrBool(r.URL.Query().Get("billable_to_tenant")),
 	}
 
 	expenses, listErr := h.service.ListExpenses(r.Context(), *filterQuery, filters)
@@ -838,22 +830,35 @@ func (h *MaintenanceRequestHandler) DeleteExpense(w http.ResponseWriter, r *http
 	json.NewEncoder(w).Encode(map[string]any{"data": true})
 }
 
+type GenerateExpenseInvoicePayerBody struct {
+	Amount    int64  `json:"amount"     validate:"required,gt=0"`
+	PayerType string `json:"payer_type" validate:"required,oneof=TENANT PROPERTY_OWNER EXTERNAL"`
+	PayeeType string `json:"payee_type" validate:"required,oneof=TENANT PROPERTY_OWNER EXTERNAL"`
+}
+
+type GenerateExpenseInvoiceBody struct {
+	Payers []GenerateExpenseInvoicePayerBody `json:"payers" validate:"required,min=1,dive"`
+}
+
 // GenerateExpenseInvoice godoc
 //
-//	@Summary		Generate a draft invoice from billable expenses
-//	@Description	Create a draft invoice from all unbilled, billable expenses on a maintenance request (Admin)
+//	@Summary		Generate invoices from a billable expense
+//	@Description	Create one invoice per payer from a specific expense on a maintenance request (Admin)
 //	@Tags			MaintenanceRequests
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			property_id				path		string				true	"Property ID"
-//	@Param			maintenance_request_id	path		string				true	"Maintenance Request ID"
-//	@Success		201						{object}	object{data=string}	"Invoice ID of the generated draft invoice"
-//	@Failure		400						{object}	lib.HTTPError		"No billable expenses found or error generating invoice"
-//	@Failure		401						{object}	string				"Invalid or absent authentication token"
-//	@Failure		404						{object}	lib.HTTPError		"Maintenance request not found"
-//	@Failure		500						{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses:invoice [post]
+//	@Param			property_id				path		string											true	"Property ID"
+//	@Param			maintenance_request_id	path		string											true	"Maintenance Request ID"
+//	@Param			expense_id				path		string											true	"Expense ID"
+//	@Param			body					body		GenerateExpenseInvoiceBody						true	"Payers for this expense"
+//	@Success		201						{object}	object{data=[]transformations.OutputInvoice}	"Generated invoices"
+//	@Failure		400						{object}	lib.HTTPError									"Validation error or no payers provided"
+//	@Failure		401						{object}	string											"Invalid or absent authentication token"
+//	@Failure		404						{object}	lib.HTTPError									"Maintenance request or expense not found"
+//	@Failure		422						{object}	lib.HTTPError									"Validation error"
+//	@Failure		500						{object}	string											"An unexpected error occurred"
+//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses/{expense_id}/generate:invoice [post]
 func (h *MaintenanceRequestHandler) GenerateExpenseInvoice(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -861,18 +866,45 @@ func (h *MaintenanceRequestHandler) GenerateExpenseInvoice(w http.ResponseWriter
 		return
 	}
 
-	invoice, err := h.service.GenerateExpenseInvoice(
+	var body GenerateExpenseInvoiceBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
+		return
+	}
+
+	var payers []services.GenerateExpenseInvoicePayerInput
+	for _, p := range body.Payers {
+		payers = append(payers, services.GenerateExpenseInvoicePayerInput{
+			Amount:    p.Amount,
+			PayerType: p.PayerType,
+			PayeeType: p.PayeeType,
+		})
+	}
+
+	invoices, err := h.service.GenerateExpenseInvoice(
 		r.Context(),
-		chi.URLParam(r, "maintenance_request_id"),
-		currentUser.ClientID,
+		services.GenerateExpenseInvoiceInput{
+			MaintenanceRequestID: chi.URLParam(r, "maintenance_request_id"),
+			ExpenseID:            chi.URLParam(r, "expense_id"),
+			ClientID:             currentUser.ClientID,
+			Payers:               payers,
+		},
 	)
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return
 	}
 
+	rows := make([]any, len(invoices))
+	for i := range invoices {
+		rows[i] = transformations.DBInvoiceToRest(&invoices[i])
+	}
+
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]any{"data": invoice.ID.String()})
+	json.NewEncoder(w).Encode(map[string]any{"data": rows})
 }
 
 // ─── Tenant Handlers ──────────────────────────────────────────────────────────

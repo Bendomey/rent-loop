@@ -495,7 +495,10 @@ func (s *leaseService) GenerateLeaseRentInvoice(ctx context.Context, leaseID str
 
 	leaseIDStr := lease.ID.String()
 	clientID := lease.Unit.Property.ClientID
+	propertyID := lease.Unit.PropertyID
 	invoice, invoiceErr := s.invoiceService.CreateInvoice(transCtx, CreateInvoiceInput{
+		ClientID:       &clientID,
+		PropertyID:     &propertyID,
 		PayerType:      "TENANT",
 		PayerTenantID:  &lease.TenantId,
 		PayeeType:      "PROPERTY_OWNER",

@@ -4,6 +4,7 @@ title: Add isRead field to tenant announcement API response
 status: To Do
 assignee: []
 created_date: '2026-03-13 11:00'
+updated_date: '2026-03-27 09:43'
 labels:
   - backend
   - flutter
@@ -15,6 +16,7 @@ references:
   - apps/go/lib/src/api/announcement_api.dart
   - apps/go/lib/src/repository/models/announcement_model.dart
 priority: medium
+ordinal: 1000
 ---
 
 ## Description
@@ -77,4 +79,3 @@ No API call changes required — the field is returned automatically by the upda
 - [ ] #5 Swagger docs reflect the new field
 - [ ] #6 Existing backend tests pass; add a test covering `is_read` toggling if test coverage exists for announcements
 <!-- AC:END -->
-<!-- SECTION:DESCRIPTION:END -->

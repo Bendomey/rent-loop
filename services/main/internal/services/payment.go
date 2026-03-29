@@ -447,7 +447,7 @@ func (s *paymentService) VerifyOfflinePayment(
 			})
 		}
 
-		// Post payment receipt journal entry: Debit Cash/Bank, Credit AR
+		// Post payment settlement journal entry
 		transactionDate := now.Format(time.RFC3339)
 		accounts := s.appCtx.Config.ChartOfAccounts
 		reference := fmt.Sprintf("PMT-%s", payment.Invoice.Code)
@@ -455,6 +455,7 @@ func (s *paymentService) VerifyOfflinePayment(
 			reference = *payment.Reference
 		}
 
+		paymentLines := buildPaymentJournalLines(&payment.Invoice, payment.Amount, accounts)
 		_, journalErr := s.accountingService.RecordInvoicePayment(transCtx, accounting.CreateJournalEntryRequest{
 			Status:          string(accounting.JournalEntryStatusPosted),
 			Reference:       reference,
@@ -465,23 +466,10 @@ func (s *paymentService) VerifyOfflinePayment(
 				"invoice_code": payment.Invoice.Code,
 				"amount":       payment.Amount,
 				"currency":     payment.Currency,
+				"client_id":    lib.SafeString(payment.Invoice.ClientID),
+				"property_id":  lib.SafeString(payment.Invoice.PropertyID),
 			},
-			Lines: []accounting.CreateJournalEntryLineRequest{
-				{
-					AccountID: accounts.CashBankAccountID,
-					Debit:     payment.Amount,
-					Credit:    0,
-					Notes:     lib.StringPointer(fmt.Sprintf("Cash receipt for invoice %s", payment.Invoice.Code)),
-				},
-				{
-					AccountID: accounts.AccountsReceivableID,
-					Debit:     0,
-					Credit:    payment.Amount,
-					Notes: lib.StringPointer(
-						fmt.Sprintf("AR reduction on payment for invoice %s", payment.Invoice.Code),
-					),
-				},
-			},
+			Lines: paymentLines,
 		})
 		if journalErr != nil {
 			transaction.Rollback()

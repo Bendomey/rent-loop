@@ -11,8 +11,14 @@ type Invoice struct {
 	BaseModelSoftDelete
 	Code string `gorm:"not null;uniqueIndex;"` // unique invoice code
 
+	// just for easier querying and reporting, we store the property and client info here as well, even though we can get it via the context (e.g. lease -> unit -> property)
+	PropertyID *string
+	Property   *Property
+	ClientID   *string
+	Client     *Client
+
 	// Who is paying the invoice
-	PayerType string `gorm:"not null;"` //  'TENANT_APPLICATION' | 'TENANT' | 'PROPERTY_OWNER'
+	PayerType string `gorm:"not null;"` //  'TENANT_APPLICATION' | 'TENANT' | 'PROPERTY_OWNER' | 'EXTERNAL'
 
 	PayerClientID *string
 	PayerClient   *Client
@@ -24,11 +30,14 @@ type Invoice struct {
 	PayerTenant   *Tenant
 
 	// who is receiving the payment
-	PayeeType     string `gorm:"not null;"` // 'PROPERTY_OWNER' | 'RENTLOOP'
+	PayeeType     string `gorm:"not null;"` // 'PROPERTY_OWNER' | 'RENTLOOP' | 'TENANT' | 'EXTERNAL'
 	PayeeClientID *string
 	PayeeClient   *Client
 
-	ContextType string `gorm:"not null;"` // 'TENANT_APPLICATION' | 'LEASE_RENT' | 'MAINTENANCE' | 'SAAS_FEE' | 'GENERAL_EXPENSE'
+	PayeeTenantID *string
+	PayeeTenant   *Tenant
+
+	ContextType string `gorm:"not null;"` // 'TENANT_APPLICATION' | 'LEASE_RENT' | 'MAINTENANCE' | 'SAAS_FEE' | 'GENERAL_EXPENSE' | 'MAINTENANCE_EXPENSE'
 
 	ContextTenantApplicationID *string
 	ContextTenantApplication   *TenantApplication
@@ -38,6 +47,9 @@ type Invoice struct {
 
 	ContextMaintenanceRequestID *string
 	ContextMaintenanceRequest   *MaintenanceRequest
+
+	ContextExpenseID *string
+	ContextExpense   *Expense
 
 	TotalAmount int64  `gorm:"not null;"` // in smallest currency unit, e.g., pesewas
 	Taxes       int64  `gorm:"not null;default:0"`

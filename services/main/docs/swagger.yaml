@@ -3,22 +3,13 @@ definitions:
     properties:
       amount:
         type: integer
-      billable_to_tenant:
-        type: boolean
       currency:
         type: string
       description:
         type: string
-      paid_by:
-        enum:
-        - BUSINESS
-        - TENANT
-        - OWNER
-        type: string
     required:
     - amount
     - description
-    - paid_by
     type: object
   handlers.AddLineItemRequest:
     properties:
@@ -1063,6 +1054,37 @@ definitions:
         type: string
     required:
     - expires_at
+    type: object
+  handlers.GenerateExpenseInvoiceBody:
+    properties:
+      payers:
+        items:
+          $ref: '#/definitions/handlers.GenerateExpenseInvoicePayerBody'
+        minItems: 1
+        type: array
+    required:
+    - payers
+    type: object
+  handlers.GenerateExpenseInvoicePayerBody:
+    properties:
+      amount:
+        type: integer
+      payee_type:
+        enum:
+        - TENANT
+        - PROPERTY_OWNER
+        - EXTERNAL
+        type: string
+      payer_type:
+        enum:
+        - TENANT
+        - PROPERTY_OWNER
+        - EXTERNAL
+        type: string
+    required:
+    - amount
+    - payee_type
+    - payer_type
     type: object
   handlers.GenerateInvoiceRequest:
     properties:
@@ -3010,8 +3032,6 @@ definitions:
     properties:
       amount:
         type: number
-      billable_to_tenant:
-        type: boolean
       context_maintenance_request_id:
         type: string
       context_type:
@@ -3026,12 +3046,6 @@ definitions:
         type: string
       id:
         type: string
-      invoice:
-        $ref: '#/definitions/transformations.OutputInvoice'
-      invoice_id:
-        type: string
-      paid_by:
-        type: string
       updated_at:
         type: string
     type: object
@@ -3044,8 +3058,18 @@ definitions:
         items:
           type: string
         type: array
+      client:
+        $ref: '#/definitions/transformations.OutputClient'
+      client_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
       code:
         example: INV-2024-0001
+        type: string
+      context_expense:
+        $ref: '#/definitions/transformations.OutputExpense'
+      context_expense_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
       context_lease:
         additionalProperties: {}
@@ -3091,6 +3115,11 @@ definitions:
       payee_client_id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
+      payee_tenant:
+        $ref: '#/definitions/transformations.OutputTenant'
+      payee_tenant_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
       payee_type:
         example: PROPERTY_OWNER
         type: string
@@ -3116,6 +3145,11 @@ definitions:
         items:
           $ref: '#/definitions/transformations.OutputPayment'
         type: array
+      property:
+        $ref: '#/definitions/transformations.OutputProperty'
+      property_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
       status:
         example: DRAFT
         type: string
@@ -9366,9 +9400,6 @@ paths:
         required: true
         type: string
       - in: query
-        name: billable_to_tenant
-        type: boolean
-      - in: query
         name: end_date
         type: string
       - collectionFormat: multi
@@ -9396,9 +9427,6 @@ paths:
         minimum: 0
         name: page_size
         type: integer
-      - in: query
-        name: paid_by
-        type: string
       - collectionFormat: csv
         in: query
         items:
@@ -9552,12 +9580,12 @@ paths:
       summary: Delete an expense from a maintenance request
       tags:
       - MaintenanceRequests
-  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses:invoice:
+  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses/{expense_id}/generate:invoice:
     post:
       consumes:
       - application/json
-      description: Create a draft invoice from all unbilled, billable expenses on
-        a maintenance request (Admin)
+      description: Create one invoice per payer from a specific expense on a maintenance
+        request (Admin)
       parameters:
       - description: Property ID
         in: path
@@ -9569,18 +9597,31 @@ paths:
         name: maintenance_request_id
         required: true
         type: string
+      - description: Expense ID
+        in: path
+        name: expense_id
+        required: true
+        type: string
+      - description: Payers for this expense
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.GenerateExpenseInvoiceBody'
       produces:
       - application/json
       responses:
         "201":
-          description: Invoice ID of the generated draft invoice
+          description: Generated invoices
           schema:
             properties:
               data:
-                type: string
+                items:
+                  $ref: '#/definitions/transformations.OutputInvoice'
+                type: array
             type: object
         "400":
-          description: No billable expenses found or error generating invoice
+          description: Validation error or no payers provided
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "401":
@@ -9588,7 +9629,11 @@ paths:
           schema:
             type: string
         "404":
-          description: Maintenance request not found
+          description: Maintenance request or expense not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "500":
@@ -9597,7 +9642,7 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: Generate a draft invoice from billable expenses
+      summary: Generate invoices from a billable expense
       tags:
       - MaintenanceRequests
   /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/status:

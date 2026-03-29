@@ -1020,10 +1020,14 @@ func (s *tenantApplicationService) GenerateInvoice(
 	}
 
 	// Create the invoice
+	taClientID := tenantApplication.DesiredUnit.Property.ClientID
+	taPropertyID := tenantApplication.DesiredUnit.PropertyID
 	invoice, createErr := s.invoiceService.CreateInvoice(ctx, CreateInvoiceInput{
+		ClientID:                   &taClientID,
+		PropertyID:                 &taPropertyID,
 		PayerType:                  "TENANT_APPLICATION",
 		PayeeType:                  "PROPERTY_OWNER",
-		PayeeClientID:              &tenantApplication.DesiredUnit.Property.ClientID,
+		PayeeClientID:              &taClientID,
 		ContextType:                "TENANT_APPLICATION",
 		ContextTenantApplicationID: &tenantApplicationID,
 		TotalAmount:                totalAmount,

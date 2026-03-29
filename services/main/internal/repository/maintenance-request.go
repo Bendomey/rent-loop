@@ -43,7 +43,6 @@ type MaintenanceRequestRepository interface {
 	) (int64, error)
 	DeleteExpense(ctx context.Context, expenseID string) error
 	UpdateExpense(ctx context.Context, expense *models.Expense) error
-	GetUnbilledExpenses(ctx context.Context, maintenanceRequestID string) (*[]models.Expense, error)
 	CreateComment(ctx context.Context, comment *models.MaintenanceRequestComment) error
 	GetComment(ctx context.Context, id string) (*models.MaintenanceRequestComment, error)
 	ListComments(
@@ -95,8 +94,6 @@ type ListMaintenanceRequestActivityLogsFilter struct {
 
 type ListMaintenanceExpensesFilter struct {
 	MaintenanceRequestID string
-	PaidBy               *string
-	BillableToTenant     *bool
 }
 
 type ListMaintenanceRequestCommentsFilter struct {
@@ -274,11 +271,10 @@ func (r *maintenanceRequestRepository) ListExpenses(
 			DateRangeScope("expenses", filterQuery.DateRange),
 			SearchScope("expenses", filterQuery.Search),
 			expenseRequestScope(filters.MaintenanceRequestID),
-			expensePaidByScope(filters.PaidBy),
-			expenseBillableScope(filters.BillableToTenant),
 			PaginationScope(filterQuery.Page, filterQuery.PageSize),
 			OrderScope("expenses", filterQuery.OrderBy, filterQuery.Order),
 		).
+		Preload("Invoices").
 		Find(&expenses)
 	if result.Error != nil {
 		return nil, result.Error
@@ -298,8 +294,6 @@ func (r *maintenanceRequestRepository) CountExpenses(
 			DateRangeScope("expenses", filterQuery.DateRange),
 			SearchScope("expenses", filterQuery.Search),
 			expenseRequestScope(filters.MaintenanceRequestID),
-			expensePaidByScope(filters.PaidBy),
-			expenseBillableScope(filters.BillableToTenant),
 		).
 		Count(&count)
 	if result.Error != nil {
@@ -314,24 +308,6 @@ func (r *maintenanceRequestRepository) DeleteExpense(ctx context.Context, expens
 
 func (r *maintenanceRequestRepository) UpdateExpense(ctx context.Context, expense *models.Expense) error {
 	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Save(expense).Error
-}
-
-func (r *maintenanceRequestRepository) GetUnbilledExpenses(
-	ctx context.Context,
-	maintenanceRequestID string,
-) (*[]models.Expense, error) {
-	var expenses []models.Expense
-	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
-		Where(
-			"context_type = ? AND context_maintenance_request_id = ? AND billable_to_tenant = true AND invoice_id IS NULL",
-			"MAINTENANCE",
-			maintenanceRequestID,
-		).
-		Find(&expenses)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return &expenses, nil
 }
 
 func (r *maintenanceRequestRepository) CreateComment(

@@ -8,8 +8,13 @@ import (
 )
 
 type OutputInvoice struct {
-	ID        string `json:"id"         example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	Code      string `json:"code"       example:"INV-2024-0001"`
+	ID         string          `json:"id"                    example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	Code       string          `json:"code"                  example:"INV-2024-0001"`
+	ClientID   *string         `json:"client_id,omitempty"   example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	Client     *OutputClient   `json:"client,omitempty"`
+	PropertyID *string         `json:"property_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	Property   *OutputProperty `json:"property,omitempty"`
+
 	PayerType string `json:"payer_type" example:"TENANT"`
 
 	PayerClientID *string       `json:"payer_client_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
@@ -25,6 +30,9 @@ type OutputInvoice struct {
 	PayeeClientID *string       `json:"payee_client_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 	PayeeClient   *OutputClient `json:"payee_client,omitempty"`
 
+	PayeeTenantID *string       `json:"payee_tenant_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	PayeeTenant   *OutputTenant `json:"payee_tenant,omitempty"`
+
 	ContextType string `json:"context_type" example:"LEASE_RENT"`
 
 	ContextTenantApplicationID *string                       `json:"context_tenant_application_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
@@ -34,6 +42,9 @@ type OutputInvoice struct {
 	ContextLease   map[any]any `json:"context_lease,omitempty"`
 
 	ContextMaintenanceRequestID *string `json:"context_maintenance_request_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+
+	ContextExpenseID *string        `json:"context_expense_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	ContextExpense   *OutputExpense `json:"context_expense,omitempty"`
 
 	TotalAmount int64  `json:"total_amount" example:"100000"`
 	Taxes       int64  `json:"taxes"        example:"0"`
@@ -63,6 +74,10 @@ func DBInvoiceToRest(i *models.Invoice) any {
 	data := map[string]any{
 		"id":                             i.ID,
 		"code":                           i.Code,
+		"client_id":                      i.ClientID,
+		"client":                         DBClientToRestClient(i.Client),
+		"property_id":                    i.PropertyID,
+		"property":                       DBPropertyToRest(i.Property),
 		"payer_type":                     i.PayerType,
 		"payer_client_id":                i.PayerClientID,
 		"payer_client":                   DBClientToRestClient(i.PayerClient),
@@ -73,12 +88,16 @@ func DBInvoiceToRest(i *models.Invoice) any {
 		"payee_type":                     i.PayeeType,
 		"payee_client_id":                i.PayeeClientID,
 		"payee_client":                   DBClientToRestClient(i.PayeeClient),
+		"payee_tenant_id":                i.PayeeTenantID,
+		"payee_tenant":                   DBTenantToRest(i.PayeeTenant),
 		"context_type":                   i.ContextType,
 		"context_tenant_application_id":  i.ContextTenantApplicationID,
 		"context_tenant_application":     DBAdminTenantApplicationToRest(i.ContextTenantApplication),
 		"context_lease_id":               i.ContextLeaseID,
 		"context_lease":                  DBAdminLeaseToRest(i.ContextLease),
 		"context_maintenance_request_id": i.ContextMaintenanceRequestID,
+		"context_expense_id":             i.ContextExpenseID,
+		"context_expense":                DBExpenseToRest(i.ContextExpense),
 		"total_amount":                   i.TotalAmount,
 		"taxes":                          i.Taxes,
 		"sub_total":                      i.SubTotal,
