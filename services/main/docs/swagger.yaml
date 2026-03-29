@@ -1858,6 +1858,11 @@ definitions:
     required:
     - otp_code
     type: object
+  handlers.VoidInvoiceBody:
+    properties:
+      voided_reason:
+        type: string
+    type: object
   handlers.analyticsTokenResponse:
     properties:
       token:
@@ -3167,6 +3172,14 @@ definitions:
         type: string
       voided_at:
         example: "2024-06-25T00:00:00Z"
+        type: string
+      voided_by_client_user:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      voided_by_client_user_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      voided_reason:
+        example: Associated expense was deleted
         type: string
     type: object
   transformations.OutputInvoiceLineItem:
@@ -7638,6 +7651,11 @@ paths:
         name: invoice_id
         required: true
         type: string
+      - description: Optional void reason
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.VoidInvoiceBody'
       produces:
       - application/json
       responses:

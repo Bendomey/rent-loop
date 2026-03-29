@@ -82,6 +82,10 @@ func (h *InvoiceHandler) UpdateInvoice(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+type VoidInvoiceBody struct {
+	VoidedReason *string `json:"voided_reason" validate:"omitempty"`
+}
+
 // VoidInvoice godoc
 //
 //	@Summary		Void invoice (Admin)
@@ -92,6 +96,7 @@ func (h *InvoiceHandler) UpdateInvoice(w http.ResponseWriter, r *http.Request) {
 //	@Produce		json
 //	@Param			property_id	path		string										true	"Property ID"
 //	@Param			invoice_id	path		string										true	"Invoice ID"
+//	@Param			body		body		VoidInvoiceBody								false	"Optional void reason"
 //	@Success		200			{object}	object{data=transformations.OutputInvoice}	"Invoice Voided Successfully"
 //	@Failure		400			{object}	lib.HTTPError								"Error occurred when voiding invoice"
 //	@Failure		401			{object}	string										"Invalid or absent authentication token"
@@ -100,10 +105,27 @@ func (h *InvoiceHandler) UpdateInvoice(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500			{object}	string										"An unexpected error occurred"
 //	@Router			/api/v1/admin/properties/{property_id}/invoices/{invoice_id}/void [patch]
 func (h *InvoiceHandler) VoidInvoice(w http.ResponseWriter, r *http.Request) {
+	currentUser, ok := lib.ClientUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	invoiceID := chi.URLParam(r, "invoice_id")
 
+	var body VoidInvoiceBody
+	if r.Body != nil && r.ContentLength != 0 {
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+			return
+		}
+	}
+
+	currentUserID := currentUser.ID
 	input := services.VoidInvoiceInput{
-		InvoiceID: invoiceID,
+		InvoiceID:            invoiceID,
+		VoidedReason:         body.VoidedReason,
+		VoidedByClientUserID: &currentUserID,
 	}
 
 	invoice, err := h.service.VoidInvoice(r.Context(), input)

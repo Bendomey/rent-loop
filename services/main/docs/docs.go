@@ -5838,6 +5838,14 @@ const docTemplate = `{
                         "name": "invoice_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Optional void reason",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.VoidInvoiceBody"
+                        }
                     }
                 ],
                 "responses": {
@@ -16960,6 +16968,14 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.VoidInvoiceBody": {
+            "type": "object",
+            "properties": {
+                "voided_reason": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.analyticsTokenResponse": {
             "type": "object",
             "properties": {
@@ -18765,6 +18781,17 @@ const docTemplate = `{
                 "voided_at": {
                     "type": "string",
                     "example": "2024-06-25T00:00:00Z"
+                },
+                "voided_by_client_user": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "voided_by_client_user_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "voided_reason": {
+                    "type": "string",
+                    "example": "Associated expense was deleted"
                 }
             }
         },

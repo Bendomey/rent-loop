@@ -52,10 +52,13 @@ type OutputInvoice struct {
 	Currency    string `json:"currency"     example:"GHS"`
 	Status      string `json:"status"       example:"DRAFT"`
 
-	DueDate  *time.Time `json:"due_date,omitempty"  example:"2024-07-01T00:00:00Z"`
-	IssuedAt *time.Time `json:"issued_at,omitempty" example:"2024-06-15T00:00:00Z"`
-	PaidAt   *time.Time `json:"paid_at,omitempty"   example:"2024-06-20T00:00:00Z"`
-	VoidedAt *time.Time `json:"voided_at,omitempty" example:"2024-06-25T00:00:00Z"`
+	DueDate              *time.Time        `json:"due_date,omitempty"                 example:"2024-07-01T00:00:00Z"`
+	IssuedAt             *time.Time        `json:"issued_at,omitempty"                example:"2024-06-15T00:00:00Z"`
+	PaidAt               *time.Time        `json:"paid_at,omitempty"                  example:"2024-06-20T00:00:00Z"`
+	VoidedAt             *time.Time        `json:"voided_at,omitempty"                example:"2024-06-25T00:00:00Z"`
+	VoidedReason         *string           `json:"voided_reason,omitempty"            example:"Associated expense was deleted"`
+	VoidedByClientUserID *string           `json:"voided_by_client_user_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	VoidedByClientUser   *OutputClientUser `json:"voided_by_client_user,omitempty"`
 
 	AllowedPaymentRails []string `json:"allowed_payment_rails" example:"MOMO,BANK"`
 
@@ -107,6 +110,9 @@ func DBInvoiceToRest(i *models.Invoice) any {
 		"issued_at":                      i.IssuedAt,
 		"paid_at":                        i.PaidAt,
 		"voided_at":                      i.VoidedAt,
+		"voided_reason":                  i.VoidedReason,
+		"voided_by_client_user_id":       i.VoidedByClientUserID,
+		"voided_by_client_user":          DBClientUserToRest(i.VoidedByClientUser),
 		"allowed_payment_rails":          []string(i.AllowedPaymentRails),
 		"line_items":                     DBInvoiceLineItemsToRest(i.LineItems),
 		"payments":                       DBPaymentsToRest(&i.Payments),

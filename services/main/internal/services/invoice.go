@@ -393,7 +393,9 @@ func (s *invoiceService) GetByQuery(ctx context.Context, query repository.GetInv
 }
 
 type VoidInvoiceInput struct {
-	InvoiceID string
+	InvoiceID            string
+	VoidedReason         *string
+	VoidedByClientUserID *string
 }
 
 func (s *invoiceService) VoidInvoice(ctx context.Context, input VoidInvoiceInput) (*models.Invoice, error) {
@@ -441,6 +443,8 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, input VoidInvoiceInput
 	invoice.Status = "VOID"
 	now := time.Now()
 	invoice.VoidedAt = &now
+	invoice.VoidedReason = input.VoidedReason
+	invoice.VoidedByClientUserID = input.VoidedByClientUserID
 
 	if invoice.Status == "DRAFT" {
 
