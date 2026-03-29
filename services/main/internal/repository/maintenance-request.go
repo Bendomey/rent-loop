@@ -274,6 +274,7 @@ func (r *maintenanceRequestRepository) ListExpenses(
 			PaginationScope(filterQuery.Page, filterQuery.PageSize),
 			OrderScope("expenses", filterQuery.OrderBy, filterQuery.Order),
 		).
+		Preload("Invoices").
 		Find(&expenses)
 	if result.Error != nil {
 		return nil, result.Error

@@ -879,6 +879,7 @@ func (h *MaintenanceRequestHandler) GenerateExpenseInvoice(w http.ResponseWriter
 	for _, p := range body.Payers {
 		payers = append(payers, services.GenerateExpenseInvoicePayerInput{
 			Amount:    p.Amount,
+			PayerType: p.PayerType,
 			PayeeType: p.PayeeType,
 		})
 	}

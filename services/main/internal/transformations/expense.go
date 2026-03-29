@@ -23,6 +23,13 @@ func DBExpenseToRest(e *models.Expense) any {
 	if e == nil {
 		return nil
 	}
+
+	invoices := make([]any, len(e.Invoices))
+
+	for i := range e.Invoices {
+		invoices[i] = DBInvoiceToRest(&e.Invoices[i])
+	}
+
 	return map[string]any{
 		"id":                             e.ID.String(),
 		"context_type":                   e.ContextType,
@@ -30,6 +37,7 @@ func DBExpenseToRest(e *models.Expense) any {
 		"description":                    e.Description,
 		"amount":                         e.Amount,
 		"currency":                       e.Currency,
+		"invoices":                       invoices,
 		"created_by_client_user_id":      e.CreatedByClientUserID,
 		"created_at":                     e.CreatedAt,
 		"updated_at":                     e.UpdatedAt,
