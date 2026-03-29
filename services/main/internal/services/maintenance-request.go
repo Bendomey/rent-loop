@@ -1011,8 +1011,10 @@ func (s *maintenanceRequestService) GenerateExpenseInvoice(
 			ContextType:      "MAINTENANCE_EXPENSE",
 			ContextExpenseID: &input.ExpenseID,
 			TotalAmount:      payer.Amount,
+			SubTotal:         payer.Amount,
 			Currency:         expense.Currency,
 			LineItems:        []LineItemInput{lineItem},
+			Status:           "ISSUED",
 		}
 
 		if payer.PayeeType == "TENANT" || payer.PayerType == "TENANT" {
