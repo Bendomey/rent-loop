@@ -999,8 +999,8 @@ func (s *maintenanceRequestService) GenerateExpenseInvoice(
 
 	for _, payer := range input.Payers {
 
-		if payer.PayeeType != "TENANT" && payer.PayeeType != "PROPERTY_OWNER" {
-			return nil, pkg.BadRequestError("invalid payee type: "+payer.PayeeType, nil)
+		if payer.PayerType != "TENANT" && payer.PayerType != "PROPERTY_OWNER" {
+			return nil, pkg.BadRequestError("invalid payer type: "+payer.PayerType, nil)
 		}
 
 		createInvoiceInput := CreateInvoiceInput{
