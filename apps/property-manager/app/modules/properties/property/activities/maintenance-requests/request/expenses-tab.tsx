@@ -312,9 +312,7 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 	const [activeInvoiceExpenseId, setActiveInvoiceExpenseId] = useState<
 		string | null
 	>(null)
-	const [pendingDelete, setPendingDelete] = useState<Expense | null>(
-		null,
-	)
+	const [pendingDelete, setPendingDelete] = useState<Expense | null>(null)
 
 	const {
 		data: expensesData,
@@ -384,13 +382,13 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 						return
 					}
 
-					const apiPayers: GenerateExpenseInvoicePayer[] =
-						values.payers.map((p) => ({
-
+					const apiPayers: GenerateExpenseInvoicePayer[] = values.payers.map(
+						(p) => ({
 							payer_type: p.payer_type,
 							payee_type: p.payee_type,
 							amount: Math.round(parseFloat(p.amount) * 100),
-						}))
+						}),
+					)
 
 					generateInvoice.mutate(
 						{

@@ -20,7 +20,6 @@ export function PropertyFinancialsPaymentLineItemsModule({
 	error,
 	refetch,
 }: Props) {
-
 	const columns: ColumnDef<InvoiceLineItem>[] = useMemo(() => {
 		return [
 			{

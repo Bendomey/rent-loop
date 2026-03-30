@@ -17,7 +17,7 @@ export const PropertyExpensesController = ({
 				id: 1,
 				type: 'selector',
 				selectType: 'single',
-				label: 'Context',
+				label: 'Type',
 				value: {
 					options: [
 						{ label: 'Lease', value: 'LEASE' },

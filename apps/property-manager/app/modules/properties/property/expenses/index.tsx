@@ -67,7 +67,7 @@ export function PropertyExpensesModule() {
 			},
 			{
 				accessorKey: 'context_type',
-				header: 'Context',
+				header: 'Type',
 				cell: ({ row }) => {
 					const isLease =
 						row.original.context_type === 'LEASE' &&
@@ -181,7 +181,8 @@ export function PropertyExpensesModule() {
 						}}
 						empty={{
 							message: 'No expenses found',
-							description: 'Expenses will appear here once created from leases or maintenance requests.',
+							description:
+								'Expenses will appear here once created from leases or maintenance requests.',
 						}}
 					/>
 				</div>

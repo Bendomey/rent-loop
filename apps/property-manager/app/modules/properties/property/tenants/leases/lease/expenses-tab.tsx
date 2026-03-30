@@ -299,7 +299,10 @@ interface LeaseExpensesTabProps {
 	propertyId: string
 }
 
-export function LeaseExpensesTab({ leaseId, propertyId }: LeaseExpensesTabProps) {
+export function LeaseExpensesTab({
+	leaseId,
+	propertyId,
+}: LeaseExpensesTabProps) {
 	const queryClient = useQueryClient()
 	const [showForm, setShowForm] = useState(false)
 	const [activeInvoiceExpenseId, setActiveInvoiceExpenseId] = useState<
@@ -373,12 +376,13 @@ export function LeaseExpensesTab({ leaseId, propertyId }: LeaseExpensesTabProps)
 						return
 					}
 
-					const apiPayers: GenerateExpenseInvoicePayer[] =
-						values.payers.map((p) => ({
+					const apiPayers: GenerateExpenseInvoicePayer[] = values.payers.map(
+						(p) => ({
 							payer_type: p.payer_type,
 							payee_type: p.payee_type,
 							amount: Math.round(parseFloat(p.amount) * 100),
-						}))
+						}),
+					)
 
 					generateInvoice.mutate(
 						{

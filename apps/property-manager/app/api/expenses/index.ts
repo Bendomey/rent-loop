@@ -126,10 +126,7 @@ export interface CreateExpenseInput {
 	currency?: string
 }
 
-const createExpense = async ({
-	property_id,
-	...data
-}: CreateExpenseInput) => {
+const createExpense = async ({ property_id, ...data }: CreateExpenseInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<Expense>>(
 			`/v1/admin/properties/${property_id}/expenses`,
@@ -145,8 +142,7 @@ const createExpense = async ({
 	}
 }
 
-export const useCreateExpense = () =>
-	useMutation({ mutationFn: createExpense })
+export const useCreateExpense = () => useMutation({ mutationFn: createExpense })
 
 /**
  * DELETE an expense (property-scoped)
@@ -156,7 +152,10 @@ export interface DeleteExpenseInput {
 	expense_id: string
 }
 
-const deleteExpense = async ({ property_id, expense_id }: DeleteExpenseInput) => {
+const deleteExpense = async ({
+	property_id,
+	expense_id,
+}: DeleteExpenseInput) => {
 	try {
 		await fetchClient(
 			`/v1/admin/properties/${property_id}/expenses/${expense_id}`,
@@ -171,8 +170,7 @@ const deleteExpense = async ({ property_id, expense_id }: DeleteExpenseInput) =>
 	}
 }
 
-export const useDeleteExpense = () =>
-	useMutation({ mutationFn: deleteExpense })
+export const useDeleteExpense = () => useMutation({ mutationFn: deleteExpense })
 
 /**
  * Generate invoices from an expense (property-scoped)
