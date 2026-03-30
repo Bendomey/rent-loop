@@ -352,8 +352,6 @@ export interface CreateMaintenanceExpenseInput {
 	description: string
 	amount: number
 	currency?: string
-	paid_by: MaintenanceExpense['paid_by']
-	billable_to_tenant: boolean
 }
 
 const createMaintenanceExpense = async ({
@@ -417,19 +415,31 @@ export const useDeleteMaintenanceExpense = () =>
 	useMutation({ mutationFn: deleteMaintenanceExpense })
 
 /**
- * Generate a draft invoice from billable expenses
+ * Generate invoices from a specific expense
  */
+export interface GenerateMaintenanceInvoicePayer {
+	payer_type: 'TENANT' | 'PROPERTY_OWNER'
+	payee_type: 'TENANT' | 'PROPERTY_OWNER' | 'EXTERNAL'
+	amount: number
+}
+
+export interface GenerateMaintenanceInvoiceInput {
+	property_id: string
+	id: string
+	expense_id: string
+	payers: GenerateMaintenanceInvoicePayer[]
+}
+
 const generateMaintenanceInvoice = async ({
 	property_id,
 	id,
-}: {
-	property_id: string
-	id: string
-}) => {
+	expense_id,
+	payers,
+}: GenerateMaintenanceInvoiceInput) => {
 	try {
-		const response = await fetchClient<ApiResponse<string>>(
-			`/v1/admin/properties/${property_id}/maintenance-requests/${id}/expenses:invoice`,
-			{ method: 'POST' },
+		const response = await fetchClient<ApiResponse<Invoice[]>>(
+			`/v1/admin/properties/${property_id}/maintenance-requests/${id}/expenses/${expense_id}/generate:invoice`,
+			{ method: 'POST', body: JSON.stringify({ payers }) },
 		)
 		return response.parsedBody.data
 	} catch (error: unknown) {

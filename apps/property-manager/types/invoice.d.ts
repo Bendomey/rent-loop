@@ -31,6 +31,7 @@ interface Invoice {
 		| 'TENANT_APPLICATION'
 		| 'LEASE_RENT'
 		| 'MAINTENANCE'
+		| 'MAINTENANCE_EXPENSE'
 		| 'SAAS_FEE'
 		| 'GENERAL_EXPENSE'
 	context_tenant_application_id: Nullable<string>
@@ -47,6 +48,9 @@ interface Invoice {
 	issued_at: Nullable<Date>
 	paid_at: Nullable<Date>
 	voided_at: Nullable<Date>
+	voided_reason: Nullable<string>
+	voided_by_client_user_id: Nullable<string>
+	voided_by_client_user: Nullable<ClientUser>
 	allowed_payment_rails: Array<PAYMENT_RAIL>
 	line_items: Array<InvoiceLineItem>
 	payments: Array<Payment>

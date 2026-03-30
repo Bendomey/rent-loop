@@ -45,14 +45,16 @@ export const useGetInvoices = (
 const voidInvoice = async ({
 	property_id,
 	id,
+	voided_reason,
 }: {
 	property_id: string
 	id: string
+	voided_reason?: string
 }) => {
 	try {
 		const response = await fetchClient<ApiResponse<Invoice>>(
 			`/v1/admin/properties/${property_id}/invoices/${id}/void`,
-			{ method: 'PATCH' },
+			{ method: 'PATCH', body: JSON.stringify({ voided_reason }) },
 		)
 		return response.parsedBody.data
 	} catch (error: unknown) {

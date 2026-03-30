@@ -9,7 +9,7 @@ export function getInvoiceStatusLabel(invoiceStatus: Invoice['status']) {
 		case 'PAID':
 			return 'Paid'
 		case 'VOID':
-			return 'Empty'
+			return 'Cancelled'
 		default:
 			return 'Unknown'
 	}
@@ -45,6 +45,7 @@ export function getInvoiceContextTypeLabel(
 		TENANT_APPLICATION: 'Application',
 		LEASE_RENT: 'Rent',
 		MAINTENANCE: 'Maintenance',
+		MAINTENANCE_EXPENSE: 'Maintenance Expense',
 		SAAS_FEE: 'Platform',
 		GENERAL_EXPENSE: 'Expense',
 	}

@@ -56,14 +56,13 @@ interface MaintenanceRequestActivityLog {
 
 interface MaintenanceExpense {
 	id: string
+	code: string
 	context_type: string
 	context_maintenance_request_id: string
 	description: string
 	amount: number
 	currency: string
-	paid_by: 'BUSINESS' | 'TENANT' | 'OWNER'
-	billable_to_tenant: boolean
-	invoice_id: Nullable<string>
+	invoices: Invoice[]
 	created_by_client_user_id: string
 	created_at: string
 	updated_at: string
@@ -96,8 +95,7 @@ interface FetchMaintenanceRequestActivityLogFilter {
 }
 
 interface FetchMaintenanceExpenseFilter {
-	paid_by?: MaintenanceExpense['paid_by']
-	billable_to_tenant?: boolean
+	// intentionally empty — filters to be added as needed
 }
 
 interface FetchMaintenanceRequestCommentFilter {
