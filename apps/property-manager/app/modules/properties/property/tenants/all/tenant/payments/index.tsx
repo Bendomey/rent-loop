@@ -3,7 +3,6 @@ import {
 	CircleCheck,
 	CircleDollarSign,
 	CircleX,
-	EllipsisVertical,
 	Pencil,
 	Receipt,
 	Send,
@@ -15,23 +14,15 @@ import { TenantPaymentController } from './controller'
 import { useGetInvoices } from '~/api/invoices'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
-import { Button } from '~/components/ui/button'
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
-import { safeString } from '~/lib/strings'
 import {
 	getInvoiceContextTypeLabel,
 	getInvoiceStatusLabel,
 } from '~/lib/invoice'
+import { safeString } from '~/lib/strings'
 import { useProperty } from '~/providers/property-provider'
 
 export function TenantPaymentsModule() {
@@ -152,34 +143,6 @@ export function TenantPaymentsModule() {
 						</span>
 					</div>
 				),
-			},
-			{
-				id: 'actions',
-				cell: ({ row }) => {
-					return (
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="ghost"
-									className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-									size="icon"
-								>
-									<EllipsisVertical />
-									<span className="sr-only">Open menu</span>
-								</Button>
-							</DropdownMenuTrigger>
-
-							<DropdownMenuContent align="end" className="32">
-								<Link
-									to={`/properties/${clientUserProperty?.property?.id}/financials/payments/${row.original.id}`}
-								>
-									<DropdownMenuItem>View</DropdownMenuItem>
-								</Link>
-								<DropdownMenuSeparator />
-							</DropdownMenuContent>
-						</DropdownMenu>
-					)
-				},
 			},
 		]
 	}, [clientUserProperty])

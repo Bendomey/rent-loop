@@ -28,6 +28,7 @@ type Repository struct {
 	AnnouncementRepository                 AnnouncementRepository
 	MaintenanceRequestRepository           MaintenanceRequestRepository
 	WaitlistRepository                     WaitlistRepository
+	ExpenseRepository                      ExpenseRepository
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -56,6 +57,7 @@ func NewRepository(db *gorm.DB) Repository {
 	announcementRepository := NewAnnouncementRepository(db)
 	maintenanceRequestRepository := NewMaintenanceRequestRepository(db)
 	waitlistRepository := NewWaitlistRepository(db)
+	expenseRepository := NewExpenseRepository(db)
 
 	return Repository{
 		AdminRepository:                        adminRepository,
@@ -83,5 +85,6 @@ func NewRepository(db *gorm.DB) Repository {
 		AnnouncementRepository:                 announcementRepository,
 		MaintenanceRequestRepository:           maintenanceRequestRepository,
 		WaitlistRepository:                     waitlistRepository,
+		ExpenseRepository:                      expenseRepository,
 	}
 }

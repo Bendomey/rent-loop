@@ -148,6 +148,20 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 						})
 					})
 
+					// property-scoped expenses
+					r.Route("/expenses", func(r chi.Router) {
+						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+							Post("/", handlers.ExpenseHandler.AddExpense)
+						r.Get("/", handlers.ExpenseHandler.ListPropertyExpenses)
+						r.Route("/{expense_id}", func(r chi.Router) {
+							r.Get("/", handlers.ExpenseHandler.GetExpense)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Delete("/", handlers.ExpenseHandler.DeleteExpense)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/generate:invoice", handlers.ExpenseHandler.GenerateExpenseInvoice)
+						})
+					})
+
 					// property-scoped announcements
 					r.Route("/announcements", func(r chi.Router) {
 						r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
@@ -245,6 +259,9 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 								})
 							})
 						})
+						r.Route("/expenses", func(r chi.Router) {
+							r.Get("/", handlers.ExpenseHandler.ListLeaseExpenses)
+						})
 					})
 
 					r.Route("/tenants/{tenant_id}", func(r chi.Router) {
@@ -273,17 +290,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 								})
 							})
 							r.Route("/expenses", func(r chi.Router) {
-								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-									Post("/", handlers.MaintenanceRequestHandler.AddExpense)
-								r.Get("/", handlers.MaintenanceRequestHandler.ListExpenses)
-
-								r.Route("/{expense_id}", func(r chi.Router) {
-									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-										Delete("/", handlers.MaintenanceRequestHandler.DeleteExpense)
-
-									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-										Post("/generate:invoice", handlers.MaintenanceRequestHandler.GenerateExpenseInvoice)
-								})
+								r.Get("/", handlers.ExpenseHandler.ListMRExpenses)
 							})
 						})
 					})

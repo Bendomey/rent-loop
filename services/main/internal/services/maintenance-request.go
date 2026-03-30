@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
 
@@ -12,7 +11,6 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/getsentry/raven-go"
-	gonanoid "github.com/matoous/go-nanoid"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -52,18 +50,6 @@ type MaintenanceRequestService interface {
 		filterQuery lib.FilterQuery,
 		filters repository.ListMaintenanceRequestActivityLogsFilter,
 	) (int64, error)
-	AddExpense(ctx context.Context, input AddMaintenanceExpenseInput) (*models.Expense, error)
-	ListExpenses(
-		ctx context.Context,
-		filterQuery lib.FilterQuery,
-		filters repository.ListMaintenanceExpensesFilter,
-	) ([]models.Expense, error)
-	CountExpenses(
-		ctx context.Context,
-		filterQuery lib.FilterQuery,
-		filters repository.ListMaintenanceExpensesFilter,
-	) (int64, error)
-	DeleteExpense(ctx context.Context, expenseID string) error
 	CreateComment(ctx context.Context, input CreateMaintenanceCommentInput) (*models.MaintenanceRequestComment, error)
 	ListComments(
 		ctx context.Context,
@@ -77,10 +63,6 @@ type MaintenanceRequestService interface {
 	) (int64, error)
 	UpdateComment(ctx context.Context, input UpdateMaintenanceCommentInput) (*models.MaintenanceRequestComment, error)
 	DeleteComment(ctx context.Context, id string) error
-	GenerateExpenseInvoice(
-		ctx context.Context,
-		input GenerateExpenseInvoiceInput,
-	) ([]models.Invoice, error)
 	GetMaintenanceRequestStats(
 		ctx context.Context,
 		filters repository.ListMaintenanceRequestsFilter,
@@ -178,14 +160,6 @@ type CreateMaintenanceCommentInput struct {
 type UpdateMaintenanceCommentInput struct {
 	ID      string
 	Content string
-}
-
-type AddMaintenanceExpenseInput struct {
-	RequestID    string
-	Description  string
-	Amount       int64
-	Currency     string
-	ClientUserID string
 }
 
 // --- Create ---
@@ -705,115 +679,6 @@ func (s *maintenanceRequestService) CountActivityLogs(
 	return count, nil
 }
 
-// --- Expenses ---
-
-func (s *maintenanceRequestService) AddExpense(
-	ctx context.Context,
-	input AddMaintenanceExpenseInput,
-) (*models.Expense, error) {
-	// Ensure the request exists
-	if _, err := s.repo.GetOneWithPopulate(ctx, repository.GetMaintenanceRequestQuery{ID: input.RequestID}); err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, pkg.NotFoundError("maintenance request not found", nil)
-		}
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "AddExpense",
-				"action":   "fetching maintenance request",
-			},
-		})
-	}
-
-	nanoID, err := gonanoid.Generate("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890", 6)
-	if err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "AddExpense",
-				"action":   "generating expense code",
-			},
-		})
-	}
-	year, month, _ := time.Now().Date()
-	code := fmt.Sprintf("EXP-%02d%02d-%s", year%100, month, nanoID)
-
-	currency := input.Currency
-	if currency == "" {
-		currency = "GHS"
-	}
-
-	expense := &models.Expense{
-		Code:                        code,
-		ContextType:                 "MAINTENANCE",
-		ContextMaintenanceRequestID: &input.RequestID,
-		Description:                 input.Description,
-		Amount:                      input.Amount,
-		Currency:                    currency,
-		CreatedByClientUserID:       input.ClientUserID,
-	}
-
-	if err := s.repo.CreateExpense(ctx, expense); err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "AddExpense",
-				"action":   "creating expense",
-			},
-		})
-	}
-	return expense, nil
-}
-
-func (s *maintenanceRequestService) ListExpenses(
-	ctx context.Context,
-	filterQuery lib.FilterQuery,
-	filters repository.ListMaintenanceExpensesFilter,
-) ([]models.Expense, error) {
-	expenses, err := s.repo.ListExpenses(ctx, filterQuery, filters)
-	if err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "ListExpenses",
-				"action":   "listing expenses",
-			},
-		})
-	}
-	return *expenses, nil
-}
-
-func (s *maintenanceRequestService) CountExpenses(
-	ctx context.Context,
-	filterQuery lib.FilterQuery,
-	filters repository.ListMaintenanceExpensesFilter,
-) (int64, error) {
-	count, err := s.repo.CountExpenses(ctx, filterQuery, filters)
-	if err != nil {
-		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "CountExpenses",
-				"action":   "counting expenses",
-			},
-		})
-	}
-	return count, nil
-}
-
-func (s *maintenanceRequestService) DeleteExpense(ctx context.Context, expenseID string) error {
-	if err := s.repo.DeleteExpense(ctx, expenseID); err != nil {
-		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "DeleteExpense",
-				"action":   "deleting expense",
-			},
-		})
-	}
-	return nil
-}
-
 // --- Comments ---
 
 func (s *maintenanceRequestService) CreateComment(
@@ -930,163 +795,6 @@ func (s *maintenanceRequestService) DeleteComment(ctx context.Context, id string
 		})
 	}
 	return nil
-}
-
-// --- Invoice generation from expenses ---
-
-type GenerateExpenseInvoicePayerInput struct {
-	Amount    int64
-	PayeeType string // "TENANT" | "PROPERTY_OWNER" | "EXTERNAL"
-	PayerType string // "TENANT" | "PROPERTY_OWNER" | "EXTERNAL"
-}
-
-type GenerateExpenseInvoiceInput struct {
-	MaintenanceRequestID string
-	ExpenseID            string
-	ClientID             string
-	Payers               []GenerateExpenseInvoicePayerInput
-}
-
-func (s *maintenanceRequestService) GenerateExpenseInvoice(
-	ctx context.Context,
-	input GenerateExpenseInvoiceInput,
-) ([]models.Invoice, error) {
-	if len(input.Payers) == 0 {
-		return nil, pkg.BadRequestError("at least one payer is required to generate an invoice", nil)
-	}
-
-	mr, err := s.repo.GetOneWithPopulate(ctx, repository.GetMaintenanceRequestQuery{
-		ID:       input.MaintenanceRequestID,
-		Populate: &[]string{"Lease", "Lease.Tenant", "Unit", "Expenses"},
-	})
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, pkg.NotFoundError("maintenance request not found", nil)
-		}
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "GenerateExpenseInvoice",
-				"action":   "fetching maintenance request",
-			},
-		})
-	}
-
-	// find expense to be invoiced
-	var expense *models.Expense
-	for _, exp := range mr.Expenses {
-		if exp.ID.String() == input.ExpenseID {
-			expense = &exp
-			break
-		}
-	}
-
-	if expense == nil {
-		return nil, pkg.NotFoundError("expense not found for this maintenance request", nil)
-	}
-
-	// make sure full amount is covered by payers
-	var totalPayerAmount int64
-	for _, payer := range input.Payers {
-		totalPayerAmount += payer.Amount
-	}
-
-	if totalPayerAmount < expense.Amount {
-		return nil, pkg.BadRequestError("total payer amount must cover the full expense amount", nil)
-	}
-
-	lineItem := LineItemInput{
-		Label:       expense.Description,
-		Category:    "EXPENSE",
-		Quantity:    1,
-		UnitAmount:  expense.Amount,
-		TotalAmount: expense.Amount,
-		Currency:    expense.Currency,
-		Metadata: &map[string]any{
-			"mr": mr.ID.String(),
-		},
-	}
-
-	// Single transaction: invoice creation + expense linking are fully atomic
-	tx := s.appCtx.DB.Begin()
-	transCtx := lib.WithTransaction(ctx, tx)
-
-	var invoices []models.Invoice
-
-	for _, payer := range input.Payers {
-
-		if payer.PayerType != "TENANT" && payer.PayerType != "PROPERTY_OWNER" {
-			return nil, pkg.BadRequestError("invalid payer type: "+payer.PayerType, nil)
-		}
-
-		createInvoiceInput := CreateInvoiceInput{
-			ClientID:         &input.ClientID,
-			PropertyID:       &mr.Unit.PropertyID,
-			PayerType:        payer.PayerType,
-			PayeeType:        payer.PayeeType,
-			ContextType:      "MAINTENANCE_EXPENSE",
-			ContextExpenseID: &input.ExpenseID,
-			TotalAmount:      payer.Amount,
-			SubTotal:         payer.Amount,
-			Currency:         expense.Currency,
-			LineItems:        []LineItemInput{lineItem},
-			Status:           "ISSUED",
-		}
-
-		if payer.PayeeType == "TENANT" || payer.PayerType == "TENANT" {
-			var tenantID string
-
-			// Resolve payer tenant: prefer preloaded Lease.Tenant, fall back to CreatedByTenantID.
-			// Reject invoice generation when no tenant can be resolved.
-			if mr.Lease != nil && mr.Lease.TenantId != "" {
-				tenantID = mr.Lease.TenantId
-			} else if mr.CreatedByTenantID != nil {
-				tenantID = *mr.CreatedByTenantID
-			} else {
-				return nil, pkg.BadRequestError(
-					"cannot generate invoice: no tenant associated with this maintenance request",
-					nil,
-				)
-			}
-
-			if createInvoiceInput.PayerType == "TENANT" && tenantID != "" {
-				createInvoiceInput.PayerTenantID = &tenantID
-			}
-			if createInvoiceInput.PayeeType == "TENANT" && tenantID != "" {
-				createInvoiceInput.PayeeTenantID = &tenantID
-			}
-
-		}
-
-		if createInvoiceInput.PayerType == "PROPERTY_OWNER" {
-			createInvoiceInput.PayerClientID = &input.ClientID
-		}
-
-		if createInvoiceInput.PayeeType == "PROPERTY_OWNER" {
-			createInvoiceInput.PayeeClientID = &input.ClientID
-		}
-
-		invoice, err := s.invoiceService.CreateInvoice(transCtx, createInvoiceInput)
-		if err != nil {
-			tx.Rollback()
-			return nil, err
-		}
-
-		invoices = append(invoices, *invoice)
-	}
-
-	if commitErr := tx.Commit().Error; commitErr != nil {
-		tx.Rollback()
-		return nil, pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
-			Err: commitErr,
-			Metadata: map[string]string{
-				"function": "GenerateExpenseInvoice",
-				"action":   "committing transaction",
-			},
-		})
-	}
-
-	return invoices, nil
 }
 
 func (s *maintenanceRequestService) GetMaintenanceRequestStats(

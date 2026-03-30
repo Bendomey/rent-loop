@@ -10,6 +10,8 @@ type OutputExpense struct {
 	ID                          string    `json:"id"`
 	Code                        string    `json:"code"`
 	ContextType                 string    `json:"context_type"`
+	PropertyID                  string    `json:"property_id"`
+	ContextLeaseID              *string   `json:"context_lease_id,omitempty"`
 	ContextMaintenanceRequestID string    `json:"context_maintenance_request_id"`
 	Description                 string    `json:"description"`
 	Amount                      float64   `json:"amount"`
@@ -35,6 +37,8 @@ func DBExpenseToRest(e *models.Expense) any {
 		"id":                             e.ID.String(),
 		"code":                           e.Code,
 		"context_type":                   e.ContextType,
+		"property_id":                    e.PropertyID,
+		"context_lease_id":               e.ContextLeaseID,
 		"context_maintenance_request_id": e.ContextMaintenanceRequestID,
 		"description":                    e.Description,
 		"amount":                         e.Amount,

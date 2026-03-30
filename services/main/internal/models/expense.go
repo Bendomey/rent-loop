@@ -5,10 +5,16 @@ type Expense struct {
 
 	Code string `gorm:"not null;uniqueIndex;"` // unique expense code, e.g. EXP-YYMM-XXXXXX
 
-	ContextType string `gorm:"not null;index;"` // MAINTENANCE (extensible for future context types)
+	ContextType string `gorm:"not null;index;"` // MAINTENANCE | LEASE (extensible for future context types)
 
 	ContextMaintenanceRequestID *string
 	ContextMaintenanceRequest   *MaintenanceRequest
+
+	ContextLeaseID *string
+	ContextLease   *Lease
+
+	PropertyID string `gorm:"index;"`
+	Property   Property
 
 	Description string `gorm:"not null;"`
 	Amount      int64  `gorm:"not null;"`

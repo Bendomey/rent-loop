@@ -11,7 +11,7 @@ import {
 	useCreateExpense,
 	useDeleteExpense,
 	useGenerateExpenseInvoice,
-	useGetMRExpenses,
+	useGetLeaseExpenses,
 } from '~/api/expenses'
 import { useVoidInvoice } from '~/api/invoices'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
@@ -95,7 +95,6 @@ function PayerForm({ totalAmount, payers, onChange }: PayerFormProps) {
 			return { ...p, amount: value }
 		})
 
-		// Auto-adjust the other row's amount when one amount changes
 		if (field === 'amount' && updated.length === 2) {
 			const edited = parseFloat(value) || 0
 			const remaining = Math.max(0, totalAmount - edited)
@@ -126,7 +125,6 @@ function PayerForm({ totalAmount, payers, onChange }: PayerFormProps) {
 
 	const removeRow = (index: number) => {
 		const updated: PayerRow[] = payers.filter((_, i) => i !== index)
-		// Reset the remaining row's amount to total
 		const first = updated[0]
 		if (updated.length === 1 && first) {
 			updated[0] = { ...first, amount: totalAmount.toFixed(2) }
@@ -218,7 +216,7 @@ function PayerForm({ totalAmount, payers, onChange }: PayerFormProps) {
 interface InvoiceFormSheetProps {
 	expenseId: string
 	expenseAmount: number
-	requestId: string
+	leaseId: string
 	propertyId: string
 	onClose: () => void
 }
@@ -226,7 +224,7 @@ interface InvoiceFormSheetProps {
 function InvoiceFormSheet({
 	expenseId,
 	expenseAmount,
-	requestId,
+	leaseId,
 	propertyId,
 	onClose,
 }: InvoiceFormSheetProps) {
@@ -257,12 +255,7 @@ function InvoiceFormSheet({
 				onSuccess: () => {
 					toast.success('Invoice created')
 					void queryClient.invalidateQueries({
-						queryKey: [
-							QUERY_KEYS.EXPENSES,
-							propertyId,
-							'maintenance-requests',
-							requestId,
-						],
+						queryKey: [QUERY_KEYS.LEASES, propertyId, leaseId, 'expenses'],
 					})
 					void queryClient.invalidateQueries({
 						queryKey: [QUERY_KEYS.INVOICES],
@@ -301,12 +294,15 @@ function InvoiceFormSheet({
 	)
 }
 
-interface ExpensesTabProps {
-	requestId: string
+interface LeaseExpensesTabProps {
+	leaseId: string
 	propertyId: string
 }
 
-export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
+export function LeaseExpensesTab({
+	leaseId,
+	propertyId,
+}: LeaseExpensesTabProps) {
 	const queryClient = useQueryClient()
 	const [showForm, setShowForm] = useState(false)
 	const [activeInvoiceExpenseId, setActiveInvoiceExpenseId] = useState<
@@ -319,7 +315,7 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 		isLoading,
 		isError,
 		refetch,
-	} = useGetMRExpenses(propertyId, requestId, {
+	} = useGetLeaseExpenses(propertyId, leaseId, {
 		pagination: { page: 1, per: 100 },
 		filters: {},
 	})
@@ -344,15 +340,14 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 	const generateInvoiceOn = form.watch('generate_invoice')
 	const expenseAmountValue = form.watch('amount')
 
-	const invalidateExpenses = () =>
+	const invalidateExpenses = () => {
 		void queryClient.invalidateQueries({
-			queryKey: [
-				QUERY_KEYS.EXPENSES,
-				propertyId,
-				'maintenance-requests',
-				requestId,
-			],
+			queryKey: [QUERY_KEYS.LEASES, propertyId, leaseId, 'expenses'],
 		})
+		void queryClient.invalidateQueries({
+			queryKey: [QUERY_KEYS.EXPENSES, propertyId],
+		})
+	}
 
 	const onSubmit = (values: ExpenseFormValues) => {
 		const amount = parseFloat(values.amount)
@@ -361,14 +356,13 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 			return
 		}
 
-		// Convert GHS to pesewas for the API (backend stores in lowest denomination)
 		const amountPesewas = Math.round(amount * 100)
 
 		createExpense.mutate(
 			{
 				property_id: propertyId,
-				context_type: 'MAINTENANCE',
-				context_maintenance_request_id: requestId,
+				context_type: 'LEASE',
+				context_lease_id: leaseId,
 				description: values.description,
 				amount: amountPesewas,
 			},
@@ -407,7 +401,6 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 								})
 							},
 							onError: (err) => {
-								// Expense was created; just invoice generation failed
 								toast.warning('Expense added, but invoice generation failed')
 								toast.error(
 									err instanceof Error
@@ -435,7 +428,6 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 		setPendingDelete(null)
 
 		try {
-			// Void any associated invoices first
 			if (expense.invoices.length > 0) {
 				await Promise.all(
 					expense.invoices.map((inv) =>
@@ -450,7 +442,10 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 			}
 
 			deleteExpense.mutate(
-				{ property_id: propertyId, expense_id: expense.id },
+				{
+					property_id: propertyId,
+					expense_id: expense.id,
+				},
 				{
 					onSuccess: () => {
 						toast.success('Expense removed')
@@ -471,7 +466,6 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 
 	const total = expenses?.reduce((sum, e) => sum + e.amount, 0) ?? 0
 
-	// Sync payer amounts when expense amount changes and generate_invoice is on
 	const expenseAmountFloat = parseFloat(expenseAmountValue) || 0
 	const currentPayers = form.watch('payers')
 
@@ -535,7 +529,6 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 														placeholder="0.00"
 														onChange={(e) => {
 															field.onChange(e)
-															// Reset single-row payer amount to match
 															if (currentPayers.length === 1) {
 																form.setValue('payers.0.amount', e.target.value)
 															}
@@ -562,7 +555,6 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 														checked={field.value}
 														onCheckedChange={(checked) => {
 															field.onChange(checked)
-															// Reset payer amounts to expense amount on toggle
 															if (checked) {
 																form.setValue('payers', [
 																	{
@@ -740,7 +732,7 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 										<InvoiceFormSheet
 											expenseId={expense.id}
 											expenseAmount={expense.amount / 100}
-											requestId={requestId}
+											leaseId={leaseId}
 											propertyId={propertyId}
 											onClose={() => setActiveInvoiceExpenseId(null)}
 										/>

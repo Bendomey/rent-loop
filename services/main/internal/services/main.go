@@ -32,6 +32,7 @@ type Services struct {
 	AnnouncementService       AnnouncementService
 	MaintenanceRequestService MaintenanceRequestService
 	WaitlistService           WaitlistService
+	ExpenseService            ExpenseService
 }
 
 type INewServicesParams struct {
@@ -163,6 +164,14 @@ func NewServices(params INewServicesParams) Services {
 
 	waitlistService := NewWaitlistService(params.AppCtx, params.Repository.WaitlistRepository)
 
+	expenseService := NewExpenseService(ExpenseServiceDeps{
+		AppCtx:         params.AppCtx,
+		Repo:           params.Repository.ExpenseRepository,
+		LeaseRepo:      params.Repository.LeaseRepository,
+		MRRepo:         params.Repository.MaintenanceRequestRepository,
+		InvoiceService: invoiceService,
+	})
+
 	return Services{
 		NotificationService: notificationService,
 		AccountingService:   accountingService,
@@ -191,5 +200,6 @@ func NewServices(params INewServicesParams) Services {
 		AnnouncementService:       announcementService,
 		MaintenanceRequestService: maintenanceRequestService,
 		WaitlistService:           waitlistService,
+		ExpenseService:            expenseService,
 	}
 }

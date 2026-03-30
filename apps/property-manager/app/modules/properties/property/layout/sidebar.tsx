@@ -121,7 +121,6 @@ export function PropertySidebar({
 					{
 						title: 'Expenses',
 						url: '/expenses',
-						isComingSoon: true,
 					},
 					{
 						title: 'Reports',
