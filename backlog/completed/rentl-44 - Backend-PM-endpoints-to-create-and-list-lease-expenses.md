@@ -1,11 +1,12 @@
 ---
 id: RENTL-44
 title: 'Backend: PM endpoints to create and list lease expenses'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-03-25 14:27'
-updated_date: '2026-03-27 09:44'
+updated_date: '2026-03-30 23:10'
 labels: []
+milestone: m-4
 dependencies: []
 references:
   - services/main/internal/handlers/invoice.go

@@ -1,13 +1,14 @@
 ---
 id: RENTL-43
 title: Arbitrary expenses under a lease
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-03-25 14:27'
-updated_date: '2026-03-27 09:44'
+updated_date: '2026-03-30 23:11'
 labels: []
+milestone: m-4
 dependencies: []
-ordinal: 3000
+ordinal: 2000
 ---
 
 ## Description

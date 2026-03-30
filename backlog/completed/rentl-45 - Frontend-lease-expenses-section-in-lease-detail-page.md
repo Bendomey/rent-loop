@@ -1,11 +1,12 @@
 ---
 id: RENTL-45
 title: 'Frontend: lease expenses section in lease detail page'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-03-25 14:28'
-updated_date: '2026-03-27 09:44'
+updated_date: '2026-03-30 23:11'
 labels: []
+milestone: m-4
 dependencies:
   - RENTL-44
 references:
@@ -14,7 +15,7 @@ references:
   - apps/property-manager/app/api/invoices/index.ts
   - >-
     apps/property-manager/app/modules/properties/property/tenants/leases/lease/components/
-ordinal: 2000
+ordinal: 3000
 ---
 
 ## Description
