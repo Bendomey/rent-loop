@@ -2,7 +2,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useUpdateProperty } from '~/api/properties'
@@ -484,7 +483,7 @@ export function PropertyGeneralSettingsModule() {
 					</div>
 				</div>
 			</section>
-
+ 
 			{/* Support Access */}
 			{/* <section className="bg-card grid gap-6 rounded-xl border p-4 shadow-sm md:p-6">
 				<TypographyH3>Support Access</TypographyH3>
