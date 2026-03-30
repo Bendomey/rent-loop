@@ -8,6 +8,7 @@ import (
 
 type OutputExpense struct {
 	ID                          string    `json:"id"`
+	Code                        string    `json:"code"`
 	ContextType                 string    `json:"context_type"`
 	ContextMaintenanceRequestID string    `json:"context_maintenance_request_id"`
 	Description                 string    `json:"description"`
@@ -32,6 +33,7 @@ func DBExpenseToRest(e *models.Expense) any {
 
 	return map[string]any{
 		"id":                             e.ID.String(),
+		"code":                           e.Code,
 		"context_type":                   e.ContextType,
 		"context_maintenance_request_id": e.ContextMaintenanceRequestID,
 		"description":                    e.Description,

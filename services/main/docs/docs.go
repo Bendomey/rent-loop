@@ -18592,6 +18592,9 @@ const docTemplate = `{
                 "amount": {
                     "type": "number"
                 },
+                "code": {
+                    "type": "string"
+                },
                 "context_maintenance_request_id": {
                     "type": "string"
                 },

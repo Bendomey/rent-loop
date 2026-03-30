@@ -83,6 +83,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddInvoicePropertyClientPayeeTenant(),
 		jobs.DropExpenseInvoicePaidByBillable(),
 		jobs.AddInvoiceVoidedReason(),
+		jobs.AddExpenseCode(),
 	})
 	m.Migrate()
 

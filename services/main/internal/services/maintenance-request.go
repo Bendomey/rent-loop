@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/getsentry/raven-go"
+	gonanoid "github.com/matoous/go-nanoid"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -723,12 +725,26 @@ func (s *maintenanceRequestService) AddExpense(
 		})
 	}
 
+	nanoID, err := gonanoid.Generate("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890", 6)
+	if err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "AddExpense",
+				"action":   "generating expense code",
+			},
+		})
+	}
+	year, month, _ := time.Now().Date()
+	code := fmt.Sprintf("EXP-%02d%02d-%s", year%100, month, nanoID)
+
 	currency := input.Currency
 	if currency == "" {
 		currency = "GHS"
 	}
 
 	expense := &models.Expense{
+		Code:                        code,
 		ContextType:                 "MAINTENANCE",
 		ContextMaintenanceRequestID: &input.RequestID,
 		Description:                 input.Description,

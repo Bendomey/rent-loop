@@ -3,6 +3,8 @@ package models
 type Expense struct {
 	BaseModelSoftDelete
 
+	Code string `gorm:"not null;uniqueIndex;"` // unique expense code, e.g. EXP-YYMM-XXXXXX
+
 	ContextType string `gorm:"not null;index;"` // MAINTENANCE (extensible for future context types)
 
 	ContextMaintenanceRequestID *string
