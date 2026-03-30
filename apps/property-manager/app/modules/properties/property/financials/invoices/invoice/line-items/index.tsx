@@ -1,21 +1,11 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { Building, EllipsisVertical } from 'lucide-react'
+import { Building } from 'lucide-react'
 import { useMemo } from 'react'
-import { Link } from 'react-router'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
-import { Button } from '~/components/ui/button'
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
-import { useProperty } from '~/providers/property-provider'
 
 interface Props {
 	data: Invoice
@@ -30,7 +20,6 @@ export function PropertyFinancialsPaymentLineItemsModule({
 	error,
 	refetch,
 }: Props) {
-	const { clientUserProperty } = useProperty()
 
 	const columns: ColumnDef<InvoiceLineItem>[] = useMemo(() => {
 		return [
@@ -98,36 +87,8 @@ export function PropertyFinancialsPaymentLineItemsModule({
 					</div>
 				),
 			},
-			{
-				id: 'actions',
-				cell: ({ row }) => {
-					return (
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="ghost"
-									className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-									size="icon"
-								>
-									<EllipsisVertical />
-									<span className="sr-only">Open menu</span>
-								</Button>
-							</DropdownMenuTrigger>
-
-							<DropdownMenuContent align="end" className="32">
-								<Link
-									to={`/properties/${clientUserProperty?.property?.id}/financials/payments/${row.original.id}`}
-								>
-									<DropdownMenuItem>View</DropdownMenuItem>
-								</Link>
-								<DropdownMenuSeparator />
-							</DropdownMenuContent>
-						</DropdownMenu>
-					)
-				},
-			},
 		]
-	}, [clientUserProperty])
+	}, [])
 
 	return (
 		<div className="mx-auto my-2 flex flex-col gap-4 sm:gap-6">

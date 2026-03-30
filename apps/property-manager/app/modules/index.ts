@@ -87,6 +87,7 @@ export * from './properties/property/activities/polls'
 
 export * from './properties/property/financials/invoices'
 export * from './properties/property/financials/invoices/invoice'
+export * from './properties/property/expenses'
 
 export * from './properties/property/settings/members'
 export * from './properties/property/settings/general'

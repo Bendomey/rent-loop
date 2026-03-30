@@ -3,12 +3,22 @@ definitions:
     properties:
       amount:
         type: integer
+      context_lease_id:
+        type: string
+      context_maintenance_request_id:
+        type: string
+      context_type:
+        enum:
+        - LEASE
+        - MAINTENANCE
+        type: string
       currency:
         type: string
       description:
         type: string
     required:
     - amount
+    - context_type
     - description
     type: object
   handlers.AddLineItemRequest:
@@ -3039,6 +3049,8 @@ definitions:
         type: number
       code:
         type: string
+      context_lease_id:
+        type: string
       context_maintenance_request_id:
         type: string
       context_type:
@@ -3052,6 +3064,8 @@ definitions:
       description:
         type: string
       id:
+        type: string
+      property_id:
         type: string
       updated_at:
         type: string
@@ -7220,6 +7234,288 @@ paths:
       summary: Unlink property from client users (Admin)
       tags:
       - ClientUserProperties
+  /api/v1/admin/properties/{property_id}/expenses:
+    get:
+      consumes:
+      - application/json
+      description: List all expenses (across all contexts) scoped to a property (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - enum:
+        - LEASE
+        - MAINTENANCE
+        in: query
+        name: context_type
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Expenses
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputExpense'
+                    type: array
+                type: object
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List all expenses for a property
+      tags:
+      - Expenses
+    post:
+      consumes:
+      - application/json
+      description: Create a new expense scoped to a property (context_type determines
+        lease or maintenance) (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Expense details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AddExpenseBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created expense
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputExpense'
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Add an expense to a property
+      tags:
+      - Expenses
+  /api/v1/admin/properties/{property_id}/expenses/{expense_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove an expense record scoped to a property (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Expense ID
+        in: path
+        name: expense_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Expense deleted successfully
+          schema:
+            properties:
+              data:
+                type: boolean
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Expense not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete an expense
+      tags:
+      - Expenses
+    get:
+      consumes:
+      - application/json
+      description: Fetch a single expense by ID scoped to a property (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Expense ID
+        in: path
+        name: expense_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Expense
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputExpense'
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Expense not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get a single expense
+      tags:
+      - Expenses
+  /api/v1/admin/properties/{property_id}/expenses/{expense_id}/generate:invoice:
+    post:
+      consumes:
+      - application/json
+      description: Create one invoice per payer from a specific expense (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Expense ID
+        in: path
+        name: expense_id
+        required: true
+        type: string
+      - description: Payers for this expense
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.GenerateExpenseInvoiceBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Generated invoices
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/transformations.OutputInvoice'
+                type: array
+            type: object
+        "400":
+          description: Validation error or no payers provided
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Expense not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Generate invoices from an expense
+      tags:
+      - Expenses
   /api/v1/admin/properties/{property_id}/invoices:
     get:
       consumes:
@@ -8566,6 +8862,105 @@ paths:
       summary: Submit lease checklist
       tags:
       - LeaseChecklist
+  /api/v1/admin/properties/{property_id}/leases/{lease_id}/expenses:
+    get:
+      consumes:
+      - application/json
+      description: List expenses with pagination scoped to a lease (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - enum:
+        - LEASE
+        - MAINTENANCE
+        in: query
+        name: context_type
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Expenses
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputExpense'
+                    type: array
+                type: object
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List expenses for a lease
+      tags:
+      - Expenses
   /api/v1/admin/properties/{property_id}/leases/{lease_id}/status:active:
     patch:
       consumes:
@@ -9407,7 +9802,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: List expenses with pagination and optional filters (Admin)
+      description: List expenses with pagination scoped to a maintenance request (Admin)
       parameters:
       - description: Property ID
         in: path
@@ -9418,6 +9813,12 @@ paths:
         in: path
         name: maintenance_request_id
         required: true
+        type: string
+      - enum:
+        - LEASE
+        - MAINTENANCE
+        in: query
+        name: context_type
         type: string
       - in: query
         name: end_date
@@ -9495,176 +9896,7 @@ paths:
       - BearerAuth: []
       summary: List expenses for a maintenance request
       tags:
-      - MaintenanceRequests
-    post:
-      consumes:
-      - application/json
-      description: Record a new expense against a maintenance request (Admin)
-      parameters:
-      - description: Property ID
-        in: path
-        name: property_id
-        required: true
-        type: string
-      - description: Maintenance Request ID
-        in: path
-        name: maintenance_request_id
-        required: true
-        type: string
-      - description: Expense details
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.AddExpenseBody'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Expense added successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputExpense'
-            type: object
-        "400":
-          description: Error occurred when adding expense
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Maintenance request not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Add an expense to a maintenance request
-      tags:
-      - MaintenanceRequests
-  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses/{expense_id}:
-    delete:
-      consumes:
-      - application/json
-      description: Remove an expense record from a maintenance request (Admin)
-      parameters:
-      - description: Property ID
-        in: path
-        name: property_id
-        required: true
-        type: string
-      - description: Maintenance Request ID
-        in: path
-        name: maintenance_request_id
-        required: true
-        type: string
-      - description: Expense ID
-        in: path
-        name: expense_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Expense deleted successfully
-          schema:
-            properties:
-              data:
-                type: boolean
-            type: object
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Expense not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Delete an expense from a maintenance request
-      tags:
-      - MaintenanceRequests
-  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses/{expense_id}/generate:invoice:
-    post:
-      consumes:
-      - application/json
-      description: Create one invoice per payer from a specific expense on a maintenance
-        request (Admin)
-      parameters:
-      - description: Property ID
-        in: path
-        name: property_id
-        required: true
-        type: string
-      - description: Maintenance Request ID
-        in: path
-        name: maintenance_request_id
-        required: true
-        type: string
-      - description: Expense ID
-        in: path
-        name: expense_id
-        required: true
-        type: string
-      - description: Payers for this expense
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.GenerateExpenseInvoiceBody'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Generated invoices
-          schema:
-            properties:
-              data:
-                items:
-                  $ref: '#/definitions/transformations.OutputInvoice'
-                type: array
-            type: object
-        "400":
-          description: Validation error or no payers provided
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Maintenance request or expense not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Generate invoices from a billable expense
-      tags:
-      - MaintenanceRequests
+      - Expenses
   /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/status:
     patch:
       consumes:

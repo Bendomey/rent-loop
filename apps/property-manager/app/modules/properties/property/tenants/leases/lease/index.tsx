@@ -12,6 +12,7 @@ import { Link, useLoaderData } from 'react-router'
 import { ChecklistAlerts } from './components/checklist-alerts'
 import { ChecklistSection } from './components/checklist-section'
 import { StartLeaseDialog } from './components/start-lease-dialog'
+import { LeaseExpensesTab } from './expenses-tab'
 import { Image } from '~/components/Image'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { useHasPropertyPermissions } from '~/components/permissions/use-has-role'
@@ -246,6 +247,7 @@ export function LeaseDetailModule() {
 								<TabsTrigger value="details">Lease Details</TabsTrigger>
 								<TabsTrigger value="tenant">Tenant Profile</TabsTrigger>
 								<TabsTrigger value="documents">Documents</TabsTrigger>
+								<TabsTrigger value="expenses">Expenses</TabsTrigger>
 							</TabsList>
 
 							{/* Details Tab */}
@@ -707,6 +709,17 @@ export function LeaseDetailModule() {
 												<p className="text-muted-foreground text-sm">N/A</p>
 											)}
 										</div>
+									</CardContent>
+								</Card>
+							</TabsContent>
+							{/* Expenses Tab */}
+							<TabsContent value="expenses" className="mt-4">
+								<Card className="shadow-none">
+									<CardContent className="pt-4">
+										<LeaseExpensesTab
+											leaseId={lease.id}
+											propertyId={propertyId}
+										/>
 									</CardContent>
 								</Card>
 							</TabsContent>
