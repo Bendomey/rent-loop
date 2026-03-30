@@ -13,7 +13,7 @@ import {
 	useGenerateExpenseInvoice,
 	useGetLeaseExpenses,
 } from '~/api/expenses'
-import { useVoidInvoice } from '~/api/invoices'
+import { useDeleteInvoice, useVoidInvoice } from '~/api/invoices'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import {
 	AlertDialog,
@@ -318,12 +318,14 @@ export function LeaseExpensesTab({
 	} = useGetLeaseExpenses(propertyId, leaseId, {
 		pagination: { page: 1, per: 100 },
 		filters: {},
+		populate: ['Invoices'],
 	})
 	const expenses = expensesData?.rows
 	const createExpense = useCreateExpense()
 	const deleteExpense = useDeleteExpense()
 	const generateInvoice = useGenerateExpenseInvoice()
 	const voidInvoice = useVoidInvoice()
+	const deleteInvoice = useDeleteInvoice()
 
 	const form = useForm<ExpenseFormValues>({
 		resolver: zodResolver(expenseSchema),
@@ -436,6 +438,11 @@ export function LeaseExpensesTab({
 							id: inv.id,
 							voided_reason: `Associated expense - ${expense.code} was deleted`,
 						}),
+					),
+				)
+				await Promise.all(
+					expense.invoices.map((inv) =>
+						deleteInvoice.mutateAsync({ property_id: propertyId, id: inv.id }),
 					),
 				)
 				void queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVOICES] })

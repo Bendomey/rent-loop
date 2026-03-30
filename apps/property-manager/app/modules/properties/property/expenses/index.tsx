@@ -36,6 +36,7 @@ export function PropertyExpensesModule() {
 			filters: contextType ? { context_type: contextType } : {},
 			pagination: { page, per },
 			sorter: { sort: 'desc', sort_by: 'created_at' },
+			populate: ['Invoices'],
 		})
 
 	const isLoading = isPending || isRefetching
@@ -80,7 +81,12 @@ export function PropertyExpensesModule() {
 							Lease
 						</Link>
 					) : (
-						<span className="text-muted-foreground text-xs">Maintenance</span>
+						<Link
+							to={`/properties/${propertyId}/activities/maintenance-requests/${row.original.context_maintenance_request_id}`}
+							className="text-xs text-blue-600 hover:underline dark:text-blue-500"
+						>
+							Maintenance
+						</Link>
 					)
 				},
 			},

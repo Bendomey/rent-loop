@@ -13,7 +13,7 @@ import {
 	useGenerateExpenseInvoice,
 	useGetMRExpenses,
 } from '~/api/expenses'
-import { useVoidInvoice } from '~/api/invoices'
+import { useDeleteInvoice, useVoidInvoice } from '~/api/invoices'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import {
 	AlertDialog,
@@ -322,12 +322,14 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 	} = useGetMRExpenses(propertyId, requestId, {
 		pagination: { page: 1, per: 100 },
 		filters: {},
+		populate: ['Invoices'],
 	})
 	const expenses = expensesData?.rows
 	const createExpense = useCreateExpense()
 	const deleteExpense = useDeleteExpense()
 	const generateInvoice = useGenerateExpenseInvoice()
 	const voidInvoice = useVoidInvoice()
+	const deleteInvoice = useDeleteInvoice()
 
 	const form = useForm<ExpenseFormValues>({
 		resolver: zodResolver(expenseSchema),
@@ -435,7 +437,7 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 		setPendingDelete(null)
 
 		try {
-			// Void any associated invoices first
+			// Void then delete any associated invoices first
 			if (expense.invoices.length > 0) {
 				await Promise.all(
 					expense.invoices.map((inv) =>
@@ -444,6 +446,11 @@ export function ExpensesTab({ requestId, propertyId }: ExpensesTabProps) {
 							id: inv.id,
 							voided_reason: `Associated expense - ${expense.code} was deleted`,
 						}),
+					),
+				)
+				await Promise.all(
+					expense.invoices.map((inv) =>
+						deleteInvoice.mutateAsync({ property_id: propertyId, id: inv.id }),
 					),
 				)
 				void queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVOICES] })
