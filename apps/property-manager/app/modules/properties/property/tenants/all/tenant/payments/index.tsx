@@ -12,6 +12,7 @@ import { Link, useParams, useSearchParams } from 'react-router'
 import { TenantPaymentSectionCards } from './cards'
 import { TenantPaymentController } from './controller'
 import { useGetInvoices } from '~/api/invoices'
+import { useGetTenantLeases } from '~/api/leases'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
@@ -38,12 +39,19 @@ export function TenantPaymentsModule() {
 		: PAGINATION_DEFAULTS.PER_PAGE
 	const status = searchParams.get('status') ?? undefined
 
+	const { data: leasesData } = useGetTenantLeases(
+		safeString(clientUserProperty?.property_id),
+		safeString(tenantId),
+		{ filters: {}, pagination: { page: 1, per: 1 } },
+	)
+	const leaseId = leasesData?.rows?.[0]?.id
+
 	const { data, isPending, isRefetching, error, refetch } = useGetInvoices(
 		safeString(clientUserProperty?.property_id),
 		{
 			filters: {
 				status: status,
-				payer_tenant_id: tenantId,
+				payer_lease_id: leaseId,
 			},
 			pagination: { page, per },
 			sorter: { sort: 'desc', sort_by: 'created_at' },

@@ -19,7 +19,7 @@ type InvoiceRepository interface {
 	TenantCount(ctx context.Context, filter TenantListInvoicesFilter) (int64, error)
 	TenantStatsByStatus(
 		ctx context.Context,
-		tenantID, leaseID string,
+		leaseID string,
 		tenantApplicationID *string,
 	) ([]InvoiceStatusStat, error)
 	Delete(context context.Context, invoiceID string) error
@@ -90,7 +90,7 @@ type ListInvoicesFilter struct {
 	lib.FilterQuery
 	PayerType                  *string
 	PayerClientID              *string
-	PayerTenantID              *string
+	PayerLeaseID               *string
 	PayeeType                  *string
 	PayeeClientID              *string
 	PayeeTenantID              *string
@@ -110,7 +110,7 @@ func (r *invoiceRepository) List(ctx context.Context, filterQuery ListInvoicesFi
 		IDsFilterScope("invoices", filterQuery.IDs),
 		invoicePayerTypeScope(filterQuery.PayerType),
 		invoicePayerClientIDScope(filterQuery.PayerClientID),
-		invoicePayerTenantIDScope(filterQuery.PayerTenantID),
+		invoicePayerLeaseIDScope(filterQuery.PayerLeaseID),
 		invoicePayeeTypeScope(filterQuery.PayeeType),
 		invoicePayeeClientIDScope(filterQuery.PayeeClientID),
 		invoicePayeeTenantIDScope(filterQuery.PayeeTenantID),
@@ -150,7 +150,7 @@ func (r *invoiceRepository) Count(ctx context.Context, filterQuery ListInvoicesF
 			IDsFilterScope("invoices", filterQuery.IDs),
 			invoicePayerTypeScope(filterQuery.PayerType),
 			invoicePayerClientIDScope(filterQuery.PayerClientID),
-			invoicePayerTenantIDScope(filterQuery.PayerTenantID),
+			invoicePayerLeaseIDScope(filterQuery.PayerLeaseID),
 			invoicePayeeTypeScope(filterQuery.PayeeType),
 			invoicePayeeClientIDScope(filterQuery.PayeeClientID),
 			invoicePayeeTenantIDScope(filterQuery.PayeeTenantID),
@@ -192,7 +192,7 @@ func (r *invoiceRepository) TenantList(
 	var invoices []models.Invoice
 
 	db := r.DB.WithContext(ctx).Scopes(
-		invoiceTenantOwnerContextScope(&filter.TenantID, &filter.LeaseID, filter.TenantApplicationID),
+		invoiceTenantOwnerContextScope(&filter.LeaseID, filter.TenantApplicationID),
 		invoiceStatusScope(filter.Status),
 		invoiceActiveScope(filter.Active),
 		PaginationScope(filter.Page, filter.PageSize),
@@ -219,7 +219,7 @@ func (r *invoiceRepository) TenantCount(ctx context.Context, filter TenantListIn
 	result := r.DB.WithContext(ctx).
 		Model(&models.Invoice{}).
 		Scopes(
-			invoiceTenantOwnerContextScope(&filter.TenantID, &filter.LeaseID, filter.TenantApplicationID),
+			invoiceTenantOwnerContextScope(&filter.LeaseID, filter.TenantApplicationID),
 			invoiceStatusScope(filter.Status),
 			invoiceActiveScope(filter.Active),
 		).Count(&count)
@@ -233,7 +233,7 @@ func (r *invoiceRepository) TenantCount(ctx context.Context, filter TenantListIn
 
 func (r *invoiceRepository) TenantStatsByStatus(
 	ctx context.Context,
-	tenantID, leaseID string,
+	leaseID string,
 	tenantApplicationID *string,
 ) ([]InvoiceStatusStat, error) {
 	var results []InvoiceStatusStat
@@ -241,7 +241,7 @@ func (r *invoiceRepository) TenantStatsByStatus(
 	err := r.DB.WithContext(ctx).
 		Model(&models.Invoice{}).
 		Select("status, COUNT(*) as count, COALESCE(SUM(total_amount), 0) as total_amount").
-		Scopes(invoiceTenantOwnerContextScope(&tenantID, &leaseID, tenantApplicationID)).
+		Scopes(invoiceTenantOwnerContextScope(&leaseID, tenantApplicationID)).
 		Group("status").
 		Find(&results).Error
 	if err != nil {
@@ -270,12 +270,12 @@ func invoicePayerClientIDScope(payerClientID *string) func(db *gorm.DB) *gorm.DB
 	}
 }
 
-func invoicePayerTenantIDScope(payerTenantID *string) func(db *gorm.DB) *gorm.DB {
+func invoicePayerLeaseIDScope(payerLeaseID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if payerTenantID == nil {
+		if payerLeaseID == nil {
 			return db
 		}
-		return db.Where("invoices.payer_tenant_id = ?", *payerTenantID)
+		return db.Where("invoices.payer_lease_id = ?", *payerLeaseID)
 	}
 }
 
@@ -365,33 +365,31 @@ func invoiceLeaseContextScope(leaseID *string, tenantApplicationID *string) func
 }
 
 // invoiceTenantOwnerContextScope handles the tenant-scoped invoice list query.
-// TENANT_APPLICATION invoices may not have payer_tenant_id set, so a simple
-// AND of payer_tenant_id + context would exclude them. Instead we emit:
+// Since all tenant-payer invoices now carry payer_lease_id, ownership can be
+// expressed as a single clause: payer_lease_id = leaseID. TENANT_APPLICATION
+// invoices may not have payer_lease_id set, so when an applicationID is also
+// provided we include them via OR:
 //
-//	(payer_tenant_id = ? AND context_lease_id = ?) OR context_tenant_application_id = ?
+//	invoices.payer_lease_id = ? OR invoices.context_tenant_application_id = ?
 //
 // When no application ID is provided it falls back to:
 //
-//	payer_tenant_id = ? AND context_lease_id = ?
+//	invoices.payer_lease_id = ?
 //
-// If any of tenantID or leaseID is nil, the scope is a no-op.
-func invoiceTenantOwnerContextScope(tenantID, leaseID, applicationID *string) func(db *gorm.DB) *gorm.DB {
+// If leaseID is nil, the scope is a no-op.
+func invoiceTenantOwnerContextScope(leaseID, applicationID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if tenantID == nil || leaseID == nil {
+		if leaseID == nil {
 			return db
 		}
 		if applicationID != nil {
 			return db.Where(
-				"(invoices.payer_tenant_id = ? AND invoices.context_lease_id = ?) OR invoices.context_tenant_application_id = ?",
-				*tenantID,
+				"invoices.payer_lease_id = ? OR invoices.context_tenant_application_id = ?",
 				*leaseID,
 				*applicationID,
 			)
 		}
-		return db.Where(
-			"invoices.payer_tenant_id = ? AND invoices.context_lease_id = ?",
-			*tenantID, *leaseID,
-		)
+		return db.Where("invoices.payer_lease_id = ?", *leaseID)
 	}
 }
 
@@ -469,7 +467,7 @@ func (r *invoiceRepository) ListForReminders(ctx context.Context) (*[]models.Inv
 			overdueHorizon,
 			startOfToday,
 		).
-		Preload("PayerTenant.TenantAccount").
+		Preload("PayerLease.Tenant.TenantAccount").
 		Preload("ContextLease.Unit").
 		Find(&invoices)
 	if result.Error != nil {

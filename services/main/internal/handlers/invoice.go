@@ -184,7 +184,7 @@ type ListInvoicesQuery struct {
 	lib.FilterQueryInput
 	PayerType     *string   `json:"payer_type"      query:"payer_type"`
 	PayerClientID *string   `json:"payer_client_id" query:"payer_client_id"`
-	PayerTenantID *string   `json:"payer_tenant_id" query:"payer_tenant_id"`
+	PayerLeaseID  *string   `json:"payer_lease_id"  query:"payer_lease_id"`
 	PayeeType     *string   `json:"payee_type"      query:"payee_type"`
 	PayeeClientID *string   `json:"payee_client_id" query:"payee_client_id"`
 	ContextType   *string   `json:"context_type"    query:"context_type"`
@@ -223,7 +223,7 @@ func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 		FilterQuery:   *filterQuery,
 		PayerType:     lib.NullOrString(r.URL.Query().Get("payer_type")),
 		PayerClientID: lib.NullOrString(r.URL.Query().Get("payer_client_id")),
-		PayerTenantID: lib.NullOrString(r.URL.Query().Get("payer_tenant_id")),
+		PayerLeaseID:  lib.NullOrString(r.URL.Query().Get("payer_lease_id")),
 		PayeeType:     lib.NullOrString(r.URL.Query().Get("payee_type")),
 		PayeeClientID: lib.NullOrString(r.URL.Query().Get("payee_client_id")),
 		ContextType:   lib.NullOrString(r.URL.Query().Get("context_type")),
@@ -533,7 +533,7 @@ func (h *InvoiceHandler) TenantInvoiceStats(w http.ResponseWriter, r *http.Reque
 		tenantApplicationID = &lease.TenantApplicationId
 	}
 
-	stats, err := h.service.TenantInvoiceStats(r.Context(), account.TenantId, leaseID, tenantApplicationID)
+	stats, err := h.service.TenantInvoiceStats(r.Context(), leaseID, tenantApplicationID)
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return
@@ -612,7 +612,8 @@ func (h *InvoiceHandler) TenantGetInvoice(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	ownedByTenant := (invoice.PayerTenantID != nil && *invoice.PayerTenantID == account.TenantId) ||
+	leaseIDStr := lease.ID.String()
+	ownedByTenant := (invoice.PayerLeaseID != nil && *invoice.PayerLeaseID == leaseIDStr) ||
 		(invoice.ContextTenantApplicationID != nil && *invoice.ContextTenantApplicationID == lease.TenantApplicationId)
 
 	if !ownedByTenant {

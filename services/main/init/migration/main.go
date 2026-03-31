@@ -85,6 +85,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddInvoiceVoidedReason(),
 		jobs.AddExpenseCode(),
 		jobs.AddExpenseLeasePropertyContext(),
+		jobs.ReplacePayerTenantWithPayerLease(),
 	})
 	m.Migrate()
 

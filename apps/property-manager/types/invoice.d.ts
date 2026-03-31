@@ -22,8 +22,8 @@ interface Invoice {
 	payer_client: Nullable<Client>
 	payer_property_id: Nullable<string>
 	payer_property: Nullable<Property>
-	payer_tenant_id: Nullable<string>
-	payer_tenant: Nullable<Tenant>
+	payer_lease_id: Nullable<string>
+	payer_lease: Nullable<Lease>
 	payee_type: 'PROPERTY_OWNER' | 'RENTLOOP'
 	payee_client_id: Nullable<string>
 	payee_client: Nullable<Client>
@@ -62,5 +62,5 @@ interface FetchInvoiceFilter {
 	payee_type?: string
 	payer_type?: string
 	status?: string
-	payer_tenant_id?: string
+	payer_lease_id?: string
 }

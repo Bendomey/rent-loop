@@ -497,19 +497,20 @@ func (s *leaseService) GenerateLeaseRentInvoice(ctx context.Context, leaseID str
 	clientID := lease.Unit.Property.ClientID
 	propertyID := lease.Unit.PropertyID
 	invoice, invoiceErr := s.invoiceService.CreateInvoice(transCtx, CreateInvoiceInput{
-		ClientID:       &clientID,
-		PropertyID:     &propertyID,
-		PayerType:      "TENANT",
-		PayerTenantID:  &lease.TenantId,
-		PayeeType:      "PROPERTY_OWNER",
-		PayeeClientID:  &clientID,
-		ContextType:    "LEASE_RENT",
-		ContextLeaseID: &leaseIDStr,
-		TotalAmount:    lease.RentFee,
-		SubTotal:       lease.RentFee,
-		Currency:       lease.RentFeeCurrency,
-		Status:         "ISSUED",
-		DueDate:        &dueDate,
+		ClientID:             &clientID,
+		PropertyID:           &propertyID,
+		PayerType:            "TENANT",
+		PayerLeaseID:         &leaseIDStr,
+		NotificationTenantID: &lease.TenantId,
+		PayeeType:            "PROPERTY_OWNER",
+		PayeeClientID:        &clientID,
+		ContextType:          "LEASE_RENT",
+		ContextLeaseID:       &leaseIDStr,
+		TotalAmount:          lease.RentFee,
+		SubTotal:             lease.RentFee,
+		Currency:             lease.RentFeeCurrency,
+		Status:               "ISSUED",
+		DueDate:              &dueDate,
 		LineItems: []LineItemInput{
 			{
 				Label:       label,

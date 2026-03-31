@@ -23,8 +23,8 @@ type OutputInvoice struct {
 	PayerPropertyID *string         `json:"payer_property_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 	PayerProperty   *OutputProperty `json:"payer_property,omitempty"`
 
-	PayerTenantID *string       `json:"payer_tenant_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	PayerTenant   *OutputTenant `json:"payer_tenant,omitempty"`
+	PayerLeaseID *string     `json:"payer_lease_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	PayerLease   map[any]any `json:"payer_lease,omitempty"`
 
 	PayeeType     string        `json:"payee_type"                example:"PROPERTY_OWNER"`
 	PayeeClientID *string       `json:"payee_client_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
@@ -86,8 +86,8 @@ func DBInvoiceToRest(i *models.Invoice) any {
 		"payer_client":                   DBClientToRestClient(i.PayerClient),
 		"payer_property_id":              i.PayerPropertyID,
 		"payer_property":                 DBPropertyToRest(i.PayerProperty),
-		"payer_tenant_id":                i.PayerTenantID,
-		"payer_tenant":                   DBTenantToRest(i.PayerTenant),
+		"payer_lease_id":                 i.PayerLeaseID,
+		"payer_lease":                    DBAdminLeaseToRest(i.PayerLease),
 		"payee_type":                     i.PayeeType,
 		"payee_client_id":                i.PayeeClientID,
 		"payee_client":                   DBClientToRestClient(i.PayeeClient),

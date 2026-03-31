@@ -308,12 +308,12 @@ func (s *expenseService) GenerateExpenseInvoice(
 						nil,
 					)
 				}
-				tenantID := lease.TenantId
 				if inv.PayerType == "TENANT" {
-					inv.PayerTenantID = &tenantID
+					inv.PayerLeaseID = &leaseID
+					inv.NotificationTenantID = &lease.TenantId
 				}
 				if inv.PayeeType == "TENANT" {
-					inv.PayeeTenantID = &tenantID
+					inv.PayeeTenantID = &lease.TenantId
 				}
 			}
 			if inv.PayerType == "PROPERTY_OWNER" {
@@ -390,7 +390,11 @@ func (s *expenseService) GenerateExpenseInvoice(
 					return nil, pkg.BadRequestError("cannot generate invoice: no tenant associated with this maintenance request", nil)
 				}
 				if inv.PayerType == "TENANT" {
-					inv.PayerTenantID = &tenantID
+					if mr.Lease != nil {
+						mrLeaseID := mr.Lease.ID.String()
+						inv.PayerLeaseID = &mrLeaseID
+					}
+					inv.NotificationTenantID = &tenantID
 				}
 				if inv.PayeeType == "TENANT" {
 					inv.PayeeTenantID = &tenantID

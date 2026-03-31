@@ -5692,7 +5692,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "name": "payer_tenant_id",
+                        "name": "payer_lease_id",
                         "in": "query"
                     },
                     {
@@ -19090,17 +19090,18 @@ const docTemplate = `{
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
                 },
+                "payer_lease": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "payer_lease_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
                 "payer_property": {
                     "$ref": "#/definitions/transformations.OutputProperty"
                 },
                 "payer_property_id": {
-                    "type": "string",
-                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
-                },
-                "payer_tenant": {
-                    "$ref": "#/definitions/transformations.OutputTenant"
-                },
-                "payer_tenant_id": {
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
                 },

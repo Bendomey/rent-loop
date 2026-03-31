@@ -3149,14 +3149,15 @@ definitions:
       payer_client_id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
+      payer_lease:
+        additionalProperties: {}
+        type: object
+      payer_lease_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
       payer_property:
         $ref: '#/definitions/transformations.OutputProperty'
       payer_property_id:
-        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
-        type: string
-      payer_tenant:
-        $ref: '#/definitions/transformations.OutputTenant'
-      payer_tenant_id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
       payer_type:
@@ -7571,7 +7572,7 @@ paths:
         name: payer_client_id
         type: string
       - in: query
-        name: payer_tenant_id
+        name: payer_lease_id
         type: string
       - in: query
         name: payer_type

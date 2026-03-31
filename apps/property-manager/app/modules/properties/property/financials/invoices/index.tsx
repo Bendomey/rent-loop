@@ -60,7 +60,7 @@ export function PropertyFinancialsPaymentsModule() {
 			sorter: { sort: 'desc', sort_by: 'created_at' },
 			search: {
 				query: searchParams.get('query') ?? undefined,
-				fields: ['end_date', 'payer_tenant_id'],
+				fields: ['end_date', 'payer_lease_id', 'code'],
 			},
 		},
 	)

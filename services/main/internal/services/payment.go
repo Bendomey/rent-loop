@@ -292,7 +292,7 @@ func (s *paymentService) VerifyOfflinePayment(
 	input VerifyOfflinePaymentInput,
 ) (*models.Payment, error) {
 	// Get payment with tenant info for notifications
-	populate := []string{"Invoice", "Invoice.PayerTenant.TenantAccount", "Invoice.ContextLease.Unit"}
+	populate := []string{"Invoice", "Invoice.PayerLease.Tenant.TenantAccount", "Invoice.ContextLease.Unit"}
 	payment, paymentErr := s.repo.GetByIDWithQuery(ctx, repository.GetPaymentQuery{
 		PaymentID: input.PaymentID,
 		Populate:  &populate,
@@ -511,8 +511,8 @@ func (s *paymentService) VerifyOfflinePayment(
 	}
 
 	// Fire-and-forget payment confirmation notifications when invoice is fully paid
-	if invoiceFullyPaid && payment.Invoice.PayerTenant != nil {
-		tenant := payment.Invoice.PayerTenant
+	if invoiceFullyPaid && payment.Invoice.PayerLease != nil && payment.Invoice.PayerLease.TenantId != "" {
+		tenant := payment.Invoice.PayerLease.Tenant
 		unitName := ""
 		if payment.Invoice.ContextLease != nil {
 			unitName = payment.Invoice.ContextLease.Unit.Name
