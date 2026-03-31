@@ -285,18 +285,19 @@ func (s *expenseService) GenerateExpenseInvoice(
 			}
 
 			inv := CreateInvoiceInput{
-				ClientID:         &input.ClientID,
-				PropertyID:       &propertyID,
-				PayerType:        payer.PayerType,
-				PayeeType:        payer.PayeeType,
-				ContextType:      "GENERAL_EXPENSE",
-				ContextLeaseID:   &leaseID,
-				ContextExpenseID: &expenseID,
-				TotalAmount:      payer.Amount,
-				SubTotal:         payer.Amount,
-				Currency:         expense.Currency,
-				LineItems:        []LineItemInput{lineItem},
-				Status:           "ISSUED",
+				ClientID:          &input.ClientID,
+				PropertyID:        &propertyID,
+				PayerType:         payer.PayerType,
+				PayeeType:         payer.PayeeType,
+				ContextType:       "GENERAL_EXPENSE",
+				ContextLeaseID:    &leaseID,
+				ContextExpenseID:  &expenseID,
+				TotalAmount:       payer.Amount,
+				SubTotal:          payer.Amount,
+				Currency:          expense.Currency,
+				LineItems:         []LineItemInput{lineItem},
+				Status:            "ISSUED",
+				SendNotifications: true,
 			}
 
 			if payer.PayerType == "TENANT" || payer.PayeeType == "TENANT" {
@@ -364,17 +365,18 @@ func (s *expenseService) GenerateExpenseInvoice(
 			}
 
 			inv := CreateInvoiceInput{
-				ClientID:         &input.ClientID,
-				PropertyID:       &propertyID,
-				PayerType:        payer.PayerType,
-				PayeeType:        payer.PayeeType,
-				ContextType:      "MAINTENANCE_EXPENSE",
-				ContextExpenseID: &expenseID,
-				TotalAmount:      payer.Amount,
-				SubTotal:         payer.Amount,
-				Currency:         expense.Currency,
-				LineItems:        []LineItemInput{lineItem},
-				Status:           "ISSUED",
+				ClientID:          &input.ClientID,
+				PropertyID:        &propertyID,
+				PayerType:         payer.PayerType,
+				PayeeType:         payer.PayeeType,
+				ContextType:       "MAINTENANCE_EXPENSE",
+				ContextExpenseID:  &expenseID,
+				TotalAmount:       payer.Amount,
+				SubTotal:          payer.Amount,
+				Currency:          expense.Currency,
+				LineItems:         []LineItemInput{lineItem},
+				Status:            "ISSUED",
+				SendNotifications: true,
 			}
 
 			if payer.PayerType == "TENANT" || payer.PayeeType == "TENANT" {

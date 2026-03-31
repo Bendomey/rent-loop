@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/accounting"
+	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/config"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
@@ -40,17 +42,30 @@ type InvoiceService interface {
 }
 
 type invoiceService struct {
-	appCtx            pkg.AppContext
-	repo              repository.InvoiceRepository
-	accountingService AccountingService
+	appCtx              pkg.AppContext
+	repo                repository.InvoiceRepository
+	accountingService   AccountingService
+	notificationService NotificationService
+	tenantAccountRepo   repository.TenantAccountRepository
+	tenantRepo          repository.TenantRepository
 }
 
 func NewInvoiceService(
 	appCtx pkg.AppContext,
 	repo repository.InvoiceRepository,
 	accountingService AccountingService,
+	notificationService NotificationService,
+	tenantAccountRepo repository.TenantAccountRepository,
+	tenantRepo repository.TenantRepository,
 ) InvoiceService {
-	return &invoiceService{appCtx: appCtx, repo: repo, accountingService: accountingService}
+	return &invoiceService{
+		appCtx:              appCtx,
+		repo:                repo,
+		accountingService:   accountingService,
+		notificationService: notificationService,
+		tenantAccountRepo:   tenantAccountRepo,
+		tenantRepo:          tenantRepo,
+	}
 }
 
 type LineItemInput struct {
@@ -86,6 +101,7 @@ type CreateInvoiceInput struct {
 	DueDate                     *time.Time
 	AllowedPaymentRails         []string
 	LineItems                   []LineItemInput
+	SendNotifications           bool
 }
 
 func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceInput) (*models.Invoice, error) {
@@ -243,6 +259,61 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 				},
 			})
 		}
+	}
+
+	if input.SendNotifications && input.PayerTenantID != nil && input.Status == "ISSUED" {
+		tenantID := *input.PayerTenantID
+		invoiceID := invoice.ID.String()
+		invoiceCode := invoice.Code
+		contextType := invoice.ContextType
+		invoiceAmount := lib.FormatAmount(lib.PesewasToCedis(invoice.TotalAmount))
+		invoiceCurrency := invoice.Currency
+		go func() {
+			ctx := context.Background()
+			account, err := s.tenantAccountRepo.FindOne(ctx, map[string]any{"tenant_id": tenantID})
+			if err != nil {
+				return
+			}
+			tenant, err := s.tenantRepo.FindOne(ctx, map[string]any{"id": tenantID})
+			if err != nil {
+				return
+			}
+			_ = s.notificationService.SendToTenantAccount(
+				ctx,
+				account.ID.String(),
+				"New Invoice",
+				fmt.Sprintf("Invoice %s is ready for payment.", invoiceCode),
+				map[string]string{
+					"type":         "INVOICE",
+					"invoice_id":   invoiceID,
+					"invoice_code": invoiceCode,
+					"context_type": contextType,
+				},
+			)
+			r := strings.NewReplacer(
+				"{{tenant_name}}", tenant.FirstName,
+				"{{invoice_code}}", invoiceCode,
+				"{{currency}}", invoiceCurrency,
+				"{{amount}}", invoiceAmount,
+			)
+			if tenant.Email != nil {
+				go pkg.SendEmail(
+					s.appCtx.Config,
+					pkg.SendEmailInput{
+						Recipient: *tenant.Email,
+						Subject:   lib.INVOICE_CREATED_SUBJECT,
+						TextBody:  r.Replace(lib.INVOICE_CREATED_BODY),
+					},
+				)
+			}
+			go s.appCtx.Clients.GatekeeperAPI.SendSMS(
+				ctx,
+				gatekeeper.SendSMSInput{
+					Recipient: tenant.Phone,
+					Message:   r.Replace(lib.INVOICE_CREATED_SMS_BODY),
+				},
+			)
+		}()
 	}
 
 	return &invoice, nil
@@ -422,20 +493,12 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, input VoidInvoiceInput
 		})
 	}
 
-	if invoice.Status == "VOID" {
-		return nil, pkg.BadRequestError("Invoice is already voided", &pkg.RentLoopErrorParams{
+	if invoice.Status != "ISSUED" {
+		return nil, pkg.BadRequestError("Only issued invoices can be voided", &pkg.RentLoopErrorParams{
 			Metadata: map[string]string{
-				"function": "VoidInvoice",
-				"action":   "checking invoice status",
-			},
-		})
-	}
-
-	if invoice.Status == "PARTIALLY_PAID" || invoice.Status == "PAID" {
-		return nil, pkg.BadRequestError("Cannot void a partially paid or paid invoice", &pkg.RentLoopErrorParams{
-			Metadata: map[string]string{
-				"function": "VoidInvoice",
-				"action":   "checking invoice status",
+				"function":       "VoidInvoice",
+				"action":         "checking invoice status",
+				"current_status": invoice.Status,
 			},
 		})
 	}
@@ -445,23 +508,6 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, input VoidInvoiceInput
 	invoice.VoidedAt = &now
 	invoice.VoidedReason = input.VoidedReason
 	invoice.VoidedByClientUserID = input.VoidedByClientUserID
-
-	if invoice.Status == "DRAFT" {
-
-		updateErr := s.repo.Update(ctx, invoice)
-		if updateErr != nil {
-			return nil, pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
-				Err: updateErr,
-				Metadata: map[string]string{
-					"function": "VoidInvoice",
-					"scenario": "Invoice is in DRAFT status",
-					"action":   "updating invoice status to VOID",
-				},
-			})
-		}
-
-		return invoice, nil
-	}
 
 	transaction := s.appCtx.DB.Begin()
 	transCtx := lib.WithTransaction(ctx, transaction)
@@ -526,6 +572,54 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, input VoidInvoiceInput
 				"action":   "committing transaction",
 			},
 		})
+	}
+
+	if invoice.PayerTenantID != nil {
+		tenantID := *invoice.PayerTenantID
+		invoiceCode := invoice.Code
+		go func() {
+			ctx := context.Background()
+			account, err := s.tenantAccountRepo.FindOne(ctx, map[string]any{"tenant_id": tenantID})
+			if err != nil {
+				return
+			}
+			tenant, err := s.tenantRepo.FindOne(ctx, map[string]any{"id": tenantID})
+			if err != nil {
+				return
+			}
+			_ = s.notificationService.SendToTenantAccount(
+				ctx,
+				account.ID.String(),
+				"Invoice Voided",
+				fmt.Sprintf("Invoice %s has been voided and is no longer payable.", invoiceCode),
+				map[string]string{
+					"type":         "INVOICE_VOIDED",
+					"invoice_id":   invoice.ID.String(),
+					"invoice_code": invoiceCode,
+				},
+			)
+			r := strings.NewReplacer(
+				"{{tenant_name}}", tenant.FirstName,
+				"{{invoice_code}}", invoiceCode,
+			)
+			if tenant.Email != nil {
+				go pkg.SendEmail(
+					s.appCtx.Config,
+					pkg.SendEmailInput{
+						Recipient: *tenant.Email,
+						Subject:   lib.INVOICE_VOIDED_SUBJECT,
+						TextBody:  r.Replace(lib.INVOICE_VOIDED_BODY),
+					},
+				)
+			}
+			go s.appCtx.Clients.GatekeeperAPI.SendSMS(
+				ctx,
+				gatekeeper.SendSMSInput{
+					Recipient: tenant.Phone,
+					Message:   r.Replace(lib.INVOICE_VOIDED_SMS_BODY),
+				},
+			)
+		}()
 	}
 
 	return invoice, nil

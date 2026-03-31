@@ -621,3 +621,31 @@ const (
 	SIGNING_TOKEN_INVITE_SMS_BODY = `[Rentloop] Hi {{signer_name}}, you have a document to sign. Sign here: {{property_manager_portal_url}}/sign/{{token}} (expires {{expires_at}})`
 	SIGNING_TOKEN_RESENT_SMS_BODY = `[Rentloop] Reminder: Sign your document here: {{property_manager_portal_url}}/sign/{{token}} (expires {{expires_at}})`
 )
+
+const (
+	INVOICE_CREATED_SUBJECT = "New Invoice Ready for Payment"
+	INVOICE_CREATED_BODY    = `Hi {{tenant_name}},
+
+An invoice ({{invoice_code}}) for {{currency}} {{amount}} has been issued and is now ready for payment.
+
+Please make your payment at your earliest convenience.
+
+Best regards,
+The Rentloop Team
+`
+	INVOICE_CREATED_SMS_BODY = `[Rentloop] Hi {{tenant_name}}, invoice {{invoice_code}} for {{currency}} {{amount}} is ready for payment.`
+)
+
+const (
+	INVOICE_VOIDED_SUBJECT = "Your Invoice Has Been Cancelled"
+	INVOICE_VOIDED_BODY    = `Hi {{tenant_name}},
+
+Invoice ({{invoice_code}}) has been cancelled and is no longer payable.
+
+If you have any questions about this, please reach out to your landlord.
+
+Best regards,
+The Rentloop Team
+`
+	INVOICE_VOIDED_SMS_BODY = `[Rentloop] Hi {{tenant_name}}, invoice {{invoice_code}} has been cancelled and is no longer payable.`
+)
