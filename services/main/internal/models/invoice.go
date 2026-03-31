@@ -26,8 +26,8 @@ type Invoice struct {
 	PayerPropertyID *string
 	PayerProperty   *Property
 
-	PayerTenantID *string
-	PayerTenant   *Tenant
+	PayerLeaseID *string
+	PayerLease   *Lease
 
 	// who is receiving the payment
 	PayeeType     string `gorm:"not null;"` // 'PROPERTY_OWNER' | 'RENTLOOP' | 'TENANT' | 'EXTERNAL'

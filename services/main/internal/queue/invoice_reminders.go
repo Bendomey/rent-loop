@@ -99,13 +99,13 @@ func handleInvoiceReminder(
 				continue
 			}
 
-			tenant := invoice.PayerTenant
-			if tenant == nil {
+			if invoice.PayerLease == nil || invoice.PayerLease.TenantId == "" {
 				log.WithField("invoice_id", invoice.ID.String()).
-					Warn("[Cron] invoice has no payer tenant, skipping reminder")
+					Warn("[Cron] invoice has no payer lease/tenant, skipping reminder")
 				failCount++
 				continue
 			}
+			tenant := &invoice.PayerLease.Tenant
 
 			unitName := ""
 			if invoice.ContextLease != nil {

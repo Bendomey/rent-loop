@@ -33,7 +33,7 @@ type InvoiceService interface {
 	) (*[]models.Invoice, int64, error)
 	TenantInvoiceStats(
 		ctx context.Context,
-		tenantID, leaseID string,
+		leaseID string,
 		tenantApplicationID *string,
 	) ([]repository.InvoiceStatusStat, error)
 	AddLineItem(context context.Context, input AddLineItemInput) (*models.InvoiceLineItem, error)
@@ -84,7 +84,7 @@ type CreateInvoiceInput struct {
 	PayerType                   string
 	PayerClientID               *string
 	PayerPropertyID             *string
-	PayerTenantID               *string
+	PayerLeaseID                *string
 	PayeeType                   string
 	PayeeClientID               *string
 	PayeeTenantID               *string
@@ -102,6 +102,11 @@ type CreateInvoiceInput struct {
 	AllowedPaymentRails         []string
 	LineItems                   []LineItemInput
 	SendNotifications           bool
+	// NotificationTenantID is used to send invoice notifications to the payer
+	// tenant. Callers that set PayerLeaseID should also set this to the lease's
+	// TenantId so the notification goroutine can look up the tenant account
+	// without an extra DB round-trip.
+	NotificationTenantID *string
 }
 
 func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceInput) (*models.Invoice, error) {
@@ -157,7 +162,7 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 		PayerType:                   input.PayerType,
 		PayerClientID:               input.PayerClientID,
 		PayerPropertyID:             input.PayerPropertyID,
-		PayerTenantID:               input.PayerTenantID,
+		PayerLeaseID:                input.PayerLeaseID,
 		PayeeType:                   input.PayeeType,
 		PayeeClientID:               input.PayeeClientID,
 		PayeeTenantID:               input.PayeeTenantID,
@@ -261,8 +266,8 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 		}
 	}
 
-	if input.SendNotifications && input.PayerTenantID != nil && input.Status == "ISSUED" {
-		tenantID := *input.PayerTenantID
+	if input.SendNotifications && input.NotificationTenantID != nil && input.Status == "ISSUED" {
+		tenantID := *input.NotificationTenantID
 		invoiceID := invoice.ID.String()
 		invoiceCode := invoice.Code
 		contextType := invoice.ContextType
@@ -470,7 +475,7 @@ type VoidInvoiceInput struct {
 }
 
 func (s *invoiceService) VoidInvoice(ctx context.Context, input VoidInvoiceInput) (*models.Invoice, error) {
-	populate := []string{"LineItems"}
+	populate := []string{"LineItems", "PayerLease"}
 	invoice, getErr := s.repo.GetByQuery(ctx, repository.GetInvoiceQuery{
 		Query: map[string]any{
 			"id": input.InvoiceID,
@@ -574,8 +579,8 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, input VoidInvoiceInput
 		})
 	}
 
-	if invoice.PayerTenantID != nil {
-		tenantID := *invoice.PayerTenantID
+	if invoice.PayerLeaseID != nil && invoice.PayerLease != nil {
+		tenantID := invoice.PayerLease.TenantId
 		invoiceCode := invoice.Code
 		go func() {
 			ctx := context.Background()
@@ -685,10 +690,10 @@ func (s *invoiceService) TenantListInvoices(
 
 func (s *invoiceService) TenantInvoiceStats(
 	ctx context.Context,
-	tenantID, leaseID string,
+	leaseID string,
 	tenantApplicationID *string,
 ) ([]repository.InvoiceStatusStat, error) {
-	stats, err := s.repo.TenantStatsByStatus(ctx, tenantID, leaseID, tenantApplicationID)
+	stats, err := s.repo.TenantStatsByStatus(ctx, leaseID, tenantApplicationID)
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
