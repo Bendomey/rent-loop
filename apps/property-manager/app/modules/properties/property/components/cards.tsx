@@ -23,6 +23,13 @@ interface LeaseRow {
 	'Leases.createdAt.month'?: string
 }
 
+interface MaintenanceRow {
+	'MaintenanceRequests.count': string | null
+	'MaintenanceRequests.newCount': string | null
+	'MaintenanceRequests.inProgressCount': string | null
+	'MaintenanceRequests.inReviewCount': string | null
+}
+
 function parseNum(v: string | null | undefined): number {
 	return v ? Number(v) : 0
 }
@@ -87,7 +94,29 @@ export function PropertySectionCards({ propertyId }: Props) {
 		},
 	)
 
-	const isLoading = revenueQuery.isPending || leaseQuery.isPending
+	// Maintenance request counts
+	const maintenanceQuery = useCubeQuery<MaintenanceRow>(
+		token,
+		['prop-maintenance-kpi', propertyId],
+		{
+			measures: [
+				'MaintenanceRequests.count',
+				'MaintenanceRequests.newCount',
+				'MaintenanceRequests.inProgressCount',
+				'MaintenanceRequests.inReviewCount',
+			],
+			filters: [
+				{
+					member: 'MaintenanceRequests.propertyId',
+					operator: 'equals',
+					values: [propertyId],
+				},
+			],
+		},
+	)
+
+	const isLoading =
+		revenueQuery.isPending || leaseQuery.isPending || maintenanceQuery.isPending
 
 	// Revenue
 	const revenueRows = revenueQuery.data ?? []
@@ -114,6 +143,20 @@ export function PropertySectionCards({ propertyId }: Props) {
 		],
 	)
 	const leaseDelta = momDelta(thisMonthLeases, lastMonthLeases)
+
+	// Maintenance request counts
+	const maintenanceRow = maintenanceQuery.data?.[0]
+	const totalMaintenance = parseNum(
+		maintenanceRow?.['MaintenanceRequests.count'],
+	)
+	const newRequests = parseNum(maintenanceRow?.['MaintenanceRequests.newCount'])
+	const inProgress = parseNum(
+		maintenanceRow?.['MaintenanceRequests.inProgressCount'],
+	)
+	const inReview = parseNum(
+		maintenanceRow?.['MaintenanceRequests.inReviewCount'],
+	)
+	const openRequests = newRequests + inProgress + inReview
 
 	return (
 		<div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs sm:grid-cols-2 lg:grid-cols-2 lg:px-6 xl:grid-cols-4">
@@ -186,21 +229,33 @@ export function PropertySectionCards({ propertyId }: Props) {
 				</CardFooter>
 			</Card>
 
-			{/* Maintenance Requests — no cube data yet */}
+			{/* Maintenance Requests */}
 			<Card className="hover:from-primary/10 @container/card gap-3 py-4 transition-all duration-300 ease-out hover:-translate-y-[2px] hover:scale-[1.02] hover:shadow-lg">
 				<CardHeader>
 					<CardDescription>Maintenance Requests</CardDescription>
 					<CardTitle className="text-3xl font-semibold tabular-nums @[250px]/card:text-4xl">
-						—
+						{isLoading ? (
+							<Skeleton className="h-8 w-16" />
+						) : (
+							openRequests.toLocaleString()
+						)}
 					</CardTitle>
 					<CardAction>
-						<Badge variant="outline" className="gap-1 text-zinc-400">
-							Coming soon
+						<Badge variant="outline" className="gap-1">
+							{isLoading ? (
+								<Skeleton className="h-4 w-12" />
+							) : (
+								`${totalMaintenance} total`
+							)}
 						</Badge>
 					</CardAction>
 				</CardHeader>
 				<CardFooter className="text-muted-foreground text-xs">
-					Maintenance tracking not yet active
+					{isLoading ? (
+						<Skeleton className="h-3 w-40" />
+					) : (
+						`${newRequests} new · ${inProgress} in progress · ${inReview} in review`
+					)}
 				</CardFooter>
 			</Card>
 

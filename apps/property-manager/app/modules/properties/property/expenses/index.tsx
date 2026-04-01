@@ -2,6 +2,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { Receipt } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
+import { PropertyExpenseAnalyticsCards } from './components/cards'
 import { PropertyExpensesController } from './controller'
 import { useGetPropertyExpenses } from '~/api/expenses'
 import { DataTable } from '~/components/datatable'
@@ -165,6 +166,8 @@ export function PropertyExpensesModule() {
 					All expenses across lease and maintenance contexts for this property.
 				</TypographyMuted>
 			</div>
+
+			<PropertyExpenseAnalyticsCards propertyId={propertyId} />
 
 			<PropertyExpensesController isLoading={isLoading} refetch={refetch} />
 
