@@ -56,11 +56,12 @@ cube(`Invoices`, {
       primaryKey: true,
     },
 
-    // Derived property ID — resolves via context join (TA → unit, Lease → unit, payer_property_id)
+    // Derived property ID — resolves via context join (TA → unit, Lease → unit, Expense → property, payer_property_id)
     propertyId: {
       sql: `COALESCE(
         (SELECT u.property_id::text FROM tenant_applications ta JOIN units u ON ta.desired_unit_id = u.id WHERE ta.id = ${CUBE}.context_tenant_application_id LIMIT 1),
         (SELECT u.property_id::text FROM leases l JOIN units u ON l.unit_id = u.id WHERE l.id = ${CUBE}.context_lease_id LIMIT 1),
+        (SELECT e.property_id::text FROM expenses e WHERE e.id = ${CUBE}.context_expense_id LIMIT 1),
         ${CUBE}.payer_property_id::text
       )`,
       type: `string`,
