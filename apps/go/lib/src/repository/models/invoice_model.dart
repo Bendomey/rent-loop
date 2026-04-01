@@ -42,6 +42,8 @@ class InvoiceModel {
   final String? contextTenantApplicationId;
   @JsonKey(name: 'context_maintenance_request_id')
   final String? contextMaintenanceRequestId;
+  @JsonKey(name: 'context_expense_id')
+  final String? contextExpenseId;
   @JsonKey(name: 'total_amount')
   final int totalAmount;
   @JsonKey(name: 'sub_total')
@@ -74,6 +76,7 @@ class InvoiceModel {
     this.contextLeaseId,
     this.contextTenantApplicationId,
     this.contextMaintenanceRequestId,
+    this.contextExpenseId,
     this.dueDate,
     this.issuedAt,
     this.paidAt,

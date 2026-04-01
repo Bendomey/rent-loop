@@ -1,5 +1,6 @@
 import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:flutter/material.dart';
+import 'package:rentloop_go/src/lib/money.dart';
 import 'package:rentloop_go/src/repository/models/maintenance_request_model.dart';
 import 'package:rentloop_go/src/repository/providers/maintenance_badge_provider.dart';
 import 'package:rentloop_go/src/repository/providers/maintenance_request_provider.dart';
@@ -410,12 +411,7 @@ class _ExpenseCard extends StatelessWidget {
 
   String _formattedAmount() {
     if (expense.amount == null) return '—';
-    final amt = expense.amount!;
-    final currency = (expense.currency ?? 'USD').toUpperCase();
-    final formatted = amt == amt.truncateToDouble()
-        ? amt.toInt().toString()
-        : amt.toStringAsFixed(2);
-    return '$currency $formatted';
+    return MoneyLib.formatPesewas(expense.amount!);
   }
 
   @override
@@ -509,6 +505,49 @@ class _ExpenseCard extends StatelessWidget {
                       ),
                   ],
                 ),
+                if (expense.invoices?.isNotEmpty == true) ...[
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: () =>
+                        context.push('/payments/${expense.invoices!.first.id}'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).primaryColor.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).primaryColor.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.receipt_outlined,
+                            size: 13,
+                            color: Theme.of(context).primaryColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'View Invoice',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

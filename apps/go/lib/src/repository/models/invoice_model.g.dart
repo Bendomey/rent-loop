@@ -41,6 +41,7 @@ InvoiceModel _$InvoiceModelFromJson(Map<String, dynamic> json) => InvoiceModel(
           json['context_tenant_application_id'] as String?,
       contextMaintenanceRequestId:
           json['context_maintenance_request_id'] as String?,
+      contextExpenseId: json['context_expense_id'] as String?,
       dueDate: json['due_date'] as String?,
       issuedAt: json['issued_at'] as String?,
       paidAt: json['paid_at'] as String?,
@@ -66,6 +67,7 @@ Map<String, dynamic> _$InvoiceModelToJson(InvoiceModel instance) =>
       'context_lease_id': instance.contextLeaseId,
       'context_tenant_application_id': instance.contextTenantApplicationId,
       'context_maintenance_request_id': instance.contextMaintenanceRequestId,
+      'context_expense_id': instance.contextExpenseId,
       'total_amount': instance.totalAmount,
       'sub_total': instance.subTotal,
       'currency': instance.currency,

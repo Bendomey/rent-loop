@@ -14,7 +14,8 @@ String? notificationMessageToPath(RemoteMessage message) {
       final mrId = message.data['maintenance_request_id'] as String?;
       return mrId != null ? '/maintenance/$mrId' : '/maintenance';
     case 'INVOICE':
-      return '/payments';
+      final invoiceId = message.data['invoice_id'] as String?;
+      return invoiceId != null ? '/payments/$invoiceId' : '/payments';
     case 'LEASE':
       return '/more/lease-details';
     case 'CHECKLIST_SUBMITTED':

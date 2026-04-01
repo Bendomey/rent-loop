@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'invoice_model.dart';
 
 part 'maintenance_request_model.g.dart';
 
@@ -20,10 +21,18 @@ class MaintenanceUnitModel {
   Map<String, dynamic> toJson() => _$MaintenanceUnitModelToJson(this);
 }
 
-@JsonSerializable()
+int? _amountFromJson(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is double) return value.round();
+  return null;
+}
+
+@JsonSerializable(explicitToJson: true)
 class MaintenanceExpenseModel {
   final String id;
-  final double? amount;
+  @JsonKey(fromJson: _amountFromJson)
+  final int? amount;
   final String? currency;
   final String? description;
   @JsonKey(name: 'billable_to_tenant')
@@ -34,6 +43,7 @@ class MaintenanceExpenseModel {
   final String? contextType;
   @JsonKey(name: 'created_at')
   final String? createdAt;
+  final List<InvoiceModel>? invoices;
 
   MaintenanceExpenseModel({
     required this.id,
@@ -44,6 +54,7 @@ class MaintenanceExpenseModel {
     this.paidBy,
     this.contextType,
     this.createdAt,
+    this.invoices,
   });
 
   factory MaintenanceExpenseModel.fromJson(Map<String, dynamic> json) =>

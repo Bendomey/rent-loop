@@ -327,6 +327,8 @@ class _ContextSection extends StatelessWidget {
         );
       case 'MAINTENANCE':
         return (Icons.build_outlined, 'Maintenance Request', null);
+      case 'MAINTENANCE_EXPENSE':
+        return (Icons.receipt_long_outlined, 'Maintenance Expense', null);
       case 'GENERAL_EXPENSE':
         return (Icons.receipt_outlined, 'General Expense', null);
       default:
@@ -371,18 +373,21 @@ class _LineItemsSection extends StatelessWidget {
                         children: [
                           Text(
                             item.label,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 13,
-                            ),
-                          ),
-                          Text(
-                            '${item.category} × ${item.quantity}',
-                            style: TextStyle(
-                              fontSize: 11,
                               color: Colors.grey.shade500,
                             ),
                           ),
+                          // Text(
+                          //   item.quantity == 1
+                          //       ? _formatCategory(item.category)
+                          //       : '${_formatCategory(item.category)} × ${item.quantity}',
+                          //   style: TextStyle(
+                          //     fontSize: 11,
+                          //     color: Colors.grey.shade500,
+                          //   ),
+                          // ),
                         ],
                       ),
                     ),
@@ -416,6 +421,17 @@ class _LineItemsSection extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _formatCategory(String category) {
+    return category
+        .split('_')
+        .map(
+          (w) => w.isEmpty
+              ? ''
+              : '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}',
+        )
+        .join(' ');
   }
 }
 

@@ -15,4 +15,13 @@ class MoneyLib {
 
   static String formatPesewas(int pesewas) =>
       formatMoney(pesawasToCedis(pesewas));
+
+  static String currencySymbol(String code) {
+    switch (code.toUpperCase()) {
+      case 'GHS':
+        return 'GH₵';
+      default:
+        return code;
+    }
+  }
 }

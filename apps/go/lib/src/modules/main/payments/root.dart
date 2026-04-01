@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
+import 'package:rentloop_go/src/lib/money.dart';
 import 'package:rentloop_go/src/repository/models/invoice_model.dart';
 import 'package:rentloop_go/src/repository/providers/invoices_provider.dart';
 
@@ -203,7 +204,7 @@ class _BalanceCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '$currency $formatted',
+            '${MoneyLib.currencySymbol(currency)} $formatted',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 32,
@@ -314,7 +315,7 @@ class _InvoiceCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '${invoice.currency} $formatted',
+                        '${MoneyLib.currencySymbol(invoice.currency)} $formatted',
                         style: const TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 15,
@@ -436,6 +437,8 @@ class _ContextBadge extends StatelessWidget {
         return ('Application', null);
       case 'MAINTENANCE':
         return ('Maintenance', null);
+      case 'MAINTENANCE_EXPENSE':
+        return ('Maintenance Expense', null);
       case 'GENERAL_EXPENSE':
         return ('Expense', null);
       default:

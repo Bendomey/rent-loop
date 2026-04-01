@@ -26,13 +26,16 @@ MaintenanceExpenseModel _$MaintenanceExpenseModelFromJson(
         Map<String, dynamic> json) =>
     MaintenanceExpenseModel(
       id: json['id'] as String,
-      amount: (json['amount'] as num?)?.toDouble(),
+      amount: _amountFromJson(json['amount']),
       currency: json['currency'] as String?,
       description: json['description'] as String?,
       billableToTenant: json['billable_to_tenant'] as bool?,
       paidBy: json['paid_by'] as String?,
       contextType: json['context_type'] as String?,
       createdAt: json['created_at'] as String?,
+      invoices: (json['invoices'] as List<dynamic>?)
+          ?.map((e) => InvoiceModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$MaintenanceExpenseModelToJson(
@@ -46,6 +49,7 @@ Map<String, dynamic> _$MaintenanceExpenseModelToJson(
       'paid_by': instance.paidBy,
       'context_type': instance.contextType,
       'created_at': instance.createdAt,
+      'invoices': instance.invoices?.map((e) => e.toJson()).toList(),
     };
 
 MaintenanceActivityLogModel _$MaintenanceActivityLogModelFromJson(

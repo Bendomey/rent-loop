@@ -127,7 +127,7 @@ class MaintenanceApi extends AbstractApi {
     final response = await execute(
       method: 'GET',
       path:
-          '/api/v1/leases/$leaseId/maintenance-requests/$id?populate=ActivityLogs,Expenses',
+          '/api/v1/leases/$leaseId/maintenance-requests/$id?populate=ActivityLogs,Expenses,Expenses.Invoices',
     );
     final json = jsonDecode(response.body) as Map<String, dynamic>;
     return MaintenanceRequestModel.fromJson(
