@@ -145,9 +145,11 @@ These operate on the `User` identity record, not a specific client membership.
 | `POST` | `/api/v1/users/forgot-password` | Public | was `/client-users/forgot-password` |
 | `GET` | `/api/v1/users/reset-password` | Public | was `/client-users/reset-password` |
 | `POST` | `/api/v1/users/reset-password` | Public | was `/client-users/reset-password` |
-| `GET` | `/api/v1/users/me` | JWT | new — returns `User` with `ClientUsers.Client` preloaded |
+| `GET` | `/api/v1/users/me` | JWT | new — returns `User` with `ClientUsers.Client` preloaded; single source of truth for identity + all client memberships |
 | `PATCH` | `/api/v1/users/me` | JWT | new — updates `name`, `email`, `phone_number` on `User` |
 | `PATCH` | `/api/v1/users/me/password` | JWT | was `/client-users/me/password` |
+
+> `/client-users/me` is removed. Use `GET /api/v1/clients/{client_id}/client-users/{id}` when a specific membership record is needed.
 
 ### Routes that stay unchanged
 
@@ -189,7 +191,7 @@ Mirrors `AuthProvider`. Receives data hydrated by loaders, exposes via `useClien
 
 ### `/select-client` route
 
-- Loader: reads `user.client_users` from `userContext` (already resolved by `authMiddleware`)
+- Loader: reads `user.client_users` from `userContext` (already resolved by `authMiddleware` via `GET /api/v1/users/me`)
 - Single client: action auto-selects, writes `selectedClientId` to cookie, redirects to dashboard
 - Multiple clients: renders picker UI; on pick, action writes `selectedClientId` to cookie, redirects to dashboard
 
