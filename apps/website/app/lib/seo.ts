@@ -29,7 +29,7 @@ export function getSocialMetas({
 	}
 
 	if (!images.length && origin) {
-		images = [`${origin}/logo.png`]
+		images = [`${origin}/images/og-image.png`]
 	}
 
 	const ogImages = images.map((image) => {
