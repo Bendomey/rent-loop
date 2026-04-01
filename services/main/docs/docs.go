@@ -17116,6 +17116,15 @@ const docTemplate = `{
                     "minLength": 2,
                     "example": "Greater Accra"
                 },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "Property.Status.Active",
+                        "Property.Status.Maintenance",
+                        "Property.Status.Inactive"
+                    ],
+                    "example": "Property.Status.Active"
+                },
                 "tags": {
                     "type": "array",
                     "items": {
@@ -17125,6 +17134,14 @@ const docTemplate = `{
                         "beachfront",
                         "furnished"
                     ]
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "SINGLE",
+                        "MULTI"
+                    ],
+                    "example": "SINGLE"
                 }
             }
         },

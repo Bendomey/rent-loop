@@ -114,6 +114,7 @@ func NewValidator() *validator.Validate {
 	v.RegisterCustomTypeFunc(optionalCustomTypeFunc,
 		Optional[string]{},
 		Optional[int64]{},
+		Optional[[]string]{},
 		Optional[time.Time]{},
 	)
 

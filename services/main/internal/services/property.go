@@ -41,6 +41,7 @@ type propertyService struct {
 	clientUserPropertyService ClientUserPropertyService
 	unitService               UnitService
 	propertyBlockService      PropertyBlockService
+	leaseRepo                 repository.LeaseRepository
 }
 
 type PropertyServiceDependencies struct {
@@ -50,6 +51,7 @@ type PropertyServiceDependencies struct {
 	ClientUserPropertyService ClientUserPropertyService
 	UnitService               UnitService
 	PropertyBlockService      PropertyBlockService
+	LeaseRepo                 repository.LeaseRepository
 }
 
 func NewPropertyService(deps PropertyServiceDependencies) PropertyService {
@@ -60,6 +62,7 @@ func NewPropertyService(deps PropertyServiceDependencies) PropertyService {
 		clientUserPropertyService: deps.ClientUserPropertyService,
 		unitService:               deps.UnitService,
 		propertyBlockService:      deps.PropertyBlockService,
+		leaseRepo:                 deps.LeaseRepo,
 	}
 }
 
@@ -251,16 +254,18 @@ type UpdatePropertyInput struct {
 	PropertyID  string
 	ClientID    string
 	Name        *string
-	Description *string
-	Images      *[]string
-	Tags        *[]string
+	Description lib.Optional[string]
+	Images      lib.Optional[[]string]
+	Tags        lib.Optional[[]string]
 	Latitude    *float64
 	Longitude   *float64
 	Address     *string
 	Country     *string
 	Region      *string
 	City        *string
-	GPSAddress  *string
+	GPSAddress  lib.Optional[string]
+	Type        *string
+	Status      *string
 }
 
 func (s *propertyService) UpdateProperty(
@@ -291,14 +296,24 @@ func (s *propertyService) UpdateProperty(
 		property.Name = *input.Name
 	}
 
-	property.Description = input.Description
-
-	if input.Images != nil {
-		property.Images = *input.Images
+	if input.Description.IsSet {
+		property.Description = input.Description.Value
 	}
 
-	if input.Tags != nil {
-		property.Tags = *input.Tags
+	if input.Images.IsSet {
+		if input.Images.Value != nil {
+			property.Images = pq.StringArray(*input.Images.Value)
+		} else {
+			property.Images = pq.StringArray{}
+		}
+	}
+
+	if input.Tags.IsSet {
+		if input.Tags.Value != nil {
+			property.Tags = pq.StringArray(*input.Tags.Value)
+		} else {
+			property.Tags = pq.StringArray{}
+		}
 	}
 
 	if input.Latitude != nil {
@@ -325,7 +340,72 @@ func (s *propertyService) UpdateProperty(
 		property.City = *input.City
 	}
 
-	property.GPSAddress = input.GPSAddress
+	if input.GPSAddress.IsSet {
+		property.GPSAddress = input.GPSAddress.Value
+	}
+
+	if input.Type != nil {
+		newType := *input.Type
+		if newType != property.Type && property.Type == "MULTI" && newType == "SINGLE" {
+			unitsCount, unitsCountErr := s.unitService.CountUnits(
+				context,
+				repository.ListUnitsFilter{PropertyID: property.ID.String()},
+			)
+			if unitsCountErr != nil {
+				return nil, unitsCountErr
+			}
+			if unitsCount > 1 {
+				return nil, pkg.BadRequestError(
+					"property has more than 1 unit; remove units before switching to SINGLE",
+					nil,
+				)
+			}
+
+			blocksCount, blocksCountErr := s.propertyBlockService.CountPropertyBlocks(
+				context,
+				repository.ListPropertyBlocksFilter{PropertyID: property.ID.String()},
+			)
+			if blocksCountErr != nil {
+				return nil, blocksCountErr
+			}
+			if blocksCount > 1 {
+				return nil, pkg.BadRequestError(
+					"property has more than 1 block; remove blocks before switching to SINGLE",
+					nil,
+				)
+			}
+		}
+		property.Type = newType
+	}
+
+	if input.Status != nil {
+		newStatus := *input.Status
+		if newStatus != property.Status {
+			isGoingOffline := newStatus == "Property.Status.Inactive" || newStatus == "Property.Status.Maintenance"
+			if property.Status == "Property.Status.Active" && isGoingOffline {
+				activeLeaseCount, activeLeaseCountErr := s.leaseRepo.CountActiveByPropertyID(
+					context,
+					property.ID.String(),
+				)
+				if activeLeaseCountErr != nil {
+					return nil, pkg.InternalServerError(activeLeaseCountErr.Error(), &pkg.RentLoopErrorParams{
+						Err: activeLeaseCountErr,
+						Metadata: map[string]string{
+							"function": "UpdateProperty",
+							"action":   "counting active leases for property",
+						},
+					})
+				}
+				if activeLeaseCount > 0 {
+					return nil, pkg.BadRequestError(
+						"property has active or pending leases; vacate all tenants before changing status",
+						nil,
+					)
+				}
+			}
+			property.Status = newStatus
+		}
+	}
 
 	if updateErr := s.repo.Update(context, property); updateErr != nil {
 		return nil, pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{

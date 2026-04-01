@@ -97,6 +97,24 @@ All primary entities embed `BaseModelSoftDelete` — UUID PK with `uuid_generate
 - `Property`, `Unit`: Generate slug from Name in `BeforeCreate`
 - `TenantApplication`, `SigningToken`, `Invoice`: Generate unique codes/tokens in `BeforeCreate`
 
+### Optional Fields in Update Request Bodies
+
+Use `lib.Optional[T]` **only when the underlying model field is nullable** — i.e. the model field is a pointer type (`*string`, `*time.Time`) or a non-pointer type that is still semantically nullable (e.g. `pq.StringArray` / `[]string` array columns). For all other fields that are simply optional in the request body (non-nullable model fields like `string`, `float64`), use a plain pointer `*T`.
+
+**Rule of thumb:**
+- Model field is `*T` or a nullable collection (`pq.StringArray`) → use `lib.Optional[T]` in the request struct and service input. Check `IsSet` to distinguish "not sent" from "explicitly nulled".
+- Model field is a non-nullable value type (`string`, `float64`, etc.) → use `*T`. `nil` means "not provided in this request".
+
+**Why:** `lib.Optional[T]` lets the service distinguish between a client omitting a field (no change) and a client explicitly sending `null` (clear the value). For non-nullable model fields this distinction is meaningless — `null` is not a valid state — so `*T` is sufficient.
+
+**Swagger:** `lib.Optional[T]` is a generic struct and swaggo cannot introspect it. Always add a `swaggertype` tag alongside every `lib.Optional[T]` field:
+- `lib.Optional[string]` → `swaggertype:"string"`
+- `lib.Optional[[]string]` → `swaggertype:"array,string"`
+- `lib.Optional[int64]` → `swaggertype:"integer"`
+- `lib.Optional[time.Time]` → `swaggertype:"string"`
+
+**Registering new Optional types with the validator:** If you introduce a new `lib.Optional[T]` for a type not already listed, add it to `RegisterCustomTypeFunc` in `internal/lib/optional.go → NewValidator()`.
+
 ---
 
 ## Authentication

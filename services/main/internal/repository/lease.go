@@ -18,6 +18,7 @@ type LeaseRepository interface {
 	List(context context.Context, filterQuery ListLeasesFilter) (*[]models.Lease, error)
 	Count(context context.Context, filterQuery ListLeasesFilter) (int64, error)
 	CountActiveByUnitID(context context.Context, unitID string) (int64, error)
+	CountActiveByPropertyID(context context.Context, propertyID string) (int64, error)
 	ListDueForBilling(ctx context.Context) (*[]models.Lease, error)
 }
 
@@ -214,6 +215,23 @@ func tenantAccountLeasesScope(tenantAccountID *string) func(db *gorm.DB) *gorm.D
 			*tenantAccountID,
 		)
 	}
+}
+
+func (r *leaseRepository) CountActiveByPropertyID(ctx context.Context, propertyID string) (int64, error) {
+	var count int64
+	err := r.DB.WithContext(ctx).
+		Model(&models.Lease{}).
+		Joins("INNER JOIN units ON leases.unit_id = units.id").
+		Where("units.property_id = ?", propertyID).
+		Where("leases.status IN ?", []string{
+			"Lease.Status.Pending",
+			"Lease.Status.Active",
+		}).
+		Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 func (r *leaseRepository) ListDueForBilling(ctx context.Context) (*[]models.Lease, error) {
