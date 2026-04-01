@@ -579,7 +579,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 						{`
 						var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
 						Tawk_API.onLoad=function(){
-							var hiddenPaths=['/login','/forgot-your-password','/reset-your-password'];
+							var hiddenPaths=${JSON.stringify(TAWK_HIDDEN_PATHS)};
 							if(hiddenPaths.indexOf(window.location.pathname)!==-1){Tawk_API.hideWidget();}
 						};
 						(function(){
@@ -604,10 +604,11 @@ function TawkVisibility() {
 	const location = useLocation()
 
 	useEffect(() => {
-		const tawkApi = (window as unknown as { Tawk_API?: { hideWidget?: () => void; showWidget?: () => void } }).Tawk_API
+		const tawkApi = (window as unknown as { Tawk_API?: { hideWidget?: () => void; showWidget?: () => void; minimize?: () => void } }).Tawk_API
 		if (!tawkApi) return
 
 		if (TAWK_HIDDEN_PATHS.includes(location.pathname)) {
+			tawkApi.minimize?.()
 			tawkApi.hideWidget?.()
 		} else {
 			tawkApi.showWidget?.()
