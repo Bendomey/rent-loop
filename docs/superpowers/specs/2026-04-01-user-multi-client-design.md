@@ -129,17 +129,29 @@ All protected client-user routes move from `/api/v1/...` to `/api/v1/clients/{cl
 | Before | After |
 |---|---|
 | `POST /api/v1/client-users` | `POST /api/v1/clients/{client_id}/client-users` |
-| `GET /api/v1/client-users/me` | `GET /api/v1/clients/{client_id}/client-users/me` |
+| `GET /api/v1/client-users` | `GET /api/v1/clients/{client_id}/client-users` |
+| `GET /api/v1/client-users/{id}` | `GET /api/v1/clients/{client_id}/client-users/{id}` |
 | `GET /api/v1/properties` | `GET /api/v1/clients/{client_id}/properties` |
 | `GET /api/v1/invoices` | `GET /api/v1/clients/{client_id}/invoices` |
 | `GET /api/v1/payment-accounts` | `GET /api/v1/clients/{client_id}/payment-accounts` |
 
+### User-scoped endpoints (not client-scoped, no `{client_id}` prefix)
+
+These operate on the `User` identity record, not a specific client membership.
+
+| Method | Path | Auth | Notes |
+|---|---|---|---|
+| `POST` | `/api/v1/users/login` | Public | was `/client-users/login` |
+| `POST` | `/api/v1/users/forgot-password` | Public | was `/client-users/forgot-password` |
+| `GET` | `/api/v1/users/reset-password` | Public | was `/client-users/reset-password` |
+| `POST` | `/api/v1/users/reset-password` | Public | was `/client-users/reset-password` |
+| `GET` | `/api/v1/users/me` | JWT | new — returns `User` with `ClientUsers.Client` preloaded |
+| `PATCH` | `/api/v1/users/me` | JWT | new — updates `name`, `email`, `phone_number` on `User` |
+| `PATCH` | `/api/v1/users/me/password` | JWT | was `/client-users/me/password` |
+
 ### Routes that stay unchanged
 
 - `POST /api/v1/clients/apply`
-- `POST /api/v1/users/login` (was `/client-users/login`)
-- `POST /api/v1/users/forgot-password`
-- `GET/POST /api/v1/users/reset-password`
 - `GET /api/v1/units/{unit_id}` (public)
 - All admin routes (`/api/v1/admins/...`)
 - All tenant routes (`/api/v1/auth/...`, `/api/v1/tenant-accounts/...`)
