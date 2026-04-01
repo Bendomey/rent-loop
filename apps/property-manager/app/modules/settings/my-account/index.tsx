@@ -1,25 +1,16 @@
 import { Separator } from '@radix-ui/react-separator'
-import { Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 import UpdateClientProfileModal from './components/update-name'
 import UpdatePasswordModal from './components/update-password'
 import { UpdateClientEmail } from './update-email'
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
+import { Avatar, AvatarFallback } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
-import {
-	Field,
-	FieldContent,
-	FieldDescription,
-	FieldGroup,
-	FieldLabel,
-} from '~/components/ui/field'
+import { Field, FieldGroup, FieldLabel } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
-import { Label } from '~/components/ui/label'
-import { Switch } from '~/components/ui/switch'
-import { TypographyH3, TypographyP } from '~/components/ui/typography'
+import { TypographyH3 } from '~/components/ui/typography'
 import { useSendOtp } from '~/hooks/use-send-otp'
-import { safeString } from '~/lib/strings'
 import { getNameInitials } from '~/lib/misc'
+import { safeString } from '~/lib/strings'
 import { useAuth } from '~/providers/auth-provider'
 
 export function MyAccountSettingsModule() {

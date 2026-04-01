@@ -12,12 +12,12 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
-import { cn } from '~/lib/utils'
 import {
 	CATEGORY_LABELS,
 	PRIORITY_LABELS,
 	PRIORITY_STYLES,
 } from '~/lib/maintenance-request.utils'
+import { cn } from '~/lib/utils'
 
 type MaintenanceKanbanItem = MaintenanceRequest & {
 	column: MaintenanceRequestStatus
