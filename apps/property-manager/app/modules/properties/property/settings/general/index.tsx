@@ -10,10 +10,7 @@ import {
 	AddressSchema,
 	type AddressInputSchema,
 } from '~/components/address-input'
-import {
-	PermissionGuard,
-	PropertyPermissionGuard,
-} from '~/components/permissions/permission-guard'
+import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Button } from '~/components/ui/button'
 import {
 	Dialog,
@@ -22,7 +19,12 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '~/components/ui/dialog'
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '~/components/ui/field'
+import {
+	Field,
+	FieldError,
+	FieldGroup,
+	FieldLabel,
+} from '~/components/ui/field'
 import {
 	Form,
 	FormControl,
@@ -35,7 +37,6 @@ import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { Separator } from '~/components/ui/separator'
 import { Spinner } from '~/components/ui/spinner'
-import { Switch } from '~/components/ui/switch'
 import { Textarea } from '~/components/ui/textarea'
 import {
 	TypographyH3,
@@ -46,6 +47,7 @@ import { getErrorMessage } from '~/lib/error-messages'
 import { safeString } from '~/lib/strings'
 import { useProperty } from '~/providers/property-provider'
 import ConfirmDeletePropertyModule from './delete'
+import { SwitchPropertyType } from './component/switch-type'
 import { useQueryClient } from '@tanstack/react-query'
 import { QUERY_KEYS } from '~/lib/constants'
 
@@ -94,15 +96,9 @@ function usePropertyMutation(
 const editBasicSchema = z.object({
 	name: z.string().min(2, 'Name must be at least 2 characters'),
 	description: z.string().max(500, 'Max 500 characters').optional(),
-	type: z.enum(['SINGLE', 'MULTI'], { error: 'Please select a type' }),
 })
 
 type EditBasicSchema = z.infer<typeof editBasicSchema>
-
-const typeOptions: Array<{ label: string; value: 'SINGLE' | 'MULTI' }> = [
-	{ label: 'Single', value: 'SINGLE' },
-	{ label: 'Multi', value: 'MULTI' },
-]
 
 function EditBasicDetailsDialog({
 	property,
@@ -126,11 +122,10 @@ function EditBasicDetailsDialog({
 		defaultValues: {
 			name: property.name,
 			description: safeString(property.description) || '',
-			type: property.type,
 		},
 	})
 
-	const { control, handleSubmit, watch, setValue } = rhf
+	const { control, handleSubmit } = rhf
 
 	const onSubmit = (data: EditBasicSchema) => {
 		submit({
@@ -138,8 +133,7 @@ function EditBasicDetailsDialog({
 			data: {
 				name: data.name,
 				description: data.description || null,
-				type: data.type,
-			}
+			},
 		})
 	}
 
@@ -149,7 +143,7 @@ function EditBasicDetailsDialog({
 				<DialogHeader>
 					<DialogTitle>Edit Basic Details</DialogTitle>
 					<DialogDescription>
-						Update the property name, description, and type.
+						Update the property name and description.
 					</DialogDescription>
 				</DialogHeader>
 
@@ -186,34 +180,6 @@ function EditBasicDetailsDialog({
 								</FormItem>
 							)}
 						/>
-
-						<FormItem>
-							<FormLabel>Type</FormLabel>
-							<div className="flex gap-2">
-								{typeOptions.map((opt) => {
-									const isSelected = watch('type') === opt.value
-									return (
-										<Button
-											key={opt.value}
-											type="button"
-											variant={isSelected ? 'default' : 'outline'}
-											size="sm"
-											onClick={() =>
-												setValue('type', opt.value, {
-													shouldDirty: true,
-													shouldValidate: true,
-												})
-											}
-										>
-											{opt.label}
-										</Button>
-									)
-								})}
-							</div>
-							<FormMessage>
-								{rhf.formState.errors.type?.message}
-							</FormMessage>
-						</FormItem>
 
 						<div className="flex justify-end gap-3 pt-1">
 							<Button
@@ -298,7 +264,7 @@ function EditLocationDialog({
 				country: data.country,
 				latitude: data.latitude,
 				longitude: data.longitude,
-			}
+			},
 		})
 	}
 
@@ -358,7 +324,7 @@ function EditLocationDialog({
 
 export function PropertyGeneralSettingsModule() {
 	const { clientUserProperty } = useProperty()
-		const queryClient = useQueryClient()
+	const queryClient = useQueryClient()
 
 	const [openDeletePropertyModal, setOpenDeletePropertyModal] = useState(false)
 	const [showEditBasic, setShowEditBasic] = useState(false)
@@ -367,7 +333,9 @@ export function PropertyGeneralSettingsModule() {
 	const property = clientUserProperty?.property
 
 	const handleMutationSuccess = () => {
-				void queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CLIENT_USER_PROPERTIES] })
+		void queryClient.invalidateQueries({
+			queryKey: [QUERY_KEYS.CLIENT_USER_PROPERTIES],
+		})
 	}
 
 	return (
@@ -420,13 +388,21 @@ export function PropertyGeneralSettingsModule() {
 						</p>
 					</div>
 
-					<div className="space-y-1">
+					<div className="space-y-2">
 						<Label className="text-sm font-medium">Type</Label>
 						<p className="text-muted-foreground text-sm">
 							{property?.type
 								? property.type.charAt(0) + property.type.slice(1).toLowerCase()
 								: '—'}
 						</p>
+						{property && (
+							<PropertyPermissionGuard roles={['MANAGER']}>
+								<SwitchPropertyType
+									property={property}
+									onSuccess={handleMutationSuccess}
+								/>
+							</PropertyPermissionGuard>
+						)}
 					</div>
 				</div>
 			</section>
@@ -447,9 +423,12 @@ export function PropertyGeneralSettingsModule() {
 				</PropertyPermissionGuard>
 
 				<div className="space-y-2">
-					<TypographyH4 className="text-lg font-semibold">Location</TypographyH4>
+					<TypographyH4 className="text-lg font-semibold">
+						Location
+					</TypographyH4>
 					<TypographyMuted className="text-sm">
-						Changing the address updates country, region, and city automatically.
+						Changing the address updates country, region, and city
+						automatically.
 					</TypographyMuted>
 				</div>
 
@@ -483,7 +462,7 @@ export function PropertyGeneralSettingsModule() {
 					</div>
 				</div>
 			</section>
- 
+
 			{/* Support Access */}
 			{/* <section className="bg-card grid gap-6 rounded-xl border p-4 shadow-sm md:p-6">
 				<TypographyH3>Support Access</TypographyH3>

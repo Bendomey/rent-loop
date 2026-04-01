@@ -170,7 +170,6 @@ export const createProperty = async (
 	}
 }
 
-
 export interface UpdatePropertyInput {
 	propertyId: string
 	data: Partial<CreatePropertyInput>
@@ -195,9 +194,8 @@ const updateProperty = async ({ propertyId, ...data }: UpdatePropertyInput) => {
 	}
 }
 
-export const useUpdateProperty = () => useMutation({ mutationFn: updateProperty })
-
-
+export const useUpdateProperty = () =>
+	useMutation({ mutationFn: updateProperty })
 
 /**
  * Delete property
