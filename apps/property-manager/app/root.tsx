@@ -557,6 +557,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 					media="(prefers-color-scheme: dark)"
 					content="#1c1c24"
 				/>
+				<meta name="apple-mobile-web-app-capable" content="yes" />
+				<meta name="mobile-web-app-capable" content="yes" />
 				<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 				<Meta />
 				<Links />

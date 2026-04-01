@@ -33,8 +33,18 @@ export function PwaUpdatePrompt() {
 			</span>
 			<button
 				onClick={() => {
+					const onControllerChange = () => {
+						navigator.serviceWorker.removeEventListener(
+							'controllerchange',
+							onControllerChange,
+						)
+						window.location.reload()
+					}
+					navigator.serviceWorker.addEventListener(
+						'controllerchange',
+						onControllerChange,
+					)
 					waitingWorker.postMessage({ type: 'SKIP_WAITING' })
-					window.location.reload()
 				}}
 				className="text-primary text-sm font-medium underline"
 			>
