@@ -27,7 +27,7 @@ export function PwaUpdatePrompt() {
 	if (!waitingWorker) return null
 
 	return (
-		<div className="fixed bottom-4 left-4 z-50 flex items-center gap-3 rounded-lg border bg-card p-4 shadow-lg">
+		<div className="bg-card fixed bottom-4 left-4 z-50 flex items-center gap-3 rounded-lg border p-4 shadow-lg">
 			<span className="text-card-foreground text-sm">
 				A new version is available.
 			</span>

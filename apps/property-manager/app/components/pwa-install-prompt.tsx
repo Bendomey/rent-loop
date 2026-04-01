@@ -74,7 +74,7 @@ export function PwaInstallPrompt() {
 
 	if (showIosHint) {
 		return (
-			<div className="fixed bottom-4 left-4 right-4 z-50 rounded-lg border bg-card p-4 shadow-lg sm:right-auto sm:w-80">
+			<div className="bg-card fixed right-4 bottom-4 left-4 z-50 rounded-lg border p-4 shadow-lg sm:right-auto sm:w-80">
 				<div className="flex items-start justify-between gap-3">
 					<div className="flex flex-col gap-1">
 						<p className="text-card-foreground text-sm font-medium">
@@ -103,7 +103,7 @@ export function PwaInstallPrompt() {
 	if (!deferredPrompt) return null
 
 	return (
-		<div className="fixed bottom-4 left-4 right-4 z-50 rounded-lg border bg-card p-4 shadow-lg sm:right-auto sm:w-80">
+		<div className="bg-card fixed right-4 bottom-4 left-4 z-50 rounded-lg border p-4 shadow-lg sm:right-auto sm:w-80">
 			<div className="flex items-start justify-between gap-3">
 				<div className="flex flex-col gap-1">
 					<p className="text-card-foreground text-sm font-medium">

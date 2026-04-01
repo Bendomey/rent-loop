@@ -30,17 +30,17 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '~/components/ui/tooltip'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import {
 	ASSET_MANAGEMENT_GUIDE_URL,
 	PAGINATION_DEFAULTS,
 } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from '~/components/ui/tooltip'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyAssetUnitsModule() {
