@@ -13,6 +13,7 @@ import {
 	Scripts,
 	ScrollRestoration,
 	useLoaderData,
+	useLocation,
 } from 'react-router'
 import type { Route } from './+types/root'
 
@@ -25,6 +26,7 @@ import { getAuthSession } from './lib/actions/auth.session.server'
 import { environmentVariables } from './lib/actions/env.server'
 import { NotFoundModule } from './modules'
 import { Providers } from './providers'
+import { TAWK_HIDDEN_PATHS } from './lib/constants'
 
 dayjs.locale('en-gb')
 dayjs.extend(localizedFormat)
@@ -576,6 +578,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 					<script>
 						{`
 						var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+						Tawk_API.onLoad=function(){
+							var hiddenPaths=['/login','/forgot-your-password','/reset-your-password'];
+							if(hiddenPaths.indexOf(window.location.pathname)!==-1){Tawk_API.hideWidget();}
+						};
 						(function(){
 							var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
 							s1.async=true;
@@ -594,6 +600,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
 	)
 }
 
+function TawkVisibility() {
+	const location = useLocation()
+
+	useEffect(() => {
+		const tawkApi = (window as unknown as { Tawk_API?: { hideWidget?: () => void; showWidget?: () => void } }).Tawk_API
+		if (!tawkApi) return
+
+		if (TAWK_HIDDEN_PATHS.includes(location.pathname)) {
+			tawkApi.hideWidget?.()
+		} else {
+			tawkApi.showWidget?.()
+		}
+	}, [location.pathname])
+
+	return null
+}
+
 export default function App() {
 	const { ENV } = useLoaderData<typeof loader>()
 
@@ -610,6 +633,7 @@ export default function App() {
 	return (
 		<Providers>
 			<GoogleAnalytics gaId={ENV.GOOGLE_ANALYTICS_ID} />
+			<TawkVisibility />
 			<PwaInstallPrompt />
 			<PwaUpdatePrompt />
 			<Outlet />

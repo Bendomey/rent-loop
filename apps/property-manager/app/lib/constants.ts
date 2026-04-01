@@ -55,3 +55,5 @@ export type APIStatusType = (typeof API_STATUS)[keyof typeof API_STATUS]
 const placeholderColor =
 	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8+/79fwAJaAPMsmQeyQAAAABJRU5ErkJggg==' // grey-10 as 1px png in base64
 export const blurDataURL = `data:image/png;base64,${placeholderColor}`
+
+export const TAWK_HIDDEN_PATHS = ['/login', '/forgot-your-password', '/reset-your-password']
