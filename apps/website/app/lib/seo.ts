@@ -32,9 +32,12 @@ export function getSocialMetas({
 		images = [`${origin}/images/og-image.png`]
 	}
 
-	const ogImages = images.map((image) => {
-		return { name: 'og:image', content: image }
-	})
+	const ogImages = images.flatMap((image) => [
+		{ property: 'og:image', content: image },
+		{ property: 'og:image:width', content: '1200' },
+		{ property: 'og:image:height', content: '630' },
+		{ property: 'og:image:type', content: 'image/png' },
+	])
 
 	const twitterImages = images.map((image) => {
 		return { name: 'twitter:image', content: image }
@@ -58,11 +61,11 @@ export function getSocialMetas({
 		{ name: 'robots', content: 'index, follow' },
 		{ name: 'author', content: 'RentLoop' },
 		{ tagName: 'link', rel: 'canonical', href: fullUrl },
-		{ name: 'og:url', content: fullUrl },
-		{ name: 'og:site_name', content: capitalize(APP_NAME) },
-		{ name: 'og:type', content: 'website' },
-		{ name: 'og:title', content: title },
-		{ name: 'og:description', content: truncateDescription },
+		{ property: 'og:url', content: fullUrl },
+		{ property: 'og:site_name', content: capitalize(APP_NAME) },
+		{ property: 'og:type', content: 'website' },
+		{ property: 'og:title', content: title },
+		{ property: 'og:description', content: truncateDescription },
 		...ogImages,
 		{
 			name: 'twitter:card',
