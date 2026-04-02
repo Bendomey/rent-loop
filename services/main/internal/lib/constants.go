@@ -15,6 +15,21 @@ type ClientUserFromToken struct {
 	ClientID string `json:"client_id"`
 }
 
+type UserFromToken struct {
+	ID string `json:"id"`
+}
+
+const userTokenContextKey contextKey = "rentloop-user"
+
+func WithUser(ctx context.Context, user *UserFromToken) context.Context {
+	return context.WithValue(ctx, userTokenContextKey, user)
+}
+
+func UserFromContext(ctx context.Context) (*UserFromToken, bool) {
+	user, ok := ctx.Value(userTokenContextKey).(*UserFromToken)
+	return user, ok
+}
+
 type TenantAccountFromToken struct {
 	ID string `json:"id"`
 }

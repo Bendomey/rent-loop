@@ -19,14 +19,12 @@ func InjectClientUserAuthMiddleware(appCtx pkg.AppContext) func(http.Handler) ht
 			authorizationToken := r.Header.Get("Authorization")
 
 			if authorizationToken != "" {
-				client, clientError := clientFromJWT(authorizationToken, appCtx.Config.TokenSecrets.ClientUserSecret)
-
-				if clientError != nil {
+				user, err := userFromJWT(authorizationToken, appCtx.Config.TokenSecrets.ClientUserSecret)
+				if err != nil {
 					http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
 					return
 				}
-
-				ctx := lib.WithClientUser(r.Context(), client)
+				ctx := lib.WithUser(r.Context(), user)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
@@ -38,37 +36,67 @@ func InjectClientUserAuthMiddleware(appCtx pkg.AppContext) func(http.Handler) ht
 
 func CheckForClientUserAuthPresenceMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		client, ok := lib.ClientUserFromContext(r.Context())
-		if !ok || client == nil {
+		user, ok := lib.UserFromContext(r.Context())
+		if !ok || user == nil {
 			http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
 			return
 		}
-
 		next.ServeHTTP(w, r)
 	})
 }
 
-func clientFromJWT(unattendedToken string, secret string) (*lib.ClientUserFromToken, error) {
-	token, extractTokenErr := ExtractToken(unattendedToken)
+// ValidateClientMembershipMiddleware resolves the ClientUser for (userID, clientID from URL)
+// and injects it as ClientUserFromToken so all downstream handlers work unchanged.
+func ValidateClientMembershipMiddleware(appCtx pkg.AppContext) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			userCtx, ok := lib.UserFromContext(r.Context())
+			if !ok || userCtx == nil {
+				http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
+				return
+			}
 
-	if extractTokenErr != nil {
-		return nil, extractTokenErr
+			clientID := chi.URLParam(r, "client_id")
+
+			var clientUser models.ClientUser
+			result := appCtx.DB.
+				Select("client_users.id", "client_users.client_id", "client_users.role").
+				Joins("JOIN users ON users.id = client_users.user_id").
+				Where("client_users.client_id = ? AND users.id = ? AND client_users.deleted_at IS NULL", clientID, userCtx.ID).
+				First(&clientUser)
+			if result.Error != nil {
+				http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
+				return
+			}
+
+			ctx := lib.WithClientUser(r.Context(), &lib.ClientUserFromToken{
+				ID:       clientUser.ID.String(),
+				ClientID: clientUser.ClientID,
+			})
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+func userFromJWT(unattendedToken string, secret string) (*lib.UserFromToken, error) {
+	token, err := ExtractToken(unattendedToken)
+	if err != nil {
+		return nil, err
 	}
 
-	rawToken, validateError := validatetoken.ValidateJWTToken(token, secret)
-	if validateError != nil {
+	rawToken, err := validatetoken.ValidateJWTToken(token, secret)
+	if err != nil {
 		return nil, errors.New("AuthorizationFailed")
 	}
 
 	claims, ok := rawToken.Claims.(jwt.MapClaims)
-	var clientFromTokenImplementation lib.ClientUserFromToken
-
-	if ok && rawToken.Valid {
-		clientFromTokenImplementation.ID = claims["id"].(string)
-		clientFromTokenImplementation.ClientID = claims["client_id"].(string)
+	if !ok || !rawToken.Valid {
+		return nil, errors.New("AuthorizationFailed")
 	}
 
-	return &clientFromTokenImplementation, nil
+	return &lib.UserFromToken{
+		ID: claims["id"].(string),
+	}, nil
 }
 
 func ValidateRoleClientUserMiddleware(appCtx pkg.AppContext, allowedRoles ...string) func(http.Handler) http.Handler {
