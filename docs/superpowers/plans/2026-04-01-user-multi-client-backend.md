@@ -313,7 +313,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func InjectClientUserAuthMiddleware(appCtx pkg.AppContext) func(http.Handler) http.Handler {
+func InjectUserAuthMiddleware(appCtx pkg.AppContext) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authorizationToken := r.Header.Get("Authorization")
@@ -334,7 +334,7 @@ func InjectClientUserAuthMiddleware(appCtx pkg.AppContext) func(http.Handler) ht
 	}
 }
 
-func CheckForClientUserAuthPresenceMiddleware(next http.Handler) http.Handler {
+func CheckForUserAuthPresenceMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, ok := lib.UserFromContext(r.Context())
 		if !ok || user == nil {
@@ -1708,7 +1708,7 @@ import (
 
 func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func(r chi.Router) {
 	return func(r chi.Router) {
-		r.Use(middlewares.InjectClientUserAuthMiddleware(appCtx))
+		r.Use(middlewares.InjectUserAuthMiddleware(appCtx))
 
 		// unprotected routes
 		r.Group(func(r chi.Router) {
@@ -1736,7 +1736,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 
 		// user-scoped protected routes (JWT required, no client_id)
 		r.Group(func(r chi.Router) {
-			r.Use(middlewares.CheckForClientUserAuthPresenceMiddleware)
+			r.Use(middlewares.CheckForUserAuthPresenceMiddleware)
 
 			r.Route("/v1/admin/users", func(r chi.Router) {
 				r.Get("/me", handlers.UserHandler.GetMe)
@@ -1749,7 +1749,7 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 
 		// client-scoped protected routes (JWT + client_id in URL)
 		r.Route("/v1/admin/clients/{client_id}", func(r chi.Router) {
-			r.Use(middlewares.CheckForClientUserAuthPresenceMiddleware)
+			r.Use(middlewares.CheckForUserAuthPresenceMiddleware)
 			r.Use(middlewares.ValidateClientMembershipMiddleware(appCtx))
 
 			// analytics

@@ -84,7 +84,7 @@ func (s *userService) LoginUser(ctx context.Context, input LoginUserInput) (*Log
 			return nil, pkg.NotFoundError("UserNotFound", &pkg.RentLoopErrorParams{Err: err})
 		}
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
+			Err:      err,
 			Metadata: map[string]string{"function": "LoginUser", "action": "fetching user by email"},
 		})
 	}
@@ -98,7 +98,7 @@ func (s *userService) LoginUser(ctx context.Context, input LoginUserInput) (*Log
 	userWithClients, err := s.repo.GetByIDWithClientUsers(ctx, user.ID.String())
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
+			Err:      err,
 			Metadata: map[string]string{"function": "LoginUser", "action": "fetching user with clients"},
 		})
 	}
@@ -108,7 +108,7 @@ func (s *userService) LoginUser(ctx context.Context, input LoginUserInput) (*Log
 	}, s.appCtx.Config.TokenSecrets.ClientUserSecret)
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
+			Err:      err,
 			Metadata: map[string]string{"function": "LoginUser", "action": "signing token"},
 		})
 	}
@@ -123,7 +123,7 @@ func (s *userService) GetMe(ctx context.Context, userID string) (*models.User, e
 			return nil, pkg.NotFoundError("UserNotFound", &pkg.RentLoopErrorParams{Err: err})
 		}
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
+			Err:      err,
 			Metadata: map[string]string{"function": "GetMe", "action": "fetching user with clients"},
 		})
 	}
@@ -144,7 +144,7 @@ func (s *userService) UpdateMe(ctx context.Context, input UpdateUserMeInput) (*m
 			return nil, pkg.NotFoundError("UserNotFound", &pkg.RentLoopErrorParams{Err: err})
 		}
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
+			Err:      err,
 			Metadata: map[string]string{"function": "UpdateMe", "action": "fetching user by ID"},
 		})
 	}
@@ -160,7 +160,7 @@ func (s *userService) UpdateMe(ctx context.Context, input UpdateUserMeInput) (*m
 		existing, emailErr := s.repo.GetByEmail(ctx, newEmail)
 		if emailErr != nil && !errors.Is(emailErr, gorm.ErrRecordNotFound) {
 			return nil, pkg.InternalServerError(emailErr.Error(), &pkg.RentLoopErrorParams{
-				Err: emailErr,
+				Err:      emailErr,
 				Metadata: map[string]string{"function": "UpdateMe", "action": "checking email uniqueness"},
 			})
 		}
@@ -172,7 +172,7 @@ func (s *userService) UpdateMe(ctx context.Context, input UpdateUserMeInput) (*m
 
 	if err := s.repo.Update(ctx, user); err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
+			Err:      err,
 			Metadata: map[string]string{"function": "UpdateMe", "action": "updating user"},
 		})
 	}
@@ -192,7 +192,7 @@ func (s *userService) UpdatePassword(ctx context.Context, input UpdateUserPasswo
 			return nil, pkg.NotFoundError("UserNotFound", &pkg.RentLoopErrorParams{Err: err})
 		}
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
+			Err:      err,
 			Metadata: map[string]string{"function": "UpdatePassword", "action": "fetching user"},
 		})
 	}
@@ -207,7 +207,7 @@ func (s *userService) UpdatePassword(ctx context.Context, input UpdateUserPasswo
 	hashed, err := hashpassword.HashPassword(input.NewPassword)
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
+			Err:      err,
 			Metadata: map[string]string{"function": "UpdatePassword", "action": "hashing password"},
 		})
 	}
@@ -215,7 +215,7 @@ func (s *userService) UpdatePassword(ctx context.Context, input UpdateUserPasswo
 
 	if err := s.repo.Update(ctx, user); err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
+			Err:      err,
 			Metadata: map[string]string{"function": "UpdatePassword", "action": "saving user"},
 		})
 	}
@@ -244,7 +244,7 @@ func (s *userService) SendForgotPasswordResetLink(ctx context.Context, email str
 			return nil, pkg.NotFoundError("UserNotFound", &pkg.RentLoopErrorParams{Err: err})
 		}
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
+			Err:      err,
 			Metadata: map[string]string{"function": "SendForgotPasswordResetLink", "action": "fetching user by email"},
 		})
 	}
@@ -254,7 +254,7 @@ func (s *userService) SendForgotPasswordResetLink(ctx context.Context, email str
 	}, s.appCtx.Config.TokenSecrets.ClientUserSecret)
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
+			Err:      err,
 			Metadata: map[string]string{"function": "SendForgotPasswordResetLink", "action": "signing token"},
 		})
 	}
@@ -283,7 +283,7 @@ func (s *userService) ResetPassword(ctx context.Context, input ResetUserPassword
 			return nil, pkg.NotFoundError("UserNotFound", &pkg.RentLoopErrorParams{Err: err})
 		}
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
+			Err:      err,
 			Metadata: map[string]string{"function": "ResetPassword", "action": "fetching user"},
 		})
 	}
@@ -291,7 +291,7 @@ func (s *userService) ResetPassword(ctx context.Context, input ResetUserPassword
 	hashed, err := hashpassword.HashPassword(input.NewPassword)
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
+			Err:      err,
 			Metadata: map[string]string{"function": "ResetPassword", "action": "hashing password"},
 		})
 	}
@@ -299,7 +299,7 @@ func (s *userService) ResetPassword(ctx context.Context, input ResetUserPassword
 
 	if err := s.repo.Update(ctx, user); err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
+			Err:      err,
 			Metadata: map[string]string{"function": "ResetPassword", "action": "saving user"},
 		})
 	}

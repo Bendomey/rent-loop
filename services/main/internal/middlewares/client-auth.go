@@ -13,7 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func InjectClientUserAuthMiddleware(appCtx pkg.AppContext) func(http.Handler) http.Handler {
+func InjectUserAuthMiddleware(appCtx pkg.AppContext) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authorizationToken := r.Header.Get("Authorization")
@@ -34,7 +34,7 @@ func InjectClientUserAuthMiddleware(appCtx pkg.AppContext) func(http.Handler) ht
 	}
 }
 
-func CheckForClientUserAuthPresenceMiddleware(next http.Handler) http.Handler {
+func CheckForUserAuthPresenceMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, ok := lib.UserFromContext(r.Context())
 		if !ok || user == nil {
@@ -72,6 +72,7 @@ func ValidateClientMembershipMiddleware(appCtx pkg.AppContext) func(http.Handler
 			ctx := lib.WithClientUser(r.Context(), &lib.ClientUserFromToken{
 				ID:       clientUser.ID.String(),
 				ClientID: clientUser.ClientID,
+				Role:     clientUser.Role,
 			})
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
@@ -99,7 +100,7 @@ func userFromJWT(unattendedToken string, secret string) (*lib.UserFromToken, err
 	}, nil
 }
 
-func ValidateRoleClientUserMiddleware(appCtx pkg.AppContext, allowedRoles ...string) func(http.Handler) http.Handler {
+func ValidateRoleClientUserMiddleware(_ pkg.AppContext, allowedRoles ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			clientCtx, ok := lib.ClientUserFromContext(r.Context())
@@ -108,23 +109,7 @@ func ValidateRoleClientUserMiddleware(appCtx pkg.AppContext, allowedRoles ...str
 				return
 			}
 
-			// TODO: Add a cache layer here later
-			var clientUser models.ClientUser
-			result := appCtx.DB.Select("id", "role").Where("id = ?", clientCtx.ID).First(&clientUser)
-			if result.Error != nil {
-				http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
-				return
-			}
-
-			hasAllowedRole := false
-			for _, role := range allowedRoles {
-				if clientUser.Role == role {
-					hasAllowedRole = true
-					break
-				}
-			}
-
-			if !hasAllowedRole {
+			if !slices.Contains(allowedRoles, clientCtx.Role) {
 				http.Error(w, "Forbidden", http.StatusForbidden)
 				return
 			}
@@ -134,10 +119,11 @@ func ValidateRoleClientUserMiddleware(appCtx pkg.AppContext, allowedRoles ...str
 	}
 }
 
-func ValidateRoleClientUserPropertyMiddleware(
-	appCtx pkg.AppContext,
-	allowedRoles ...string,
-) func(http.Handler) http.Handler {
+// ValidatePropertyAccessMiddleware ensures the current client user has access to the
+// property_id in the URL. Only OWNER implicitly has MANAGER-level access to all properties
+// in their client. ADMIN and STAFF must be explicitly assigned via client_user_properties.
+// The resolved property role is stored in context so downstream role checks need no extra DB call.
+func ValidatePropertyAccessMiddleware(appCtx pkg.AppContext) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			clientCtx, ok := lib.ClientUserFromContext(r.Context())
@@ -146,21 +132,47 @@ func ValidateRoleClientUserPropertyMiddleware(
 				return
 			}
 
-			propertyID := chi.URLParam(r, "property_id")
+			// Only OWNER has universal access to all client properties
+			if clientCtx.Role == "OWNER" {
+				ctx := lib.WithClientUserProperty(r.Context(), &lib.ClientUserPropertyFromToken{
+					Role: "MANAGER",
+				})
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
 
-			// TODO: Add a cache layer here later
-			var clientUserProperty models.ClientUserProperty
+			// STAFF must be explicitly assigned to this property
+			propertyID := chi.URLParam(r, "property_id")
+			var cup models.ClientUserProperty
 			result := appCtx.DB.Select("id", "role").
-				Where("client_user_id = ? AND property_id = ?", clientCtx.ID, propertyID).
-				First(&clientUserProperty)
+				Where("client_user_id = ? AND property_id = ? AND deleted_at IS NULL", clientCtx.ID, propertyID).
+				First(&cup)
 			if result.Error != nil {
+				http.Error(w, "Forbidden", http.StatusForbidden)
+				return
+			}
+
+			ctx := lib.WithClientUserProperty(r.Context(), &lib.ClientUserPropertyFromToken{
+				Role: cup.Role,
+			})
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+func ValidateRoleClientUserPropertyMiddleware(
+	_ pkg.AppContext,
+	allowedRoles ...string,
+) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			cupCtx, ok := lib.ClientUserPropertyFromContext(r.Context())
+			if !ok || cupCtx == nil {
 				http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
 				return
 			}
 
-			hasAllowedRole := slices.Contains(allowedRoles, clientUserProperty.Role)
-
-			if !hasAllowedRole {
+			if !slices.Contains(allowedRoles, cupCtx.Role) {
 				http.Error(w, "Forbidden", http.StatusForbidden)
 				return
 			}

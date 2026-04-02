@@ -236,10 +236,10 @@ func (s *paymentService) CreateOfflinePayment(
 		if invoice.ContextLeaseID != nil && s.leaseService != nil {
 			lease, leaseErr := s.leaseService.GetByIDWithPopulate(bgCtx, repository.GetLeaseQuery{
 				ID:       *invoice.ContextLeaseID,
-				Populate: &[]string{"ActivatedBy", "Unit", "Tenant"},
+				Populate: &[]string{"ActivatedBy", "ActivatedBy.User", "Unit", "Tenant"},
 			})
 			if leaseErr != nil || lease.ActivatedById == nil || lease.ActivatedBy == nil ||
-				lease.ActivatedBy.Email == "" {
+				lease.ActivatedBy.User.Email == "" {
 				return
 			}
 			message := strings.NewReplacer(
@@ -250,16 +250,16 @@ func (s *paymentService) CreateOfflinePayment(
 				"{{currency}}", invoice.Currency,
 			).Replace(lib.ApplyGlobalVariableTemplate(s.appCtx.Config, lib.PM_OFFLINE_PAYMENT_SUBMITTED_BODY))
 			pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-				Recipient: lease.ActivatedBy.Email,
+				Recipient: lease.ActivatedBy.User.Email,
 				Subject:   lib.PM_OFFLINE_PAYMENT_SUBMITTED_SUBJECT,
 				TextBody:  message,
 			})
 		} else if invoice.ContextTenantApplicationID != nil && s.tenantApplicationService != nil {
 			ta, taErr := s.tenantApplicationService.GetOneTenantApplication(bgCtx, repository.GetTenantApplicationQuery{
 				TenantApplicationID: *invoice.ContextTenantApplicationID,
-				Populate:            &[]string{"CreatedBy"},
+				Populate:            &[]string{"CreatedBy", "CreatedBy.User"},
 			})
-			if taErr != nil || ta.CreatedBy.Email == "" {
+			if taErr != nil || ta.CreatedBy.User.Email == "" {
 				return
 			}
 			message := strings.NewReplacer(
@@ -270,7 +270,7 @@ func (s *paymentService) CreateOfflinePayment(
 				"{{currency}}", invoice.Currency,
 			).Replace(lib.ApplyGlobalVariableTemplate(s.appCtx.Config, lib.PM_OFFLINE_PAYMENT_SUBMITTED_BODY))
 			pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-				Recipient: ta.CreatedBy.Email,
+				Recipient: ta.CreatedBy.User.Email,
 				Subject:   lib.PM_OFFLINE_PAYMENT_SUBMITTED_SUBJECT,
 				TextBody:  message,
 			})

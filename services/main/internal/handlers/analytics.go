@@ -32,7 +32,7 @@ type analyticsTokenResponse struct {
 //	@Success		200	{object}	object{data=analyticsTokenResponse}	"Signed Cube.js JWT"
 //	@Failure		401	{object}	string								"Unauthorized"
 //	@Failure		500	{object}	string								"Failed to generate token"
-//	@Router			/api/v1/admin/analytics/token [get]
+//	@Router			/api/v1/admin/clients/{client_id}/analytics/token [get]
 func (h *AnalyticsHandler) GetToken(w http.ResponseWriter, r *http.Request) {
 	clientCtx, ok := lib.ClientUserFromContext(r.Context())
 	if !ok || clientCtx == nil {

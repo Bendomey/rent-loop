@@ -34,6 +34,7 @@ type clientApplicationService struct {
 	repo              repository.ClientApplicationRepository
 	clientService     ClientService
 	clientUserService ClientUserService
+	userService       UserService
 }
 
 type ClientApplicationServiceDeps struct {
@@ -41,6 +42,7 @@ type ClientApplicationServiceDeps struct {
 	Repo              repository.ClientApplicationRepository
 	ClientService     ClientService
 	ClientUserService ClientUserService
+	UserService       UserService
 }
 
 func NewClientApplicationService(deps ClientApplicationServiceDeps) ClientApplicationService {
@@ -49,6 +51,7 @@ func NewClientApplicationService(deps ClientApplicationServiceDeps) ClientApplic
 		repo:              deps.Repo,
 		clientService:     deps.ClientService,
 		clientUserService: deps.ClientUserService,
+		userService:       deps.UserService,
 	}
 }
 
@@ -314,18 +317,26 @@ func (s *clientApplicationService) ApproveClientApplication(
 			Err: err,
 			Metadata: map[string]string{
 				"function": "ApproveClientApplication",
-				"action":   "generating random password for OWNER client user",
+				"action":   "generating random password for OWNER user",
 			},
 		})
 	}
 
-	user := models.ClientUser{
-		ClientID:    client.ID.String(),
+	ownerUser := models.User{
 		Name:        clientApplication.ContactName,
 		PhoneNumber: clientApplication.ContactPhoneNumber,
 		Email:       clientApplication.ContactEmail,
 		Password:    password,
-		Role:        "OWNER",
+	}
+
+	if err := s.userService.InsertUser(transCtx, &ownerUser); err != nil {
+		return nil, err
+	}
+
+	user := models.ClientUser{
+		UserID:   ownerUser.ID.String(),
+		ClientID: client.ID.String(),
+		Role:     "OWNER",
 	}
 
 	if err := s.clientUserService.InsertClientUser(transCtx, &user); err != nil {

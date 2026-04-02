@@ -5,31 +5,18 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/Bendomey/goutilities/pkg/hashpassword"
-	"github.com/Bendomey/goutilities/pkg/signjwt"
-	"github.com/Bendomey/goutilities/pkg/validatehash"
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
-	"github.com/dgrijalva/jwt-go"
 	gonanoid "github.com/matoous/go-nanoid"
 	"gorm.io/gorm"
 )
 
 type ClientUserService interface {
 	CreateClientUser(ctx context.Context, input CreateClientUserInput) (*models.ClientUser, error)
-	AuthenticateClientUser(
-		ctx context.Context,
-		input AuthenticateClientUserInput,
-	) (*AuthenticateClientUserResponse, error)
 	GetClientUser(ctx context.Context, query repository.GetClientUserWithPopulateQuery) (*models.ClientUser, error)
-	SendForgotPasswordResetLink(ctx context.Context, email string) (*models.ClientUser, error)
-	ResetPassword(
-		ctx context.Context,
-		input ResetClientUserPasswordInput,
-	) (*models.ClientUser, error)
 	GetClientUserByQuery(context context.Context, query map[string]any) (*models.ClientUser, error)
 	ListClientUsers(
 		ctx context.Context,
@@ -45,8 +32,6 @@ type ClientUserService interface {
 	) (*models.ClientUser, error)
 	ActivateClientUser(ctx context.Context, input ClientUserSearchInput) (*models.ClientUser, error)
 	DeactivateClientUser(ctx context.Context, input DeactivateClientUserInput) (*models.ClientUser, error)
-	UpdateClientUser(ctx context.Context, input UpdateClientUserInput) (*models.ClientUser, error)
-	UpateClientUserPassword(ctx context.Context, input UpdateClientUserPasswordInput) (*models.ClientUser, error)
 	InsertClientUser(ctx context.Context, clientUser *models.ClientUser) error
 }
 
@@ -54,14 +39,16 @@ type clientUserService struct {
 	appCtx     pkg.AppContext
 	repo       repository.ClientUserRepository
 	clientRepo repository.ClientRepository
+	userRepo   repository.UserRepository
 }
 
 func NewClientUserService(
 	appCtx pkg.AppContext,
 	repo repository.ClientUserRepository,
 	clientRepo repository.ClientRepository,
+	userRepo repository.UserRepository,
 ) ClientUserService {
-	return &clientUserService{appCtx, repo, clientRepo}
+	return &clientUserService{appCtx, repo, clientRepo, userRepo}
 }
 
 func (s *clientUserService) InsertClientUser(ctx context.Context, clientUser *models.ClientUser) error {
@@ -69,8 +56,8 @@ func (s *clientUserService) InsertClientUser(ctx context.Context, clientUser *mo
 		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
 			Metadata: map[string]string{
-				"function": "CreateClientUser",
-				"action":   "creating new client user",
+				"function": "InsertClientUser",
+				"action":   "inserting client user",
 			},
 		})
 	}
@@ -90,146 +77,121 @@ func (s *clientUserService) CreateClientUser(
 	ctx context.Context,
 	input CreateClientUserInput,
 ) (*models.ClientUser, error) {
-	existingClientUser, clientUserErr := s.repo.GetByEmail(ctx, input.Email)
-
-	if clientUserErr != nil && !errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
-		return nil, pkg.InternalServerError(clientUserErr.Error(), &pkg.RentLoopErrorParams{
-			Err: clientUserErr,
+	// Find or create the User record
+	user, userErr := s.userRepo.GetByEmail(ctx, input.Email)
+	if userErr != nil && !errors.Is(userErr, gorm.ErrRecordNotFound) {
+		return nil, pkg.InternalServerError(userErr.Error(), &pkg.RentLoopErrorParams{
+			Err: userErr,
 			Metadata: map[string]string{
 				"function": "CreateClientUser",
-				"action":   "checking existing client user by email",
+				"action":   "checking existing user by email",
 			},
 		})
 	}
 
-	if existingClientUser != nil {
-		return nil, errors.New("email already in use")
+	var plainPassword string
+
+	if user == nil {
+		password, err := gonanoid.Generate("abcdefghijklmnopqrstuvwxyz1234567890", 10)
+		if err != nil {
+			return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+				Err: err,
+				Metadata: map[string]string{
+					"function": "CreateClientUser",
+					"action":   "generating random password",
+				},
+			})
+		}
+		plainPassword = password
+
+		newUser := models.User{
+			Name:        input.Name,
+			Email:       input.Email,
+			PhoneNumber: input.Phone,
+			Password:    password,
+		}
+		if err := s.userRepo.Create(ctx, &newUser); err != nil {
+			return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+				Err: err,
+				Metadata: map[string]string{
+					"function": "CreateClientUser",
+					"action":   "creating user",
+				},
+			})
+		}
+		user = &newUser
 	}
 
-	password, err := gonanoid.Generate("abcdefghijklmnopqrstuvwxyz1234567890", 10)
-	if err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
+	// Check if this user is already a member of this client
+	existing, existingErr := s.repo.GetByQuery(ctx, map[string]any{
+		"user_id":   user.ID.String(),
+		"client_id": input.ClientID,
+	})
+	if existingErr != nil && !errors.Is(existingErr, gorm.ErrRecordNotFound) {
+		return nil, pkg.InternalServerError(existingErr.Error(), &pkg.RentLoopErrorParams{
+			Err: existingErr,
 			Metadata: map[string]string{
 				"function": "CreateClientUser",
-				"action":   "generating random password",
+				"action":   "checking existing client user membership",
 			},
 		})
+	}
+	if existing != nil {
+		return nil, pkg.BadRequestError("UserAlreadyMemberOfClient", nil)
 	}
 
 	clientUser := models.ClientUser{
+		UserID:      user.ID.String(),
 		ClientID:    input.ClientID,
-		Name:        input.Name,
-		PhoneNumber: input.Phone,
-		Email:       input.Email,
-		Password:    password,
 		Role:        input.Role,
 		CreatedByID: &input.CreatedByID,
 	}
 
-	insertClientUserErr := s.InsertClientUser(ctx, &clientUser)
-	if insertClientUserErr != nil {
-		return nil, insertClientUserErr
+	if err := s.InsertClientUser(ctx, &clientUser); err != nil {
+		return nil, err
 	}
 
-	client, clientErr := s.clientRepo.GetByID(ctx, input.ClientID)
-	if clientErr != nil {
-		return nil, pkg.InternalServerError(clientErr.Error(), &pkg.RentLoopErrorParams{
-			Err: clientErr,
-			Metadata: map[string]string{
-				"function": "CreateClientUser",
-				"action":   "fetching client for email notification",
-			},
-		})
-	}
-
-	r := strings.NewReplacer(
-		"{{name}}", input.Name,
-		"{{client_name}}", client.Name,
-		"{{email}}", input.Email,
-		"{{password}}", password,
-	)
-	message := r.Replace(lib.CLIENT_USER_ADDED_BODY)
-	smsMessage := r.Replace(lib.CLIENT_USER_ADDED_SMS_BODY)
-
-	go pkg.SendEmail(
-		s.appCtx.Config,
-		pkg.SendEmailInput{
-			Recipient: input.Email,
-			Subject:   lib.CLIENT_USER_ADDED_SUBJECT,
-			TextBody:  message,
-		},
-	)
-
-	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-		context.Background(),
-		gatekeeper.SendSMSInput{
-			Recipient: input.Phone,
-			Message:   smsMessage,
-		},
-	)
-
-	return &clientUser, nil
-}
-
-type AuthenticateClientUserInput struct {
-	Email    string
-	Password string
-}
-
-type AuthenticateClientUserResponse struct {
-	ClientUser models.ClientUser
-	Token      string
-}
-
-func (s *clientUserService) AuthenticateClientUser(
-	ctx context.Context,
-	input AuthenticateClientUserInput,
-) (*AuthenticateClientUserResponse, error) {
-	clientUser, clientUserErr := s.repo.GetByEmail(ctx, input.Email)
-	if clientUserErr != nil {
-		if errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
-			return nil, pkg.NotFoundError("ClientUserNotFound", &pkg.RentLoopErrorParams{
-				Err: clientUserErr,
+	// Only send "added with credentials" notification for newly-created users
+	if plainPassword != "" {
+		client, clientErr := s.clientRepo.GetByID(ctx, input.ClientID)
+		if clientErr != nil {
+			return nil, pkg.InternalServerError(clientErr.Error(), &pkg.RentLoopErrorParams{
+				Err: clientErr,
+				Metadata: map[string]string{
+					"function": "CreateClientUser",
+					"action":   "fetching client for email notification",
+				},
 			})
 		}
 
-		return nil, pkg.InternalServerError(clientUserErr.Error(), &pkg.RentLoopErrorParams{
-			Err: clientUserErr,
-			Metadata: map[string]string{
-				"function": "AuthenticateClientUser",
-				"action":   "fetching client user by email",
+		r := strings.NewReplacer(
+			"{{name}}", input.Name,
+			"{{client_name}}", client.Name,
+			"{{email}}", input.Email,
+			"{{password}}", plainPassword,
+		)
+		message := r.Replace(lib.CLIENT_USER_ADDED_BODY)
+		smsMessage := r.Replace(lib.CLIENT_USER_ADDED_SMS_BODY)
+
+		go pkg.SendEmail(
+			s.appCtx.Config,
+			pkg.SendEmailInput{
+				Recipient: input.Email,
+				Subject:   lib.CLIENT_USER_ADDED_SUBJECT,
+				TextBody:  message,
 			},
-		})
-	}
-	if clientUser.Status == "ClientUser.Status.Inactive" {
-		return nil, pkg.ForbiddenError("ClientUserInactive", nil)
-	}
+		)
 
-	isSame := validatehash.ValidateCipher(input.Password, clientUser.Password)
-	if !isSame {
-		return nil, pkg.BadRequestError("PasswordIncorrect", nil)
-	}
-
-	token, signTokenErrr := signjwt.SignJWT(jwt.MapClaims{
-		"id":        clientUser.ID,
-		"client_id": clientUser.ClientID,
-	}, s.appCtx.Config.TokenSecrets.ClientUserSecret)
-
-	if signTokenErrr != nil {
-		return nil, pkg.InternalServerError(signTokenErrr.Error(), &pkg.RentLoopErrorParams{
-			Err: signTokenErrr,
-			Metadata: map[string]string{
-				"function": "AuthenticateClientUser",
-				"action":   "signing token",
+		go s.appCtx.Clients.GatekeeperAPI.SendSMS(
+			context.Background(),
+			gatekeeper.SendSMSInput{
+				Recipient: input.Phone,
+				Message:   smsMessage,
 			},
-		})
+		)
 	}
 
-	return &AuthenticateClientUserResponse{
-		ClientUser: *clientUser,
-		Token:      token,
-	}, nil
+	return &clientUser, nil
 }
 
 func (s *clientUserService) GetClientUser(
@@ -255,112 +217,6 @@ func (s *clientUserService) GetClientUser(
 
 	if clientUser.Status == "ClientUser.Status.Inactive" {
 		return nil, pkg.ForbiddenError("ClientUserInactive", nil)
-	}
-
-	return clientUser, nil
-}
-
-func (s *clientUserService) SendForgotPasswordResetLink(
-	ctx context.Context,
-	email string,
-) (*models.ClientUser, error) {
-	clientUser, clientUserErr := s.repo.GetByEmail(ctx, email)
-	if clientUserErr != nil {
-		if errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
-			return nil, pkg.NotFoundError("ClientUserNotFound", &pkg.RentLoopErrorParams{
-				Err: clientUserErr,
-			})
-		}
-
-		return nil, pkg.InternalServerError(clientUserErr.Error(), &pkg.RentLoopErrorParams{
-			Err: clientUserErr,
-			Metadata: map[string]string{
-				"function": "SendForgotPasswordResetLink",
-				"action":   "fetching client user by email",
-			},
-		})
-	}
-
-	token, signTokenErrr := signjwt.SignJWT(jwt.MapClaims{
-		"id":        clientUser.ID,
-		"client_id": clientUser.ClientID,
-	}, s.appCtx.Config.TokenSecrets.ClientUserSecret)
-
-	if signTokenErrr != nil {
-		return nil, pkg.InternalServerError(signTokenErrr.Error(), &pkg.RentLoopErrorParams{
-			Err: signTokenErrr,
-			Metadata: map[string]string{
-				"function": "SendForgotPasswordResetLink",
-				"action":   "signing token",
-			},
-		})
-	}
-
-	r := strings.NewReplacer(
-		"{{name}}", clientUser.Name,
-		"{{reset_token}}", token,
-	)
-	message := r.Replace(lib.CLIENT_USER_PASSWORD_RESET_BODY)
-
-	go pkg.SendEmail(
-		s.appCtx.Config,
-		pkg.SendEmailInput{
-			Recipient: clientUser.Email,
-			Subject:   lib.CLIENT_USER_PASSWORD_RESET_SUBJECT,
-			TextBody:  message,
-		},
-	)
-
-	return clientUser, nil
-}
-
-type ResetClientUserPasswordInput struct {
-	ID          string
-	NewPassword string
-}
-
-func (s *clientUserService) ResetPassword(
-	ctx context.Context,
-	input ResetClientUserPasswordInput,
-) (*models.ClientUser, error) {
-	clientUser, clientUserErr := s.repo.GetByID(ctx, input.ID)
-	if clientUserErr != nil {
-		if errors.Is(clientUserErr, gorm.ErrRecordNotFound) {
-			return nil, pkg.NotFoundError("ClientUserNotFound", &pkg.RentLoopErrorParams{
-				Err: clientUserErr,
-			})
-		}
-
-		return nil, pkg.InternalServerError(clientUserErr.Error(), &pkg.RentLoopErrorParams{
-			Err: clientUserErr,
-			Metadata: map[string]string{
-				"function": "ResetPassword",
-				"action":   "fetching client user by id",
-			},
-		})
-	}
-
-	hashed, err := hashpassword.HashPassword(input.NewPassword)
-	if err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "ResetPassword",
-				"action":   "hashing new password",
-			},
-		})
-	}
-
-	clientUser.Password = hashed
-
-	if err := s.repo.Update(ctx, clientUser); err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "ResetPassword",
-				"action":   "updating client user",
-			},
-		})
 	}
 
 	return clientUser, nil
@@ -486,16 +342,25 @@ func (s *clientUserService) ActivateClientUser(
 		})
 	}
 
-	r := strings.NewReplacer(
-		"{{name}}", clientUserToBeActivated.Name,
-	)
+	user, userErr := s.userRepo.GetByID(ctx, clientUserToBeActivated.UserID)
+	if userErr != nil {
+		return nil, pkg.InternalServerError(userErr.Error(), &pkg.RentLoopErrorParams{
+			Err: userErr,
+			Metadata: map[string]string{
+				"function": "ActivateClientUser",
+				"action":   "fetching user for notification",
+			},
+		})
+	}
+
+	r := strings.NewReplacer("{{name}}", user.Name)
 	message := r.Replace(lib.CLIENT_USER_ACTIVATED_BODY)
 	smsMessage := r.Replace(lib.CLIENT_USER_ACTIVATED_SMS_BODY)
 
 	go pkg.SendEmail(
 		s.appCtx.Config,
 		pkg.SendEmailInput{
-			Recipient: clientUserToBeActivated.Email,
+			Recipient: user.Email,
 			Subject:   lib.CLIENT_USER_ACTIVATED_SUBJECT,
 			TextBody:  message,
 		},
@@ -504,7 +369,7 @@ func (s *clientUserService) ActivateClientUser(
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
 		context.Background(),
 		gatekeeper.SendSMSInput{
-			Recipient: clientUserToBeActivated.PhoneNumber,
+			Recipient: user.PhoneNumber,
 			Message:   smsMessage,
 		},
 	)
@@ -556,8 +421,19 @@ func (s *clientUserService) DeactivateClientUser(
 		})
 	}
 
+	user, userErr := s.userRepo.GetByID(ctx, clientUserToBeDeactivated.UserID)
+	if userErr != nil {
+		return nil, pkg.InternalServerError(userErr.Error(), &pkg.RentLoopErrorParams{
+			Err: userErr,
+			Metadata: map[string]string{
+				"function": "DeactivateClientUser",
+				"action":   "fetching user for notification",
+			},
+		})
+	}
+
 	r := strings.NewReplacer(
-		"{{name}}", clientUserToBeDeactivated.Name,
+		"{{name}}", user.Name,
 		"{{reason}}", input.Reason,
 	)
 	message := r.Replace(lib.CLIENT_USER_DEACTIVATED_BODY)
@@ -566,7 +442,7 @@ func (s *clientUserService) DeactivateClientUser(
 	go pkg.SendEmail(
 		s.appCtx.Config,
 		pkg.SendEmailInput{
-			Recipient: clientUserToBeDeactivated.Email,
+			Recipient: user.Email,
 			Subject:   lib.CLIENT_USER_DEACTIVATED_SUBJECT,
 			TextBody:  message,
 		},
@@ -575,168 +451,10 @@ func (s *clientUserService) DeactivateClientUser(
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
 		context.Background(),
 		gatekeeper.SendSMSInput{
-			Recipient: clientUserToBeDeactivated.PhoneNumber,
+			Recipient: user.PhoneNumber,
 			Message:   smsMessage,
 		},
 	)
 
 	return clientUserToBeDeactivated, nil
-}
-
-type UpdateClientUserInput struct {
-	ClientUserID string
-	Name         lib.Optional[string]
-	PhoneNumber  lib.Optional[string]
-	Email        lib.Optional[string]
-}
-
-func (s *clientUserService) UpdateClientUser(
-	ctx context.Context,
-	input UpdateClientUserInput,
-) (*models.ClientUser, error) {
-	clientUser, err := s.repo.GetByID(ctx, input.ClientUserID)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, pkg.NotFoundError("ClientUserNotFound", &pkg.RentLoopErrorParams{
-				Err: err,
-			})
-		}
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "UpdateClientUser",
-				"action":   "fetching client user by ID",
-			},
-		})
-	}
-
-	if input.Name.IsSet && input.Name.Value != nil {
-		clientUser.Name = *input.Name.Value
-	}
-
-	if input.PhoneNumber.IsSet && input.PhoneNumber.Value != nil {
-		clientUser.PhoneNumber = *input.PhoneNumber.Value
-	}
-
-	if input.Email.IsSet && input.Email.Value != nil {
-		newEmail := *input.Email.Value
-		existing, emailErr := s.repo.GetByEmail(ctx, newEmail)
-		if emailErr != nil && !errors.Is(emailErr, gorm.ErrRecordNotFound) {
-			return nil, pkg.InternalServerError(emailErr.Error(), &pkg.RentLoopErrorParams{
-				Err: emailErr,
-				Metadata: map[string]string{
-					"function": "UpdateClientUser",
-					"action":   "checking existing client user by email",
-				},
-			})
-		}
-		if existing != nil && existing.ID != clientUser.ID {
-			return nil, errors.New("email already in use")
-		}
-		clientUser.Email = newEmail
-	}
-
-	updateClientUserErr := s.repo.Update(ctx, clientUser)
-	if updateClientUserErr != nil {
-		return nil, pkg.InternalServerError(updateClientUserErr.Error(), &pkg.RentLoopErrorParams{
-			Err: updateClientUserErr,
-			Metadata: map[string]string{
-				"function": "UpdateClientUser",
-				"action":   "updating client user",
-			},
-		})
-	}
-
-	return clientUser, nil
-}
-
-type UpdateClientUserPasswordInput struct {
-	ClientUserID string
-	OldPassword  string
-	NewPassword  string
-}
-
-func (s *clientUserService) UpateClientUserPassword(
-	ctx context.Context,
-	input UpdateClientUserPasswordInput,
-) (*models.ClientUser, error) {
-	clientUser, err := s.repo.GetByID(ctx, input.ClientUserID)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, pkg.NotFoundError("ClientUserNotFound", &pkg.RentLoopErrorParams{
-				Err: err,
-			})
-		}
-
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "UpateClientUserPassword",
-				"action":   "fetching client user by ID",
-			},
-		})
-	}
-
-	if clientUser.Status == "ClientUser.Status.Inactive" {
-		return nil, pkg.ForbiddenError("ClientUserInactive", nil)
-	}
-
-	isSame := validatehash.ValidateCipher(input.OldPassword, clientUser.Password)
-	if !isSame {
-		return nil, pkg.BadRequestError("PasswordIncorrect", nil)
-	}
-
-	isRepeated := validatehash.ValidateCipher(input.NewPassword, clientUser.Password)
-	if isRepeated {
-		return nil, pkg.BadRequestError("PasswordRepeated", nil)
-	}
-
-	hashed, hashErr := hashpassword.HashPassword(input.NewPassword)
-	if hashErr != nil {
-		return nil, pkg.InternalServerError(hashErr.Error(), &pkg.RentLoopErrorParams{
-			Err: hashErr,
-			Metadata: map[string]string{
-				"function": "UpateClientUserPassword",
-				"action":   "hashing new password",
-			},
-		})
-	}
-
-	clientUser.Password = hashed
-
-	updateClientUserErr := s.repo.Update(ctx, clientUser)
-	if updateClientUserErr != nil {
-		return nil, pkg.InternalServerError(updateClientUserErr.Error(), &pkg.RentLoopErrorParams{
-			Err: updateClientUserErr,
-			Metadata: map[string]string{
-				"function": "UpdateClientUserPassword",
-				"action":   "Updating client user password",
-			},
-		})
-	}
-
-	r := strings.NewReplacer(
-		"{{name}}", clientUser.Name,
-	)
-	message := r.Replace(lib.CLIENT_USER_PASSWORD_UPDATED_BODY)
-	smsMessage := r.Replace(lib.CLIENT_USER_PASSWORD_UPDATED_SMS_BODY)
-
-	go pkg.SendEmail(
-		s.appCtx.Config,
-		pkg.SendEmailInput{
-			Recipient: clientUser.Email,
-			Subject:   lib.CLIENT_USER_PASSWORD_UPDATED_SUBJECT,
-			TextBody:  message,
-		},
-	)
-
-	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
-		context.Background(),
-		gatekeeper.SendSMSInput{
-			Recipient: clientUser.PhoneNumber,
-			Message:   smsMessage,
-		},
-	)
-
-	return clientUser, nil
 }

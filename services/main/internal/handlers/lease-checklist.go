@@ -56,7 +56,7 @@ type CreateLeaseChecklistRequest struct {
 //	@Failure		403			{object}	lib.HTTPError										"Forbidden"
 //	@Failure		422			{object}	lib.HTTPError										"Validation error"
 //	@Failure		500			{object}	string												"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists [post]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists [post]
 func (h *LeaseChecklistHandler) CreateLeaseChecklist(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentClientUserOk {
@@ -129,7 +129,7 @@ type GetLeaseCheckListQuery struct {
 //	@Failure		401				{object}	string												"Invalid or absent authentication token"
 //	@Failure		404				{object}	lib.HTTPError										"Lease checklist not found"
 //	@Failure		500				{object}	string												"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id} [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id} [get]
 func (h *LeaseChecklistHandler) GetLeaseCheckList(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "checklist_id")
 	leaseID := chi.URLParam(r, "lease_id")
@@ -175,7 +175,7 @@ type UpdateLeaseChecklistRequest struct {
 //	@Failure		404				{object}	lib.HTTPError										"Lease checklist not found"
 //	@Failure		422				{object}	lib.HTTPError										"Validation error"
 //	@Failure		500				{object}	string												"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id} [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id} [patch]
 func (h *LeaseChecklistHandler) UpdateLeaseChecklist(w http.ResponseWriter, r *http.Request) {
 	leaseCheckListID := chi.URLParam(r, "checklist_id")
 	leaseID := chi.URLParam(r, "lease_id")
@@ -224,7 +224,7 @@ func (h *LeaseChecklistHandler) UpdateLeaseChecklist(w http.ResponseWriter, r *h
 //	@Failure		403				{object}	lib.HTTPError	"Forbidden"
 //	@Failure		404				{object}	lib.HTTPError	"Lease checklist not found"
 //	@Failure		500				{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id} [delete]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id} [delete]
 func (h *LeaseChecklistHandler) DeleteLeaseChecklist(w http.ResponseWriter, r *http.Request) {
 	leaseID := chi.URLParam(r, "lease_id")
 	leaseChecklistID := chi.URLParam(r, "checklist_id")
@@ -263,7 +263,7 @@ type ListLeaseChecklistsQuery struct {
 //	@Failure		400			{object}	lib.HTTPError	"An error occurred while filtering lease checklists"
 //	@Failure		401			{object}	string			"Absent or invalid authentication token"
 //	@Failure		500			{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists [get]
 func (h *LeaseChecklistHandler) ListLeaseChecklists(w http.ResponseWriter, r *http.Request) {
 	leaseId := chi.URLParam(r, "lease_id")
 	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
@@ -324,7 +324,7 @@ func (h *LeaseChecklistHandler) ListLeaseChecklists(w http.ResponseWriter, r *ht
 //	@Failure		401				{object}	string												"Invalid or absent authentication token"
 //	@Failure		404				{object}	lib.HTTPError										"Checklist not found"
 //	@Failure		500				{object}	string												"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/submit [post]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/submit [post]
 func (h *LeaseChecklistHandler) SubmitLeaseChecklist(w http.ResponseWriter, r *http.Request) {
 	leaseID := chi.URLParam(r, "lease_id")
 	checklistID := chi.URLParam(r, "checklist_id")
@@ -355,7 +355,7 @@ func (h *LeaseChecklistHandler) SubmitLeaseChecklist(w http.ResponseWriter, r *h
 //	@Failure		404				{object}	lib.HTTPError	"Checklist not found"
 //	@Failure		401				{object}	string			"Invalid or absent authentication token"
 //	@Failure		500				{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/comparison [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/comparison [get]
 func (h *LeaseChecklistHandler) GetChecklistComparison(w http.ResponseWriter, r *http.Request) {
 	leaseID := chi.URLParam(r, "lease_id")
 	checklistID := chi.URLParam(r, "checklist_id")
@@ -398,7 +398,7 @@ type CreateSingleLeaseChecklistItemRequest struct {
 //	@Failure		401				{object}	string			"Invalid or absent authentication token"
 //	@Failure		422				{object}	lib.HTTPError	"Validation error"
 //	@Failure		500				{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/items [post]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/items [post]
 func (h *LeaseChecklistHandler) CreateLeaseChecklistItem(w http.ResponseWriter, r *http.Request) {
 	checklistID := chi.URLParam(r, "checklist_id")
 
@@ -459,7 +459,7 @@ type UpdateLeaseChecklistItemRequest struct {
 //	@Failure		404				{object}	lib.HTTPError	"Item not found"
 //	@Failure		422				{object}	lib.HTTPError	"Validation error"
 //	@Failure		500				{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/items/{item_id} [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/items/{item_id} [patch]
 func (h *LeaseChecklistHandler) UpdateLeaseChecklistItem(w http.ResponseWriter, r *http.Request) {
 	checklistID := chi.URLParam(r, "checklist_id")
 	itemID := chi.URLParam(r, "item_id")
@@ -512,7 +512,7 @@ func (h *LeaseChecklistHandler) UpdateLeaseChecklistItem(w http.ResponseWriter, 
 //	@Failure		401				{object}	string			"Invalid or absent authentication token"
 //	@Failure		404				{object}	lib.HTTPError	"Item not found"
 //	@Failure		500				{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/items/{item_id} [delete]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/items/{item_id} [delete]
 func (h *LeaseChecklistHandler) DeleteLeaseChecklistItem(w http.ResponseWriter, r *http.Request) {
 	leaseID := chi.URLParam(r, "lease_id")
 	checklistID := chi.URLParam(r, "checklist_id")

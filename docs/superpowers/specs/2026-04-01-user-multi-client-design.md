@@ -108,7 +108,7 @@ type UserFromToken struct {
 
 ### Middleware changes
 
-**`InjectClientUserAuthMiddleware`:** validates JWT, injects `UserFromToken{ID}` into context. No `ClientID` read from token.
+**`InjectUserAuthMiddleware`:** validates JWT, injects `UserFromToken{ID}` into context. No `ClientID` read from token.
 
 **`ValidateClientMembershipMiddleware`** (new): applied to all `/clients/{client_id}/*` routes. Reads `user_id` from context + `client_id` from URL param, looks up `client_users` row, 401s if not found. Injects the resolved `ClientUser` into context for downstream handlers.
 

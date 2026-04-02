@@ -10,11 +10,7 @@ func ExtractUsersFromClientUsers() *gormigrate.Migration {
 	return &gormigrate.Migration{
 		ID: "202604020001_EXTRACT_USERS_FROM_CLIENT_USERS",
 		Migrate: func(db *gorm.DB) error {
-			// 1. Create users table
-			if err := db.AutoMigrate(&models.User{}); err != nil {
-				return err
-			}
-
+			// 1. Create users table - already done.
 			// 2. Add user_id column (nullable first, for backfill)
 			if err := db.Exec(`ALTER TABLE client_users ADD COLUMN IF NOT EXISTS user_id UUID`).Error; err != nil {
 				return err

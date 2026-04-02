@@ -9,6 +9,7 @@ type Services struct {
 	NotificationService       NotificationService
 	AuthService               AuthService
 	AdminService              AdminService
+	UserService               UserService
 	ClientService             ClientService
 	ClientApplicationService  ClientApplicationService
 	ClientUserService         ClientUserService
@@ -56,12 +57,14 @@ func NewServices(params INewServicesParams) Services {
 
 	authService := NewAuthService(params.AppCtx, params.Repository.TenantAccountRepository)
 	adminService := NewAdminService(params.AppCtx, params.Repository.AdminRepository)
+	userService := NewUserService(params.AppCtx, params.Repository.UserRepository)
 	clientService := NewClientService(params.AppCtx, params.Repository.ClientRepository)
 
 	clientUserService := NewClientUserService(
 		params.AppCtx,
 		params.Repository.ClientUserRepository,
 		params.Repository.ClientRepository,
+		params.Repository.UserRepository,
 	)
 
 	clientApplicationService := NewClientApplicationService(ClientApplicationServiceDeps{
@@ -69,6 +72,7 @@ func NewServices(params INewServicesParams) Services {
 		Repo:              params.Repository.ClientApplicationRepository,
 		ClientService:     clientService,
 		ClientUserService: clientUserService,
+		UserService:       userService,
 	})
 
 	clientUserPropertyService := NewClientUserPropertyService(
@@ -189,6 +193,7 @@ func NewServices(params INewServicesParams) Services {
 
 		AuthService:               authService,
 		AdminService:              adminService,
+		UserService:               userService,
 		ClientService:             clientService,
 		ClientApplicationService:  clientApplicationService,
 		ClientUserService:         clientUserService,

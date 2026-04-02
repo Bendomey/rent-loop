@@ -50,7 +50,7 @@ type UpdateInvoiceRequest struct {
 //	@Failure		404			{object}	lib.HTTPError								"Invoice not found"
 //	@Failure		422			{object}	lib.HTTPError								"Validation error"
 //	@Failure		500			{object}	string										"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/invoices/{invoice_id} [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id} [patch]
 func (h *InvoiceHandler) UpdateInvoice(w http.ResponseWriter, r *http.Request) {
 	var body UpdateInvoiceRequest
 	invoiceID := chi.URLParam(r, "invoice_id")
@@ -103,7 +103,7 @@ type VoidInvoiceBody struct {
 //	@Failure		404			{object}	lib.HTTPError								"Invoice not found"
 //	@Failure		422			{object}	lib.HTTPError								"Validation error"
 //	@Failure		500			{object}	string										"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/invoices/{invoice_id}/void [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/void [patch]
 func (h *InvoiceHandler) VoidInvoice(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -159,7 +159,7 @@ type GetInvoiceQuery struct {
 //	@Failure		401			{object}	string										"Invalid or absent authentication token"
 //	@Failure		404			{object}	lib.HTTPError								"Invoice not found"
 //	@Failure		500			{object}	string										"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/invoices/{invoice_id} [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id} [get]
 func (h *InvoiceHandler) GetInvoiceByID(w http.ResponseWriter, r *http.Request) {
 	invoiceID := chi.URLParam(r, "invoice_id")
 
@@ -206,7 +206,7 @@ type ListInvoicesQuery struct {
 //	@Failure		400			{object}	lib.HTTPError																						"Error occurred when listing invoices"
 //	@Failure		401			{object}	string																								"Invalid or absent authentication token"
 //	@Failure		500			{object}	string																								"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/invoices [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices [get]
 func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
 	if filterErr != nil {
@@ -273,7 +273,7 @@ type AddLineItemRequest struct {
 //	@Failure		404			{object}	lib.HTTPError										"Invoice not found"
 //	@Failure		422			{object}	lib.HTTPError										"Validation error"
 //	@Failure		500			{object}	string												"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/invoices/{invoice_id}/line-items [post]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/line-items [post]
 func (h *InvoiceHandler) AddLineItem(w http.ResponseWriter, r *http.Request) {
 	var body AddLineItemRequest
 	invoiceID := chi.URLParam(r, "invoice_id")
@@ -325,7 +325,7 @@ func (h *InvoiceHandler) AddLineItem(w http.ResponseWriter, r *http.Request) {
 //	@Failure		400			{object}	lib.HTTPError											"Error occurred when getting line items"
 //	@Failure		401			{object}	string													"Invalid or absent authentication token"
 //	@Failure		500			{object}	string													"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/invoices/{invoice_id}/line-items [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/line-items [get]
 func (h *InvoiceHandler) GetLineItems(w http.ResponseWriter, r *http.Request) {
 	invoiceID := chi.URLParam(r, "invoice_id")
 
@@ -360,7 +360,7 @@ func (h *InvoiceHandler) GetLineItems(w http.ResponseWriter, r *http.Request) {
 //	@Failure		401			{object}	string			"Invalid or absent authentication token"
 //	@Failure		404			{object}	lib.HTTPError	"Invoice not found"
 //	@Failure		500			{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/invoices/{invoice_id} [delete]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id} [delete]
 func (h *InvoiceHandler) DeleteInvoice(w http.ResponseWriter, r *http.Request) {
 	invoiceID := chi.URLParam(r, "invoice_id")
 
@@ -389,7 +389,7 @@ func (h *InvoiceHandler) DeleteInvoice(w http.ResponseWriter, r *http.Request) {
 //	@Failure		401				{object}	string			"Invalid or absent authentication token"
 //	@Failure		404				{object}	lib.HTTPError	"Invoice or line item not found"
 //	@Failure		500				{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/invoices/{invoice_id}/line-items/{line_item_id} [delete]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/line-items/{line_item_id} [delete]
 func (h *InvoiceHandler) RemoveLineItem(w http.ResponseWriter, r *http.Request) {
 	invoiceID := chi.URLParam(r, "invoice_id")
 	lineItemID := chi.URLParam(r, "line_item_id")

@@ -382,987 +382,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/agreements": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns all active agreements, each enriched with whether the current user has accepted it",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Agreements"
-                ],
-                "summary": "List active agreements with acceptance status",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/transformations.OutputAgreement"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/agreements/{agreement_id}/accept": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Records that the current OWNER user has accepted the specified agreement",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Agreements"
-                ],
-                "summary": "Accept an agreement (OWNER only)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Agreement ID",
-                        "name": "agreement_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/analytics/token": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns a signed JWT for querying the Cube.js analytics API. The token is scoped to the authenticated client.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Analytics"
-                ],
-                "summary": "Get Cube.js analytics token",
-                "responses": {
-                    "200": {
-                        "description": "Signed Cube.js JWT",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/handlers.analyticsTokenResponse"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Failed to generate token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/announcements": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "List announcements for the current client",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Announcements"
-                ],
-                "summary": "List announcements (Admin)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "example": [
-                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
-                        ],
-                        "name": "ids",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "name": "order",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "query",
-                        "in": "query"
-                    },
-                    {
-                        "minItems": 1,
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "search_fields",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_date",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "DRAFT",
-                            "SCHEDULED",
-                            "PUBLISHED",
-                            "EXPIRED"
-                        ],
-                        "type": "string",
-                        "example": "PUBLISHED",
-                        "name": "status",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "MAINTENANCE",
-                            "COMMUNITY",
-                            "POLICY_CHANGE",
-                            "EMERGENCY"
-                        ],
-                        "type": "string",
-                        "example": "MAINTENANCE",
-                        "name": "type",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "properties": {
-                                        "meta": {
-                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
-                                        },
-                                        "rows": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/transformations.AdminOutputAnnouncement"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a new announcement in DRAFT status",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Announcements"
-                ],
-                "summary": "Create a new announcement (Admin)",
-                "parameters": [
-                    {
-                        "description": "Announcement details",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.CreateAnnouncementRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.AdminOutputAnnouncement"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/announcements/{announcement_id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get a single announcement by ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Announcements"
-                ],
-                "summary": "Get announcement by ID (Admin)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Announcement ID",
-                        "name": "announcement_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.AdminOutputAnnouncement"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Delete a DRAFT announcement",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Announcements"
-                ],
-                "summary": "Delete an announcement (Admin)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Announcement ID",
-                        "name": "announcement_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update a DRAFT announcement",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Announcements"
-                ],
-                "summary": "Update an announcement (Admin)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Announcement ID",
-                        "name": "announcement_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Announcement updates",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdateAnnouncementRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.AdminOutputAnnouncement"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/announcements/{announcement_id}/expiry": {
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update the expiry time of a PUBLISHED announcement; cancels the existing expire job and enqueues a new one",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Announcements"
-                ],
-                "summary": "Extend announcement expiry (Admin)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Announcement ID",
-                        "name": "announcement_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "New expiry",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ExtendAnnouncementExpiryRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/announcements/{announcement_id}/publish": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Publish a DRAFT or SCHEDULED announcement immediately",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Announcements"
-                ],
-                "summary": "Publish an announcement (Admin)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Announcement ID",
-                        "name": "announcement_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/announcements/{announcement_id}/schedule": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Schedule a DRAFT announcement for future publishing",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Announcements"
-                ],
-                "summary": "Schedule an announcement (Admin)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Announcement ID",
-                        "name": "announcement_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Schedule details",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ScheduleAnnouncementRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.AdminOutputAnnouncement"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Cancels the queued publish job and reverts the announcement back to DRAFT",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Announcements"
-                ],
-                "summary": "Cancel a scheduled announcement (Admin)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Announcement ID",
-                        "name": "announcement_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/checklist-templates": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "List all system-seeded checklist templates",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ChecklistTemplate"
-                ],
-                "summary": "List checklist templates",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "example": [
-                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
-                        ],
-                        "name": "ids",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "name": "order",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "populate",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "query",
-                        "in": "query"
-                    },
-                    {
-                        "minItems": 1,
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "name": "search_fields",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "start_date",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "properties": {
-                                        "meta": {
-                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
-                                        },
-                                        "rows": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/transformations.OutputChecklistTemplate"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/checklist-templates/{template_id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get a single checklist template by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ChecklistTemplate"
-                ],
-                "summary": "Get checklist template",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Template ID",
-                        "name": "template_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputChecklistTemplate"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/admin/client-applications": {
             "get": {
                 "security": [
@@ -1730,7 +749,1120 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/client-user-properties": {
+        "/api/v1/admin/clients/apply": {
+            "post": {
+                "description": "Create a new client application (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ClientApplications"
+                ],
+                "summary": "Create a new client application (Admin)",
+                "parameters": [
+                    {
+                        "description": "Client Application details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateClientApplicationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClientApplication"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update the client's type, sub type, or company details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Update client details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Client Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateClientRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputClient"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating client",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Client not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error occurred",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/agreements": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns all active agreements, each enriched with whether the current user has accepted it",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Agreements"
+                ],
+                "summary": "List active agreements with acceptance status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/transformations.OutputAgreement"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/agreements/{agreement_id}/accept": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Records that the current OWNER user has accepted the specified agreement",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Agreements"
+                ],
+                "summary": "Accept an agreement (OWNER only)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Agreement ID",
+                        "name": "agreement_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/analytics/token": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a signed JWT for querying the Cube.js analytics API. The token is scoped to the authenticated client.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Analytics"
+                ],
+                "summary": "Get Cube.js analytics token",
+                "responses": {
+                    "200": {
+                        "description": "Signed Cube.js JWT",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/handlers.analyticsTokenResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to generate token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/announcements": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List announcements for the current client",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Announcements"
+                ],
+                "summary": "List announcements (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "DRAFT",
+                            "SCHEDULED",
+                            "PUBLISHED",
+                            "EXPIRED"
+                        ],
+                        "type": "string",
+                        "example": "PUBLISHED",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "MAINTENANCE",
+                            "COMMUNITY",
+                            "POLICY_CHANGE",
+                            "EMERGENCY"
+                        ],
+                        "type": "string",
+                        "example": "MAINTENANCE",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.AdminOutputAnnouncement"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new announcement in DRAFT status",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Announcements"
+                ],
+                "summary": "Create a new announcement (Admin)",
+                "parameters": [
+                    {
+                        "description": "Announcement details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateAnnouncementRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.AdminOutputAnnouncement"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/announcements/{announcement_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a single announcement by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Announcements"
+                ],
+                "summary": "Get announcement by ID (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Announcement ID",
+                        "name": "announcement_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.AdminOutputAnnouncement"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a DRAFT announcement",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Announcements"
+                ],
+                "summary": "Delete an announcement (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Announcement ID",
+                        "name": "announcement_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a DRAFT announcement",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Announcements"
+                ],
+                "summary": "Update an announcement (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Announcement ID",
+                        "name": "announcement_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Announcement updates",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateAnnouncementRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.AdminOutputAnnouncement"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/announcements/{announcement_id}/expiry": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update the expiry time of a PUBLISHED announcement; cancels the existing expire job and enqueues a new one",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Announcements"
+                ],
+                "summary": "Extend announcement expiry (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Announcement ID",
+                        "name": "announcement_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New expiry",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ExtendAnnouncementExpiryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/announcements/{announcement_id}/publish": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Publish a DRAFT or SCHEDULED announcement immediately",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Announcements"
+                ],
+                "summary": "Publish an announcement (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Announcement ID",
+                        "name": "announcement_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/announcements/{announcement_id}/schedule": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Schedule a DRAFT announcement for future publishing",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Announcements"
+                ],
+                "summary": "Schedule an announcement (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Announcement ID",
+                        "name": "announcement_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Schedule details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ScheduleAnnouncementRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.AdminOutputAnnouncement"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancels the queued publish job and reverts the announcement back to DRAFT",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Announcements"
+                ],
+                "summary": "Cancel a scheduled announcement (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Announcement ID",
+                        "name": "announcement_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/checklist-templates": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List all system-seeded checklist templates",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ChecklistTemplate"
+                ],
+                "summary": "List checklist templates",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.OutputChecklistTemplate"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/checklist-templates/{template_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a single checklist template by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ChecklistTemplate"
+                ],
+                "summary": "Get checklist template",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Template ID",
+                        "name": "template_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputChecklistTemplate"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/client-user-properties": {
             "get": {
                 "security": [
                     {
@@ -1887,7 +2019,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/client-user-properties/{client_user_property_id}": {
+        "/api/v1/admin/clients/{client_id}/client-user-properties/{client_user_property_id}": {
             "get": {
                 "security": [
                     {
@@ -1956,7 +2088,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/client-users": {
+        "/api/v1/admin/clients/{client_id}/client-users": {
             "get": {
                 "security": [
                     {
@@ -1975,6 +2107,13 @@ const docTemplate = `{
                 ],
                 "summary": "Get all client users (Admin)",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "name": "end_date",
@@ -2137,6 +2276,13 @@ const docTemplate = `{
                 "summary": "Creates new client user (Admin)",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Create Client User Request Body",
                         "name": "body",
                         "in": "body",
@@ -2179,104 +2325,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/client-users/forgot-password": {
-            "post": {
-                "description": "Sends forgot password reset link to client user (Admin)",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUsers"
-                ],
-                "summary": "Sends forgot password reset link to client user (Admin)",
-                "parameters": [
-                    {
-                        "description": "Send Forgot Password Reset Link Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.SendForgotPasswordResetLinkRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Forgot password reset link sent successfully"
-                    },
-                    "400": {
-                        "description": "Error occurred when sending forgot password reset link to client user",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/client-users/login": {
-            "post": {
-                "description": "Authenticate client user and returns client user and token (Admin)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUsers"
-                ],
-                "summary": "Authenticates client user and returns token (Admin)",
-                "parameters": [
-                    {
-                        "description": "Client user login credentials",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.LoginClientUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Client user authenticated successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientUserWithToken"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when authenticating a client user",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden Access",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/client-users/me": {
+        "/api/v1/admin/clients/{client_id}/client-users/me": {
             "get": {
                 "security": [
                     {
@@ -2295,6 +2344,13 @@ const docTemplate = `{
                 ],
                 "summary": "Get the currently authenticated client user (Admin)",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "array",
                         "items": {
@@ -2342,200 +2398,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "update client user (Admin)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUsers"
-                ],
-                "summary": "update client user (Admin)",
-                "parameters": [
-                    {
-                        "description": "Update Client User Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdateClientUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientUser"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when updating client user",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Client user not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error occured",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
             }
         },
-        "/api/v1/admin/client-users/me/password": {
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update client user password (Admin)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUsers"
-                ],
-                "summary": "Update client user password (Admin)",
-                "parameters": [
-                    {
-                        "description": "Update Client User Password Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdateClientUserPasswordRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientUser"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when updating client user password",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Client user not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error occured",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/client-users/reset-password": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Resets the password for a client user (Admin)",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUsers"
-                ],
-                "summary": "Resets the password for a client user (Admin)",
-                "parameters": [
-                    {
-                        "description": "Reset Password Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ResetPasswordRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Password reset successfully"
-                    },
-                    "400": {
-                        "description": "Error occurred when resetting password for client user",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/client-users/{client_user_id}": {
+        "/api/v1/admin/clients/{client_id}/client-users/{client_user_id}": {
             "get": {
                 "security": [
                     {
@@ -2554,6 +2419,13 @@ const docTemplate = `{
                 ],
                 "summary": "Get client user with populate (Admin)",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Client user ID",
@@ -2602,88 +2474,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update client user name and phone number by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientUsers"
-                ],
-                "summary": "Update client user by ID (Admin/Owner)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Client User ID",
-                        "name": "client_user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Update Client User Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdateClientUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientUser"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when updating client user",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Client user not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error occured",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
             }
         },
-        "/api/v1/admin/client-users/{client_user_id}/activate": {
+        "/api/v1/admin/clients/{client_id}/client-users/{client_user_id}/activate": {
             "post": {
                 "security": [
                     {
@@ -2702,6 +2495,13 @@ const docTemplate = `{
                 ],
                 "summary": "Activate client user (Admin)",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Client user ID",
@@ -2755,7 +2555,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/client-users/{client_user_id}/deactivate": {
+        "/api/v1/admin/clients/{client_id}/client-users/{client_user_id}/deactivate": {
             "post": {
                 "security": [
                     {
@@ -2774,6 +2574,13 @@ const docTemplate = `{
                 ],
                 "summary": "Deactivate client user (Admin)",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Client user ID",
@@ -2836,7 +2643,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/client-users/{client_user_id}/properties:link": {
+        "/api/v1/admin/clients/{client_id}/client-users/{client_user_id}/properties:link": {
             "post": {
                 "security": [
                     {
@@ -2897,7 +2704,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/client-users/{client_user_id}/properties:unlink": {
+        "/api/v1/admin/clients/{client_id}/client-users/{client_user_id}/properties:unlink": {
             "delete": {
                 "security": [
                     {
@@ -2952,139 +2759,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/clients/apply": {
-            "post": {
-                "description": "Create a new client application (Admin)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "ClientApplications"
-                ],
-                "summary": "Create a new client application (Admin)",
-                "parameters": [
-                    {
-                        "description": "Client Application details",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.CreateClientApplicationRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClientApplication"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/clients/{client_id}": {
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update the client's type, sub type, or company details",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Clients"
-                ],
-                "summary": "Update client details",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Client ID",
-                        "name": "client_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Update Client Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdateClientRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputClient"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when updating client",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Client not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error occurred",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/documents": {
+        "/api/v1/admin/clients/{client_id}/documents": {
             "get": {
                 "security": [
                     {
@@ -3327,7 +3002,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/documents/{document_id}": {
+        "/api/v1/admin/clients/{client_id}/documents/{document_id}": {
             "get": {
                 "security": [
                     {
@@ -3514,7 +3189,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/payment-accounts": {
+        "/api/v1/admin/clients/{client_id}/payment-accounts": {
             "get": {
                 "security": [
                     {
@@ -3755,7 +3430,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/payment-accounts/{payment_account_id}": {
+        "/api/v1/admin/clients/{client_id}/payment-accounts/{payment_account_id}": {
             "get": {
                 "security": [
                     {
@@ -3954,7 +3629,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties": {
+        "/api/v1/admin/clients/{client_id}/properties": {
             "get": {
                 "security": [
                     {
@@ -4169,7 +3844,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/me": {
+        "/api/v1/admin/clients/{client_id}/properties/me": {
             "get": {
                 "security": [
                     {
@@ -4314,7 +3989,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/slug/{slug}": {
+        "/api/v1/admin/clients/{client_id}/properties/slug/{slug}": {
             "get": {
                 "security": [
                     {
@@ -4389,7 +4064,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}": {
             "get": {
                 "security": [
                     {
@@ -4588,7 +4263,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/blocks": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/blocks": {
             "get": {
                 "security": [
                     {
@@ -4821,7 +4496,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/blocks/{block_id}": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/blocks/{block_id}": {
             "get": {
                 "security": [
                     {
@@ -5064,7 +4739,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/blocks/{block_id}/units": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/blocks/{block_id}/units": {
             "post": {
                 "security": [
                     {
@@ -5152,7 +4827,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/client-users:link": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/client-users:link": {
             "post": {
                 "security": [
                     {
@@ -5207,7 +4882,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/client-users:unlink": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/client-users:unlink": {
             "delete": {
                 "security": [
                     {
@@ -5262,7 +4937,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/expenses": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/expenses": {
             "get": {
                 "security": [
                     {
@@ -5475,7 +5150,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/expenses/{expense_id}": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/expenses/{expense_id}": {
             "get": {
                 "security": [
                     {
@@ -5607,7 +5282,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/expenses/{expense_id}/generate:invoice": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/expenses/{expense_id}/generate:invoice": {
             "post": {
                 "security": [
                     {
@@ -5698,7 +5373,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/invoices": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices": {
             "get": {
                 "security": [
                     {
@@ -5885,7 +5560,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/invoices/{invoice_id}": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}": {
             "get": {
                 "security": [
                     {
@@ -6116,7 +5791,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/invoices/{invoice_id}/line-items": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/line-items": {
             "get": {
                 "security": [
                     {
@@ -6272,7 +5947,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/invoices/{invoice_id}/line-items/{line_item_id}": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/line-items/{line_item_id}": {
             "delete": {
                 "security": [
                     {
@@ -6344,7 +6019,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/invoices/{invoice_id}/void": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/void": {
             "patch": {
                 "security": [
                     {
@@ -6431,7 +6106,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/leases": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases": {
             "get": {
                 "security": [
                     {
@@ -6641,7 +6316,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/leases/{lease_id}": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}": {
             "get": {
                 "security": [
                     {
@@ -6809,7 +6484,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists": {
             "get": {
                 "security": [
                     {
@@ -7068,7 +6743,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}": {
             "get": {
                 "security": [
                     {
@@ -7332,7 +7007,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/comparison": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/comparison": {
             "get": {
                 "security": [
                     {
@@ -7414,7 +7089,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/items": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/items": {
             "post": {
                 "security": [
                     {
@@ -7503,7 +7178,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/items/{item_id}": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/items/{item_id}": {
             "delete": {
                 "security": [
                     {
@@ -7682,7 +7357,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/submit": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/submit": {
             "post": {
                 "security": [
                     {
@@ -7762,7 +7437,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/leases/{lease_id}/expenses": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/expenses": {
             "get": {
                 "security": [
                     {
@@ -7915,7 +7590,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/leases/{lease_id}/status:active": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/status:active": {
             "patch": {
                 "security": [
                     {
@@ -7980,7 +7655,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/leases/{lease_id}/status:cancelled": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/status:cancelled": {
             "patch": {
                 "security": [
                     {
@@ -8060,7 +7735,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/maintenance-requests": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests": {
             "get": {
                 "security": [
                     {
@@ -8320,7 +7995,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}": {
             "get": {
                 "security": [
                     {
@@ -8482,7 +8157,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/activity_logs": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/activity_logs": {
             "get": {
                 "security": [
                     {
@@ -8636,7 +8311,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/assign-manager": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/assign-manager": {
             "post": {
                 "security": [
                     {
@@ -8724,7 +8399,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/assign-worker": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/assign-worker": {
             "post": {
                 "security": [
                     {
@@ -8812,7 +8487,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments": {
             "get": {
                 "security": [
                     {
@@ -9047,7 +8722,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments/{comment_id}": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments/{comment_id}": {
             "delete": {
                 "security": [
                     {
@@ -9208,7 +8883,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses": {
             "get": {
                 "security": [
                     {
@@ -9361,7 +9036,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/status": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/status": {
             "patch": {
                 "security": [
                     {
@@ -9449,7 +9124,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/payments/{payment_id}/verify": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/payments/{payment_id}/verify": {
             "patch": {
                 "security": [
                     {
@@ -9537,7 +9212,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/signing": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/signing": {
             "post": {
                 "security": [
                     {
@@ -9606,7 +9281,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/signing-tokens": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/signing-tokens": {
             "get": {
                 "security": [
                     {
@@ -9776,7 +9451,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/signing-tokens/{signing_token_id}": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/signing-tokens/{signing_token_id}": {
             "patch": {
                 "security": [
                     {
@@ -9859,7 +9534,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/signing-tokens/{signing_token_id}/resend": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/signing-tokens/{signing_token_id}/resend": {
             "post": {
                 "security": [
                     {
@@ -9930,7 +9605,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/signing/direct": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/signing/direct": {
             "post": {
                 "description": "Submit a signature for a document using tenant application or lease context (for PMs) (Admin)",
                 "consumes": [
@@ -9994,7 +9669,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/tenant-applications": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications": {
             "get": {
                 "security": [
                     {
@@ -10311,7 +9986,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/tenant-applications/invite": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/invite": {
             "post": {
                 "security": [
                     {
@@ -10384,7 +10059,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}": {
             "get": {
                 "security": [
                     {
@@ -10615,7 +10290,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}/approve": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/approve": {
             "patch": {
                 "security": [
                     {
@@ -10698,7 +10373,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}/cancel": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/cancel": {
             "patch": {
                 "security": [
                     {
@@ -10778,7 +10453,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay": {
             "post": {
                 "security": [
                     {
@@ -10865,7 +10540,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice:generate": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice:generate": {
             "post": {
                 "security": [
                     {
@@ -10952,7 +10627,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/tenants": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/tenants": {
             "get": {
                 "security": [
                     {
@@ -11105,7 +10780,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/tenants/{tenant_id}": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/tenants/{tenant_id}": {
             "get": {
                 "security": [
                     {
@@ -11181,7 +10856,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/tenants/{tenant_id}/leases": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/tenants/{tenant_id}/leases": {
             "get": {
                 "security": [
                     {
@@ -11398,7 +11073,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/units": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/units": {
             "get": {
                 "security": [
                     {
@@ -11599,7 +11274,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/units/{unit_id}": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/units/{unit_id}": {
             "get": {
                 "security": [
                     {
@@ -11842,7 +11517,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/units/{unit_id}/status:available": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/units/{unit_id}/status:available": {
             "patch": {
                 "security": [
                     {
@@ -11913,7 +11588,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/units/{unit_id}/status:draft": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/units/{unit_id}/status:draft": {
             "patch": {
                 "security": [
                     {
@@ -11984,7 +11659,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/properties/{property_id}/units/{unit_id}/status:maintenance": {
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/units/{unit_id}/status:maintenance": {
             "patch": {
                 "security": [
                     {
@@ -12255,6 +11930,349 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/forgot-password": {
+            "post": {
+                "description": "Send forgot password reset link to user (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Send forgot password reset link to user (Admin)",
+                "parameters": [
+                    {
+                        "description": "Forgot Password Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ForgotPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Reset link sent successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when sending reset link",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/login": {
+            "post": {
+                "description": "Login user with email and password, returns user with client_users and token (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Login user and return token (Admin)",
+                "parameters": [
+                    {
+                        "description": "Login credentials",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LoginUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User authenticated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputUserWithToken"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when authenticating user",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the currently authenticated user with all client memberships (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get the currently authenticated user (Admin)",
+                "responses": {
+                    "200": {
+                        "description": "User retrieved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputUser"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update the currently authenticated user's profile (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update the currently authenticated user (Admin)",
+                "parameters": [
+                    {
+                        "description": "Update User Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateMeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputUser"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when updating user",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error occurred",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/me/password": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update the currently authenticated user's password (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update the currently authenticated user's password (Admin)",
+                "parameters": [
+                    {
+                        "description": "Update Password Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdatePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Password updated successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when updating password",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error occurred",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/reset-password": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Reset user password using the reset token from the forgot-password email (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Reset user password (Admin)",
+                "parameters": [
+                    {
+                        "description": "Reset Password Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UserResetPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Password reset successfully"
+                    },
+                    "400": {
+                        "description": "Error occurred when resetting password",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
                         "schema": {
                             "type": "string"
                         }
@@ -16550,6 +16568,18 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.ForgotPasswordRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                }
+            }
+        },
         "handlers.GenerateExpenseInvoiceBody": {
             "type": "object",
             "required": [
@@ -16692,24 +16722,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.LoginClientUserRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "client-user@example.com"
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 6,
-                    "example": "password123"
-                }
-            }
-        },
         "handlers.LoginRequest": {
             "type": "object",
             "required": [
@@ -16726,6 +16738,24 @@ const docTemplate = `{
                     "maxLength": 255,
                     "minLength": 8,
                     "example": "strongpassword123"
+                }
+            }
+        },
+        "handlers.LoginUserRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "password123"
                 }
             }
         },
@@ -16832,19 +16862,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.ResetPasswordRequest": {
-            "type": "object",
-            "required": [
-                "newPassword"
-            ],
-            "properties": {
-                "newPassword": {
-                    "type": "string",
-                    "minLength": 6,
-                    "example": "newpassword123"
-                }
-            }
-        },
         "handlers.ScheduleAnnouncementRequest": {
             "type": "object",
             "required": [
@@ -16854,18 +16871,6 @@ const docTemplate = `{
                 "scheduled_at": {
                     "type": "string",
                     "example": "2026-04-01T09:00:00Z"
-                }
-            }
-        },
-        "handlers.SendForgotPasswordResetLinkRequest": {
-            "type": "object",
-            "required": [
-                "email"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "client-user@example.com"
                 }
             }
         },
@@ -17145,43 +17150,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.UpdateClientUserPasswordRequest": {
-            "type": "object",
-            "required": [
-                "new_password",
-                "old_password"
-            ],
-            "properties": {
-                "new_password": {
-                    "type": "string",
-                    "minLength": 6,
-                    "example": "newpassword123"
-                },
-                "old_password": {
-                    "type": "string",
-                    "minLength": 6,
-                    "example": "oldpassword123"
-                }
-            }
-        },
-        "handlers.UpdateClientUserRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "john@example.com"
-                },
-                "name": {
-                    "type": "string",
-                    "minLength": 2,
-                    "example": "John Doe"
-                },
-                "phoneNumber": {
-                    "type": "string",
-                    "example": "+233281234569"
-                }
-            }
-        },
         "handlers.UpdateCommentBody": {
             "type": "object",
             "required": [
@@ -17347,6 +17315,43 @@ const docTemplate = `{
                         "TENANT_VISIBLE",
                         "INTERNAL_ONLY"
                     ]
+                }
+            }
+        },
+        "handlers.UpdateMeRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "example": "John Doe"
+                },
+                "phone_number": {
+                    "type": "string",
+                    "example": "+233281234569"
+                }
+            }
+        },
+        "handlers.UpdatePasswordRequest": {
+            "type": "object",
+            "required": [
+                "new_password",
+                "old_password"
+            ],
+            "properties": {
+                "new_password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "newpassword123"
+                },
+                "old_password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "oldpassword123"
                 }
             }
         },
@@ -17618,6 +17623,19 @@ const docTemplate = `{
                         "RETAIL"
                     ],
                     "example": "APARTMENT"
+                }
+            }
+        },
+        "handlers.UserResetPasswordRequest": {
+            "type": "object",
+            "required": [
+                "new_password"
+            ],
+            "properties": {
+                "new_password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "newpassword123"
                 }
             }
         },
@@ -19174,21 +19192,9 @@ const docTemplate = `{
                     "type": "string",
                     "example": "0205126b-9bbb-4a98-960a-e87d8f095335"
                 },
-                "email": {
-                    "type": "string",
-                    "example": "client-user@example.com"
-                },
                 "id": {
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Client User Name"
-                },
-                "phone_number": {
-                    "type": "string",
-                    "example": "+233281234569"
                 },
                 "role": {
                     "type": "string",
@@ -19208,6 +19214,10 @@ const docTemplate = `{
                 "updated_at": {
                     "type": "string",
                     "example": "2023-01-01T00:00:00Z"
+                },
+                "user_id": {
+                    "type": "string",
+                    "example": "e4ad26d4-d7e9-4599-a246-5e88abba6083"
                 }
             }
         },
@@ -19253,18 +19263,6 @@ const docTemplate = `{
                     "type": "string",
                     "format": "date-time",
                     "example": "2023-01-01T00:00:00Z"
-                }
-            }
-        },
-        "transformations.OutputClientUserWithToken": {
-            "type": "object",
-            "properties": {
-                "client_user": {
-                    "$ref": "#/definitions/transformations.OutputClientUser"
-                },
-                "token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw"
                 }
             }
         },
@@ -20753,6 +20751,53 @@ const docTemplate = `{
                 "type": {
                     "type": "string",
                     "example": "APARTMENT"
+                }
+            }
+        },
+        "transformations.OutputUser": {
+            "type": "object",
+            "properties": {
+                "client_users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/transformations.OutputClientUser"
+                    }
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john@example.com"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "phone_number": {
+                    "type": "string",
+                    "example": "+233281234569"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                }
+            }
+        },
+        "transformations.OutputUserWithToken": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                },
+                "user": {
+                    "$ref": "#/definitions/transformations.OutputUser"
                 }
             }
         }

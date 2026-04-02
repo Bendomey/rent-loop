@@ -13,6 +13,7 @@ type AdminFromToken struct {
 type ClientUserFromToken struct {
 	ID       string `json:"id"`
 	ClientID string `json:"client_id"`
+	Role     string `json:"role"`
 }
 
 type UserFromToken struct {
@@ -79,6 +80,22 @@ func WithClientUser(ctx context.Context, clientUser *ClientUserFromToken) contex
 func ClientUserFromContext(ctx context.Context) (*ClientUserFromToken, bool) {
 	clientUser, ok := ctx.Value(clientUserContextKey).(*ClientUserFromToken)
 	return clientUser, ok
+}
+
+// for client user property (property-scoped access resolved by ValidatePropertyAccessMiddleware)
+type ClientUserPropertyFromToken struct {
+	Role string // MANAGER or STAFF at this property
+}
+
+const clientUserPropertyContextKey contextKey = "rentloop-client-user-property"
+
+func WithClientUserProperty(ctx context.Context, cup *ClientUserPropertyFromToken) context.Context {
+	return context.WithValue(ctx, clientUserPropertyContextKey, cup)
+}
+
+func ClientUserPropertyFromContext(ctx context.Context) (*ClientUserPropertyFromToken, bool) {
+	cup, ok := ctx.Value(clientUserPropertyContextKey).(*ClientUserPropertyFromToken)
+	return cup, ok
 }
 
 // for tenant account

@@ -43,7 +43,7 @@ type CreateDocumentRequest struct {
 //	@Failure		400		{object}	lib.HTTPError
 //	@Failure		401		{object}	string
 //	@Failure		500		{object}	string
-//	@Router			/api/v1/admin/documents [post]
+//	@Router			/api/v1/admin/clients/{client_id}/documents [post]
 func (h *DocumentHandler) CreateDocument(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 
@@ -114,7 +114,7 @@ type AdminUpdateDocumentRequest struct {
 //	@Failure		400			{object}	lib.HTTPError
 //	@Failure		401			{object}	string
 //	@Failure		500			{object}	string
-//	@Router			/api/v1/admin/documents/{document_id} [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/documents/{document_id} [patch]
 func (h *DocumentHandler) AdminUpdateDocument(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 
@@ -236,7 +236,7 @@ func (h *DocumentHandler) UpdateDocument(w http.ResponseWriter, r *http.Request)
 //	@Failure		400			{object}	lib.HTTPError
 //	@Failure		401			{object}	string
 //	@Failure		500			{object}	string
-//	@Router			/api/v1/admin/documents/{document_id} [delete]
+//	@Router			/api/v1/admin/clients/{client_id}/documents/{document_id} [delete]
 func (h *DocumentHandler) DeleteDocument(w http.ResponseWriter, r *http.Request) {
 	documentID := chi.URLParam(r, "document_id")
 
@@ -267,7 +267,7 @@ type GetDocumentWithPopulateQuery struct {
 //	@Failure		400			{object}	lib.HTTPError
 //	@Failure		401			{object}	string
 //	@Failure		500			{object}	string
-//	@Router			/api/v1/admin/documents/{document_id} [get]
+//	@Router			/api/v1/admin/clients/{client_id}/documents/{document_id} [get]
 func (h *DocumentHandler) GetDocumentById(w http.ResponseWriter, r *http.Request) {
 	documentID := chi.URLParam(r, "document_id")
 
@@ -312,7 +312,7 @@ type ListDocumentsFilterRequest struct {
 //	@Failure		400	{object}	lib.HTTPError
 //	@Failure		401	{object}	string
 //	@Failure		500	{object}	string
-//	@Router			/api/v1/admin/documents [get]
+//	@Router			/api/v1/admin/clients/{client_id}/documents [get]
 func (h *DocumentHandler) ListDocuments(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 

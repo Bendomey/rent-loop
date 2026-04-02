@@ -47,7 +47,7 @@ type GenerateTokenRequest struct {
 //	@Failure		400			{object}	lib.HTTPError
 //	@Failure		401			{object}	string
 //	@Failure		500			{object}	string
-//	@Router			/api/v1/admin/properties/{property_id}/signing [post]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/signing [post]
 func (h *SigningHandler) GenerateToken(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {
@@ -199,7 +199,7 @@ type ListSigningTokensFilterRequest struct {
 //	@Failure		400			{object}	lib.HTTPError
 //	@Failure		401			{object}	string
 //	@Failure		500			{object}	string
-//	@Router			/api/v1/admin/properties/{property_id}/signing-tokens [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/signing-tokens [get]
 func (h *SigningHandler) ListSigningTokens(w http.ResponseWriter, r *http.Request) {
 	_, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {
@@ -295,7 +295,7 @@ type UpdateSigningTokenRequest struct {
 //	@Failure		401					{object}	string
 //	@Failure		404					{object}	lib.HTTPError
 //	@Failure		500					{object}	string
-//	@Router			/api/v1/admin/properties/{property_id}/signing-tokens/{signing_token_id} [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/signing-tokens/{signing_token_id} [patch]
 func (h *SigningHandler) UpdateToken(w http.ResponseWriter, r *http.Request) {
 	_, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {
@@ -344,7 +344,7 @@ func (h *SigningHandler) UpdateToken(w http.ResponseWriter, r *http.Request) {
 //	@Failure		401					{object}	string
 //	@Failure		404					{object}	lib.HTTPError
 //	@Failure		500					{object}	string
-//	@Router			/api/v1/admin/properties/{property_id}/signing-tokens/{signing_token_id}/resend [post]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/signing-tokens/{signing_token_id}/resend [post]
 func (h *SigningHandler) ResendToken(w http.ResponseWriter, r *http.Request) {
 	_, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {
@@ -385,7 +385,7 @@ type SignDocumentPMRequest struct {
 //	@Failure		400			{object}	lib.HTTPError
 //	@Failure		404			{object}	lib.HTTPError
 //	@Failure		500			{object}	string
-//	@Router			/api/v1/admin/properties/{property_id}/signing/direct [post]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/signing/direct [post]
 func (h *SigningHandler) SignDocumentPM(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {

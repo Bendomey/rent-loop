@@ -1098,6 +1098,14 @@ definitions:
     required:
     - expires_at
     type: object
+  handlers.ForgotPasswordRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+    required:
+    - email
+    type: object
   handlers.GenerateExpenseInvoiceBody:
     properties:
       payers:
@@ -1197,19 +1205,6 @@ definitions:
     - client_user_ids
     - role
     type: object
-  handlers.LoginClientUserRequest:
-    properties:
-      email:
-        example: client-user@example.com
-        type: string
-      password:
-        example: password123
-        minLength: 6
-        type: string
-    required:
-    - email
-    - password
-    type: object
   handlers.LoginRequest:
     properties:
       email:
@@ -1219,6 +1214,19 @@ definitions:
         example: strongpassword123
         maxLength: 255
         minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  handlers.LoginUserRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: password123
+        minLength: 6
         type: string
     required:
     - email
@@ -1300,15 +1308,6 @@ definitions:
     required:
     - reason
     type: object
-  handlers.ResetPasswordRequest:
-    properties:
-      newPassword:
-        example: newpassword123
-        minLength: 6
-        type: string
-    required:
-    - newPassword
-    type: object
   handlers.ScheduleAnnouncementRequest:
     properties:
       scheduled_at:
@@ -1316,14 +1315,6 @@ definitions:
         type: string
     required:
     - scheduled_at
-    type: object
-  handlers.SendForgotPasswordResetLinkRequest:
-    properties:
-      email:
-        example: client-user@example.com
-        type: string
-    required:
-    - email
     type: object
   handlers.SendTenantCodeRequest:
     properties:
@@ -1518,33 +1509,6 @@ definitions:
       website_url:
         type: string
     type: object
-  handlers.UpdateClientUserPasswordRequest:
-    properties:
-      new_password:
-        example: newpassword123
-        minLength: 6
-        type: string
-      old_password:
-        example: oldpassword123
-        minLength: 6
-        type: string
-    required:
-    - new_password
-    - old_password
-    type: object
-  handlers.UpdateClientUserRequest:
-    properties:
-      email:
-        example: john@example.com
-        type: string
-      name:
-        example: John Doe
-        minLength: 2
-        type: string
-      phoneNumber:
-        example: "+233281234569"
-        type: string
-    type: object
   handlers.UpdateCommentBody:
     properties:
       content:
@@ -1663,6 +1627,33 @@ definitions:
         - TENANT_VISIBLE
         - INTERNAL_ONLY
         type: string
+    type: object
+  handlers.UpdateMeRequest:
+    properties:
+      email:
+        example: john@example.com
+        type: string
+      name:
+        example: John Doe
+        minLength: 2
+        type: string
+      phone_number:
+        example: "+233281234569"
+        type: string
+    type: object
+  handlers.UpdatePasswordRequest:
+    properties:
+      new_password:
+        example: newpassword123
+        minLength: 6
+        type: string
+      old_password:
+        example: oldpassword123
+        minLength: 6
+        type: string
+    required:
+    - new_password
+    - old_password
     type: object
   handlers.UpdatePaymentAccountRequest:
     properties:
@@ -1863,6 +1854,15 @@ definitions:
         - RETAIL
         example: APARTMENT
         type: string
+    type: object
+  handlers.UserResetPasswordRequest:
+    properties:
+      new_password:
+        example: newpassword123
+        minLength: 6
+        type: string
+    required:
+    - new_password
     type: object
   handlers.VerifyCodeRequest:
     properties:
@@ -2990,17 +2990,8 @@ definitions:
       created_by_id:
         example: 0205126b-9bbb-4a98-960a-e87d8f095335
         type: string
-      email:
-        example: client-user@example.com
-        type: string
       id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
-        type: string
-      name:
-        example: Client User Name
-        type: string
-      phone_number:
-        example: "+233281234569"
         type: string
       role:
         example: STAFF
@@ -3015,6 +3006,9 @@ definitions:
         type: string
       updated_at:
         example: "2023-01-01T00:00:00Z"
+        type: string
+      user_id:
+        example: e4ad26d4-d7e9-4599-a246-5e88abba6083
         type: string
     type: object
   transformations.OutputClientUserProperty:
@@ -3048,14 +3042,6 @@ definitions:
       updated_at:
         example: "2023-01-01T00:00:00Z"
         format: date-time
-        type: string
-    type: object
-  transformations.OutputClientUserWithToken:
-    properties:
-      client_user:
-        $ref: '#/definitions/transformations.OutputClientUser'
-      token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw
         type: string
     type: object
   transformations.OutputDocument:
@@ -4135,6 +4121,39 @@ definitions:
         example: APARTMENT
         type: string
     type: object
+  transformations.OutputUser:
+    properties:
+      client_users:
+        items:
+          $ref: '#/definitions/transformations.OutputClientUser'
+        type: array
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      email:
+        example: john@example.com
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      name:
+        example: John Doe
+        type: string
+      phone_number:
+        example: "+233281234569"
+        type: string
+      updated_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+    type: object
+  transformations.OutputUserWithToken:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      user:
+        $ref: '#/definitions/transformations.OutputUser'
+    type: object
 info:
   contact:
     email: domeybenjamin1@gmail.com
@@ -4376,638 +4395,6 @@ paths:
       summary: Get the currently authenticated admin (Admin)
       tags:
       - Admins
-  /api/v1/admin/agreements:
-    get:
-      description: Returns all active agreements, each enriched with whether the current
-        user has accepted it
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                items:
-                  $ref: '#/definitions/transformations.OutputAgreement'
-                type: array
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: List active agreements with acceptance status
-      tags:
-      - Agreements
-  /api/v1/admin/agreements/{agreement_id}/accept:
-    post:
-      description: Records that the current OWNER user has accepted the specified
-        agreement
-      parameters:
-      - description: Agreement ID
-        in: path
-        name: agreement_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                type: object
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Accept an agreement (OWNER only)
-      tags:
-      - Agreements
-  /api/v1/admin/analytics/token:
-    get:
-      description: Returns a signed JWT for querying the Cube.js analytics API. The
-        token is scoped to the authenticated client.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Signed Cube.js JWT
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/handlers.analyticsTokenResponse'
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Failed to generate token
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Get Cube.js analytics token
-      tags:
-      - Analytics
-  /api/v1/admin/announcements:
-    get:
-      description: List announcements for the current client
-      parameters:
-      - in: query
-        name: end_date
-        type: string
-      - collectionFormat: multi
-        example:
-        - a8098c1a-f86e-11da-bd1a-00112444be1e
-        in: query
-        items:
-          type: string
-        name: ids
-        type: array
-      - enum:
-        - asc
-        - desc
-        in: query
-        name: order
-        type: string
-      - in: query
-        name: order_by
-        type: string
-      - in: query
-        minimum: 0
-        name: page
-        type: integer
-      - in: query
-        minimum: 0
-        name: page_size
-        type: integer
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      - in: query
-        name: query
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        minItems: 1
-        name: search_fields
-        type: array
-      - in: query
-        name: start_date
-        type: string
-      - enum:
-        - DRAFT
-        - SCHEDULED
-        - PUBLISHED
-        - EXPIRED
-        example: PUBLISHED
-        in: query
-        name: status
-        type: string
-      - enum:
-        - MAINTENANCE
-        - COMMUNITY
-        - POLICY_CHANGE
-        - EMERGENCY
-        example: MAINTENANCE
-        in: query
-        name: type
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                properties:
-                  meta:
-                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
-                  rows:
-                    items:
-                      $ref: '#/definitions/transformations.AdminOutputAnnouncement'
-                    type: array
-                type: object
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: List announcements (Admin)
-      tags:
-      - Announcements
-    post:
-      consumes:
-      - application/json
-      description: Create a new announcement in DRAFT status
-      parameters:
-      - description: Announcement details
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.CreateAnnouncementRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.AdminOutputAnnouncement'
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Create a new announcement (Admin)
-      tags:
-      - Announcements
-  /api/v1/admin/announcements/{announcement_id}:
-    delete:
-      description: Delete a DRAFT announcement
-      parameters:
-      - description: Announcement ID
-        in: path
-        name: announcement_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No Content
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Delete an announcement (Admin)
-      tags:
-      - Announcements
-    get:
-      description: Get a single announcement by ID
-      parameters:
-      - description: Announcement ID
-        in: path
-        name: announcement_id
-        required: true
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.AdminOutputAnnouncement'
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Get announcement by ID (Admin)
-      tags:
-      - Announcements
-    patch:
-      consumes:
-      - application/json
-      description: Update a DRAFT announcement
-      parameters:
-      - description: Announcement ID
-        in: path
-        name: announcement_id
-        required: true
-        type: string
-      - description: Announcement updates
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateAnnouncementRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.AdminOutputAnnouncement'
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Update an announcement (Admin)
-      tags:
-      - Announcements
-  /api/v1/admin/announcements/{announcement_id}/expiry:
-    patch:
-      consumes:
-      - application/json
-      description: Update the expiry time of a PUBLISHED announcement; cancels the
-        existing expire job and enqueues a new one
-      parameters:
-      - description: Announcement ID
-        in: path
-        name: announcement_id
-        required: true
-        type: string
-      - description: New expiry
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.ExtendAnnouncementExpiryRequest'
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No Content
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Extend announcement expiry (Admin)
-      tags:
-      - Announcements
-  /api/v1/admin/announcements/{announcement_id}/publish:
-    post:
-      description: Publish a DRAFT or SCHEDULED announcement immediately
-      parameters:
-      - description: Announcement ID
-        in: path
-        name: announcement_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No Content
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Publish an announcement (Admin)
-      tags:
-      - Announcements
-  /api/v1/admin/announcements/{announcement_id}/schedule:
-    delete:
-      description: Cancels the queued publish job and reverts the announcement back
-        to DRAFT
-      parameters:
-      - description: Announcement ID
-        in: path
-        name: announcement_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No Content
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Cancel a scheduled announcement (Admin)
-      tags:
-      - Announcements
-    post:
-      consumes:
-      - application/json
-      description: Schedule a DRAFT announcement for future publishing
-      parameters:
-      - description: Announcement ID
-        in: path
-        name: announcement_id
-        required: true
-        type: string
-      - description: Schedule details
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.ScheduleAnnouncementRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.AdminOutputAnnouncement'
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Schedule an announcement (Admin)
-      tags:
-      - Announcements
-  /api/v1/admin/checklist-templates:
-    get:
-      consumes:
-      - application/json
-      description: List all system-seeded checklist templates
-      parameters:
-      - in: query
-        name: end_date
-        type: string
-      - collectionFormat: multi
-        example:
-        - a8098c1a-f86e-11da-bd1a-00112444be1e
-        in: query
-        items:
-          type: string
-        name: ids
-        type: array
-      - enum:
-        - asc
-        - desc
-        in: query
-        name: order
-        type: string
-      - in: query
-        name: order_by
-        type: string
-      - in: query
-        minimum: 0
-        name: page
-        type: integer
-      - in: query
-        minimum: 0
-        name: page_size
-        type: integer
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      - in: query
-        name: query
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        minItems: 1
-        name: search_fields
-        type: array
-      - in: query
-        name: start_date
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                properties:
-                  meta:
-                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
-                  rows:
-                    items:
-                      $ref: '#/definitions/transformations.OutputChecklistTemplate'
-                    type: array
-                type: object
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: List checklist templates
-      tags:
-      - ChecklistTemplate
-  /api/v1/admin/checklist-templates/{template_id}:
-    get:
-      consumes:
-      - application/json
-      description: Get a single checklist template by ID
-      parameters:
-      - description: Template ID
-        in: path
-        name: template_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputChecklistTemplate'
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Get checklist template
-      tags:
-      - ChecklistTemplate
   /api/v1/admin/client-applications:
     get:
       consumes:
@@ -5244,7 +4631,691 @@ paths:
       summary: Reject a client application (Admin)
       tags:
       - ClientApplications
-  /api/v1/admin/client-user-properties:
+  /api/v1/admin/clients/{client_id}:
+    patch:
+      consumes:
+      - application/json
+      description: Update the client's type, sub type, or company details
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Update Client Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateClientRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClient'
+            type: object
+        "400":
+          description: Error occurred when updating client
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Client not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error occurred
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update client details
+      tags:
+      - Clients
+  /api/v1/admin/clients/{client_id}/agreements:
+    get:
+      description: Returns all active agreements, each enriched with whether the current
+        user has accepted it
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/transformations.OutputAgreement'
+                type: array
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List active agreements with acceptance status
+      tags:
+      - Agreements
+  /api/v1/admin/clients/{client_id}/agreements/{agreement_id}/accept:
+    post:
+      description: Records that the current OWNER user has accepted the specified
+        agreement
+      parameters:
+      - description: Agreement ID
+        in: path
+        name: agreement_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Accept an agreement (OWNER only)
+      tags:
+      - Agreements
+  /api/v1/admin/clients/{client_id}/analytics/token:
+    get:
+      description: Returns a signed JWT for querying the Cube.js analytics API. The
+        token is scoped to the authenticated client.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Signed Cube.js JWT
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/handlers.analyticsTokenResponse'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Failed to generate token
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get Cube.js analytics token
+      tags:
+      - Analytics
+  /api/v1/admin/clients/{client_id}/announcements:
+    get:
+      description: List announcements for the current client
+      parameters:
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - DRAFT
+        - SCHEDULED
+        - PUBLISHED
+        - EXPIRED
+        example: PUBLISHED
+        in: query
+        name: status
+        type: string
+      - enum:
+        - MAINTENANCE
+        - COMMUNITY
+        - POLICY_CHANGE
+        - EMERGENCY
+        example: MAINTENANCE
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.AdminOutputAnnouncement'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List announcements (Admin)
+      tags:
+      - Announcements
+    post:
+      consumes:
+      - application/json
+      description: Create a new announcement in DRAFT status
+      parameters:
+      - description: Announcement details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateAnnouncementRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputAnnouncement'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a new announcement (Admin)
+      tags:
+      - Announcements
+  /api/v1/admin/clients/{client_id}/announcements/{announcement_id}:
+    delete:
+      description: Delete a DRAFT announcement
+      parameters:
+      - description: Announcement ID
+        in: path
+        name: announcement_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete an announcement (Admin)
+      tags:
+      - Announcements
+    get:
+      description: Get a single announcement by ID
+      parameters:
+      - description: Announcement ID
+        in: path
+        name: announcement_id
+        required: true
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputAnnouncement'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get announcement by ID (Admin)
+      tags:
+      - Announcements
+    patch:
+      consumes:
+      - application/json
+      description: Update a DRAFT announcement
+      parameters:
+      - description: Announcement ID
+        in: path
+        name: announcement_id
+        required: true
+        type: string
+      - description: Announcement updates
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateAnnouncementRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputAnnouncement'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update an announcement (Admin)
+      tags:
+      - Announcements
+  /api/v1/admin/clients/{client_id}/announcements/{announcement_id}/expiry:
+    patch:
+      consumes:
+      - application/json
+      description: Update the expiry time of a PUBLISHED announcement; cancels the
+        existing expire job and enqueues a new one
+      parameters:
+      - description: Announcement ID
+        in: path
+        name: announcement_id
+        required: true
+        type: string
+      - description: New expiry
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ExtendAnnouncementExpiryRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Extend announcement expiry (Admin)
+      tags:
+      - Announcements
+  /api/v1/admin/clients/{client_id}/announcements/{announcement_id}/publish:
+    post:
+      description: Publish a DRAFT or SCHEDULED announcement immediately
+      parameters:
+      - description: Announcement ID
+        in: path
+        name: announcement_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Publish an announcement (Admin)
+      tags:
+      - Announcements
+  /api/v1/admin/clients/{client_id}/announcements/{announcement_id}/schedule:
+    delete:
+      description: Cancels the queued publish job and reverts the announcement back
+        to DRAFT
+      parameters:
+      - description: Announcement ID
+        in: path
+        name: announcement_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Cancel a scheduled announcement (Admin)
+      tags:
+      - Announcements
+    post:
+      consumes:
+      - application/json
+      description: Schedule a DRAFT announcement for future publishing
+      parameters:
+      - description: Announcement ID
+        in: path
+        name: announcement_id
+        required: true
+        type: string
+      - description: Schedule details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ScheduleAnnouncementRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputAnnouncement'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Schedule an announcement (Admin)
+      tags:
+      - Announcements
+  /api/v1/admin/clients/{client_id}/checklist-templates:
+    get:
+      consumes:
+      - application/json
+      description: List all system-seeded checklist templates
+      parameters:
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputChecklistTemplate'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List checklist templates
+      tags:
+      - ChecklistTemplate
+  /api/v1/admin/clients/{client_id}/checklist-templates/{template_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a single checklist template by ID
+      parameters:
+      - description: Template ID
+        in: path
+        name: template_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputChecklistTemplate'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get checklist template
+      tags:
+      - ChecklistTemplate
+  /api/v1/admin/clients/{client_id}/client-user-properties:
     get:
       consumes:
       - application/json
@@ -5345,7 +5416,7 @@ paths:
       summary: List all client user properties (Admin)
       tags:
       - ClientUserProperties
-  /api/v1/admin/client-user-properties/{client_user_property_id}:
+  /api/v1/admin/clients/{client_id}/client-user-properties/{client_user_property_id}:
     get:
       consumes:
       - application/json
@@ -5389,12 +5460,17 @@ paths:
       summary: Fetch client user property with populate (Admin)
       tags:
       - ClientUserProperties
-  /api/v1/admin/client-users:
+  /api/v1/admin/clients/{client_id}/client-users:
     get:
       consumes:
       - application/json
       description: Get all client users (Admin)
       parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
       - in: query
         name: end_date
         type: string
@@ -5500,6 +5576,11 @@ paths:
       - application/json
       description: Create a new client user (Admin)
       parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
       - description: Create Client User Request Body
         in: body
         name: body
@@ -5533,12 +5614,17 @@ paths:
       summary: Creates new client user (Admin)
       tags:
       - ClientUsers
-  /api/v1/admin/client-users/{client_user_id}:
+  /api/v1/admin/clients/{client_id}/client-users/{client_user_id}:
     get:
       consumes:
       - application/json
       description: Get client user with populate (Admin)
       parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
       - description: Client user ID
         in: path
         name: client_user_id
@@ -5577,63 +5663,17 @@ paths:
       summary: Get client user with populate (Admin)
       tags:
       - ClientUsers
-    patch:
-      consumes:
-      - application/json
-      description: Update client user name and phone number by ID
-      parameters:
-      - description: Client User ID
-        in: path
-        name: client_user_id
-        required: true
-        type: string
-      - description: Update Client User Request Body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateClientUserRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputClientUser'
-            type: object
-        "400":
-          description: Error occurred when updating client user
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Client user not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error occured
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Update client user by ID (Admin/Owner)
-      tags:
-      - ClientUsers
-  /api/v1/admin/client-users/{client_user_id}/activate:
+  /api/v1/admin/clients/{client_id}/client-users/{client_user_id}/activate:
     post:
       consumes:
       - application/json
       description: Activate client user (Admin)
       parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
       - description: Client user ID
         in: path
         name: client_user_id
@@ -5674,12 +5714,17 @@ paths:
       summary: Activate client user (Admin)
       tags:
       - ClientUsers
-  /api/v1/admin/client-users/{client_user_id}/deactivate:
+  /api/v1/admin/clients/{client_id}/client-users/{client_user_id}/deactivate:
     post:
       consumes:
       - application/json
       description: Deactivate client user (Admin)
       parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
       - description: Client user ID
         in: path
         name: client_user_id
@@ -5726,7 +5771,7 @@ paths:
       summary: Deactivate client user (Admin)
       tags:
       - ClientUsers
-  /api/v1/admin/client-users/{client_user_id}/properties:link:
+  /api/v1/admin/clients/{client_id}/client-users/{client_user_id}/properties:link:
     post:
       consumes:
       - application/json
@@ -5765,7 +5810,7 @@ paths:
       summary: Link client user to properties (Admin)
       tags:
       - ClientUserProperties
-  /api/v1/admin/client-users/{client_user_id}/properties:unlink:
+  /api/v1/admin/clients/{client_id}/client-users/{client_user_id}/properties:unlink:
     delete:
       consumes:
       - application/json
@@ -5800,76 +5845,17 @@ paths:
       summary: Unlink client user from properties (Admin)
       tags:
       - ClientUserProperties
-  /api/v1/admin/client-users/forgot-password:
-    post:
-      consumes:
-      - application/json
-      description: Sends forgot password reset link to client user (Admin)
-      parameters:
-      - description: Send Forgot Password Reset Link Request Body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.SendForgotPasswordResetLinkRequest'
-      responses:
-        "204":
-          description: Forgot password reset link sent successfully
-        "400":
-          description: Error occurred when sending forgot password reset link to client
-            user
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      summary: Sends forgot password reset link to client user (Admin)
-      tags:
-      - ClientUsers
-  /api/v1/admin/client-users/login:
-    post:
-      consumes:
-      - application/json
-      description: Authenticate client user and returns client user and token (Admin)
-      parameters:
-      - description: Client user login credentials
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.LoginClientUserRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Client user authenticated successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputClientUserWithToken'
-            type: object
-        "400":
-          description: Error occurred when authenticating a client user
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "403":
-          description: Forbidden Access
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      summary: Authenticates client user and returns token (Admin)
-      tags:
-      - ClientUsers
-  /api/v1/admin/client-users/me:
+  /api/v1/admin/clients/{client_id}/client-users/me:
     get:
       consumes:
       - application/json
       description: Get the currently authenticated client user (Admin)
       parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
       - collectionFormat: csv
         in: query
         items:
@@ -5907,213 +5893,7 @@ paths:
       summary: Get the currently authenticated client user (Admin)
       tags:
       - ClientUsers
-    patch:
-      consumes:
-      - application/json
-      description: update client user (Admin)
-      parameters:
-      - description: Update Client User Request Body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateClientUserRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputClientUser'
-            type: object
-        "400":
-          description: Error occurred when updating client user
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Client user not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error occured
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: update client user (Admin)
-      tags:
-      - ClientUsers
-  /api/v1/admin/client-users/me/password:
-    patch:
-      consumes:
-      - application/json
-      description: Update client user password (Admin)
-      parameters:
-      - description: Update Client User Password Request Body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateClientUserPasswordRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputClientUser'
-            type: object
-        "400":
-          description: Error occurred when updating client user password
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Client user not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error occured
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Update client user password (Admin)
-      tags:
-      - ClientUsers
-  /api/v1/admin/client-users/reset-password:
-    post:
-      consumes:
-      - application/json
-      description: Resets the password for a client user (Admin)
-      parameters:
-      - description: Reset Password Request Body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.ResetPasswordRequest'
-      responses:
-        "204":
-          description: Password reset successfully
-        "400":
-          description: Error occurred when resetting password for client user
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Resets the password for a client user (Admin)
-      tags:
-      - ClientUsers
-  /api/v1/admin/clients/{client_id}:
-    patch:
-      consumes:
-      - application/json
-      description: Update the client's type, sub type, or company details
-      parameters:
-      - description: Client ID
-        in: path
-        name: client_id
-        required: true
-        type: string
-      - description: Update Client Request Body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateClientRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputClient'
-            type: object
-        "400":
-          description: Error occurred when updating client
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Client not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error occurred
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Update client details
-      tags:
-      - Clients
-  /api/v1/admin/clients/apply:
-    post:
-      consumes:
-      - application/json
-      description: Create a new client application (Admin)
-      parameters:
-      - description: Client Application details
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.CreateClientApplicationRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputClientApplication'
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      summary: Create a new client application (Admin)
-      tags:
-      - ClientApplications
-  /api/v1/admin/documents:
+  /api/v1/admin/clients/{client_id}/documents:
     get:
       consumes:
       - application/json
@@ -6270,7 +6050,7 @@ paths:
       summary: Create a new document (Admin)
       tags:
       - Documents
-  /api/v1/admin/documents/{document_id}:
+  /api/v1/admin/clients/{client_id}/documents/{document_id}:
     delete:
       consumes:
       - application/json
@@ -6390,7 +6170,7 @@ paths:
       summary: Update an existing document (Admin)
       tags:
       - Documents
-  /api/v1/admin/payment-accounts:
+  /api/v1/admin/clients/{client_id}/payment-accounts:
     get:
       consumes:
       - application/json
@@ -6546,7 +6326,7 @@ paths:
       summary: Creates a new payment account (Admin)
       tags:
       - Payment Accounts
-  /api/v1/admin/payment-accounts/{payment_account_id}:
+  /api/v1/admin/clients/{client_id}/payment-accounts/{payment_account_id}:
     delete:
       consumes:
       - application/json
@@ -6674,7 +6454,7 @@ paths:
       summary: Update an existing payment account (Admin)
       tags:
       - Payment Accounts
-  /api/v1/admin/properties:
+  /api/v1/admin/clients/{client_id}/properties:
     get:
       consumes:
       - application/json
@@ -6812,7 +6592,7 @@ paths:
       summary: Creates a new property (Admin)
       tags:
       - Properties
-  /api/v1/admin/properties/{property_id}:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}:
     delete:
       consumes:
       - application/json
@@ -6940,7 +6720,7 @@ paths:
       summary: Update an existing property (Admin)
       tags:
       - Properties
-  /api/v1/admin/properties/{property_id}/blocks:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/blocks:
     get:
       consumes:
       - application/json
@@ -7091,7 +6871,7 @@ paths:
       summary: Create a new property block (Admin)
       tags:
       - PropertyBlocks
-  /api/v1/admin/properties/{property_id}/blocks/{block_id}:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/blocks/{block_id}:
     delete:
       consumes:
       - application/json
@@ -7249,7 +7029,7 @@ paths:
       summary: Update a property block (Admin)
       tags:
       - PropertyBlocks
-  /api/v1/admin/properties/{property_id}/blocks/{block_id}/units:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/blocks/{block_id}/units:
     post:
       consumes:
       - application/json
@@ -7306,7 +7086,7 @@ paths:
       summary: Create unit (Admin)
       tags:
       - Units
-  /api/v1/admin/properties/{property_id}/client-users:link:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/client-users:link:
     post:
       consumes:
       - application/json
@@ -7341,7 +7121,7 @@ paths:
       summary: Link property to client users (Admin)
       tags:
       - ClientUserProperties
-  /api/v1/admin/properties/{property_id}/client-users:unlink:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/client-users:unlink:
     delete:
       consumes:
       - application/json
@@ -7376,7 +7156,7 @@ paths:
       summary: Unlink property from client users (Admin)
       tags:
       - ClientUserProperties
-  /api/v1/admin/properties/{property_id}/expenses:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/expenses:
     get:
       consumes:
       - application/json
@@ -7514,7 +7294,7 @@ paths:
       summary: Add an expense to a property
       tags:
       - Expenses
-  /api/v1/admin/properties/{property_id}/expenses/{expense_id}:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/expenses/{expense_id}:
     delete:
       consumes:
       - application/json
@@ -7599,7 +7379,7 @@ paths:
       summary: Get a single expense
       tags:
       - Expenses
-  /api/v1/admin/properties/{property_id}/expenses/{expense_id}/generate:invoice:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/expenses/{expense_id}/generate:invoice:
     post:
       consumes:
       - application/json
@@ -7658,7 +7438,7 @@ paths:
       summary: Generate invoices from an expense
       tags:
       - Expenses
-  /api/v1/admin/properties/{property_id}/invoices:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/invoices:
     get:
       consumes:
       - application/json
@@ -7777,7 +7557,7 @@ paths:
       summary: List invoices (Admin)
       tags:
       - Invoice
-  /api/v1/admin/properties/{property_id}/invoices/{invoice_id}:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}:
     delete:
       consumes:
       - application/json
@@ -7927,7 +7707,7 @@ paths:
       summary: Update invoice (Admin)
       tags:
       - Invoice
-  /api/v1/admin/properties/{property_id}/invoices/{invoice_id}/line-items:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/line-items:
     get:
       consumes:
       - application/json
@@ -8028,7 +7808,7 @@ paths:
       summary: Add line item to invoice (Admin)
       tags:
       - Invoice
-  /api/v1/admin/properties/{property_id}/invoices/{invoice_id}/line-items/{line_item_id}:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/line-items/{line_item_id}:
     delete:
       consumes:
       - application/json
@@ -8075,7 +7855,7 @@ paths:
       summary: Remove line item from invoice (Admin)
       tags:
       - Invoice
-  /api/v1/admin/properties/{property_id}/invoices/{invoice_id}/void:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/void:
     patch:
       consumes:
       - application/json
@@ -8131,7 +7911,7 @@ paths:
       summary: Void invoice (Admin)
       tags:
       - Invoice
-  /api/v1/admin/properties/{property_id}/leases:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases:
     get:
       consumes:
       - application/json
@@ -8272,7 +8052,7 @@ paths:
       summary: List leases by property (Admin)
       tags:
       - Lease
-  /api/v1/admin/properties/{property_id}/leases/{lease_id}:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}:
     get:
       consumes:
       - application/json
@@ -8381,7 +8161,7 @@ paths:
       summary: Update lease (Admin)
       tags:
       - Lease
-  /api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists:
     get:
       consumes:
       - application/json
@@ -8550,7 +8330,7 @@ paths:
       summary: Create lease checklist
       tags:
       - LeaseChecklist
-  /api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}:
     delete:
       consumes:
       - application/json
@@ -8723,7 +8503,7 @@ paths:
       summary: Update lease checklist
       tags:
       - LeaseChecklist
-  /api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/comparison:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/comparison:
     get:
       consumes:
       - application/json
@@ -8776,7 +8556,7 @@ paths:
       summary: Get checklist comparison
       tags:
       - LeaseChecklist
-  /api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/items:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/items:
     post:
       consumes:
       - application/json
@@ -8834,7 +8614,7 @@ paths:
       summary: Create lease checklist item
       tags:
       - LeaseChecklist
-  /api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/items/{item_id}:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/items/{item_id}:
     delete:
       consumes:
       - application/json
@@ -8952,7 +8732,7 @@ paths:
       summary: Update lease checklist item
       tags:
       - LeaseChecklist
-  /api/v1/admin/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/submit:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists/{checklist_id}/submit:
     post:
       consumes:
       - application/json
@@ -9004,7 +8784,7 @@ paths:
       summary: Submit lease checklist
       tags:
       - LeaseChecklist
-  /api/v1/admin/properties/{property_id}/leases/{lease_id}/expenses:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/expenses:
     get:
       consumes:
       - application/json
@@ -9103,7 +8883,7 @@ paths:
       summary: List expenses for a lease
       tags:
       - Expenses
-  /api/v1/admin/properties/{property_id}/leases/{lease_id}/status:active:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/status:active:
     patch:
       consumes:
       - application/json
@@ -9145,7 +8925,7 @@ paths:
       summary: Activate lease (Admin)
       tags:
       - Lease
-  /api/v1/admin/properties/{property_id}/leases/{lease_id}/status:cancelled:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/status:cancelled:
     patch:
       consumes:
       - application/json
@@ -9197,7 +8977,7 @@ paths:
       summary: Cancel lease (Admin)
       tags:
       - Lease
-  /api/v1/admin/properties/{property_id}/maintenance-requests:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests:
     get:
       consumes:
       - application/json
@@ -9363,7 +9143,7 @@ paths:
       summary: Create a maintenance request (Admin)
       tags:
       - MaintenanceRequests
-  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}:
     get:
       consumes:
       - application/json
@@ -9468,7 +9248,7 @@ paths:
       summary: Update a maintenance request (Admin)
       tags:
       - MaintenanceRequests
-  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/activity_logs:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/activity_logs:
     get:
       consumes:
       - application/json
@@ -9568,7 +9348,7 @@ paths:
       summary: List activity logs for a maintenance request
       tags:
       - MaintenanceRequests
-  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/assign-manager:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/assign-manager:
     post:
       consumes:
       - application/json
@@ -9625,7 +9405,7 @@ paths:
       summary: Assign a manager to a maintenance request
       tags:
       - MaintenanceRequests
-  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/assign-worker:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/assign-worker:
     post:
       consumes:
       - application/json
@@ -9682,7 +9462,7 @@ paths:
       summary: Assign a worker to a maintenance request
       tags:
       - MaintenanceRequests
-  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments:
     get:
       consumes:
       - application/json
@@ -9835,7 +9615,7 @@ paths:
       summary: Create a comment on a maintenance request
       tags:
       - MaintenanceRequests
-  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments/{comment_id}:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments/{comment_id}:
     delete:
       consumes:
       - application/json
@@ -9940,7 +9720,7 @@ paths:
       summary: Update a comment on a maintenance request
       tags:
       - MaintenanceRequests
-  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses:
     get:
       consumes:
       - application/json
@@ -10039,7 +9819,7 @@ paths:
       summary: List expenses for a maintenance request
       tags:
       - Expenses
-  /api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/status:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/status:
     patch:
       consumes:
       - application/json
@@ -10096,7 +9876,7 @@ paths:
       summary: Update the status of a maintenance request
       tags:
       - MaintenanceRequests
-  /api/v1/admin/properties/{property_id}/payments/{payment_id}/verify:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/payments/{payment_id}/verify:
     patch:
       consumes:
       - application/json
@@ -10154,7 +9934,7 @@ paths:
       summary: Verify an offline payment (Admin)
       tags:
       - Payments
-  /api/v1/admin/properties/{property_id}/signing:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/signing:
     post:
       consumes:
       - application/json
@@ -10198,7 +9978,7 @@ paths:
       summary: Generate a signing token (Admin)
       tags:
       - Signing
-  /api/v1/admin/properties/{property_id}/signing-tokens:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/signing-tokens:
     get:
       description: List signing tokens with optional filters (Admin)
       parameters:
@@ -10307,7 +10087,7 @@ paths:
       summary: List signing tokens (Admin)
       tags:
       - Signing
-  /api/v1/admin/properties/{property_id}/signing-tokens/{signing_token_id}:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/signing-tokens/{signing_token_id}:
     patch:
       consumes:
       - application/json
@@ -10361,7 +10141,7 @@ paths:
       summary: Update a signing token (Admin)
       tags:
       - Signing
-  /api/v1/admin/properties/{property_id}/signing-tokens/{signing_token_id}/resend:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/signing-tokens/{signing_token_id}/resend:
     post:
       description: Extend the token expiry by 7 days and resend the notification to
         the signer (Admin)
@@ -10408,7 +10188,7 @@ paths:
       summary: Resend a signing token (Admin)
       tags:
       - Signing
-  /api/v1/admin/properties/{property_id}/signing/direct:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/signing/direct:
     post:
       consumes:
       - application/json
@@ -10451,7 +10231,7 @@ paths:
       summary: Submit a signature (Admin)
       tags:
       - Signing
-  /api/v1/admin/properties/{property_id}/tenant-applications:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications:
     get:
       consumes:
       - application/json
@@ -10663,7 +10443,7 @@ paths:
       summary: Create a new tenant application (Admin)
       tags:
       - TenantApplication
-  /api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}:
     delete:
       consumes:
       - application/json
@@ -10815,7 +10595,7 @@ paths:
       summary: Update a tenant application (Admin)
       tags:
       - TenantApplication
-  /api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}/approve:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/approve:
     patch:
       consumes:
       - application/json
@@ -10869,7 +10649,7 @@ paths:
       summary: Approve a tenant application (Admin)
       tags:
       - TenantApplication
-  /api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}/cancel:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/cancel:
     patch:
       consumes:
       - application/json
@@ -10921,7 +10701,7 @@ paths:
       summary: Cancel a tenant application (Admin)
       tags:
       - TenantApplication
-  /api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay:
     post:
       consumes:
       - application/json
@@ -10979,7 +10759,7 @@ paths:
       summary: Pay an invoice for a tenant application (Admin)
       tags:
       - TenantApplication
-  /api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice:generate:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice:generate:
     post:
       consumes:
       - application/json
@@ -11036,7 +10816,7 @@ paths:
       summary: Generate an invoice for a tenant application (Admin)
       tags:
       - TenantApplication
-  /api/v1/admin/properties/{property_id}/tenant-applications/invite:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/invite:
     post:
       consumes:
       - application/json
@@ -11083,7 +10863,7 @@ paths:
       summary: Sends a tenant invite to a possible tenant (Admin)
       tags:
       - TenantApplication
-  /api/v1/admin/properties/{property_id}/tenants:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/tenants:
     get:
       consumes:
       - application/json
@@ -11184,7 +10964,7 @@ paths:
       summary: List tenants by property (Admin)
       tags:
       - Tenants
-  /api/v1/admin/properties/{property_id}/tenants/{tenant_id}:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/tenants/{tenant_id}:
     get:
       consumes:
       - application/json
@@ -11233,7 +11013,7 @@ paths:
       summary: Get tenant by ID (Admin)
       tags:
       - Tenants
-  /api/v1/admin/properties/{property_id}/tenants/{tenant_id}/leases:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/tenants/{tenant_id}/leases:
     get:
       consumes:
       - application/json
@@ -11379,7 +11159,7 @@ paths:
       summary: List leases by tenant (Admin)
       tags:
       - Lease
-  /api/v1/admin/properties/{property_id}/units:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/units:
     get:
       consumes:
       - application/json
@@ -11514,7 +11294,7 @@ paths:
       summary: List units (Admin)
       tags:
       - Units
-  /api/v1/admin/properties/{property_id}/units/{unit_id}:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/units/{unit_id}:
     delete:
       consumes:
       - application/json
@@ -11672,7 +11452,7 @@ paths:
       summary: Update unit (Admin)
       tags:
       - Units
-  /api/v1/admin/properties/{property_id}/units/{unit_id}/status:available:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/units/{unit_id}/status:available:
     patch:
       consumes:
       - application/json
@@ -11718,7 +11498,7 @@ paths:
       summary: Update unit (Admin) status to available
       tags:
       - Units
-  /api/v1/admin/properties/{property_id}/units/{unit_id}/status:draft:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/units/{unit_id}/status:draft:
     patch:
       consumes:
       - application/json
@@ -11764,7 +11544,7 @@ paths:
       summary: Update unit (Admin) status to draft
       tags:
       - Units
-  /api/v1/admin/properties/{property_id}/units/{unit_id}/status:maintenance:
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/units/{unit_id}/status:maintenance:
     patch:
       consumes:
       - application/json
@@ -11810,7 +11590,7 @@ paths:
       summary: Update unit (Admin) status to maintenance
       tags:
       - Units
-  /api/v1/admin/properties/me:
+  /api/v1/admin/clients/{client_id}/properties/me:
     get:
       consumes:
       - application/json
@@ -11903,7 +11683,7 @@ paths:
       summary: Get my properties (Admin)
       tags:
       - ClientUserProperties
-  /api/v1/admin/properties/slug/{slug}:
+  /api/v1/admin/clients/{client_id}/properties/slug/{slug}:
     get:
       consumes:
       - application/json
@@ -11951,6 +11731,39 @@ paths:
       summary: Get property by slug (Admin)
       tags:
       - Properties
+  /api/v1/admin/clients/apply:
+    post:
+      consumes:
+      - application/json
+      description: Create a new client application (Admin)
+      parameters:
+      - description: Client Application details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateClientApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputClientApplication'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Create a new client application (Admin)
+      tags:
+      - ClientApplications
   /api/v1/admin/system/agreements:
     get:
       description: Returns all agreement versions including inactive ones
@@ -12082,6 +11895,228 @@ paths:
       summary: Activate an agreement version (Admin)
       tags:
       - Agreements
+  /api/v1/admin/users/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Send forgot password reset link to user (Admin)
+      parameters:
+      - description: Forgot Password Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ForgotPasswordRequest'
+      responses:
+        "204":
+          description: Reset link sent successfully
+        "400":
+          description: Error occurred when sending reset link
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Send forgot password reset link to user (Admin)
+      tags:
+      - Users
+  /api/v1/admin/users/login:
+    post:
+      consumes:
+      - application/json
+      description: Login user with email and password, returns user with client_users
+        and token (Admin)
+      parameters:
+      - description: Login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User authenticated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputUserWithToken'
+            type: object
+        "400":
+          description: Error occurred when authenticating user
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Login user and return token (Admin)
+      tags:
+      - Users
+  /api/v1/admin/users/me:
+    get:
+      consumes:
+      - application/json
+      description: Get the currently authenticated user with all client memberships
+        (Admin)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User retrieved successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputUser'
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get the currently authenticated user (Admin)
+      tags:
+      - Users
+    patch:
+      consumes:
+      - application/json
+      description: Update the currently authenticated user's profile (Admin)
+      parameters:
+      - description: Update User Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateMeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User updated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputUser'
+            type: object
+        "400":
+          description: Error occurred when updating user
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error occurred
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update the currently authenticated user (Admin)
+      tags:
+      - Users
+  /api/v1/admin/users/me/password:
+    patch:
+      consumes:
+      - application/json
+      description: Update the currently authenticated user's password (Admin)
+      parameters:
+      - description: Update Password Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdatePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Password updated successfully
+        "400":
+          description: Error occurred when updating password
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error occurred
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update the currently authenticated user's password (Admin)
+      tags:
+      - Users
+  /api/v1/admin/users/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Reset user password using the reset token from the forgot-password
+        email (Admin)
+      parameters:
+      - description: Reset Password Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserResetPasswordRequest'
+      responses:
+        "204":
+          description: Password reset successfully
+        "400":
+          description: Error occurred when resetting password
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Reset user password (Admin)
+      tags:
+      - Users
   /api/v1/announcements/{announcement_id}:
     get:
       description: Get a PUBLISHED announcement by ID

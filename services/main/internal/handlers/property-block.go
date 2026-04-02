@@ -44,7 +44,7 @@ type CreatePropertyBlockRequest struct {
 //	@Failure		403			{object}	lib.HTTPError										"Forbidden access"
 //	@Failure		422			{object}	lib.HTTPError										"Invalid request body"
 //	@Failure		500			{object}	string												"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/blocks [post]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/blocks [post]
 func (h PropertyBlockHandler) CreatePropertyBlock(w http.ResponseWriter, r *http.Request) {
 	propertyID := chi.URLParam(r, "property_id")
 
@@ -98,7 +98,7 @@ type PropertyBlockListQueryFilters struct {
 //	@Failure		400			{object}	lib.HTTPError
 //	@Failure		401			{object}	string
 //	@Failure		500			{object}	string
-//	@Router			/api/v1/admin/properties/{property_id}/blocks [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/blocks [get]
 func (h *PropertyBlockHandler) ListPropertyBlocks(w http.ResponseWriter, r *http.Request) {
 	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
 	if filterErr != nil {
@@ -160,7 +160,7 @@ type GetPropertyBlockQuery struct {
 //	@Failure		401			{object}	string												"Invalid or absent authentication token"
 //	@Failure		404			{object}	lib.HTTPError										"Property block not found"
 //	@Failure		500			{object}	string												"An unexpected error occured"
-//	@Router			/api/v1/admin/properties/{property_id}/blocks/{block_id} [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/blocks/{block_id} [get]
 func (h *PropertyBlockHandler) GetPropertyBlock(w http.ResponseWriter, r *http.Request) {
 	populate := GetPopulateFields(r)
 
@@ -209,7 +209,7 @@ type UpdatePropertyBlockRequest struct {
 //	@Failure		404			{object}	lib.HTTPError										"Property block not found"
 //	@Failure		422			{object}	lib.HTTPError										"Invalid request body"
 //	@Failure		500			{object}	string												"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/blocks/{block_id} [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/blocks/{block_id} [patch]
 func (h *PropertyBlockHandler) UpdatePropertyBlock(w http.ResponseWriter, r *http.Request) {
 	propertyID := chi.URLParam(r, "property_id")
 	propertyBlockID := chi.URLParam(r, "block_id")
@@ -262,7 +262,7 @@ func (h *PropertyBlockHandler) UpdatePropertyBlock(w http.ResponseWriter, r *htt
 //	@Failure		403			{object}	lib.HTTPError	"Forbidden access"
 //	@Failure		404			{object}	lib.HTTPError	"Property block not found"
 //	@Failure		500			{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/blocks/{block_id} [delete]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/blocks/{block_id} [delete]
 func (h *PropertyBlockHandler) DeletePropertyBlock(w http.ResponseWriter, r *http.Request) {
 	propertyID := chi.URLParam(r, "property_id")
 	propertyBlockID := chi.URLParam(r, "block_id")

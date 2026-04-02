@@ -190,7 +190,7 @@ Base prefix: `/api`
 | PATCH | `/v1/client-applications/{application_id}/approve` | Admin JWT |
 | PATCH | `/v1/client-applications/{application_id}/reject` | Admin JWT |
 
-### Client User Routes — `InjectClientUserAuthMiddleware`
+### Client User Routes — `InjectUserAuthMiddleware`
 
 **Public:**
 

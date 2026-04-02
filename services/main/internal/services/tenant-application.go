@@ -212,7 +212,10 @@ func (s *tenantApplicationService) InviteTenant(ctx context.Context, input Invit
 		return pkg.BadRequestError("PhoneOrEmailRequired", nil)
 	}
 
-	admin, getAdminErr := s.clientUserService.GetClientUserByQuery(ctx, map[string]any{"id": input.AdminId})
+	admin, getAdminErr := s.clientUserService.GetClientUserWithPopulate(ctx, repository.GetClientUserWithPopulateQuery{
+		ID:       input.AdminId,
+		Populate: &[]string{"User"},
+	})
 	if getAdminErr != nil {
 		return getAdminErr
 	}
@@ -226,7 +229,7 @@ func (s *tenantApplicationService) InviteTenant(ctx context.Context, input Invit
 	r := strings.NewReplacer(
 		"{{unit_id}}", input.UnitId,
 		"{{admin_id}}", input.AdminId,
-		"{{admin_email}}", admin.Email,
+		"{{admin_email}}", admin.User.Email,
 	)
 
 	message := r.Replace(lib.TENANT_INVITED_BODY)

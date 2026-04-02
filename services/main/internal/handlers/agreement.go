@@ -32,7 +32,7 @@ func NewAgreementHandler(appCtx pkg.AppContext, service services.AgreementServic
 //	@Success		200	{object}	object{data=[]transformations.OutputAgreement}
 //	@Failure		401	{object}	string
 //	@Failure		500	{object}	string
-//	@Router			/api/v1/admin/agreements [get]
+//	@Router			/api/v1/admin/clients/{client_id}/agreements [get]
 func (h *AgreementHandler) GetAgreements(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {
@@ -68,7 +68,7 @@ func (h *AgreementHandler) GetAgreements(w http.ResponseWriter, r *http.Request)
 //	@Failure		400				{object}	lib.HTTPError
 //	@Failure		401				{object}	string
 //	@Failure		500				{object}	string
-//	@Router			/api/v1/admin/agreements/{agreement_id}/accept [post]
+//	@Router			/api/v1/admin/clients/{client_id}/agreements/{agreement_id}/accept [post]
 func (h *AgreementHandler) AcceptAgreement(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {
