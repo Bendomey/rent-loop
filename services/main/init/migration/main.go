@@ -18,6 +18,7 @@ func updateMigration(db *gorm.DB) error {
 		&models.Admin{},
 		&models.ClientApplication{},
 		&models.Client{},
+		&models.User{},
 		&models.ClientUser{},
 		&models.PaymentAccount{},
 		&models.Property{},
@@ -89,6 +90,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddExpenseLeasePropertyContext(),
 		jobs.ReplacePayerTenantWithPayerLease(),
 		jobs.SeedAgreements(),
+		jobs.ExtractUsersFromClientUsers(),
 	})
 	m.Migrate()
 
