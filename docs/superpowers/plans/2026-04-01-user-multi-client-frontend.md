@@ -917,6 +917,10 @@ interface Window {
 }
 ```
 
+- [ ] **Step 3b: Handle 403 on property-scoped routes**
+
+The backend now enforces property-level access: **only OWNER** has universal access to all properties in a client. ADMIN and STAFF receive a `403 Forbidden` if they request a property they are not explicitly assigned to. This means any UI that lists or links to properties should gracefully handle the case where a non-OWNER user navigates to an unassigned property — show a "You don't have access to this property" message rather than a generic error. No API changes are needed, but add error boundary handling for 403 responses on all property-scoped API calls (e.g. `/v1/admin/clients/${clientId}/properties/${propertyId}/...`).
+
 - [ ] **Step 4: Add client switcher to sidebar**
 
 In the app sidebar component (find with `grep -r "AppSidebar\|sidebar" apps/property-manager/app/components/ -l`), add a "Switch workspace" link that navigates to `/select-client`:
