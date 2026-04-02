@@ -60,12 +60,17 @@ func ValidateClientMembershipMiddleware(appCtx pkg.AppContext) func(http.Handler
 
 			var clientUser models.ClientUser
 			result := appCtx.DB.
-				Select("client_users.id", "client_users.client_id", "client_users.role").
+				Select("client_users.id", "client_users.client_id", "client_users.role", "client_users.status").
 				Joins("JOIN users ON users.id = client_users.user_id").
 				Where("client_users.client_id = ? AND users.id = ? AND client_users.deleted_at IS NULL", clientID, userCtx.ID).
 				First(&clientUser)
 			if result.Error != nil {
 				http.Error(w, "AuthorizationFailed", http.StatusUnauthorized)
+				return
+			}
+
+			if clientUser.Status != "ClientUser.Status.Active" {
+				http.Error(w, "Forbidden", http.StatusForbidden)
 				return
 			}
 
@@ -95,8 +100,17 @@ func userFromJWT(unattendedToken string, secret string) (*lib.UserFromToken, err
 		return nil, errors.New("AuthorizationFailed")
 	}
 
+	idVal, found := claims["id"]
+	if !found {
+		return nil, errors.New("AuthorizationFailed")
+	}
+	id, ok := idVal.(string)
+	if !ok {
+		return nil, errors.New("AuthorizationFailed")
+	}
+
 	return &lib.UserFromToken{
-		ID: claims["id"].(string),
+		ID: id,
 	}, nil
 }
 
@@ -141,7 +155,7 @@ func ValidatePropertyAccessMiddleware(appCtx pkg.AppContext) func(http.Handler) 
 				return
 			}
 
-			// STAFF must be explicitly assigned to this property
+			// non-OWNERs must be explicitly assigned to this property
 			propertyID := chi.URLParam(r, "property_id")
 			var cup models.ClientUserProperty
 			result := appCtx.DB.Select("id", "role").

@@ -64,6 +64,7 @@ func (r *clientUserRepository) Update(ctx context.Context, clientUser *models.Cl
 
 type GetClientUserWithPopulateQuery struct {
 	ID       string
+	ClientID string
 	Populate *[]string
 }
 
@@ -73,7 +74,7 @@ func (r *clientUserRepository) GetByIDWithPopulate(
 ) (*models.ClientUser, error) {
 	var clientUser models.ClientUser
 
-	db := r.DB.WithContext(ctx).Where("id = ?", query.ID)
+	db := r.DB.WithContext(ctx).Where("id = ? AND client_id = ?", query.ID, query.ClientID)
 
 	if query.Populate != nil {
 		for _, field := range *query.Populate {

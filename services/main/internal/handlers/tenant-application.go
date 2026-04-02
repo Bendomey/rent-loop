@@ -273,10 +273,11 @@ func (h *TenantApplicationHandler) SendTenantInvite(w http.ResponseWriter, r *ht
 	}
 
 	input := services.InviteTenantInput{
-		Email:   body.Email,
-		Phone:   body.Phone,
-		UnitId:  body.UnitId,
-		AdminId: adminClientUser.ID,
+		Email:    body.Email,
+		Phone:    body.Phone,
+		UnitId:   body.UnitId,
+		AdminId:  adminClientUser.ID,
+		ClientID: adminClientUser.ClientID,
 	}
 
 	sendInviteErr := h.service.InviteTenant(r.Context(), input)

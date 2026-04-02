@@ -201,10 +201,11 @@ func (s *tenantApplicationService) CreateTenantApplication(
 }
 
 type InviteTenantInput struct {
-	Email   *string
-	Phone   *string
-	UnitId  string
-	AdminId string
+	Email    *string
+	Phone    *string
+	UnitId   string
+	AdminId  string
+	ClientID string
 }
 
 func (s *tenantApplicationService) InviteTenant(ctx context.Context, input InviteTenantInput) error {
@@ -214,6 +215,7 @@ func (s *tenantApplicationService) InviteTenant(ctx context.Context, input Invit
 
 	admin, getAdminErr := s.clientUserService.GetClientUserWithPopulate(ctx, repository.GetClientUserWithPopulateQuery{
 		ID:       input.AdminId,
+		ClientID: input.ClientID,
 		Populate: &[]string{"User"},
 	})
 	if getAdminErr != nil {

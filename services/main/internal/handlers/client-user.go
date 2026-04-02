@@ -118,6 +118,7 @@ func (h *ClientUserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 
 	query := repository.GetClientUserWithPopulateQuery{
 		ID:       currentClientUser.ID,
+		ClientID: currentClientUser.ClientID,
 		Populate: populateFields,
 	}
 	clientUser, err := h.service.GetClientUser(r.Context(), query)
@@ -227,9 +228,11 @@ func (h *ClientUserHandler) GetClientUserWithPopulate(w http.ResponseWriter, r *
 	populateFields := GetPopulateFields(r)
 
 	clientUserId := chi.URLParam(r, "client_user_id")
+	clientID := chi.URLParam(r, "client_id")
 
 	query := repository.GetClientUserWithPopulateQuery{
 		ID:       clientUserId,
+		ClientID: clientID,
 		Populate: populateFields,
 	}
 	clientUser, err := h.service.GetClientUserWithPopulate(r.Context(), query)

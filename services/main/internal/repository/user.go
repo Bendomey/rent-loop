@@ -31,7 +31,7 @@ func (r *userRepository) Create(ctx context.Context, user *models.User) error {
 
 func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	var user models.User
-	result := r.DB.WithContext(ctx).Where("email = ?", email).First(&user)
+	result := lib.ResolveDB(ctx, r.DB).Where("email = ?", email).First(&user)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -40,7 +40,7 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.
 
 func (r *userRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
 	var user models.User
-	result := r.DB.WithContext(ctx).Where("id = ?", id).First(&user)
+	result := lib.ResolveDB(ctx, r.DB).Where("id = ?", id).First(&user)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -49,7 +49,7 @@ func (r *userRepository) GetByID(ctx context.Context, id string) (*models.User, 
 
 func (r *userRepository) GetByIDWithClientUsers(ctx context.Context, id string) (*models.User, error) {
 	var user models.User
-	result := r.DB.WithContext(ctx).
+	result := lib.ResolveDB(ctx, r.DB).
 		Preload("ClientUsers").
 		Preload("ClientUsers.Client").
 		Where("id = ?", id).
@@ -61,5 +61,5 @@ func (r *userRepository) GetByIDWithClientUsers(ctx context.Context, id string) 
 }
 
 func (r *userRepository) Update(ctx context.Context, user *models.User) error {
-	return r.DB.WithContext(ctx).Save(user).Error
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Save(user).Error
 }
