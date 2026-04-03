@@ -11,6 +11,7 @@ export const TOUR_KEYS = {
 	MAINTENANCE_DETAIL: 'rent-loop:tour-maintenance-detail-v1',
 	INVOICES: 'rent-loop:tour-invoices-v1',
 	ANNOUNCEMENTS: 'rent-loop:tour-announcements-v1',
+	LEASE_DETAIL: 'rent-loop:tour-lease-detail-v1',
 } as const
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
@@ -236,6 +237,50 @@ export const INVOICES_TOUR_STEPS: DriveStep[] = [
 			title: 'Invoice Table',
 			description:
 				'Every invoice for this property — click the invoice code to open full payment details, history, and actions.',
+			side: 'top',
+			align: 'start',
+		},
+	},
+]
+
+// ─── Lease Detail ────────────────────────────────────────────────────────────
+
+export const LEASE_DETAIL_TOUR_STEPS: DriveStep[] = [
+	{
+		popover: {
+			title: 'Lease Overview',
+			description:
+				'This page gives you a full picture of a single lease — terms, tenant info, documents, and expenses all in one place.',
+			side: 'over',
+			align: 'center',
+		},
+	},
+	{
+		element: '#lease-sidebar',
+		popover: {
+			title: 'Lease Summary',
+			description:
+				'Key details at a glance: lease code, status, linked tenant and unit, rent fee, and quick-action buttons to start or terminate the lease.',
+			side: 'right',
+			align: 'start',
+		},
+	},
+	{
+		element: '#lease-tabs',
+		popover: {
+			title: 'Lease Tabs',
+			description:
+				'Navigate between Lease Details (terms & financials), Tenant Profile (personal & employment info), Documents (signed agreements), and Expenses logged against this lease.',
+			side: 'bottom',
+			align: 'start',
+		},
+	},
+	{
+		element: '#lease-checklist',
+		popover: {
+			title: 'Checklist',
+			description:
+				'Track the required steps to activate or close out this lease — inspection reports and other milestones appear here.',
 			side: 'top',
 			align: 'start',
 		},

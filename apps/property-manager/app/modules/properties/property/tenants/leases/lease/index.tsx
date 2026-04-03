@@ -7,7 +7,7 @@ import {
 	ScrollText,
 	User,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLoaderData } from 'react-router'
 import { ChecklistAlerts } from './components/checklist-alerts'
 import { ChecklistSection } from './components/checklist-section'
@@ -28,6 +28,7 @@ import {
 import { Separator } from '~/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { TypographyMuted } from '~/components/ui/typography'
+import { useTour } from '~/hooks/use-tour'
 import { PermissionState } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
@@ -37,6 +38,7 @@ import {
 	getPaymentFrequencyPeriodLabel,
 } from '~/lib/properties.utils'
 import { toFirstUpperCase } from '~/lib/strings'
+import { LEASE_DETAIL_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
 import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.leases.$leaseId'
 
@@ -73,6 +75,14 @@ export function LeaseDetailModule() {
 		roles: ['MANAGER'],
 	})
 	const [startLeaseOpen, setStartLeaseOpen] = useState(false)
+	const { startTour, hasCompletedTour } = useTour(
+		TOUR_KEYS.LEASE_DETAIL,
+		LEASE_DETAIL_TOUR_STEPS,
+	)
+
+	useEffect(() => {
+		if (!hasCompletedTour()) startTour()
+	}, [hasCompletedTour, startTour])
 
 	const propertyId =
 		clientUserProperty?.property_id ?? ctxProp?.property_id ?? ''
@@ -102,7 +112,7 @@ export function LeaseDetailModule() {
 				/>
 				<div className="m-5 grid grid-cols-12 gap-6">
 					{/* Sidebar */}
-					<div className="col-span-12 lg:col-span-4">
+					<div id="lease-sidebar" className="col-span-12 lg:col-span-4">
 						<Card className="overflow-hidden pt-0 shadow-none">
 							{unit?.images?.[0] && (
 								<div className="h-40 w-full overflow-hidden">
@@ -243,7 +253,7 @@ export function LeaseDetailModule() {
 					{/* Main Content */}
 					<div className="col-span-12 lg:col-span-8">
 						<Tabs defaultValue="details">
-							<TabsList>
+							<TabsList id="lease-tabs">
 								<TabsTrigger value="details">Lease Details</TabsTrigger>
 								<TabsTrigger value="tenant">Tenant Profile</TabsTrigger>
 								<TabsTrigger value="documents">Documents</TabsTrigger>
@@ -394,7 +404,7 @@ export function LeaseDetailModule() {
 								</Card>
 
 								{/* Inspection Reports — separate card */}
-								<Card className="shadow-none">
+								<Card id="lease-checklist" className="shadow-none">
 									<CardContent>
 										<ChecklistSection
 											leaseId={lease.id}
