@@ -62,6 +62,25 @@ definitions:
     - total_amount
     - unit_amount
     type: object
+  handlers.AdminCreateAgreementRequest:
+    properties:
+      content:
+        type: string
+      effective_date:
+        example: "2026-04-03T00:00:00Z"
+        type: string
+      name:
+        example: Landlord Agreement
+        type: string
+      version:
+        example: v1.1
+        type: string
+    required:
+    - content
+    - effective_date
+    - name
+    - version
+    type: object
   handlers.AdminCreateTenantApplicationRequest:
     properties:
       current_address:
@@ -171,6 +190,20 @@ definitions:
     - occupation_address
     - phone
     - relationship_to_emergency_contact
+    type: object
+  handlers.AdminUpdateAgreementRequest:
+    properties:
+      content:
+        type: string
+      effective_date:
+        example: "2026-04-03T00:00:00Z"
+        type: string
+      name:
+        example: Landlord Agreement
+        type: string
+      version:
+        example: v1.1
+        type: string
     type: object
   handlers.AdminUpdateDocumentRequest:
     properties:
@@ -2696,6 +2729,35 @@ definitions:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw
         type: string
     type: object
+  transformations.OutputAgreement:
+    properties:
+      content:
+        type: string
+      created_at:
+        example: "2026-04-03T00:00:00Z"
+        type: string
+      effective_date:
+        example: "2026-04-03T00:00:00Z"
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Landlord Agreement
+        type: string
+      updated_at:
+        example: "2026-04-03T00:00:00Z"
+        type: string
+      user_has_accepted:
+        example: false
+        type: boolean
+      version:
+        example: v1.0
+        type: string
+    type: object
   transformations.OutputAnnouncement:
     properties:
       content:
@@ -4314,6 +4376,72 @@ paths:
       summary: Get the currently authenticated admin (Admin)
       tags:
       - Admins
+  /api/v1/admin/agreements:
+    get:
+      description: Returns all active agreements, each enriched with whether the current
+        user has accepted it
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/transformations.OutputAgreement'
+                type: array
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List active agreements with acceptance status
+      tags:
+      - Agreements
+  /api/v1/admin/agreements/{agreement_id}/accept:
+    post:
+      description: Records that the current OWNER user has accepted the specified
+        agreement
+      parameters:
+      - description: Agreement ID
+        in: path
+        name: agreement_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Accept an agreement (OWNER only)
+      tags:
+      - Agreements
   /api/v1/admin/analytics/token:
     get:
       description: Returns a signed JWT for querying the Cube.js analytics API. The
@@ -11823,6 +11951,137 @@ paths:
       summary: Get property by slug (Admin)
       tags:
       - Properties
+  /api/v1/admin/system/agreements:
+    get:
+      description: Returns all agreement versions including inactive ones
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/transformations.OutputAgreement'
+                type: array
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List all agreements (Admin)
+      tags:
+      - Agreements
+    post:
+      consumes:
+      - application/json
+      description: Creates a new agreement version. Not active by default.
+      parameters:
+      - description: Agreement details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AdminCreateAgreementRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAgreement'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a new agreement (Admin)
+      tags:
+      - Agreements
+  /api/v1/admin/system/agreements/{agreement_id}:
+    patch:
+      consumes:
+      - application/json
+      description: Updates fields of an existing agreement version
+      parameters:
+      - description: Agreement ID
+        in: path
+        name: agreement_id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AdminUpdateAgreementRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAgreement'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update an agreement (Admin)
+      tags:
+      - Agreements
+  /api/v1/admin/system/agreements/{agreement_id}/activate:
+    patch:
+      description: Sets is_active=true on the specified agreement, making it require
+        acceptance from all OWNERs
+      parameters:
+      - description: Agreement ID
+        in: path
+        name: agreement_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAgreement'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Activate an agreement version (Admin)
+      tags:
+      - Agreements
   /api/v1/announcements/{announcement_id}:
     get:
       description: Get a PUBLISHED announcement by ID

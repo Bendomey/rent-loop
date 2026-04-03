@@ -47,6 +47,8 @@ func updateMigration(db *gorm.DB) error {
 		&models.MaintenanceRequestActivityLog{},
 		&models.MaintenanceRequestComment{},
 		&models.Expense{},
+		&models.Agreement{},
+		&models.AgreementAcceptance{},
 	)
 	return err
 }
@@ -86,6 +88,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddExpenseCode(),
 		jobs.AddExpenseLeasePropertyContext(),
 		jobs.ReplacePayerTenantWithPayerLease(),
+		jobs.SeedAgreements(),
 	})
 	m.Migrate()
 

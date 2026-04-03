@@ -382,6 +382,108 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/agreements": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns all active agreements, each enriched with whether the current user has accepted it",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Agreements"
+                ],
+                "summary": "List active agreements with acceptance status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/transformations.OutputAgreement"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/agreements/{agreement_id}/accept": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Records that the current OWNER user has accepted the specified agreement",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Agreements"
+                ],
+                "summary": "Accept an agreement (OWNER only)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Agreement ID",
+                        "name": "agreement_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/analytics/token": {
             "get": {
                 "security": [
@@ -11953,6 +12055,213 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/system/agreements": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns all agreement versions including inactive ones",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Agreements"
+                ],
+                "summary": "List all agreements (Admin)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/transformations.OutputAgreement"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new agreement version. Not active by default.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Agreements"
+                ],
+                "summary": "Create a new agreement (Admin)",
+                "parameters": [
+                    {
+                        "description": "Agreement details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AdminCreateAgreementRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAgreement"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/system/agreements/{agreement_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates fields of an existing agreement version",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Agreements"
+                ],
+                "summary": "Update an agreement (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Agreement ID",
+                        "name": "agreement_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields to update",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AdminUpdateAgreementRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAgreement"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/system/agreements/{agreement_id}/activate": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sets is_active=true on the specified agreement, making it require acceptance from all OWNERs",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Agreements"
+                ],
+                "summary": "Activate an agreement version (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Agreement ID",
+                        "name": "agreement_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputAgreement"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/announcements/{announcement_id}": {
             "get": {
                 "security": [
@@ -14844,6 +15153,32 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.AdminCreateAgreementRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "effective_date",
+                "name",
+                "version"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "effective_date": {
+                    "type": "string",
+                    "example": "2026-04-03T00:00:00Z"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Landlord Agreement"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "v1.1"
+                }
+            }
+        },
         "handlers.AdminCreateTenantApplicationRequest": {
             "type": "object",
             "required": [
@@ -14982,6 +15317,26 @@ const docTemplate = `{
                 "relationship_to_emergency_contact": {
                     "type": "string",
                     "example": "Sister"
+                }
+            }
+        },
+        "handlers.AdminUpdateAgreementRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "effective_date": {
+                    "type": "string",
+                    "example": "2026-04-03T00:00:00Z"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Landlord Agreement"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "v1.1"
                 }
             }
         },
@@ -18460,6 +18815,46 @@ const docTemplate = `{
                 "token": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw"
+                }
+            }
+        },
+        "transformations.OutputAgreement": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2026-04-03T00:00:00Z"
+                },
+                "effective_date": {
+                    "type": "string",
+                    "example": "2026-04-03T00:00:00Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Landlord Agreement"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2026-04-03T00:00:00Z"
+                },
+                "user_has_accepted": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "version": {
+                    "type": "string",
+                    "example": "v1.0"
                 }
             }
         },

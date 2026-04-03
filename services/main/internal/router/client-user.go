@@ -364,6 +364,13 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 				)
 			})
 
+			// agreements
+			r.Route("/v1/admin/agreements", func(r chi.Router) {
+				r.Get("/", handlers.AgreementHandler.GetAgreements)
+				r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "OWNER")).
+					Post("/{agreement_id}/accept", handlers.AgreementHandler.AcceptAgreement)
+			})
+
 			// checklist templates
 			r.Route("/v1/admin/checklist-templates", func(r chi.Router) {
 				r.Get("/", handlers.ChecklistTemplateHandler.ListChecklistTemplates)
