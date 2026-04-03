@@ -8,7 +8,7 @@ import {
 	Receipt,
 	Send,
 } from 'lucide-react'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { RentPaymentSectionCards } from './components/cards'
 import { PropertyFinancialsRentPaymentController } from './controller'
@@ -24,6 +24,7 @@ import {
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
+import { useTour } from '~/hooks/use-tour'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
@@ -32,11 +33,21 @@ import {
 	getInvoiceStatusLabel,
 } from '~/lib/invoice'
 import { safeString } from '~/lib/strings'
+import { INVOICES_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyFinancialsPaymentsModule() {
 	const [searchParams] = useSearchParams()
 	const { clientUserProperty } = useProperty()
+
+	const { startTour, hasCompletedTour } = useTour(
+		TOUR_KEYS.INVOICES,
+		INVOICES_TOUR_STEPS,
+	)
+
+	useEffect(() => {
+		if (!hasCompletedTour()) startTour()
+	}, [hasCompletedTour, startTour])
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -200,18 +211,20 @@ export function PropertyFinancialsPaymentsModule() {
 			</div>
 
 			{/* Summary Cards */}
-			<section className="mb-6">
+			<section id="invoices-summary-cards" className="mb-6">
 				<RentPaymentSectionCards
 					propertyId={clientUserProperty?.property_id ?? ''}
 				/>
 			</section>
 
 			<div className="bg-background space-y-4 rounded-lg border p-3 sm:p-5">
-				<PropertyFinancialsRentPaymentController
-					isLoading={isLoading}
-					refetch={refetch}
-				/>
-				<div className="h-full w-full">
+				<div id="invoices-filters">
+					<PropertyFinancialsRentPaymentController
+						isLoading={isLoading}
+						refetch={refetch}
+					/>
+				</div>
+				<div id="invoices-table" className="h-full w-full">
 					<DataTable
 						columns={columns}
 						isLoading={isLoading}

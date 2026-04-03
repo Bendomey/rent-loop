@@ -31,6 +31,7 @@ const data = {
 			isHome: true,
 			url: '/',
 			icon: PieChart,
+			id: 'tour-nav-insights',
 		},
 		{
 			title: 'My Properties',
@@ -52,6 +53,7 @@ const data = {
 			title: 'Settings',
 			url: '/settings',
 			icon: Settings2,
+			id: 'tour-nav-settings',
 		},
 	],
 	navSecondary: [

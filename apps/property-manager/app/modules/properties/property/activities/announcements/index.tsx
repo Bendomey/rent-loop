@@ -1,6 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { ChevronRight, Copy, Plus } from 'lucide-react'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { useGetPropertyAnnouncements } from '~/api/announcements'
 import { DataTable } from '~/components/datatable'
@@ -13,8 +13,10 @@ import {
 	TooltipTrigger,
 } from '~/components/ui/tooltip'
 import { TypographyH2 } from '~/components/ui/typography'
+import { useTour } from '~/hooks/use-tour'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
+import { ANNOUNCEMENTS_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
 import { useProperty } from '~/providers/property-provider'
 
 function getStatusBadge(status: Announcement['status']) {
@@ -52,6 +54,15 @@ export function PropertyActivitiesAnnouncementsModule() {
 	const propertyId = clientUserProperty?.property?.id
 	const navigate = useNavigate()
 	const [searchParams] = useSearchParams()
+
+	const { startTour, hasCompletedTour } = useTour(
+		TOUR_KEYS.ANNOUNCEMENTS,
+		ANNOUNCEMENTS_TOUR_STEPS,
+	)
+
+	useEffect(() => {
+		if (!hasCompletedTour()) startTour()
+	}, [hasCompletedTour, startTour])
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -137,7 +148,10 @@ export function PropertyActivitiesAnnouncementsModule() {
 
 	return (
 		<div className="mx-6 my-6 flex flex-col gap-4 sm:gap-6">
-			<div className="flex flex-row items-center justify-between">
+			<div
+				id="announcements-header"
+				className="flex flex-row items-center justify-between"
+			>
 				<div>
 					<TypographyH2>Announcements</TypographyH2>
 					<p className="text-muted-foreground mt-1 text-sm">
@@ -154,26 +168,28 @@ export function PropertyActivitiesAnnouncementsModule() {
 				</PropertyPermissionGuard>
 			</div>
 
-			<DataTable
-				columns={columns}
-				isLoading={isLoading}
-				refetch={refetch}
-				error={error ? 'Failed to load announcements.' : undefined}
-				dataResponse={{
-					rows: data?.rows ?? [],
-					total: data?.meta?.total ?? 0,
-					page,
-					page_size: per,
-					order: data?.meta?.order ?? 'desc',
-					order_by: data?.meta?.order_by ?? 'created_at',
-					has_prev_page: data?.meta?.has_prev_page ?? false,
-					has_next_page: data?.meta?.has_next_page ?? false,
-				}}
-				empty={{
-					message: 'No announcements yet',
-					description: 'Create one to notify tenants.',
-				}}
-			/>
+			<div id="announcements-table">
+				<DataTable
+					columns={columns}
+					isLoading={isLoading}
+					refetch={refetch}
+					error={error ? 'Failed to load announcements.' : undefined}
+					dataResponse={{
+						rows: data?.rows ?? [],
+						total: data?.meta?.total ?? 0,
+						page,
+						page_size: per,
+						order: data?.meta?.order ?? 'desc',
+						order_by: data?.meta?.order_by ?? 'created_at',
+						has_prev_page: data?.meta?.has_prev_page ?? false,
+						has_next_page: data?.meta?.has_next_page ?? false,
+					}}
+					empty={{
+						message: 'No announcements yet',
+						description: 'Create one to notify tenants.',
+					}}
+				/>
+			</div>
 		</div>
 	)
 }

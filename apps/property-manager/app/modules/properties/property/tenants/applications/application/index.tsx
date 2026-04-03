@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet, useLoaderData } from 'react-router'
 import ApproveTenantApplicationModal from '../approve'
 import CancelTenantApplicationModal from '../cancel'
@@ -12,9 +12,10 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from '~/components/ui/tooltip'
-
+import { useTour } from '~/hooks/use-tour'
 import { localizedDayjs } from '~/lib/date'
 import { safeString } from '~/lib/strings'
+import { TENANT_APPLICATION_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
 import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.applications.$applicationId'
 
 export function PropertyTenantApplicationContainer() {
@@ -22,6 +23,15 @@ export function PropertyTenantApplicationContainer() {
 		useLoaderData<typeof loader>()
 	const [openCancelModal, setOpenCancelModal] = useState(false)
 	const [openApproveModal, setOpenApproveModal] = useState(false)
+
+	const { startTour, hasCompletedTour } = useTour(
+		TOUR_KEYS.TENANT_APPLICATION,
+		TENANT_APPLICATION_TOUR_STEPS,
+	)
+
+	useEffect(() => {
+		if (!hasCompletedTour()) startTour()
+	}, [hasCompletedTour, startTour])
 
 	const isInvoicePaid = ['PAID', 'PARTIALLY_PAID'].includes(
 		tenantApplication?.application_payment_invoice?.status ?? '',
@@ -41,7 +51,7 @@ export function PropertyTenantApplicationContainer() {
 	return (
 		<div className="m-5 grid grid-cols-12 gap-4">
 			<div className="col-span-8">
-				<div className="space-y-1">
+				<div id="application-header" className="space-y-1">
 					<div className="flex items-center space-x-3">
 						<h1 className="text-3xl font-bold">
 							Application Info #{tenantApplication?.code}
@@ -85,7 +95,10 @@ export function PropertyTenantApplicationContainer() {
 			<div className="col-span-4">
 				{tenantApplication?.status === 'TenantApplication.Status.InProgress' ? (
 					<PropertyPermissionGuard roles={['MANAGER']}>
-						<div className="mb-3 flex w-full flex-row items-center justify-end space-x-2">
+						<div
+							id="application-actions"
+							className="mb-3 flex w-full flex-row items-center justify-end space-x-2"
+						>
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<span>
@@ -115,7 +128,10 @@ export function PropertyTenantApplicationContainer() {
 				) : tenantApplication.status ===
 				  'TenantApplication.Status.Cancelled' ? (
 					<PropertyPermissionGuard roles={['MANAGER']}>
-						<div className="mb-3 flex w-full flex-row items-center justify-end space-x-2">
+						<div
+							id="application-actions"
+							className="mb-3 flex w-full flex-row items-center justify-end space-x-2"
+						>
 							<Button
 								variant="destructive"
 								onClick={() => setOpenApproveModal(true)}
@@ -125,7 +141,9 @@ export function PropertyTenantApplicationContainer() {
 						</div>
 					</PropertyPermissionGuard>
 				) : null}
-				<PropertyTenantApplicationChecklist application={tenantApplication} />
+				<div id="application-checklist">
+					<PropertyTenantApplicationChecklist application={tenantApplication} />
+				</div>
 			</div>
 			<CancelTenantApplicationModal
 				opened={openCancelModal}
