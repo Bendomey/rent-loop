@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link, Outlet, redirect } from 'react-router'
 import pkgJson from '../../package.json'
 import type { Route } from './+types/_auth._dashboard'
+import { getAgreementsForServer } from '~/api/agreements'
 import { getClientUserPropertiesForServer } from '~/api/client-user-properties/server'
 import { getPaymentAccountsForServer } from '~/api/payment-accounts'
 import { getPropertiesForServer } from '~/api/properties'
@@ -64,7 +65,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 		return redirect('/properties/no-assigned')
 	}
 
-	const [properties, paymentAccounts] = await Promise.all([
+	const isOwner = authData.clientUser.role === 'OWNER'
+
+	const [properties, paymentAccounts, agreements] = await Promise.all([
 		getPropertiesForServer(
 			{
 				pagination: { page: 1, per: 1 },
@@ -80,9 +83,15 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 			},
 			apiConfig,
 		),
+		isOwner ? getAgreementsForServer(apiConfig) : Promise.resolve(null),
 	])
 
+	const hasAcceptedAllAgreements = isOwner
+		? (agreements?.every((a) => a.user_has_accepted) ?? true)
+		: true
+
 	return {
+		hasAcceptedAllAgreements,
 		propertiesCount: properties?.meta?.total || 0,
 		paymentAccountsCount: paymentAccounts?.meta?.total || 0,
 	}
@@ -116,6 +125,9 @@ export default function AuthDashboard({
 				<ClientChecklist
 					paymentAccountsCount={loaderData?.paymentAccountsCount ?? 0}
 					propertiesCount={loaderData?.propertiesCount ?? 0}
+					hasAcceptedAllAgreements={
+						loaderData?.hasAcceptedAllAgreements ?? true
+					}
 				/>
 				<header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
 					<div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">

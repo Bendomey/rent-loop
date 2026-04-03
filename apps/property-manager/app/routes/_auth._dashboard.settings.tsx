@@ -28,6 +28,11 @@ export default function SettingsDashboard({}: Route.ComponentProps) {
 			url: '/my-account',
 			icon: UserCircle,
 		},
+		{
+			title: 'Agreements',
+			url: '/agreements',
+			icon: FileText,
+		},
 	]
 
 	const workspaceMenus = [

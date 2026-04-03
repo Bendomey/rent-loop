@@ -29,6 +29,7 @@ export * from './settings/documents'
 export * from './settings/documents/document'
 
 export * from './settings/my-account'
+export * from './settings/agreements'
 
 // property
 export * from './properties/property/layout/sidebar'

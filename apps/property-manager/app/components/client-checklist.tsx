@@ -17,16 +17,19 @@ import { cn } from '~/lib/utils'
 interface Props {
 	propertiesCount: number
 	paymentAccountsCount: number
+	hasAcceptedAllAgreements: boolean
 }
 export function ClientChecklist({
 	propertiesCount,
 	paymentAccountsCount,
+	hasAcceptedAllAgreements,
 }: Props) {
 	const isProfileComplete = true // for now we are not asking users to complete their profile, but we can easily add this back in the future by passing a prop from the loader.
 	const isPropertiesComplete = propertiesCount > 0
 	const isPaymentAccountsComplete = paymentAccountsCount > 0
 
 	const steps = [
+		hasAcceptedAllAgreements,
 		isProfileComplete,
 		isPropertiesComplete,
 		isPaymentAccountsComplete,
@@ -58,6 +61,29 @@ export function ClientChecklist({
 					</DialogHeader>
 
 					<div className="mt-5">
+						<DialogClose asChild>
+							<Link to="/settings/agreements">
+								<Alert
+									className={cn('mb-3 w-full cursor-pointer', {
+										'border-green-200 bg-green-50 text-green-900 dark:border-green-900 dark:bg-green-950 dark:text-green-50':
+											hasAcceptedAllAgreements,
+										'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50':
+											!hasAcceptedAllAgreements,
+									})}
+								>
+									{hasAcceptedAllAgreements ? (
+										<CircleCheck />
+									) : (
+										<AlertTriangleIcon />
+									)}
+									<AlertTitle>Accept Agreements</AlertTitle>
+									<AlertDescription className="text-xs">
+										Review and accept the Terms of Service and other legal
+										agreements required to use RentLoop.
+									</AlertDescription>
+								</Alert>
+							</Link>
+						</DialogClose>
 						<DialogClose asChild>
 							<Link to="/settings/general">
 								<Alert
