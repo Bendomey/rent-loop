@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Link, Outlet, redirect } from 'react-router'
 import pkgJson from '../../package.json'
 import type { Route } from './+types/_auth._dashboard'
@@ -20,6 +21,7 @@ import {
 	SidebarProvider,
 	SidebarTrigger,
 } from '~/components/ui/sidebar'
+import { useOnboardingTour } from '~/hooks/use-onboarding-tour'
 import { userContext } from '~/lib/actions/auth.context.server'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
@@ -90,6 +92,12 @@ export default function AuthDashboard({
 	matches,
 	loaderData,
 }: Route.ComponentProps) {
+	const { startTour, hasCompletedTour } = useOnboardingTour()
+
+	useEffect(() => {
+		if (!hasCompletedTour()) startTour()
+	}, [hasCompletedTour, startTour])
+
 	const breadcrumbs = matches
 		.filter((m) => m?.handle)
 		.map((m) => {

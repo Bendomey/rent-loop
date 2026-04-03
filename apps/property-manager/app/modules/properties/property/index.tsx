@@ -1,18 +1,29 @@
+import { useEffect } from 'react'
 import { PropertySectionCards } from './components/cards'
 import { PropertyChartBar } from './components/chart'
 import { PropertyRentIncomeCards } from './components/rent-cards'
 import { PropertyUnitsChart } from './components/units-chart'
 import { TypographyH1, TypographyP } from '~/components/ui/typography'
+import { useTour } from '~/hooks/use-tour'
+import { PROPERTY_OVERVIEW_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyModule() {
 	const { clientUserProperty } = useProperty()
 	const propertyId = clientUserProperty?.property_id ?? ''
+	const { startTour, hasCompletedTour } = useTour(
+		TOUR_KEYS.PROPERTY_OVERVIEW,
+		PROPERTY_OVERVIEW_TOUR_STEPS,
+	)
+
+	useEffect(() => {
+		if (!hasCompletedTour()) startTour()
+	}, [hasCompletedTour, startTour])
 
 	return (
 		<div className="mx-auto w-full max-w-7xl px-4 py-8">
 			{/* Header */}
-			<div className="mb-8">
+			<div id="property-overview-header" className="mb-8">
 				<TypographyH1 className="text-2xl font-semibold tracking-tight md:text-3xl">
 					Property Overview{' '}
 					{clientUserProperty?.property?.name
@@ -26,12 +37,15 @@ export function PropertyModule() {
 			</div>
 
 			{/* Summary Cards */}
-			<section className="mb-8">
+			<section id="property-summary-cards" className="mb-8">
 				<PropertySectionCards propertyId={propertyId} />
 			</section>
 
 			{/* Charts Section */}
-			<section className="grid grid-cols-1 gap-6 lg:grid-cols-6">
+			<section
+				id="property-charts"
+				className="grid grid-cols-1 gap-6 lg:grid-cols-6"
+			>
 				<div className="order-2 lg:order-1 lg:col-span-4">
 					<PropertyChartBar propertyId={propertyId} />
 				</div>
@@ -43,7 +57,10 @@ export function PropertyModule() {
 
 			{/* Bottom Widgets */}
 			<section className="mt-8">
-				<div className="bg-background rounded-2xl p-4 shadow-sm transition-shadow hover:shadow-md">
+				<div
+					id="property-rent-income"
+					className="bg-background rounded-2xl p-4 shadow-sm transition-shadow hover:shadow-md"
+				>
 					<PropertyRentIncomeCards propertyId={propertyId} />
 				</div>
 			</section>

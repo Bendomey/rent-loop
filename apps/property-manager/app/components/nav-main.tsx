@@ -32,6 +32,7 @@ export function NavMain({
 		title: string
 		url: string
 		icon?: LucideIcon
+		id?: string
 		isActive?: boolean
 		isComingSoon?: boolean
 		isHome?: boolean
@@ -79,6 +80,7 @@ export function NavMain({
 								<SidebarMenuItem>
 									<CollapsibleTrigger asChild>
 										<SidebarMenuButton
+											id={item.id}
 											tooltip={item.title}
 											className={
 												isActive
@@ -150,6 +152,7 @@ export function NavMain({
 					return (
 						<SidebarMenuItem key={item.title}>
 							<SidebarMenuButton
+								id={item.id}
 								className={
 									isActive
 										? 'text-primary-foreground hover:text-primary-foreground bg-rose-600 hover:bg-rose-700 dark:text-white dark:hover:bg-rose-700'

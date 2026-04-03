@@ -604,7 +604,15 @@ function TawkVisibility() {
 	const location = useLocation()
 
 	useEffect(() => {
-		const tawkApi = (window as unknown as { Tawk_API?: { hideWidget?: () => void; showWidget?: () => void; minimize?: () => void } }).Tawk_API
+		const tawkApi = (
+			window as unknown as {
+				Tawk_API?: {
+					hideWidget?: () => void
+					showWidget?: () => void
+					minimize?: () => void
+				}
+			}
+		).Tawk_API
 		if (!tawkApi) return
 
 		if (TAWK_HIDDEN_PATHS.includes(location.pathname)) {

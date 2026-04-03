@@ -4,6 +4,7 @@ import {
 	ChevronsUpDown,
 	CreditCard,
 	LogOut,
+	Map,
 	Moon,
 	Sun,
 } from 'lucide-react'
@@ -38,6 +39,7 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from '~/components/ui/sidebar'
+import { useOnboardingTour } from '~/hooks/use-onboarding-tour'
 import { getNameInitials } from '~/lib/misc'
 import { useAuth } from '~/providers/auth-provider'
 
@@ -45,6 +47,7 @@ export function NavUser() {
 	const { currentUser } = useAuth()
 	const { isMobile } = useSidebar()
 	const { theme, setTheme } = useTheme()
+	const { startTour } = useOnboardingTour()
 
 	return (
 		<SidebarMenu>
@@ -116,6 +119,10 @@ export function NavUser() {
 								<DropdownMenuItem disabled>
 									<Bell />
 									Notifications
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={startTour}>
+									<Map />
+									Take the tour
 								</DropdownMenuItem>
 								<DropdownMenuItem
 									onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}

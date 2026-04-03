@@ -28,8 +28,10 @@ import {
 } from '~/components/ui/dialog'
 import { Textarea } from '~/components/ui/textarea'
 import { TypographyH3, TypographyMuted } from '~/components/ui/typography'
+import { useTour } from '~/hooks/use-tour'
 import { QUERY_KEYS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
+import { MAINTENANCE_LIST_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
 import { cn } from '~/lib/utils'
 import { useProperty } from '~/providers/property-provider'
 
@@ -73,6 +75,15 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 	const queryClient = useQueryClient()
 	const propertyId = safeString(clientUserProperty?.property?.id)
 	const [searchParams] = useSearchParams()
+
+	const { startTour, hasCompletedTour } = useTour(
+		TOUR_KEYS.MAINTENANCE_LIST,
+		MAINTENANCE_LIST_TOUR_STEPS,
+	)
+
+	useEffect(() => {
+		if (!hasCompletedTour()) startTour()
+	}, [hasCompletedTour, startTour])
 
 	const isDraggingRef = useRef(false)
 
@@ -325,7 +336,10 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 
 			<div className="flex h-full flex-col">
 				<div className="m-5 flex shrink-0 flex-col gap-3">
-					<div className="flex items-center justify-between">
+					<div
+						id="maintenance-list-header"
+						className="flex items-center justify-between"
+					>
 						<TypographyH3>Maintenance Requests</TypographyH3>
 						<PropertyPermissionGuard roles={['MANAGER']}>
 							<Button asChild>
@@ -338,11 +352,16 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 							</Button>
 						</PropertyPermissionGuard>
 					</div>
-					<PropertyActivitiesMaintenanceRequestsController />
+					<div id="maintenance-filters">
+						<PropertyActivitiesMaintenanceRequestsController />
+					</div>
 				</div>
 
 				<div className="relative min-h-0 flex-1">
-					<div className="absolute inset-0 mb-5 overflow-x-auto px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+					<div
+						id="maintenance-kanban"
+						className="absolute inset-0 mb-5 overflow-x-auto px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+					>
 						<KanbanProvider
 							columns={COLUMNS}
 							data={localData}

@@ -28,7 +28,10 @@ export function NavProperties() {
 	const hasMoreProperties = data?.meta?.has_next_page
 
 	return (
-		<SidebarGroup className="group-data-[collapsible=icon]:hidden">
+		<SidebarGroup
+			id="tour-nav-properties"
+			className="group-data-[collapsible=icon]:hidden"
+		>
 			<SidebarGroupLabel>My Properties</SidebarGroupLabel>
 			<PermissionGuard roles={['ADMIN', 'OWNER']}>
 				<Link to="/properties/new">

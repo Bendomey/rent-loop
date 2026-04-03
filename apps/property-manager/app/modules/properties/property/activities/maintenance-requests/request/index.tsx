@@ -1,6 +1,6 @@
 import { Paperclip, X } from 'lucide-react'
 import { Pencil } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLoaderData, useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { ActivityTab } from './activity-tab'
@@ -13,7 +13,9 @@ import { Input } from '~/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { Textarea } from '~/components/ui/textarea'
 import { TypographyH5, TypographyMuted } from '~/components/ui/typography'
+import { useTour } from '~/hooks/use-tour'
 import { localizedDayjs } from '~/lib/date'
+import { MAINTENANCE_DETAIL_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
 import type { loader } from '~/routes/_auth.properties.$propertyId.activities.maintenance-requests.$requestId'
 
 function InlineTitle({
@@ -270,6 +272,15 @@ export function MaintenanceRequestDetailModule() {
 
 	const propertyId = clientUserProperty?.property_id ?? ''
 
+	const { startTour, hasCompletedTour } = useTour(
+		TOUR_KEYS.MAINTENANCE_DETAIL,
+		MAINTENANCE_DETAIL_TOUR_STEPS,
+	)
+
+	useEffect(() => {
+		if (!hasCompletedTour()) startTour()
+	}, [hasCompletedTour, startTour])
+
 	if (!request) {
 		return (
 			<div className="flex items-center justify-center py-20">
@@ -286,7 +297,7 @@ export function MaintenanceRequestDetailModule() {
 			{/* Left pane */}
 			<div className="flex flex-col gap-6 lg:col-span-8">
 				{/* Header */}
-				<div className="flex flex-col gap-2">
+				<div id="request-title-area" className="flex flex-col gap-2">
 					<div className="flex items-center gap-2">
 						<TypographyMuted className="text-xs font-medium">
 							#{request.code}
@@ -318,31 +329,33 @@ export function MaintenanceRequestDetailModule() {
 				<AttachmentsSection attachments={request.attachments} />
 
 				{/* Tabs */}
-				<Tabs defaultValue="comments" className="w-full">
-					<TabsList>
-						<TabsTrigger value="history">History</TabsTrigger>
-						<TabsTrigger value="comments">Comments</TabsTrigger>
-						<TabsTrigger value="expenses">Expenses</TabsTrigger>
-					</TabsList>
-					<TabsContent value="history" className="mt-4">
-						<ActivityTab
-							requestId={request.id}
-							propertyId={propertyId}
-							mr={request}
-						/>
-					</TabsContent>
-					<TabsContent value="comments" className="mt-4">
-						<CommentsTab requestId={request.id} propertyId={propertyId} />
-					</TabsContent>
-					<TabsContent value="expenses" className="mt-4">
-						<ExpensesTab requestId={request.id} propertyId={propertyId} />
-					</TabsContent>
-				</Tabs>
+				<div id="request-content-tabs">
+					<Tabs defaultValue="comments" className="w-full">
+						<TabsList>
+							<TabsTrigger value="history">History</TabsTrigger>
+							<TabsTrigger value="comments">Comments</TabsTrigger>
+							<TabsTrigger value="expenses">Expenses</TabsTrigger>
+						</TabsList>
+						<TabsContent value="history" className="mt-4">
+							<ActivityTab
+								requestId={request.id}
+								propertyId={propertyId}
+								mr={request}
+							/>
+						</TabsContent>
+						<TabsContent value="comments" className="mt-4">
+							<CommentsTab requestId={request.id} propertyId={propertyId} />
+						</TabsContent>
+						<TabsContent value="expenses" className="mt-4">
+							<ExpensesTab requestId={request.id} propertyId={propertyId} />
+						</TabsContent>
+					</Tabs>
+				</div>
 			</div>
 
 			{/* Right pane — sidebar */}
 			<div className="lg:col-span-4">
-				<div className="sticky top-6">
+				<div id="request-detail-sidebar" className="sticky top-6">
 					<MaintenanceRequestSidebar mr={request} propertyId={propertyId} />
 				</div>
 			</div>
