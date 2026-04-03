@@ -27,6 +27,16 @@ func NewAdminRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func(r ch
 				r.Get("/", handlers.AdminHandler.ListAdmins)
 			})
 
+			// agreement management (admin only)
+			r.Route("/v1/admin/system/agreements", func(r chi.Router) {
+				r.Post("/", handlers.AgreementHandler.AdminCreateAgreement)
+				r.Get("/", handlers.AgreementHandler.AdminListAgreements)
+				r.Route("/{agreement_id}", func(r chi.Router) {
+					r.Patch("/", handlers.AgreementHandler.AdminUpdateAgreement)
+					r.Patch("/activate", handlers.AgreementHandler.AdminActivateAgreement)
+				})
+			})
+
 			r.Route("/v1/admin/client-applications", func(r chi.Router) {
 				r.Get("/", handlers.ClientApplicationHandler.ListClientApplications)
 
