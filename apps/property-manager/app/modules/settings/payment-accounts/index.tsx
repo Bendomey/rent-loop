@@ -5,6 +5,7 @@ import {
 	Edit,
 	EllipsisVertical,
 	Eye,
+	Plus,
 	RotateCw,
 	Trash2,
 } from 'lucide-react'
@@ -218,14 +219,15 @@ export function PaymentAccountsModule() {
 					</TypographyMuted>
 				</div>
 				<div className="flex items-center justify-end gap-2">
-					{/* <Button
+					<Button
 						variant="default"
 						size="sm"
 						className="bg-rose-600 text-white hover:bg-rose-700"
+						onClick={() => void navigate('/settings/payment-accounts/new')}
 					>
 						<Plus className="size-4" />
 						Add Payment Account
-					</Button> */}
+					</Button>
 					<Button
 						onClick={() => refetch()}
 						disabled={isLoading}
@@ -258,12 +260,10 @@ export function PaymentAccountsModule() {
 						message: 'No payment accounts found',
 						description:
 							"Try adjusting your search or filter to find what you're looking for.",
-						// button: {
-						// 	label: 'Add Payment Account',
-						// 	onClick: () => {
-						// 		Handle button click
-						// 	},
-						// },
+						button: {
+							label: 'Add Payment Account',
+							onClick: () => void navigate('/settings/payment-accounts/new'),
+						},
 					}}
 				/>
 			</div>
