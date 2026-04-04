@@ -61,12 +61,51 @@ export const useGetPaymentAccounts = (
 		queryFn: () => getPaymentAccounts(query),
 	})
 
+interface CreatePaymentAccountProps {
+	rail: PaymentAccount['rail']
+	provider?: PaymentAccount['provider']
+	identifier?: string
+	metadata?: PaymentAccountMetadata
+	is_default: boolean
+	status: PaymentAccount['status']
+}
+
+/**
+ * Create payment account
+ */
+
+const createPaymentAccount = async (props: CreatePaymentAccountProps) => {
+	try {
+		const response = await fetchClient<ApiResponse<PaymentAccount>>(
+			`/v1/admin/payment-accounts`,
+			{
+				method: 'POST',
+				body: JSON.stringify(props),
+			},
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useCreatePaymentAccount = () =>
+	useMutation({ mutationFn: createPaymentAccount })
+
 interface UpdatePaymentAccountProps {
 	id: string
 	identifier?: string
 	is_default?: boolean
 	provider?: PaymentAccount['provider']
 	status?: PaymentAccount['status']
+	metadata?: PaymentAccountMetadata
 }
 
 /**

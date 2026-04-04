@@ -27,6 +27,7 @@ import {
 	SelectValue,
 } from '~/components/ui/select'
 import { Spinner } from '~/components/ui/spinner'
+import { Textarea } from '~/components/ui/textarea'
 import {
 	TypographyH2,
 	TypographyMuted,
@@ -46,6 +47,10 @@ const ValidationSchema = z.object({
 		},
 	),
 	status: z.enum(['ACTIVE', 'INACTIVE'], { error: 'Please select a status' }),
+	account_name: z.string().optional(),
+	bank_name: z.string().optional(),
+	branch: z.string().optional(),
+	description: z.string().optional(),
 })
 
 type FormSchema = z.infer<typeof ValidationSchema>
@@ -54,7 +59,7 @@ const providerOptions: Array<{ label: string; value: FormSchema['provider'] }> =
 	[
 		{ label: 'MTN', value: 'MTN' },
 		{ label: 'Vodafone', value: 'VODAFONE' },
-		{ label: 'AirTelTigo', value: 'AIRTELTIGO' },
+		{ label: 'AirtelTigo', value: 'AIRTELTIGO' },
 		{ label: 'Paystack', value: 'PAYSTACK' },
 		{ label: 'Bank', value: 'BANK_API' },
 		{ label: 'Cash / Offline', value: 'CASH' },
@@ -78,6 +83,10 @@ export function EditPaymentAccountModule() {
 			identifier: '',
 			provider: 'MTN',
 			status: 'ACTIVE',
+			account_name: '',
+			bank_name: '',
+			branch: '',
+			description: '',
 		},
 	})
 
@@ -88,11 +97,30 @@ export function EditPaymentAccountModule() {
 				identifier: safeString(data.identifier),
 				provider: data.provider ?? 'MTN',
 				status: data.status ?? 'ACTIVE',
+				account_name: data.metadata?.account_name ?? '',
+				bank_name: data.metadata?.bank_name ?? '',
+				branch: data.metadata?.branch ?? '',
+				description: data.metadata?.description ?? '',
 			})
 		}
 	}, [data, rhfMethods])
 
 	const onSubmit = async (formData: FormSchema) => {
+		const metadata: PaymentAccountMetadata = {}
+		const rail = data?.rail
+
+		if (rail === 'MOMO' && formData.account_name) {
+			metadata.account_name = formData.account_name
+		}
+		if (rail === 'BANK_TRANSFER') {
+			if (formData.account_name) metadata.account_name = formData.account_name
+			if (formData.bank_name) metadata.bank_name = formData.bank_name
+			if (formData.branch) metadata.branch = formData.branch
+		}
+		if (rail === 'OFFLINE' && formData.description) {
+			metadata.description = formData.description
+		}
+
 		mutate(
 			{
 				id: safeString(data?.id),
@@ -103,6 +131,13 @@ export function EditPaymentAccountModule() {
 				provider: formState.dirtyFields.provider
 					? formData.provider
 					: undefined,
+				metadata:
+					formState.dirtyFields.account_name ||
+					formState.dirtyFields.bank_name ||
+					formState.dirtyFields.branch ||
+					formState.dirtyFields.description
+						? metadata
+						: undefined,
 			},
 			{
 				onError: () =>
@@ -121,6 +156,7 @@ export function EditPaymentAccountModule() {
 	}
 
 	const { watch, formState, setValue } = rhfMethods
+	const rail = data?.rail
 
 	return (
 		<Form {...rhfMethods}>
@@ -134,7 +170,7 @@ export function EditPaymentAccountModule() {
 					</TypographyH2>
 					<TypographyMuted>
 						Use the form below to edit this payment account. Make sure to save
-						your changes when you're done.
+						your changes when you&apos;re done.
 					</TypographyMuted>
 					<TypographyMuted>
 						Note: Changing the provider or status may affect how this payment
@@ -143,20 +179,26 @@ export function EditPaymentAccountModule() {
 				</div>
 
 				<FieldGroup>
-					<FormField
-						name="identifier"
-						control={rhfMethods.control}
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Identifier</FormLabel>
-								<FormControl>
-									<Input type="text" {...field} />
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+					{/* Identifier */}
+					{rail !== 'OFFLINE' && (
+						<FormField
+							name="identifier"
+							control={rhfMethods.control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>
+										{rail === 'MOMO' ? 'Phone Number' : 'Account Number'}
+									</FormLabel>
+									<FormControl>
+										<Input type="text" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					)}
 
+					{/* Provider */}
 					<FormField
 						name="provider"
 						control={rhfMethods.control}
@@ -184,6 +226,86 @@ export function EditPaymentAccountModule() {
 						)}
 					/>
 
+					{/* Account Name — MOMO and BANK_TRANSFER */}
+					{(rail === 'MOMO' || rail === 'BANK_TRANSFER') && (
+						<FormField
+							name="account_name"
+							control={rhfMethods.control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Account Name</FormLabel>
+									<FormControl>
+										<Input type="text" placeholder="e.g. John Doe" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					)}
+
+					{/* Bank Name + Branch — BANK_TRANSFER only */}
+					{rail === 'BANK_TRANSFER' && (
+						<>
+							<FormField
+								name="bank_name"
+								control={rhfMethods.control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Bank Name</FormLabel>
+										<FormControl>
+											<Input
+												type="text"
+												placeholder="e.g. GCB Bank"
+												{...field}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								name="branch"
+								control={rhfMethods.control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Branch</FormLabel>
+										<FormControl>
+											<Input
+												type="text"
+												placeholder="e.g. Accra Main Branch"
+												{...field}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</>
+					)}
+
+					{/* Description — OFFLINE only */}
+					{rail === 'OFFLINE' && (
+						<FormField
+							name="description"
+							control={rhfMethods.control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Payment Instructions</FormLabel>
+									<FormControl>
+										<Textarea
+											placeholder="e.g. Visit the office at 123 Main Street between 9am–5pm to pay in cash."
+											rows={3}
+											{...field}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					)}
+
+					{/* Status */}
 					<div className="flex flex-col items-center space-x-6 md:flex-row">
 						<FormLabel>Status: </FormLabel>
 						<div className="flex space-x-3">
