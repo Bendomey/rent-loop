@@ -31,9 +31,9 @@ export function PricingModule() {
 							with you
 						</h1>
 						<p className="mt-6 text-lg font-light text-gray-500">
-							Pay only for what you manage. Create your account, add your units,
-							and we handle the rest — your billing rate adjusts automatically
-							as your portfolio grows.
+							Simple flat monthly plans — no per-unit fees. Create your account,
+							add your units, and your plan updates automatically as your
+							portfolio crosses each threshold.
 						</p>
 						<a
 							href={`${PROPERTY_MANAGER_APP_URL}/apply`}
@@ -126,7 +126,7 @@ export function PricingModule() {
 								Enterprise
 							</h2>
 							<p className="mt-1 text-sm font-medium text-rose-600">
-								200+ units
+								150+ units
 							</p>
 							<p className="mt-2 max-w-xl text-sm text-gray-600">
 								Large portfolio? Let's talk. We offer custom pricing, dedicated
@@ -212,20 +212,20 @@ const tiers = [
 		highlighted: false,
 	},
 	{
-		name: 'Standard',
-		range: '6 – 100 units',
-		price: 'GH₵ 10',
-		priceSuffix: '/unit/month',
+		name: 'Starter',
+		range: '6 – 50 units',
+		price: 'GH₵ 70',
+		priceSuffix: '/month',
 		description:
-			'Applied automatically once you add a 6th unit to your portfolio.',
+			'Flat monthly rate applied automatically once you add a 6th unit.',
 		highlighted: true,
 	},
 	{
 		name: 'Growth',
-		range: '101 – 200 units',
-		price: 'GH₵ 8',
-		priceSuffix: '/unit/month',
-		description: 'Volume discount applied automatically at 101 units.',
+		range: '51 – 150 units',
+		price: 'GH₵ 200',
+		priceSuffix: '/month',
+		description: 'Flat monthly rate applied automatically at 51 units.',
 		highlighted: false,
 	},
 ]
@@ -237,9 +237,9 @@ const faqs = [
 			'No. There is nothing to select. You simply create an account, add your properties and units, and Rentloop automatically applies the correct billing rate based on your total unit count. As your portfolio grows or shrinks, your rate updates at the start of the next billing cycle.',
 	},
 	{
-		question: 'How does per-unit billing work?',
+		question: 'How does billing work?',
 		answer:
-			'You pay a monthly fee for each unit in your active portfolio. If you have 20 units on the Standard rate, you pay GH₵ 10 × 20 = GH₵ 200/month. Your bill adjusts automatically as you add or remove units.',
+			'You pay a flat monthly fee based on your total unit count, not per unit. If you have 20 units you pay GH₵ 70/month. If you have 80 units you pay GH₵ 70/month. Your plan updates automatically as you add or remove units.',
 	},
 	{
 		question: 'What counts as a unit?',
@@ -249,7 +249,7 @@ const faqs = [
 	{
 		question: 'What happens when I cross a tier threshold?',
 		answer:
-			'When your unit count crosses into a new billing range (e.g. from 100 to 101 units), the new rate applies to your entire portfolio from the next billing cycle. You do not pay two different rates within a single cycle.',
+			'When your unit count crosses into a new plan range (e.g. from 50 to 51 units, or from 150 to custom), the new flat monthly rate applies from the next billing cycle. You do not pay two different rates within a single cycle.',
 	},
 	{
 		question: 'Is there a long-term contract?',
