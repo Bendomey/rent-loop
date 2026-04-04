@@ -329,7 +329,8 @@ func (s *clientApplicationService) ApproveClientApplication(
 		Password:    password,
 	}
 
-	if err := s.userService.InsertUser(transCtx, &ownerUser); err != nil {
+	ownerUserCreated, err := s.userService.InsertUser(transCtx, &ownerUser)
+	if err != nil {
 		return nil, err
 	}
 
@@ -353,24 +354,36 @@ func (s *clientApplicationService) ApproveClientApplication(
 		})
 	}
 
-	r := strings.NewReplacer(
-		"{{owner_name}}", clientApplication.ContactName,
-		"{{email}}", clientApplication.ContactEmail,
-		"{{password}}", password,
-	)
-	message := r.Replace(lib.CLIENT_APPLICATION_ACCEPTED_BODY)
-	smsMessage := r.Replace(lib.CLIENT_APPLICATION_ACCEPTED_SMS_BODY)
-
-	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-		Recipient: clientApplication.ContactEmail,
-		Subject:   lib.CLIENT_APPLICATION_ACCEPTED_SUBJECT,
-		TextBody:  message,
-	})
-
-	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
-		Recipient: clientApplication.ContactPhoneNumber,
-		Message:   smsMessage,
-	})
+	if ownerUserCreated {
+		r := strings.NewReplacer(
+			"{{owner_name}}", clientApplication.ContactName,
+			"{{email}}", clientApplication.ContactEmail,
+			"{{password}}", password,
+		)
+		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+			Recipient: clientApplication.ContactEmail,
+			Subject:   lib.CLIENT_APPLICATION_ACCEPTED_SUBJECT,
+			TextBody:  r.Replace(lib.CLIENT_APPLICATION_ACCEPTED_BODY),
+		})
+		go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
+			Recipient: clientApplication.ContactPhoneNumber,
+			Message:   r.Replace(lib.CLIENT_APPLICATION_ACCEPTED_SMS_BODY),
+		})
+	} else {
+		r := strings.NewReplacer(
+			"{{name}}", clientApplication.ContactName,
+			"{{client_name}}", client.Name,
+		)
+		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+			Recipient: clientApplication.ContactEmail,
+			Subject:   lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_SUBJECT,
+			TextBody:  r.Replace(lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_BODY),
+		})
+		go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
+			Recipient: clientApplication.ContactPhoneNumber,
+			Message:   r.Replace(lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_SMS_BODY),
+		})
+	}
 
 	return clientApplication, nil
 }

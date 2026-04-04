@@ -18,7 +18,7 @@ import (
 )
 
 type UserService interface {
-	InsertUser(ctx context.Context, user *models.User) error
+	InsertUser(ctx context.Context, user *models.User) (bool, error)
 	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
 	LoginUser(ctx context.Context, input LoginUserInput) (*LoginUserResponse, error)
 	GetMe(ctx context.Context, userID string) (*models.User, error)
@@ -37,17 +37,18 @@ func NewUserService(appCtx pkg.AppContext, repo repository.UserRepository) UserS
 	return &userService{appCtx, repo}
 }
 
-func (s *userService) InsertUser(ctx context.Context, user *models.User) error {
-	if err := s.repo.Create(ctx, user); err != nil {
-		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+func (s *userService) InsertUser(ctx context.Context, user *models.User) (bool, error) {
+	wasCreated, err := s.repo.Upsert(ctx, user)
+	if err != nil {
+		return false, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
 			Metadata: map[string]string{
 				"function": "InsertUser",
-				"action":   "inserting user",
+				"action":   "upserting user",
 			},
 		})
 	}
-	return nil
+	return wasCreated, nil
 }
 
 func (s *userService) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {

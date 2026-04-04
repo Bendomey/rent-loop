@@ -101,6 +101,21 @@ The Rentloop Team
 )
 
 const (
+	CLIENT_USER_ADDED_EXISTING_ACCOUNT_SUBJECT = "You've been added to a new account on Rentloop"
+	CLIENT_USER_ADDED_EXISTING_ACCOUNT_BODY    = `Hey {{name}},
+
+You've been added to {{client_name}} on Rentloop.
+
+You can log in using your existing credentials:
+Url: {{property_manager_portal_url}}
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+The Rentloop Team
+`
+)
+
+const (
 	CLIENT_USER_PASSWORD_RESET_SUBJECT = "Reset Your Rentloop Password"
 	CLIENT_USER_PASSWORD_RESET_BODY    = `Hey {{name}},
 
@@ -467,7 +482,7 @@ Best regards,
 The Rentloop Team
 `
 
-	ANNOUNCEMENT_SMS_BODY = `[Rentloop] {{announcement_title}}: {{announcement_content}}`
+	ANNOUNCEMENT_SMS_BODY = `{{announcement_title}}: {{announcement_content}}`
 )
 
 const (
@@ -578,48 +593,49 @@ The Rentloop Team
 // ============================================================================
 
 const (
-	CLIENT_APPLICATION_SUBMITTED_SMS_BODY = `[Rentloop] Hi {{owner_name}}, we've received your application. We'll review it and get back to you soon.`
-	CLIENT_APPLICATION_REJECTED_SMS_BODY  = `[Rentloop] Hi {{owner_name}}, your application was not approved. Reason: {{rejection_reason}}. Contact us for details.`
-	CLIENT_APPLICATION_ACCEPTED_SMS_BODY  = `[Rentloop] Hi {{owner_name}}, your application is approved! Login: {{property_manager_portal_url}} Email: {{email}} Password: {{password}}`
+	CLIENT_APPLICATION_SUBMITTED_SMS_BODY = `Hi {{owner_name}}, we've received your application. We'll review it and get back to you soon.`
+	CLIENT_APPLICATION_REJECTED_SMS_BODY  = `Hi {{owner_name}}, your application was not approved. Reason: {{rejection_reason}}. Contact us for details.`
+	CLIENT_APPLICATION_ACCEPTED_SMS_BODY  = `Hi {{owner_name}}, your application is approved! Login: {{property_manager_portal_url}} Email: {{email}} Password: {{password}}`
 )
 
 const (
-	CLIENT_USER_ADDED_SMS_BODY            = `[Rentloop] Hi {{name}}, you've been added to {{client_name}}. Login: {{property_manager_portal_url}} Email: {{email}} Password: {{password}}`
-	CLIENT_USER_ACTIVATED_SMS_BODY        = `[Rentloop] Hi {{name}}, your account has been activated. You can now log in.`
-	CLIENT_USER_DEACTIVATED_SMS_BODY      = `[Rentloop] Hi {{name}}, your account has been deactivated. Reason: {{reason}}. Contact your admin.`
-	CLIENT_USER_PASSWORD_UPDATED_SMS_BODY = `[Rentloop] Hi {{name}}, your password has been changed. If you didn't do this, contact support.`
-	CLIENT_USER_PASSWORD_RESET_SMS_BODY   = `[Rentloop] Reset your password: {{property_manager_portal_url}}/reset-your-password?token={{reset_token}}`
+	CLIENT_USER_ADDED_SMS_BODY                  = `Hi {{name}}, you've been added to {{client_name}}. Login: {{property_manager_portal_url}} Email: {{email}} Password: {{password}}`
+	CLIENT_USER_ADDED_EXISTING_ACCOUNT_SMS_BODY = `Hi {{name}}, you've been added to {{client_name}} on Rentloop. Login at {{property_manager_portal_url}} with your existing credentials.`
+	CLIENT_USER_ACTIVATED_SMS_BODY              = `Hi {{name}}, your account has been activated. You can now log in.`
+	CLIENT_USER_DEACTIVATED_SMS_BODY            = `Hi {{name}}, your account has been deactivated. Reason: {{reason}}. Contact your admin.`
+	CLIENT_USER_PASSWORD_UPDATED_SMS_BODY       = `Hi {{name}}, your password has been changed. If you didn't do this, contact support.`
+	CLIENT_USER_PASSWORD_RESET_SMS_BODY         = `Reset your password: {{property_manager_portal_url}}/reset-your-password?token={{reset_token}}`
 )
 
 const (
-	TENANT_INVITED_SMS_BODY               = `[Rentloop] You've been invited to apply for a tenancy. Apply here: {{website_url}}/tenants/apply?unit={{unit_id}}&referred_by={{admin_id}}`
-	TENANT_APPLICATION_SUBMITTED_SMS_BODY = `[Rentloop] Hi {{applicant_name}}, your application ({{application_code}}) for {{unit_name}} has been submitted. We'll be in touch.`
-	TENANT_CANCELLED_SMS_BODY             = `[Rentloop] Hi {{applicant_name}}, your application ({{application_code}}) has been cancelled. Reason: {{reason}}`
-	TENANT_APPLICATION_APPROVED_SMS_BODY  = `[Rentloop] Hi {{applicant_name}}, your application for {{unit_name}} is approved! Log in to the Rentloop app with phone: {{phone_number}}`
+	TENANT_INVITED_SMS_BODY               = `You've been invited to apply for a tenancy. Apply here: {{website_url}}/tenants/apply?unit={{unit_id}}&referred_by={{admin_id}}`
+	TENANT_APPLICATION_SUBMITTED_SMS_BODY = `Hi {{applicant_name}}, your application ({{application_code}}) for {{unit_name}} has been submitted. We'll be in touch.`
+	TENANT_CANCELLED_SMS_BODY             = `Hi {{applicant_name}}, your application ({{application_code}}) has been cancelled. Reason: {{reason}}`
+	TENANT_APPLICATION_APPROVED_SMS_BODY  = `Hi {{applicant_name}}, your application for {{unit_name}} is approved! Log in to the Rentloop app with phone: {{phone_number}}`
 )
 
 const (
-	AUTH_VERIFICATION_CODE_SMS_BODY = `[Rentloop] Your verification code is {{verification_code}}. Valid for {{expiry_duration}}. Do not share this code.`
+	AUTH_VERIFICATION_CODE_SMS_BODY = `Your verification code is {{verification_code}}. Valid for {{expiry_duration}}. Do not share this code.`
 )
 
 const (
-	LEASE_ACTIVATED_SMS_BODY = `[Rentloop] Hi {{tenant_name}}, your lease for {{unit_name}} is now active. Move-in date: {{move_in_date}}.`
-	LEASE_CANCELLED_SMS_BODY = `[Rentloop] Hi {{tenant_name}}, your lease for {{unit_name}} was cancelled. Reason: {{cancellation_reason}}`
+	LEASE_ACTIVATED_SMS_BODY = `Hi {{tenant_name}}, your lease for {{unit_name}} is now active. Move-in date: {{move_in_date}}.`
+	LEASE_CANCELLED_SMS_BODY = `Hi {{tenant_name}}, your lease for {{unit_name}} was cancelled. Reason: {{cancellation_reason}}`
 )
 
 const (
-	RENT_INVOICE_GENERATED_SMS_BODY = `[Rentloop] Hi {{tenant_name}}, your rent invoice ({{invoice_code}}) for {{unit_name}} is ready. Amount: {{currency}} {{amount}}.`
-	INVOICE_PRE_DUE_1D_SMS_BODY     = `[Rentloop] Reminder: Invoice {{invoice_code}} for {{unit_name}} is due tomorrow. Amount: {{currency}} {{amount}}.`
-	INVOICE_OVERDUE_1D_SMS_BODY     = `[Rentloop] Invoice {{invoice_code}} for {{unit_name}} is 1 day overdue. Amount: {{currency}} {{amount}}. Please pay now.`
-	INVOICE_OVERDUE_3D_SMS_BODY     = `[Rentloop] Invoice {{invoice_code}} for {{unit_name}} is 3 days overdue. Amount: {{currency}} {{amount}}. Please pay promptly.`
-	INVOICE_OVERDUE_7D_SMS_BODY     = `[Rentloop] Urgent: Invoice {{invoice_code}} is 7 days overdue. Amount: {{currency}} {{amount}}. Pay immediately.`
-	INVOICE_OVERDUE_14D_SMS_BODY    = `[Rentloop] Final notice: Invoice {{invoice_code}} is 14 days overdue. Amount: {{currency}} {{amount}}. Pay now to avoid action.`
-	INVOICE_PAID_SMS_BODY           = `[Rentloop] Payment received for invoice {{invoice_code}}. Amount: {{currency}} {{amount}}. Thank you!`
+	RENT_INVOICE_GENERATED_SMS_BODY = `Hi {{tenant_name}}, your rent invoice ({{invoice_code}}) for {{unit_name}} is ready. Amount: {{currency}} {{amount}}.`
+	INVOICE_PRE_DUE_1D_SMS_BODY     = `Reminder: Invoice {{invoice_code}} for {{unit_name}} is due tomorrow. Amount: {{currency}} {{amount}}.`
+	INVOICE_OVERDUE_1D_SMS_BODY     = `Invoice {{invoice_code}} for {{unit_name}} is 1 day overdue. Amount: {{currency}} {{amount}}. Please pay now.`
+	INVOICE_OVERDUE_3D_SMS_BODY     = `Invoice {{invoice_code}} for {{unit_name}} is 3 days overdue. Amount: {{currency}} {{amount}}. Please pay promptly.`
+	INVOICE_OVERDUE_7D_SMS_BODY     = `Urgent: Invoice {{invoice_code}} is 7 days overdue. Amount: {{currency}} {{amount}}. Pay immediately.`
+	INVOICE_OVERDUE_14D_SMS_BODY    = `Final notice: Invoice {{invoice_code}} is 14 days overdue. Amount: {{currency}} {{amount}}. Pay now to avoid action.`
+	INVOICE_PAID_SMS_BODY           = `Payment received for invoice {{invoice_code}}. Amount: {{currency}} {{amount}}. Thank you!`
 )
 
 const (
-	SIGNING_TOKEN_INVITE_SMS_BODY = `[Rentloop] Hi {{signer_name}}, you have a document to sign. Sign here: {{property_manager_portal_url}}/sign/{{token}} (expires {{expires_at}})`
-	SIGNING_TOKEN_RESENT_SMS_BODY = `[Rentloop] Reminder: Sign your document here: {{property_manager_portal_url}}/sign/{{token}} (expires {{expires_at}})`
+	SIGNING_TOKEN_INVITE_SMS_BODY = `Hi {{signer_name}}, you have a document to sign. Sign here: {{property_manager_portal_url}}/sign/{{token}} (expires {{expires_at}})`
+	SIGNING_TOKEN_RESENT_SMS_BODY = `Reminder: Sign your document here: {{property_manager_portal_url}}/sign/{{token}} (expires {{expires_at}})`
 )
 
 const (
@@ -633,7 +649,7 @@ Please make your payment at your earliest convenience.
 Best regards,
 The Rentloop Team
 `
-	INVOICE_CREATED_SMS_BODY = `[Rentloop] Hi {{tenant_name}}, invoice {{invoice_code}} for {{currency}} {{amount}} is ready for payment.`
+	INVOICE_CREATED_SMS_BODY = `Hi {{tenant_name}}, invoice {{invoice_code}} for {{currency}} {{amount}} is ready for payment.`
 )
 
 const (
@@ -647,5 +663,5 @@ If you have any questions about this, please reach out to your landlord.
 Best regards,
 The Rentloop Team
 `
-	INVOICE_VOIDED_SMS_BODY = `[Rentloop] Hi {{tenant_name}}, invoice {{invoice_code}} has been cancelled and is no longer payable.`
+	INVOICE_VOIDED_SMS_BODY = `Hi {{tenant_name}}, invoice {{invoice_code}} has been cancelled and is no longer payable.`
 )

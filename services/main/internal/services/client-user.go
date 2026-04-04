@@ -151,42 +151,59 @@ func (s *clientUserService) CreateClientUser(
 		return nil, err
 	}
 
-	// Only send "added with credentials" notification for newly-created users
-	if plainPassword != "" {
-		client, clientErr := s.clientRepo.GetByID(ctx, input.ClientID)
-		if clientErr != nil {
-			return nil, pkg.InternalServerError(clientErr.Error(), &pkg.RentLoopErrorParams{
-				Err: clientErr,
-				Metadata: map[string]string{
-					"function": "CreateClientUser",
-					"action":   "fetching client for email notification",
-				},
-			})
-		}
+	client, clientErr := s.clientRepo.GetByID(ctx, input.ClientID)
+	if clientErr != nil {
+		return nil, pkg.InternalServerError(clientErr.Error(), &pkg.RentLoopErrorParams{
+			Err: clientErr,
+			Metadata: map[string]string{
+				"function": "CreateClientUser",
+				"action":   "fetching client for email notification",
+			},
+		})
+	}
 
+	if plainPassword != "" {
+		// New user — send credentials
 		r := strings.NewReplacer(
 			"{{name}}", input.Name,
 			"{{client_name}}", client.Name,
 			"{{email}}", input.Email,
 			"{{password}}", plainPassword,
 		)
-		message := r.Replace(lib.CLIENT_USER_ADDED_BODY)
-		smsMessage := r.Replace(lib.CLIENT_USER_ADDED_SMS_BODY)
-
 		go pkg.SendEmail(
 			s.appCtx.Config,
 			pkg.SendEmailInput{
 				Recipient: input.Email,
 				Subject:   lib.CLIENT_USER_ADDED_SUBJECT,
-				TextBody:  message,
+				TextBody:  r.Replace(lib.CLIENT_USER_ADDED_BODY),
 			},
 		)
-
 		go s.appCtx.Clients.GatekeeperAPI.SendSMS(
 			context.Background(),
 			gatekeeper.SendSMSInput{
 				Recipient: input.Phone,
-				Message:   smsMessage,
+				Message:   r.Replace(lib.CLIENT_USER_ADDED_SMS_BODY),
+			},
+		)
+	} else {
+		// Existing user — notify them they've been added to a new client
+		r := strings.NewReplacer(
+			"{{name}}", input.Name,
+			"{{client_name}}", client.Name,
+		)
+		go pkg.SendEmail(
+			s.appCtx.Config,
+			pkg.SendEmailInput{
+				Recipient: input.Email,
+				Subject:   lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_SUBJECT,
+				TextBody:  r.Replace(lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_BODY),
+			},
+		)
+		go s.appCtx.Clients.GatekeeperAPI.SendSMS(
+			context.Background(),
+			gatekeeper.SendSMSInput{
+				Recipient: input.Phone,
+				Message:   r.Replace(lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_SMS_BODY),
 			},
 		)
 	}
