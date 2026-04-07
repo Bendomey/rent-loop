@@ -4,16 +4,19 @@ import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
+import { safeString } from '~/lib/strings'
 import { EditPaymentAccountModule } from '~/modules'
 
 export async function loader({ request, params }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const authToken = authSession.get('authToken')
+	const clientId = safeString(authSession.get('selectedClientId'))
 	const payment_account_id = params.paymentAccountId
 
 	try {
 		const paymentAccount = await getPaymentAccountForServer(
+			clientId,
 			{ payment_account_id: payment_account_id },
 			{
 				authToken,

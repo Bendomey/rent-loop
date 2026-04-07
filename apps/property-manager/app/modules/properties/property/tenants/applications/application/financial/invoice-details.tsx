@@ -53,6 +53,8 @@ import {
 import { Separator } from '~/components/ui/separator'
 import { Spinner } from '~/components/ui/spinner'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 const STATUS_CONFIG: Record<
 	Invoice['status'],
@@ -104,14 +106,18 @@ export function InvoiceDetails({
 	propertyId,
 }: InvoiceDetailsProps) {
 	const revalidator = useRevalidator()
+	const { clientUser } = useClient()
 	const [showReconfigureAlert, setShowReconfigureAlert] = useState(false)
 	const [showPayDialog, setShowPayDialog] = useState(false)
 	const [selectedAccountId, setSelectedAccountId] = useState<string>('')
 	const [reference, setReference] = useState('')
 
-	const { data: accountsData } = useGetPaymentAccounts({
-		filters: { owner_types: ['PROPERTY_OWNER', 'SYSTEM'], status: 'ACTIVE' },
-	})
+	const { data: accountsData } = useGetPaymentAccounts(
+		safeString(clientUser?.client_id),
+		{
+			filters: { owner_types: ['PROPERTY_OWNER', 'SYSTEM'], status: 'ACTIVE' },
+		},
+	)
 	const accounts = (accountsData?.rows ?? [])?.filter((a) =>
 		invoice.allowed_payment_rails.includes(a.rail),
 	)
@@ -127,14 +133,22 @@ export function InvoiceDetails({
 
 	const handleVoidConfirm = () => {
 		voidInvoiceMutation(
-			{ property_id: propertyId, id: invoice.id },
+			{
+				client_id: safeString(clientUser?.client_id),
+				property_id: propertyId,
+				id: invoice.id,
+			},
 			{
 				onError: () => {
 					toast.error('Failed to void invoice. Please try again.')
 				},
 				onSuccess: () => {
 					deleteInvoiceMutation(
-						{ property_id: propertyId, id: invoice.id },
+						{
+							client_id: safeString(clientUser?.client_id),
+							property_id: propertyId,
+							id: invoice.id,
+						},
 						{
 							onError: () => {
 								toast.error('Invoice voided but could not be deleted.')
@@ -158,6 +172,7 @@ export function InvoiceDetails({
 		if (!selectedAccount) return
 		payInvoiceMutation(
 			{
+				client_id: safeString(clientUser?.client_id),
 				property_id: propertyId,
 				tenant_application_id: applicationId,
 				invoice_id: invoice.id,

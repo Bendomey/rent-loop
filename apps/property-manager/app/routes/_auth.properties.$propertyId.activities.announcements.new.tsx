@@ -5,6 +5,7 @@ import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
+import { safeString } from '~/lib/strings'
 import { NewPropertyAnnouncementModule } from '~/modules'
 
 export const handle = {
@@ -33,9 +34,11 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const authToken = authSession.get('authToken')
+	const clientId = safeString(authSession.get('selectedClientId'))
 
 	try {
 		const sourceAnnouncement = await getPropertyAnnouncementForServer(
+			clientId,
 			params.propertyId,
 			sourceId,
 			{ authToken, baseUrl },

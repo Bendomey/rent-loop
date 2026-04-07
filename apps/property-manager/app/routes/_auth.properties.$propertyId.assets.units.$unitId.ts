@@ -5,15 +5,18 @@ import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
+import { safeString } from '~/lib/strings'
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const clientUserProperty = context.get(propertyContext)
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const authToken = authSession.get('authToken')
+	const clientId = safeString(authSession.get('selectedClientId'))
 
 	try {
 		const unit = await getPropertyUnitForServer(
+			clientId,
 			{
 				property_id: params.propertyId,
 				unit_id: params.unitId,

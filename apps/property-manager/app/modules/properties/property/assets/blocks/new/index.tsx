@@ -30,6 +30,7 @@ import { useUploadObject } from '~/hooks/use-upload-object'
 import { ASSET_MANAGEMENT_GUIDE_URL } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 const ValidationSchema = z.object({
@@ -63,6 +64,7 @@ const status: Array<{ label: string; value: PropertyBlock['status'] }> = [
 
 export function NewPropertyAssetBlocksModule() {
 	const { clientUserProperty } = useProperty()
+	const { clientUser } = useClient()
 	const navigate = useNavigate()
 
 	const rhfMethods = useForm<FormSchema>({
@@ -91,7 +93,9 @@ export function NewPropertyAssetBlocksModule() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [objectUrl])
 
-	const { mutate, isPending } = useCreatePropertyBlock()
+	const { mutate, isPending } = useCreatePropertyBlock(
+		safeString(clientUser?.client_id),
+	)
 
 	const onSubmit = async (data: FormSchema) => {
 		if (data) {

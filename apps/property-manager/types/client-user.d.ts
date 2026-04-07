@@ -1,10 +1,9 @@
 interface ClientUser {
 	id: string
+	user?: User
+	user_id: string
 	client_id: string
-	client: Nullable<Client>
-	name: string
-	phone_number: string
-	email: string
+	client: Client
 	role: 'OWNER' | 'ADMIN' | 'STAFF'
 	status: 'ClientUser.Status.Active' | 'ClientUser.Status.Inactive'
 	created_at: Date

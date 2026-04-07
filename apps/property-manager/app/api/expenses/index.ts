@@ -7,6 +7,7 @@ import { fetchClient } from '~/lib/transport'
  * GET all expenses for a property (paginated)
  */
 const getPropertyExpenses = async (
+	clientId: string,
 	propertyId: string,
 	query: FetchMultipleDataInputParams<FetchExpenseFilter>,
 ) => {
@@ -14,7 +15,9 @@ const getPropertyExpenses = async (
 		const params = getQueryParams<FetchExpenseFilter>(query)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<Expense>>
-		>(`/v1/admin/properties/${propertyId}/expenses?${params.toString()}`)
+		>(
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/expenses?${params.toString()}`,
+		)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -26,19 +29,21 @@ const getPropertyExpenses = async (
 }
 
 export const useGetPropertyExpenses = (
+	clientId: string,
 	propertyId: string,
 	query: FetchMultipleDataInputParams<FetchExpenseFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.EXPENSES, propertyId, query],
-		queryFn: () => getPropertyExpenses(propertyId, query),
-		enabled: !!propertyId,
+		queryKey: [QUERY_KEYS.EXPENSES, clientId, propertyId, query],
+		queryFn: () => getPropertyExpenses(clientId, propertyId, query),
+		enabled: !!propertyId && !!clientId,
 	})
 
 /**
  * GET expenses for a lease (paginated)
  */
 const getLeaseExpenses = async (
+	clientId: string,
 	propertyId: string,
 	leaseId: string,
 	query: FetchMultipleDataInputParams<FetchExpenseFilter>,
@@ -48,7 +53,7 @@ const getLeaseExpenses = async (
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<Expense>>
 		>(
-			`/v1/admin/properties/${propertyId}/leases/${leaseId}/expenses?${params.toString()}`,
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/leases/${leaseId}/expenses?${params.toString()}`,
 		)
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -61,20 +66,29 @@ const getLeaseExpenses = async (
 }
 
 export const useGetLeaseExpenses = (
+	clientId: string,
 	propertyId: string,
 	leaseId: string,
 	query: FetchMultipleDataInputParams<FetchExpenseFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.LEASES, propertyId, leaseId, 'expenses', query],
-		queryFn: () => getLeaseExpenses(propertyId, leaseId, query),
-		enabled: !!propertyId && !!leaseId,
+		queryKey: [
+			QUERY_KEYS.LEASES,
+			clientId,
+			propertyId,
+			leaseId,
+			'expenses',
+			query,
+		],
+		queryFn: () => getLeaseExpenses(clientId, propertyId, leaseId, query),
+		enabled: !!propertyId && !!leaseId && !!clientId,
 	})
 
 /**
  * GET expenses for a maintenance request (paginated)
  */
 const getMRExpenses = async (
+	clientId: string,
 	propertyId: string,
 	maintenanceRequestId: string,
 	query: FetchMultipleDataInputParams<FetchExpenseFilter>,
@@ -84,7 +98,7 @@ const getMRExpenses = async (
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<Expense>>
 		>(
-			`/v1/admin/properties/${propertyId}/maintenance-requests/${maintenanceRequestId}/expenses?${params.toString()}`,
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/maintenance-requests/${maintenanceRequestId}/expenses?${params.toString()}`,
 		)
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -97,6 +111,7 @@ const getMRExpenses = async (
 }
 
 export const useGetMRExpenses = (
+	clientId: string,
 	propertyId: string,
 	maintenanceRequestId: string,
 	query: FetchMultipleDataInputParams<FetchExpenseFilter>,
@@ -104,19 +119,22 @@ export const useGetMRExpenses = (
 	useQuery({
 		queryKey: [
 			QUERY_KEYS.EXPENSES,
+			clientId,
 			propertyId,
 			'maintenance-requests',
 			maintenanceRequestId,
 			query,
 		],
-		queryFn: () => getMRExpenses(propertyId, maintenanceRequestId, query),
-		enabled: !!propertyId && !!maintenanceRequestId,
+		queryFn: () =>
+			getMRExpenses(clientId, propertyId, maintenanceRequestId, query),
+		enabled: !!propertyId && !!maintenanceRequestId && !!clientId,
 	})
 
 /**
  * POST a new expense (property-scoped, context_type determines LEASE or MAINTENANCE)
  */
 export interface CreateExpenseInput {
+	client_id: string
 	property_id: string
 	context_type: 'LEASE' | 'MAINTENANCE'
 	context_lease_id?: string
@@ -126,10 +144,14 @@ export interface CreateExpenseInput {
 	currency?: string
 }
 
-const createExpense = async ({ property_id, ...data }: CreateExpenseInput) => {
+const createExpense = async ({
+	client_id,
+	property_id,
+	...data
+}: CreateExpenseInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<Expense>>(
-			`/v1/admin/properties/${property_id}/expenses`,
+			`/v1/admin/clients/${client_id}/properties/${property_id}/expenses`,
 			{ method: 'POST', body: JSON.stringify(data) },
 		)
 		return response.parsedBody.data
@@ -148,17 +170,19 @@ export const useCreateExpense = () => useMutation({ mutationFn: createExpense })
  * DELETE an expense (property-scoped)
  */
 export interface DeleteExpenseInput {
+	client_id: string
 	property_id: string
 	expense_id: string
 }
 
 const deleteExpense = async ({
+	client_id,
 	property_id,
 	expense_id,
 }: DeleteExpenseInput) => {
 	try {
 		await fetchClient(
-			`/v1/admin/properties/${property_id}/expenses/${expense_id}`,
+			`/v1/admin/clients/${client_id}/properties/${property_id}/expenses/${expense_id}`,
 			{ method: 'DELETE' },
 		)
 	} catch (error: unknown) {
@@ -182,19 +206,21 @@ export interface GenerateExpenseInvoicePayer {
 }
 
 export interface GenerateExpenseInvoiceInput {
+	client_id: string
 	property_id: string
 	expense_id: string
 	payers: GenerateExpenseInvoicePayer[]
 }
 
 const generateExpenseInvoice = async ({
+	client_id,
 	property_id,
 	expense_id,
 	payers,
 }: GenerateExpenseInvoiceInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<Invoice[]>>(
-			`/v1/admin/properties/${property_id}/expenses/${expense_id}/generate:invoice`,
+			`/v1/admin/clients/${client_id}/properties/${property_id}/expenses/${expense_id}/generate:invoice`,
 			{ method: 'POST', body: JSON.stringify({ payers }) },
 		)
 		return response.parsedBody.data

@@ -1,11 +1,11 @@
 import { createContext, useContext, type PropsWithChildren } from 'react'
 
 interface Props {
-	data?: ClientUser
+	data?: User
 }
 
 interface IAuthContext {
-	currentUser?: ClientUser
+	currentUser?: User
 }
 
 const AuthContext = createContext<IAuthContext | null>(null)

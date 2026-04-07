@@ -42,6 +42,8 @@ import {
 	getItemStatusLabel,
 	isChecklistEditable,
 } from '~/lib/lease-checklist.utils'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface Props {
 	leaseId: string
@@ -85,6 +87,7 @@ export function ChecklistModal({
 	const [deleteItemId, setDeleteItemId] = useState<string | null>(null)
 	const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false)
 
+	const { clientUser } = useClient()
 	const submitMutation = useSubmitLeaseChecklist()
 	const deleteItemMutation = useDeleteLeaseChecklistItem()
 
@@ -98,6 +101,7 @@ export function ChecklistModal({
 	async function handleSubmit() {
 		try {
 			await submitMutation.mutateAsync({
+				client_id: safeString(clientUser?.client_id),
 				lease_id: leaseId,
 				property_id: propertyId,
 				checklist_id: checklist.id,
@@ -114,6 +118,7 @@ export function ChecklistModal({
 	async function handleDeleteItem(itemId: string) {
 		try {
 			await deleteItemMutation.mutateAsync({
+				client_id: safeString(clientUser?.client_id),
 				lease_id: leaseId,
 				property_id: propertyId,
 				checklist_id: checklist.id,

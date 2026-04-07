@@ -32,6 +32,8 @@ import {
 	SelectValue,
 } from '~/components/ui/select'
 import { Textarea } from '~/components/ui/textarea'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 const ITEM_STATUSES: { value: LeaseChecklistItemStatus; label: string }[] = [
 	{ value: 'PENDING', label: 'Pending' },
@@ -74,6 +76,7 @@ export function ChecklistItemDialog({
 	setOpened,
 }: Props) {
 	const isEdit = !!item
+	const { clientUser } = useClient()
 	const createMutation = useCreateLeaseChecklistItem()
 	const updateMutation = useUpdateLeaseChecklistItem()
 	const isPending = createMutation.isPending || updateMutation.isPending
@@ -101,6 +104,7 @@ export function ChecklistItemDialog({
 		try {
 			if (isEdit && item) {
 				await updateMutation.mutateAsync({
+					client_id: safeString(clientUser?.client_id),
 					lease_id: leaseId,
 					property_id: propertyId,
 					checklist_id: checklistId,
@@ -112,6 +116,7 @@ export function ChecklistItemDialog({
 				toast.success('Item updated')
 			} else {
 				await createMutation.mutateAsync({
+					client_id: safeString(clientUser?.client_id),
 					lease_id: leaseId,
 					property_id: propertyId,
 					checklist_id: checklistId,

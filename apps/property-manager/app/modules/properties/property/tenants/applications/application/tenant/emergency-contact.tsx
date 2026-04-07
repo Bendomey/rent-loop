@@ -37,6 +37,7 @@ import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
 import { toFirstUpperCase } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 
 const employer_type: Array<{
 	label: string
@@ -89,6 +90,7 @@ export function PropertyTenantApplicationEmergencyContact({
 	property_id,
 }: Props) {
 	const { tenantApplication: application } = useTenantApplicationContext()
+	const { clientUser } = useClient()
 
 	const isDocLocked = ['SIGNED', 'SIGNING'].includes(
 		application?.lease_agreement_document_status ?? '',
@@ -142,6 +144,7 @@ export function PropertyTenantApplicationEmergencyContact({
 
 		mutate(
 			{
+				client_id: safeString(clientUser?.client_id),
 				id: application.id,
 				property_id,
 				data,

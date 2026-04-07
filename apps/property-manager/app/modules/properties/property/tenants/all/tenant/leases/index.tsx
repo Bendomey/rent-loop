@@ -12,10 +12,12 @@ import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { getLeaseStatusClass, getLeaseStatusLabel } from '~/lib/lease.utils'
 import { getPaymentFrequencyPeriodLabel } from '~/lib/properties.utils'
 import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 export function TenantLeasesModule() {
 	const [searchParams] = useSearchParams()
+	const { clientUser } = useClient()
 	const { clientUserProperty } = useProperty()
 	const { tenantId } = useParams<{ tenantId: string }>()
 
@@ -30,6 +32,7 @@ export function TenantLeasesModule() {
 	const status = searchParams.get('status') ?? undefined
 
 	const { data, isPending, isRefetching, error, refetch } = useGetTenantLeases(
+		safeString(clientUser?.client_id),
 		propertyId,
 		safeString(tenantId),
 		{

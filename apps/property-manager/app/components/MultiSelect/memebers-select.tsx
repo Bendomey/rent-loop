@@ -1,6 +1,8 @@
 import { useMemo } from 'react'
 import { MultiSelect } from '../multi-select'
 import { useGetClientUsers } from '~/api/client-users'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface MembersSelectProps
 	extends FetchMultipleDataInputParams<FetchClientUserFilter> {
@@ -19,17 +21,24 @@ export function MembersSelect({
 	maxCount = 2,
 	onChange,
 }: MembersSelectProps) {
-	const { data, isPending, error } = useGetClientUsers({
-		filters,
-		sorter,
-		pagination,
-		populate,
-		search,
-	})
+	const { clientUser } = useClient()
+	const { data, isPending, error } = useGetClientUsers(
+		safeString(clientUser?.client_id),
+		{
+			filters,
+			sorter,
+			pagination,
+			populate,
+			search,
+		},
+	)
 
 	const selectOptions: Array<{ value: string; label: string }> = useMemo(() => {
 		if (data && data.rows) {
-			return data.rows.map((item) => ({ value: item.id, label: item.name }))
+			return data.rows.map((item) => ({
+				value: item.id,
+				label: safeString(item.user?.name),
+			}))
 		}
 
 		if (isPending) {

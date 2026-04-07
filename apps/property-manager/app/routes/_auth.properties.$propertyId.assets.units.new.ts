@@ -9,6 +9,7 @@ import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'
 import { convertCedisToPesewas } from '~/lib/format-amount'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
+import { safeString } from '~/lib/strings'
 import { NewPropertyAssetUnitsModule } from '~/modules'
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -29,8 +30,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	if (unitId && clientUserProperty?.property?.id) {
 		const baseUrl = environmentVariables().API_ADDRESS
 		const authSession = await getAuthSession(request.headers.get('Cookie'))
+		const clientId = safeString(authSession.get('selectedClientId'))
 		sourceUnit =
 			(await getPropertyUnitForServer(
+				clientId,
 				{ property_id: clientUserProperty.property.id, unit_id: unitId },
 				{ baseUrl, authToken: authSession.get('authToken') },
 			)) ?? null
@@ -50,6 +53,7 @@ export const handle = {
 export async function action({ request }: Route.ActionArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
+	const clientId = authSession.get('selectedClientId') ?? ''
 
 	let formData = await request.formData()
 	const property_id = formData.get('property_id') as string
@@ -77,6 +81,7 @@ export async function action({ request }: Route.ActionArgs) {
 
 	try {
 		const property = await createPropertyUnit(
+			clientId,
 			replaceNullUndefinedWithUndefined({
 				property_id,
 				property_block_id,

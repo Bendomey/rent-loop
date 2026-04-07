@@ -9,14 +9,17 @@ import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '~/components/ui/card'
 import { Separator } from '~/components/ui/separator'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
-import { useAuth } from '~/providers/auth-provider'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth._dashboard.settings.agreements'
 
 function AgreementCard({ agreement }: { agreement: Agreement }) {
-	const { currentUser } = useAuth()
-	const { mutate: acceptAgreement, isPending } = useAcceptAgreement()
+	const { clientUser } = useClient()
+	const { mutate: acceptAgreement, isPending } = useAcceptAgreement(
+		safeString(clientUser?.client_id),
+	)
 	const revalidator = useRevalidator()
-	const isOwner = currentUser?.role === 'OWNER'
+	const isOwner = clientUser?.role === 'OWNER'
 
 	const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false)
 	const scrollRef = useRef<HTMLDivElement>(null)
@@ -95,7 +98,10 @@ function AgreementCard({ agreement }: { agreement: Agreement }) {
 
 export function AgreementsModule() {
 	const loaderData = useLoaderData<typeof loader>()
-	const { data: agreements } = useGetAgreements()
+	const { clientUser: currentClientUser } = useClient()
+	const { data: agreements } = useGetAgreements(
+		safeString(currentClientUser?.client_id),
+	)
 
 	const displayAgreements = agreements ?? loaderData.agreements
 

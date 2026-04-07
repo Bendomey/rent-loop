@@ -2,10 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { QUERY_KEYS } from '~/lib/constants'
 import { fetchClient, fetchServer } from '~/lib/transport'
 
-const getAgreements = async () => {
+const getAgreements = async (clientId: string) => {
 	try {
-		const response =
-			await fetchClient<ApiResponse<Agreement[]>>(`/v1/admin/agreements`)
+		const response = await fetchClient<ApiResponse<Agreement[]>>(
+			`/v1/admin/clients/${clientId}/agreements`,
+		)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -17,11 +18,12 @@ const getAgreements = async () => {
 }
 
 export const getAgreementsForServer = async (
+	clientId: string,
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<Agreement[]>>(
-			`${apiConfig.baseUrl}/v1/admin/agreements`,
+			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/agreements`,
 			apiConfig,
 		)
 		return response.parsedBody.data
@@ -34,16 +36,23 @@ export const getAgreementsForServer = async (
 	}
 }
 
-export const useGetAgreements = () =>
+export const useGetAgreements = (clientId: string) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.AGREEMENTS],
-		queryFn: getAgreements,
+		queryKey: [QUERY_KEYS.AGREEMENTS, clientId],
+		queryFn: () => getAgreements(clientId),
+		enabled: !!clientId,
 	})
 
-const acceptAgreement = async (agreementId: string) => {
+const acceptAgreement = async ({
+	clientId,
+	agreementId,
+}: {
+	clientId: string
+	agreementId: string
+}) => {
 	try {
 		const response = await fetchClient<ApiResponse<object>>(
-			`/v1/admin/agreements/${agreementId}/accept`,
+			`/v1/admin/clients/${clientId}/agreements/${agreementId}/accept`,
 			{ method: 'POST' },
 		)
 		return response.parsedBody.data
@@ -56,12 +65,15 @@ const acceptAgreement = async (agreementId: string) => {
 	}
 }
 
-export const useAcceptAgreement = () => {
+export const useAcceptAgreement = (clientId: string) => {
 	const queryClient = useQueryClient()
 	return useMutation({
-		mutationFn: acceptAgreement,
+		mutationFn: (agreementId: string) =>
+			acceptAgreement({ clientId, agreementId }),
 		onSuccess: () => {
-			void queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AGREEMENTS] })
+			void queryClient.invalidateQueries({
+				queryKey: [QUERY_KEYS.AGREEMENTS, clientId],
+			})
 		},
 	})
 }

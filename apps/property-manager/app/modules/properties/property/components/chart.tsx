@@ -19,6 +19,8 @@ import { Skeleton } from '~/components/ui/skeleton'
 import { ToggleGroup, ToggleGroupItem } from '~/components/ui/toggle-group'
 import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface RevenueRow {
 	'Invoices.paidAmount': string | null
@@ -73,7 +75,10 @@ interface Props {
 
 export function PropertyChartBar({ propertyId }: Props) {
 	const [timeRange, setTimeRange] = useState<TimeRange>('90d')
-	const { data: token } = useGetAnalyticsToken()
+	const { clientUser } = useClient()
+	const { data: token } = useGetAnalyticsToken(
+		safeString(clientUser?.client_id),
+	)
 
 	const granularity = granularityForRange(timeRange)
 	const dateRange = dateRangeForRange(timeRange)

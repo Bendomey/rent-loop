@@ -11,6 +11,8 @@ import {
 	shouldShowCheckInAlert,
 	shouldShowCheckOutAlert,
 } from '~/lib/lease-checklist.utils'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface Props {
 	lease: Lease
@@ -19,9 +21,15 @@ interface Props {
 }
 
 export function ChecklistAlerts({ lease, canEdit, propertyId }: Props) {
-	const { data, isSuccess } = useGetLeaseChecklists(propertyId, lease.id, {
-		populate: ['Items', 'Acknowledgments'],
-	})
+	const { clientUser } = useClient()
+	const { data, isSuccess } = useGetLeaseChecklists(
+		safeString(clientUser?.client_id),
+		propertyId,
+		lease.id,
+		{
+			populate: ['Items', 'Acknowledgments'],
+		},
+	)
 	const { hasPermissions: canCreateReport } = useHasPropertyPermissions({
 		roles: ['MANAGER'],
 	})

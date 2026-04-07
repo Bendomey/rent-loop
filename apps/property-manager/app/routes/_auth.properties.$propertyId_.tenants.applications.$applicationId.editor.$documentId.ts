@@ -6,6 +6,7 @@ import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
+import { safeString } from '~/lib/strings'
 import { LeaseDocumentModule } from '~/modules/properties/property/tenants/applications/application/docs/lease-editor'
 
 export async function loader({ request, params }: Route.LoaderArgs) {
@@ -16,10 +17,13 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 		return redirect('/login')
 	}
 
+	const clientId = safeString(authSession.get('selectedClientId'))
+
 	try {
 		const [document, tenantApplication] = await Promise.all([
-			getDocument(params.documentId, { authToken, baseUrl }),
+			getDocument(clientId, params.documentId, { authToken, baseUrl }),
 			getAdminPropertyTenantApplicationForServer(
+				clientId,
 				{
 					id: params.applicationId,
 					property_id: params.propertyId,

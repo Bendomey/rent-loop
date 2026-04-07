@@ -4,12 +4,13 @@ import { fetchServer } from '~/lib/transport'
  * GET single announcement by ID (server-side, global scope).
  */
 export const getAnnouncementForServer = async (
+	clientId: string,
 	id: string,
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<Announcement>>(
-			`${apiConfig.baseUrl}/v1/admin/announcements/${id}`,
+			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/announcements/${id}`,
 			{ ...apiConfig },
 		)
 		return response.parsedBody.data
@@ -26,13 +27,14 @@ export const getAnnouncementForServer = async (
  * GET single announcement by ID (server-side, property-scoped).
  */
 export const getPropertyAnnouncementForServer = async (
+	clientId: string,
 	propertyId: string,
 	id: string,
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<Announcement>>(
-			`${apiConfig.baseUrl}/v1/admin/properties/${propertyId}/announcements/${id}?populate=PropertyBlock`,
+			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/properties/${propertyId}/announcements/${id}?populate=PropertyBlock`,
 			{ ...apiConfig },
 		)
 		return response.parsedBody.data

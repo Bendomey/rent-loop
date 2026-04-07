@@ -10,7 +10,9 @@ import {
 import { useGetMaintenanceRequestActivityLogs } from '~/api/maintenance-requests'
 import { TypographyMuted } from '~/components/ui/typography'
 import { localizedDayjs } from '~/lib/date'
+import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 
 const ACTION_CONFIG: Record<
 	MaintenanceRequestActivityLog['action'],
@@ -106,7 +108,9 @@ function ActivityDetail({
 				<p className="text-muted-foreground text-sm">
 					Created by{' '}
 					{log.performed_by_client_user ? (
-						<UserChip name={log.performed_by_client_user?.name} />
+						<UserChip
+							name={safeString(log.performed_by_client_user?.user?.name)}
+						/>
 					) : (
 						'a manager'
 					)}{' '}
@@ -119,7 +123,9 @@ function ActivityDetail({
 				<p className="text-muted-foreground flex flex-wrap items-center gap-1 text-sm">
 					Created by{' '}
 					{log.performed_by_client_user ? (
-						<UserChip name={log.performed_by_client_user?.name} />
+						<UserChip
+							name={safeString(log.performed_by_client_user?.user?.name)}
+						/>
 					) : (
 						'a manager'
 					)}
@@ -171,7 +177,12 @@ function ActivityDetail({
 			log.performed_by_client_user_id === mr.assigned_worker_id
 		return (
 			<p className="text-muted-foreground flex flex-wrap items-center gap-1 text-sm">
-				Assigned to {worker ? <UserChip name={worker?.name} /> : 'a worker'}
+				Assigned to{' '}
+				{worker ? (
+					<UserChip name={safeString(worker?.user?.name)} />
+				) : (
+					'a worker'
+				)}
 				{assignedToSelf && (
 					<span className="text-muted-foreground italic">
 						(assigned to themselves)
@@ -188,7 +199,12 @@ function ActivityDetail({
 			log.performed_by_client_user_id === mr.assigned_manager_id
 		return (
 			<p className="text-muted-foreground flex flex-wrap items-center gap-1 text-sm">
-				Assigned to {manager ? <UserChip name={manager?.name} /> : 'a manager'}
+				Assigned to{' '}
+				{manager ? (
+					<UserChip name={safeString(manager?.user?.name)} />
+				) : (
+					'a manager'
+				)}
 				{assignedToSelf && (
 					<span className="text-muted-foreground italic">
 						(assigned to themselves)
@@ -212,12 +228,22 @@ interface ActivityTabProps {
 }
 
 export function ActivityTab({ requestId, propertyId, mr }: ActivityTabProps) {
+	const { clientUser } = useClient()
 	const { data, isLoading, isError, refetch } =
-		useGetMaintenanceRequestActivityLogs(propertyId, requestId, {
-			pagination: { page: 1, per: 100 },
-			filters: {},
-			populate: ['PerformedByClientUser', 'PerformedByTenant'],
-		})
+		useGetMaintenanceRequestActivityLogs(
+			safeString(clientUser?.client_id),
+			propertyId,
+			requestId,
+			{
+				pagination: { page: 1, per: 100 },
+				filters: {},
+				populate: [
+					'PerformedByClientUser',
+					'PerformedByClientUser.User',
+					'PerformedByTenant',
+				],
+			},
+		)
 
 	const logs = data?.rows ?? []
 

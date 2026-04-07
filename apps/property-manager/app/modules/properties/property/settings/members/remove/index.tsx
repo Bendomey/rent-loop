@@ -14,6 +14,7 @@ import {
 } from '~/components/ui/alert-dialog'
 import { Spinner } from '~/components/ui/spinner'
 import { QUERY_KEYS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
 
 interface Props {
 	data?: ClientUser
@@ -38,7 +39,8 @@ export default function RemoveMemberModule({
 
 			mutate(
 				{
-					property_id: property?.id ?? '',
+					clientId: safeString(property?.client_id),
+					property_id: safeString(property?.id),
 					client_user_ids: clientUserId ? [clientUserId] : [],
 				},
 				{
@@ -63,12 +65,12 @@ export default function RemoveMemberModule({
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>
-						{data ? `Remove ${data.name}` : 'Remove this Member'} From{' '}
+						{data ? `Remove ${data.user?.name}` : 'Remove this Member'} From{' '}
 						{property ? property?.name : 'This Property'}
 					</AlertDialogTitle>
 
 					<AlertDialogDescription>
-						Are you sure you want to remove {data?.name ?? 'this member'}?
+						Are you sure you want to remove {data?.user?.name ?? 'this member'}?
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 

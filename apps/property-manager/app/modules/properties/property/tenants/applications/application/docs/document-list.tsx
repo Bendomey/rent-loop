@@ -7,8 +7,10 @@ import { Input } from '~/components/ui/input'
 import { Skeleton } from '~/components/ui/skeleton'
 import { TypographyMuted } from '~/components/ui/typography'
 import { useDebounce } from '~/hooks/use-debounce'
+import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import type { IDocumentTemplate } from '~/modules/settings/documents/controller'
+import { useClient } from '~/providers/client-provider'
 
 type DocFilter = 'all' | 'global' | 'property'
 
@@ -33,6 +35,7 @@ export function DocumentList({
 }: DocumentListProps) {
 	const [search, setSearch] = useState('')
 	const [filter, setFilter] = useState<DocFilter>('all')
+	const { clientUser } = useClient()
 
 	const emptyDocumentTemplate = documentTemplates.find(
 		(doc) => doc.id === 'empty',
@@ -65,18 +68,21 @@ export function DocumentList({
 		delay: 250,
 		value: search,
 	})
-	const { data: documents, isPending } = useGetDocuments({
-		filters: {
-			...filters,
-			type: 'TEMPLATE',
+	const { data: documents, isPending } = useGetDocuments(
+		safeString(clientUser?.client_id),
+		{
+			filters: {
+				...filters,
+				type: 'TEMPLATE',
+			},
+			pagination: { page: 1, per: 50 },
+			sorter: { sort: 'desc', sort_by: 'created_at' },
+			search: {
+				fields: ['title'],
+				query: debouncedSearch.length > 0 ? debouncedSearch : undefined,
+			},
 		},
-		pagination: { page: 1, per: 50 },
-		sorter: { sort: 'desc', sort_by: 'created_at' },
-		search: {
-			fields: ['title'],
-			query: debouncedSearch.length > 0 ? debouncedSearch : undefined,
-		},
-	})
+	)
 
 	const hasDocuments = documents && documents.rows.length > 0
 	const isEmptySelected = selectedDocument?.id === EMPTY_DOCUMENT_SENTINEL.id

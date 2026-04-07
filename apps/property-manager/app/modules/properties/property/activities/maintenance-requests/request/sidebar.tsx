@@ -32,7 +32,9 @@ import { Textarea } from '~/components/ui/textarea'
 import { TypographyMuted } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
+import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 
 const STATUS_COLORS: Record<MaintenanceRequestStatus, string> = {
 	NEW: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
@@ -86,6 +88,8 @@ interface SidebarProps {
 export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 	const queryClient = useQueryClient()
 	const revalidator = useRevalidator()
+	const { clientUser } = useClient()
+	const clientId = safeString(clientUser?.client_id)
 
 	const [pendingStatus, setPendingStatus] =
 		useState<MaintenanceRequestStatus | null>(null)
@@ -112,8 +116,9 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 	const assignManager = useAssignManager()
 	const createComment = useCreateMaintenanceRequestComment()
 
-	const { data: clientUsers } = useGetClientUsers({
+	const { data: clientUsers } = useGetClientUsers(clientId, {
 		pagination: { page: 1, per: 100 },
+		populate: ['User'],
 	})
 
 	const handleStatusChange = (status: MaintenanceRequestStatus) => {
@@ -123,7 +128,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 			return
 		}
 		updateStatus.mutate(
-			{ id: mr.id, property_id: propertyId, status },
+			{ client_id: clientId, id: mr.id, property_id: propertyId, status },
 			{
 				onSuccess: () => {
 					toast.success('Status updated')
@@ -148,6 +153,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 
 		try {
 			await updateStatus.mutateAsync({
+				client_id: clientId,
 				id: mr.id,
 				property_id: propertyId,
 				status: pendingStatus,
@@ -155,6 +161,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 					pendingStatus === 'CANCELED' ? note || undefined : undefined,
 			})
 			await createComment.mutateAsync({
+				client_id: clientId,
 				id: mr.id,
 				property_id: propertyId,
 				content: note,
@@ -173,7 +180,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 
 	const handlePriorityChange = (priority: MaintenanceRequestPriority) => {
 		updateRequest.mutate(
-			{ id: mr.id, property_id: propertyId, priority },
+			{ client_id: clientId, id: mr.id, property_id: propertyId, priority },
 			{
 				onSuccess: () => {
 					toast.success('Priority updated')
@@ -189,7 +196,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 
 	const handleCategoryChange = (category: MaintenanceRequestCategory) => {
 		updateRequest.mutate(
-			{ id: mr.id, property_id: propertyId, category },
+			{ client_id: clientId, id: mr.id, property_id: propertyId, category },
 			{
 				onSuccess: () => {
 					toast.success('Category updated')
@@ -207,7 +214,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 		visibility: MaintenanceRequest['visibility'],
 	) => {
 		updateRequest.mutate(
-			{ id: mr.id, property_id: propertyId, visibility },
+			{ client_id: clientId, id: mr.id, property_id: propertyId, visibility },
 			{
 				onSuccess: () => {
 					toast.success('Visibility updated')
@@ -223,7 +230,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 
 	const handleWorkerChange = (worker_id: string) => {
 		assignWorker.mutate(
-			{ id: mr.id, property_id: propertyId, worker_id },
+			{ client_id: clientId, id: mr.id, property_id: propertyId, worker_id },
 			{
 				onSuccess: () => {
 					toast.success('Worker assigned')
@@ -239,7 +246,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 
 	const handleManagerChange = (manager_id: string) => {
 		assignManager.mutate(
-			{ id: mr.id, property_id: propertyId, manager_id },
+			{ client_id: clientId, id: mr.id, property_id: propertyId, manager_id },
 			{
 				onSuccess: () => {
 					toast.success('Manager assigned')
@@ -378,13 +385,13 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 							>
 								<SelectTrigger className="h-8 w-full bg-white text-xs">
 									<SelectValue placeholder="Unassigned">
-										{mr.assigned_worker?.name ?? 'Unassigned'}
+										{mr.assigned_worker?.user?.name ?? 'Unassigned'}
 									</SelectValue>
 								</SelectTrigger>
 								<SelectContent>
 									{clientUsers?.rows.map((u) => (
 										<SelectItem key={u.id} value={u.id}>
-											{u.name}
+											{u.user?.name}
 										</SelectItem>
 									))}
 								</SelectContent>
@@ -399,13 +406,13 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 							>
 								<SelectTrigger className="h-8 w-full text-xs">
 									<SelectValue placeholder="Unassigned">
-										{mr.assigned_manager?.name ?? 'Unassigned'}
+										{mr.assigned_manager?.user?.name ?? 'Unassigned'}
 									</SelectValue>
 								</SelectTrigger>
 								<SelectContent>
 									{clientUsers?.rows.map((u) => (
 										<SelectItem key={u.id} value={u.id}>
-											{u.name}
+											{u.user?.name}
 										</SelectItem>
 									))}
 								</SelectContent>

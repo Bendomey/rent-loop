@@ -177,7 +177,7 @@ Lives in the same httpOnly cookie as `authToken`. Cleared automatically on logou
 
 ### React Router context
 
-New `clientContext` (`lib/actions/client.context.server.ts`) mirrors `userContext`. Holds the resolved `ClientUser & { client: Client }` for the selected client.
+New `clientContext` (`lib/actions/client.context.server.ts`) mirrors `userContext`. Holds the resolved `ClientUser` for the selected client.
 
 ### `clientMiddleware`
 

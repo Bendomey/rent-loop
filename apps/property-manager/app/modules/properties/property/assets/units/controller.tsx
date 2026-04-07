@@ -6,7 +6,9 @@ import { PropertyPermissionGuard } from '~/components/permissions/permission-gua
 import { SearchInput } from '~/components/search'
 import { Button } from '~/components/ui/button'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.assets.units._index'
 
 export const PropertyAssetUnitsController = ({
@@ -17,6 +19,8 @@ export const PropertyAssetUnitsController = ({
 	refetch: VoidFunction
 }) => {
 	const { clientUserProperty } = useLoaderData<typeof loader>()
+	const { clientUser } = useClient()
+	const clientId = safeString(clientUser?.client_id)
 
 	const filters: Array<Filter> = [
 		{
@@ -46,7 +50,7 @@ export const PropertyAssetUnitsController = ({
 						return []
 					}
 
-					const data = await getPropertyBlocks({
+					const data = await getPropertyBlocks(clientId, {
 						property_id: clientUserProperty?.property_id,
 						pagination: {
 							page: PAGINATION_DEFAULTS.PAGE,

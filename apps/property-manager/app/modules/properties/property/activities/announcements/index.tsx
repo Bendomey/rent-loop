@@ -16,7 +16,9 @@ import { TypographyH2 } from '~/components/ui/typography'
 import { useTour } from '~/hooks/use-tour'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
+import { safeString } from '~/lib/strings'
 import { ANNOUNCEMENTS_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 function getStatusBadge(status: Announcement['status']) {
@@ -51,6 +53,7 @@ function getStatusBadge(status: Announcement['status']) {
 
 export function PropertyActivitiesAnnouncementsModule() {
 	const { clientUserProperty } = useProperty()
+	const { clientUser } = useClient()
 	const propertyId = clientUserProperty?.property?.id
 	const navigate = useNavigate()
 	const [searchParams] = useSearchParams()
@@ -72,7 +75,7 @@ export function PropertyActivitiesAnnouncementsModule() {
 		: PAGINATION_DEFAULTS.PER_PAGE
 
 	const { data, isPending, isRefetching, error, refetch } =
-		useGetPropertyAnnouncements(propertyId, {
+		useGetPropertyAnnouncements(safeString(clientUser?.client_id), propertyId, {
 			pagination: { page, per },
 			sorter: { sort: 'desc', sort_by: 'created_at' },
 		})

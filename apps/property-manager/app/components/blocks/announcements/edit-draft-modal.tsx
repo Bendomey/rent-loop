@@ -37,6 +37,8 @@ import {
 import { Spinner } from '~/components/ui/spinner'
 import { Textarea } from '~/components/ui/textarea'
 import { QUERY_KEYS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 const ValidationSchema = z.object({
 	title: z
@@ -71,6 +73,8 @@ export function EditDraftModal({
 	propertyId,
 }: Props) {
 	const queryClient = useQueryClient()
+	const { clientUser } = useClient()
+	const clientId = safeString(clientUser?.client_id)
 	const { mutate: mutateGlobal, isPending: isPendingGlobal } =
 		useUpdateAnnouncement()
 	const { mutate: mutateProperty, isPending: isPendingProperty } =
@@ -113,11 +117,11 @@ export function EditDraftModal({
 		}
 		if (propertyId) {
 			mutateProperty(
-				{ propertyId, id: announcement.id, data: formData },
+				{ clientId, propertyId, id: announcement.id, data: formData },
 				callbacks,
 			)
 		} else {
-			mutateGlobal({ id: announcement.id, data: formData }, callbacks)
+			mutateGlobal({ clientId, id: announcement.id, data: formData }, callbacks)
 		}
 	}
 

@@ -39,8 +39,12 @@ export function RequestCard({ item, propertyId }: RequestCardProps) {
 		setAssignDialogOpen(true)
 	}
 
-	const workerInitials = item.assigned_worker?.name?.slice(0, 2).toUpperCase()
-	const managerInitials = item.assigned_manager?.name?.slice(0, 2).toUpperCase()
+	const workerInitials = item.assigned_worker?.user?.name
+		?.slice(0, 2)
+		.toUpperCase()
+	const managerInitials = item.assigned_manager?.user?.name
+		?.slice(0, 2)
+		.toUpperCase()
 
 	return (
 		<>
@@ -103,7 +107,7 @@ export function RequestCard({ item, propertyId }: RequestCardProps) {
 							{workerInitials && (
 								<Avatar
 									className="h-5 w-5"
-									title={`Worker: ${item.assigned_worker?.name}`}
+									title={`Worker: ${item.assigned_worker?.user?.name}`}
 								>
 									<AvatarFallback className="text-[9px]">
 										{workerInitials}
@@ -113,7 +117,7 @@ export function RequestCard({ item, propertyId }: RequestCardProps) {
 							{managerInitials && (
 								<Avatar
 									className="h-5 w-5"
-									title={`Manager: ${item.assigned_manager?.name}`}
+									title={`Manager: ${item.assigned_manager?.user?.name}`}
 								>
 									<AvatarFallback className="bg-blue-100 text-[9px] text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
 										{managerInitials}

@@ -16,6 +16,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '~/components/ui/dialog'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId_.tenants.applications.$applicationId.editor.$documentId'
 
 const initialValue = {
@@ -43,6 +45,7 @@ export function LeaseDocumentModule() {
 	const updateTenantApplication = useAdminUpdateTenantApplication()
 	const revalidator = useRevalidator()
 	const navigate = useNavigate()
+	const { clientUser } = useClient()
 
 	const [editorState, setEditorState] = useState<SerializedEditorState>(
 		document?.content ? JSON.parse(document.content) : initialValue,
@@ -54,6 +57,7 @@ export function LeaseDocumentModule() {
 		if (updateTenantApplication.isPending) return
 		updateTenantApplication.mutate(
 			{
+				client_id: safeString(clientUser?.client_id),
 				id: tenantApplication.id,
 				property_id: tenantApplication.desired_unit.property_id,
 				data: { lease_agreement_document_status: 'FINALIZED' },
@@ -77,6 +81,7 @@ export function LeaseDocumentModule() {
 		if (updateTenantApplication.isPending) return
 		updateTenantApplication.mutate(
 			{
+				client_id: safeString(clientUser?.client_id),
 				id: tenantApplication.id,
 				property_id: tenantApplication.desired_unit.property_id,
 				data: { lease_agreement_document_status: 'DRAFT' },

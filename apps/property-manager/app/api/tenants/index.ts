@@ -8,6 +8,7 @@ import { fetchClient } from '~/lib/transport'
  */
 
 const getPropertyTenants = async (
+	clientId: string,
 	props: FetchMultipleDataInputParams<FetchTenantFilter> & {
 		property_id: string
 	},
@@ -16,7 +17,9 @@ const getPropertyTenants = async (
 		const params = getQueryParams<FetchTenantFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<Tenant>>
-		>(`/v1/admin/properties/${props.property_id}/tenants?${params.toString()}`)
+		>(
+			`/v1/admin/clients/${clientId}/properties/${props.property_id}/tenants?${params.toString()}`,
+		)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -32,13 +35,15 @@ const getPropertyTenants = async (
 }
 
 export const useGetPropertyTenants = (
+	clientId: string,
 	query: FetchMultipleDataInputParams<FetchTenantFilter> & {
 		property_id: string
 	},
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.PROPERTY_TENANTS, query],
-		queryFn: () => getPropertyTenants(query),
+		queryKey: [QUERY_KEYS.PROPERTY_TENANTS, clientId, query],
+		queryFn: () => getPropertyTenants(clientId, query),
+		enabled: !!clientId,
 	})
 
 /**

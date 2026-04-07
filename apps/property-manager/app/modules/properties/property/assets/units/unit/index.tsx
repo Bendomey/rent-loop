@@ -60,6 +60,7 @@ import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { getPropertyUnitStatusLabel } from '~/lib/properties.utils'
 import { safeString, toFirstUpperCase } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.assets.units.$unitId'
 
@@ -130,6 +131,8 @@ export function PropertyAssetUnitModule() {
 	const queryClient = useQueryClient()
 	const revalidator = useRevalidator()
 	const { clientUserProperty } = useProperty()
+	const { clientUser } = useClient()
+	const clientId = safeString(clientUser?.client_id)
 	const { mutate: makeDraft, isPending: isDrafting } =
 		useMakePropertyUnitDraft()
 	const { mutate: makeAvailable, isPending: isMakingAvailable } =
@@ -161,7 +164,7 @@ export function PropertyAssetUnitModule() {
 	const isMultiProperty = clientUserProperty?.property?.type === 'MULTI'
 
 	const handleStatusChange = (newStatus: PropertyUnit['status']) => {
-		const statusProps = { propertyId: property_id, unitId: unit.id }
+		const statusProps = { clientId, propertyId: property_id, unitId: unit.id }
 		const callbacks = {
 			onError: () => toast.error('Failed to update status. Try again later.'),
 			onSuccess: () => {

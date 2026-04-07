@@ -4,6 +4,7 @@ import { getQueryParams } from '~/lib/get-param'
 import { fetchClient } from '~/lib/transport'
 
 const getPropertyLeases = async (
+	clientId: string,
 	propertyId: string,
 	props: FetchMultipleDataInputParams<FetchLeaseFilter>,
 ) => {
@@ -11,7 +12,9 @@ const getPropertyLeases = async (
 		const params = getQueryParams<FetchLeaseFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<Lease>>
-		>(`/v1/admin/properties/${propertyId}/leases?${params.toString()}`)
+		>(
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/leases?${params.toString()}`,
+		)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -25,16 +28,18 @@ const getPropertyLeases = async (
 }
 
 export const useGetPropertyLeases = (
+	clientId: string,
 	propertyId: string,
 	query: FetchMultipleDataInputParams<FetchLeaseFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.LEASES, propertyId, query],
-		queryFn: () => getPropertyLeases(propertyId, query),
-		enabled: !!propertyId,
+		queryKey: [QUERY_KEYS.LEASES, clientId, propertyId, query],
+		queryFn: () => getPropertyLeases(clientId, propertyId, query),
+		enabled: !!propertyId && !!clientId,
 	})
 
 const getTenantLeases = async (
+	clientId: string,
 	propertyId: string,
 	tenantId: string,
 	props: FetchMultipleDataInputParams<FetchLeaseFilter>,
@@ -44,7 +49,7 @@ const getTenantLeases = async (
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<Lease>>
 		>(
-			`/v1/admin/properties/${propertyId}/tenants/${tenantId}/leases?${params.toString()}`,
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/tenants/${tenantId}/leases?${params.toString()}`,
 		)
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -59,6 +64,7 @@ const getTenantLeases = async (
 }
 
 export interface UpdateLeaseInput {
+	clientId: string
 	propertyId: string
 	leaseId: string
 	utility_transfers_date?: Date
@@ -71,7 +77,7 @@ const updateLease = async (props: UpdateLeaseInput) => {
 			body.utility_transfers_date = props.utility_transfers_date.toISOString()
 
 		const response = await fetchClient<ApiResponse<Lease>>(
-			`/v1/admin/properties/${props.propertyId}/leases/${props.leaseId}`,
+			`/v1/admin/clients/${props.clientId}/properties/${props.propertyId}/leases/${props.leaseId}`,
 			{
 				method: 'PATCH',
 				body: JSON.stringify(body),
@@ -90,12 +96,13 @@ const updateLease = async (props: UpdateLeaseInput) => {
 export const useUpdateLease = () => useMutation({ mutationFn: updateLease })
 
 const activateLease = async (props: {
+	clientId: string
 	propertyId: string
 	leaseId: string
 }) => {
 	try {
 		await fetchClient(
-			`/v1/admin/properties/${props.propertyId}/leases/${props.leaseId}/status:active`,
+			`/v1/admin/clients/${props.clientId}/properties/${props.propertyId}/leases/${props.leaseId}/status:active`,
 			{ method: 'PATCH' },
 		)
 	} catch (error: unknown) {
@@ -110,12 +117,13 @@ const activateLease = async (props: {
 export const useActivateLease = () => useMutation({ mutationFn: activateLease })
 
 export const useGetTenantLeases = (
+	clientId: string,
 	propertyId: string,
 	tenantId: string,
 	query: FetchMultipleDataInputParams<FetchLeaseFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.LEASES, propertyId, tenantId, query],
-		queryFn: () => getTenantLeases(propertyId, tenantId, query),
-		enabled: !!tenantId && !!propertyId,
+		queryKey: [QUERY_KEYS.LEASES, clientId, propertyId, tenantId, query],
+		queryFn: () => getTenantLeases(clientId, propertyId, tenantId, query),
+		enabled: !!tenantId && !!propertyId && !!clientId,
 	})

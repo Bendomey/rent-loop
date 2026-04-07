@@ -12,6 +12,8 @@ import {
 import { Skeleton } from '~/components/ui/skeleton'
 import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface RevenueRow {
 	'Invoices.paidAmount': string | null
@@ -37,7 +39,10 @@ interface Props {
 }
 
 export function RentPaymentSectionCards({ propertyId }: Props) {
-	const { data: token } = useGetAnalyticsToken()
+	const { clientUser } = useClient()
+	const { data: token } = useGetAnalyticsToken(
+		safeString(clientUser?.client_id),
+	)
 
 	const thisMonth = localizedDayjs().format('YYYY-MM')
 	const lastMonth = localizedDayjs().subtract(1, 'month').format('YYYY-MM')

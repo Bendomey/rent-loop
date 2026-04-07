@@ -19,6 +19,8 @@ import {
 	SelectValue,
 } from '~/components/ui/select'
 import { QUERY_KEYS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface AssignDialogProps {
 	open: boolean
@@ -36,11 +38,16 @@ export function AssignDialog({
 	type,
 }: AssignDialogProps) {
 	const queryClient = useQueryClient()
+	const { clientUser } = useClient()
 	const [selectedUserId, setSelectedUserId] = useState<string>('')
 
-	const { data: clientUsers, isPending: isLoadingUsers } = useGetClientUsers({
-		pagination: { page: 1, per: 100 },
-	})
+	const { data: clientUsers, isPending: isLoadingUsers } = useGetClientUsers(
+		safeString(clientUser?.client_id),
+		{
+			pagination: { page: 1, per: 100 },
+			populate: ['User'],
+		},
+	)
 
 	const assignWorker = useAssignWorker()
 	const assignManager = useAssignManager()
@@ -53,12 +60,14 @@ export function AssignDialog({
 		try {
 			if (type === 'worker') {
 				await assignWorker.mutateAsync({
+					client_id: safeString(clientUser?.client_id),
 					id: requestId,
 					property_id: propertyId,
 					worker_id: selectedUserId,
 				})
 			} else {
 				await assignManager.mutateAsync({
+					client_id: safeString(clientUser?.client_id),
 					id: requestId,
 					property_id: propertyId,
 					manager_id: selectedUserId,
@@ -99,7 +108,7 @@ export function AssignDialog({
 						<SelectContent>
 							{clientUsers?.rows.map((user) => (
 								<SelectItem key={user.id} value={user.id}>
-									{user.name}
+									{user.user?.name || 'Unnamed User'}
 								</SelectItem>
 							))}
 						</SelectContent>

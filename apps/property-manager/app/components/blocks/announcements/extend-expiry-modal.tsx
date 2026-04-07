@@ -19,6 +19,8 @@ import {
 import { Button } from '~/components/ui/button'
 import { Spinner } from '~/components/ui/spinner'
 import { QUERY_KEYS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface Props {
 	announcement: Announcement | null
@@ -34,6 +36,8 @@ export function ExtendExpiryModal({
 	propertyId,
 }: Props) {
 	const queryClient = useQueryClient()
+	const { clientUser } = useClient()
+	const clientId = safeString(clientUser?.client_id)
 	const [expiresAt, setExpiresAt] = useState<Date | undefined>(undefined)
 	const { mutate: mutateGlobal, isPending: isPendingGlobal } =
 		useExtendAnnouncementExpiry()
@@ -61,6 +65,7 @@ export function ExtendExpiryModal({
 		if (propertyId) {
 			mutateProperty(
 				{
+					clientId,
 					propertyId,
 					id: announcement.id,
 					expires_at: expiresAt.toISOString(),
@@ -69,7 +74,7 @@ export function ExtendExpiryModal({
 			)
 		} else {
 			mutateGlobal(
-				{ id: announcement.id, expires_at: expiresAt.toISOString() },
+				{ clientId, id: announcement.id, expires_at: expiresAt.toISOString() },
 				callbacks,
 			)
 		}

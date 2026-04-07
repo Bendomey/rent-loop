@@ -4,13 +4,14 @@ import { getQueryParams } from '~/lib/get-param'
 import { fetchClient, fetchServer } from '~/lib/transport'
 
 const getDocuments = async (
+	clientId: string,
 	props: FetchMultipleDataInputParams<FetchRentloopDocumentFilter>,
 ) => {
 	try {
 		const params = getQueryParams<FetchRentloopDocumentFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<RentloopDocument>>
-		>(`/v1/admin/documents?${params.toString()}`)
+		>(`/v1/admin/clients/${clientId}/documents?${params.toString()}`)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -26,12 +27,13 @@ const getDocuments = async (
 }
 
 export const getDocument = async (
+	clientId: string,
 	id: string,
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<RentloopDocument>>(
-			`${apiConfig?.baseUrl}/v1/admin/documents/${id}`,
+			`${apiConfig?.baseUrl}/v1/admin/clients/${clientId}/documents/${id}`,
 			{
 				method: 'GET',
 				...(apiConfig ? apiConfig : {}),
@@ -52,11 +54,13 @@ export const getDocument = async (
 }
 
 export const useGetDocuments = (
+	clientId: string,
 	query: FetchMultipleDataInputParams<FetchRentloopDocumentFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.DOCUMENTS, query],
-		queryFn: () => getDocuments(query),
+		queryKey: [QUERY_KEYS.DOCUMENTS, clientId, query],
+		queryFn: () => getDocuments(clientId, query),
+		enabled: !!clientId,
 	})
 
 interface CreateDocumentInputParams {
@@ -69,12 +73,13 @@ interface CreateDocumentInputParams {
 }
 
 export const createDocumentSSR = async (
+	clientId: string,
 	params: CreateDocumentInputParams,
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<RentloopDocument>>(
-			`${apiConfig?.baseUrl}/v1/admin/documents`,
+			`${apiConfig?.baseUrl}/v1/admin/clients/${clientId}/documents`,
 			{
 				method: 'POST',
 				body: JSON.stringify(params),
@@ -95,10 +100,13 @@ export const createDocumentSSR = async (
 	}
 }
 
-export const createDocument = async (params: CreateDocumentInputParams) => {
+export const createDocument = async (
+	clientId: string,
+	params: CreateDocumentInputParams,
+) => {
 	try {
 		const response = await fetchClient<ApiResponse<RentloopDocument>>(
-			'/v1/admin/documents',
+			`/v1/admin/clients/${clientId}/documents`,
 			{
 				method: 'POST',
 				body: JSON.stringify(params),
@@ -118,12 +126,14 @@ export const createDocument = async (params: CreateDocumentInputParams) => {
 	}
 }
 
-export const useCreateDocument = () =>
+export const useCreateDocument = (clientId: string) =>
 	useMutation({
-		mutationFn: createDocument,
+		mutationFn: (params: CreateDocumentInputParams) =>
+			createDocument(clientId, params),
 	})
 
 interface AdminUpdateDocumentInputParams {
+	clientId: string
 	id: string
 	content?: string
 	title?: string
@@ -133,12 +143,13 @@ interface AdminUpdateDocumentInputParams {
 }
 
 const adminUpdateDocument = async ({
+	clientId,
 	id,
 	...data
 }: AdminUpdateDocumentInputParams) => {
 	try {
 		const response = await fetchClient<ApiResponse<RentloopDocument>>(
-			`/v1/admin/documents/${id}`,
+			`/v1/admin/clients/${clientId}/documents/${id}`,
 			{
 				method: 'PATCH',
 				body: JSON.stringify(data),
@@ -197,9 +208,15 @@ export const useUpdateDocument = () =>
 		mutationFn: updateDocument,
 	})
 
-const deleteDocument = async (id: string) => {
+const deleteDocument = async ({
+	clientId,
+	id,
+}: {
+	clientId: string
+	id: string
+}) => {
 	try {
-		await fetchClient(`/v1/admin/documents/${id}`, {
+		await fetchClient(`/v1/admin/clients/${clientId}/documents/${id}`, {
 			method: 'DELETE',
 		})
 	} catch (error: unknown) {

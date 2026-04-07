@@ -9,10 +9,9 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useLoaderData } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import { CURRENT_USER_QUERY_KEY, useGetCurrentUser } from '~/api/auth'
+import { useGetClientUser } from '~/api/client-users'
 import { useUpdateClient } from '~/api/clients'
 import {
 	AddressInput,
@@ -63,9 +62,10 @@ import {
 	TypographyH4,
 	TypographyMuted,
 } from '~/components/ui/typography'
+import { QUERY_KEYS } from '~/lib/constants'
 import { getErrorMessage } from '~/lib/error-messages'
 import { safeString } from '~/lib/strings'
-import type { loader } from '~/routes/_auth._dashboard.settings.general'
+import { useClient } from '~/providers/client-provider'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -795,10 +795,12 @@ function SwitchToIndividualForm({
 // ---------------------------------------------------------------------------
 
 export function GeneralSettingsModule() {
-	const loaderData = useLoaderData<typeof loader>()
 	const queryClient = useQueryClient()
-	const { data: currentUser } = useGetCurrentUser(
-		loaderData.currentUser ?? undefined,
+	const { clientUser: clientUserServer } = useClient()
+	const { data: currentUser } = useGetClientUser(
+		safeString(clientUserServer?.client_id),
+		safeString(clientUserServer?.user_id),
+		clientUserServer,
 	)
 
 	const [showWarning, setShowWarning] = useState(false)
@@ -818,7 +820,9 @@ export function GeneralSettingsModule() {
 	}
 
 	const handleMutationSuccess = () => {
-		void queryClient.invalidateQueries({ queryKey: CURRENT_USER_QUERY_KEY })
+		void queryClient.invalidateQueries({
+			queryKey: [QUERY_KEYS.CLIENT_USER, safeString(currentUser?.id)],
+		})
 	}
 
 	const handleSwitchSuccess = () => {

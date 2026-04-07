@@ -23,8 +23,8 @@ import {
 	SidebarTrigger,
 } from '~/components/ui/sidebar'
 import { useOnboardingTour } from '~/hooks/use-onboarding-tour'
-import { userContext } from '~/lib/actions/auth.context.server'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { clientContext } from '~/lib/actions/client.context.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -35,8 +35,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 		return redirect('/login')
 	}
 
-	const authData = context.get(userContext)
-	if (!authData) return
+	const clientData = context.get(clientContext)
+	if (!clientData) return
+
+	const clientId = clientData.clientUser.client_id
 
 	const apiConfig = {
 		authToken,
@@ -44,10 +46,11 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	}
 
 	// only admins and owners can access the main dashboard.
-	if (authData.clientUser.role === 'STAFF') {
+	if (clientData.clientUser.role === 'STAFF') {
 		const clientUserProperties = await getClientUserPropertiesForServer(
+			clientId,
 			{
-				filters: { client_user_id: authData.clientUser.id },
+				filters: { client_user_id: clientData.clientUser.id },
 				pagination: { page: 1, per: 1 },
 				populate: ['Property'],
 				search: {},
@@ -65,16 +68,18 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 		return redirect('/properties/no-assigned')
 	}
 
-	const isOwner = authData.clientUser.role === 'OWNER'
+	const isOwner = clientData.clientUser.role === 'OWNER'
 
 	const [properties, paymentAccounts, agreements] = await Promise.all([
 		getPropertiesForServer(
+			clientId,
 			{
 				pagination: { page: 1, per: 1 },
 			},
 			apiConfig,
 		),
 		getPaymentAccountsForServer(
+			clientId,
 			{
 				filters: {
 					owner_types: ['PROPERTY_OWNER', 'SYSTEM'],
@@ -83,7 +88,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 			},
 			apiConfig,
 		),
-		isOwner ? getAgreementsForServer(apiConfig) : Promise.resolve(null),
+		isOwner
+			? getAgreementsForServer(clientId, apiConfig)
+			: Promise.resolve(null),
 	])
 
 	const hasAcceptedAllAgreements = isOwner

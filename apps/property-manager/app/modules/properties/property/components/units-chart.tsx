@@ -10,6 +10,8 @@ import {
 } from '~/components/ui/chart'
 import { Skeleton } from '~/components/ui/skeleton'
 import { TypographyH3 } from '~/components/ui/typography'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface UnitRow {
 	'Units.occupiedCount': string | null
@@ -31,7 +33,10 @@ interface Props {
 }
 
 export function PropertyUnitsChart({ propertyId }: Props) {
-	const { data: token } = useGetAnalyticsToken()
+	const { clientUser } = useClient()
+	const { data: token } = useGetAnalyticsToken(
+		safeString(clientUser?.client_id),
+	)
 
 	const unitsQuery = useCubeQuery<UnitRow>(
 		token,

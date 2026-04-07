@@ -7,13 +7,16 @@ import { fetchClient } from '~/lib/transport'
  * GET all client users (Members) for a particular property based on a query.
  */
 export const getClientUserProperties = async (
+	clientId: string,
 	props: FetchMultipleDataInputParams<FetchClientUserPropertyFilter>,
 ) => {
 	try {
 		const params = getQueryParams<FetchClientUserPropertyFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<ClientUserProperty>>
-		>(`/v1/admin/client-user-properties?${params.toString()}`)
+		>(
+			`/v1/admin/clients/${clientId}/client-user-properties?${params.toString()}`,
+		)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -29,14 +32,17 @@ export const getClientUserProperties = async (
 }
 
 export const useGetClientUserProperties = (
+	clientId: string,
 	query: FetchMultipleDataInputParams<FetchClientUserPropertyFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.CLIENT_USER_PROPERTIES, query],
-		queryFn: () => getClientUserProperties(query),
+		queryKey: [QUERY_KEYS.CLIENT_USER_PROPERTIES, clientId, query],
+		queryFn: () => getClientUserProperties(clientId, query),
+		enabled: !!clientId,
 	})
 
 interface ClientUserPropertyLinkProps {
+	clientId: string
 	property_id: string
 	role: ClientUserProperty['role']
 	client_user_ids: ClientUser['id'][]
@@ -46,13 +52,14 @@ interface ClientUserPropertyLinkProps {
  * Link client user to property
  */
 const clientUserPropertyLink = async ({
+	clientId,
 	property_id,
 	role,
 	client_user_ids,
 }: ClientUserPropertyLinkProps) => {
 	try {
 		const response = await fetchClient<ApiResponse<ClientUserProperty>>(
-			`/v1/admin/properties/${property_id}/client-users:link`,
+			`/v1/admin/clients/${clientId}/properties/${property_id}/client-users:link`,
 			{
 				method: 'POST',
 				body: JSON.stringify({ role, client_user_ids }),
@@ -74,6 +81,7 @@ export const useLinkClientUserProperty = () =>
 	useMutation({ mutationFn: clientUserPropertyLink })
 
 interface ClientUserPropertyUnlinkProps {
+	clientId: string
 	property_id: string
 	client_user_ids: ClientUser['id'][]
 }
@@ -83,12 +91,13 @@ interface ClientUserPropertyUnlinkProps {
  */
 
 const clientUserPropertyUnlink = async ({
+	clientId,
 	property_id,
 	client_user_ids,
 }: ClientUserPropertyUnlinkProps) => {
 	try {
 		await fetchClient<boolean>(
-			`/v1/admin/properties/${property_id}/client-users:unlink`,
+			`/v1/admin/clients/${clientId}/properties/${property_id}/client-users:unlink`,
 			{
 				method: 'DELETE',
 				body: JSON.stringify({ client_user_ids }),
@@ -110,20 +119,22 @@ export const useUnlinkClientUserProperty = () =>
 
 /**
  * Link a client user to multiple properties (user-centric)
- * POST /v1/admin/client-users/{id}/properties:link
+ * POST /v1/admin/clients/{client_id}/client-users/{id}/properties:link
  */
 export const linkClientUserToProperties = async ({
+	clientId,
 	client_user_id,
 	property_ids,
 	role,
 }: {
+	clientId: string
 	client_user_id: string
 	property_ids: string[]
 	role: ClientUserProperty['role']
 }) => {
 	try {
 		const response = await fetchClient<ApiResponse<ClientUserProperty>>(
-			`/v1/admin/client-users/${client_user_id}/properties:link`,
+			`/v1/admin/clients/${clientId}/client-users/${client_user_id}/properties:link`,
 			{
 				method: 'POST',
 				body: JSON.stringify({ property_ids, role }),
@@ -141,18 +152,20 @@ export const linkClientUserToProperties = async ({
 
 /**
  * Unlink a client user from multiple properties (user-centric)
- * DELETE /v1/admin/client-users/{id}/properties:unlink
+ * DELETE /v1/admin/clients/{client_id}/client-users/{id}/properties:unlink
  */
 export const unlinkClientUserFromProperties = async ({
+	clientId,
 	client_user_id,
 	property_ids,
 }: {
+	clientId: string
 	client_user_id: string
 	property_ids: string[]
 }) => {
 	try {
 		await fetchClient<boolean>(
-			`/v1/admin/client-users/${client_user_id}/properties:unlink`,
+			`/v1/admin/clients/${clientId}/client-users/${client_user_id}/properties:unlink`,
 			{
 				method: 'DELETE',
 				body: JSON.stringify({ property_ids }),

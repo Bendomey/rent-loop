@@ -15,9 +15,11 @@ import {
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { getNameInitials } from '~/lib/misc'
 import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyTenantsModule() {
+	const { clientUser } = useClient()
 	const { clientUserProperty } = useProperty()
 	const [searchParams] = useSearchParams()
 
@@ -30,7 +32,7 @@ export function PropertyTenantsModule() {
 	const status = searchParams.get('status') ?? undefined
 
 	const { data, isPending, isRefetching, error, refetch } =
-		useGetPropertyTenants({
+		useGetPropertyTenants(safeString(clientUser?.client_id), {
 			property_id: safeString(clientUserProperty?.property?.id),
 			filters: { status: status },
 			pagination: { page, per },

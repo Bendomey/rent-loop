@@ -6,7 +6,7 @@ import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { htmlToLexicalState } from '~/lib/actions/editor-utils.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { captureException } from '~/lib/actions/sentry.server'
-import { removeFileExtension } from '~/lib/strings'
+import { removeFileExtension, safeString } from '~/lib/strings'
 
 export async function action({ request }: Route.ActionArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
@@ -36,7 +36,9 @@ export async function action({ request }: Route.ActionArgs) {
 			? removeFileExtension((pdfFile as File).name)
 			: 'Untitled Document'
 
+		const clientId = safeString(authSession.get('selectedClientId'))
 		const response = await createDocumentSSR(
+			clientId,
 			{
 				title: pdfName,
 				content: JSON.stringify(lexicalState),

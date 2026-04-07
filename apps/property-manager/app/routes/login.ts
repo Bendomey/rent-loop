@@ -64,13 +64,25 @@ export async function action({ request }: Route.ActionArgs) {
 
 		session.set('authToken', loginResponse.token)
 
-		// get the return_to param from the URL
-		const url = new URL(request.url)
-		const returnTo = url.searchParams.get('return_to') || '/'
-		return redirect(returnTo, {
-			headers: {
-				'Set-Cookie': await saveAuthSession(session),
-			},
+		// Check how many clients the user has
+		const clientUsers = loginResponse.user.client_users ?? []
+
+		if (clientUsers.length === 1) {
+			const clientUser = clientUsers[0]
+			if (clientUser?.client_id) {
+				// Auto-select the single client
+				session.set('selectedClientId', clientUser.client_id)
+				const url = new URL(request.url)
+				const returnTo = url.searchParams.get('return_to') || '/'
+				return redirect(returnTo, {
+					headers: { 'Set-Cookie': await saveAuthSession(session) },
+				})
+			}
+		}
+
+		// Multiple clients (or zero) → go to picker
+		return redirect('/select-client', {
+			headers: { 'Set-Cookie': await saveAuthSession(session) },
 		})
 	} catch {
 		session.flash(

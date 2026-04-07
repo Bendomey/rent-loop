@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
 import type { IDocumentTemplate } from '~/modules/settings/documents/controller'
+import { useClient } from '~/providers/client-provider'
 
 interface AddDocumentModalProps {
 	open: boolean
@@ -42,6 +43,7 @@ export function AddDocumentModal({
 	const [selectedDocument, setSelectedDocument] =
 		useState<RentloopDocument | null>(null)
 	const revalidator = useRevalidator()
+	const { clientUser } = useClient()
 
 	const {
 		upload,
@@ -50,7 +52,7 @@ export function AddDocumentModal({
 	} = useUploadObject('tenant-applications/lease-documents')
 
 	const { mutateAsync: createDocument, isPending: isCreating } =
-		useCreateDocument()
+		useCreateDocument(safeString(clientUser?.client_id))
 	const { mutateAsync: updateTenantApplication, isPending: isUpdating } =
 		useAdminUpdateTenantApplication()
 
@@ -66,6 +68,7 @@ export function AddDocumentModal({
 			if (!uploadedUrl) return
 
 			await updateTenantApplication({
+				client_id: safeString(clientUser?.client_id),
 				id: application.id,
 				property_id: propertyId,
 				data: {
@@ -90,6 +93,7 @@ export function AddDocumentModal({
 			if (!newDoc) return
 
 			await updateTenantApplication({
+				client_id: safeString(clientUser?.client_id),
 				id: application.id,
 				property_id: propertyId,
 				data: {

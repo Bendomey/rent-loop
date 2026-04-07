@@ -27,6 +27,8 @@ import {
 import { Spinner } from '~/components/ui/spinner'
 import { useDisclosure } from '~/hooks/use-disclosure'
 import { QUERY_KEYS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 export type IDocumentTemplate = {
 	id: string
@@ -65,7 +67,10 @@ export function AddDocumentButton({
 	property?: Property
 }) {
 	const [documentTitle, setDocumentTitle] = useState<string>('')
-	const { mutate, isPending } = useCreateDocument()
+	const { clientUser } = useClient()
+	const { mutate, isPending } = useCreateDocument(
+		safeString(clientUser?.client_id),
+	)
 	const { isOpened, onClose, setIsOpened } = useDisclosure()
 	const [selectedTemplate, setSelectedTemplate] = useState<string>()
 	const navigate = useNavigate()

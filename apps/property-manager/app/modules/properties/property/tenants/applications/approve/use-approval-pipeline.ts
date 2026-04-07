@@ -14,6 +14,8 @@ import {
 	buildTemplateFieldMap,
 	resolveTemplateFields,
 } from '~/lib/resolve-template-fields'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 type ApprovalStep =
 	| 'GENERATE_PDF'
@@ -48,6 +50,7 @@ export function useApprovalPipeline({
 	const [state, setState] = useState<PipelineState>({ status: 'IDLE' })
 	const queryClient = useQueryClient()
 	const revalidator = useRevalidator()
+	const { clientUser } = useClient()
 	const { mutateAsync: updateApplication } = useAdminUpdateTenantApplication()
 	const { mutateAsync: approveApplication } = useApproveTenantApplication()
 	const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
@@ -182,6 +185,7 @@ export function useApprovalPipeline({
 				// Step 3: Update application with PDF URL
 				beginStep('UPDATE_APPLICATION')
 				await updateApplication({
+					client_id: safeString(clientUser?.client_id),
 					id: application.id,
 					property_id: propertyId,
 					data: { lease_agreement_document_url: pdfUrl },
@@ -191,7 +195,11 @@ export function useApprovalPipeline({
 
 			// Step 4: Approve
 			beginStep('APPROVE')
-			await approveApplication({ property_id: propertyId, id: application.id })
+			await approveApplication({
+				client_id: safeString(clientUser?.client_id),
+				property_id: propertyId,
+				id: application.id,
+			})
 			completeStep('APPROVE')
 
 			// Success
@@ -226,6 +234,7 @@ export function useApprovalPipeline({
 		hasExistingPdfUrl,
 		beginStep,
 		approveApplication,
+		clientUser?.client_id,
 		propertyId,
 		application,
 		completeStep,

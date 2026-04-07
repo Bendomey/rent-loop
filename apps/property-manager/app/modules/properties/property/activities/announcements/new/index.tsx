@@ -64,7 +64,9 @@ import {
 	TypographyMuted,
 } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.activities.announcements.new'
 
@@ -94,6 +96,8 @@ type SubmitIntent = 'post' | 'draft'
 export function NewPropertyAnnouncementModule() {
 	const { propertyId } = useParams<{ propertyId: string }>()
 	const { clientUserProperty } = useProperty()
+	const { clientUser } = useClient()
+	const clientId = safeString(clientUser?.client_id)
 	const property = clientUserProperty?.property
 	const isMulti = property?.type === 'MULTI'
 
@@ -104,6 +108,7 @@ export function NewPropertyAnnouncementModule() {
 	const loaderData = useLoaderData<typeof loader>()
 
 	const { data: sourceAnnouncement } = useGetPropertyAnnouncement(
+		clientId,
 		propertyId,
 		sourceId,
 		loaderData.sourceAnnouncement ?? undefined,
@@ -115,11 +120,11 @@ export function NewPropertyAnnouncementModule() {
 
 	const [unitPopoverOpen, setUnitPopoverOpen] = useState(false)
 
-	const { data: blocksData } = useGetPropertyBlocks({
+	const { data: blocksData } = useGetPropertyBlocks(clientId, {
 		property_id: propertyId ?? '',
 		pagination: { page: 1, per: 100 },
 	})
-	const { data: unitsData } = useGetPropertyUnits({
+	const { data: unitsData } = useGetPropertyUnits(clientId, {
 		property_id: propertyId ?? '',
 		pagination: { page: 1, per: 200 },
 	})
@@ -191,6 +196,7 @@ export function NewPropertyAnnouncementModule() {
 
 		try {
 			const created = await createAnnouncement({
+				clientId,
 				propertyId: propertyId!,
 				title: formData.title,
 				content: formData.content,
@@ -217,13 +223,18 @@ export function NewPropertyAnnouncementModule() {
 
 			if (isScheduled) {
 				await scheduleAnnouncement({
-					propertyId: propertyId!,
+					clientId,
+					propertyId: safeString(propertyId),
 					id: created.id,
 					scheduled_at: scheduledAt.toISOString(),
 				})
 				toast.success('Announcement scheduled.')
 			} else {
-				await publishAnnouncement({ propertyId: propertyId!, id: created.id })
+				await publishAnnouncement({
+					clientId,
+					propertyId: safeString(propertyId),
+					id: created.id,
+				})
 				toast.success('Announcement published.')
 			}
 

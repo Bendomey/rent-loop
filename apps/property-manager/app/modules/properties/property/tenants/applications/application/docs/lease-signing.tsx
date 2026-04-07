@@ -18,11 +18,13 @@ import {
 } from '~/lib/resolve-template-fields'
 import { safeString } from '~/lib/strings'
 import { dataUrlToBlob } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId_.tenants.applications.$applicationId.signing.$documentId'
 
 export function LeaseSigningModule() {
 	const { tenantApplication, clientUserProperty } =
 		useLoaderData<typeof loader>()
+	const { clientUser } = useClient()
 	const signDocumentDirect = useSignDocumentDirect()
 	const updateDocument = useAdminUpdateDocument()
 	const updateTenantApplication = useAdminUpdateTenantApplication()
@@ -44,7 +46,7 @@ export function LeaseSigningModule() {
 	const signatureStatuses = getSignatureStatuses(resolvedEditorState)
 
 	const signerName =
-		[tenantApplication.created_by?.name].filter(Boolean).join(' ') ||
+		[tenantApplication.created_by?.user?.name].filter(Boolean).join(' ') ||
 		'Property Manager'
 
 	const uploadSignature = async (dataUrl: string) => {
@@ -82,6 +84,7 @@ export function LeaseSigningModule() {
 
 			// 2. Submit direct signature record (backend creates document_signatures entry)
 			await signDocumentDirect.mutateAsync({
+				client_id: safeString(clientUser?.client_id),
 				property_id: safeString(clientUserProperty?.property_id),
 				document_id: tenantApplication.lease_agreement_document.id,
 				signature_url: safeString(uploadResult.url),
@@ -100,6 +103,7 @@ export function LeaseSigningModule() {
 
 			// 4. Save the updated document content
 			await updateDocument.mutateAsync({
+				clientId: safeString(clientUser?.client_id),
 				id: tenantApplication.lease_agreement_document.id,
 				content: JSON.stringify(updatedState),
 			})
@@ -109,6 +113,7 @@ export function LeaseSigningModule() {
 				(s) => s.signed,
 			)
 			await updateTenantApplication.mutateAsync({
+				client_id: safeString(clientUser?.client_id),
 				id: tenantApplication.id,
 				property_id: safeString(clientUserProperty?.property_id),
 				data: {

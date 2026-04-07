@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { useFetcher, useSubmit } from 'react-router'
 import { toast } from 'sonner'
-import { useUpdateClientUserMe, type UpdateClientUserMeInput } from '~/api/auth'
+import { useUpdateUserMe, type UpdateUserMeInput } from '~/api/auth'
 
 interface UpdateClientEmailContextType {
 	stepCount: number
@@ -11,7 +11,7 @@ interface UpdateClientEmailContextType {
 	closeModal: () => void
 	updateFormData: (
 		data: Partial<
-			UpdateClientUserMeInput & {
+			UpdateUserMeInput & {
 				newEmail?: string
 				currentEmailVerified?: boolean
 				newEmailVerified?: boolean
@@ -19,7 +19,7 @@ interface UpdateClientEmailContextType {
 		>,
 	) => void
 	formData: Partial<
-		UpdateClientUserMeInput & {
+		UpdateUserMeInput & {
 			newEmail?: string
 			currentEmailVerified?: boolean
 			newEmailVerified?: boolean
@@ -28,7 +28,7 @@ interface UpdateClientEmailContextType {
 	isSubmitting: boolean
 	onSubmit: (
 		data: Partial<
-			UpdateClientUserMeInput & {
+			UpdateUserMeInput & {
 				newEmail?: string
 				currentEmailVerified?: boolean
 				newEmailVerified?: boolean
@@ -54,7 +54,7 @@ export function UpdateClientEmailProvider({
 	const [stepCount, setStepCount] = useState(0)
 	const [formData, setFormData] = useState<
 		Partial<
-			UpdateClientUserMeInput & {
+			UpdateUserMeInput & {
 				newEmail?: string
 				currentEmailVerified?: boolean
 				newEmailVerified?: boolean
@@ -79,32 +79,32 @@ export function UpdateClientEmailProvider({
 
 	const updateFormData = (
 		data: Partial<
-			UpdateClientUserMeInput & {
+			UpdateUserMeInput & {
 				newEmail?: string
 				currentEmailVerified?: boolean
 				newEmailVerified?: boolean
 			}
 		>,
 	) => {
-		setFormData((prev) => ({
+		setFormData((prev: typeof formData) => ({
 			...prev,
 			...data,
 		}))
 	}
-	const { mutate, isPending } = useUpdateClientUserMe()
+	const { mutate } = useUpdateUserMe()
 
-	const onSubmit = async (data: Partial<UpdateClientUserMeInput>) => {
+	const onSubmit = async (data: Partial<UpdateUserMeInput>) => {
 		const updatedData = { ...data }
 
-		if (formData.phoneNumber) {
-			updatedData.phoneNumber = `+233${formData.phoneNumber.slice(-9)}`
+		if (formData.phone_number) {
+			updatedData.phone_number = `+233${formData.phone_number.slice(-9)}`
 		}
 
 		return new Promise<void>((resolve, reject) => {
 			mutate(
 				{
 					name: updatedData.name,
-					phoneNumber: updatedData.phoneNumber,
+					phone_number: updatedData.phone_number,
 					email: updatedData.email,
 				},
 				{

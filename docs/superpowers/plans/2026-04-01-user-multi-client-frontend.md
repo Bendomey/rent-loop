@@ -54,7 +54,7 @@ interface User {
   phone_number: string
   created_at: Date
   updated_at: Date
-  client_users: Array<ClientUser & { client: Client }>
+  client_users: Array<ClientUser>
 }
 ```
 
@@ -137,7 +137,7 @@ export const userContext = createContext<{
 import { createContext } from 'react-router'
 
 export const clientContext = createContext<{
-  clientUser: ClientUser & { client: Client }
+  clientUser: ClientUser
 } | null>(null)
 ```
 
@@ -703,11 +703,11 @@ git commit -m "feat: add /select-client route for multi-client picker"
 import { createContext, useContext, type PropsWithChildren } from 'react'
 
 interface Props {
-  data?: ClientUser & { client: Client }
+  data?: ClientUser
 }
 
 interface IClientContext {
-  clientUser?: ClientUser & { client: Client }
+  clientUser?: ClientUser
 }
 
 const ClientContext = createContext<IClientContext | null>(null)

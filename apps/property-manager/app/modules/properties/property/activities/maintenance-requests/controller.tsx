@@ -3,11 +3,15 @@ import { getClientUserProperties } from '~/api/client-user-properties'
 import { getPropertyUnits } from '~/api/units'
 import { FilterSet } from '~/components/filter-set'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyActivitiesMaintenanceRequestsController() {
 	const { clientUserProperty } = useProperty()
-	const propertyId = clientUserProperty?.property_id ?? ''
+	const { clientUser } = useClient()
+	const propertyId = safeString(clientUserProperty?.property_id)
+	const clientId = safeString(clientUser?.client_id)
 	const isMultiUnit = clientUserProperty?.property?.type === 'MULTI'
 
 	const filters: Array<Filter> = [
@@ -53,7 +57,7 @@ export function PropertyActivitiesMaintenanceRequestsController() {
 			value: {
 				onSearch: async ({ ids }) => {
 					if (!propertyId) return []
-					const data = await getClientUserProperties({
+					const data = await getClientUserProperties(clientId, {
 						filters: {
 							property_id: propertyId,
 							ids: ids?.map((id) => id.toString()),
@@ -66,7 +70,7 @@ export function PropertyActivitiesMaintenanceRequestsController() {
 					})
 					return (
 						data?.rows.map((cup) => ({
-							label: cup.client_user?.name ?? cup.client_user_id,
+							label: cup.client_user_id,
 							value: cup.client_user_id,
 						})) ?? []
 					)
@@ -84,7 +88,7 @@ export function PropertyActivitiesMaintenanceRequestsController() {
 			value: {
 				onSearch: async ({ ids }) => {
 					if (!propertyId) return []
-					const data = await getClientUserProperties({
+					const data = await getClientUserProperties(clientId, {
 						filters: {
 							property_id: propertyId,
 							ids: ids?.map((id) => id.toString()),
@@ -97,7 +101,7 @@ export function PropertyActivitiesMaintenanceRequestsController() {
 					})
 					return (
 						data?.rows.map((cup) => ({
-							label: cup.client_user?.name ?? cup.client_user_id,
+							label: cup.client_user_id,
 							value: cup.client_user_id,
 						})) ?? []
 					)
@@ -117,7 +121,7 @@ export function PropertyActivitiesMaintenanceRequestsController() {
 						value: {
 							onSearch: async ({ ids }) => {
 								if (!propertyId) return []
-								const data = await getPropertyUnits({
+								const data = await getPropertyUnits(clientId, {
 									property_id: propertyId,
 									filters: {
 										ids: ids?.map((id) => id.toString()),

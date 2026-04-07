@@ -6,6 +6,7 @@ import { fetchServer } from '~/lib/transport'
  * GET all property blocks based on a query.
  */
 export const getPropertyBlocksForServer = async (
+	clientId: string,
 	props: FetchMultipleDataInputParams<FetchPropertyBlockFilter> & {
 		property_id: string
 	},
@@ -16,7 +17,7 @@ export const getPropertyBlocksForServer = async (
 		const response = await fetchServer<
 			ApiResponse<FetchMultipleDataResponse<PropertyBlock>>
 		>(
-			`${apiConfig.baseUrl}/v1/admin/properties/${props.property_id}/blocks?${params.toString()}`,
+			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/properties/${props.property_id}/blocks?${params.toString()}`,
 			{
 				method: 'GET',
 				...apiConfig,
@@ -37,12 +38,13 @@ export const getPropertyBlocksForServer = async (
 }
 
 export const createPropertyBlockForServer = async (
+	clientId: string,
 	props: CreatePropertyBlockInput,
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<PropertyBlock>>(
-			`${apiConfig.baseUrl}/v1/admin/properties/${props.property_id}/blocks`,
+			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/properties/${props.property_id}/blocks`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),

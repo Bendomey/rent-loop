@@ -6,6 +6,7 @@ import { propertyContext } from '~/lib/actions/property.context.server'
 
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
+import { safeString } from '~/lib/strings'
 import { PropertyFinancialsPaymentModule } from '~/modules'
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
@@ -13,10 +14,12 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const authToken = authSession.get('authToken')
+	const clientId = safeString(authSession.get('selectedClientId'))
 	const invoice_id = params.invoiceId
 
 	try {
 		const invoice = await getInvoiceForServer(
+			clientId,
 			{ invoice_id: invoice_id, property_id: params.propertyId },
 			{
 				authToken,

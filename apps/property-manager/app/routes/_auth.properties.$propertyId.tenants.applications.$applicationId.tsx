@@ -11,21 +11,26 @@ import { PropertyTenantApplicationContainer } from '~/modules'
 export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
+	const clientId = safeString(authSession.get('selectedClientId'))
 
 	const clientUserProperty = context.get(propertyContext)
 
 	try {
 		const tenantApplication = await getAdminPropertyTenantApplicationForServer(
+			clientId,
 			{
 				id: params.applicationId,
 				property_id: params.propertyId,
 				populate: [
 					'DesiredUnit',
 					'CreatedBy',
+					'CreatedBy.User',
 					'CompletedBy',
 					'CancelledBy',
 					'LeaseAgreementDocument',
 					'LeaseAgreementDocumentSignatures',
+					'LeaseAgreementDocumentSignatures.SignedBy',
+					'LeaseAgreementDocumentSignatures.SignedBy.User',
 					'ApplicationPaymentInvoice',
 					'ApplicationPaymentInvoice.LineItems',
 				],

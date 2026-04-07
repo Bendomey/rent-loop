@@ -35,6 +35,8 @@ import {
 import { Spinner } from '~/components/ui/spinner'
 import { Textarea } from '~/components/ui/textarea'
 import { QUERY_KEYS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 const ValidationSchema = z.object({
 	title: z.string().min(1, 'Title is required'),
@@ -55,6 +57,7 @@ interface Props {
 
 export function AnnouncementForm({ propertyId }: Props) {
 	const queryClient = useQueryClient()
+	const { clientUser } = useClient()
 	const [open, setOpen] = useState(false)
 	const [expiresAt, setExpiresAt] = useState<Date | undefined>(undefined)
 	const { mutate, isPending } = useCreateAnnouncement()
@@ -78,6 +81,7 @@ export function AnnouncementForm({ propertyId }: Props) {
 	const onSubmit = (formData: FormSchema) => {
 		mutate(
 			{
+				clientId: safeString(clientUser?.client_id),
 				title: formData.title,
 				content: formData.content,
 				type: formData.type,

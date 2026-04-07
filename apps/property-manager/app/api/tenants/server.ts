@@ -5,6 +5,7 @@ import { fetchServer } from '~/lib/transport'
  * GET property tenant by ID .
  */
 export const getPropertyTenantForServer = async (
+	clientId: string,
 	props: {
 		tenant_id: string
 		property_id: string
@@ -17,7 +18,7 @@ export const getPropertyTenantForServer = async (
 			populate: props.populate,
 		})
 		const response = await fetchServer<ApiResponse<Tenant>>(
-			`${apiConfig.baseUrl}/v1/admin/properties/${props.property_id}/tenants/${props.tenant_id}?${params.toString()}`,
+			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/properties/${props.property_id}/tenants/${props.tenant_id}?${params.toString()}`,
 			{
 				...apiConfig,
 			},

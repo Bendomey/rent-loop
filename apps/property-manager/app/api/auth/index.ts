@@ -3,74 +3,65 @@ import { fetchClient, fetchServer } from '~/lib/transport'
 
 export const CURRENT_USER_QUERY_KEY = ['current-user']
 
-export interface LoginClientUserInput {
+export interface LoginInput {
 	email: string
 	password: string
 }
 
-interface LoginClientUserResponse {
-	client_user: ClientUser
+interface LoginResponse {
+	user: User
 	token: string
 }
 
 export const login = async (
-	props: LoginClientUserInput,
+	props: LoginInput,
 	apiConfig?: ApiConfigForServerConfig,
 ) => {
 	try {
-		const response = await fetchServer<ApiResponse<LoginClientUserResponse>>(
-			`${apiConfig?.baseUrl}/v1/admin/client-users/login`,
+		const response = await fetchServer<ApiResponse<LoginResponse>>(
+			`${apiConfig?.baseUrl}/v1/admin/users/login`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),
 			},
 		)
-
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
 			throw new Error(response.errors?.message || 'Unknown error')
 		}
-
-		if (error instanceof Error) {
-			throw error
-		}
+		if (error instanceof Error) throw error
 	}
 }
 
 export const getCurrentUser = async (apiConfig?: ApiConfigForServerConfig) => {
 	try {
-		const response = await fetchServer<ApiResponse<ClientUser>>(
-			`${apiConfig?.baseUrl}/v1/admin/client-users/me?populate=Client`,
+		const response = await fetchServer<ApiResponse<User>>(
+			`${apiConfig?.baseUrl}/v1/admin/users/me`,
 			{
 				method: 'GET',
 				...(apiConfig ? apiConfig : {}),
 			},
 		)
-
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
 			throw new Error(response.errors?.message || 'Unknown error')
 		}
-
-		if (error instanceof Error) {
-			throw error
-		}
+		if (error instanceof Error) throw error
 	}
 }
 
 const getCurrentUserClient = async () => {
-	const response = await fetchClient<ApiResponse<ClientUser>>(
-		`/v1/admin/client-users/me?populate=Client`,
-		{ method: 'GET' },
-	)
+	const response = await fetchClient<ApiResponse<User>>(`/v1/admin/users/me`, {
+		method: 'GET',
+	})
 	return response.parsedBody.data
 }
 
-export const useGetCurrentUser = (initialData?: ClientUser) =>
+export const useGetCurrentUser = (initialData?: User) =>
 	useQuery({
 		queryKey: CURRENT_USER_QUERY_KEY,
 		queryFn: getCurrentUserClient,
@@ -86,22 +77,16 @@ export const sendForgotPasswordLink = async (
 	apiConfig?: ApiConfigForServerConfig,
 ) => {
 	try {
-		await fetchServer(
-			`${apiConfig?.baseUrl}/v1/admin/client-users/forgot-password`,
-			{
-				method: 'POST',
-				body: JSON.stringify(props),
-			},
-		)
+		await fetchServer(`${apiConfig?.baseUrl}/v1/admin/users/forgot-password`, {
+			method: 'POST',
+			body: JSON.stringify(props),
+		})
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
 			throw new Error(response.errors?.message || 'Unknown error')
 		}
-
-		if (error instanceof Error) {
-			throw error
-		}
+		if (error instanceof Error) throw error
 	}
 }
 
@@ -115,7 +100,7 @@ export const resetPassword = async (
 ) => {
 	try {
 		await fetchServer<ApiResponse<string>>(
-			`${apiConfig?.baseUrl}/v1/admin/client-users/reset-password`,
+			`${apiConfig?.baseUrl}/v1/admin/users/reset-password`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),
@@ -127,10 +112,7 @@ export const resetPassword = async (
 			const response = await error.json()
 			throw new Error(response.errors?.message || 'Unknown error')
 		}
-
-		if (error instanceof Error) {
-			throw error
-		}
+		if (error instanceof Error) throw error
 	}
 }
 
@@ -139,14 +121,10 @@ interface UpdatePasswordProps {
 	old_password: string
 }
 
-/**
- * Update Password
- */
-
 const updatePassword = async (props: UpdatePasswordProps) => {
 	try {
-		const response = await fetchClient<ApiResponse<ClientUser>>(
-			`/v1/admin/client-users/me/password`,
+		const response = await fetchClient<ApiResponse<User>>(
+			`/v1/admin/users/me/password`,
 			{
 				method: 'PATCH',
 				body: JSON.stringify(props),
@@ -158,15 +136,39 @@ const updatePassword = async (props: UpdatePasswordProps) => {
 			const response = await error.json()
 			throw new Error(response.errors?.message || 'Unknown error')
 		}
-
-		if (error instanceof Error) {
-			throw error
-		}
+		if (error instanceof Error) throw error
 	}
 }
 
 export const useUpdatePassword = () =>
 	useMutation({ mutationFn: updatePassword })
+
+export interface UpdateUserMeInput {
+	name?: string
+	phone_number?: string
+	email?: string
+}
+
+const updateUserMe = async (props: UpdateUserMeInput) => {
+	try {
+		const response = await fetchClient<ApiResponse<User>>(
+			`/v1/admin/users/me`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify(props),
+			},
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+
+export const useUpdateUserMe = () => useMutation({ mutationFn: updateUserMe })
 
 // OTP
 
@@ -228,38 +230,3 @@ export const verifyOtpCode = async (props: VerifyOtpCodeInput) => {
 }
 
 export const useVerifyOtpCode = () => useMutation({ mutationFn: verifyOtpCode })
-
-/**
- * PATCH Update personal details
- */
-export interface UpdateClientUserMeInput {
-	name?: string
-	phoneNumber?: string
-	email?: string
-}
-
-const updateClientUserMe = async ({
-	name,
-	phoneNumber,
-	email,
-}: UpdateClientUserMeInput) => {
-	try {
-		const response = await fetchClient<ApiResponse<ClientUser>>(
-			`/v1/admin/client-users/me`,
-			{
-				method: 'PATCH',
-				body: JSON.stringify({ name, phoneNumber, email }),
-			},
-		)
-		return response.parsedBody.data
-	} catch (error: unknown) {
-		if (error instanceof Response) {
-			const response = await error.json()
-			throw new Error(response.errors?.message || 'Unknown error')
-		}
-		if (error instanceof Error) throw error
-	}
-}
-
-export const useUpdateClientUserMe = () =>
-	useMutation({ mutationFn: updateClientUserMe })

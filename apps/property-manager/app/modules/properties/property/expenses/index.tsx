@@ -13,11 +13,13 @@ import { localizedDayjs } from '~/lib/date'
 import { formatAmount } from '~/lib/format-amount'
 import { getInvoiceStatusLabel } from '~/lib/invoice'
 import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyExpensesModule() {
 	const [searchParams] = useSearchParams()
 	const { clientUserProperty } = useProperty()
+	const { clientUser } = useClient()
 
 	const propertyId = safeString(clientUserProperty?.property_id)
 
@@ -33,7 +35,7 @@ export function PropertyExpensesModule() {
 		| null
 
 	const { data, isPending, isRefetching, error, refetch } =
-		useGetPropertyExpenses(propertyId, {
+		useGetPropertyExpenses(safeString(clientUser?.client_id), propertyId, {
 			filters: contextType ? { context_type: contextType } : {},
 			pagination: { page, per },
 			sorter: { sort: 'desc', sort_by: 'created_at' },

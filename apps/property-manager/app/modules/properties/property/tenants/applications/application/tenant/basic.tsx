@@ -45,6 +45,7 @@ import {
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
 import { toFirstUpperCase } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 const ValidationSchema = z.object({
 	first_name: z.string().trim().min(1, 'First name is required'),
@@ -82,6 +83,7 @@ interface Props {
 
 export function PropertyTenantApplicationBasic({ property_id }: Props) {
 	const { tenantApplication: application } = useTenantApplicationContext()
+	const { clientUser } = useClient()
 
 	const isDocLocked = ['SIGNED', 'SIGNING'].includes(
 		application?.lease_agreement_document_status ?? '',
@@ -134,6 +136,7 @@ export function PropertyTenantApplicationBasic({ property_id }: Props) {
 
 		mutate(
 			{
+				client_id: safeString(clientUser?.client_id),
 				id: application.id,
 				property_id,
 				data: {

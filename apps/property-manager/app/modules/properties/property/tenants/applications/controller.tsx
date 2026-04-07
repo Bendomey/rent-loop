@@ -7,7 +7,9 @@ import { PropertyPermissionGuard } from '~/components/permissions/permission-gua
 import { SearchInput } from '~/components/search'
 import { Button } from '~/components/ui/button'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 export const PropertyTenantApplicationsController = ({
@@ -18,6 +20,7 @@ export const PropertyTenantApplicationsController = ({
 	refetch: VoidFunction
 }) => {
 	const { clientUserProperty } = useProperty()
+	const { clientUser } = useClient()
 
 	const filters: Array<Filter> = useMemo(
 		() => [
@@ -53,13 +56,16 @@ export const PropertyTenantApplicationsController = ({
 							return []
 						}
 
-						const data = await getPropertyUnits({
-							property_id: clientUserProperty.property_id,
-							pagination: {
-								page: PAGINATION_DEFAULTS.PAGE,
-								per: PAGINATION_DEFAULTS.PER_PAGE,
+						const data = await getPropertyUnits(
+							safeString(clientUser?.client_id),
+							{
+								property_id: clientUserProperty.property_id,
+								pagination: {
+									page: PAGINATION_DEFAULTS.PAGE,
+									per: PAGINATION_DEFAULTS.PER_PAGE,
+								},
 							},
-						})
+						)
 
 						return (
 							data?.rows.map((unit) => ({

@@ -7,6 +7,8 @@ import {
 	SelectValue,
 } from '../ui/select'
 import { useGetPropertyBlocks } from '~/api/blocks'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface BlockSelectProps
 	extends FetchMultipleDataInputParams<FetchClientUserFilter> {
@@ -28,14 +30,18 @@ export function BlockSelect({
 	label = 'Block',
 	onChange,
 }: BlockSelectProps) {
-	const { data, isPending, error } = useGetPropertyBlocks({
-		property_id,
-		filters,
-		sorter,
-		pagination,
-		populate,
-		search,
-	})
+	const { clientUser } = useClient()
+	const { data, isPending, error } = useGetPropertyBlocks(
+		safeString(clientUser?.client_id),
+		{
+			property_id,
+			filters,
+			sorter,
+			pagination,
+			populate,
+			search,
+		},
+	)
 
 	const selectOptions: Array<{ value: string; label: string }> = useMemo(() => {
 		if (data && data.rows) {

@@ -4,18 +4,24 @@ import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
+import { safeString } from '~/lib/strings'
 import { AnnouncementDetailModule } from '~/modules'
 
 export async function loader({ request, params }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const authToken = authSession.get('authToken')
+	const clientId = safeString(authSession.get('selectedClientId'))
 
 	try {
-		const announcement = await getAnnouncementForServer(params.announcementId, {
-			authToken,
-			baseUrl,
-		})
+		const announcement = await getAnnouncementForServer(
+			clientId,
+			params.announcementId,
+			{
+				authToken,
+				baseUrl,
+			},
+		)
 		return {
 			origin: getDomainUrl(request),
 			announcement,

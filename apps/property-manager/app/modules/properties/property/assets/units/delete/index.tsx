@@ -14,6 +14,8 @@ import {
 } from '~/components/ui/alert-dialog'
 import { Spinner } from '~/components/ui/spinner'
 import { QUERY_KEYS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface Props {
 	data?: PropertyUnit
@@ -27,6 +29,7 @@ export default function DeletePropertyUnitModal({
 	setOpened,
 }: Props) {
 	const queryClient = useQueryClient()
+	const { clientUser } = useClient()
 
 	const { mutate, isPending } = useDeletePropertyUnit()
 
@@ -34,6 +37,7 @@ export default function DeletePropertyUnitModal({
 		if (data) {
 			mutate(
 				{
+					clientId: safeString(clientUser?.client_id),
 					property_id: data.property_id,
 					unit_id: data.id,
 				},

@@ -24,11 +24,14 @@ import {
 } from '~/components/ui/dropdown-menu'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
 import { useAuth } from '~/providers/auth-provider'
+import { useClient } from '~/providers/client-provider'
 
 export function MembersModule() {
 	const [searchParams] = useSearchParams()
 	const { currentUser } = useAuth()
+	const { clientUser } = useClient()
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -39,16 +42,19 @@ export function MembersModule() {
 	const role = searchParams.get('role') ?? undefined
 	const status = searchParams.get('status') ?? undefined
 
-	const { data, isPending, isRefetching, error, refetch } = useGetClientUsers({
-		filters: { role: role, status: status },
-		pagination: { page, per },
-		populate: ['CreatedBy'],
-		sorter: { sort: 'desc', sort_by: 'created_at' },
-		search: {
-			query: searchParams.get('query') ?? undefined,
-			fields: ['name', 'email', 'phone_number'],
+	const { data, isPending, isRefetching, error, refetch } = useGetClientUsers(
+		safeString(clientUser?.client_id),
+		{
+			filters: { role: role, status: status },
+			pagination: { page, per },
+			populate: ['CreatedBy', 'CreatedBy.User'],
+			sorter: { sort: 'desc', sort_by: 'created_at' },
+			search: {
+				query: searchParams.get('query') ?? undefined,
+				fields: ['name', 'email', 'phone_number'],
+			},
 		},
-	})
+	)
 
 	const isLoading = isPending || isRefetching
 
@@ -90,10 +96,10 @@ export function MembersModule() {
 				cell: ({ row }) => (
 					<div className="flex min-w-32 flex-col items-start gap-1">
 						<span className="truncate text-xs text-zinc-600 dark:text-white">
-							{row.original.email}
+							{row.original.user?.email}
 						</span>
 						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
-							{row.original.phone_number}
+							{row.original.user?.phone_number}
 						</span>
 					</div>
 				),
@@ -146,7 +152,7 @@ export function MembersModule() {
 								) : (
 									<>
 										{row.original.role !== 'OWNER' ||
-										currentUser?.role === 'OWNER' ? (
+										clientUser?.role === 'OWNER' ? (
 											<>
 												<DropdownMenuItem asChild>
 													<Link to={`/settings/members/${row.original.id}`}>
@@ -176,7 +182,7 @@ export function MembersModule() {
 				},
 			},
 		]
-	}, [currentUser, refetch])
+	}, [currentUser, clientUser, refetch])
 
 	return (
 		<main className="flex flex-col gap-2 sm:gap-4">

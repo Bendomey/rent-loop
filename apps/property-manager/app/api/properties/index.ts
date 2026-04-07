@@ -7,13 +7,14 @@ import { fetchClient, fetchServer } from '~/lib/transport'
  * GET all properties based on a query.
  */
 const getProperties = async (
+	clientId: string,
 	props: FetchMultipleDataInputParams<FetchPropertyFilter>,
 ) => {
 	try {
 		const params = getQueryParams<FetchPropertyFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<Property>>
-		>(`/v1/admin/properties?${params.toString()}`)
+		>(`/v1/admin/clients/${clientId}/properties?${params.toString()}`)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -29,14 +30,17 @@ const getProperties = async (
 }
 
 export const useGetProperties = (
+	clientId: string,
 	query: FetchMultipleDataInputParams<FetchPropertyFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.PROPERTIES, query],
-		queryFn: () => getProperties(query),
+		queryKey: [QUERY_KEYS.PROPERTIES, clientId, query],
+		queryFn: () => getProperties(clientId, query),
+		enabled: !!clientId,
 	})
 
 export const getPropertiesForServer = async (
+	clientId: string,
 	props: FetchMultipleDataInputParams<FetchPropertyFilter>,
 	apiConfig: ApiConfigForServerConfig,
 ) => {
@@ -44,10 +48,13 @@ export const getPropertiesForServer = async (
 		const params = getQueryParams<FetchPropertyFilter>(props)
 		const response = await fetchServer<
 			ApiResponse<FetchMultipleDataResponse<Property>>
-		>(`${apiConfig?.baseUrl}/v1/admin/properties?${params.toString()}`, {
-			method: 'GET',
-			...apiConfig,
-		})
+		>(
+			`${apiConfig?.baseUrl}/v1/admin/clients/${clientId}/properties?${params.toString()}`,
+			{
+				method: 'GET',
+				...apiConfig,
+			},
+		)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -66,12 +73,13 @@ export const getPropertiesForServer = async (
  * Get property
  */
 export const getProperty = async (
+	clientId: string,
 	id: string,
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<Property>>(
-			`${apiConfig?.baseUrl}/v1/admin/properties/${id}`,
+			`${apiConfig?.baseUrl}/v1/admin/clients/${clientId}/properties/${id}`,
 			{
 				method: 'GET',
 				...(apiConfig ? apiConfig : {}),
@@ -92,12 +100,13 @@ export const getProperty = async (
 }
 
 export const getPropertyBySlug = async (
+	clientId: string,
 	slug: string,
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<Property>>(
-			`${apiConfig?.baseUrl}/v1/admin/properties/slug/${slug}`,
+			`${apiConfig?.baseUrl}/v1/admin/clients/${clientId}/properties/slug/${slug}`,
 			{
 				method: 'GET',
 				...(apiConfig ? apiConfig : {}),
@@ -134,12 +143,13 @@ export interface CreatePropertyInput {
 }
 
 export const createProperty = async (
+	clientId: string,
 	props: CreatePropertyInput,
 	apiConfig?: ApiConfigForServerConfig,
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<Property>>(
-			`${apiConfig?.baseUrl}/v1/admin/properties`,
+			`${apiConfig?.baseUrl}/v1/admin/clients/${clientId}/properties`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),
@@ -163,9 +173,15 @@ export const createProperty = async (
 /**
  * Delete property
  */
-const deleteProperty = async (id: string) => {
+const deleteProperty = async ({
+	clientId,
+	id,
+}: {
+	clientId: string
+	id: string
+}) => {
 	try {
-		await fetchClient(`/v1/admin/properties/${id}`, {
+		await fetchClient(`/v1/admin/clients/${clientId}/properties/${id}`, {
 			method: 'DELETE',
 		})
 	} catch (error: unknown) {
@@ -186,6 +202,7 @@ export const useDeleteProperty = () =>
 	})
 
 export const getClientUserProperties = async (
+	clientId: string,
 	props: FetchMultipleDataInputParams<FetchClientUserPropertyFilter>,
 	apiConfig: ApiConfigForServerConfig,
 ) => {
@@ -193,10 +210,13 @@ export const getClientUserProperties = async (
 		const params = getQueryParams<FetchClientUserPropertyFilter>(props)
 		const response = await fetchServer<
 			ApiResponse<FetchMultipleDataResponse<ClientUserProperty>>
-		>(`${apiConfig.baseUrl}/v1/admin/properties/me?${params.toString()}`, {
-			method: 'GET',
-			authToken: apiConfig.authToken,
-		})
+		>(
+			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/properties/me?${params.toString()}`,
+			{
+				method: 'GET',
+				authToken: apiConfig.authToken,
+			},
+		)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -212,13 +232,14 @@ export const getClientUserProperties = async (
 }
 
 const getClientUserPropertiesForClient = async (
+	clientId: string,
 	props: FetchMultipleDataInputParams<FetchClientUserPropertyFilter>,
 ) => {
 	try {
 		const params = getQueryParams<FetchClientUserPropertyFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<ClientUserProperty>>
-		>(`/v1/admin/properties/me?${params.toString()}`, {
+		>(`/v1/admin/clients/${clientId}/properties/me?${params.toString()}`, {
 			method: 'GET',
 		})
 
@@ -236,9 +257,11 @@ const getClientUserPropertiesForClient = async (
 }
 
 export const useGetMyProperties = (
+	clientId: string,
 	query: FetchMultipleDataInputParams<FetchClientUserPropertyFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.CURRENT_USER, QUERY_KEYS.PROPERTIES, query],
-		queryFn: () => getClientUserPropertiesForClient(query),
+		queryKey: [QUERY_KEYS.CURRENT_USER, QUERY_KEYS.PROPERTIES, clientId, query],
+		queryFn: () => getClientUserPropertiesForClient(clientId, query),
+		enabled: !!clientId,
 	})

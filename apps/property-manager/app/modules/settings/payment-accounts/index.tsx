@@ -31,10 +31,13 @@ import {
 	getPaymentAccountStatusLabel,
 } from '~/lib/payment-account.utils'
 import { paymentIcons } from '~/lib/payment-account.utils'
+import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 
 export function PaymentAccountsModule() {
 	const navigate = useNavigate()
+	const { clientUser } = useClient()
 
 	const [selectedPaymentAccount, setSelectedPaymentAccount] =
 		useState<PaymentAccount>()
@@ -56,7 +59,7 @@ export function PaymentAccountsModule() {
 	const status = searchParams.get('status') ?? undefined
 
 	const { data, isPending, isRefetching, error, refetch } =
-		useGetPaymentAccounts({
+		useGetPaymentAccounts(safeString(clientUser?.client_id), {
 			filters: {
 				rail: rail,
 				status: status,

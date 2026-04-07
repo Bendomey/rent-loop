@@ -40,6 +40,8 @@ import {
 import { Spinner } from '~/components/ui/spinner'
 import { TypographyH4 } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 interface Props {
@@ -61,6 +63,7 @@ type FormSchema = z.infer<typeof ValidationSchema>
 export default function AddMemberModule({ opened, setOpened }: Props) {
 	const queryClient = useQueryClient()
 
+	const { clientUser } = useClient()
 	const { clientUserProperty } = useProperty()
 
 	const rhfMethods = useForm<FormSchema>({
@@ -80,6 +83,7 @@ export default function AddMemberModule({ opened, setOpened }: Props) {
 			const pluralSuffix = data.members.length > 1 ? 's' : ''
 			mutate(
 				{
+					clientId: safeString(clientUser?.client_id),
 					property_id: clientUserProperty?.property?.id ?? '',
 					role: data.role,
 					client_user_ids: data.members,
@@ -126,6 +130,7 @@ export default function AddMemberModule({ opened, setOpened }: Props) {
 										<FormItem>
 											<FormControl>
 												<MembersSelect
+													populate={['User']}
 													filters={{
 														not_in_property_id:
 															clientUserProperty?.property?.id,

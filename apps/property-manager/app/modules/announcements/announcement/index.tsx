@@ -38,6 +38,8 @@ import { Skeleton } from '~/components/ui/skeleton'
 import { TypographyMuted } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth._dashboard.activities.announcements.$announcementId._index'
 
 const STATUS_CONFIG: Record<
@@ -112,6 +114,8 @@ export function AnnouncementDetailModule() {
 	const { announcementId } = useParams<{ announcementId: string }>()
 	const navigate = useNavigate()
 	const queryClient = useQueryClient()
+	const { clientUser } = useClient()
+	const clientId = safeString(clientUser?.client_id)
 	const loaderData = useLoaderData<typeof loader>()
 
 	const [editOpen, setEditOpen] = useState(false)
@@ -125,7 +129,8 @@ export function AnnouncementDetailModule() {
 		isPending,
 		error,
 	} = useGetAnnouncement(
-		announcementId ?? '',
+		clientId,
+		safeString(announcementId),
 		loaderData.announcement ?? undefined,
 	)
 	const { mutate: publish, isPending: isPublishing } = usePublishAnnouncement()
@@ -311,14 +316,17 @@ export function AnnouncementDetailModule() {
 										className="w-full"
 										disabled={isCancelling}
 										onClick={() =>
-											cancelSchedule(announcement.id, {
-												onError: () =>
-													toast.error('Failed to cancel schedule.'),
-												onSuccess: () => {
-													toast.success('Schedule cancelled.')
-													invalidate()
+											cancelSchedule(
+												{ clientId, id: announcement.id },
+												{
+													onError: () =>
+														toast.error('Failed to cancel schedule.'),
+													onSuccess: () => {
+														toast.success('Schedule cancelled.')
+														invalidate()
+													},
 												},
-											})
+											)
 										}
 									>
 										{isCancelling ? 'Cancelling…' : 'Cancel Schedule'}
@@ -403,14 +411,17 @@ export function AnnouncementDetailModule() {
 							className="bg-rose-600 text-white hover:bg-rose-700"
 							onClick={(e) => {
 								e.preventDefault()
-								publish(announcement.id, {
-									onError: () => toast.error('Failed to publish. Try again.'),
-									onSuccess: () => {
-										toast.success('Announcement published.')
-										invalidate()
-										setPublishOpen(false)
+								publish(
+									{ clientId, id: announcement.id },
+									{
+										onError: () => toast.error('Failed to publish. Try again.'),
+										onSuccess: () => {
+											toast.success('Announcement published.')
+											invalidate()
+											setPublishOpen(false)
+										},
 									},
-								})
+								)
 							}}
 						>
 							{isPublishing ? 'Publishing…' : 'Publish'}
@@ -434,13 +445,16 @@ export function AnnouncementDetailModule() {
 							className="bg-destructive hover:bg-destructive/90 text-white"
 							onClick={(e) => {
 								e.preventDefault()
-								deleteAnnouncement(announcement.id, {
-									onError: () => toast.error('Failed to delete. Try again.'),
-									onSuccess: () => {
-										invalidate()
-										void navigate('/activities/announcements')
+								deleteAnnouncement(
+									{ clientId, id: announcement.id },
+									{
+										onError: () => toast.error('Failed to delete. Try again.'),
+										onSuccess: () => {
+											invalidate()
+											void navigate('/activities/announcements')
+										},
 									},
-								})
+								)
 							}}
 						>
 							{isDeleting ? 'Deleting…' : 'Delete'}

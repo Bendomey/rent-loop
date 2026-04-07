@@ -19,7 +19,9 @@ import { Spinner } from '~/components/ui/spinner'
 import { QUERY_KEYS } from '~/lib/constants'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { getPropertyUnitStatusLabel } from '~/lib/properties.utils'
+import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 
 interface Props {
 	applicationId: string
@@ -38,15 +40,19 @@ export function ChangeUnitModal({
 }: Props) {
 	const queryClient = useQueryClient()
 	const revalidator = useRevalidator()
+	const { clientUser } = useClient()
 	const [selectedUnitId, setSelectedUnitId] = useState<string | undefined>(
 		currentUnitId,
 	)
 
-	const { data, isPending: isLoadingUnits } = useGetPropertyUnits({
-		property_id: propertyId,
-		sorter: { sort: 'desc', sort_by: 'created_at' },
-		pagination: { per: 1000 },
-	})
+	const { data, isPending: isLoadingUnits } = useGetPropertyUnits(
+		safeString(clientUser?.client_id),
+		{
+			property_id: propertyId,
+			sorter: { sort: 'desc', sort_by: 'created_at' },
+			pagination: { per: 1000 },
+		},
+	)
 
 	const { isPending, mutate } = useAdminUpdateTenantApplication()
 
@@ -57,6 +63,7 @@ export function ChangeUnitModal({
 
 		mutate(
 			{
+				client_id: safeString(clientUser?.client_id),
 				id: applicationId,
 				property_id: propertyId,
 				data: {

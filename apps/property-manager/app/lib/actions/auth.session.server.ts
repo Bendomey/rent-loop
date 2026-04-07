@@ -4,6 +4,7 @@ import { environmentVariables } from './env.server'
 
 type SessionData = {
 	authToken: string
+	selectedClientId: string
 }
 
 type SessionFlashData = {
