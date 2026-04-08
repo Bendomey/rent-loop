@@ -26,7 +26,6 @@ import { getAuthSession } from './lib/actions/auth.session.server'
 import { environmentVariables } from './lib/actions/env.server'
 import { NotFoundModule } from './modules'
 import { Providers } from './providers'
-import { TAWK_HIDDEN_PATHS } from './lib/constants'
 
 dayjs.locale('en-gb')
 dayjs.extend(localizedFormat)
@@ -578,10 +577,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 					<script>
 						{`
 						var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-						Tawk_API.onLoad=function(){
-							var hiddenPaths=${JSON.stringify(TAWK_HIDDEN_PATHS)};
-							if(hiddenPaths.indexOf(window.location.pathname)!==-1){Tawk_API.hideWidget();}
-						};
+						Tawk_API.onLoad=function(){Tawk_API.hideWidget();};
+						Tawk_API.onChatMinimized=function(){Tawk_API.hideWidget();};
 						(function(){
 							var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
 							s1.async=true;
@@ -608,19 +605,14 @@ function TawkVisibility() {
 			window as unknown as {
 				Tawk_API?: {
 					hideWidget?: () => void
-					showWidget?: () => void
 					minimize?: () => void
 				}
 			}
 		).Tawk_API
 		if (!tawkApi) return
 
-		if (TAWK_HIDDEN_PATHS.includes(location.pathname)) {
-			tawkApi.minimize?.()
-			tawkApi.hideWidget?.()
-		} else {
-			tawkApi.showWidget?.()
-		}
+		tawkApi.minimize?.()
+		tawkApi.hideWidget?.()
 	}, [location.pathname])
 
 	return null
