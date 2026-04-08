@@ -26,6 +26,8 @@ export function PropertyModule() {
 		PROPERTY_OVERVIEW_TOUR_STEPS,
 	)
 
+	const baseUrl = `/properties/${propertyId}`
+
 	useEffect(() => {
 		if (!hasCompletedTour()) startTour()
 	}, [hasCompletedTour, startTour])
@@ -49,37 +51,37 @@ export function PropertyModule() {
 						{
 							label: 'Manage Tenants',
 							icon: Users,
-							to: `/properties/${propertyId}/tenants/all`,
+							to: `${baseUrl}/tenants/all`,
 						},
 						{
 							label: 'Manage Units',
 							icon: Building2,
-							to: `/properties/${propertyId}/assets`,
+							to: `${baseUrl}/assets/units`,
 						},
 						{
 							label: 'View Leases',
 							icon: FileText,
-							to: `/properties/${propertyId}/tenants/leases`,
+							to: `${baseUrl}/tenants/leases`,
 						},
 						{
 							label: 'Applications',
 							icon: ClipboardList,
-							to: `/properties/${propertyId}/tenants/applications`,
+							to: `${baseUrl}/tenants/applications`,
 						},
 						{
 							label: 'Financials',
 							icon: Wallet,
-							to: `/properties/${propertyId}/financials`,
+							to: `${baseUrl}/financials/invoices`,
 						},
 						{
 							label: 'Maintenance',
 							icon: Wrench,
-							to: `/properties/${propertyId}/activities/maintenance-requests`,
+							to: `${baseUrl}/activities/maintenance-requests`,
 						},
 						{
 							label: 'Announcements',
 							icon: Megaphone,
-							to: `/properties/${propertyId}/activities/announcements`,
+							to: `${baseUrl}/activities/announcements`,
 						},
 					].map(({ label, icon: Icon, to }) => (
 						<Link
