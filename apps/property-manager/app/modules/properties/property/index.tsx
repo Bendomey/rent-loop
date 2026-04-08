@@ -1,4 +1,14 @@
 import { useEffect } from 'react'
+import { Link } from 'react-router'
+import {
+	Users,
+	Building2,
+	FileText,
+	ClipboardList,
+	Wallet,
+	Wrench,
+	Megaphone,
+} from 'lucide-react'
 import { PropertySectionCards } from './components/cards'
 import { PropertyChartBar } from './components/chart'
 import { PropertyRentIncomeCards } from './components/rent-cards'
@@ -7,6 +17,47 @@ import { TypographyH1, TypographyP } from '~/components/ui/typography'
 import { useTour } from '~/hooks/use-tour'
 import { PROPERTY_OVERVIEW_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
 import { useProperty } from '~/providers/property-provider'
+
+const NAV_ITEMS = (propertyId: string) => {
+	const baseUrl = `/properties/${propertyId}`
+	return [
+		{
+			label: 'Manage Tenants',
+			icon: Users,
+			to: `${baseUrl}/tenants/all`,
+		},
+		{
+			label: 'Manage Units',
+			icon: Building2,
+			to: `${baseUrl}/assets/units`,
+		},
+		{
+			label: 'View Leases',
+			icon: FileText,
+			to: `${baseUrl}/tenants/leases`,
+		},
+		{
+			label: 'Applications',
+			icon: ClipboardList,
+			to: `${baseUrl}/tenants/applications`,
+		},
+		{
+			label: 'Financials',
+			icon: Wallet,
+			to: `${baseUrl}/financials/invoices`,
+		},
+		{
+			label: 'Maintenance',
+			icon: Wrench,
+			to: `${baseUrl}/activities/maintenance-requests`,
+		},
+		{
+			label: 'Announcements',
+			icon: Megaphone,
+			to: `${baseUrl}/activities/announcements`,
+		},
+	]
+}
 
 export function PropertyModule() {
 	const { clientUserProperty } = useProperty()
@@ -30,10 +81,22 @@ export function PropertyModule() {
 						? `— ${clientUserProperty?.property.name}`
 						: ''}
 				</TypographyH1>
-				<TypographyP className="text-muted-foreground mt-1 text-sm">
+				<TypographyP className="text-muted-foreground mt-1 mb-4 text-sm">
 					Comprehensive insights into rental performance, occupancy, and
 					maintenance trends.
 				</TypographyP>
+				<div className="flex gap-2 overflow-x-auto pb-1">
+					{NAV_ITEMS(propertyId).map(({ label, icon: Icon, to }) => (
+						<Link
+							key={label}
+							to={to}
+							className="bg-background hover:bg-muted text-foreground flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors"
+						>
+							<Icon className="text-muted-foreground size-4" />
+							{label}
+						</Link>
+					))}
+				</div>
 			</div>
 
 			{/* Summary Cards */}

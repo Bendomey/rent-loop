@@ -25,15 +25,15 @@ export function FilterSet(props: Props) {
 				}))}
 				onClear={() => {
 					searchParams.delete(props.urlParam)
-					setSearchParams(searchParams)
+					setSearchParams(searchParams, { replace: true })
 				}}
 				onRemove={(valOption) => {
 					searchParams.delete(props.urlParam, valOption.value)
-					setSearchParams(searchParams)
+					setSearchParams(searchParams, { replace: true })
 				}}
 				onSelect={(valOption) => {
 					searchParams.append(props.urlParam, valOption.value)
-					setSearchParams(searchParams)
+					setSearchParams(searchParams, { replace: true })
 				}}
 				selectedOptions={selectedOptions}
 				urlParam={props.urlParam}
@@ -73,15 +73,15 @@ function FilterSelector({ filter }: { filter: Filter }) {
 			options={filter.value.options}
 			onClear={() => {
 				searchParams.delete(filter.value.urlParam)
-				setSearchParams(searchParams)
+				setSearchParams(searchParams, { replace: true })
 			}}
 			onRemove={(valOption) => {
 				searchParams.delete(filter.value.urlParam, valOption.value)
-				setSearchParams(searchParams)
+				setSearchParams(searchParams, { replace: true })
 			}}
 			onSelect={(valOption) => {
 				searchParams.append(filter.value.urlParam, valOption.value)
-				setSearchParams(searchParams)
+				setSearchParams(searchParams, { replace: true })
 			}}
 			selectedOptions={searchParams.getAll(filter.value.urlParam)}
 			urlParam={filter.value.urlParam}
