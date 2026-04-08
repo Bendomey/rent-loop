@@ -118,6 +118,9 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen>
               _displayedText.length - 1,
             );
           });
+          if (_displayedText.length % 3 == 0) {
+            Haptics.vibrate(HapticsType.selection);
+          }
           _scheduleNext();
         });
       } else {
