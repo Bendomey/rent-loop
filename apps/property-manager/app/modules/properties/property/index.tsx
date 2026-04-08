@@ -1,4 +1,14 @@
 import { useEffect } from 'react'
+import { Link } from 'react-router'
+import {
+	Users,
+	Building2,
+	FileText,
+	ClipboardList,
+	Wallet,
+	Wrench,
+	Megaphone,
+} from 'lucide-react'
 import { PropertySectionCards } from './components/cards'
 import { PropertyChartBar } from './components/chart'
 import { PropertyRentIncomeCards } from './components/rent-cards'
@@ -30,10 +40,58 @@ export function PropertyModule() {
 						? `— ${clientUserProperty?.property.name}`
 						: ''}
 				</TypographyH1>
-				<TypographyP className="text-muted-foreground mt-1 text-sm">
+				<TypographyP className="text-muted-foreground mt-1 mb-4 text-sm">
 					Comprehensive insights into rental performance, occupancy, and
 					maintenance trends.
 				</TypographyP>
+				<div className="flex gap-2 overflow-x-auto pb-1">
+					{[
+						{
+							label: 'Manage Tenants',
+							icon: Users,
+							to: `/properties/${propertyId}/tenants/all`,
+						},
+						{
+							label: 'Manage Units',
+							icon: Building2,
+							to: `/properties/${propertyId}/assets`,
+						},
+						{
+							label: 'View Leases',
+							icon: FileText,
+							to: `/properties/${propertyId}/tenants/leases`,
+						},
+						{
+							label: 'Applications',
+							icon: ClipboardList,
+							to: `/properties/${propertyId}/tenants/applications`,
+						},
+						{
+							label: 'Financials',
+							icon: Wallet,
+							to: `/properties/${propertyId}/financials`,
+						},
+						{
+							label: 'Maintenance',
+							icon: Wrench,
+							to: `/properties/${propertyId}/activities/maintenance-requests`,
+						},
+						{
+							label: 'Announcements',
+							icon: Megaphone,
+							to: `/properties/${propertyId}/activities/announcements`,
+						},
+					].map(({ label, icon: Icon, to }) => (
+						<Link
+							key={label}
+							to={to}
+							className="bg-background hover:bg-muted text-foreground flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors"
+						>
+							<Icon className="text-muted-foreground size-4" />
+							{label}
+						</Link>
+					))}
+				</div>
 			</div>
 
 			{/* Summary Cards */}
