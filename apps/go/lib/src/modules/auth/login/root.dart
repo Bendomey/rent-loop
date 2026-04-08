@@ -33,8 +33,6 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
   Future<void> _handleContinue() async {
     if (!_formKey.currentState!.validate()) return;
 
-    await Haptics.vibrate(HapticsType.selection);
-
     final digits = _phoneController.text.substring(
       _phoneController.text.length - 9,
     );
@@ -57,7 +55,7 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
     final isLoading = sendOtpState.status.isLoading();
 
     ref.listen(sendOtpNotifierProvider, (prev, next) {
-      if (next.status.isFailed()) Haptics.vibrate(HapticsType.error);
+      // No vibration on error as requested
     });
 
     return Scaffold(
@@ -70,7 +68,6 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.black87),
           onPressed: () async {
-            await Haptics.vibrate(HapticsType.selection);
             if (context.mounted) context.go('/auth');
           },
         ),

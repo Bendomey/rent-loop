@@ -118,9 +118,6 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen>
               _displayedText.length - 1,
             );
           });
-          if (_displayedText.length % 3 == 0) {
-            Haptics.vibrate(HapticsType.selection);
-          }
           _scheduleNext();
         });
       } else {
@@ -137,6 +134,8 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen>
   }
 
   Future<void> _finishOnboarding() async {
+    _active = false;
+    _timer?.cancel();
     await Haptics.vibrate(HapticsType.success);
     if (!mounted) return;
 
