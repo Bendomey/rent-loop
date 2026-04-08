@@ -18,6 +18,47 @@ import { useTour } from '~/hooks/use-tour'
 import { PROPERTY_OVERVIEW_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
 import { useProperty } from '~/providers/property-provider'
 
+const NAV_ITEMS = (propertyId: string) => {
+	const baseUrl = `/properties/${propertyId}`
+	return [
+		{
+			label: 'Manage Tenants',
+			icon: Users,
+			to: `${baseUrl}/tenants/all`,
+		},
+		{
+			label: 'Manage Units',
+			icon: Building2,
+			to: `${baseUrl}/assets/units`,
+		},
+		{
+			label: 'View Leases',
+			icon: FileText,
+			to: `${baseUrl}/tenants/leases`,
+		},
+		{
+			label: 'Applications',
+			icon: ClipboardList,
+			to: `${baseUrl}/tenants/applications`,
+		},
+		{
+			label: 'Financials',
+			icon: Wallet,
+			to: `${baseUrl}/financials/invoices`,
+		},
+		{
+			label: 'Maintenance',
+			icon: Wrench,
+			to: `${baseUrl}/activities/maintenance-requests`,
+		},
+		{
+			label: 'Announcements',
+			icon: Megaphone,
+			to: `${baseUrl}/activities/announcements`,
+		},
+	]
+}
+
 export function PropertyModule() {
 	const { clientUserProperty } = useProperty()
 	const propertyId = clientUserProperty?.property_id ?? ''
@@ -25,8 +66,6 @@ export function PropertyModule() {
 		TOUR_KEYS.PROPERTY_OVERVIEW,
 		PROPERTY_OVERVIEW_TOUR_STEPS,
 	)
-
-	const baseUrl = `/properties/${propertyId}`
 
 	useEffect(() => {
 		if (!hasCompletedTour()) startTour()
@@ -47,43 +86,7 @@ export function PropertyModule() {
 					maintenance trends.
 				</TypographyP>
 				<div className="flex gap-2 overflow-x-auto pb-1">
-					{[
-						{
-							label: 'Manage Tenants',
-							icon: Users,
-							to: `${baseUrl}/tenants/all`,
-						},
-						{
-							label: 'Manage Units',
-							icon: Building2,
-							to: `${baseUrl}/assets/units`,
-						},
-						{
-							label: 'View Leases',
-							icon: FileText,
-							to: `${baseUrl}/tenants/leases`,
-						},
-						{
-							label: 'Applications',
-							icon: ClipboardList,
-							to: `${baseUrl}/tenants/applications`,
-						},
-						{
-							label: 'Financials',
-							icon: Wallet,
-							to: `${baseUrl}/financials/invoices`,
-						},
-						{
-							label: 'Maintenance',
-							icon: Wrench,
-							to: `${baseUrl}/activities/maintenance-requests`,
-						},
-						{
-							label: 'Announcements',
-							icon: Megaphone,
-							to: `${baseUrl}/activities/announcements`,
-						},
-					].map(({ label, icon: Icon, to }) => (
+					{NAV_ITEMS(propertyId).map(({ label, icon: Icon, to }) => (
 						<Link
 							key={label}
 							to={to}
