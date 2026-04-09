@@ -5,9 +5,6 @@ import {
 	Building2,
 	FileText,
 	ClipboardList,
-	Wallet,
-	Wrench,
-	Megaphone,
 } from 'lucide-react'
 import { PropertySectionCards } from './components/cards'
 import { PropertyChartBar } from './components/chart'
@@ -40,21 +37,6 @@ const NAV_ITEMS = (propertyId: string) => {
 			label: 'Applications',
 			icon: ClipboardList,
 			to: `${baseUrl}/tenants/applications`,
-		},
-		{
-			label: 'Financials',
-			icon: Wallet,
-			to: `${baseUrl}/financials/invoices`,
-		},
-		{
-			label: 'Maintenance',
-			icon: Wrench,
-			to: `${baseUrl}/activities/maintenance-requests`,
-		},
-		{
-			label: 'Announcements',
-			icon: Megaphone,
-			to: `${baseUrl}/activities/announcements`,
 		},
 	]
 }
