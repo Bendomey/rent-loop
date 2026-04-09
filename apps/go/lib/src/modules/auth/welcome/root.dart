@@ -92,7 +92,9 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen>
           setState(() {
             _displayedText = phrase.substring(0, _displayedText.length + 1);
           });
-          Haptics.vibrate(HapticsType.selection);
+          if (_displayedText.length % 3 == 0) {
+            Haptics.vibrate(HapticsType.selection);
+          }
           _scheduleNext();
         });
       } else {
@@ -116,7 +118,9 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen>
               _displayedText.length - 1,
             );
           });
-          Haptics.vibrate(HapticsType.selection);
+          if (_displayedText.length % 3 == 0) {
+            Haptics.vibrate(HapticsType.selection);
+          }
           _scheduleNext();
         });
       } else {
@@ -133,6 +137,8 @@ class _WelcomeScreen extends ConsumerState<WelcomeScreen>
   }
 
   Future<void> _finishOnboarding() async {
+    _active = false;
+    _timer?.cancel();
     await Haptics.vibrate(HapticsType.success);
     if (!mounted) return;
 
