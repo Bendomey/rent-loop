@@ -1,11 +1,13 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { ScrollText } from 'lucide-react'
+import { ArrowRight, History, ScrollText } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { PropertyTenantLeasesController } from './controller'
 import { useGetPropertyLeases } from '~/api/leases'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
+import { Button } from '~/components/ui/button'
+import { Card, CardContent } from '~/components/ui/card'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
@@ -203,6 +205,28 @@ export function PropertyTenantLeasesModule() {
 			</div>
 
 			<PropertyTenantLeasesController isLoading={isLoading} refetch={refetch} />
+
+			{/* Entry point for bulk onboard — show when the list is empty */}
+			{!isPending && data?.rows?.length === 0 && (
+				<Card className="border-dashed shadow-none">
+					<CardContent className="flex items-center justify-between py-5">
+						<div className="flex items-center gap-3">
+							<History className="h-6 w-6 shrink-0 text-rose-600 dark:text-rose-400" />
+							<div>
+								<p className="text-sm font-semibold">Have existing tenants?</p>
+								<p className="text-muted-foreground text-sm">
+									Quickly onboard all your current tenants and their leases.
+								</p>
+							</div>
+						</div>
+						<Link to={`/properties/${propertyId}/tenants/leases/bulk-onboard`}>
+							<Button variant="outline" size="sm">
+								Get started <ArrowRight className="ml-1 h-4 w-4" />
+							</Button>
+						</Link>
+					</CardContent>
+				</Card>
+			)}
 
 			<div className="bg-background space-y-4 rounded-lg border p-3 sm:p-5">
 				<div className="h-full w-full">

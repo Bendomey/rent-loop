@@ -1,0 +1,58 @@
+<h2>Existing Lease Onboarding Wizard — Approaches</h2>
+<p class="subtitle">Two architectural approaches for the batch wizard. Both use the same linear-per-tenant + table-overview UX.</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Dedicated Bulk Endpoint (Recommended)</h3>
+      <p><strong>New backend endpoint:</strong> <code>POST /v1/properties/{id}/leases:bulk-onboard</code></p>
+      <p>Accepts an array of tenant+lease objects. Creates Tenants, TenantAccounts, and Leases in a single transaction. Skips the TenantApplication flow entirely.</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Single API call — atomic success/failure</li>
+            <li>No invoice/payment/signing overhead</li>
+            <li>Clean separation from the application flow</li>
+            <li>Can validate all units are available upfront</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>New endpoint + service method to build</li>
+            <li>Large payload for many tenants</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Reuse Existing Endpoints</h3>
+      <p><strong>Frontend orchestration:</strong> Call existing create-tenant-application + approve endpoints sequentially for each tenant.</p>
+      <p>The wizard collects data, then submits each tenant through the existing pipeline with flags to skip invoice/payment requirements.</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Less backend work — reuse existing services</li>
+            <li>Each tenant processed independently</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>Multiple API calls — partial failure risk</li>
+            <li>Must hack around invoice/payment/signing requirements</li>
+            <li>Slower — sequential API calls per tenant</li>
+            <li>Pollutes TenantApplication table with synthetic records</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -380,6 +380,43 @@ type CancelLeaseRequest struct {
 	CancellationReason string `json:"cancellation_reason" example:"Lease was cancelled due to a tenant's request."`
 }
 
+type BulkOnboardLeaseEntryRequest struct {
+	UnitId                         string     `json:"unit_id"                           validate:"required,uuid4"`
+	FirstName                      string     `json:"first_name"                        validate:"required,min=2"`
+	OtherNames                     *string    `json:"other_names,omitempty"`
+	LastName                       string     `json:"last_name"                         validate:"required,min=2"`
+	Email                          *string    `json:"email,omitempty"                   validate:"omitempty,email"`
+	Phone                          string     `json:"phone"                             validate:"required"`
+	Gender                         string     `json:"gender"                            validate:"required,oneof=Male Female"`
+	DateOfBirth                    time.Time  `json:"date_of_birth"                     validate:"required"`
+	Nationality                    string     `json:"nationality"                       validate:"required"`
+	MaritalStatus                  string     `json:"marital_status"                    validate:"required,oneof=Single Married Divorced Widowed"`
+	CurrentAddress                 string     `json:"current_address"                   validate:"required"`
+	IDType                         string     `json:"id_type"                           validate:"required,oneof=NationalID Passport DriverLicense"`
+	IDNumber                       string     `json:"id_number"                         validate:"required"`
+	EmergencyContactName           string     `json:"emergency_contact_name"            validate:"required"`
+	EmergencyContactPhone          string     `json:"emergency_contact_phone"           validate:"required"`
+	RelationshipToEmergencyContact string     `json:"relationship_to_emergency_contact" validate:"required"`
+	Occupation                     *string    `json:"occupation,omitempty"`
+	Employer                       *string    `json:"employer,omitempty"`
+	RentFee                        int64      `json:"rent_fee"                          validate:"required,gte=1"`
+	RentFeeCurrency                string     `json:"rent_fee_currency"                 validate:"required"`
+	PaymentFrequency               *string    `json:"payment_frequency,omitempty"       validate:"omitempty,oneof=HOURLY DAILY MONTHLY QUARTERLY BIANNUALLY ANNUALLY ONETIME"`
+	MoveInDate                     time.Time  `json:"move_in_date"                      validate:"required"`
+	StayDurationFrequency          string     `json:"stay_duration_frequency"           validate:"required,oneof=HOURS DAYS MONTHS"`
+	StayDuration                   int64      `json:"stay_duration"                     validate:"required,gte=1"`
+	PaidThroughDate                *time.Time `json:"paid_through_date,omitempty"`
+	InitialDepositFee              int64      `json:"initial_deposit_fee"               validate:"gte=0"`
+	InitialDepositFeeCurrency      string     `json:"initial_deposit_fee_currency"      validate:"required"`
+	SecurityDepositFee             int64      `json:"security_deposit_fee"              validate:"gte=0"`
+	SecurityDepositFeeCurrency     string     `json:"security_deposit_fee_currency"     validate:"required"`
+	LeaseAgreementDocumentUrl      string     `json:"lease_agreement_document_url"      validate:"required,url"`
+}
+
+type BulkOnboardLeasesRequest struct {
+	Entries []BulkOnboardLeaseEntryRequest `json:"entries" validate:"required,min=1,max=20,dive"`
+}
+
 // CancelLease godoc
 //
 //	@Summary		Cancel lease (Admin)
@@ -418,6 +455,87 @@ func (h *LeaseHandler) CancelLease(w http.ResponseWriter, r *http.Request) {
 		LeaseID:            leaseID,
 		CancellationReason: body.CancellationReason,
 		ClientUserId:       clientUser.ID,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// BulkOnboardLeases godoc
+//
+//	@Summary		Bulk onboard existing leases (Client User)
+//	@Description	Onboard up to 20 existing tenant-lease pairs in a single transaction. Creates TenantApplication, Invoice (if deposits provided), Tenant, TenantAccount, and Lease records. Designed for landlords migrating existing tenants into Rent-Loop.
+//	@Tags			Lease
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			client_id	path		string						true	"Client ID"
+//	@Param			property_id	path		string						true	"Property ID"
+//	@Param			body		body		BulkOnboardLeasesRequest	true	"Bulk onboard request body (max 20 entries)"
+//	@Success		204			{object}	nil							"Bulk onboard successful"
+//	@Failure		400			{object}	lib.HTTPError				"Validation or business rule error (e.g. UnitNoLongerAvailable)"
+//	@Failure		401			{object}	string						"Invalid or absent authentication token"
+//	@Failure		422			{object}	lib.HTTPError				"Request body validation error"
+//	@Failure		500			{object}	string						"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases:bulk-onboard [post]
+func (h *LeaseHandler) BulkOnboardLeases(w http.ResponseWriter, r *http.Request) {
+	clientUser, _ := lib.ClientUserFromContext(r.Context())
+
+	propertyID := chi.URLParam(r, "property_id")
+
+	var body BulkOnboardLeasesRequest
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
+		return
+	}
+
+	entries := make([]services.BulkOnboardLeaseEntry, 0, len(body.Entries))
+	for _, e := range body.Entries {
+		entries = append(entries, services.BulkOnboardLeaseEntry{
+			UnitId:                         e.UnitId,
+			FirstName:                      e.FirstName,
+			OtherNames:                     e.OtherNames,
+			LastName:                       e.LastName,
+			Email:                          e.Email,
+			Phone:                          e.Phone,
+			Gender:                         e.Gender,
+			DateOfBirth:                    e.DateOfBirth,
+			Nationality:                    e.Nationality,
+			MaritalStatus:                  e.MaritalStatus,
+			CurrentAddress:                 e.CurrentAddress,
+			IDType:                         e.IDType,
+			IDNumber:                       e.IDNumber,
+			EmergencyContactName:           e.EmergencyContactName,
+			EmergencyContactPhone:          e.EmergencyContactPhone,
+			RelationshipToEmergencyContact: e.RelationshipToEmergencyContact,
+			Occupation:                     e.Occupation,
+			Employer:                       e.Employer,
+			RentFee:                        e.RentFee,
+			RentFeeCurrency:                e.RentFeeCurrency,
+			PaymentFrequency:               e.PaymentFrequency,
+			MoveInDate:                     e.MoveInDate,
+			StayDurationFrequency:          e.StayDurationFrequency,
+			StayDuration:                   e.StayDuration,
+			PaidThroughDate:                e.PaidThroughDate,
+			InitialDepositFee:              e.InitialDepositFee,
+			InitialDepositFeeCurrency:      e.InitialDepositFeeCurrency,
+			SecurityDepositFee:             e.SecurityDepositFee,
+			SecurityDepositFeeCurrency:     e.SecurityDepositFeeCurrency,
+			LeaseAgreementDocumentUrl:      e.LeaseAgreementDocumentUrl,
+		})
+	}
+
+	err := h.services.TenantApplicationService.BulkOnboardLeases(r.Context(), services.BulkOnboardLeasesInput{
+		ClientUserID: clientUser.ID,
+		PropertyID:   propertyID,
+		Entries:      entries,
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)
