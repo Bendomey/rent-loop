@@ -1119,6 +1119,15 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 	now := time.Now()
 
 	transaction := s.appCtx.DB.Begin()
+	if transaction.Error != nil {
+		return pkg.InternalServerError(transaction.Error.Error(), &pkg.RentLoopErrorParams{
+			Err: transaction.Error,
+			Metadata: map[string]string{
+				"function": "BulkOnboardLeases",
+				"action":   "beginning transaction",
+			},
+		})
+	}
 	transCtx := lib.WithTransaction(ctx, transaction)
 
 	type notificationPayload struct {
@@ -1132,7 +1141,7 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 	var notifications []notificationPayload
 
 	for _, entry := range input.Entries {
-		unit, err := s.unitService.GetUnitByID(ctx, entry.UnitId)
+		unit, err := s.unitService.GetUnitByID(transCtx, entry.UnitId)
 		if err != nil {
 			transaction.Rollback()
 			return err
@@ -1198,6 +1207,11 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 		}
 
 		// 2. Create invoice as PAID (historical record — Status=PAID skips Fincore journal entry)
+		if entry.InitialDepositFee > 0 && entry.SecurityDepositFee > 0 &&
+			entry.InitialDepositFeeCurrency != entry.SecurityDepositFeeCurrency {
+			transaction.Rollback()
+			return pkg.BadRequestError("DepositCurrencyMismatch", nil)
+		}
 		if entry.InitialDepositFee > 0 || entry.SecurityDepositFee > 0 {
 			appID := tenantApp.ID.String()
 			propertyID := input.PropertyID
@@ -1316,8 +1330,9 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 			Model(&models.Lease{}).
 			Where("tenant_application_id = ?", appIDStr).
 			Updates(map[string]any{
-				"activated_at":    now,
-				"activated_by_id": input.ClientUserID,
+				"activated_at":      now,
+				"activated_by_id":   input.ClientUserID,
+				"next_billing_date": nil,
 			}).Error; updateErr != nil {
 			transaction.Rollback()
 			return pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
