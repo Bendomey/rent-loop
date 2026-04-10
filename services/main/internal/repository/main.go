@@ -27,7 +27,6 @@ type Repository struct {
 	FcmTokenRepository                     FcmTokenRepository
 	AnnouncementRepository                 AnnouncementRepository
 	MaintenanceRequestRepository           MaintenanceRequestRepository
-	WaitlistRepository                     WaitlistRepository
 	ExpenseRepository                      ExpenseRepository
 	AgreementRepository                    AgreementRepository
 }
@@ -57,7 +56,6 @@ func NewRepository(db *gorm.DB) Repository {
 	fcmTokenRepository := NewFcmTokenRepository(db)
 	announcementRepository := NewAnnouncementRepository(db)
 	maintenanceRequestRepository := NewMaintenanceRequestRepository(db)
-	waitlistRepository := NewWaitlistRepository(db)
 	expenseRepository := NewExpenseRepository(db)
 	agreementRepository := NewAgreementRepository(db)
 
@@ -86,7 +84,6 @@ func NewRepository(db *gorm.DB) Repository {
 		FcmTokenRepository:                     fcmTokenRepository,
 		AnnouncementRepository:                 announcementRepository,
 		MaintenanceRequestRepository:           maintenanceRequestRepository,
-		WaitlistRepository:                     waitlistRepository,
 		ExpenseRepository:                      expenseRepository,
 		AgreementRepository:                    agreementRepository,
 	}
