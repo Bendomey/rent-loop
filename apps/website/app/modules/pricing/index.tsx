@@ -108,7 +108,7 @@ export function PricingModule() {
 								</div>
 
 								<ul className="flex flex-col gap-y-3">
-									{allFeatures.map((feature) => (
+									{tier.features.map((feature) => (
 										<li key={feature} className="flex items-start gap-x-3">
 											<CheckIcon className="mt-0.5 size-5 shrink-0 text-rose-600" />
 											<span className="text-sm text-gray-600">{feature}</span>
@@ -190,7 +190,15 @@ export function PricingModule() {
 	)
 }
 
-const allFeatures = [
+const freePlanFeatures = [
+	'Up to 3 units',
+	'Tenant management',
+	'Lease tracking',
+	'Maintenance requests',
+	'Rent collection & payment tracking',
+]
+
+const paidPlanFeatures = [
 	'Tenant management',
 	'Lease tracking',
 	'Maintenance requests',
@@ -204,29 +212,32 @@ const allFeatures = [
 const tiers = [
 	{
 		name: 'Free',
-		range: 'Up to 5 units',
+		range: '1 – 3 units',
 		price: 'GH₵ 0',
 		priceSuffix: '/month',
 		description:
-			'Automatically applied when your portfolio has 5 units or fewer.',
+			'Get started at no cost. Designed for onboarding and early adoption.',
 		highlighted: false,
+		features: freePlanFeatures,
 	},
 	{
 		name: 'Starter',
-		range: '6 – 50 units',
-		price: 'GH₵ 70',
+		range: '4 – 50 units',
+		price: 'GHS 199 – 499',
 		priceSuffix: '/month',
 		description:
-			'Flat monthly rate applied automatically once you add a 6th unit.',
+			'Flat monthly rate applied automatically once you add a 4th unit.',
 		highlighted: true,
+		features: paidPlanFeatures,
 	},
 	{
 		name: 'Growth',
 		range: '51 – 150 units',
-		price: 'GH₵ 200',
+		price: 'GHS 500 – 1,299',
 		priceSuffix: '/month',
 		description: 'Flat monthly rate applied automatically at 51 units.',
 		highlighted: false,
+		features: paidPlanFeatures,
 	},
 ]
 
