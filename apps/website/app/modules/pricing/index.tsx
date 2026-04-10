@@ -95,7 +95,7 @@ export function PricingModule() {
 									</h2>
 									<p className="mt-1 text-sm text-gray-500">{tier.range}</p>
 									<div className="mt-4 flex items-baseline gap-x-1">
-										<span className="text-4xl lg:text-xl font-bold tracking-tight text-gray-900">
+										<span className="text-4xl font-bold tracking-tight text-gray-900 lg:text-xl">
 											{tier.price}
 										</span>
 										<span className="text-sm font-medium text-gray-500">
@@ -120,7 +120,7 @@ export function PricingModule() {
 					</div>
 
 					{/* Enterprise banner */}
-					<div className="mx-auto mt-8 max-w-4xl rounded-2xl bg-gray-50 p-8 ring-1 ring-gray-200 lg:flex lg:items-center lg:justify-between">
+					<div className="mx-auto mt-8 max-w-4xl rounded-2xl bg-white p-8 ring-1 ring-gray-200 lg:flex lg:items-center lg:justify-between">
 						<div>
 							<h2 className="text-xl font-semibold text-gray-900">
 								Enterprise
@@ -136,7 +136,7 @@ export function PricingModule() {
 						</div>
 						<div className="mt-6 lg:mt-0 lg:shrink-0">
 							<a
-								href="mailto:hello@rentloopapp.com"
+								href="mailto:rentloopapp@gmail.com"
 								className="inline-block rounded-md bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-gray-700"
 							>
 								Contact us
