@@ -30,13 +30,11 @@ type Handlers struct {
 	ChecklistTemplateHandler  ChecklistTemplateHandler
 	AnnouncementHandler       AnnouncementHandler
 	MaintenanceRequestHandler MaintenanceRequestHandler
-	WaitlistHandler           WaitlistHandler
 	ExpenseHandler            ExpenseHandler
 	AgreementHandler          AgreementHandler
 }
 
 func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
-	waitlistHandler := NewWaitlistHandler(appCtx, services.WaitlistService)
 	notificationHandler := NewNotificationHandler(appCtx, services.NotificationService)
 	authHandler := NewAuthHandler(appCtx, services.AuthService)
 	analyticsHandler := NewAnalyticsHandler(appCtx)
@@ -101,7 +99,6 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 		ChecklistTemplateHandler:  checklistTemplateHandler,
 		AnnouncementHandler:       announcementHandler,
 		MaintenanceRequestHandler: maintenanceRequestHandler,
-		WaitlistHandler:           waitlistHandler,
 		ExpenseHandler:            expenseHandler,
 		AgreementHandler:          agreementHandler,
 	}

@@ -4,15 +4,12 @@ import {
 	DisclosurePanel,
 } from '@headlessui/react'
 import { MinusSmallIcon, PlusSmallIcon } from '@heroicons/react/24/outline'
-import { useState } from 'react'
 import { Link } from 'react-router'
-import { WaitlistModal } from '~/components/blocks/WaitlistModal'
+import { ExternalLink } from '~/components/layout/ExternalLink'
 import { Footer } from '~/components/layout/footer'
 import { Header } from '~/components/layout/header'
-import { Button } from '~/components/ui/button'
 
 export function Home() {
-	const [waitlistOpen, setWaitlistOpen] = useState(false)
 	return (
 		<div>
 			<Header />
@@ -73,12 +70,12 @@ export function Home() {
 								>
 									Get started Today
 								</ExternalLink> */}
-								<Button
-									onClick={() => setWaitlistOpen(true)}
+								<ExternalLink
+									href='https://bisaform-main-bw7x.vercel.app/f/c915943frqp6'
 									className="cursor-pointer rounded-md bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-rose-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600"
 								>
 									Join our waitlist
-								</Button>
+								</ExternalLink>
 								<Link
 									to="/blog/what-is-rentloop"
 									className="text-sm/6 font-semibold text-gray-900 hover:text-rose-600"
@@ -101,8 +98,6 @@ export function Home() {
 					</div>
 				</div>
 			</div>
-
-			<WaitlistModal open={waitlistOpen} onOpenChange={setWaitlistOpen} />
 
 			<div id="features" className="scroll-mt-20 pb-24">
 				<div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
