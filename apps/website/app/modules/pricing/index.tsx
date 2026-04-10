@@ -95,7 +95,7 @@ export function PricingModule() {
 									</h2>
 									<p className="mt-1 text-sm text-gray-500">{tier.range}</p>
 									<div className="mt-4 flex items-baseline gap-x-1">
-										<span className="text-4xl font-bold tracking-tight text-gray-900">
+										<span className="text-4xl lg:text-xl font-bold tracking-tight text-gray-900">
 											{tier.price}
 										</span>
 										<span className="text-sm font-medium text-gray-500">
@@ -213,7 +213,7 @@ const tiers = [
 	{
 		name: 'Free',
 		range: '1 – 3 units',
-		price: 'GH₵ 0',
+		price: 'GHS 0',
 		priceSuffix: '/month',
 		description:
 			'Get started at no cost. Designed for onboarding and early adoption.',
