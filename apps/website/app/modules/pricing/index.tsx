@@ -250,7 +250,7 @@ const faqs = [
 	{
 		question: 'How does billing work?',
 		answer:
-			'You pay a flat monthly fee based on your total unit count, not per unit. If you have 20 units you pay GH₵ 70/month. If you have 80 units you pay GH₵ 70/month. Your plan updates automatically as you add or remove units.',
+			'You pay a flat monthly fee based on your total unit count. Your first 3 units are completely free. From 4 to 50 units you move to the Starter plan (GHS 199–499/month), and from 51 to 150 units you move to the Growth plan (GHS 500–1,299/month). Your plan updates automatically as you add or remove units.',
 	},
 	{
 		question: 'What counts as a unit?',
@@ -260,7 +260,7 @@ const faqs = [
 	{
 		question: 'What happens when I cross a tier threshold?',
 		answer:
-			'When your unit count crosses into a new plan range (e.g. from 50 to 51 units, or from 150 to custom), the new flat monthly rate applies from the next billing cycle. You do not pay two different rates within a single cycle.',
+			'When your unit count crosses into a new plan range (e.g. from 3 to 4 units, or from 50 to 51 units), the new monthly rate applies from the next billing cycle. You do not pay two different rates within a single cycle.',
 	},
 	{
 		question: 'Is there a long-term contract?',
