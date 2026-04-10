@@ -9,6 +9,7 @@ import {
 	MinusSmallIcon,
 	PlusSmallIcon,
 } from '@heroicons/react/24/outline'
+import { ExternalLink } from '~/components/layout/ExternalLink'
 import { Footer } from '~/components/layout/footer'
 import { Header } from '~/components/layout/header'
 import { PROPERTY_MANAGER_APP_URL } from '~/lib/constants'
@@ -135,12 +136,12 @@ export function PricingModule() {
 							</p>
 						</div>
 						<div className="mt-6 lg:mt-0 lg:shrink-0">
-							<a
-								href="mailto:rentloopapp@gmail.com"
+							<ExternalLink
+								href="https://bisaform-main-bw7x.vercel.app/f/b1ae7cbbk45q"
 								className="inline-block rounded-md bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-gray-700"
 							>
 								Contact us
-							</a>
+							</ExternalLink>
 						</div>
 					</div>
 				</div>
