@@ -13,7 +13,7 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 	return getSocialMetas({
 		title: 'Pricing | RentLoop',
 		description:
-			'Simple, transparent pricing for property managers. Start free with up to 5 units. Scale as you grow with flat monthly plans from GH₵ 70/month.',
+			'Simple, transparent pricing for property managers. Start free with up to 3 units. Scale as you grow with flat monthly plans from GHS 199/month.',
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,
