@@ -209,7 +209,7 @@ export function PaymentAccountsModule() {
 				),
 			},
 		]
-	}, [])
+	}, [navigate])
 
 	return (
 		<main className="space-y-4">

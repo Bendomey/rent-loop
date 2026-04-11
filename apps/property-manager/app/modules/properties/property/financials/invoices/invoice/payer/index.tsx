@@ -35,10 +35,6 @@ export function PropertyFinancialsPaymentPayerModule({ data }: Props) {
 		data.payer_type === 'TENANT_APPLICATION'
 			? data?.context_tenant_application
 			: data?.payer_lease?.tenant
-	const isTenantApplication = data.payer_type === 'TENANT_APPLICATION'
-	const tenantApplication = isTenantApplication
-		? (tenant as typeof data.context_tenant_application)
-		: null
 
 	if (!tenant) {
 		return (
