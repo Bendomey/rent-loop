@@ -14,7 +14,6 @@ import (
 func updateMigration(db *gorm.DB) error {
 	err := db.AutoMigrate(
 
-		&models.Waitlist{},
 		&models.Admin{},
 		&models.ClientApplication{},
 		&models.Client{},
@@ -68,7 +67,9 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		// Add more jobs, etc here
 		return nil
 	})
-	m.Migrate()
+	if err := m.Migrate(); err != nil {
+		return fmt.Errorf("[Migration.InitSchema.Migrate]: %v", err)
+	}
 
 	if err := updateMigration(db); err != nil {
 		return err
@@ -92,7 +93,9 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.SeedAgreements(),
 		jobs.ExtractUsersFromClientUsers(),
 	})
-	m.Migrate()
+	if err := m.Migrate(); err != nil {
+		return fmt.Errorf("[Migration.Migrate]: %v", err)
+	}
 
 	return nil
 }

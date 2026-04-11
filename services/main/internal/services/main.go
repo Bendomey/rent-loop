@@ -32,7 +32,6 @@ type Services struct {
 	ChecklistTemplateService  ChecklistTemplateService
 	AnnouncementService       AnnouncementService
 	MaintenanceRequestService MaintenanceRequestService
-	WaitlistService           WaitlistService
 	ExpenseService            ExpenseService
 	AgreementService          AgreementService
 }
@@ -175,7 +174,6 @@ func NewServices(params INewServicesParams) Services {
 		InvoiceService:      invoiceService,
 	})
 
-	waitlistService := NewWaitlistService(params.AppCtx, params.Repository.WaitlistRepository)
 	agreementService := NewAgreementService(params.Repository.AgreementRepository)
 
 	expenseService := NewExpenseService(ExpenseServiceDeps{
@@ -214,7 +212,6 @@ func NewServices(params INewServicesParams) Services {
 		ChecklistTemplateService:  checklistTemplateService,
 		AnnouncementService:       announcementService,
 		MaintenanceRequestService: maintenanceRequestService,
-		WaitlistService:           waitlistService,
 		ExpenseService:            expenseService,
 		AgreementService:          agreementService,
 	}

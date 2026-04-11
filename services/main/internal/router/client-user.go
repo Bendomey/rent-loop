@@ -13,8 +13,6 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 
 		// unprotected routes
 		r.Group(func(r chi.Router) {
-			r.Post("/v1/waitlist", handlers.WaitlistHandler.CreateWaitlistEntry)
-
 			r.Post("/v1/admin/clients/apply", handlers.ClientApplicationHandler.CreateClientApplication)
 
 			// user auth endpoints

@@ -59,7 +59,7 @@ const data = {
 	navSecondary: [
 		{
 			title: 'Support',
-			onClick: () => window?.Tawk_API?.toggle(),
+			onClick: () => window?.Tawk_API?.showWidget(),
 			icon: LifeBuoy,
 		},
 		{

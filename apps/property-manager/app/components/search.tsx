@@ -17,7 +17,7 @@ export function SearchInput({ placeholder = 'Search ...' }: Props) {
 			} else {
 				searchParams.delete('query')
 			}
-			setSearchParams(searchParams)
+			setSearchParams(searchParams, { replace: true })
 		}, 300)
 		return () => {
 			clearTimeout(handler)

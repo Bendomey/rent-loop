@@ -47,7 +47,7 @@ export function MembersModule() {
 		{
 			filters: { role: role, status: status },
 			pagination: { page, per },
-			populate: ['CreatedBy', 'CreatedBy.User'],
+			populate: ['User'],
 			sorter: { sort: 'desc', sort_by: 'created_at' },
 			search: {
 				query: searchParams.get('query') ?? undefined,
@@ -66,13 +66,13 @@ export function MembersModule() {
 				cell: () => <User />,
 			},
 			{
-				accessorKey: 'name',
+				accessorKey: 'user.name',
 				header: 'Name',
 				cell: ({ getValue }) => {
 					return (
 						<div className="min-w-32">
 							<span className="truncate text-xs text-zinc-600 dark:text-white">
-								{getValue<string>()}
+								{getValue<string>() ?? 'No name'}
 							</span>
 						</div>
 					)

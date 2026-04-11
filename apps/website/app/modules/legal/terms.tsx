@@ -10,7 +10,9 @@ export function TermsOfUse() {
 				<h1 className="text-4xl font-semibold tracking-tight text-gray-900">
 					Terms of Use
 				</h1>
-				<p className="mt-2 text-sm text-gray-500">Last Updated: April 3, 2026</p>
+				<p className="mt-2 text-sm text-gray-500">
+					Last Updated: April 3, 2026
+				</p>
 
 				<section className="mt-10">
 					<h2 className="mb-4 text-2xl font-semibold text-gray-900">
@@ -19,14 +21,14 @@ export function TermsOfUse() {
 					<p className="text-base/7 text-gray-600">
 						RentLoop is a property and lease management software platform that
 						allows property owners, managers, and related parties to manage
-						rental operations, including tenant records, leases, rent collection,
-						maintenance tracking, invoices, and related activities.
+						rental operations, including tenant records, leases, rent
+						collection, maintenance tracking, invoices, and related activities.
 					</p>
 					<p className="mt-4 text-base/7 text-gray-600">
 						RentLoop is not a property manager, real estate agent, broker, law
-						firm, or financial institution. RentLoop does not own, manage, lease,
-						or control any properties listed or managed on the platform. RentLoop
-						is a software tool only.
+						firm, or financial institution. RentLoop does not own, manage,
+						lease, or control any properties listed or managed on the platform.
+						RentLoop is a software tool only.
 					</p>
 					<p className="mt-4 text-base/7 text-gray-600">
 						RentLoop is not a party to any agreement between landlords, tenants,
@@ -82,9 +84,7 @@ export function TermsOfUse() {
 						<li>Upload false or misleading tenant or property information</li>
 						<li>Use the platform for fraudulent purposes</li>
 						<li>Interfere with the operation or security of the platform</li>
-						<li>
-							Attempt to access other users' data without authorization
-						</li>
+						<li>Attempt to access other users' data without authorization</li>
 						<li>Use RentLoop to violate any laws or regulations</li>
 					</ul>
 					<p className="mt-4 text-base/7 text-gray-600">
@@ -174,14 +174,15 @@ export function TermsOfUse() {
 					</h2>
 					<p className="text-base/7 text-gray-600">
 						You agree to indemnify and hold harmless RentLoop, its owners,
-						employees, and partners from any claims, damages, losses, liabilities,
-						and expenses arising from:
+						employees, and partners from any claims, damages, losses,
+						liabilities, and expenses arising from:
 					</p>
 					<ul className="mt-4 list-disc space-y-1 pl-6 text-gray-600">
 						<li>Your use of the platform</li>
 						<li>Your violation of these Terms</li>
 						<li>
-							Disputes between you and tenants, property owners, or third parties
+							Disputes between you and tenants, property owners, or third
+							parties
 						</li>
 						<li>Any data you upload to the platform</li>
 					</ul>

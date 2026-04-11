@@ -9,6 +9,7 @@ import {
 	MinusSmallIcon,
 	PlusSmallIcon,
 } from '@heroicons/react/24/outline'
+import { ExternalLink } from '~/components/layout/ExternalLink'
 import { Footer } from '~/components/layout/footer'
 import { Header } from '~/components/layout/header'
 import { PROPERTY_MANAGER_APP_URL } from '~/lib/constants'
@@ -31,9 +32,9 @@ export function PricingModule() {
 							with you
 						</h1>
 						<p className="mt-6 text-lg font-light text-gray-500">
-							Pay only for what you manage. Create your account, add your units,
-							and we handle the rest — your billing rate adjusts automatically
-							as your portfolio grows.
+							Simple flat monthly plans — no per-unit fees. Create your account,
+							add your units, and your plan updates automatically as your
+							portfolio crosses each threshold.
 						</p>
 						<a
 							href={`${PROPERTY_MANAGER_APP_URL}/apply`}
@@ -95,7 +96,7 @@ export function PricingModule() {
 									</h2>
 									<p className="mt-1 text-sm text-gray-500">{tier.range}</p>
 									<div className="mt-4 flex items-baseline gap-x-1">
-										<span className="text-4xl font-bold tracking-tight text-gray-900">
+										<span className="text-4xl font-bold tracking-tight text-gray-900 lg:text-xl">
 											{tier.price}
 										</span>
 										<span className="text-sm font-medium text-gray-500">
@@ -108,7 +109,7 @@ export function PricingModule() {
 								</div>
 
 								<ul className="flex flex-col gap-y-3">
-									{allFeatures.map((feature) => (
+									{tier.features.map((feature) => (
 										<li key={feature} className="flex items-start gap-x-3">
 											<CheckIcon className="mt-0.5 size-5 shrink-0 text-rose-600" />
 											<span className="text-sm text-gray-600">{feature}</span>
@@ -120,13 +121,13 @@ export function PricingModule() {
 					</div>
 
 					{/* Enterprise banner */}
-					<div className="mx-auto mt-8 max-w-4xl rounded-2xl bg-gray-50 p-8 ring-1 ring-gray-200 lg:flex lg:items-center lg:justify-between">
+					<div className="mx-auto mt-8 max-w-4xl rounded-2xl bg-white p-8 ring-1 ring-gray-200 lg:flex lg:items-center lg:justify-between">
 						<div>
 							<h2 className="text-xl font-semibold text-gray-900">
 								Enterprise
 							</h2>
 							<p className="mt-1 text-sm font-medium text-rose-600">
-								200+ units
+								150+ units
 							</p>
 							<p className="mt-2 max-w-xl text-sm text-gray-600">
 								Large portfolio? Let's talk. We offer custom pricing, dedicated
@@ -135,12 +136,12 @@ export function PricingModule() {
 							</p>
 						</div>
 						<div className="mt-6 lg:mt-0 lg:shrink-0">
-							<a
-								href="mailto:hello@rentloopapp.com"
+							<ExternalLink
+								href="https://bisaform-main-bw7x.vercel.app/f/b1ae7cbbk45q"
 								className="inline-block rounded-md bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-gray-700"
 							>
 								Contact us
-							</a>
+							</ExternalLink>
 						</div>
 					</div>
 				</div>
@@ -190,7 +191,15 @@ export function PricingModule() {
 	)
 }
 
-const allFeatures = [
+const freePlanFeatures = [
+	'Up to 3 units',
+	'Tenant management',
+	'Lease tracking',
+	'Maintenance requests',
+	'Rent collection & payment tracking',
+]
+
+const paidPlanFeatures = [
 	'Tenant management',
 	'Lease tracking',
 	'Maintenance requests',
@@ -204,29 +213,32 @@ const allFeatures = [
 const tiers = [
 	{
 		name: 'Free',
-		range: 'Up to 5 units',
-		price: 'GH₵ 0',
+		range: '1 – 3 units',
+		price: 'GHS 0',
 		priceSuffix: '/month',
 		description:
-			'Automatically applied when your portfolio has 5 units or fewer.',
+			'Get started at no cost. Designed for onboarding and early adoption.',
 		highlighted: false,
+		features: freePlanFeatures,
 	},
 	{
-		name: 'Standard',
-		range: '6 – 100 units',
-		price: 'GH₵ 10',
-		priceSuffix: '/unit/month',
+		name: 'Starter',
+		range: '4 – 50 units',
+		price: 'GHS 199 – 499',
+		priceSuffix: '/month',
 		description:
-			'Applied automatically once you add a 6th unit to your portfolio.',
+			'Flat monthly rate applied automatically once you add a 4th unit.',
 		highlighted: true,
+		features: paidPlanFeatures,
 	},
 	{
 		name: 'Growth',
-		range: '101 – 200 units',
-		price: 'GH₵ 8',
-		priceSuffix: '/unit/month',
-		description: 'Volume discount applied automatically at 101 units.',
+		range: '51 – 150 units',
+		price: 'GHS 500 – 1,299',
+		priceSuffix: '/month',
+		description: 'Flat monthly rate applied automatically at 51 units.',
 		highlighted: false,
+		features: paidPlanFeatures,
 	},
 ]
 
@@ -237,9 +249,9 @@ const faqs = [
 			'No. There is nothing to select. You simply create an account, add your properties and units, and Rentloop automatically applies the correct billing rate based on your total unit count. As your portfolio grows or shrinks, your rate updates at the start of the next billing cycle.',
 	},
 	{
-		question: 'How does per-unit billing work?',
+		question: 'How does billing work?',
 		answer:
-			'You pay a monthly fee for each unit in your active portfolio. If you have 20 units on the Standard rate, you pay GH₵ 10 × 20 = GH₵ 200/month. Your bill adjusts automatically as you add or remove units.',
+			'You pay a flat monthly fee based on your total unit count. Your first 3 units are completely free. From 4 to 50 units you move to the Starter plan (GHS 199–499/month), and from 51 to 150 units you move to the Growth plan (GHS 500–1,299/month). Your plan updates automatically as you add or remove units.',
 	},
 	{
 		question: 'What counts as a unit?',
@@ -249,7 +261,7 @@ const faqs = [
 	{
 		question: 'What happens when I cross a tier threshold?',
 		answer:
-			'When your unit count crosses into a new billing range (e.g. from 100 to 101 units), the new rate applies to your entire portfolio from the next billing cycle. You do not pay two different rates within a single cycle.',
+			'When your unit count crosses into a new plan range (e.g. from 3 to 4 units, or from 50 to 51 units), the new monthly rate applies from the next billing cycle. You do not pay two different rates within a single cycle.',
 	},
 	{
 		question: 'Is there a long-term contract?',

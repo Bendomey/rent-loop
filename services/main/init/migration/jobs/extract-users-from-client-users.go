@@ -16,25 +16,28 @@ func ExtractUsersFromClientUsers() *gormigrate.Migration {
 				return err
 			}
 
-			// 3. Insert a user row for each unique email across all client_users
+			// 3. Insert a user row for each unique email across ALL client_users
+			// (including soft-deleted rows — they still need a user_id before SET NOT NULL)
+			// Guarded: email column may already be dropped if migration partially ran before.
 			if err := db.Exec(`
-				INSERT INTO users (id, name, email, phone_number, password, created_at, updated_at)
-				SELECT DISTINCT ON (email)
-					uuid_generate_v4(), name, email, phone_number, password, NOW(), NOW()
-				FROM client_users
-				WHERE deleted_at IS NULL
-				ON CONFLICT (email) DO NOTHING
-			`).Error; err != nil {
-				return err
-			}
+				DO $$
+				BEGIN
+					IF EXISTS (
+						SELECT 1 FROM information_schema.columns
+						WHERE table_name = 'client_users' AND column_name = 'email'
+					) THEN
+						INSERT INTO users (id, name, email, phone_number, password, created_at, updated_at)
+						SELECT DISTINCT ON (email)
+							uuid_generate_v4(), name, email, phone_number, password, NOW(), NOW()
+						FROM client_users
+						ON CONFLICT (email) DO NOTHING;
 
-			// 4. Set user_id on each client_user row
-			if err := db.Exec(`
-				UPDATE client_users
-				SET user_id = users.id
-				FROM users
-				WHERE client_users.email = users.email
-				AND client_users.deleted_at IS NULL
+						UPDATE client_users
+						SET user_id = users.id
+						FROM users
+						WHERE client_users.email = users.email;
+					END IF;
+				END $$;
 			`).Error; err != nil {
 				return err
 			}
