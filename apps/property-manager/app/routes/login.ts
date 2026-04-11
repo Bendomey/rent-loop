@@ -80,8 +80,13 @@ export async function action({ request }: Route.ActionArgs) {
 			}
 		}
 
-		// Multiple clients (or zero) → go to picker
-		return redirect('/select-client', {
+		// Multiple clients (or zero) → go to picker, preserving return_to
+		const url = new URL(request.url)
+		const returnTo = url.searchParams.get('return_to')
+		const pickerUrl = returnTo
+			? `/select-client?return_to=${encodeURIComponent(returnTo)}`
+			: '/select-client'
+		return redirect(pickerUrl, {
 			headers: { 'Set-Cookie': await saveAuthSession(session) },
 		})
 	} catch {

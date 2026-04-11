@@ -53,7 +53,7 @@ export function PropertyMembersModule() {
 				cell: () => <User />,
 			},
 			{
-				accessorKey: 'client_user.name',
+				accessorKey: 'client_user.user.name',
 				header: 'Name',
 				cell: ({ getValue }) => {
 					return (

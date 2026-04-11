@@ -19215,6 +19215,9 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2023-01-01T00:00:00Z"
                 },
+                "user": {
+                    "$ref": "#/definitions/transformations.OutputUser"
+                },
                 "user_id": {
                     "type": "string",
                     "example": "e4ad26d4-d7e9-4599-a246-5e88abba6083"

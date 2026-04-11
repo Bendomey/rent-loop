@@ -12,11 +12,9 @@ import {
 	SidebarMenuItem,
 } from '~/components/ui/sidebar'
 import { safeString } from '~/lib/strings'
-import { useAuth } from '~/providers/auth-provider'
 import { useClient } from '~/providers/client-provider'
 
 export function NavProperties() {
-	const { currentUser } = useAuth()
 	const { clientUser } = useClient()
 	const { data } = useGetClientUserProperties(
 		safeString(clientUser?.client_id),
@@ -25,7 +23,7 @@ export function NavProperties() {
 			sorter: {},
 			search: {},
 			populate: ['Property'],
-			filters: { client_user_id: currentUser?.id },
+			filters: { client_user_id: clientUser?.id },
 		},
 	)
 

@@ -10,6 +10,7 @@ import (
 type OutputClientUser struct {
 	ID                string            `json:"id"                   example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 	UserID            string            `json:"user_id"              example:"e4ad26d4-d7e9-4599-a246-5e88abba6083"`
+	User              OutputUser        `json:"user"`
 	ClientID          string            `json:"client_id"            example:"e4ad26d4-d7e9-4599-a246-5e88abba6083"`
 	Client            OutputClient      `json:"client"`
 	Role              string            `json:"role"                 example:"STAFF"`
@@ -29,6 +30,7 @@ func DBClientUserToRest(i *models.ClientUser) interface{} {
 	return map[string]interface{}{
 		"id":                   i.ID.String(),
 		"user_id":              i.UserID,
+		"user":                 DBUserToRest(&i.User),
 		"client_id":            i.ClientID,
 		"client":               DBClientToRestClient(&i.Client),
 		"role":                 i.Role,
