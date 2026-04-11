@@ -9,7 +9,7 @@ import (
 // ClientUser represents a membership between a User and a Client
 type ClientUser struct {
 	BaseModelSoftDelete
-	UserID string `gorm:"not null;index"`
+	UserID string `gorm:"index"`
 	User   User
 
 	ClientID string `gorm:"not null;index"`
