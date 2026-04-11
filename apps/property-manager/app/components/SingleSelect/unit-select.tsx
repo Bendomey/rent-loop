@@ -17,7 +17,7 @@ interface UnitSelectProps
 	label?: string
 	maxCount?: number
 	value?: string
-	onChange?: (value: { id: string; name: string }) => void
+	onChange?: (value: { id: string; name: string; unit: PropertyUnit }) => void
 }
 
 export function UnitSelect({
@@ -48,6 +48,7 @@ export function UnitSelect({
 		value: string
 		label: string
 		isAvailable?: boolean
+		unit?: PropertyUnit
 	}> = useMemo(() => {
 		if (data && data.rows) {
 			return data.rows.map((item) => ({
@@ -59,6 +60,7 @@ export function UnitSelect({
 				isAvailable:
 					item.status === 'Unit.Status.Available' ||
 					item.status === 'Unit.Status.PartiallyOccupied',
+				unit: item,
 			}))
 		}
 
@@ -83,10 +85,11 @@ export function UnitSelect({
 				onValueChange={(value) => {
 					const selected = selectOptions.find((opt) => opt.value === value)
 
-					if (selected) {
+					if (selected?.unit) {
 						onChange?.({
 							id: selected.value,
 							name: selected.label,
+							unit: selected.unit,
 						})
 					}
 				}}

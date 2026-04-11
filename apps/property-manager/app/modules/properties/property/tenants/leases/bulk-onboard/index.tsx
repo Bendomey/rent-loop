@@ -1,5 +1,12 @@
-import { AlertCircle, CheckCircle2, Pencil, Plus, Trash2 } from 'lucide-react'
-import { useNavigate } from 'react-router'
+import {
+	AlertCircle,
+	CheckCircle2,
+	Info,
+	Pencil,
+	Plus,
+	Trash2,
+} from 'lucide-react'
+import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { BulkOnboardProvider, useBulkOnboard } from './context'
 import { BulkOnboardWizard } from './wizard'
@@ -7,6 +14,7 @@ import {
 	type BulkOnboardLeaseEntryInput,
 	useBulkOnboardLeases,
 } from '~/api/leases'
+import { BlockNavigationDialog } from '~/components/block-navigation-dialog'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -18,6 +26,7 @@ import {
 	TableRow,
 } from '~/components/ui/table'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
+import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
 import { formatAmount } from '~/lib/format-amount'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
@@ -42,9 +51,18 @@ function BulkOnboardTable() {
 	const propertyId = safeString(clientUserProperty?.property_id)
 	const clientId = safeString(clientUser?.client_id)
 
+	const blocker = useNavigationBlocker(
+		(entries.length > 0 || editingEntryId !== null) && !isSubmitting,
+	)
+
 	if (editingEntryId !== null) {
 		const editingEntry = entries.find((e) => e.id === editingEntryId)
-		return <BulkOnboardWizard editingEntry={editingEntry} />
+		return (
+			<>
+				<BulkOnboardWizard editingEntry={editingEntry} />
+				<BlockNavigationDialog blocker={blocker} />
+			</>
+		)
 	}
 
 	const allComplete = entries.length > 0 && entries.every((e) => e.isComplete)
@@ -101,6 +119,23 @@ function BulkOnboardTable() {
 						{isSubmitting ? 'Submitting…' : `Submit All (${entries.length})`}
 					</Button>
 				</div>
+			</div>
+
+			{/* Disclaimer */}
+			<div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300">
+				<Info className="mt-0.5 h-4 w-4 shrink-0" />
+				<p>
+					This is for tenants who are{' '}
+					<span className="font-medium">already living in your property</span>.
+					For new tenants, use the{' '}
+					<Link
+						to={`/properties/${propertyId}/tenants/applications`}
+						className="font-medium underline underline-offset-2"
+					>
+						application process
+					</Link>{' '}
+					instead.
+				</p>
 			</div>
 
 			{/* Progress bar */}
@@ -187,10 +222,12 @@ function BulkOnboardTable() {
 
 			{entries.length >= MAX_ENTRIES && (
 				<p className="text-muted-foreground rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-900">
-					Maximum of {MAX_ENTRIES} tenants per submission reached. Submit this
-					batch first, then start a new one.
+					Maximum of {MAX_ENTRIES} tenants per batch. Submit this batch, then
+					come back to add the rest.
 				</p>
 			)}
+
+			<BlockNavigationDialog blocker={blocker} />
 		</div>
 	)
 }

@@ -7,6 +7,7 @@ import { Button } from '~/components/ui/button'
 import {
 	Form,
 	FormControl,
+	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -85,7 +86,7 @@ export function WizardStep2({
 					<TypographyMuted>Basic details about the tenant.</TypographyMuted>
 				</div>
 
-				<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+				<div className="grid grid-cols-1 gap-6 md:grid-cols-2">
 					<FormField
 						control={form.control}
 						name="first_name"
@@ -112,19 +113,21 @@ export function WizardStep2({
 							</FormItem>
 						)}
 					/>
-					<FormField
-						control={form.control}
-						name="other_names"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Other Names</FormLabel>
-								<FormControl>
-									<Input {...field} />
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+					<div className="col-span-2">
+						<FormField
+							control={form.control}
+							name="other_names"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Other Names</FormLabel>
+									<FormControl>
+										<Input {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
 					<FormField
 						control={form.control}
 						name="phone"
@@ -162,13 +165,40 @@ export function WizardStep2({
 									defaultValue={field.value}
 								>
 									<FormControl>
-										<SelectTrigger>
+										<SelectTrigger className="w-full">
 											<SelectValue placeholder="Select gender" />
 										</SelectTrigger>
 									</FormControl>
 									<SelectContent>
 										<SelectItem value="Male">Male</SelectItem>
 										<SelectItem value="Female">Female</SelectItem>
+									</SelectContent>
+								</Select>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+					<FormField
+						control={form.control}
+						name="marital_status"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Marital Status *</FormLabel>
+								<Select
+									onValueChange={field.onChange}
+									defaultValue={field.value}
+								>
+									<FormControl>
+										<SelectTrigger className="w-full">
+											<SelectValue placeholder="Select status" />
+										</SelectTrigger>
+									</FormControl>
+									<SelectContent>
+										{['Single', 'Married', 'Divorced', 'Widowed'].map((s) => (
+											<SelectItem key={s} value={s}>
+												{s}
+											</SelectItem>
+										))}
 									</SelectContent>
 								</Select>
 								<FormMessage />
@@ -206,42 +236,17 @@ export function WizardStep2({
 							</FormItem>
 						)}
 					/>
-					<FormField
-						control={form.control}
-						name="marital_status"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Marital Status *</FormLabel>
-								<Select
-									onValueChange={field.onChange}
-									defaultValue={field.value}
-								>
-									<FormControl>
-										<SelectTrigger>
-											<SelectValue placeholder="Select status" />
-										</SelectTrigger>
-									</FormControl>
-									<SelectContent>
-										{['Single', 'Married', 'Divorced', 'Widowed'].map((s) => (
-											<SelectItem key={s} value={s}>
-												{s}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+
 					<FormField
 						control={form.control}
 						name="current_address"
 						render={({ field }) => (
 							<FormItem className="md:col-span-2">
-								<FormLabel>Current Address *</FormLabel>
+								<FormLabel>Previous Address *</FormLabel>
 								<FormControl>
 									<Input {...field} />
 								</FormControl>
+								<FormDescription>Use N/A if not applicable</FormDescription>
 								<FormMessage />
 							</FormItem>
 						)}
@@ -263,7 +268,7 @@ export function WizardStep2({
 									defaultValue={field.value}
 								>
 									<FormControl>
-										<SelectTrigger>
+										<SelectTrigger className="w-full">
 											<SelectValue placeholder="Select ID type" />
 										</SelectTrigger>
 									</FormControl>

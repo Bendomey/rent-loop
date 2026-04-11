@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight } from 'lucide-react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useBulkOnboard } from '../context'
@@ -23,7 +24,7 @@ type FormValues = z.infer<typeof Schema>
 
 interface Step1Props {
 	initialValues?: Partial<FormValues>
-	onNext: (values: FormValues) => void
+	onNext: (values: FormValues & { unit: PropertyUnit | null }) => void
 	onCancel: () => void
 }
 
@@ -36,6 +37,8 @@ export function WizardStep1({ initialValues, onNext, onCancel }: Step1Props) {
 	const excludedUnitIds = entries
 		.filter((e) => e.id !== editingEntryId)
 		.map((e) => e.unit_id)
+
+	const [selectedUnit, setSelectedUnit] = useState<PropertyUnit | null>(null)
 
 	const { setValue, watch, formState, handleSubmit, setError } =
 		useForm<FormValues>({
@@ -50,7 +53,7 @@ export function WizardStep1({ initialValues, onNext, onCancel }: Step1Props) {
 			})
 			return
 		}
-		onNext(data)
+		onNext({ ...data, unit: selectedUnit })
 	}
 
 	return (
@@ -71,9 +74,10 @@ export function WizardStep1({ initialValues, onNext, onCancel }: Step1Props) {
 					label=""
 					property_id={propertyId}
 					value={watch('unit_id')}
-					onChange={({ id, name }) => {
+					onChange={({ id, name, unit }) => {
 						setValue('unit_id', id, { shouldDirty: true, shouldValidate: true })
 						setValue('unit_name', name)
+						setSelectedUnit(unit)
 					}}
 				/>
 				{formState.errors?.unit_id ? (

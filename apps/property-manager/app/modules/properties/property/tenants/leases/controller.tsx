@@ -1,5 +1,6 @@
-import { RotateCw, ToggleLeft } from 'lucide-react'
+import { History, RotateCw, ToggleLeft } from 'lucide-react'
 import { useMemo } from 'react'
+import { Link } from 'react-router'
 import { getPropertyUnits } from '~/api/units'
 import { FilterSet } from '~/components/filter-set'
 import { SearchInput } from '~/components/search'
@@ -13,9 +14,13 @@ import { useProperty } from '~/providers/property-provider'
 export const PropertyTenantLeasesController = ({
 	isLoading,
 	refetch,
+	propertyId,
+	hasLeases,
 }: {
 	isLoading: boolean
 	refetch: VoidFunction
+	propertyId: string
+	hasLeases: boolean
 }) => {
 	const { clientUserProperty } = useProperty()
 	const { clientUser } = useClient()
@@ -81,7 +86,7 @@ export const PropertyTenantLeasesController = ({
 					] as Array<Filter>)
 				: []),
 		],
-		[clientUserProperty?.property_id, isMultiProperty],
+		[clientUser?.client_id, clientUserProperty?.property_id, isMultiProperty],
 	)
 
 	return (
@@ -96,6 +101,14 @@ export const PropertyTenantLeasesController = ({
 					<SearchInput placeholder="Search by lease code..." />
 				</div>
 				<div className="flex items-center justify-end gap-2">
+					{hasLeases && (
+						<Link to={`/properties/${propertyId}/tenants/leases/bulk-onboard`}>
+							<Button variant="outline" size="sm">
+								<History className="size-4" />
+								Add existing tenants
+							</Button>
+						</Link>
+					)}
 					<Button
 						onClick={() => refetch()}
 						disabled={isLoading}

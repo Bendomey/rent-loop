@@ -204,9 +204,14 @@ export function PropertyTenantLeasesModule() {
 				</TypographyMuted>
 			</div>
 
-			<PropertyTenantLeasesController isLoading={isLoading} refetch={refetch} />
+			<PropertyTenantLeasesController
+				isLoading={isLoading}
+				refetch={refetch}
+				propertyId={propertyId}
+				hasLeases={!isPending && (data?.rows?.length ?? 0) > 0}
+			/>
 
-			{/* Entry point for bulk onboard — show when the list is empty */}
+			{/* Big banner — only when there are no leases yet */}
 			{!isPending && data?.rows?.length === 0 && (
 				<Card className="border-dashed shadow-none">
 					<CardContent className="flex items-center justify-between py-5">
@@ -215,13 +220,14 @@ export function PropertyTenantLeasesModule() {
 							<div>
 								<p className="text-sm font-semibold">Have existing tenants?</p>
 								<p className="text-muted-foreground text-sm">
-									Quickly onboard all your current tenants and their leases.
+									Quickly onboard your current tenants and their leases in
+									batches of up to 20.
 								</p>
 							</div>
 						</div>
 						<Link to={`/properties/${propertyId}/tenants/leases/bulk-onboard`}>
 							<Button variant="outline" size="sm">
-								Get started <ArrowRight className="ml-1 h-4 w-4" />
+								Add tenants <ArrowRight className="ml-1 h-4 w-4" />
 							</Button>
 						</Link>
 					</CardContent>

@@ -9,12 +9,27 @@ import type { Step3Values } from './step3'
 import { WizardStep4 } from './step4'
 import type { BulkOnboardLeaseEntryInput } from '~/api/leases'
 import { localizedDayjs } from '~/lib/date'
+import { convertPesewasToCedis } from '~/lib/format-amount'
 
 const TOTAL_STEPS = 4
+
+function paymentFreqToDurationFreq(
+	freq: PropertyUnit['payment_frequency'],
+): Step3Values['stay_duration_frequency'] {
+	return freq === 'DAILY' ? 'DAYS' : 'MONTHS'
+}
+
+interface UnitDefaults {
+	rent_fee: number
+	rent_fee_currency: string
+	payment_frequency: PropertyUnit['payment_frequency']
+	stay_duration_frequency: Step3Values['stay_duration_frequency']
+}
 
 interface WizardData {
 	unit_id: string
 	unit_name: string
+	unitDefaults?: UnitDefaults
 	step2: Partial<Step2Values>
 	step3: Partial<Step3Values>
 	lease_agreement_document_url: string
@@ -158,6 +173,21 @@ export function BulkOnboardWizard({ editingEntry }: BulkOnboardWizardProps) {
 										...d,
 										unit_id: v.unit_id,
 										unit_name: v.unit_name,
+										// Only update unitDefaults when a unit was actually (re-)selected;
+										// v.unit is null if the user proceeded without changing the unit
+										// during an edit, in which case we keep the existing defaults.
+										...(v.unit
+											? {
+													unitDefaults: {
+														rent_fee: convertPesewasToCedis(v.unit.rent_fee),
+														rent_fee_currency: v.unit.rent_fee_currency,
+														payment_frequency: v.unit.payment_frequency,
+														stay_duration_frequency: paymentFreqToDurationFreq(
+															v.unit.payment_frequency,
+														),
+													},
+												}
+											: {}),
 									}))
 									setStep(2)
 								}}
@@ -178,6 +208,7 @@ export function BulkOnboardWizard({ editingEntry }: BulkOnboardWizardProps) {
 						{step === 3 && (
 							<WizardStep3
 								initialValues={data.step3}
+								unitDefaults={data.unitDefaults}
 								onNext={(v) => {
 									setData((d) => ({ ...d, step3: v }))
 									setStep(4)
