@@ -62,7 +62,7 @@ type GenerateExpenseInvoiceBody struct {
 //	@Failure		401			{object}	string										"Invalid or absent authentication token"
 //	@Failure		422			{object}	lib.HTTPError								"Validation error"
 //	@Failure		500			{object}	string										"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/expenses [post]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/expenses [post]
 func (h *ExpenseHandler) AddExpense(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -114,7 +114,7 @@ func (h *ExpenseHandler) AddExpense(w http.ResponseWriter, r *http.Request) {
 //	@Failure		401			{object}	string										"Invalid or absent authentication token"
 //	@Failure		404			{object}	lib.HTTPError								"Expense not found"
 //	@Failure		500			{object}	string										"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/expenses/{expense_id} [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/expenses/{expense_id} [get]
 func (h *ExpenseHandler) GetExpense(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -147,7 +147,7 @@ func (h *ExpenseHandler) GetExpense(w http.ResponseWriter, r *http.Request) {
 //	@Failure		401			{object}	string				"Invalid or absent authentication token"
 //	@Failure		404			{object}	lib.HTTPError		"Expense not found"
 //	@Failure		500			{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/expenses/{expense_id} [delete]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/expenses/{expense_id} [delete]
 func (h *ExpenseHandler) DeleteExpense(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -180,7 +180,7 @@ func (h *ExpenseHandler) DeleteExpense(w http.ResponseWriter, r *http.Request) {
 //	@Failure		404			{object}	lib.HTTPError									"Expense not found"
 //	@Failure		422			{object}	lib.HTTPError									"Validation error"
 //	@Failure		500			{object}	string											"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/expenses/{expense_id}/generate:invoice [post]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/expenses/{expense_id}/generate:invoice [post]
 func (h *ExpenseHandler) GenerateExpenseInvoice(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -241,7 +241,7 @@ func (h *ExpenseHandler) GenerateExpenseInvoice(w http.ResponseWriter, r *http.R
 //	@Success		200			{object}	object{data=object{rows=[]transformations.OutputExpense,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Expenses"
 //	@Failure		401			{object}	string																								"Invalid or absent authentication token"
 //	@Failure		500			{object}	string																								"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/expenses [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/expenses [get]
 func (h *ExpenseHandler) ListPropertyExpenses(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -297,7 +297,7 @@ func (h *ExpenseHandler) ListPropertyExpenses(w http.ResponseWriter, r *http.Req
 //	@Success		200			{object}	object{data=object{rows=[]transformations.OutputExpense,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Expenses"
 //	@Failure		401			{object}	string																								"Invalid or absent authentication token"
 //	@Failure		500			{object}	string																								"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id}/expenses [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/expenses [get]
 func (h *ExpenseHandler) ListLeaseExpenses(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -355,7 +355,7 @@ func (h *ExpenseHandler) ListLeaseExpenses(w http.ResponseWriter, r *http.Reques
 //	@Success		200						{object}	object{data=object{rows=[]transformations.OutputExpense,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Expenses"
 //	@Failure		401						{object}	string																								"Invalid or absent authentication token"
 //	@Failure		500						{object}	string																								"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/expenses [get]
 func (h *ExpenseHandler) ListMRExpenses(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {

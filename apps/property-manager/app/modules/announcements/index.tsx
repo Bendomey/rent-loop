@@ -14,6 +14,8 @@ import {
 import { TypographyH2 } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 function getStatusBadge(status: Announcement['status']) {
 	const map: Record<
@@ -48,6 +50,7 @@ function getStatusBadge(status: Announcement['status']) {
 export function AnnouncementsModule() {
 	const navigate = useNavigate()
 	const [searchParams] = useSearchParams()
+	const { clientUser } = useClient()
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -57,6 +60,7 @@ export function AnnouncementsModule() {
 		: PAGINATION_DEFAULTS.PER_PAGE
 
 	const { data, isPending, isRefetching, error, refetch } = useGetAnnouncements(
+		safeString(clientUser?.client_id),
 		{
 			pagination: { page, per },
 			sorter: { sort: 'desc', sort_by: 'created_at' },

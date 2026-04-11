@@ -23,9 +23,9 @@ export function buildTemplateFieldMap(
 	}
 
 	// Landlord (from created_by ClientUser)
-	set('LandlordName', app.created_by?.name)
-	set('LandlordEmail', app.created_by?.email)
-	set('LandlordPhoneNumber', app.created_by?.phone_number)
+	set('LandlordName', app.created_by?.user?.name)
+	set('LandlordEmail', app.created_by?.user?.email)
+	set('LandlordPhoneNumber', app.created_by?.user?.phone_number)
 
 	// Tenant
 	const tenantName = [app.first_name, app.other_names, app.last_name]

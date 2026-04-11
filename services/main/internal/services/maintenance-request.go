@@ -170,7 +170,7 @@ func (s *maintenanceRequestService) CreateByTenant(
 ) (*models.MaintenanceRequest, error) {
 	lease, err := s.leaseRepo.GetOneWithPopulate(ctx, repository.GetLeaseQuery{
 		ID:       input.LeaseID,
-		Populate: &[]string{"ActivatedBy", "Unit", "Tenant"},
+		Populate: &[]string{"ActivatedBy", "ActivatedBy.User", "Unit", "Tenant"},
 	})
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -215,7 +215,7 @@ func (s *maintenanceRequestService) CreateByTenant(
 	}
 
 	go func() {
-		if lease.ActivatedById == nil || lease.ActivatedBy == nil || lease.ActivatedBy.Email == "" {
+		if lease.ActivatedById == nil || lease.ActivatedBy == nil || lease.ActivatedBy.User.Email == "" {
 			return
 		}
 		message := strings.NewReplacer(
@@ -226,7 +226,7 @@ func (s *maintenanceRequestService) CreateByTenant(
 			"{{priority}}", mr.Priority,
 		).Replace(lib.ApplyGlobalVariableTemplate(s.appCtx.Config, lib.PM_MAINTENANCE_REQUEST_CREATED_BODY))
 		pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-			Recipient: lease.ActivatedBy.Email,
+			Recipient: lease.ActivatedBy.User.Email,
 			Subject:   lib.PM_MAINTENANCE_REQUEST_CREATED_SUBJECT,
 			TextBody:  message,
 		})

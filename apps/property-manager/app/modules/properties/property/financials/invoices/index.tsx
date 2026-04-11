@@ -34,11 +34,13 @@ import {
 } from '~/lib/invoice'
 import { safeString } from '~/lib/strings'
 import { INVOICES_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyFinancialsPaymentsModule() {
 	const [searchParams] = useSearchParams()
 	const { clientUserProperty } = useProperty()
+	const { clientUser } = useClient()
 
 	const { startTour, hasCompletedTour } = useTour(
 		TOUR_KEYS.INVOICES,
@@ -60,6 +62,7 @@ export function PropertyFinancialsPaymentsModule() {
 	const status = searchParams.get('status') ?? undefined
 
 	const { data, isPending, isRefetching, error, refetch } = useGetInvoices(
+		safeString(clientUser?.client_id),
 		safeString(clientUserProperty?.property_id),
 		{
 			filters: {

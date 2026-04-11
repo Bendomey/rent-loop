@@ -7,6 +7,8 @@ import {
 } from '~/components/ui/card'
 import { Skeleton } from '~/components/ui/skeleton'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface ExpenseRow {
 	'Expenses.totalAmount': string | null
@@ -23,7 +25,10 @@ interface Props {
 }
 
 export function PropertyExpenseAnalyticsCards({ propertyId }: Props) {
-	const { data: token } = useGetAnalyticsToken()
+	const { clientUser } = useClient()
+	const { data: token } = useGetAnalyticsToken(
+		safeString(clientUser?.client_id),
+	)
 
 	const expensesQuery = useCubeQuery<ExpenseRow>(
 		token,

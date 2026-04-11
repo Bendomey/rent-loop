@@ -29,6 +29,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
 import { TypographyH3, TypographyMuted } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.applications.new'
 
 interface Props {
@@ -77,6 +78,7 @@ export type FormSchema = z.infer<typeof ValidationSchema>
 function InviteTenantModal({ opened, setOpened, data, admin_id }: Props) {
 	const queryClient = useQueryClient()
 	const navigate = useNavigate()
+	const { clientUser } = useClient()
 	const { clientUserProperty, rentLoopWebsiteUrl } =
 		useLoaderData<typeof loader>()
 	const property_id = safeString(clientUserProperty?.property?.id)
@@ -118,6 +120,7 @@ function InviteTenantModal({ opened, setOpened, data, admin_id }: Props) {
 		if (data) {
 			mutate(
 				{
+					client_id: safeString(clientUser?.client_id),
 					unit_id: data.desired_unit_id,
 					property_id: property_id,
 					email: data.email,

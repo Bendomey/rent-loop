@@ -11,10 +11,13 @@ import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyMembersModule() {
 	const [searchParams] = useSearchParams()
+	const { clientUser } = useClient()
 	const { clientUserProperty } = useProperty()
 
 	const [selectedMember, setSelectedMember] = useState<ClientUser>()
@@ -29,10 +32,10 @@ export function PropertyMembersModule() {
 	const role = searchParams.get('role') ?? undefined
 
 	const { data, isPending, isRefetching, error, refetch } =
-		useGetClientUserProperties({
+		useGetClientUserProperties(safeString(clientUser?.client_id), {
 			filters: { role: role, property_id: clientUserProperty?.property?.id },
 			pagination: { page, per },
-			populate: ['ClientUser'],
+			populate: ['ClientUser', 'ClientUser.User'],
 			sorter: { sort: 'desc', sort_by: 'created_at' },
 			search: {
 				query: searchParams.get('query') ?? undefined,
@@ -50,7 +53,7 @@ export function PropertyMembersModule() {
 				cell: () => <User />,
 			},
 			{
-				accessorKey: 'client_user.name',
+				accessorKey: 'client_user.user.name',
 				header: 'Name',
 				cell: ({ getValue }) => {
 					return (
@@ -80,10 +83,10 @@ export function PropertyMembersModule() {
 				cell: ({ row }) => (
 					<div className="flex min-w-32 flex-col items-start gap-1">
 						<span className="truncate text-xs text-zinc-600 dark:text-white">
-							{row.original.client_user?.email}
+							{row.original.client_user?.user?.email}
 						</span>
 						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
-							{row.original.client_user?.phone_number}
+							{row.original.client_user?.user?.phone_number}
 						</span>
 					</div>
 				),

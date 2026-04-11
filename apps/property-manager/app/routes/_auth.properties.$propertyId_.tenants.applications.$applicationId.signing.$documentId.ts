@@ -6,6 +6,7 @@ import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
+import { safeString } from '~/lib/strings'
 import { LeaseSigningModule } from '~/modules/properties/property/tenants/applications/application/docs/lease-signing'
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
@@ -17,15 +18,18 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 	}
 
 	const clientUserProperty = context.get(propertyContext)
+	const clientId = safeString(authSession.get('selectedClientId'))
 
 	try {
 		const tenantApplication = await getAdminPropertyTenantApplicationForServer(
+			clientId,
 			{
 				id: params.applicationId,
 				property_id: params.propertyId,
 				populate: [
 					'DesiredUnit',
 					'CreatedBy',
+					'CreatedBy.User',
 					'LeaseAgreementDocumentSignatures',
 					'LeaseAgreementDocument',
 				],

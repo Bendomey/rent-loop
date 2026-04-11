@@ -34,6 +34,7 @@ type clientApplicationService struct {
 	repo              repository.ClientApplicationRepository
 	clientService     ClientService
 	clientUserService ClientUserService
+	userService       UserService
 }
 
 type ClientApplicationServiceDeps struct {
@@ -41,6 +42,7 @@ type ClientApplicationServiceDeps struct {
 	Repo              repository.ClientApplicationRepository
 	ClientService     ClientService
 	ClientUserService ClientUserService
+	UserService       UserService
 }
 
 func NewClientApplicationService(deps ClientApplicationServiceDeps) ClientApplicationService {
@@ -49,6 +51,7 @@ func NewClientApplicationService(deps ClientApplicationServiceDeps) ClientApplic
 		repo:              deps.Repo,
 		clientService:     deps.ClientService,
 		clientUserService: deps.ClientUserService,
+		userService:       deps.UserService,
 	}
 }
 
@@ -314,18 +317,27 @@ func (s *clientApplicationService) ApproveClientApplication(
 			Err: err,
 			Metadata: map[string]string{
 				"function": "ApproveClientApplication",
-				"action":   "generating random password for OWNER client user",
+				"action":   "generating random password for OWNER user",
 			},
 		})
 	}
 
-	user := models.ClientUser{
-		ClientID:    client.ID.String(),
+	ownerUser := models.User{
 		Name:        clientApplication.ContactName,
 		PhoneNumber: clientApplication.ContactPhoneNumber,
 		Email:       clientApplication.ContactEmail,
 		Password:    password,
-		Role:        "OWNER",
+	}
+
+	ownerUserCreated, err := s.userService.InsertUser(transCtx, &ownerUser)
+	if err != nil {
+		return nil, err
+	}
+
+	user := models.ClientUser{
+		UserID:   ownerUser.ID.String(),
+		ClientID: client.ID.String(),
+		Role:     "OWNER",
 	}
 
 	if err := s.clientUserService.InsertClientUser(transCtx, &user); err != nil {
@@ -342,24 +354,36 @@ func (s *clientApplicationService) ApproveClientApplication(
 		})
 	}
 
-	r := strings.NewReplacer(
-		"{{owner_name}}", clientApplication.ContactName,
-		"{{email}}", clientApplication.ContactEmail,
-		"{{password}}", password,
-	)
-	message := r.Replace(lib.CLIENT_APPLICATION_ACCEPTED_BODY)
-	smsMessage := r.Replace(lib.CLIENT_APPLICATION_ACCEPTED_SMS_BODY)
-
-	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-		Recipient: clientApplication.ContactEmail,
-		Subject:   lib.CLIENT_APPLICATION_ACCEPTED_SUBJECT,
-		TextBody:  message,
-	})
-
-	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
-		Recipient: clientApplication.ContactPhoneNumber,
-		Message:   smsMessage,
-	})
+	if ownerUserCreated {
+		r := strings.NewReplacer(
+			"{{owner_name}}", clientApplication.ContactName,
+			"{{email}}", clientApplication.ContactEmail,
+			"{{password}}", password,
+		)
+		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+			Recipient: clientApplication.ContactEmail,
+			Subject:   lib.CLIENT_APPLICATION_ACCEPTED_SUBJECT,
+			TextBody:  r.Replace(lib.CLIENT_APPLICATION_ACCEPTED_BODY),
+		})
+		go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
+			Recipient: clientApplication.ContactPhoneNumber,
+			Message:   r.Replace(lib.CLIENT_APPLICATION_ACCEPTED_SMS_BODY),
+		})
+	} else {
+		r := strings.NewReplacer(
+			"{{name}}", clientApplication.ContactName,
+			"{{client_name}}", client.Name,
+		)
+		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+			Recipient: clientApplication.ContactEmail,
+			Subject:   lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_SUBJECT,
+			TextBody:  r.Replace(lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_BODY),
+		})
+		go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
+			Recipient: clientApplication.ContactPhoneNumber,
+			Message:   r.Replace(lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_SMS_BODY),
+		})
+	}
 
 	return clientApplication, nil
 }

@@ -74,7 +74,7 @@ type GetTenantQuery struct {
 //	@Failure		401			{object}	string											"Invalid or absent authentication token"
 //	@Failure		404			{object}	lib.HTTPError									"Tenant not found"
 //	@Failure		500			{object}	string											"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/tenants/{tenant_id} [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenants/{tenant_id} [get]
 func (h *TenantHandler) GetTenantByID(w http.ResponseWriter, r *http.Request) {
 	tenantID := chi.URLParam(r, "tenant_id")
 	populateFields := GetPopulateFields(r)
@@ -112,7 +112,7 @@ type ListTenantsByPropertyQuery struct {
 //	@Failure		400			{object}	lib.HTTPError	"An error occurred while filtering tenants"
 //	@Failure		401			{object}	string			"Absent or invalid authentication token"
 //	@Failure		500			{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/tenants [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenants [get]
 func (h *TenantHandler) ListTenantsByProperty(w http.ResponseWriter, r *http.Request) {
 	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
 	if filterQueryErr != nil {

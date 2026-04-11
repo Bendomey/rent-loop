@@ -33,18 +33,18 @@ export const authMiddleware: MiddlewareFunction = async ({
 		// 	return
 		// }
 
-		const clientUser = await getCurrentUser({
+		const user = await getCurrentUser({
 			baseUrl,
 			authToken,
 		})
 
-		if (!clientUser) {
+		if (!user) {
 			throw new Error('No user found')
 		}
 
-		// userCache.set(cacheKey, JSON.stringify(clientUser))
+		// userCache.set(cacheKey, JSON.stringify(user))
 		context.set(userContext, {
-			clientUser,
+			user,
 		})
 	} catch {
 		userCache.delete(cacheKey)

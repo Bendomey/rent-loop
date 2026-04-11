@@ -14,6 +14,8 @@ import {
 } from '~/components/ui/alert-dialog'
 import { Spinner } from '~/components/ui/spinner'
 import { QUERY_KEYS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface Props {
 	data?: TenantApplication
@@ -29,6 +31,7 @@ export default function DeleteTenantApplicationModal({
 	propertyId,
 }: Props) {
 	const queryClient = useQueryClient()
+	const { clientUser } = useClient()
 
 	const { mutate, isPending } = useDeleteTenantApplication()
 
@@ -41,6 +44,7 @@ export default function DeleteTenantApplicationModal({
 		if (data) {
 			mutate(
 				{
+					client_id: safeString(clientUser?.client_id),
 					id: data.id,
 					property_id: propertyId,
 				},

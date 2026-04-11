@@ -6,6 +6,7 @@ import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
+import { safeString } from '~/lib/strings'
 import { SingleDocumentModule } from '~/modules'
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
@@ -17,8 +18,10 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 	}
 	const clientUserProperty = context.get(propertyContext)
 
+	const clientId = safeString(authSession.get('selectedClientId'))
+
 	try {
-		const document = await getDocument(params.documentId, {
+		const document = await getDocument(clientId, params.documentId, {
 			authToken,
 			baseUrl,
 		})

@@ -51,7 +51,7 @@ type UpdateLeaseRequest struct {
 //	@Failure		404			{object}	lib.HTTPError									"Lease not found"
 //	@Failure		422			{object}	lib.HTTPError									"Validation error"
 //	@Failure		500			{object}	string											"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id} [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id} [patch]
 func (h *LeaseHandler) UpdateLease(w http.ResponseWriter, r *http.Request) {
 	var body UpdateLeaseRequest
 	leaseID := chi.URLParam(r, "lease_id")
@@ -109,7 +109,7 @@ type GetLeaseQuery struct {
 //	@Failure		401			{object}	string											"Invalid or absent authentication token"
 //	@Failure		404			{object}	lib.HTTPError									"Lease not found"
 //	@Failure		500			{object}	string											"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id} [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id} [get]
 func (h *LeaseHandler) GetLeaseByID(w http.ResponseWriter, r *http.Request) {
 	leaseID := chi.URLParam(r, "lease_id")
 
@@ -155,7 +155,7 @@ type ListLeasesQuery struct {
 //	@Failure		400			{object}	lib.HTTPError	"An error occurred while filtering leases"
 //	@Failure		401			{object}	string			"Absent or invalid authentication token"
 //	@Failure		500			{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/tenants/{tenant_id}/leases [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenants/{tenant_id}/leases [get]
 func (h *LeaseHandler) ListLeasesByTenant(w http.ResponseWriter, r *http.Request) {
 	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
 	if filterQueryErr != nil {
@@ -221,7 +221,7 @@ func (h *LeaseHandler) ListLeasesByTenant(w http.ResponseWriter, r *http.Request
 //	@Failure		400			{object}	lib.HTTPError	"An error occurred while filtering leases"
 //	@Failure		401			{object}	string			"Absent or invalid authentication token"
 //	@Failure		500			{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/leases [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases [get]
 func (h *LeaseHandler) ListLeasesByProperty(w http.ResponseWriter, r *http.Request) {
 	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
 	if filterQueryErr != nil {
@@ -353,7 +353,7 @@ func (h *LeaseHandler) ListLeasesByTenantAccount(w http.ResponseWriter, r *http.
 //	@Failure		401			{object}	string			"Invalid or absent authentication token"
 //	@Failure		404			{object}	lib.HTTPError	"Lease not found"
 //	@Failure		500			{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id}/status:active [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/status:active [patch]
 func (h *LeaseHandler) ActivateLease(w http.ResponseWriter, r *http.Request) {
 	clientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {
@@ -397,7 +397,7 @@ type CancelLeaseRequest struct {
 //	@Failure		404			{object}	lib.HTTPError		"Lease not found"
 //	@Failure		422			{object}	lib.HTTPError		"Validation error"
 //	@Failure		500			{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/leases/{lease_id}/status:cancelled [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/status:cancelled [patch]
 func (h *LeaseHandler) CancelLease(w http.ResponseWriter, r *http.Request) {
 	clientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {

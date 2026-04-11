@@ -7,6 +7,7 @@ import { fetchClient } from '~/lib/transport'
  * GET all property blocks based on a query.
  */
 export const getPropertyBlocks = async (
+	clientId: string,
 	props: FetchMultipleDataInputParams<FetchPropertyBlockFilter> & {
 		property_id: string
 	},
@@ -15,7 +16,9 @@ export const getPropertyBlocks = async (
 		const params = getQueryParams<FetchPropertyBlockFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<PropertyBlock>>
-		>(`/v1/admin/properties/${props.property_id}/blocks?${params.toString()}`)
+		>(
+			`/v1/admin/clients/${clientId}/properties/${props.property_id}/blocks?${params.toString()}`,
+		)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -31,13 +34,15 @@ export const getPropertyBlocks = async (
 }
 
 export const useGetPropertyBlocks = (
+	clientId: string,
 	query: FetchMultipleDataInputParams<FetchPropertyBlockFilter> & {
 		property_id: string
 	},
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.PROPERTY_BLOCKS, query],
-		queryFn: () => getPropertyBlocks(query),
+		queryKey: [QUERY_KEYS.PROPERTY_BLOCKS, clientId, query],
+		queryFn: () => getPropertyBlocks(clientId, query),
+		enabled: !!clientId,
 	})
 
 export interface CreatePropertyBlockInput {
@@ -48,10 +53,13 @@ export interface CreatePropertyBlockInput {
 	status: PropertyBlock['status']
 }
 
-export const createPropertyBlock = async (props: CreatePropertyBlockInput) => {
+export const createPropertyBlock = async (
+	clientId: string,
+	props: CreatePropertyBlockInput,
+) => {
 	try {
 		const response = await fetchClient<ApiResponse<PropertyBlock>>(
-			`/v1/admin/properties/${props.property_id}/blocks`,
+			`/v1/admin/clients/${clientId}/properties/${props.property_id}/blocks`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),
@@ -70,17 +78,23 @@ export const createPropertyBlock = async (props: CreatePropertyBlockInput) => {
 	}
 }
 
-export const useCreatePropertyBlock = () =>
-	useMutation({ mutationFn: createPropertyBlock })
+export const useCreatePropertyBlock = (clientId: string) =>
+	useMutation({
+		mutationFn: (props: CreatePropertyBlockInput) =>
+			createPropertyBlock(clientId, props),
+	})
 
 /**
  * Get single property block by ID
  */
 
-const getPropertyBlock = async (props: { property_id: string; id: string }) => {
+const getPropertyBlock = async (
+	clientId: string,
+	props: { property_id: string; id: string },
+) => {
 	try {
 		const response = await fetchClient<ApiResponse<PropertyBlock>>(
-			`/v1/admin/properties/${props.property_id}/blocks/${props.id}`,
+			`/v1/admin/clients/${clientId}/properties/${props.property_id}/blocks/${props.id}`,
 		)
 
 		return response.parsedBody.data
@@ -96,13 +110,17 @@ const getPropertyBlock = async (props: { property_id: string; id: string }) => {
 	}
 }
 
-export const useGetPropertyBlock = (props: {
-	property_id: string
-	id: string
-}) =>
+export const useGetPropertyBlock = (
+	clientId: string,
+	props: {
+		property_id: string
+		id: string
+	},
+) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.PROPERTY_BLOCKS, props],
-		queryFn: () => getPropertyBlock(props),
+		queryKey: [QUERY_KEYS.PROPERTY_BLOCKS, clientId, props],
+		queryFn: () => getPropertyBlock(clientId, props),
+		enabled: !!clientId,
 	})
 
 interface UpdatePropertyBlockProps {
@@ -114,10 +132,13 @@ interface UpdatePropertyBlockProps {
  * Update Property Block
  */
 
-const updatePropertyBlock = async (props: UpdatePropertyBlockProps) => {
+const updatePropertyBlock = async (
+	clientId: string,
+	props: UpdatePropertyBlockProps,
+) => {
 	try {
 		await fetchClient<PropertyBlock>(
-			`/v1/admin/properties/${props.data.property_id}/blocks/${props.id}`,
+			`/v1/admin/clients/${clientId}/properties/${props.data.property_id}/blocks/${props.id}`,
 			{
 				method: 'PATCH',
 				body: JSON.stringify(props.data),
@@ -135,19 +156,25 @@ const updatePropertyBlock = async (props: UpdatePropertyBlockProps) => {
 	}
 }
 
-export const useUpdatePropertyBlock = () =>
-	useMutation({ mutationFn: updatePropertyBlock })
+export const useUpdatePropertyBlock = (clientId: string) =>
+	useMutation({
+		mutationFn: (props: UpdatePropertyBlockProps) =>
+			updatePropertyBlock(clientId, props),
+	})
 
 /**
  * Delete property block
  */
-const deletePropertyBlock = async (props: {
-	property_id: string
-	block_id: string
-}) => {
+const deletePropertyBlock = async (
+	clientId: string,
+	props: {
+		property_id: string
+		block_id: string
+	},
+) => {
 	try {
 		await fetchClient(
-			`/v1/admin/properties/${props.property_id}/blocks/${props.block_id}`,
+			`/v1/admin/clients/${clientId}/properties/${props.property_id}/blocks/${props.block_id}`,
 			{
 				method: 'DELETE',
 			},
@@ -164,7 +191,8 @@ const deletePropertyBlock = async (props: {
 	}
 }
 
-export const useDeletePropertyBlock = () =>
+export const useDeletePropertyBlock = (clientId: string) =>
 	useMutation({
-		mutationFn: deletePropertyBlock,
+		mutationFn: (props: { property_id: string; block_id: string }) =>
+			deletePropertyBlock(clientId, props),
 	})

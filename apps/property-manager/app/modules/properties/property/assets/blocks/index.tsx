@@ -43,10 +43,12 @@ import {
 	PAGINATION_DEFAULTS,
 } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyAssetBlocksModule() {
 	const { clientUserProperty } = useProperty()
+	const { clientUser } = useClient()
 	const navigate = useNavigate()
 
 	const [selectedPropertyBlock, setSelectedPropertyBlock] =
@@ -65,7 +67,7 @@ export function PropertyAssetBlocksModule() {
 	const status = searchParams.get('status') ?? undefined
 
 	const { data, isPending, isRefetching, error, refetch } =
-		useGetPropertyBlocks({
+		useGetPropertyBlocks(safeString(clientUser?.client_id), {
 			property_id: safeString(clientUserProperty?.property?.id),
 			filters: { status: status },
 			pagination: { page, per },

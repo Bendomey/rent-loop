@@ -14,7 +14,9 @@ import {
 import { Label } from '~/components/ui/label'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { getPaymentFrequencyLabel } from '~/lib/properties.utils'
+import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 
 interface Props {
 	lease: Lease
@@ -35,6 +37,7 @@ export function StartLeaseDialog({
 	setOpened,
 }: Props) {
 	const { revalidate } = useRevalidator()
+	const { clientUser } = useClient()
 	const { mutateAsync: updateLease, isPending: isUpdating } = useUpdateLease()
 	const { mutateAsync: activateLease, isPending: isActivating } =
 		useActivateLease()
@@ -63,6 +66,7 @@ export function StartLeaseDialog({
 	async function handleSave() {
 		try {
 			await updateLease({
+				clientId: safeString(clientUser?.client_id),
 				propertyId,
 				leaseId: lease.id,
 				utility_transfers_date: utilityTransferDone
@@ -80,11 +84,16 @@ export function StartLeaseDialog({
 	async function handleActivate() {
 		try {
 			await updateLease({
+				clientId: safeString(clientUser?.client_id),
 				propertyId,
 				leaseId: lease.id,
 				utility_transfers_date: new Date(utilityTransfersDateStr),
 			})
-			await activateLease({ propertyId, leaseId: lease.id })
+			await activateLease({
+				clientId: safeString(clientUser?.client_id),
+				propertyId,
+				leaseId: lease.id,
+			})
 			toast.success('Lease activated')
 			setOpened(false)
 			void revalidate()

@@ -33,6 +33,7 @@ import { TypographyH3, TypographyMuted } from '~/components/ui/typography'
 import { useUploadObjectBulk } from '~/hooks/use-upload-object-bulk'
 import { QUERY_KEYS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 const schema = z.object({
@@ -54,6 +55,7 @@ type FormValues = z.infer<typeof schema>
 export function NewPropertyActivitiesMaintenanceRequestModule() {
 	const { propertyId } = useParams()
 	const { clientUserProperty } = useProperty()
+	const { clientUser } = useClient()
 	const navigate = useNavigate()
 	const queryClient = useQueryClient()
 	const createRequest = useCreateMaintenanceRequest()
@@ -62,10 +64,13 @@ export function NewPropertyActivitiesMaintenanceRequestModule() {
 		propertyId ?? clientUserProperty?.property?.id,
 	)
 
-	const { data: units } = useGetPropertyUnits({
-		property_id: resolvedPropertyId,
-		pagination: { page: 1, per: 200 },
-	})
+	const { data: units } = useGetPropertyUnits(
+		safeString(clientUser?.client_id),
+		{
+			property_id: resolvedPropertyId,
+			pagination: { page: 1, per: 200 },
+		},
+	)
 
 	const { upload, remove, uploadingIds, uploadedUrls, isUploading } =
 		useUploadObjectBulk('maintenance-requests')
@@ -90,6 +95,7 @@ export function NewPropertyActivitiesMaintenanceRequestModule() {
 	const onSubmit = async (values: FormValues) => {
 		try {
 			const input: CreateMaintenanceRequestInput = {
+				client_id: safeString(clientUser?.client_id),
 				title: values.title,
 				description: values.description,
 				priority: values.priority,

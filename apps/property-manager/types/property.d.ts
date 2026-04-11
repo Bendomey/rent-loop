@@ -1,5 +1,6 @@
 interface Property {
 	id: string
+	client_id: string
 	slug: string
 	name: string
 	slug: string

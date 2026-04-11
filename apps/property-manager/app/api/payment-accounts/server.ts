@@ -4,12 +4,13 @@ import { fetchServer } from '~/lib/transport'
  * GET single payment account by ID.
  */
 export const getPaymentAccountForServer = async (
+	clientId: string,
 	props: { payment_account_id: string },
 	apiConfig: ApiConfigForServerConfig,
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<PaymentAccount>>(
-			`${apiConfig.baseUrl}/v1/admin/payment-accounts/${props.payment_account_id}`,
+			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/payment-accounts/${props.payment_account_id}`,
 			{
 				...apiConfig,
 			},

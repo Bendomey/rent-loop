@@ -15,7 +15,9 @@ import { Textarea } from '~/components/ui/textarea'
 import { TypographyH5, TypographyMuted } from '~/components/ui/typography'
 import { useTour } from '~/hooks/use-tour'
 import { localizedDayjs } from '~/lib/date'
+import { safeString } from '~/lib/strings'
 import { MAINTENANCE_DETAIL_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
+import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.activities.maintenance-requests.$requestId'
 
 function InlineTitle({
@@ -35,6 +37,7 @@ function InlineTitle({
 	const inputRef = useRef<HTMLInputElement>(null)
 	const update = useUpdateMaintenanceRequest()
 	const revalidator = useRevalidator()
+	const { clientUser } = useClient()
 
 	const startEdit = () => {
 		if (disabled) return
@@ -59,7 +62,12 @@ function InlineTitle({
 			return
 		}
 		update.mutate(
-			{ id: requestId, property_id: propertyId, title: trimmed },
+			{
+				client_id: safeString(clientUser?.client_id),
+				id: requestId,
+				property_id: propertyId,
+				title: trimmed,
+			},
 			{
 				onSuccess: () => {
 					void revalidator.revalidate()
@@ -128,6 +136,7 @@ function InlineDescription({
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
 	const update = useUpdateMaintenanceRequest()
 	const revaldator = useRevalidator()
+	const { clientUser } = useClient()
 
 	const startEdit = () => {
 		if (disabled) return
@@ -152,7 +161,12 @@ function InlineDescription({
 			return
 		}
 		update.mutate(
-			{ id: requestId, property_id: propertyId, description: trimmed },
+			{
+				client_id: safeString(clientUser?.client_id),
+				id: requestId,
+				property_id: propertyId,
+				description: trimmed,
+			},
 			{
 				onSuccess: () => {
 					void revaldator.revalidate()

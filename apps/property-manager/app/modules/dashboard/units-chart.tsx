@@ -17,6 +17,8 @@ import {
 	ChartTooltipContent,
 } from '~/components/ui/chart'
 import { Skeleton } from '~/components/ui/skeleton'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface UnitRow {
 	'Units.occupiedCount': string | null
@@ -46,7 +48,10 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function UnitsChart() {
-	const { data: token } = useGetAnalyticsToken()
+	const { clientUser } = useClient()
+	const { data: token } = useGetAnalyticsToken(
+		safeString(clientUser?.client_id),
+	)
 
 	const unitsQuery = useCubeQuery<UnitRow>(token, ['units-distribution'], {
 		measures: [

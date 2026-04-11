@@ -33,6 +33,7 @@ export const verifySigningToken = async (
  * Authenticated — requires ADMIN or OWNER role.
  */
 export interface GenerateSigningTokenInput {
+	client_id: string
 	property_id: string
 	document_id: string
 	role: 'TENANT' | 'PM_WITNESS' | 'TENANT_WITNESS'
@@ -44,12 +45,13 @@ export interface GenerateSigningTokenInput {
 }
 
 const generateSigningToken = async ({
+	client_id,
 	property_id,
 	...body
 }: GenerateSigningTokenInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<AdminSigningToken>>(
-			`/v1/admin/properties/${property_id}/signing-tokens`,
+			`/v1/admin/clients/${client_id}/properties/${property_id}/signing-tokens`,
 			{
 				method: 'POST',
 				body: JSON.stringify(body),
@@ -114,6 +116,7 @@ export const useSignDocument = () =>
  * Authenticated — requires ADMIN or OWNER role.
  */
 export interface SignDocumentDirectInput {
+	client_id: string
 	property_id: string
 	document_id: string
 	signature_url: string
@@ -122,12 +125,13 @@ export interface SignDocumentDirectInput {
 }
 
 const signDocumentDirect = async ({
+	client_id,
 	property_id,
 	...body
 }: SignDocumentDirectInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<RentloopDocumentSignature>>(
-			`/v1/admin/properties/${property_id}/signing`,
+			`/v1/admin/clients/${client_id}/properties/${property_id}/signing`,
 			{
 				method: 'POST',
 				body: JSON.stringify(body),
@@ -154,6 +158,7 @@ export const useSignDocumentDirect = () =>
  * Update signer details on an existing signing token.
  */
 export interface UpdateSigningTokenInput {
+	client_id: string
 	property_id: string
 	signing_token_id: string
 	signer_name?: string
@@ -162,13 +167,14 @@ export interface UpdateSigningTokenInput {
 }
 
 const updateSigningToken = async ({
+	client_id,
 	property_id,
 	signing_token_id,
 	...body
 }: UpdateSigningTokenInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<AdminSigningToken>>(
-			`/v1/admin/properties/${property_id}/signing-tokens/${signing_token_id}`,
+			`/v1/admin/clients/${client_id}/properties/${property_id}/signing-tokens/${signing_token_id}`,
 			{
 				method: 'PATCH',
 				body: JSON.stringify(body),
@@ -195,15 +201,17 @@ export const useUpdateSigningToken = () =>
  * Resend the signing notification for an existing token.
  */
 const resendSigningToken = async ({
+	client_id,
 	property_id,
 	signing_token_id,
 }: {
+	client_id: string
 	property_id: string
 	signing_token_id: string
 }) => {
 	try {
 		const response = await fetchClient<ApiResponse<AdminSigningToken>>(
-			`/v1/admin/properties/${property_id}/signing-tokens/${signing_token_id}/resend`,
+			`/v1/admin/clients/${client_id}/properties/${property_id}/signing-tokens/${signing_token_id}/resend`,
 			{ method: 'POST' },
 		)
 		return response.parsedBody.data
@@ -227,6 +235,7 @@ export const useResendSigningToken = () =>
  * Fetch signing tokens filtered by document and tenant application.
  */
 const fetchSigningTokens = async (
+	clientId: string,
 	propertyId: string,
 	query: FetchMultipleDataInputParams<FetchSigningTokenFilter>,
 ) => {
@@ -234,7 +243,9 @@ const fetchSigningTokens = async (
 		const params = getQueryParams<FetchSigningTokenFilter>(query)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<AdminSigningToken>>
-		>(`/v1/admin/properties/${propertyId}/signing-tokens?${params.toString()}`)
+		>(
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/signing-tokens?${params.toString()}`,
+		)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -249,11 +260,12 @@ const fetchSigningTokens = async (
 }
 
 export const useSigningTokens = (
+	clientId: string,
 	propertyId: string,
 	query: FetchMultipleDataInputParams<FetchSigningTokenFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.SIGNING_TOKENS, propertyId, query],
-		queryFn: () => fetchSigningTokens(propertyId, query),
-		enabled: !!propertyId,
+		queryKey: [QUERY_KEYS.SIGNING_TOKENS, clientId, propertyId, query],
+		queryFn: () => fetchSigningTokens(clientId, propertyId, query),
+		enabled: !!propertyId && !!clientId,
 	})

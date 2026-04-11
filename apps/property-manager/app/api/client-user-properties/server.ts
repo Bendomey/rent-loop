@@ -5,6 +5,7 @@ import { fetchServer } from '~/lib/transport'
  * Link client user to property (server-side)
  */
 export const linkClientUserPropertyForServer = async (
+	clientId: string,
 	props: {
 		property_id: string
 		role: ClientUserProperty['role']
@@ -14,7 +15,7 @@ export const linkClientUserPropertyForServer = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<ClientUserProperty>>(
-			`${apiConfig.baseUrl}/v1/admin/properties/${props.property_id}/client-users:link`,
+			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/properties/${props.property_id}/client-users:link`,
 			{
 				method: 'POST',
 				body: JSON.stringify({
@@ -38,6 +39,7 @@ export const linkClientUserPropertyForServer = async (
  * GET all client users (Members) for a particular property based on a query.
  */
 export const getClientUserPropertiesForServer = async (
+	clientId: string,
 	props: FetchMultipleDataInputParams<FetchClientUserPropertyFilter>,
 	apiConfig: ApiConfigForServerConfig,
 ) => {
@@ -46,7 +48,7 @@ export const getClientUserPropertiesForServer = async (
 		const response = await fetchServer<
 			ApiResponse<FetchMultipleDataResponse<ClientUserProperty>>
 		>(
-			`${apiConfig.baseUrl}/v1/admin/client-user-properties?${params.toString()}`,
+			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/client-user-properties?${params.toString()}`,
 			{
 				method: 'GET',
 				...apiConfig,

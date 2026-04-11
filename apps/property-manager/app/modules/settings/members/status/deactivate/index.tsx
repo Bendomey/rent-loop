@@ -24,6 +24,8 @@ import {
 import { Spinner } from '~/components/ui/spinner'
 import { Textarea } from '~/components/ui/textarea'
 import { QUERY_KEYS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface Props {
 	data?: ClientUser
@@ -45,6 +47,7 @@ export type FormSchema = z.infer<typeof ValidationSchema>
 
 function DeactivateClientUserModal({ opened, setOpened, data }: Props) {
 	const queryClient = useQueryClient()
+	const { clientUser } = useClient()
 
 	const rhfMethods = useForm<FormSchema>({
 		defaultValues: {
@@ -62,6 +65,7 @@ function DeactivateClientUserModal({ opened, setOpened, data }: Props) {
 		if (data) {
 			mutate(
 				{
+					clientId: safeString(clientUser?.client_id),
 					id: data.id,
 					reason: data.reason,
 				},
@@ -87,7 +91,7 @@ function DeactivateClientUserModal({ opened, setOpened, data }: Props) {
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>
-						{data ? `Deactivate ${data.name}` : 'Deactivate Member'}
+						{data ? `Deactivate ${data.user?.name}` : 'Deactivate Member'}
 					</AlertDialogTitle>
 					<AlertDialogDescription>
 						<Form {...rhfMethods}>
@@ -101,11 +105,11 @@ function DeactivateClientUserModal({ opened, setOpened, data }: Props) {
 										<FormItem>
 											<FormLabel>
 												Are you sure you want to suspend{' '}
-												{data?.name ?? 'this member'}?
+												{data?.user?.name ?? 'this member'}?
 											</FormLabel>
 											<FormControl>
 												<Textarea
-													placeholder={`Kindly add reasons why you want ${data?.name ?? 'this member'} deactivated.`}
+													placeholder={`Kindly add reasons why you want ${data?.user?.name ?? 'this member'} deactivated.`}
 													rows={8}
 													{...field}
 													className="mt-4 min-h-[160px]"

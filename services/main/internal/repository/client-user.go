@@ -11,7 +11,6 @@ import (
 type ClientUserRepository interface {
 	Create(context context.Context, clientUser *models.ClientUser) error
 	GetByID(context context.Context, id string) (*models.ClientUser, error)
-	GetByEmail(context context.Context, email string) (*models.ClientUser, error)
 	GetByQuery(context context.Context, query map[string]any) (*models.ClientUser, error)
 	Update(context context.Context, clientUser *models.ClientUser) error
 	List(context context.Context, filterQuery ListClientUsersFilter) (*[]models.ClientUser, error)
@@ -38,19 +37,6 @@ func (r *clientUserRepository) Create(ctx context.Context, clientUser *models.Cl
 func (r *clientUserRepository) GetByID(ctx context.Context, id string) (*models.ClientUser, error) {
 	var clientUser models.ClientUser
 	result := r.DB.WithContext(ctx).Where("id = ?", id).First(&clientUser)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return &clientUser, nil
-}
-
-func (r *clientUserRepository) GetByEmail(
-	ctx context.Context,
-	email string,
-) (*models.ClientUser, error) {
-	var clientUser models.ClientUser
-	result := r.DB.WithContext(ctx).Where("email = ?", email).First(&clientUser)
 
 	if result.Error != nil {
 		return nil, result.Error

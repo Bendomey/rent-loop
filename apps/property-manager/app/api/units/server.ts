@@ -5,6 +5,7 @@ import { fetchServer } from '~/lib/transport'
  * GET all property apartments/units based on a query.
  */
 export const getPropertyUnitsForServer = async (
+	clientId: string,
 	props: FetchMultipleDataInputParams<FetchPropertyUnitFilter> & {
 		property_id: string
 	},
@@ -15,7 +16,7 @@ export const getPropertyUnitsForServer = async (
 		const response = await fetchServer<
 			ApiResponse<FetchMultipleDataResponse<PropertyUnit>>
 		>(
-			`${apiConfig.baseUrl}/v1/admin/properties/${props.property_id}/units?${params.toString()}`,
+			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/properties/${props.property_id}/units?${params.toString()}`,
 			{
 				...apiConfig,
 			},
@@ -35,6 +36,7 @@ export const getPropertyUnitsForServer = async (
 }
 
 export const getPropertyUnitForServer = async (
+	clientId: string,
 	props: {
 		property_id: string
 		unit_id: string
@@ -47,7 +49,7 @@ export const getPropertyUnitForServer = async (
 			populate: props.populate,
 		})
 		const response = await fetchServer<ApiResponse<PropertyUnit>>(
-			`${apiConfig.baseUrl}/v1/admin/properties/${props.property_id}/units/${props.unit_id}?${params.toString()}`,
+			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/properties/${props.property_id}/units/${props.unit_id}?${params.toString()}`,
 			{
 				...apiConfig,
 			},

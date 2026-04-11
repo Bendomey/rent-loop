@@ -7,10 +7,13 @@ import { toast } from 'sonner'
 import { useAdminUpdateDocument } from '~/api/documents'
 import { Button } from '~/components/ui/button'
 import { TypographyMuted } from '~/components/ui/typography'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 export function MenuBar({ document }: { document: RentloopDocument }) {
 	const navigate = useNavigate()
 	const [editor] = useLexicalComposerContext()
+	const { clientUser } = useClient()
 	const updateDocument = useAdminUpdateDocument()
 	const savedContentRef = useRef(document.content)
 	const isFirstUpdateRef = useRef(true)
@@ -36,7 +39,12 @@ export function MenuBar({ document }: { document: RentloopDocument }) {
 		const charCount = editorState.read(() => $getRoot().getTextContent().length)
 
 		updateDocument.mutate(
-			{ id: document.id, content, size: charCount },
+			{
+				clientId: safeString(clientUser?.client_id),
+				id: document.id,
+				content,
+				size: charCount,
+			},
 			{
 				onSuccess: () => {
 					savedContentRef.current = content

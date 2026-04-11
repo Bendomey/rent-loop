@@ -52,6 +52,7 @@ import {
 } from '~/lib/format-amount'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.assets.units.$unitId'
 
@@ -139,6 +140,7 @@ export function EditPropertyAssetUnitModule() {
 	)
 	const unit = loaderData?.unit
 	const { clientUserProperty } = useProperty()
+	const { clientUser } = useClient()
 	const navigate = useNavigate()
 	const queryClient = useQueryClient()
 	const { mutate, isPending } = useUpdatePropertyUnit()
@@ -205,6 +207,7 @@ export function EditPropertyAssetUnitModule() {
 
 		mutate(
 			{
+				clientId: safeString(clientUser?.client_id),
 				id: safeString(unit?.id),
 				data: {
 					property_id,

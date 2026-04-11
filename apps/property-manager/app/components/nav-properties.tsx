@@ -11,17 +11,21 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from '~/components/ui/sidebar'
-import { useAuth } from '~/providers/auth-provider'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 export function NavProperties() {
-	const { currentUser } = useAuth()
-	const { data } = useGetClientUserProperties({
-		pagination: { page: 1, per: 5 },
-		sorter: {},
-		search: {},
-		populate: ['Property'],
-		filters: { client_user_id: currentUser?.id },
-	})
+	const { clientUser } = useClient()
+	const { data } = useGetClientUserProperties(
+		safeString(clientUser?.client_id),
+		{
+			pagination: { page: 1, per: 5 },
+			sorter: {},
+			search: {},
+			populate: ['Property'],
+			filters: { client_user_id: clientUser?.id },
+		},
+	)
 
 	if (!data?.rows.length) return null
 

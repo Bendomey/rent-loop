@@ -3,13 +3,14 @@ import { QUERY_KEYS } from '~/lib/constants'
 import { getQueryParams } from '~/lib/get-param'
 import { fetchClient } from '~/lib/transport'
 
-const BASE = (propertyId: string, leaseId: string) =>
-	`/v1/admin/properties/${propertyId}/leases/${leaseId}/checklists`
+const BASE = (clientId: string, propertyId: string, leaseId: string) =>
+	`/v1/admin/clients/${clientId}/properties/${propertyId}/leases/${leaseId}/checklists`
 
 /**
  * GET all checklists for a lease
  */
 const getLeaseChecklists = async (
+	clientId: string,
 	propertyId: string,
 	leaseId: string,
 	props: FetchMultipleDataInputParams<FetchLeaseChecklistFilter>,
@@ -18,7 +19,7 @@ const getLeaseChecklists = async (
 		const params = getQueryParams<FetchLeaseChecklistFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<LeaseChecklist>>
-		>(`${BASE(propertyId, leaseId)}?${params.toString()}`)
+		>(`${BASE(clientId, propertyId, leaseId)}?${params.toString()}`)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -30,14 +31,21 @@ const getLeaseChecklists = async (
 }
 
 export const useGetLeaseChecklists = (
+	clientId: string,
 	propertyId: string,
 	leaseId: string,
 	query: FetchMultipleDataInputParams<FetchLeaseChecklistFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.LEASE_CHECKLISTS, propertyId, leaseId, query],
-		queryFn: () => getLeaseChecklists(propertyId, leaseId, query),
-		enabled: !!leaseId && !!propertyId,
+		queryKey: [
+			QUERY_KEYS.LEASE_CHECKLISTS,
+			clientId,
+			propertyId,
+			leaseId,
+			query,
+		],
+		queryFn: () => getLeaseChecklists(clientId, propertyId, leaseId, query),
+		enabled: !!leaseId && !!propertyId && !!clientId,
 	})
 
 /**
@@ -51,6 +59,7 @@ export interface ChecklistItemDraft {
 }
 
 export interface CreateLeaseChecklistInput {
+	client_id: string
 	property_id: string
 	lease_id: string
 	type: LeaseChecklistType
@@ -59,13 +68,14 @@ export interface CreateLeaseChecklistInput {
 }
 
 const createLeaseChecklist = async ({
+	client_id,
 	property_id,
 	lease_id,
 	...data
 }: CreateLeaseChecklistInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<LeaseChecklist>>(
-			BASE(property_id, lease_id),
+			BASE(client_id, property_id, lease_id),
 			{ method: 'POST', body: JSON.stringify(data) },
 		)
 		return response.parsedBody.data
@@ -86,6 +96,7 @@ export const useCreateLeaseChecklist = () => {
 			void queryClient.invalidateQueries({
 				queryKey: [
 					QUERY_KEYS.LEASE_CHECKLISTS,
+					variables.client_id,
 					variables.property_id,
 					variables.lease_id,
 				],
@@ -98,20 +109,25 @@ export const useCreateLeaseChecklist = () => {
  * DELETE a checklist
  */
 export interface DeleteLeaseChecklistInput {
+	client_id: string
 	property_id: string
 	lease_id: string
 	checklist_id: string
 }
 
 const deleteLeaseChecklist = async ({
+	client_id,
 	property_id,
 	lease_id,
 	checklist_id,
 }: DeleteLeaseChecklistInput) => {
 	try {
-		await fetchClient(`${BASE(property_id, lease_id)}/${checklist_id}`, {
-			method: 'DELETE',
-		})
+		await fetchClient(
+			`${BASE(client_id, property_id, lease_id)}/${checklist_id}`,
+			{
+				method: 'DELETE',
+			},
+		)
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()
@@ -129,6 +145,7 @@ export const useDeleteLeaseChecklist = () => {
 			void queryClient.invalidateQueries({
 				queryKey: [
 					QUERY_KEYS.LEASE_CHECKLISTS,
+					variables.client_id,
 					variables.property_id,
 					variables.lease_id,
 				],
@@ -141,19 +158,21 @@ export const useDeleteLeaseChecklist = () => {
  * SUBMIT a checklist for tenant review
  */
 export interface SubmitLeaseChecklistInput {
+	client_id: string
 	property_id: string
 	lease_id: string
 	checklist_id: string
 }
 
 const submitLeaseChecklist = async ({
+	client_id,
 	property_id,
 	lease_id,
 	checklist_id,
 }: SubmitLeaseChecklistInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<LeaseChecklist>>(
-			`${BASE(property_id, lease_id)}/${checklist_id}/submit`,
+			`${BASE(client_id, property_id, lease_id)}/${checklist_id}/submit`,
 			{ method: 'POST' },
 		)
 		return response.parsedBody.data
@@ -174,6 +193,7 @@ export const useSubmitLeaseChecklist = () => {
 			void queryClient.invalidateQueries({
 				queryKey: [
 					QUERY_KEYS.LEASE_CHECKLISTS,
+					variables.client_id,
 					variables.property_id,
 					variables.lease_id,
 				],
@@ -186,6 +206,7 @@ export const useSubmitLeaseChecklist = () => {
  * CREATE a checklist item
  */
 export interface CreateLeaseChecklistItemInput {
+	client_id: string
 	property_id: string
 	lease_id: string
 	checklist_id: string
@@ -196,6 +217,7 @@ export interface CreateLeaseChecklistItemInput {
 }
 
 const createLeaseChecklistItem = async ({
+	client_id,
 	property_id,
 	lease_id,
 	checklist_id,
@@ -203,7 +225,7 @@ const createLeaseChecklistItem = async ({
 }: CreateLeaseChecklistItemInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<LeaseChecklistItem>>(
-			`${BASE(property_id, lease_id)}/${checklist_id}/items`,
+			`${BASE(client_id, property_id, lease_id)}/${checklist_id}/items`,
 			{ method: 'POST', body: JSON.stringify(data) },
 		)
 		return response.parsedBody.data
@@ -224,6 +246,7 @@ export const useCreateLeaseChecklistItem = () => {
 			void queryClient.invalidateQueries({
 				queryKey: [
 					QUERY_KEYS.LEASE_CHECKLISTS,
+					variables.client_id,
 					variables.property_id,
 					variables.lease_id,
 				],
@@ -236,6 +259,7 @@ export const useCreateLeaseChecklistItem = () => {
  * UPDATE a checklist item
  */
 export interface UpdateLeaseChecklistItemInput {
+	client_id: string
 	property_id: string
 	lease_id: string
 	checklist_id: string
@@ -247,6 +271,7 @@ export interface UpdateLeaseChecklistItemInput {
 }
 
 const updateLeaseChecklistItem = async ({
+	client_id,
 	property_id,
 	lease_id,
 	checklist_id,
@@ -255,7 +280,7 @@ const updateLeaseChecklistItem = async ({
 }: UpdateLeaseChecklistItemInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<LeaseChecklistItem>>(
-			`${BASE(property_id, lease_id)}/${checklist_id}/items/${item_id}`,
+			`${BASE(client_id, property_id, lease_id)}/${checklist_id}/items/${item_id}`,
 			{ method: 'PATCH', body: JSON.stringify(data) },
 		)
 		return response.parsedBody.data
@@ -276,6 +301,7 @@ export const useUpdateLeaseChecklistItem = () => {
 			void queryClient.invalidateQueries({
 				queryKey: [
 					QUERY_KEYS.LEASE_CHECKLISTS,
+					variables.client_id,
 					variables.property_id,
 					variables.lease_id,
 				],
@@ -288,6 +314,7 @@ export const useUpdateLeaseChecklistItem = () => {
  * DELETE a checklist item
  */
 export interface DeleteLeaseChecklistItemInput {
+	client_id: string
 	property_id: string
 	lease_id: string
 	checklist_id: string
@@ -295,6 +322,7 @@ export interface DeleteLeaseChecklistItemInput {
 }
 
 const deleteLeaseChecklistItem = async ({
+	client_id,
 	property_id,
 	lease_id,
 	checklist_id,
@@ -302,7 +330,7 @@ const deleteLeaseChecklistItem = async ({
 }: DeleteLeaseChecklistItemInput) => {
 	try {
 		await fetchClient(
-			`${BASE(property_id, lease_id)}/${checklist_id}/items/${item_id}`,
+			`${BASE(client_id, property_id, lease_id)}/${checklist_id}/items/${item_id}`,
 			{ method: 'DELETE' },
 		)
 	} catch (error: unknown) {
@@ -322,6 +350,7 @@ export const useDeleteLeaseChecklistItem = () => {
 			void queryClient.invalidateQueries({
 				queryKey: [
 					QUERY_KEYS.LEASE_CHECKLISTS,
+					variables.client_id,
 					variables.property_id,
 					variables.lease_id,
 				],

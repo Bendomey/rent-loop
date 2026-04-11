@@ -12,6 +12,7 @@ import { Spinner } from '~/components/ui/spinner'
 import { getWitnessNodesFromContent } from '~/lib/document.utils'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 
 interface AttachedDocumentViewProps {
 	tenantApplication: TenantApplication
@@ -39,6 +40,7 @@ export function AttachedDocumentView({
 	isClearing,
 }: AttachedDocumentViewProps) {
 	const { propertyId, applicationId } = useParams()
+	const { clientUser } = useClient()
 	const shouldHideRemoveButton =
 		tenantApplication.status === 'TenantApplication.Status.Completed'
 
@@ -88,6 +90,7 @@ export function AttachedDocumentView({
 
 	const documentId = tenantApplication.lease_agreement_document_id
 	const { data: signingTokens, isPending: isLoadingTokens } = useSigningTokens(
+		safeString(clientUser?.client_id),
 		safeString(propertyId),
 		{
 			filters: {
@@ -246,7 +249,7 @@ export function AttachedDocumentView({
 								label="Property Manager"
 								signed={adminSigned}
 								signedAt={adminSignature?.created_at ?? null}
-								signedBy={adminSignature?.signed_by?.name}
+								signedBy={adminSignature?.signed_by?.user?.name}
 							/>
 
 							{!adminSigned && (
@@ -266,7 +269,7 @@ export function AttachedDocumentView({
 								label="Tenant"
 								signed={tenantSigned}
 								signedAt={tenantSignature?.created_at ?? null}
-								signedBy={tenantSignature?.signed_by?.name}
+								signedBy={tenantSignature?.signed_by?.user?.name}
 							/>
 
 							{!tenantSigned && (
@@ -292,7 +295,7 @@ export function AttachedDocumentView({
 											label={entry.label}
 											signed={Boolean(entry.signature)}
 											signedAt={entry.signature?.created_at ?? null}
-											signedBy={entry.signature?.signed_by?.name ?? undefined}
+											signedBy={entry.signature?.signed_by?.user?.name}
 										/>
 										{!witnessSigned && (
 											<PromptSignatureButton

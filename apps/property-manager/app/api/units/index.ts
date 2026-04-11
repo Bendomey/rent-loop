@@ -8,6 +8,7 @@ import { fetchClient, fetchServer } from '~/lib/transport'
  */
 
 export const getPropertyUnits = async (
+	clientId: string,
 	props: FetchMultipleDataInputParams<FetchPropertyUnitFilter> & {
 		property_id: string
 	},
@@ -16,7 +17,9 @@ export const getPropertyUnits = async (
 		const params = getQueryParams<FetchPropertyUnitFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<PropertyUnit>>
-		>(`/v1/admin/properties/${props.property_id}/units?${params.toString()}`)
+		>(
+			`/v1/admin/clients/${clientId}/properties/${props.property_id}/units?${params.toString()}`,
+		)
 
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -32,13 +35,15 @@ export const getPropertyUnits = async (
 }
 
 export const useGetPropertyUnits = (
+	clientId: string,
 	query: FetchMultipleDataInputParams<FetchPropertyUnitFilter> & {
 		property_id: string
 	},
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.PROPERTY_UNITS, query],
-		queryFn: () => getPropertyUnits(query),
+		queryKey: [QUERY_KEYS.PROPERTY_UNITS, clientId, query],
+		queryFn: () => getPropertyUnits(clientId, query),
+		enabled: !!clientId,
 	})
 
 export interface CreatePropertyUnitInput {
@@ -60,12 +65,13 @@ export interface CreatePropertyUnitInput {
 }
 
 export const createPropertyUnit = async (
+	clientId: string,
 	props: CreatePropertyUnitInput,
 	apiConfig?: ApiConfigForServerConfig,
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<PropertyUnit>>(
-			`${apiConfig?.baseUrl}/v1/admin/properties/${props.property_id}/blocks/${props.property_block_id}/units`,
+			`${apiConfig?.baseUrl}/v1/admin/clients/${clientId}/properties/${props.property_id}/blocks/${props.property_block_id}/units`,
 			{
 				method: 'POST',
 				body: JSON.stringify(props),
@@ -89,12 +95,13 @@ export const createPropertyUnit = async (
  * Delete property unit
  */
 const deletePropertyUnit = async (props: {
+	clientId: string
 	property_id: string
 	unit_id: string
 }) => {
 	try {
 		await fetchClient(
-			`/v1/admin/properties/${props.property_id}/units/${props.unit_id}`,
+			`/v1/admin/clients/${props.clientId}/properties/${props.property_id}/units/${props.unit_id}`,
 			{
 				method: 'DELETE',
 			},
@@ -120,6 +127,7 @@ export const useDeletePropertyUnit = () =>
  * Update property unit
  */
 interface UpdatePropertyUnitProps {
+	clientId: string
 	id: string
 	data: Partial<CreatePropertyUnitInput>
 }
@@ -127,7 +135,7 @@ interface UpdatePropertyUnitProps {
 const updatePropertyUnit = async (props: UpdatePropertyUnitProps) => {
 	try {
 		await fetchClient<PropertyUnit>(
-			`/v1/admin/properties/${props.data.property_id}/units/${props.id}`,
+			`/v1/admin/clients/${props.clientId}/properties/${props.data.property_id}/units/${props.id}`,
 			{
 				method: 'PATCH',
 				body: JSON.stringify(props.data),
@@ -152,6 +160,7 @@ export const useUpdatePropertyUnit = () =>
  * Make property unit available
  */
 interface UpdatePropertyUnitStatusProps {
+	clientId: string
 	propertyId: string
 	unitId: string
 }
@@ -161,7 +170,7 @@ const makePropertyUnitAvailable = async (
 ) => {
 	try {
 		await fetchClient<PropertyUnit>(
-			`/v1/admin/properties/${props.propertyId}/units/${props.unitId}/status:available`,
+			`/v1/admin/clients/${props.clientId}/properties/${props.propertyId}/units/${props.unitId}/status:available`,
 			{
 				method: 'PATCH',
 			},
@@ -188,7 +197,7 @@ export const useMakePropertyUnitAvailable = () =>
 const makePropertyUnitDraft = async (props: UpdatePropertyUnitStatusProps) => {
 	try {
 		await fetchClient<PropertyUnit>(
-			`/v1/admin/properties/${props.propertyId}/units/${props.unitId}/status:draft`,
+			`/v1/admin/clients/${props.clientId}/properties/${props.propertyId}/units/${props.unitId}/status:draft`,
 			{
 				method: 'PATCH',
 			},
@@ -216,7 +225,7 @@ const makePropertyUnitMaintenance = async (
 ) => {
 	try {
 		await fetchClient<PropertyUnit>(
-			`/v1/admin/properties/${props.propertyId}/units/${props.unitId}/status:maintenance`,
+			`/v1/admin/clients/${props.clientId}/properties/${props.propertyId}/units/${props.unitId}/status:maintenance`,
 			{
 				method: 'PATCH',
 			},

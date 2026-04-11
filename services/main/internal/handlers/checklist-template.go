@@ -41,7 +41,7 @@ type ListChecklistTemplatesQuery struct {
 //	@Failure		401	{object}	string
 //	@Failure		422	{object}	lib.HTTPError
 //	@Failure		500	{object}	string
-//	@Router			/api/v1/admin/checklist-templates [get]
+//	@Router			/api/v1/admin/clients/{client_id}/checklist-templates [get]
 func (h *ChecklistTemplateHandler) ListChecklistTemplates(w http.ResponseWriter, r *http.Request) {
 	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
 	if filterQueryErr != nil {
@@ -86,7 +86,7 @@ func (h *ChecklistTemplateHandler) ListChecklistTemplates(w http.ResponseWriter,
 //	@Failure		401			{object}	string
 //	@Failure		404			{object}	lib.HTTPError
 //	@Failure		500			{object}	string
-//	@Router			/api/v1/admin/checklist-templates/{template_id} [get]
+//	@Router			/api/v1/admin/clients/{client_id}/checklist-templates/{template_id} [get]
 func (h *ChecklistTemplateHandler) GetChecklistTemplate(w http.ResponseWriter, r *http.Request) {
 	templateID := chi.URLParam(r, "template_id")
 

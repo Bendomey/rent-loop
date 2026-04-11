@@ -22,10 +22,12 @@ import {
 } from '~/lib/maintenance-request.utils'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyAssetUnitMaintenanceRequestsModule() {
 	const [searchParams] = useSearchParams()
+	const { clientUser } = useClient()
 	const { clientUserProperty } = useProperty()
 	const { unitId } = useParams<{ unitId: string }>()
 
@@ -42,10 +44,11 @@ export function PropertyAssetUnitMaintenanceRequestsModule() {
 		| undefined
 
 	const { data, isPending, isRefetching, error, refetch } =
-		useGetMaintenanceRequests(propertyId, {
+		useGetMaintenanceRequests(safeString(clientUser?.client_id), propertyId, {
 			filters: { unit_id: unitId, status },
 			pagination: { page, per },
 			sorter: { sort: 'desc', sort_by: 'created_at' },
+			populate: ['AssignedWorker', 'AssignedWorker.User'],
 		})
 
 	const isLoading = isPending || isRefetching
@@ -150,7 +153,7 @@ export function PropertyAssetUnitMaintenanceRequestsModule() {
 											<TypographyP className="!mt-0 truncate text-xs">
 												Assigned to:{' '}
 												<span className="text-muted-foreground font-medium">
-													{data.assigned_worker?.name}
+													{data.assigned_worker.user?.name}
 												</span>
 											</TypographyP>
 										</div>

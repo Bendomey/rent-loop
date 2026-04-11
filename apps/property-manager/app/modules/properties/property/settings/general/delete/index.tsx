@@ -27,6 +27,8 @@ import {
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
 import { convertToSlug } from '~/lib/misc'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface Props {
 	data?: Property
@@ -106,6 +108,7 @@ const ValidationSchema = z.object({
 export type FormSchema = z.infer<typeof ValidationSchema>
 
 export function DeletePropertyModule({ data, opened, setOpened }: Props) {
+	const { clientUser } = useClient()
 	const { mutate, isPending } = useDeleteProperty()
 
 	const rhfMethods = useForm<FormSchema>({
@@ -121,15 +124,18 @@ export function DeletePropertyModule({ data, opened, setOpened }: Props) {
 
 	const handleSubmit = () => {
 		if (data && confirmed) {
-			mutate(data?.id, {
-				onError: () => {
-					toast.error(`Failed to delete property. Try again later.`)
+			mutate(
+				{ clientId: safeString(clientUser?.client_id), id: data.id },
+				{
+					onError: () => {
+						toast.error(`Failed to delete property. Try again later.`)
+					},
+					onSuccess: () => {
+						toast.success(`Property has been successfully deleted`)
+						setOpened(false)
+					},
 				},
-				onSuccess: () => {
-					toast.success(`Property has been successfully deleted`)
-					setOpened(false)
-				},
-			})
+			)
 		}
 	}
 

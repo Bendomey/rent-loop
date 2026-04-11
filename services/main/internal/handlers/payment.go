@@ -99,7 +99,7 @@ type VerifyPaymentRequest struct {
 //	@Failure		404			{object}	lib.HTTPError								"Payment not found"
 //	@Failure		422			{object}	lib.HTTPError								"Validation error"
 //	@Failure		500			{object}	string										"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/payments/{payment_id}/verify [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/payments/{payment_id}/verify [patch]
 func (h *PaymentHandler) VerifyPayment(w http.ResponseWriter, r *http.Request) {
 	clientUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {

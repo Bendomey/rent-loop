@@ -24,10 +24,12 @@ import {
 	getInvoiceStatusLabel,
 } from '~/lib/invoice'
 import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 export function TenantPaymentsModule() {
 	const [searchParams] = useSearchParams()
+	const { clientUser } = useClient()
 	const { clientUserProperty } = useProperty()
 	const { tenantId } = useParams()
 
@@ -40,6 +42,7 @@ export function TenantPaymentsModule() {
 	const status = searchParams.get('status') ?? undefined
 
 	const { data: leasesData } = useGetTenantLeases(
+		safeString(clientUser?.client_id),
 		safeString(clientUserProperty?.property_id),
 		safeString(tenantId),
 		{ filters: {}, pagination: { page: 1, per: 1 } },
@@ -47,6 +50,7 @@ export function TenantPaymentsModule() {
 	const leaseId = leasesData?.rows?.[0]?.id
 
 	const { data, isPending, isRefetching, error, refetch } = useGetInvoices(
+		safeString(clientUser?.client_id),
 		safeString(clientUserProperty?.property_id),
 		{
 			filters: {

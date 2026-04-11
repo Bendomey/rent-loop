@@ -39,12 +39,13 @@ type CreateClientUserRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			body	body		CreateClientUserRequest							true	"Create Client User Request Body"
-//	@Success		201		{object}	object{data=transformations.OutputClientUser}	"Client user created successfully"
-//	@Failure		400		{object}	lib.HTTPError									"Error occurred when creating a client user"
-//	@Failure		401		{object}	string											"Invalid or absent authentication token"
-//	@Failure		500		{object}	string											"An unexpected error occurred"
-//	@Router			/api/v1/admin/client-users [post]
+//	@Param			client_id	path		string											true	"Client ID"
+//	@Param			body		body		CreateClientUserRequest							true	"Create Client User Request Body"
+//	@Success		201			{object}	object{data=transformations.OutputClientUser}	"Client user created successfully"
+//	@Failure		400			{object}	lib.HTTPError									"Error occurred when creating a client user"
+//	@Failure		401			{object}	string											"Invalid or absent authentication token"
+//	@Failure		500			{object}	string											"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/client-users [post]
 func (h *ClientUserHandler) CreateClientUser(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 
@@ -85,58 +86,6 @@ func (h *ClientUserHandler) CreateClientUser(w http.ResponseWriter, r *http.Requ
 	})
 }
 
-type LoginClientUserRequest struct {
-	Email    string `json:"email"    validate:"required,email" example:"client-user@example.com"`
-	Password string `json:"password" validate:"required,min=6" example:"password123"`
-}
-
-// AuthenticateClientUser godoc
-//
-//	@Summary		Authenticates client user and returns token (Admin)
-//	@Description	Authenticate client user and returns client user and token (Admin)
-//	@Tags			ClientUsers
-//	@Accept			json
-//	@Produce		json
-//	@Param			body	body		LoginClientUserRequest									true	"Client user login credentials"
-//	@Success		200		{object}	object{data=transformations.OutputClientUserWithToken}	"Client user authenticated successfully"
-//	@Failure		400		{object}	lib.HTTPError											"Error occurred when authenticating a client user"
-//	@Failure		403		{object}	lib.HTTPError											"Forbidden Access"
-//	@Failure		500		{object}	string													"An unexpected error occurred"
-//	@Router			/api/v1/admin/client-users/login [post]
-func (h *ClientUserHandler) AuthenticateClientUser(w http.ResponseWriter, r *http.Request) {
-	var body LoginClientUserRequest
-	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
-		return
-	}
-
-	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
-
-	if !isPassedValidation {
-		return
-	}
-
-	clientUserWithToken, err := h.service.AuthenticateClientUser(
-		r.Context(),
-		services.AuthenticateClientUserInput{
-			Email:    body.Email,
-			Password: body.Password,
-		},
-	)
-	if err != nil {
-		HandleErrorResponse(w, err)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBClientUserToRestWithToken(
-			&clientUserWithToken.ClientUser,
-			clientUserWithToken.Token,
-		),
-	})
-}
-
 type GetClientUserQuery struct {
 	lib.GetOneQueryInput
 }
@@ -149,13 +98,14 @@ type GetClientUserQuery struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			q	query		GetClientUserQuery	true	"Client user"
-//	@Success		200	{object}	object{data=transformations.OutputClientUser}
-//	@Failure		400	{object}	lib.HTTPError
-//	@Failure		401	{object}	string
-//	@Failure		403	{object}	lib.HTTPError
-//	@Failure		500	{object}	string
-//	@Router			/api/v1/admin/client-users/me [get]
+//	@Param			client_id	path		string				true	"Client ID"
+//	@Param			q			query		GetClientUserQuery	true	"Client user"
+//	@Success		200			{object}	object{data=transformations.OutputClientUser}
+//	@Failure		400			{object}	lib.HTTPError
+//	@Failure		401			{object}	string
+//	@Failure		403			{object}	lib.HTTPError
+//	@Failure		500			{object}	string
+//	@Router			/api/v1/admin/clients/{client_id}/client-users/me [get]
 func (h *ClientUserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 
@@ -182,91 +132,6 @@ func (h *ClientUserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-type SendForgotPasswordResetLinkRequest struct {
-	Email string `json:"email" validate:"required,email" example:"client-user@example.com"`
-}
-
-// SendForgotPasswordResetLink godoc
-//
-//	@Summary		Sends forgot password reset link to client user (Admin)
-//	@Description	Sends forgot password reset link to client user (Admin)
-//	@Tags			ClientUsers
-//	@Accept			json
-//	@Param			body	body	SendForgotPasswordResetLinkRequest	true	"Send Forgot Password Reset Link Request Body"
-//	@Success		204		"Forgot password reset link sent successfully"
-//	@Failure		400		{object}	lib.HTTPError	"Error occurred when sending forgot password reset link to client user"
-//	@Failure		500		{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/client-users/forgot-password [post]
-func (h *ClientUserHandler) SendForgotPasswordResetLink(w http.ResponseWriter, r *http.Request) {
-	var body SendForgotPasswordResetLinkRequest
-	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
-		return
-	}
-
-	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
-
-	if !isPassedValidation {
-		return
-	}
-
-	_, err := h.service.SendForgotPasswordResetLink(r.Context(), body.Email)
-	if err != nil {
-		HandleErrorResponse(w, err)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
-type ResetPasswordRequest struct {
-	NewPassword string `json:"newPassword" validate:"required,min=6" example:"newpassword123"`
-}
-
-// ResetClientUserPassword godoc
-//
-//	@Summary		Resets the password for a client user (Admin)
-//	@Description	Resets the password for a client user (Admin)
-//	@Tags			ClientUsers
-//	@Accept			json
-//	@Security		BearerAuth
-//	@Param			body	body	ResetPasswordRequest	true	"Reset Password Request Body"
-//	@Success		204		"Password reset successfully"
-//	@Failure		400		{object}	lib.HTTPError	"Error occurred when resetting password for client user"
-//	@Failure		500		{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/client-users/reset-password [post]
-func (h *ClientUserHandler) ResetClientUserPassword(w http.ResponseWriter, r *http.Request) {
-	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
-
-	if !clientUserOk {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	var body ResetPasswordRequest
-	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
-		return
-	}
-
-	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
-
-	if !isPassedValidation {
-		return
-	}
-
-	_, err := h.service.ResetPassword(r.Context(), services.ResetClientUserPasswordInput{
-		ID:          currentClientUser.ID,
-		NewPassword: body.NewPassword,
-	})
-	if err != nil {
-		HandleErrorResponse(w, err)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
 type ListClientUsersFilterRequest struct {
 	lib.FilterQueryInput
 	Status          string `json:"status"             validate:"oneof=ClientUser.Status.Active ClientUser.Status.Inactive" example:"ClientUser.Status.Active"`
@@ -282,12 +147,13 @@ type ListClientUsersFilterRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			q	query		ListClientUsersFilterRequest	true	"Client users"
-//	@Success		200	{object}	object{data=object{rows=[]transformations.OutputClientUser,meta=lib.HTTPReturnPaginatedMetaResponse}}
-//	@Failure		400	{object}	lib.HTTPError	"An error occurred while filtering client users"
-//	@Failure		401	{object}	string			"Absent or invalid authentication token"
-//	@Failure		500	{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/client-users [get]
+//	@Param			client_id	path		string							true	"Client ID"
+//	@Param			q			query		ListClientUsersFilterRequest	true	"Client users"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.OutputClientUser,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400			{object}	lib.HTTPError	"An error occurred while filtering client users"
+//	@Failure		401			{object}	string			"Absent or invalid authentication token"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/client-users [get]
 func (h *ClientUserHandler) ListClientUsers(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {
@@ -350,27 +216,23 @@ type GetClientUserWithPopulateQuery struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
+//	@Param			client_id		path		string											true	"Client ID"
 //	@Param			client_user_id	path		string											true	"Client user ID"
 //	@Param			q				query		GetClientUserWithPopulateQuery					true	"Client user"
 //	@Success		200				{object}	object{data=transformations.OutputClientUser}	"Client user retrieved successfully"
 //	@Failure		401				{object}	string											"Invalid or absent authentication token"
 //	@Failure		404				{object}	lib.HTTPError									"Client user not found"
 //	@Failure		500				{object}	string											"An unexpected error occurred"
-//	@Router			/api/v1/admin/client-users/{client_user_id} [get]
+//	@Router			/api/v1/admin/clients/{client_id}/client-users/{client_user_id} [get]
 func (h *ClientUserHandler) GetClientUserWithPopulate(w http.ResponseWriter, r *http.Request) {
-	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
-	if !clientUserOk {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
 	populateFields := GetPopulateFields(r)
 
 	clientUserId := chi.URLParam(r, "client_user_id")
+	clientID := chi.URLParam(r, "client_id")
 
 	query := repository.GetClientUserWithPopulateQuery{
 		ID:       clientUserId,
-		ClientID: currentClientUser.ClientID,
+		ClientID: clientID,
 		Populate: populateFields,
 	}
 	clientUser, err := h.service.GetClientUserWithPopulate(r.Context(), query)
@@ -396,6 +258,7 @@ type DeactivateClientUserRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
+//	@Param			client_id		path		string											true	"Client ID"
 //	@Param			client_user_id	path		string											true	"Client user ID"
 //	@Param			body			body		DeactivateClientUserRequest						true	"Deactivate Client User Request Body"
 //	@Success		200				{object}	object{data=transformations.OutputClientUser}	"Client user deactivated successfully"
@@ -404,7 +267,7 @@ type DeactivateClientUserRequest struct {
 //	@Failure		404				{object}	lib.HTTPError									"Client user not found"
 //	@Failure		422				{object}	string											"Validation error occured"
 //	@Failure		500				{object}	string											"An unexpected error occurred"
-//	@Router			/api/v1/admin/client-users/{client_user_id}/deactivate [post]
+//	@Router			/api/v1/admin/clients/{client_id}/client-users/{client_user_id}/deactivate [post]
 func (h *ClientUserHandler) DeactivateClientUser(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {
@@ -451,6 +314,7 @@ func (h *ClientUserHandler) DeactivateClientUser(w http.ResponseWriter, r *http.
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
+//	@Param			client_id		path		string											true	"Client ID"
 //	@Param			client_user_id	path		string											true	"Client user ID"
 //	@Success		200				{object}	object{data=transformations.OutputClientUser}	"Client user activated successfully"
 //	@Failure		400				{object}	lib.HTTPError									"Error occurred when activating client user"
@@ -458,7 +322,7 @@ func (h *ClientUserHandler) DeactivateClientUser(w http.ResponseWriter, r *http.
 //	@Failure		404				{object}	lib.HTTPError									"Client user not found"
 //	@Failure		422				{object}	string											"Validation error occured"
 //	@Failure		500				{object}	string											"An unexpected error occurred"
-//	@Router			/api/v1/admin/client-users/{client_user_id}/activate [post]
+//	@Router			/api/v1/admin/clients/{client_id}/client-users/{client_user_id}/activate [post]
 func (h *ClientUserHandler) ActivateClientUser(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
 	if !clientUserOk {
@@ -474,171 +338,6 @@ func (h *ClientUserHandler) ActivateClientUser(w http.ResponseWriter, r *http.Re
 	}
 
 	clientUser, err := h.service.ActivateClientUser(r.Context(), input)
-	if err != nil {
-		HandleErrorResponse(w, err)
-		return
-	}
-
-	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBClientUserToRest(clientUser),
-	})
-}
-
-type UpdateClientUserRequest struct {
-	Name        lib.Optional[string] `json:"name"        validate:"omitempty,min=2" swaggertype:"string" example:"John Doe"`
-	PhoneNumber lib.Optional[string] `json:"phoneNumber" validate:"omitempty,e164"  swaggertype:"string" example:"+233281234569"`
-	Email       lib.Optional[string] `json:"email"       validate:"omitempty,email" swaggertype:"string" example:"john@example.com"`
-}
-
-// UpdateClientUserSelf godoc
-//
-//	@Summary		update client user (Admin)
-//	@Description	update client user (Admin)
-//	@Tags			ClientUsers
-//	@Accept			json
-//	@Security		BearerAuth
-//	@Produce		json
-//	@Param			body	body		UpdateClientUserRequest	true	"Update Client User Request Body"
-//	@Success		200		{object}	object{data=transformations.OutputClientUser}
-//	@Failure		400		{object}	lib.HTTPError	"Error occurred when updating client user"
-//	@Failure		401		{object}	string			"Invalid or absent authentication token"
-//	@Failure		404		{object}	lib.HTTPError	"Client user not found"
-//	@Failure		422		{object}	lib.HTTPError	"Validation error occured"
-//	@Failure		500		{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/client-users/me [patch]
-func (h *ClientUserHandler) UpdateClientUserSelf(w http.ResponseWriter, r *http.Request) {
-	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
-	if !clientUserOk {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	var body UpdateClientUserRequest
-
-	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
-		return
-	}
-
-	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
-	if !isPassedValidation {
-		return
-	}
-
-	input := services.UpdateClientUserInput{
-		ClientUserID: currentClientUser.ID,
-		Name:         body.Name,
-		PhoneNumber:  body.PhoneNumber,
-		Email:        body.Email,
-	}
-
-	clientUser, err := h.service.UpdateClientUser(r.Context(), input)
-	if err != nil {
-		HandleErrorResponse(w, err)
-		return
-	}
-
-	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBClientUserToRest(clientUser),
-	})
-}
-
-type UpdateClientUserPasswordRequest struct {
-	OldPassword string `json:"old_password" validate:"required,min=6" example:"oldpassword123"`
-	NewPassword string `json:"new_password" validate:"required,min=6" example:"newpassword123"`
-}
-
-// UpdateClientUserPassword godoc
-//
-//	@Summary		Update client user password (Admin)
-//	@Description	Update client user password (Admin)
-//	@Tags			ClientUsers
-//	@Accept			json
-//	@Security		BearerAuth
-//	@Produce		json
-//	@Param			body	body		UpdateClientUserPasswordRequest	true	"Update Client User Password Request Body"
-//	@Success		200		{object}	object{data=transformations.OutputClientUser}
-//	@Failure		400		{object}	lib.HTTPError	"Error occurred when updating client user password"
-//	@Failure		401		{object}	string			"Invalid or absent authentication token"
-//	@Failure		404		{object}	lib.HTTPError	"Client user not found"
-//	@Failure		422		{object}	lib.HTTPError	"Validation error occured"
-//	@Failure		500		{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/client-users/me/password [patch]
-func (h *ClientUserHandler) UpdateClientUserPassword(w http.ResponseWriter, r *http.Request) {
-	currentClientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
-	if !clientUserOk {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	var body UpdateClientUserPasswordRequest
-	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
-		return
-	}
-
-	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
-	if !isPassedValidation {
-		return
-	}
-
-	input := services.UpdateClientUserPasswordInput{
-		ClientUserID: currentClientUser.ID,
-		OldPassword:  body.OldPassword,
-		NewPassword:  body.NewPassword,
-	}
-
-	updatedClientUser, err := h.service.UpateClientUserPassword(r.Context(), input)
-	if err != nil {
-		HandleErrorResponse(w, err)
-		return
-	}
-
-	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBClientUserToRest(updatedClientUser),
-	})
-}
-
-// UpdateClientUserByID godoc
-//
-//	@Summary		Update client user by ID (Admin/Owner)
-//	@Description	Update client user name and phone number by ID
-//	@Tags			ClientUsers
-//	@Accept			json
-//	@Security		BearerAuth
-//	@Produce		json
-//	@Param			client_user_id	path		string					true	"Client User ID"
-//	@Param			body			body		UpdateClientUserRequest	true	"Update Client User Request Body"
-//	@Success		200				{object}	object{data=transformations.OutputClientUser}
-//	@Failure		400				{object}	lib.HTTPError	"Error occurred when updating client user"
-//	@Failure		401				{object}	string			"Invalid or absent authentication token"
-//	@Failure		404				{object}	lib.HTTPError	"Client user not found"
-//	@Failure		422				{object}	lib.HTTPError	"Validation error occured"
-//	@Failure		500				{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/client-users/{client_user_id} [patch]
-func (h *ClientUserHandler) UpdateClientUserByID(w http.ResponseWriter, r *http.Request) {
-	clientUserID := chi.URLParam(r, "client_user_id")
-
-	var body UpdateClientUserRequest
-
-	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
-		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
-		return
-	}
-
-	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
-	if !isPassedValidation {
-		return
-	}
-
-	input := services.UpdateClientUserInput{
-		ClientUserID: clientUserID,
-		Name:         body.Name,
-		PhoneNumber:  body.PhoneNumber,
-		Email:        body.Email,
-	}
-
-	clientUser, err := h.service.UpdateClientUser(r.Context(), input)
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return

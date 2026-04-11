@@ -16,6 +16,7 @@ import {
 	CardTitle,
 } from '~/components/ui/card'
 import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.applications.$applicationId.docs'
 
@@ -24,6 +25,7 @@ export function PropertyTenantApplicationDocs() {
 	const { tenantApplication } = useTenantApplicationContext()
 
 	const { applicationId } = useParams()
+	const { clientUser } = useClient()
 	const { clientUserProperty } = useProperty()
 	const [open, setOpen] = useState(false)
 	const revalidator = useRevalidator()
@@ -51,8 +53,8 @@ export function PropertyTenantApplicationDocs() {
 					documentId:
 						tenantApplication.lease_agreement_document_id ?? undefined,
 					propertyManagerSignedAt: managerSignature?.created_at ?? null,
-					propertyManagerSignedBy: managerSignature?.signed_by?.name
-						? { name: managerSignature.signed_by.name }
+					propertyManagerSignedBy: managerSignature?.signed_by?.user?.name
+						? { name: managerSignature.signed_by.user?.name }
 						: managerSignature?.signed_by_name
 							? { name: managerSignature.signed_by_name }
 							: null,
@@ -65,10 +67,14 @@ export function PropertyTenantApplicationDocs() {
 
 		// if it's online, lets delete the document that was created
 		if (attachedDoc?.mode === 'online' && attachedDoc.documentId) {
-			await deleteDocument(attachedDoc.documentId)
+			await deleteDocument({
+				clientId: safeString(clientUser?.client_id),
+				id: attachedDoc.documentId,
+			})
 		}
 
 		await updateTenantApplication({
+			client_id: safeString(clientUser?.client_id),
 			id: applicationId,
 			property_id: clientUserProperty?.property_id ?? '',
 			data: {

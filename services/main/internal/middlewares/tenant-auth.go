@@ -62,7 +62,15 @@ func tenantFromJWT(unattendedToken string, secret string) (*lib.TenantAccountFro
 	var tenantFromTokenImplementation lib.TenantAccountFromToken
 
 	if ok && rawToken.Valid {
-		tenantFromTokenImplementation.ID = claims["id"].(string)
+		idVal, found := claims["id"]
+		if !found {
+			return nil, errors.New("AuthorizationFailed")
+		}
+		id, ok := idVal.(string)
+		if !ok {
+			return nil, errors.New("AuthorizationFailed")
+		}
+		tenantFromTokenImplementation.ID = id
 	}
 
 	return &tenantFromTokenImplementation, nil

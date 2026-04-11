@@ -42,6 +42,8 @@ import {
 	TypographyMuted,
 } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth._dashboard.activities.announcements.new._index'
 
 const ValidationSchema = z.object({
@@ -67,8 +69,10 @@ type SubmitIntent = 'post' | 'draft'
 export function NewAnnouncementModule() {
 	const navigate = useNavigate()
 	const queryClient = useQueryClient()
+	const { clientUser } = useClient()
+	const clientId = safeString(clientUser?.client_id)
 	const [searchParams] = useSearchParams()
-	const announcementId = searchParams.get('announcement_id') ?? ''
+	const announcementId = safeString(searchParams.get('announcement_id'))
 	const loaderData = useLoaderData<typeof loader>()
 
 	const [scheduledAt, setScheduledAt] = useState<Date>(new Date())
@@ -85,6 +89,7 @@ export function NewAnnouncementModule() {
 	const isPending = isCreating || isPublishing || isScheduling
 
 	const { data: sourceAnnouncement } = useGetAnnouncement(
+		clientId,
 		announcementId,
 		loaderData.sourceAnnouncement ?? undefined,
 	)
@@ -129,6 +134,7 @@ export function NewAnnouncementModule() {
 
 		try {
 			const created = await createAnnouncement({
+				clientId,
 				title: formData.title,
 				content: formData.content,
 				type: formData.type,
@@ -146,12 +152,13 @@ export function NewAnnouncementModule() {
 
 			if (isScheduled) {
 				await scheduleAnnouncement({
+					clientId,
 					id: created.id,
 					scheduled_at: scheduledAt.toISOString(),
 				})
 				toast.success('Announcement scheduled.')
 			} else {
-				await publishAnnouncement(created.id)
+				await publishAnnouncement({ clientId, id: created.id })
 				toast.success('Announcement published.')
 			}
 

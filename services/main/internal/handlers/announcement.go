@@ -49,7 +49,7 @@ type CreateAnnouncementRequest struct {
 //	@Failure		400		{object}	lib.HTTPError
 //	@Failure		401		{object}	string
 //	@Failure		500		{object}	string
-//	@Router			/api/v1/admin/announcements [post]
+//	@Router			/api/v1/admin/clients/{client_id}/announcements [post]
 func (h *AnnouncementHandler) CreateAnnouncement(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {
@@ -122,7 +122,7 @@ type UpdateAnnouncementRequest struct {
 //	@Failure		400				{object}	lib.HTTPError
 //	@Failure		401				{object}	string
 //	@Failure		500				{object}	string
-//	@Router			/api/v1/admin/announcements/{announcement_id} [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/announcements/{announcement_id} [patch]
 func (h *AnnouncementHandler) UpdateAnnouncement(w http.ResponseWriter, r *http.Request) {
 	_, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {
@@ -176,7 +176,7 @@ func (h *AnnouncementHandler) UpdateAnnouncement(w http.ResponseWriter, r *http.
 //	@Failure		400				{object}	lib.HTTPError
 //	@Failure		401				{object}	string
 //	@Failure		500				{object}	string
-//	@Router			/api/v1/admin/announcements/{announcement_id} [delete]
+//	@Router			/api/v1/admin/clients/{client_id}/announcements/{announcement_id} [delete]
 func (h *AnnouncementHandler) DeleteAnnouncement(w http.ResponseWriter, r *http.Request) {
 	announcementID := chi.URLParam(r, "announcement_id")
 
@@ -201,7 +201,7 @@ func (h *AnnouncementHandler) DeleteAnnouncement(w http.ResponseWriter, r *http.
 //	@Failure		400				{object}	lib.HTTPError
 //	@Failure		401				{object}	string
 //	@Failure		500				{object}	string
-//	@Router			/api/v1/admin/announcements/{announcement_id} [get]
+//	@Router			/api/v1/admin/clients/{client_id}/announcements/{announcement_id} [get]
 func (h *AnnouncementHandler) GetAnnouncementById(w http.ResponseWriter, r *http.Request) {
 	announcementID := chi.URLParam(r, "announcement_id")
 	populateFields := GetPopulateFields(r)
@@ -238,7 +238,7 @@ type ListAnnouncementsFilterRequest struct {
 //	@Failure		400	{object}	lib.HTTPError
 //	@Failure		401	{object}	string
 //	@Failure		500	{object}	string
-//	@Router			/api/v1/admin/announcements [get]
+//	@Router			/api/v1/admin/clients/{client_id}/announcements [get]
 func (h *AnnouncementHandler) ListAnnouncements(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {
@@ -314,7 +314,7 @@ func (h *AnnouncementHandler) ListAnnouncements(w http.ResponseWriter, r *http.R
 //	@Failure		400				{object}	lib.HTTPError
 //	@Failure		401				{object}	string
 //	@Failure		500				{object}	string
-//	@Router			/api/v1/admin/announcements/{announcement_id}/publish [post]
+//	@Router			/api/v1/admin/clients/{client_id}/announcements/{announcement_id}/publish [post]
 func (h *AnnouncementHandler) PublishAnnouncement(w http.ResponseWriter, r *http.Request) {
 	announcementID := chi.URLParam(r, "announcement_id")
 
@@ -344,7 +344,7 @@ type ScheduleAnnouncementRequest struct {
 //	@Failure		400				{object}	lib.HTTPError
 //	@Failure		401				{object}	string
 //	@Failure		500				{object}	string
-//	@Router			/api/v1/admin/announcements/{announcement_id}/schedule [post]
+//	@Router			/api/v1/admin/clients/{client_id}/announcements/{announcement_id}/schedule [post]
 func (h *AnnouncementHandler) ScheduleAnnouncement(w http.ResponseWriter, r *http.Request) {
 	announcementID := chi.URLParam(r, "announcement_id")
 
@@ -385,7 +385,7 @@ func (h *AnnouncementHandler) ScheduleAnnouncement(w http.ResponseWriter, r *htt
 //	@Failure		401				{object}	string
 //	@Failure		404				{object}	lib.HTTPError
 //	@Failure		500				{object}	string
-//	@Router			/api/v1/admin/announcements/{announcement_id}/schedule [delete]
+//	@Router			/api/v1/admin/clients/{client_id}/announcements/{announcement_id}/schedule [delete]
 func (h *AnnouncementHandler) CancelScheduleAnnouncement(w http.ResponseWriter, r *http.Request) {
 	announcementID := chi.URLParam(r, "announcement_id")
 
@@ -416,7 +416,7 @@ type ExtendAnnouncementExpiryRequest struct {
 //	@Failure		401				{object}	string
 //	@Failure		404				{object}	lib.HTTPError
 //	@Failure		500				{object}	string
-//	@Router			/api/v1/admin/announcements/{announcement_id}/expiry [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/announcements/{announcement_id}/expiry [patch]
 func (h *AnnouncementHandler) ExtendAnnouncementExpiry(w http.ResponseWriter, r *http.Request) {
 	announcementID := chi.URLParam(r, "announcement_id")
 

@@ -163,14 +163,14 @@ while still refetching client-side after mutations via
 
 ## Key Utilities
 
-| Function                       | Import                   | Purpose                                 |
-| ------------------------------ | ------------------------ | --------------------------------------- |
-| `formatAmount()`               | `~/lib/format-amount`    | Formats as "GH₵ X,XXX.XX"               |
-| `toFirstUpperCase()`           | `~/lib/strings`          | Capitalize first letter                 |
-| `safeString()`                 | `~/lib/strings`          | Handle nullable strings                 |
-| `cn()`                         | `~/lib/utils`            | Tailwind class merging (clsx + twMerge) |
-| `getPropertyUnitStatusLabel()` | `~/lib/properties.utils` | Unit status enum to label               |
-| `getPropertyStatusLabel()`     | `~/lib/properties.utils` | Property status enum to label           |
+| Function                       | Import                   | Purpose                                                     |
+| ------------------------------ | ------------------------ | ----------------------------------------------------------- |
+| `formatAmount()`               | `~/lib/format-amount`    | Formats as "GH₵ X,XXX.XX"                                   |
+| `toFirstUpperCase()`           | `~/lib/strings`          | Capitalize first letter                                     |
+| `safeString()`                 | `~/lib/strings`          | Handle nullable strings — **always use instead of `?? ''`** |
+| `cn()`                         | `~/lib/utils`            | Tailwind class merging (clsx + twMerge)                     |
+| `getPropertyUnitStatusLabel()` | `~/lib/properties.utils` | Unit status enum to label                                   |
+| `getPropertyStatusLabel()`     | `~/lib/properties.utils` | Property status enum to label                               |
 
 Dates: `dayjs(date).format('MMM D, YYYY')`
 

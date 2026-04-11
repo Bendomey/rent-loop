@@ -55,6 +55,8 @@ import { QUERY_KEYS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { formatAmount } from '~/lib/format-amount'
 import { getInvoiceStatusLabel } from '~/lib/invoice'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 const payerRowSchema = z.object({
 	payer_type: z.enum(['TENANT', 'PROPERTY_OWNER']),
@@ -214,6 +216,7 @@ function PayerForm({ totalAmount, payers, onChange }: PayerFormProps) {
 }
 
 interface InvoiceFormSheetProps {
+	clientId: string
 	expenseId: string
 	expenseAmount: number
 	leaseId: string
@@ -222,6 +225,7 @@ interface InvoiceFormSheetProps {
 }
 
 function InvoiceFormSheet({
+	clientId,
 	expenseId,
 	expenseAmount,
 	leaseId,
@@ -247,6 +251,7 @@ function InvoiceFormSheet({
 
 		generateInvoice.mutate(
 			{
+				client_id: clientId,
 				property_id: propertyId,
 				expense_id: expenseId,
 				payers: apiPayers,
@@ -304,6 +309,8 @@ export function LeaseExpensesTab({
 	propertyId,
 }: LeaseExpensesTabProps) {
 	const queryClient = useQueryClient()
+	const { clientUser } = useClient()
+	const clientId = safeString(clientUser?.client_id)
 	const [showForm, setShowForm] = useState(false)
 	const [activeInvoiceExpenseId, setActiveInvoiceExpenseId] = useState<
 		string | null
@@ -315,7 +322,7 @@ export function LeaseExpensesTab({
 		isLoading,
 		isError,
 		refetch,
-	} = useGetLeaseExpenses(propertyId, leaseId, {
+	} = useGetLeaseExpenses(clientId, propertyId, leaseId, {
 		pagination: { page: 1, per: 100 },
 		filters: {},
 		populate: ['Invoices'],
@@ -362,6 +369,7 @@ export function LeaseExpensesTab({
 
 		createExpense.mutate(
 			{
+				client_id: clientId,
 				property_id: propertyId,
 				context_type: 'LEASE',
 				context_lease_id: leaseId,
@@ -388,6 +396,7 @@ export function LeaseExpensesTab({
 
 					generateInvoice.mutate(
 						{
+							client_id: clientId,
 							property_id: propertyId,
 							expense_id: expense.id,
 							payers: apiPayers,
@@ -434,6 +443,7 @@ export function LeaseExpensesTab({
 				await Promise.all(
 					expense.invoices.map((inv) =>
 						voidInvoice.mutateAsync({
+							client_id: clientId,
 							property_id: propertyId,
 							id: inv.id,
 							voided_reason: `Associated expense - ${expense.code} was deleted`,
@@ -442,7 +452,11 @@ export function LeaseExpensesTab({
 				)
 				await Promise.all(
 					expense.invoices.map((inv) =>
-						deleteInvoice.mutateAsync({ property_id: propertyId, id: inv.id }),
+						deleteInvoice.mutateAsync({
+							client_id: clientId,
+							property_id: propertyId,
+							id: inv.id,
+						}),
 					),
 				)
 				void queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVOICES] })
@@ -450,6 +464,7 @@ export function LeaseExpensesTab({
 
 			deleteExpense.mutate(
 				{
+					client_id: clientId,
 					property_id: propertyId,
 					expense_id: expense.id,
 				},
@@ -737,6 +752,7 @@ export function LeaseExpensesTab({
 									</div>
 									{isGeneratingForThis && (
 										<InvoiceFormSheet
+											clientId={clientId}
 											expenseId={expense.id}
 											expenseAmount={expense.amount / 100}
 											leaseId={leaseId}

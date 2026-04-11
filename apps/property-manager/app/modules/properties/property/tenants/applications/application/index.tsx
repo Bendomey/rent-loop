@@ -84,7 +84,7 @@ export function PropertyTenantApplicationContainer() {
 							{localizedDayjs(tenantApplication?.created_at).format('LLLL')}
 						</strong>{' '}
 						{tenantApplication?.created_by
-							? `by ${tenantApplication.created_by.name}`
+							? `by ${tenantApplication.created_by.user?.name}`
 							: null}
 					</span>
 				</div>

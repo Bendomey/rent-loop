@@ -29,6 +29,8 @@ import {
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
 import { QUERY_KEYS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 const COOLDOWN_SECONDS = 60
 
@@ -59,6 +61,7 @@ export function PromptSignatureButton({
 	tenantApplicationId,
 }: PromptSignatureButtonProps) {
 	const queryClient = useQueryClient()
+	const { clientUser } = useClient()
 	const { mutateAsync: generateToken, isPending: isGenerating } =
 		useGenerateSigningToken()
 	const { mutateAsync: updateToken, isPending: isUpdating } =
@@ -137,6 +140,7 @@ export function PromptSignatureButton({
 
 					if (hasChanges) {
 						await updateToken({
+							client_id: safeString(clientUser?.client_id),
 							signing_token_id: existingToken.id,
 							property_id: propertyId,
 							signer_name: values.signer_name,
@@ -146,11 +150,13 @@ export function PromptSignatureButton({
 					}
 
 					await resendToken({
-						property_id: propertyId ?? '',
+						client_id: safeString(clientUser?.client_id),
+						property_id: safeString(propertyId),
 						signing_token_id: existingToken.id,
 					})
 				} else {
 					await generateToken({
+						client_id: safeString(clientUser?.client_id),
 						property_id: propertyId,
 						document_id: documentId,
 						role,
@@ -179,6 +185,7 @@ export function PromptSignatureButton({
 			startCooldown,
 			rhfMethods,
 			resendToken,
+			clientUser?.client_id,
 			propertyId,
 			updateToken,
 			generateToken,

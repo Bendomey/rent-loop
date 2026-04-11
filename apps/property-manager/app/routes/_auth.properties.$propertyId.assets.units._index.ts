@@ -16,8 +16,11 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	const authToken = authSession.get('authToken')
 	const property_id = safeString(clientUserProperty?.property?.id)
 
+	const clientId = safeString(authSession.get('selectedClientId'))
+
 	if (clientUserProperty?.property?.type === 'SINGLE') {
 		const units = await getPropertyUnitsForServer(
+			clientId,
 			{
 				property_id: property_id,
 				pagination: {

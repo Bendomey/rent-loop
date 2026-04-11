@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import { CURRENT_USER_QUERY_KEY, useUpdateClientUserMe } from '~/api/auth'
+import { CURRENT_USER_QUERY_KEY, useUpdateUserMe } from '~/api/auth'
 import {
 	AlertDialog,
 	AlertDialogContent,
@@ -31,7 +31,7 @@ import { getErrorMessage } from '~/lib/error-messages'
 import { safeString } from '~/lib/strings'
 
 interface Props {
-	client?: ClientUser
+	client?: User
 	opened: boolean
 	setOpened: Dispatch<SetStateAction<boolean>>
 }
@@ -58,7 +58,7 @@ export default function UpdateClientProfileModal({
 	})
 
 	const { handleSubmit, control } = rhfMethods
-	const { mutate, isPending } = useUpdateClientUserMe()
+	const { mutate, isPending } = useUpdateUserMe()
 
 	const onSubmit = (data: FormSchema) => {
 		mutate(

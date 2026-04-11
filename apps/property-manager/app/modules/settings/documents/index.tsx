@@ -40,6 +40,7 @@ import { localizedDayjs } from '~/lib/date'
 import { getNameInitials } from '~/lib/misc'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth._dashboard.settings.documents'
 
 export function DocumentsModule() {
@@ -57,16 +58,20 @@ export function DocumentsModule() {
 	const per = searchParams.get('pageSize')
 		? Number(searchParams.get('pageSize'))
 		: PAGINATION_DEFAULTS.PER_PAGE
-	const { data, isPending, isRefetching, error, refetch } = useGetDocuments({
-		filters: { only_global_documents: true, type: 'TEMPLATE' },
-		pagination: { page, per },
-		populate: ['CreatedBy'],
-		sorter: { sort: 'desc', sort_by: 'created_at' },
-		search: {
-			query: searchParams.get('query') ?? undefined,
-			fields: ['title'],
+	const { clientUser } = useClient()
+	const { data, isPending, isRefetching, error, refetch } = useGetDocuments(
+		safeString(clientUser?.client_id),
+		{
+			filters: { only_global_documents: true, type: 'TEMPLATE' },
+			pagination: { page, per },
+			populate: ['CreatedBy', 'CreatedBy.User'],
+			sorter: { sort: 'desc', sort_by: 'created_at' },
+			search: {
+				query: searchParams.get('query') ?? undefined,
+				fields: ['title'],
+			},
 		},
-	})
+	)
 
 	const isLoading = isPending || isRefetching
 
@@ -113,11 +118,13 @@ export function DocumentsModule() {
 							<Avatar className="h-8 w-8">
 								<AvatarImage src="" />
 								<AvatarFallback>
-									{getNameInitials(safeString(row.original.created_by?.name))}
+									{getNameInitials(
+										safeString(row.original.created_by?.user?.name),
+									)}
 								</AvatarFallback>
 							</Avatar>
 							<span className="truncate pl-1.5 text-xs text-zinc-600 dark:text-white">
-								{safeString(row.original.created_by?.name)}
+								{safeString(row.original.created_by?.user?.name)}
 							</span>
 						</div>
 					)
@@ -241,18 +248,21 @@ export function DocumentsModule() {
 							onClick={(e) => {
 								e.preventDefault()
 								if (!activeId || isDeleting) return
-								deleteDocument(activeId, {
-									onError: () => {
-										toast.error('Failed to delete document. Try again later.')
+								deleteDocument(
+									{ clientId: safeString(clientUser?.client_id), id: activeId },
+									{
+										onError: () => {
+											toast.error('Failed to delete document. Try again later.')
+										},
+										onSuccess: () => {
+											void queryClient.invalidateQueries({
+												queryKey: [QUERY_KEYS.DOCUMENTS],
+											})
+											setOpenDeleteDialog(false)
+											setActiveId(null)
+										},
 									},
-									onSuccess: () => {
-										void queryClient.invalidateQueries({
-											queryKey: [QUERY_KEYS.DOCUMENTS],
-										})
-										setOpenDeleteDialog(false)
-										setActiveId(null)
-									},
-								})
+								)
 							}}
 							className="bg-destructive hover:bg-destructive/90 text-white"
 						>

@@ -21,6 +21,8 @@ import {
 	getChecklistStatusLabel,
 	getChecklistTypeLabel,
 } from '~/lib/lease-checklist.utils'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface Props {
 	leaseId: string
@@ -35,9 +37,15 @@ const CHECKLIST_TYPES: LeaseChecklistType[] = [
 ]
 
 export function ChecklistSection({ leaseId, canEdit, propertyId }: Props) {
-	const { data, isLoading } = useGetLeaseChecklists(propertyId, leaseId, {
-		populate: ['Items', 'Acknowledgments'],
-	})
+	const { clientUser } = useClient()
+	const { data, isLoading } = useGetLeaseChecklists(
+		safeString(clientUser?.client_id),
+		propertyId,
+		leaseId,
+		{
+			populate: ['Items', 'Acknowledgments'],
+		},
+	)
 	const [createType, setCreateType] = useState<LeaseChecklistType | null>(null)
 	const [viewChecklistId, setViewChecklistId] = useState<string | null>(null)
 

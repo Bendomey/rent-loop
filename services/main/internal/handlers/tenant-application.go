@@ -70,7 +70,7 @@ type AdminCreateTenantApplicationRequest struct {
 //	@Failure		400			{object}	lib.HTTPError												"Error occurred when creating a tenant application"
 //	@Failure		422			{object}	lib.HTTPError												"Validation error"
 //	@Failure		500			{object}	string														"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/tenant-applications [post]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications [post]
 func (h *TenantApplicationHandler) AdminCreateTenantApplication(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentUserOk {
@@ -252,7 +252,7 @@ type SendTenantInviteRequest struct {
 //	@Failure		404			{object}	lib.HTTPError	"TenantApplication not found"
 //	@Failure		422			{object}	string			"Validation error"
 //	@Failure		500			{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/tenant-applications/invite [post]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/invite [post]
 func (h *TenantApplicationHandler) SendTenantInvite(w http.ResponseWriter, r *http.Request) {
 	adminClientUser, adminClientUserOk := lib.ClientUserFromContext(r.Context())
 	if !adminClientUserOk {
@@ -273,10 +273,11 @@ func (h *TenantApplicationHandler) SendTenantInvite(w http.ResponseWriter, r *ht
 	}
 
 	input := services.InviteTenantInput{
-		Email:   body.Email,
-		Phone:   body.Phone,
-		UnitId:  body.UnitId,
-		AdminId: adminClientUser.ID,
+		Email:    body.Email,
+		Phone:    body.Phone,
+		UnitId:   body.UnitId,
+		AdminId:  adminClientUser.ID,
+		ClientID: adminClientUser.ClientID,
 	}
 
 	sendInviteErr := h.service.InviteTenant(r.Context(), input)
@@ -317,7 +318,7 @@ type ListTenantApplicationsQuery struct {
 //	@Failure		400			{object}	lib.HTTPError	"An error occurred while filtering tenant applications"
 //	@Failure		401			{object}	string			"Absent or invalid authentication token"
 //	@Failure		500			{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/tenant-applications [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications [get]
 func (h *TenantApplicationHandler) ListTenantApplications(w http.ResponseWriter, r *http.Request) {
 	filterQuery, filterQueryErr := lib.GenerateQuery(r.URL.Query())
 	if filterQueryErr != nil {
@@ -392,7 +393,7 @@ type GetTenantApplicationQuery struct {
 //	@Failure		401						{object}	string														"Invalid or absent authentication token"
 //	@Failure		404						{object}	lib.HTTPError												"Tenant application not found"
 //	@Failure		500						{object}	string														"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id} [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id} [get]
 func (h *TenantApplicationHandler) AdminGetTenantApplication(w http.ResponseWriter, r *http.Request) {
 	populate := GetPopulateFields(r)
 	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
@@ -512,7 +513,7 @@ type AdminUpdateTenantApplicationRequest struct {
 //	@Failure		404						{object}	lib.HTTPError												"Tenant application not found"
 //	@Failure		422						{object}	lib.HTTPError												"Validation error"
 //	@Failure		500						{object}	string														"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id} [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id} [patch]
 func (h *TenantApplicationHandler) AdminUpdateTenantApplication(w http.ResponseWriter, r *http.Request) {
 	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
 
@@ -649,7 +650,7 @@ func (h *TenantApplicationHandler) UpdateTenantApplication(w http.ResponseWriter
 //	@Failure		401						{object}	string			"Invalid or absent authentication token"
 //	@Failure		404						{object}	lib.HTTPError	"Tenant application not found"
 //	@Failure		500						{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id} [delete]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id} [delete]
 func (h *TenantApplicationHandler) DeleteTenantApplication(w http.ResponseWriter, r *http.Request) {
 	tenantApplicationID := chi.URLParam(r, "tenant_application_id")
 
@@ -683,7 +684,7 @@ type CancelTenantApplicationRequest struct {
 //	@Failure		404						{object}	lib.HTTPError	"Tenant application not found"
 //	@Failure		422						{object}	lib.HTTPError	"Validation error"
 //	@Failure		500						{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}/cancel [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/cancel [patch]
 func (h *TenantApplicationHandler) CancelTenantApplication(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentClientUserOk {
@@ -736,7 +737,7 @@ func (h *TenantApplicationHandler) CancelTenantApplication(w http.ResponseWriter
 //	@Failure		409						{object}	lib.HTTPError	"Tenant application already approved"
 //	@Failure		422						{object}	lib.HTTPError	"Validation error"
 //	@Failure		500						{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}/approve [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/approve [patch]
 func (h *TenantApplicationHandler) ApproveTenantApplication(w http.ResponseWriter, r *http.Request) {
 	currentClientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentClientUserOk {
@@ -782,7 +783,7 @@ type GenerateInvoiceRequest struct {
 //	@Failure		404						{object}	lib.HTTPError								"Tenant application not found"
 //	@Failure		422						{object}	lib.HTTPError								"Validation error"
 //	@Failure		500						{object}	string										"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice:generate [post]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice:generate [post]
 func (h *TenantApplicationHandler) GenerateInvoice(w http.ResponseWriter, r *http.Request) {
 	_, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentClientUserOk {
@@ -849,7 +850,7 @@ type PayInvoiceRequest struct {
 //	@Failure		404						{object}	lib.HTTPError	"Tenant application or invoice not found"
 //	@Failure		422						{object}	lib.HTTPError	"Validation error"
 //	@Failure		500						{object}	string			"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay [post]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay [post]
 func (h *TenantApplicationHandler) PayInvoice(w http.ResponseWriter, r *http.Request) {
 	clientUser, currentClientUserOk := lib.ClientUserFromContext(r.Context())
 	if !currentClientUserOk {

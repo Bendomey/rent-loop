@@ -24,6 +24,8 @@ import { TopbarLoader } from './components/top-bar-loader'
 import { Toaster } from './components/ui/sonner'
 import { getAuthSession } from './lib/actions/auth.session.server'
 import { environmentVariables } from './lib/actions/env.server'
+import { TAWK_HIDDEN_PATHS } from './lib/constants'
+import { safeString } from './lib/strings'
 import { NotFoundModule } from './modules'
 import { Providers } from './providers'
 
@@ -538,6 +540,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 			GOOGLE_MAPS_API_KEY: env.GOOGLE_MAPS_API_KEY,
 			CUBEJS_API_URL: env.CUBEJS_API_URL,
 			GOOGLE_ANALYTICS_ID: env.GOOGLE_ANALYTICS_ID,
+			SELECTED_CLIENT_ID: safeString(authSession.get('selectedClientId')),
 		},
 	}
 }

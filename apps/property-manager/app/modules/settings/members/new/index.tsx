@@ -45,6 +45,8 @@ import {
 	TypographyH4,
 	TypographyMuted,
 } from '~/components/ui/typography'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 const ValidationSchema = z.object({
 	role: z.enum(['ADMIN', 'STAFF'], {
@@ -72,12 +74,16 @@ export type FormSchema = z.infer<typeof ValidationSchema>
 
 export function NewMemberModule() {
 	const createFetcher = useFetcher<{ error: string }>()
+	const { clientUser } = useClient()
 
-	const { data: myProperties } = useGetMyProperties({
-		pagination: { page: 1, per: 100 },
-		populate: ['Property'],
-		sorter: { sort: 'asc', sort_by: 'created_at' },
-	})
+	const { data: myProperties } = useGetMyProperties(
+		safeString(clientUser?.client_id),
+		{
+			pagination: { page: 1, per: 100 },
+			populate: ['Property'],
+			sorter: { sort: 'asc', sort_by: 'created_at' },
+		},
+	)
 
 	const rhfMethods = useForm<FormSchema>({
 		defaultValues: {

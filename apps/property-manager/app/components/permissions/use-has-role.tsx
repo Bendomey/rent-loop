@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { PermissionState } from '~/lib/constants'
-import { useAuth } from '~/providers/auth-provider'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 interface PermissionCheckParams {
@@ -8,13 +8,13 @@ interface PermissionCheckParams {
 }
 
 export const useHasPermissions = ({ roles }: PermissionCheckParams) => {
-	const { currentUser } = useAuth()
+	const { clientUser } = useClient()
 
 	const hasPermissions = useMemo(() => {
-		if (!currentUser) return PermissionState.UNAUTHORIZED
+		if (!clientUser) return PermissionState.UNAUTHORIZED
 
 		if (roles && roles.length > 0) {
-			if (roles.includes(currentUser.role)) {
+			if (roles.includes(clientUser.role)) {
 				return PermissionState.AUTHORIZED
 			} else {
 				return PermissionState.UNAUTHORIZED
@@ -22,7 +22,7 @@ export const useHasPermissions = ({ roles }: PermissionCheckParams) => {
 		}
 
 		return PermissionState.AUTHORIZED
-	}, [currentUser, roles])
+	}, [clientUser, roles])
 
 	return { hasPermissions }
 }

@@ -161,6 +161,7 @@ export function PropertyBillingSettingsModule() {
 								updated_at: new Date(),
 								property_id: 'property_1',
 								property: {
+									client_id: 'client_1',
 									slug: 'sunset-apartments',
 									id: 'property_1',
 									name: 'Sunset Apartments',
@@ -213,6 +214,7 @@ export function PropertyBillingSettingsModule() {
 								updated_at: new Date(),
 								property_id: 'property_1',
 								property: {
+									client_id: 'client_1',
 									slug: 'client-2',
 									id: 'property_2',
 									name: 'Greenfield Villas',

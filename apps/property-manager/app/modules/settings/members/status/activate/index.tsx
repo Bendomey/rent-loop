@@ -14,6 +14,8 @@ import {
 } from '~/components/ui/alert-dialog'
 import { Spinner } from '~/components/ui/spinner'
 import { QUERY_KEYS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface Props {
 	data?: ClientUser
@@ -24,24 +26,28 @@ interface Props {
 
 function ActivateClientUserModal({ opened, setOpened, data }: Props) {
 	const queryClient = useQueryClient()
+	const { clientUser } = useClient()
 
 	const { mutate, isPending } = useActivateClientUser()
 
 	const handleSubmit = () => {
 		if (data) {
-			mutate(data.id, {
-				onError: () => {
-					toast.error('Failed to activate member. Try again later.')
-				},
-				onSuccess: () => {
-					toast.success(`${data.name} was activated successfully.`)
+			mutate(
+				{ clientId: safeString(clientUser?.client_id), id: data.id },
+				{
+					onError: () => {
+						toast.error('Failed to activate member. Try again later.')
+					},
+					onSuccess: () => {
+						toast.success(`${data.user?.name} was activated successfully.`)
 
-					void queryClient.invalidateQueries({
-						queryKey: [QUERY_KEYS.CLIENT_USERS],
-					})
-					setOpened(false)
+						void queryClient.invalidateQueries({
+							queryKey: [QUERY_KEYS.CLIENT_USERS],
+						})
+						setOpened(false)
+					},
 				},
-			})
+			)
 		}
 	}
 
@@ -50,10 +56,11 @@ function ActivateClientUserModal({ opened, setOpened, data }: Props) {
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>
-						{data ? `Activate ${data.name}` : 'Activate Member'}
+						{data ? `Activate ${data.user?.name}` : 'Activate Member'}
 					</AlertDialogTitle>
 					<AlertDialogDescription>
-						Are you sure you want to activate {data?.name ?? 'this member'}?
+						Are you sure you want to activate{' '}
+						{data?.user?.name ?? 'this member'}?
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>

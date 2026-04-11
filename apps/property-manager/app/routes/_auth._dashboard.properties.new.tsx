@@ -9,6 +9,7 @@ import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'
 import { APP_NAME } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
+import { safeString } from '~/lib/strings'
 import { NewPropertyModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -24,6 +25,7 @@ export const handle = {
 export async function action({ request }: Route.ActionArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
+	const clientId = safeString(authSession.get('selectedClientId'))
 
 	let formData = await request.formData()
 	const type = formData.get('type') as Property['type']
@@ -46,6 +48,7 @@ export async function action({ request }: Route.ActionArgs) {
 			authToken: authSession.get('authToken'),
 		}
 		const property = await createProperty(
+			clientId,
 			replaceNullUndefinedWithUndefined({
 				type,
 				status,
@@ -70,6 +73,7 @@ export async function action({ request }: Route.ActionArgs) {
 
 		// every unit should have at least one block
 		const propertyBlock = await createPropertyBlockForServer(
+			clientId,
 			{
 				name: 'Main',
 				description: 'This is the main block for the property',
@@ -86,6 +90,7 @@ export async function action({ request }: Route.ActionArgs) {
 		// create a unit automatically since there should be technically at least one unit for a single property
 		if (type === 'SINGLE' && propertyBlock) {
 			await createPropertyUnit(
+				clientId,
 				replaceNullUndefinedWithUndefined({
 					property_id: property.id,
 					property_block_id: propertyBlock.id,

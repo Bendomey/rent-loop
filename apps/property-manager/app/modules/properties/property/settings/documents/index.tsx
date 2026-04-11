@@ -41,6 +41,7 @@ import { localizedDayjs } from '~/lib/date'
 import { getNameInitials } from '~/lib/misc'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth._dashboard.settings.documents'
 
@@ -48,6 +49,7 @@ export function PropertyDocumentsSettingsModule() {
 	const { documentTemplates, error: documentError } =
 		useLoaderData<typeof loader>()
 	const [searchParams] = useSearchParams()
+	const { clientUser } = useClient()
 	const { clientUserProperty } = useProperty()
 	const queryClient = useQueryClient()
 
@@ -64,19 +66,22 @@ export function PropertyDocumentsSettingsModule() {
 
 	const property_id = clientUserProperty?.property?.id
 
-	const { data, isPending, isRefetching, error, refetch } = useGetDocuments({
-		filters: {
-			property_id: property_id,
-			type: 'TEMPLATE',
+	const { data, isPending, isRefetching, error, refetch } = useGetDocuments(
+		safeString(clientUser?.client_id),
+		{
+			filters: {
+				property_id: property_id,
+				type: 'TEMPLATE',
+			},
+			pagination: { page, per },
+			populate: ['CreatedBy', 'CreatedBy.User'],
+			sorter: { sort: 'desc', sort_by: 'created_at' },
+			search: {
+				query: searchParams.get('query') ?? undefined,
+				fields: ['title'],
+			},
 		},
-		pagination: { page, per },
-		populate: ['CreatedBy'],
-		sorter: { sort: 'desc', sort_by: 'created_at' },
-		search: {
-			query: searchParams.get('query') ?? undefined,
-			fields: ['title'],
-		},
-	})
+	)
 	const isLoading = isPending || isRefetching
 
 	const columns: ColumnDef<RentloopDocument>[] = useMemo(() => {
@@ -124,11 +129,13 @@ export function PropertyDocumentsSettingsModule() {
 							<Avatar className="h-8 w-8">
 								<AvatarImage src="" />
 								<AvatarFallback>
-									{getNameInitials(safeString(row.original.created_by?.name))}
+									{getNameInitials(
+										safeString(row.original.created_by?.user?.name),
+									)}
 								</AvatarFallback>
 							</Avatar>
 							<span className="truncate pl-1.5 text-xs text-zinc-600 dark:text-white">
-								{safeString(row.original.created_by?.name)}
+								{safeString(row.original.created_by?.user?.name)}
 							</span>
 						</div>
 					)
@@ -262,18 +269,21 @@ export function PropertyDocumentsSettingsModule() {
 							onClick={(e) => {
 								e.preventDefault()
 								if (!activeId || isDeleting) return
-								deleteDocument(activeId, {
-									onError: () => {
-										toast.error('Failed to delete document. Try again later.')
+								deleteDocument(
+									{ clientId: safeString(clientUser?.client_id), id: activeId },
+									{
+										onError: () => {
+											toast.error('Failed to delete document. Try again later.')
+										},
+										onSuccess: () => {
+											void queryClient.invalidateQueries({
+												queryKey: [QUERY_KEYS.DOCUMENTS],
+											})
+											setOpenDeleteDialog(false)
+											setActiveId(null)
+										},
 									},
-									onSuccess: () => {
-										void queryClient.invalidateQueries({
-											queryKey: [QUERY_KEYS.DOCUMENTS],
-										})
-										setOpenDeleteDialog(false)
-										setActiveId(null)
-									},
-								})
+								)
 							}}
 							className="bg-destructive hover:bg-destructive/90 text-white"
 						>

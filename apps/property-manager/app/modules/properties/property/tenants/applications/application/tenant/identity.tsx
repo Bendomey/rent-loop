@@ -42,6 +42,7 @@ import {
 } from '~/components/ui/tooltip'
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 const ID_TYPE_LABELS: Record<string, string> = {
 	NATIONAL_ID: 'National ID',
@@ -85,6 +86,7 @@ export function PropertyTenantApplicationIdentity({
 	property_id,
 }: PropertyTenantApplicationIdentityProps) {
 	const { tenantApplication: application } = useTenantApplicationContext()
+	const { clientUser } = useClient()
 
 	const isDocLocked = ['SIGNED', 'SIGNING'].includes(
 		application?.lease_agreement_document_status ?? '',
@@ -143,6 +145,7 @@ export function PropertyTenantApplicationIdentity({
 
 		mutate(
 			{
+				client_id: safeString(clientUser?.client_id),
 				id: application.id,
 				property_id,
 				data,

@@ -19,6 +19,8 @@ import {
 import { Button } from '~/components/ui/button'
 import { Spinner } from '~/components/ui/spinner'
 import { QUERY_KEYS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface Props {
 	announcementId: string | null
@@ -34,6 +36,8 @@ export function ScheduleAnnouncementModal({
 	propertyId,
 }: Props) {
 	const queryClient = useQueryClient()
+	const { clientUser } = useClient()
+	const clientId = safeString(clientUser?.client_id)
 	const [scheduledAt, setScheduledAt] = useState<Date | undefined>(undefined)
 	const { mutate: mutateGlobal, isPending: isPendingGlobal } =
 		useScheduleAnnouncement()
@@ -62,6 +66,7 @@ export function ScheduleAnnouncementModal({
 		if (propertyId) {
 			mutateProperty(
 				{
+					clientId,
 					propertyId,
 					id: announcementId,
 					scheduled_at: scheduledAt.toISOString(),
@@ -70,7 +75,11 @@ export function ScheduleAnnouncementModal({
 			)
 		} else {
 			mutateGlobal(
-				{ id: announcementId, scheduled_at: scheduledAt.toISOString() },
+				{
+					clientId,
+					id: announcementId,
+					scheduled_at: scheduledAt.toISOString(),
+				},
 				callbacks,
 			)
 		}

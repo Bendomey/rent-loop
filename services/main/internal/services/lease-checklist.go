@@ -439,7 +439,7 @@ func (s *leaseChecklistService) AcknowledgeLeaseChecklist(
 	checklist, err := s.repo.GetOneWithPopulate(ctx, repository.GetLeaseCheckListQuery{
 		ID:       input.ChecklistID,
 		LeaseID:  input.LeaseID,
-		Populate: &[]string{"CreatedBy"},
+		Populate: &[]string{"CreatedBy", "CreatedBy.User"},
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -520,7 +520,7 @@ func (s *leaseChecklistService) AcknowledgeLeaseChecklist(
 	}
 
 	go func() {
-		if checklist.CreatedBy.Email == "" {
+		if checklist.CreatedBy.User.Email == "" {
 			return
 		}
 		bgCtx := context.Background()
@@ -538,7 +538,7 @@ func (s *leaseChecklistService) AcknowledgeLeaseChecklist(
 			"{{action}}", input.Action,
 		).Replace(lib.ApplyGlobalVariableTemplate(s.appCtx.Config, lib.PM_CHECKLIST_ACKNOWLEDGED_BODY))
 		pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-			Recipient: checklist.CreatedBy.Email,
+			Recipient: checklist.CreatedBy.User.Email,
 			Subject:   lib.PM_CHECKLIST_ACKNOWLEDGED_SUBJECT,
 			TextBody:  message,
 		})

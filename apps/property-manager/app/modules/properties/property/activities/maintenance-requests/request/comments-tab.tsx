@@ -19,7 +19,9 @@ import { Textarea } from '~/components/ui/textarea'
 import { TypographyMuted } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
+import { safeString } from '~/lib/strings'
 import { useAuth } from '~/providers/auth-provider'
+import { useClient } from '~/providers/client-provider'
 
 function UserChip({ name, isMe }: { name: string; isMe: boolean }) {
 	const initials = name
@@ -51,16 +53,18 @@ interface CommentsTabProps {
 
 export function CommentsTab({ requestId, propertyId }: CommentsTabProps) {
 	const { currentUser } = useAuth()
+	const { clientUser } = useClient()
+	const clientId = safeString(clientUser?.client_id)
 	const queryClient = useQueryClient()
 	const [content, setContent] = useState('')
 	const [editingId, setEditingId] = useState<string | null>(null)
 	const [editContent, setEditContent] = useState('')
 
 	const { data, isLoading, isError, refetch } =
-		useGetMaintenanceRequestComments(propertyId, requestId, {
+		useGetMaintenanceRequestComments(clientId, propertyId, requestId, {
 			pagination: { page: 1, per: 50 },
 			filters: {},
-			populate: ['CreatedByClientUser'],
+			populate: ['CreatedByClientUser', 'CreatedByClientUser.User'],
 		})
 
 	const comments = data?.rows ?? []
@@ -80,7 +84,12 @@ export function CommentsTab({ requestId, propertyId }: CommentsTabProps) {
 		if (!trimmed) return
 
 		createComment.mutate(
-			{ id: requestId, property_id: propertyId, content: trimmed },
+			{
+				client_id: clientId,
+				id: requestId,
+				property_id: propertyId,
+				content: trimmed,
+			},
 			{
 				onSuccess: () => {
 					setContent('')
@@ -106,6 +115,7 @@ export function CommentsTab({ requestId, propertyId }: CommentsTabProps) {
 
 		updateComment.mutate(
 			{
+				client_id: clientId,
 				id: requestId,
 				property_id: propertyId,
 				comment_id: commentId,
@@ -127,7 +137,12 @@ export function CommentsTab({ requestId, propertyId }: CommentsTabProps) {
 
 	const handleDelete = (commentId: string) => {
 		deleteComment.mutate(
-			{ id: requestId, property_id: propertyId, comment_id: commentId },
+			{
+				client_id: clientId,
+				id: requestId,
+				property_id: propertyId,
+				comment_id: commentId,
+			},
 			{
 				onSuccess: () => {
 					invalidate()
@@ -231,7 +246,9 @@ export function CommentsTab({ requestId, propertyId }: CommentsTabProps) {
 									{comment.created_by_client_user && (
 										<div className="mb-2">
 											<UserChip
-												name={comment.created_by_client_user.name}
+												name={safeString(
+													comment.created_by_client_user.user?.name,
+												)}
 												isMe={
 													comment.created_by_client_user.id === currentUser?.id
 												}

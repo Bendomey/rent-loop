@@ -49,6 +49,8 @@ import {
 	TypographyMuted,
 } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth._dashboard.settings.members.$memberId._index'
 
 const ValidationSchema = z.object({
@@ -78,6 +80,7 @@ export function EditMemberModule() {
 	const queryClient = useQueryClient()
 	const { mutateAsync: updateMember, isPending: isUpdating } =
 		useUpdateClientUser()
+	const { clientUser } = useClient()
 
 	const initialAssignments = useRef(
 		memberProperties.map((mp) => ({
@@ -86,19 +89,22 @@ export function EditMemberModule() {
 		})),
 	)
 
-	const { data: myProperties } = useGetMyProperties({
-		pagination: { page: 1, per: 100 },
-		populate: ['Property'],
-		sorter: { sort: 'asc', sort_by: 'created_at' },
-	})
+	const { data: myProperties } = useGetMyProperties(
+		safeString(clientUser?.client_id),
+		{
+			pagination: { page: 1, per: 100 },
+			populate: ['Property'],
+			sorter: { sort: 'asc', sort_by: 'created_at' },
+		},
+	)
 
 	const rhfMethods = useForm<FormSchema>({
 		defaultValues: {
-			name: member.name,
-			phone: member.phone_number.slice(-9),
+			name: member.user?.name,
+			phone: safeString(member.user?.phone_number).slice(-9),
 			property_assignments: memberProperties.map((mp) => ({
 				property_id: mp.property_id,
-				name: mp.property?.name ?? '',
+				name: safeString(mp.property?.name),
 				role: mp.role,
 			})),
 		},
@@ -135,7 +141,8 @@ export function EditMemberModule() {
 		try {
 			// Update name + phone
 			await updateMember({
-				id: memberId!,
+				clientId: safeString(clientUser?.client_id),
+				id: safeString(memberId),
 				name: data.name,
 				phoneNumber: `+233${getValues('phone').slice(-9)}`,
 			})
@@ -158,7 +165,8 @@ export function EditMemberModule() {
 
 			if (toUnlink.length > 0) {
 				await unlinkClientUserFromProperties({
-					client_user_id: memberId!,
+					clientId: safeString(clientUser?.client_id),
+					client_user_id: safeString(memberId),
 					property_ids: toUnlink,
 				})
 			}
@@ -173,7 +181,8 @@ export function EditMemberModule() {
 				await Promise.all(
 					Object.entries(byRole).map(([role, property_ids]) =>
 						linkClientUserToProperties({
-							client_user_id: memberId!,
+							clientId: safeString(clientUser?.client_id),
+							client_user_id: safeString(memberId),
 							property_ids,
 							role: role as 'MANAGER' | 'STAFF',
 						}),
@@ -203,7 +212,7 @@ export function EditMemberModule() {
 				<div className="space-y-1">
 					<TypographyH2>Edit Member</TypographyH2>
 					<TypographyMuted>
-						Update {member.name}&apos;s details below.
+						Update {member.user?.name}&apos;s details below.
 					</TypographyMuted>
 				</div>
 
@@ -225,7 +234,11 @@ export function EditMemberModule() {
 
 						<FormItem>
 							<FormLabel>Email</FormLabel>
-							<Input value={member.email} disabled className="opacity-60" />
+							<Input
+								value={member.user?.email}
+								disabled
+								className="opacity-60"
+							/>
 							<p className="text-muted-foreground text-xs">
 								Email cannot be changed as it's the primary identifier for the
 								member.

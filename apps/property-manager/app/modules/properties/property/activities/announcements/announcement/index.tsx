@@ -39,6 +39,8 @@ import { Skeleton } from '~/components/ui/skeleton'
 import { TypographyMuted } from '~/components/ui/typography'
 import { QUERY_KEYS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.activities.announcements.$announcementId'
 
 const STATUS_CONFIG: Record<
@@ -116,6 +118,8 @@ export function PropertyAnnouncementDetailModule() {
 	}>()
 	const navigate = useNavigate()
 	const queryClient = useQueryClient()
+	const { clientUser } = useClient()
+	const clientId = safeString(clientUser?.client_id)
 	const loaderData = useLoaderData<typeof loader>()
 
 	const [editOpen, setEditOpen] = useState(false)
@@ -129,6 +133,7 @@ export function PropertyAnnouncementDetailModule() {
 		isPending,
 		error,
 	} = useGetPropertyAnnouncement(
+		clientId,
 		propertyId,
 		announcementId,
 		loaderData.announcement ?? undefined,
@@ -328,7 +333,11 @@ export function PropertyAnnouncementDetailModule() {
 											disabled={isCancelling}
 											onClick={() =>
 												cancelSchedule(
-													{ propertyId: propertyId!, id: announcement.id },
+													{
+														clientId,
+														propertyId: safeString(propertyId),
+														id: announcement.id,
+													},
 													{
 														onError: () =>
 															toast.error('Failed to cancel schedule.'),
@@ -427,7 +436,11 @@ export function PropertyAnnouncementDetailModule() {
 							onClick={(e) => {
 								e.preventDefault()
 								publish(
-									{ propertyId: propertyId!, id: announcement.id },
+									{
+										clientId,
+										propertyId: safeString(propertyId),
+										id: announcement.id,
+									},
 									{
 										onError: () => toast.error('Failed to publish. Try again.'),
 										onSuccess: () => {
@@ -461,7 +474,11 @@ export function PropertyAnnouncementDetailModule() {
 							onClick={(e) => {
 								e.preventDefault()
 								deleteAnnouncement(
-									{ propertyId: propertyId!, id: announcement.id },
+									{
+										clientId,
+										propertyId: safeString(propertyId),
+										id: announcement.id,
+									},
 									{
 										onError: () => toast.error('Failed to delete. Try again.'),
 										onSuccess: () => {

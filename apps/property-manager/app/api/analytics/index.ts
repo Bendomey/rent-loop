@@ -6,17 +6,18 @@ import { fetchClient } from '~/lib/transport'
 // Analytics token (signs a Cube.js JWT scoped to the authenticated client)
 // ---------------------------------------------------------------------------
 
-const getAnalyticsToken = async (): Promise<string> => {
+const getAnalyticsToken = async (clientId: string): Promise<string> => {
 	const response = await fetchClient<ApiResponse<{ token: string }>>(
-		'/v1/admin/analytics/token',
+		`/v1/admin/clients/${clientId}/analytics/token`,
 	)
 	return response.parsedBody.data.token
 }
 
-export const useGetAnalyticsToken = () =>
+export const useGetAnalyticsToken = (clientId: string) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.ANALYTICS_TOKEN],
-		queryFn: getAnalyticsToken,
+		queryKey: [QUERY_KEYS.ANALYTICS_TOKEN, clientId],
+		queryFn: () => getAnalyticsToken(clientId),
+		enabled: !!clientId,
 		// Token is valid for 1 hour; refetch at 45 min to stay ahead of expiry
 		staleTime: 45 * 60 * 1000,
 		retry: 1,

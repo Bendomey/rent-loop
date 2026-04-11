@@ -13,6 +13,8 @@ import {
 	AlertDialogTitle,
 } from '~/components/ui/alert-dialog'
 import { getChecklistTypeLabel } from '~/lib/lease-checklist.utils'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface Props {
 	leaseId: string
@@ -29,6 +31,7 @@ export function CreateChecklistDialog({
 	opened,
 	setOpened,
 }: Props) {
+	const { clientUser } = useClient()
 	const { mutateAsync, isPending } = useCreateLeaseChecklist()
 	const [skipped, setSkipped] = useState(false)
 
@@ -37,6 +40,7 @@ export function CreateChecklistDialog({
 	async function handleCreate() {
 		try {
 			await mutateAsync({
+				client_id: safeString(clientUser?.client_id),
 				lease_id: leaseId,
 				property_id: propertyId,
 				type,

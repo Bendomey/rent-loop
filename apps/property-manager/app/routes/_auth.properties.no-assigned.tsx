@@ -16,8 +16,8 @@ import {
 	InputGroupInput,
 } from '~/components/ui/input-group'
 import { TypographyH1 } from '~/components/ui/typography'
-import { userContext } from '~/lib/actions/auth.context.server'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { clientContext } from '~/lib/actions/client.context.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { APP_NAME } from '~/lib/constants'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
@@ -31,19 +31,22 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 		return redirect('/login')
 	}
 
-	const authData = context.get(userContext)
-	if (!authData) {
+	const clientData = context.get(clientContext)
+	if (!clientData) {
 		return redirect('/login')
 	}
 
-	if (authData.clientUser.role !== 'STAFF') {
+	if (clientData.clientUser.role !== 'STAFF') {
 		return redirect('/')
 	}
 
-	if (authData.clientUser.role === 'STAFF') {
+	const clientId = clientData.clientUser.client_id
+
+	if (clientData.clientUser.role === 'STAFF') {
 		const clientUserProperties = await getClientUserPropertiesForServer(
+			clientId,
 			{
-				filters: { client_user_id: authData.clientUser.id },
+				filters: { client_user_id: clientData.clientUser.id },
 				pagination: { page: 1, per: 1 },
 				populate: ['Property'],
 				search: {},

@@ -42,9 +42,11 @@ import {
 import { useOnboardingTour } from '~/hooks/use-onboarding-tour'
 import { getNameInitials } from '~/lib/misc'
 import { useAuth } from '~/providers/auth-provider'
+import { useClient } from '~/providers/client-provider'
 
 export function NavUser() {
 	const { currentUser } = useAuth()
+	const { clientUser } = useClient()
 	const { isMobile } = useSidebar()
 	const { theme, setTheme } = useTheme()
 	const { startTour } = useOnboardingTour()
@@ -71,7 +73,7 @@ export function NavUser() {
 									</span>
 									<Badge variant="outline" className="mt-1">
 										<span className="truncate text-xs capitalize">
-											{currentUser?.role?.toLowerCase()}
+											{clientUser?.role?.toLowerCase()}
 										</span>
 									</Badge>
 								</div>
@@ -131,6 +133,15 @@ export function NavUser() {
 									{theme === 'dark' ? 'Light' : 'Dark'}
 								</DropdownMenuItem>
 							</DropdownMenuGroup>
+							{currentUser?.client_users?.length &&
+							currentUser?.client_users?.length > 1 ? (
+								<>
+									<DropdownMenuSeparator />
+									<Link to="/select-client">
+										<DropdownMenuItem>Switch workspace</DropdownMenuItem>
+									</Link>
+								</>
+							) : null}
 							<DropdownMenuSeparator />
 							<AlertDialogTrigger asChild>
 								<DropdownMenuItem>

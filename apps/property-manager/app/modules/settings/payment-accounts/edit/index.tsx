@@ -35,6 +35,7 @@ import {
 import { QUERY_KEYS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth._dashboard.settings.payment-accounts.$paymentAccountId.edit'
 
 const ValidationSchema = z.object({
@@ -68,6 +69,7 @@ const statusOptions: Array<{ label: string; value: FormSchema['status'] }> = [
 export function EditPaymentAccountModule() {
 	const navigate = useNavigate()
 	const queryClient = useQueryClient()
+	const { clientUser } = useClient()
 	const { paymentAccount: data } = useLoaderData<typeof loader>()
 
 	const { mutate, isPending } = useUpdatePaymentAccount()
@@ -95,6 +97,7 @@ export function EditPaymentAccountModule() {
 	const onSubmit = async (formData: FormSchema) => {
 		mutate(
 			{
+				clientId: safeString(clientUser?.client_id),
 				id: safeString(data?.id),
 				identifier: formState.dirtyFields.identifier
 					? formData.identifier

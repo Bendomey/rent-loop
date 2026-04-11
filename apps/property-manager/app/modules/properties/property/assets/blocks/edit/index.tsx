@@ -33,6 +33,7 @@ import { useUploadObject } from '~/hooks/use-upload-object'
 import { QUERY_KEYS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 const ValidationSchema = z.object({
@@ -66,6 +67,8 @@ const statusOptions: Array<{ label: string; value: FormSchema['status'] }> = [
 
 export function EditPropertyAssetBlocksModule() {
 	const { clientUserProperty } = useProperty()
+	const { clientUser } = useClient()
+	const clientId = safeString(clientUser?.client_id)
 	const navigate = useNavigate()
 	const { blockId } = useParams()
 	const queryClient = useQueryClient()
@@ -74,11 +77,11 @@ export function EditPropertyAssetBlocksModule() {
 		isPending: isLoadingData,
 		data,
 		error,
-	} = useGetPropertyBlock({
+	} = useGetPropertyBlock(clientId, {
 		property_id: safeString(clientUserProperty?.property?.id),
 		id: safeString(blockId),
 	})
-	const { mutate, isPending } = useUpdatePropertyBlock()
+	const { mutate, isPending } = useUpdatePropertyBlock(clientId)
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),

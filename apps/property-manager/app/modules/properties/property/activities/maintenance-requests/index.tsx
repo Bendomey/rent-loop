@@ -33,6 +33,7 @@ import { QUERY_KEYS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
 import { MAINTENANCE_LIST_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 type MaintenanceKanbanItem = MaintenanceRequest & {
@@ -72,8 +73,10 @@ interface PendingStatusChange {
 
 export function PropertyActivitiesMaintenanceRequestsModule() {
 	const { clientUserProperty } = useProperty()
+	const { clientUser } = useClient()
 	const queryClient = useQueryClient()
 	const propertyId = safeString(clientUserProperty?.property?.id)
+	const clientId = safeString(clientUser?.client_id)
 	const [searchParams] = useSearchParams()
 
 	const { startTour, hasCompletedTour } = useTour(
@@ -104,26 +107,37 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 			unit_id: unitId,
 		},
 		pagination: { page: 1, per: 50 },
-		populate: ['Unit', 'AssignedWorker', 'AssignedManager'],
+		populate: [
+			'Unit',
+			'AssignedWorker',
+			'AssignedWorker.User',
+			'AssignedManager',
+			'AssignedManager.User',
+		],
 	})
 
 	const newQuery = useGetMaintenanceRequestsInfinite(
+		clientId,
 		propertyId,
 		columnParams('NEW'),
 	)
 	const inProgressQuery = useGetMaintenanceRequestsInfinite(
+		clientId,
 		propertyId,
 		columnParams('IN_PROGRESS'),
 	)
 	const inReviewQuery = useGetMaintenanceRequestsInfinite(
+		clientId,
 		propertyId,
 		columnParams('IN_REVIEW'),
 	)
 	const resolvedQuery = useGetMaintenanceRequestsInfinite(
+		clientId,
 		propertyId,
 		columnParams('RESOLVED'),
 	)
 	const canceledQuery = useGetMaintenanceRequestsInfinite(
+		clientId,
 		propertyId,
 		columnParams('CANCELED'),
 	)
@@ -207,7 +221,12 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 		}
 
 		updateStatus.mutate(
-			{ id: draggedItem.id, property_id: propertyId, status: targetColumn },
+			{
+				client_id: clientId,
+				id: draggedItem.id,
+				property_id: propertyId,
+				status: targetColumn,
+			},
 			{
 				onError: (err) => {
 					toast.error(
@@ -233,6 +252,7 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 
 		try {
 			await updateStatus.mutateAsync({
+				client_id: clientId,
 				id: item.id,
 				property_id: propertyId,
 				status: targetColumn,
@@ -240,6 +260,7 @@ export function PropertyActivitiesMaintenanceRequestsModule() {
 			})
 			if (note) {
 				await createComment.mutateAsync({
+					client_id: clientId,
 					id: item.id,
 					property_id: propertyId,
 					content: note,

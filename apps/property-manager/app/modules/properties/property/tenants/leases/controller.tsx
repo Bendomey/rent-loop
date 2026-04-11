@@ -5,7 +5,9 @@ import { FilterSet } from '~/components/filter-set'
 import { SearchInput } from '~/components/search'
 import { Button } from '~/components/ui/button'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 export const PropertyTenantLeasesController = ({
@@ -16,6 +18,7 @@ export const PropertyTenantLeasesController = ({
 	refetch: VoidFunction
 }) => {
 	const { clientUserProperty } = useProperty()
+	const { clientUser } = useClient()
 	const isMultiProperty = clientUserProperty?.property?.type === 'MULTI'
 
 	const filters: Array<Filter> = useMemo(
@@ -52,16 +55,19 @@ export const PropertyTenantLeasesController = ({
 									if (!clientUserProperty?.property_id) {
 										return []
 									}
-									const data = await getPropertyUnits({
-										property_id: clientUserProperty.property_id,
-										pagination: {
-											page: PAGINATION_DEFAULTS.PAGE,
-											per: PAGINATION_DEFAULTS.PER_PAGE,
+									const data = await getPropertyUnits(
+										safeString(clientUser?.client_id),
+										{
+											property_id: clientUserProperty.property_id,
+											pagination: {
+												page: PAGINATION_DEFAULTS.PAGE,
+												per: PAGINATION_DEFAULTS.PER_PAGE,
+											},
+											filters: {
+												ids: ids?.map((id) => id.toString()) || undefined,
+											},
 										},
-										filters: {
-											ids: ids?.map((id) => id.toString()) || undefined,
-										},
-									})
+									)
 									return (
 										data?.rows.map((unit) => ({
 											label: unit.name,

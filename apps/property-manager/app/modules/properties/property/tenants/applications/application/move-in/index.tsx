@@ -40,7 +40,8 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from '~/components/ui/tooltip'
-import { toFirstUpperCase } from '~/lib/strings'
+import { safeString, toFirstUpperCase } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 const FREQUENCY_LABELS: Record<string, string> = {
 	HOURLY: 'Hourly',
@@ -76,6 +77,7 @@ function FieldDisplay({ label, value }: FieldDisplayProps) {
 
 export function PropertyTenantApplicationMoveIn() {
 	const { tenantApplication: application } = useTenantApplicationContext()
+	const { clientUser } = useClient()
 
 	const isInvoicePaid = ['PAID', 'PARTIALLY_PAID'].includes(
 		application?.application_payment_invoice?.status ?? '',
@@ -106,6 +108,7 @@ export function PropertyTenantApplicationMoveIn() {
 
 		mutate(
 			{
+				client_id: safeString(clientUser?.client_id),
 				id: application.id,
 				property_id: application.desired_unit.property_id,
 				data: {

@@ -26,6 +26,8 @@ import {
 } from '~/components/ui/dialog'
 import { Separator } from '~/components/ui/separator'
 import { TypographyMuted } from '~/components/ui/typography'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface LeaseMenuBarProps {
 	document: RentloopDocument
@@ -42,6 +44,7 @@ export function LeaseMenuBar({
 }: LeaseMenuBarProps) {
 	const navigate = useNavigate()
 	const [editor] = useLexicalComposerContext()
+	const { clientUser } = useClient()
 	const updateDocument = useAdminUpdateDocument()
 	const savedContentRef = useRef(document.content)
 	const isFirstUpdateRef = useRef(true)
@@ -78,6 +81,7 @@ export function LeaseMenuBar({
 
 		updateDocument.mutate(
 			{
+				clientId: safeString(clientUser?.client_id),
 				id: document.id,
 				content,
 				size: charCount,

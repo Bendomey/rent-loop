@@ -8,13 +8,14 @@ import { fetchClient, fetchServer } from '~/lib/transport'
  */
 
 const getPaymentAccounts = async (
+	clientId: string,
 	props: FetchMultipleDataInputParams<FetchPaymentAccountFilter>,
 ) => {
 	try {
 		const params = getQueryParams<FetchPaymentAccountFilter>(props)
 		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<PaymentAccount>>
-		>(`/v1/admin/payment-accounts?${params.toString()}`)
+		>(`/v1/admin/clients/${clientId}/payment-accounts?${params.toString()}`)
 		return response.parsedBody.data
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -29,6 +30,7 @@ const getPaymentAccounts = async (
 }
 
 export const getPaymentAccountsForServer = async (
+	clientId: string,
 	props: FetchMultipleDataInputParams<FetchPaymentAccountFilter>,
 	apiConfig: ApiConfigForServerConfig,
 ) => {
@@ -37,7 +39,7 @@ export const getPaymentAccountsForServer = async (
 		const response = await fetchServer<
 			ApiResponse<FetchMultipleDataResponse<PaymentAccount>>
 		>(
-			`${apiConfig?.baseUrl}/v1/admin/payment-accounts?${params.toString()}`,
+			`${apiConfig?.baseUrl}/v1/admin/clients/${clientId}/payment-accounts?${params.toString()}`,
 			apiConfig,
 		)
 		return response.parsedBody.data
@@ -54,14 +56,17 @@ export const getPaymentAccountsForServer = async (
 }
 
 export const useGetPaymentAccounts = (
+	clientId: string,
 	query: FetchMultipleDataInputParams<FetchPaymentAccountFilter>,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.PAYMENT_ACCOUNTS, query],
-		queryFn: () => getPaymentAccounts(query),
+		queryKey: [QUERY_KEYS.PAYMENT_ACCOUNTS, clientId, query],
+		queryFn: () => getPaymentAccounts(clientId, query),
+		enabled: !!clientId,
 	})
 
 interface UpdatePaymentAccountProps {
+	clientId: string
 	id: string
 	identifier?: string
 	is_default?: boolean
@@ -73,10 +78,13 @@ interface UpdatePaymentAccountProps {
  * Update payment account
  */
 
-const updatePaymentAccount = async (props: UpdatePaymentAccountProps) => {
+const updatePaymentAccount = async ({
+	clientId,
+	...props
+}: UpdatePaymentAccountProps) => {
 	try {
 		await fetchClient<PaymentAccount>(
-			`/v1/admin/payment-accounts/${props.id}`,
+			`/v1/admin/clients/${clientId}/payment-accounts/${props.id}`,
 			{
 				method: 'PATCH',
 				body: JSON.stringify(props),
@@ -100,10 +108,13 @@ export const useUpdatePaymentAccount = () =>
 /**
  * Delete payment account
  */
-const deletePaymentAccount = async (props: { payment_account_id: string }) => {
+const deletePaymentAccount = async (props: {
+	clientId: string
+	payment_account_id: string
+}) => {
 	try {
 		await fetchClient(
-			`/v1/admin/payment-accounts/${props.payment_account_id}`,
+			`/v1/admin/clients/${props.clientId}/payment-accounts/${props.payment_account_id}`,
 			{
 				method: 'DELETE',
 			},

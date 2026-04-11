@@ -8,6 +8,8 @@ import {
 } from '../ui/select'
 import { useGetPropertyUnits } from '~/api/units'
 import { getPropertyUnitStatusLabel } from '~/lib/properties.utils'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface UnitSelectProps
 	extends FetchMultipleDataInputParams<FetchClientUserFilter> {
@@ -29,14 +31,18 @@ export function UnitSelect({
 	label = 'Unit',
 	onChange,
 }: UnitSelectProps) {
-	const { data, isPending, error } = useGetPropertyUnits({
-		property_id,
-		filters,
-		sorter,
-		pagination,
-		populate,
-		search,
-	})
+	const { clientUser } = useClient()
+	const { data, isPending, error } = useGetPropertyUnits(
+		safeString(clientUser?.client_id),
+		{
+			property_id,
+			filters,
+			sorter,
+			pagination,
+			populate,
+			search,
+		},
+	)
 
 	const selectOptions: Array<{
 		value: string

@@ -8,6 +8,7 @@ import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'
 import { getErrorMessage } from '~/lib/error-messages'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
+import { safeString } from '~/lib/strings'
 import { NewMemberModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -23,6 +24,7 @@ export const handle = {
 export async function action({ request }: Route.ActionArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
+	const clientId = safeString(authSession.get('selectedClientId'))
 
 	let formData = await request.formData()
 	const name = formData.get('name') as string
@@ -39,6 +41,7 @@ export async function action({ request }: Route.ActionArgs) {
 
 	try {
 		const member = await createClientUser(
+			clientId,
 			replaceNullUndefinedWithUndefined({
 				name,
 				phone,
@@ -56,6 +59,7 @@ export async function action({ request }: Route.ActionArgs) {
 			await Promise.all(
 				propertyAssignments.map(({ property_id, role: propertyRole }) =>
 					linkClientUserPropertyForServer(
+						clientId,
 						{ property_id, role: propertyRole, client_user_ids: [member.id] },
 						apiConfig,
 					),

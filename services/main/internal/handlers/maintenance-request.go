@@ -99,7 +99,7 @@ type TenantCreateMaintenanceRequestBody struct {
 //	@Failure		401			{object}	string														"Invalid or absent authentication token"
 //	@Failure		422			{object}	lib.HTTPError												"Validation error"
 //	@Failure		500			{object}	string														"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests [post]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests [post]
 func (h *MaintenanceRequestHandler) Create(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -163,7 +163,7 @@ type ListMaintenanceRequestsQuery struct {
 //	@Failure		400			{object}	lib.HTTPError																										"Error occurred when listing maintenance requests"
 //	@Failure		401			{object}	string																												"Invalid or absent authentication token"
 //	@Failure		500			{object}	string																												"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests [get]
 func (h *MaintenanceRequestHandler) List(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -230,7 +230,7 @@ type GetMaintenanceRequestQuery struct {
 //	@Failure		401						{object}	string														"Invalid or absent authentication token"
 //	@Failure		404						{object}	lib.HTTPError												"Maintenance request not found"
 //	@Failure		500						{object}	string														"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id} [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id} [get]
 func (h *MaintenanceRequestHandler) Get(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -269,7 +269,7 @@ func (h *MaintenanceRequestHandler) Get(w http.ResponseWriter, r *http.Request) 
 //	@Failure		404						{object}	lib.HTTPError												"Maintenance request not found"
 //	@Failure		422						{object}	lib.HTTPError												"Validation error"
 //	@Failure		500						{object}	string														"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id} [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id} [patch]
 func (h *MaintenanceRequestHandler) Update(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -322,7 +322,7 @@ func (h *MaintenanceRequestHandler) Update(w http.ResponseWriter, r *http.Reques
 //	@Failure		404						{object}	lib.HTTPError		"Maintenance request not found"
 //	@Failure		422						{object}	lib.HTTPError		"Validation error"
 //	@Failure		500						{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/assign-worker [post]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/assign-worker [post]
 func (h *MaintenanceRequestHandler) AssignWorker(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -368,7 +368,7 @@ func (h *MaintenanceRequestHandler) AssignWorker(w http.ResponseWriter, r *http.
 //	@Failure		404						{object}	lib.HTTPError		"Maintenance request not found"
 //	@Failure		422						{object}	lib.HTTPError		"Validation error"
 //	@Failure		500						{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/assign-manager [post]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/assign-manager [post]
 func (h *MaintenanceRequestHandler) AssignManager(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -414,7 +414,7 @@ func (h *MaintenanceRequestHandler) AssignManager(w http.ResponseWriter, r *http
 //	@Failure		404						{object}	lib.HTTPError		"Maintenance request not found"
 //	@Failure		422						{object}	lib.HTTPError		"Validation error"
 //	@Failure		500						{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/status [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/status [patch]
 func (h *MaintenanceRequestHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -459,7 +459,7 @@ func (h *MaintenanceRequestHandler) UpdateStatus(w http.ResponseWriter, r *http.
 //	@Success		200						{object}	object{data=object{rows=[]transformations.OutputMaintenanceActivityLog,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Activity logs"
 //	@Failure		401						{object}	string																												"Invalid or absent authentication token"
 //	@Failure		500						{object}	string																												"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/activity_logs [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/activity_logs [get]
 func (h *MaintenanceRequestHandler) ListActivityLogs(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -516,7 +516,7 @@ func (h *MaintenanceRequestHandler) ListActivityLogs(w http.ResponseWriter, r *h
 //	@Failure		404						{object}	lib.HTTPError		"Maintenance request not found"
 //	@Failure		422						{object}	lib.HTTPError		"Validation error"
 //	@Failure		500						{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments [post]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments [post]
 func (h *MaintenanceRequestHandler) CreateComment(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -569,7 +569,7 @@ type ListCommentsQuery struct {
 //	@Success		200						{object}	object{data=object{rows=[]transformations.OutputMaintenanceRequestComment,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Paginated list of comments"
 //	@Failure		401						{object}	string																													"Invalid or absent authentication token"
 //	@Failure		500						{object}	string																													"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments [get]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments [get]
 func (h *MaintenanceRequestHandler) ListComments(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -625,7 +625,7 @@ func (h *MaintenanceRequestHandler) ListComments(w http.ResponseWriter, r *http.
 //	@Failure		404						{object}	lib.HTTPError		"Comment not found"
 //	@Failure		422						{object}	lib.HTTPError		"Validation error"
 //	@Failure		500						{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments/{comment_id} [patch]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments/{comment_id} [patch]
 func (h *MaintenanceRequestHandler) UpdateComment(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -670,7 +670,7 @@ func (h *MaintenanceRequestHandler) UpdateComment(w http.ResponseWriter, r *http
 //	@Success		200						{object}	object{data=bool}	"Comment deleted"
 //	@Failure		401						{object}	string				"Unauthorized"
 //	@Failure		500						{object}	string				"An unexpected error occurred"
-//	@Router			/api/v1/admin/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments/{comment_id} [delete]
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests/{maintenance_request_id}/comments/{comment_id} [delete]
 func (h *MaintenanceRequestHandler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {

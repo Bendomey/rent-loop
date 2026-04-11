@@ -63,7 +63,15 @@ func adminFromJWT(unattendedToken string, secret string) (*lib.AdminFromToken, e
 	claims, ok := rawToken.Claims.(jwt.MapClaims)
 	var adminFromTokenImplementation lib.AdminFromToken
 	if ok && rawToken.Valid {
-		adminFromTokenImplementation.ID = claims["id"].(string)
+		idVal, found := claims["id"]
+		if !found {
+			return nil, errors.New("AuthorizationFailed")
+		}
+		id, ok := idVal.(string)
+		if !ok {
+			return nil, errors.New("AuthorizationFailed")
+		}
+		adminFromTokenImplementation.ID = id
 	}
 
 	return &adminFromTokenImplementation, nil

@@ -23,6 +23,7 @@ import {
 } from '~/lib/format-amount'
 import { getPaymentFrequencyLabel } from '~/lib/properties.utils'
 import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 interface FieldDisplayProps {
@@ -42,6 +43,7 @@ function FieldDisplay({ label, value }: FieldDisplayProps) {
 export function PropertyTenantApplicationFinancial() {
 	const { tenantApplication } = useTenantApplicationContext()
 	const { clientUserProperty } = useProperty()
+	const { clientUser } = useClient()
 
 	const revalidator = useRevalidator()
 
@@ -95,6 +97,7 @@ export function PropertyTenantApplicationFinancial() {
 	const handleSave = () => {
 		mutate(
 			{
+				client_id: safeString(clientUser?.client_id),
 				property_id: safeString(clientUserProperty?.property_id),
 				id: tenantApplication.id,
 				data: {

@@ -28,11 +28,13 @@ import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
 export function PropertyTenantApplicationsModule() {
 	const [searchParams] = useSearchParams()
 	const { clientUserProperty } = useProperty()
+	const { clientUser } = useClient()
 	const [openApproveModal, setOpenApproveModal] = useState(false)
 	const [openCancelModal, setOpenCancelModal] = useState(false)
 	const [openDeleteModal, setOpenDeleteModal] = useState(false)
@@ -52,20 +54,24 @@ export function PropertyTenantApplicationsModule() {
 	const propertyId = safeString(clientUserProperty?.property_id)
 
 	const { data, isPending, isRefetching, error, refetch } =
-		useGetPropertyTenantApplications(propertyId, {
-			filters: {
-				status: status,
-				gender: gender,
-				marital_status: marital_status,
+		useGetPropertyTenantApplications(
+			safeString(clientUser?.client_id),
+			propertyId,
+			{
+				filters: {
+					status: status,
+					gender: gender,
+					marital_status: marital_status,
+				},
+				pagination: { page, per },
+				populate: ['DesiredUnit'],
+				sorter: { sort: 'desc', sort_by: 'created_at' },
+				search: {
+					query: searchParams.get('query') ?? undefined,
+					fields: ['first_name', 'last_name', 'email', 'phone'],
+				},
 			},
-			pagination: { page, per },
-			populate: ['DesiredUnit'],
-			sorter: { sort: 'desc', sort_by: 'created_at' },
-			search: {
-				query: searchParams.get('query') ?? undefined,
-				fields: ['first_name', 'last_name', 'email', 'phone'],
-			},
-		})
+		)
 
 	const isLoading = isPending || isRefetching
 

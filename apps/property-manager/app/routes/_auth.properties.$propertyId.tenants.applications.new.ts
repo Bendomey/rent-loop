@@ -8,6 +8,7 @@ import { propertyContext } from '~/lib/actions/property.context.server'
 import { replaceNullUndefinedWithUndefined } from '~/lib/actions/utils.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
+import { safeString } from '~/lib/strings'
 import { NewPropertyTenantApplicationModule } from '~/modules'
 
 const CreateTenantApplicationSchema = z.object({
@@ -69,6 +70,7 @@ export const handle = {
 export async function action({ request }: Route.ActionArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
+	const clientId = safeString(authSession.get('selectedClientId'))
 
 	const formData = await request.formData()
 	const result = CreateTenantApplicationSchema.safeParse(
@@ -84,7 +86,10 @@ export async function action({ request }: Route.ActionArgs) {
 
 	try {
 		const tenantApplication = await createTenantApplication(
-			replaceNullUndefinedWithUndefined(result.data),
+			replaceNullUndefinedWithUndefined({
+				...result.data,
+				client_id: clientId,
+			}),
 			{
 				baseUrl,
 				authToken: authSession.get('authToken'),

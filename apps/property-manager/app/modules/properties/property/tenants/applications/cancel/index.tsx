@@ -25,6 +25,8 @@ import {
 import { Spinner } from '~/components/ui/spinner'
 import { Textarea } from '~/components/ui/textarea'
 import { QUERY_KEYS } from '~/lib/constants'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 interface Props {
 	data?: TenantApplication
@@ -53,6 +55,7 @@ function CancelTenantApplicationModal({
 }: Props) {
 	const queryClient = useQueryClient()
 	const revalidator = useRevalidator()
+	const { clientUser } = useClient()
 
 	const rhfMethods = useForm<FormSchema>({
 		defaultValues: {
@@ -84,6 +87,7 @@ function CancelTenantApplicationModal({
 		if (formData) {
 			mutate(
 				{
+					client_id: safeString(clientUser?.client_id),
 					id: formData.id,
 					reason: formData.reason,
 					property_id: propertyId,

@@ -12,9 +12,12 @@ import {
 	PAGINATION_DEFAULTS,
 } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 
 export function PropertiesModule() {
 	const [searchParams] = useSearchParams()
+	const { clientUser } = useClient()
 
 	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
@@ -26,19 +29,22 @@ export function PropertiesModule() {
 	const property_status = searchParams.get('property_status') ?? undefined
 	const property_type = searchParams.get('property_type') ?? undefined
 
-	const { data, isPending, isRefetching, error, refetch } = useGetMyProperties({
-		filters: {
-			property_status,
-			property_type,
+	const { data, isPending, isRefetching, error, refetch } = useGetMyProperties(
+		safeString(clientUser?.client_id),
+		{
+			filters: {
+				property_status,
+				property_type,
+			},
+			pagination: { page, per },
+			populate: ['Property'],
+			sorter: { sort: 'desc', sort_by: 'created_at' },
+			search: {
+				query: searchParams.get('query') ?? undefined,
+				fields: ['Property.name', 'Property.address'],
+			},
 		},
-		pagination: { page, per },
-		populate: ['Property'],
-		sorter: { sort: 'desc', sort_by: 'created_at' },
-		search: {
-			query: searchParams.get('query') ?? undefined,
-			fields: ['Property.name', 'Property.address'],
-		},
-	})
+	)
 
 	const isLoading = isPending || isRefetching
 

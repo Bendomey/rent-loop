@@ -5,6 +5,7 @@ import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
+import { safeString } from '~/lib/strings'
 import { LeaseDetailModule } from '~/modules'
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
@@ -12,9 +13,11 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const authToken = authSession.get('authToken')
+	const clientId = safeString(authSession.get('selectedClientId'))
 
 	try {
 		const lease = await getLeaseForServer(
+			clientId,
 			{ lease_id: params.leaseId, property_id: params.propertyId },
 			{ authToken, baseUrl },
 		)

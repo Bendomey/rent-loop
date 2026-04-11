@@ -40,7 +40,9 @@ import {
 	convertCedisToPesewas,
 	convertPesewasToCedis,
 } from '~/lib/format-amount'
+import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
+import { useClient } from '~/providers/client-provider'
 
 interface InitialPaymentSetupProps {
 	propertyId: string
@@ -87,6 +89,7 @@ export function InitialPaymentSetup({
 	initialDepositFee,
 }: InitialPaymentSetupProps) {
 	const revalidator = useRevalidator()
+	const { clientUser } = useClient()
 
 	const derived = stayDuration
 		? derivePaymentMode(initialDepositFee, rentAmount, stayDuration)
@@ -149,6 +152,7 @@ export function InitialPaymentSetup({
 	const handleConfirmGenerate = async () => {
 		try {
 			await updateApplication({
+				client_id: safeString(clientUser?.client_id),
 				id: applicationId,
 				property_id: propertyId,
 				data: {
@@ -157,6 +161,7 @@ export function InitialPaymentSetup({
 				},
 			})
 			await generateInvoice({
+				client_id: safeString(clientUser?.client_id),
 				property_id: propertyId,
 				id: applicationId,
 				due_date: dueDate ? dueDate.toISOString() : undefined,
