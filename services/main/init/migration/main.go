@@ -66,7 +66,9 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		// Add more jobs, etc here
 		return nil
 	})
-	m.Migrate()
+	if err := m.Migrate(); err != nil {
+		return fmt.Errorf("[Migration.InitSchema.Migrate]: %v", err)
+	}
 
 	if err := updateMigration(db); err != nil {
 		return err
@@ -89,7 +91,9 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.ReplacePayerTenantWithPayerLease(),
 		jobs.SeedAgreements(),
 	})
-	m.Migrate()
+	if err := m.Migrate(); err != nil {
+		return fmt.Errorf("[Migration.Migrate]: %v", err)
+	}
 
 	return nil
 }
