@@ -15,14 +15,23 @@ func ReplacePayerTenantWithPayerLease() *gormigrate.Migration {
 			}
 
 			// 2. Backfill: for each invoice with payer_tenant_id set,
-			//    find that tenant's lease and set payer_lease_id
+			//    find that tenant's lease and set payer_lease_id.
+			//    Guarded: column may already be dropped if migration partially ran before.
 			if err := db.Exec(`
-				UPDATE invoices
-				SET payer_lease_id = l.id
-				FROM leases l
-				WHERE l.tenant_id = invoices.payer_tenant_id
-				  AND invoices.payer_tenant_id IS NOT NULL
-				  AND l.deleted_at IS NULL
+				DO $$
+				BEGIN
+					IF EXISTS (
+						SELECT 1 FROM information_schema.columns
+						WHERE table_name = 'invoices' AND column_name = 'payer_tenant_id'
+					) THEN
+						UPDATE invoices
+						SET payer_lease_id = l.id
+						FROM leases l
+						WHERE l.tenant_id = invoices.payer_tenant_id
+						  AND invoices.payer_tenant_id IS NOT NULL
+						  AND l.deleted_at IS NULL;
+					END IF;
+				END $$;
 			`).Error; err != nil {
 				return err
 			}
