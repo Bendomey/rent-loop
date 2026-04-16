@@ -43,41 +43,50 @@ type TenantApplicationService interface {
 	GenerateInvoice(context context.Context, input GenerateInvoiceInput) (*models.Invoice, error)
 	ApproveTenantApplication(context context.Context, input ApproveTenantApplicationInput) error
 	BulkOnboardLeases(ctx context.Context, input BulkOnboardLeasesInput) error
+	SetPaymentService(ps PaymentService)
 }
 
 type tenantApplicationService struct {
-	appCtx               pkg.AppContext
-	repo                 repository.TenantApplicationRepository
-	unitService          UnitService
-	clientUserService    ClientUserService
-	tenantService        TenantService
-	leaseService         LeaseService
-	tenantAccountService TenantAccountService
-	invoiceService       InvoiceService
+	appCtx                pkg.AppContext
+	repo                  repository.TenantApplicationRepository
+	unitService           UnitService
+	clientUserService     ClientUserService
+	tenantService         TenantService
+	leaseService          LeaseService
+	tenantAccountService  TenantAccountService
+	invoiceService        InvoiceService
+	paymentAccountService PaymentAccountService
+	paymentService        PaymentService
 }
 
 type TenantApplicationServiceDeps struct {
-	AppCtx               pkg.AppContext
-	Repo                 repository.TenantApplicationRepository
-	UnitService          UnitService
-	ClientUserService    ClientUserService
-	TenantService        TenantService
-	LeaseService         LeaseService
-	TenantAccountService TenantAccountService
-	InvoiceService       InvoiceService
+	AppCtx                pkg.AppContext
+	Repo                  repository.TenantApplicationRepository
+	UnitService           UnitService
+	ClientUserService     ClientUserService
+	TenantService         TenantService
+	LeaseService          LeaseService
+	TenantAccountService  TenantAccountService
+	InvoiceService        InvoiceService
+	PaymentAccountService PaymentAccountService
 }
 
 func NewTenantApplicationService(deps TenantApplicationServiceDeps) TenantApplicationService {
 	return &tenantApplicationService{
-		appCtx:               deps.AppCtx,
-		repo:                 deps.Repo,
-		unitService:          deps.UnitService,
-		clientUserService:    deps.ClientUserService,
-		tenantService:        deps.TenantService,
-		leaseService:         deps.LeaseService,
-		tenantAccountService: deps.TenantAccountService,
-		invoiceService:       deps.InvoiceService,
+		appCtx:                deps.AppCtx,
+		repo:                  deps.Repo,
+		unitService:           deps.UnitService,
+		clientUserService:     deps.ClientUserService,
+		tenantService:         deps.TenantService,
+		leaseService:          deps.LeaseService,
+		tenantAccountService:  deps.TenantAccountService,
+		invoiceService:        deps.InvoiceService,
+		paymentAccountService: deps.PaymentAccountService,
 	}
+}
+
+func (s *tenantApplicationService) SetPaymentService(ps PaymentService) {
+	s.paymentService = ps
 }
 
 type CreateTenantApplicationInput struct {
@@ -1103,17 +1112,18 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 		return pkg.BadRequestError("BatchSizeOutOfRange", nil)
 	}
 
-	// Pre-flight: validate all units belong to property and are available
+	// Pre-flight: pure input validation (no DB) — fail fast before opening a transaction.
 	for _, entry := range input.Entries {
-		unit, err := s.unitService.GetUnitByID(ctx, entry.UnitId)
-		if err != nil {
-			return err
-		}
-		if unit.PropertyID != input.PropertyID {
-			return pkg.BadRequestError("UnitsNotUnderProperty", nil)
-		}
-		if unit.Status != "Unit.Status.Available" && unit.Status != "Unit.Status.PartiallyOccupied" {
-			return pkg.BadRequestError("UnitNoLongerAvailable", nil)
+		if entry.RentPaymentStatus == "PARTIAL" {
+			if entry.PeriodsPaid == nil {
+				return pkg.BadRequestError("PeriodsPaidRequiredForPartial", nil)
+			}
+			if entry.PaymentFrequency == nil {
+				return pkg.BadRequestError("PaymentFrequencyRequiredForPartial", nil)
+			}
+			if entry.BillingCycleStartDate == nil {
+				return pkg.BadRequestError("BillingCycleStartDateRequiredForPartial", nil)
+			}
 		}
 	}
 
@@ -1131,6 +1141,32 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 	}
 	transCtx := lib.WithTransaction(ctx, transaction)
 
+	// Look up the client's default OFFLINE payment account once for the whole batch.
+	// Required to run the full payment flow for FULL/PARTIAL entries.
+	offlineRail := "OFFLINE"
+	isDefault := true
+	activeStatus := "ACTIVE"
+	paymentAccounts, paErr := s.paymentAccountService.ListPaymentAccounts(ctx, repository.ListPaymentAccountsFilter{
+		ClientID:  &input.ClientID,
+		Rail:      &offlineRail,
+		IsDefault: &isDefault,
+		Status:    &activeStatus,
+	})
+	if paErr != nil {
+		transaction.Rollback()
+		return paErr
+	}
+	if len(paymentAccounts) == 0 {
+		transaction.Rollback()
+		return pkg.BadRequestError("NoDefaultOfflinePaymentAccount", &pkg.RentLoopErrorParams{
+			Metadata: map[string]string{
+				"function":  "BulkOnboardLeases",
+				"client_id": input.ClientID,
+			},
+		})
+	}
+	defaultPaymentAccountID := paymentAccounts[0].ID.String()
+
 	type notificationPayload struct {
 		firstName    string
 		unitName     string
@@ -1142,10 +1178,20 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 	var notifications []notificationPayload
 
 	for _, entry := range input.Entries {
-		unit, err := s.unitService.GetUnitByID(transCtx, entry.UnitId)
+		// Fetch the unit inside the transaction with FOR UPDATE so concurrent
+		// onboarding requests cannot race on the same unit.
+		unit, err := s.unitService.GetUnitByIDForUpdate(transCtx, entry.UnitId)
 		if err != nil {
 			transaction.Rollback()
 			return err
+		}
+		if unit.PropertyID != input.PropertyID {
+			transaction.Rollback()
+			return pkg.BadRequestError("UnitsNotUnderProperty", nil)
+		}
+		if unit.Status != "Unit.Status.Available" && unit.Status != "Unit.Status.PartiallyOccupied" {
+			transaction.Rollback()
+			return pkg.BadRequestError("UnitNoLongerAvailable", nil)
 		}
 
 		occupation := "N/A"
@@ -1293,7 +1339,7 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 			}
 
 			if len(lineItems) > 0 {
-				_, invoiceErr := s.invoiceService.CreateInvoice(transCtx, CreateInvoiceInput{
+				invoice, invoiceErr := s.invoiceService.CreateInvoice(transCtx, CreateInvoiceInput{
 					ClientID:                   &clientID,
 					PropertyID:                 &propertyID,
 					PayerType:                  "TENANT_APPLICATION",
@@ -1305,12 +1351,40 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 					Taxes:                      0,
 					SubTotal:                   total,
 					Currency:                   entry.RentFeeCurrency,
-					Status:                     invoiceStatus,
+					Status:                     "ISSUED",
 					LineItems:                  lineItems,
 				})
 				if invoiceErr != nil {
 					transaction.Rollback()
 					return invoiceErr
+				}
+
+				// For FULL/PARTIAL entries the rent was already collected offline.
+				// Run the full payment flow so there is an audit trail and the
+				// settlement journal entry is posted to Fincore.
+				if invoiceStatus == "PAID" {
+					invoiceID := invoice.ID.String()
+					provider := lib.SafeString(paymentAccounts[0].Provider)
+					payment, paymentErr := s.paymentService.CreateOfflinePayment(transCtx, CreateOfflinePaymentInput{
+						PaymentAccountID: defaultPaymentAccountID,
+						InvoiceID:        invoiceID,
+						Provider:         provider,
+						Amount:           total,
+					})
+					if paymentErr != nil {
+						transaction.Rollback()
+						return paymentErr
+					}
+
+					_, verifyErr := s.paymentService.VerifyOfflinePayment(transCtx, VerifyOfflinePaymentInput{
+						VerifiedByID: input.ClientUserID,
+						PaymentID:    payment.ID.String(),
+						IsSuccessful: true,
+					})
+					if verifyErr != nil {
+						transaction.Rollback()
+						return verifyErr
+					}
 				}
 			}
 		}
@@ -1363,7 +1437,7 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 			meta["periods_paid"] = *entry.PeriodsPaid
 		}
 		if entry.BillingCycleStartDate != nil {
-			meta["billing_cycle_start_date"] = entry.BillingCycleStartDate.Format(time.RFC3339)
+			meta["billing_cycle_start_date"] = (*entry.BillingCycleStartDate).Format(time.RFC3339)
 		}
 		_, leaseErr := s.leaseService.CreateLease(transCtx, CreateLeaseInput{
 			Status:                    "Lease.Status.Active",
@@ -1450,7 +1524,6 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 
 	// Fire notifications after commit (non-blocking goroutines)
 	for _, n := range notifications {
-		n := n
 		r := strings.NewReplacer(
 			"{{applicant_name}}", n.firstName,
 			"{{unit_name}}", n.unitName,

@@ -467,7 +467,7 @@ func (h *LeaseHandler) CancelLease(w http.ResponseWriter, r *http.Request) {
 // BulkOnboardLeases godoc
 //
 //	@Summary		Bulk onboard existing leases (Client User)
-//	@Description	Onboard up to 20 existing tenant-lease pairs in a single transaction. Creates TenantApplication, Invoice (if deposits provided), Tenant, TenantAccount, and Lease records. Designed for landlords migrating existing tenants into Rent-Loop. rent_payment_status must be NONE, PARTIAL, or FULL. When PARTIAL, periods_paid (>=1, <stay_duration) and billing_cycle_start_date are required.
+//	@Description	Onboard up to 10 existing tenant-lease pairs in a single transaction. Creates TenantApplication, Invoice (if deposits provided), Tenant, TenantAccount, and Lease records. Designed for landlords migrating existing tenants into Rent-Loop. rent_payment_status must be NONE, PARTIAL, or FULL. When PARTIAL, periods_paid (>=1, <stay_duration) and billing_cycle_start_date are required.
 //	@Tags			Lease
 //	@Accept			json
 //	@Security		BearerAuth
@@ -482,7 +482,11 @@ func (h *LeaseHandler) CancelLease(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500			{object}	string						"An unexpected error occurred"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases:bulk-onboard [post]
 func (h *LeaseHandler) BulkOnboardLeases(w http.ResponseWriter, r *http.Request) {
-	clientUser, _ := lib.ClientUserFromContext(r.Context())
+	clientUser, clientUserOk := lib.ClientUserFromContext(r.Context())
+	if !clientUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	propertyID := chi.URLParam(r, "property_id")
 

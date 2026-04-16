@@ -66,7 +66,7 @@ func calculateNextBillingDate(from time.Time, frequency string) *time.Time {
 		next = from.AddDate(0, 6, 0)
 	case "Annually", "ANNUALLY":
 		next = from.AddDate(1, 0, 0)
-	case "OneTime", "ONE_TIME":
+	case "OneTime", "ONE_TIME", "ONETIME":
 		return nil
 	default:
 		return nil

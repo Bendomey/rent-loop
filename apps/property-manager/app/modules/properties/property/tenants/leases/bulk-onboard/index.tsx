@@ -27,7 +27,7 @@ import {
 } from '~/components/ui/table'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
-import { formatAmount } from '~/lib/format-amount'
+import { convertCedisToPesewas, formatAmount } from '~/lib/format-amount'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
@@ -71,9 +71,14 @@ function BulkOnboardTable() {
 		if (!allComplete || isSubmitting) return
 		setIsSubmitting(true)
 		try {
-			const allEntries = entries.map(
-				(e) => e.formData as BulkOnboardLeaseEntryInput,
-			)
+			const allEntries = entries.map((e) => {
+				const fd = e.formData as BulkOnboardLeaseEntryInput
+				return {
+					...fd,
+					rent_fee: convertCedisToPesewas(fd.rent_fee),
+					security_deposit_fee: convertCedisToPesewas(fd.security_deposit_fee),
+				}
+			})
 			const batches = []
 			for (let i = 0; i < allEntries.length; i += BATCH_SIZE) {
 				batches.push(allEntries.slice(i, i + BATCH_SIZE))
