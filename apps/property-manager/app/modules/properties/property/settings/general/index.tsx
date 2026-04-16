@@ -1,26 +1,354 @@
-import { Edit } from 'lucide-react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Pencil } from 'lucide-react'
 import { useState } from 'react'
-import ConfirmDeletePropertyModule from './delete'
+import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
+import { z } from 'zod'
+import { useUpdateProperty } from '~/api/properties'
 import {
-	PermissionGuard,
-	PropertyPermissionGuard,
-} from '~/components/permissions/permission-guard'
+	AddressInput,
+	AddressSchema,
+	type AddressInputSchema,
+} from '~/components/address-input'
+import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Button } from '~/components/ui/button'
-import { Field, FieldDescription, FieldLabel } from '~/components/ui/field'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from '~/components/ui/dialog'
+import {
+	Field,
+	FieldError,
+	FieldGroup,
+	FieldLabel,
+} from '~/components/ui/field'
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
+import { Label } from '~/components/ui/label'
 import { Separator } from '~/components/ui/separator'
-import { Switch } from '~/components/ui/switch'
+import { Spinner } from '~/components/ui/spinner'
+import { Textarea } from '~/components/ui/textarea'
 import {
 	TypographyH3,
 	TypographyH4,
 	TypographyMuted,
 } from '~/components/ui/typography'
+import { getErrorMessage } from '~/lib/error-messages'
+import { safeString } from '~/lib/strings'
 import { useProperty } from '~/providers/property-provider'
+import ConfirmDeletePropertyModule from './delete'
+import { SwitchPropertyType } from './component/switch-type'
+import { useQueryClient } from '@tanstack/react-query'
+import { QUERY_KEYS } from '~/lib/constants'
+import { useClient } from '~/providers/client-provider'
+import { useRevalidator } from 'react-router'
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function usePropertyMutation(
+	clientId: string,
+	propertyId: string,
+	successMessage: string,
+	onSuccess: () => void,
+) {
+	const { mutate, isPending } = useUpdateProperty(clientId)
+
+	const submit = (
+		data: Parameters<typeof mutate>[0],
+		opts?: { onError?: (e: unknown) => void },
+	) => {
+		mutate(data, {
+			onSuccess: () => {
+				toast.success(successMessage)
+				onSuccess()
+			},
+			onError: (e: unknown) => {
+				if (opts?.onError) {
+					opts.onError(e)
+					return
+				}
+				toast.error(
+					getErrorMessage(
+						e instanceof Error ? e.message : 'Unknown error',
+						'Something went wrong. Please try again.',
+					),
+				)
+			},
+		})
+	}
+
+	return { submit, isPending, propertyId }
+}
+
+// ---------------------------------------------------------------------------
+// Edit Basic Details dialog
+// ---------------------------------------------------------------------------
+
+const editBasicSchema = z.object({
+	name: z.string().min(2, 'Name must be at least 2 characters'),
+	description: z.string().max(500, 'Max 500 characters').optional(),
+})
+
+type EditBasicSchema = z.infer<typeof editBasicSchema>
+
+function EditBasicDetailsDialog({
+	clientId,
+	property,
+	open,
+	onOpenChange,
+	onSuccess,
+}: {
+	clientId: string
+	property: Property
+	open: boolean
+	onOpenChange: (v: boolean) => void
+	onSuccess: () => void
+}) {
+	const { submit, isPending } = usePropertyMutation(
+		clientId,
+		property.id,
+		'Property details updated',
+		onSuccess,
+	)
+
+	const rhf = useForm<EditBasicSchema>({
+		resolver: zodResolver(editBasicSchema),
+		defaultValues: {
+			name: property.name,
+			description: safeString(property.description) || '',
+		},
+	})
+
+	const { control, handleSubmit } = rhf
+
+	const onSubmit = (data: EditBasicSchema) => {
+		submit({
+			propertyId: property.id,
+			data: {
+				name: data.name,
+				description: data.description || null,
+			},
+		})
+	}
+
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent className="max-w-sm rounded-xl">
+				<DialogHeader>
+					<DialogTitle>Edit Basic Details</DialogTitle>
+					<DialogDescription>
+						Update the property name and description.
+					</DialogDescription>
+				</DialogHeader>
+
+				<Form {...rhf}>
+					<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+						<FormField
+							name="name"
+							control={control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Property Name</FormLabel>
+									<FormControl>
+										<Input {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<FormField
+							name="description"
+							control={control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Description</FormLabel>
+									<FormControl>
+										<Textarea
+											placeholder="Describe the property..."
+											rows={3}
+											{...field}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<div className="flex justify-end gap-3 pt-1">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => onOpenChange(false)}
+							>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								disabled={isPending}
+								className="min-w-[80px]"
+							>
+								{isPending ? <Spinner /> : null}
+								Save
+							</Button>
+						</div>
+					</form>
+				</Form>
+			</DialogContent>
+		</Dialog>
+	)
+}
+
+// ---------------------------------------------------------------------------
+// Edit Location dialog
+// ---------------------------------------------------------------------------
+
+const editLocationSchema = AddressSchema
+
+type EditLocationSchema = AddressInputSchema
+
+function EditLocationDialog({
+	clientId,
+	property,
+	open,
+	onOpenChange,
+	onSuccess,
+}: {
+	clientId: string
+	property: Property
+	open: boolean
+	onOpenChange: (v: boolean) => void
+	onSuccess: () => void
+}) {
+	const { submit, isPending } = usePropertyMutation(
+		clientId,
+		property.id,
+		'Location updated',
+		onSuccess,
+	)
+
+	const rhf = useForm<EditLocationSchema>({
+		resolver: zodResolver(editLocationSchema),
+		defaultValues: {
+			addressSearch: safeString(property.address),
+			address: safeString(property.address),
+			city: safeString(property.city),
+			region: safeString(property.region),
+			country: safeString(property.country),
+			latitude: undefined,
+			longitude: undefined,
+		},
+	})
+
+	const { handleSubmit, formState } = rhf
+
+	const isAddressInvalid =
+		!!formState.errors.addressSearch ||
+		!!formState.errors.address ||
+		!!formState.errors.city ||
+		!!formState.errors.region ||
+		!!formState.errors.country ||
+		!!formState.errors.latitude ||
+		!!formState.errors.longitude
+
+	const onSubmit = (data: EditLocationSchema) => {
+		submit({
+			propertyId: property.id,
+			data: {
+				address: data.address,
+				city: data.city,
+				region: data.region,
+				country: data.country,
+				latitude: data.latitude,
+				longitude: data.longitude,
+			},
+		})
+	}
+
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent className="max-w-sm rounded-xl">
+				<DialogHeader>
+					<DialogTitle>Edit Location</DialogTitle>
+					<DialogDescription>
+						Search and select an address to update location details.
+					</DialogDescription>
+				</DialogHeader>
+
+				<Form {...rhf}>
+					<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+						<FieldGroup>
+							<Field data-invalid={isAddressInvalid}>
+								<FieldLabel>Address</FieldLabel>
+								<AddressInput />
+								{isAddressInvalid && (
+									<FieldError
+										errors={[
+											{ message: 'Kindly select a location from the list' },
+										]}
+									/>
+								)}
+							</Field>
+						</FieldGroup>
+
+						<div className="flex justify-end gap-3 pt-1">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => onOpenChange(false)}
+							>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								disabled={isPending}
+								className="min-w-[80px]"
+							>
+								{isPending ? <Spinner /> : null}
+								Save
+							</Button>
+						</div>
+					</form>
+				</Form>
+			</DialogContent>
+		</Dialog>
+	)
+}
+
+// ---------------------------------------------------------------------------
+// Main module
+// ---------------------------------------------------------------------------
 
 export function PropertyGeneralSettingsModule() {
 	const { clientUserProperty } = useProperty()
+	const { clientUser } = useClient()
+	const queryClient = useQueryClient()
+	const revalidator = useRevalidator()
 
 	const [openDeletePropertyModal, setOpenDeletePropertyModal] = useState(false)
+	const [showEditBasic, setShowEditBasic] = useState(false)
+	const [showEditLocation, setShowEditLocation] = useState(false)
+
+	const property = clientUserProperty?.property
+
+	const handleMutationSuccess = () => {
+		void revalidator.revalidate()
+		void queryClient.invalidateQueries({
+			queryKey: [QUERY_KEYS.CLIENT_USER_PROPERTIES],
+		})
+	}
 
 	return (
 		<div className="mx-auto max-w-4xl space-y-8 px-0 pt-0 pb-10 lg:px-4 lg:pt-1">
@@ -31,138 +359,130 @@ export function PropertyGeneralSettingsModule() {
 				</TypographyMuted>
 			</div>
 
-			{/* Company Details */}
-			<section className="bg-card grid gap-6 rounded-xl border p-3 shadow-sm md:p-6 lg:-space-y-2">
-				<div className="flex items-center justify-between max-md:items-start max-sm:flex-col max-sm:gap-2">
-					<TypographyH3>Basic Property Details</TypographyH3>
-					<PropertyPermissionGuard roles={['MANAGER']}>
-						<Button
-							variant="outline"
-							size="sm"
-							className="flex items-center gap-2 underline"
-						>
-							<Edit className="size-4" /> Edit Details
-						</Button>
-					</PropertyPermissionGuard>
-				</div>
-				<Separator />
-				<div className="grid gap-3 sm:grid-cols-3 sm:items-center">
-					<FieldLabel htmlFor="owner_company_name">Property Name</FieldLabel>
-					<Field className="sm:col-span-2">
-						<Input
-							id="owner_company_name"
-							placeholder="Enter your company name"
-							value={clientUserProperty?.property?.name || ''}
-							disabled
-						/>
-					</Field>
+			<Separator />
+
+			{/* Basic Property Details */}
+			<section className="bg-card relative grid gap-8 rounded-xl border p-4 shadow-sm sm:grid-cols-3 sm:items-start md:p-6">
+				<PropertyPermissionGuard roles={['MANAGER']}>
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						className="absolute top-3 right-3 gap-1.5 text-xs"
+						onClick={() => setShowEditBasic(true)}
+					>
+						<Pencil className="size-3.5" />
+						Edit
+					</Button>
+				</PropertyPermissionGuard>
+
+				<div className="space-y-2">
+					<TypographyH4 className="text-lg font-semibold">
+						Basic Details
+					</TypographyH4>
+					<TypographyMuted className="text-sm">
+						The property name, description, and type.
+					</TypographyMuted>
 				</div>
 
-				<div className="grid items-center gap-4 sm:grid-cols-3">
-					<FieldLabel htmlFor="description">Description</FieldLabel>
-					<Field className="sm:col-span-2">
-						<Input
-							id="description"
-							placeholder="Enter description (optional)"
-							value={clientUserProperty?.property?.description || ''}
-							disabled
-						/>
-					</Field>
-				</div>
+				<div className="space-y-5 sm:col-span-2">
+					<div className="space-y-1">
+						<Label className="text-sm font-medium">Property Name</Label>
+						<p className="text-foreground text-sm">
+							{safeString(property?.name) || '—'}
+						</p>
+					</div>
 
-				<div className="grid items-center gap-4 sm:grid-cols-3">
-					<FieldLabel htmlFor="type">Type</FieldLabel>
-					<Field className="sm:col-span-2">
-						<Input
-							id="type"
-							placeholder="Single/ Multi"
-							value={clientUserProperty?.property?.type || ''}
-							disabled
-						/>
-					</Field>
+					<div className="space-y-1">
+						<Label className="text-sm font-medium">Description</Label>
+						<p className="text-muted-foreground text-sm">
+							{safeString(property?.description) || '—'}
+						</p>
+					</div>
+
+					<div className="space-y-2">
+						<Label className="text-sm font-medium">Type</Label>
+						<p className="text-muted-foreground text-sm">
+							{property?.type
+								? property.type.charAt(0) + property.type.slice(1).toLowerCase()
+								: '—'}
+						</p>
+						{property && (
+							<PropertyPermissionGuard roles={['MANAGER']}>
+								<SwitchPropertyType
+									property={property}
+									clientId={safeString(clientUser?.client_id)}
+									onSuccess={handleMutationSuccess}
+								/>
+							</PropertyPermissionGuard>
+						)}
+					</div>
 				</div>
 			</section>
 
 			{/* Location */}
-			<section className="bg-card grid gap-6 rounded-xl border p-3 shadow-sm md:p-6 lg:-space-y-2">
-				<div className="flex items-center justify-between max-md:items-start max-sm:flex-col max-sm:gap-2">
-					<div className="space-y-2">
-						<TypographyH4 className="text-lg font-semibold">
-							Location
-						</TypographyH4>
-						<FieldDescription className="text-muted-foreground text-sm">
-							Changing the address updates the country, region, and city
-							automatically.
-						</FieldDescription>
+			<section className="bg-card relative grid gap-8 rounded-xl border p-4 shadow-sm sm:grid-cols-3 sm:items-start md:p-6">
+				<PropertyPermissionGuard roles={['MANAGER']}>
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						className="absolute top-3 right-3 gap-1.5 text-xs"
+						onClick={() => setShowEditLocation(true)}
+					>
+						<Pencil className="size-3.5" />
+						Edit
+					</Button>
+				</PropertyPermissionGuard>
+
+				<div className="space-y-2">
+					<TypographyH4 className="text-lg font-semibold">
+						Location
+					</TypographyH4>
+					<TypographyMuted className="text-sm">
+						Changing the address updates country, region, and city
+						automatically.
+					</TypographyMuted>
+				</div>
+
+				<div className="space-y-5 sm:col-span-2">
+					<div className="space-y-1">
+						<Label className="text-sm font-medium">Address</Label>
+						<p className="text-muted-foreground text-sm">
+							{safeString(property?.address) || '—'}
+						</p>
 					</div>
-					<PropertyPermissionGuard roles={['MANAGER']}>
-						<Button
-							variant="outline"
-							size="sm"
-							className="flex items-center gap-2 underline"
-						>
-							<Edit className="size-4" /> Edit Address
-						</Button>
-					</PropertyPermissionGuard>
-				</div>
-				<Separator />
 
-				{/* Address */}
-				<div className="grid gap-3 sm:grid-cols-3 sm:items-center">
-					<FieldLabel htmlFor="owner_company_name">Address</FieldLabel>
-					<Field className="sm:col-span-2">
-						<Input
-							id="owner_company_name"
-							placeholder="Enter your company name"
-							value={clientUserProperty?.property?.address || ''}
-							disabled
-						/>
-					</Field>
-				</div>
-
-				<div className="grid gap-3 sm:grid-cols-3 sm:items-center">
-					<FieldLabel htmlFor="owner_company_name">Country</FieldLabel>
-					<Field className="sm:col-span-2">
-						<Input
-							id="owner_company_name"
-							placeholder="Enter your company name"
-							value={clientUserProperty?.property?.country || ''}
-							disabled
-						/>
-					</Field>
-				</div>
-
-				<div className="grid items-center gap-4 sm:grid-cols-3">
-					<FieldLabel htmlFor="description">Region</FieldLabel>
-					<Field className="sm:col-span-2">
-						<Input
-							id="description"
-							placeholder="Enter description (optional)"
-							value={clientUserProperty?.property?.region || ''}
-							disabled
-						/>
-					</Field>
-				</div>
-
-				<div className="grid items-center gap-4 sm:grid-cols-3">
-					<FieldLabel htmlFor="description">City</FieldLabel>
-					<Field className="sm:col-span-2">
-						<Input
-							id="description"
-							placeholder="Enter description (optional)"
-							value={clientUserProperty?.property?.city || ''}
-							disabled
-						/>
-					</Field>
+					<div className="grid gap-5 sm:grid-cols-3">
+						<div className="space-y-1">
+							<Label className="text-sm font-medium">Country</Label>
+							<p className="text-muted-foreground text-sm">
+								{safeString(property?.country) || '—'}
+							</p>
+						</div>
+						<div className="space-y-1">
+							<Label className="text-sm font-medium">Region</Label>
+							<p className="text-muted-foreground text-sm">
+								{safeString(property?.region) || '—'}
+							</p>
+						</div>
+						<div className="space-y-1">
+							<Label className="text-sm font-medium">City</Label>
+							<p className="text-muted-foreground text-sm">
+								{safeString(property?.city) || '—'}
+							</p>
+						</div>
+					</div>
 				</div>
 			</section>
 
-			<section className="bg-card grid gap-6 rounded-xl border p-3 shadow-sm md:p-6 lg:-space-y-2">
+			{/* Support Access */}
+			{/* <section className="bg-card grid gap-6 rounded-xl border p-4 shadow-sm md:p-6">
 				<TypographyH3>Support Access</TypographyH3>
 				<Separator />
 
 				<div className="flex items-center justify-between">
-					<Field className="">
+					<Field>
 						<FieldLabel htmlFor="support_access">Support Access</FieldLabel>
 						<FieldDescription>
 							Allow support agents to access this property to help troubleshoot
@@ -176,26 +496,54 @@ export function PropertyGeneralSettingsModule() {
 
 				<PermissionGuard roles={['OWNER']}>
 					<div className="flex items-center justify-between">
-						<Field className="">
+						<Field>
 							<FieldLabel htmlFor="delete_property" className="text-rose-600">
 								Delete Property
 							</FieldLabel>
 							<FieldDescription>
-								Permanetly delete this property and all associated data.
+								Permanently delete this property and all associated data.
 							</FieldDescription>
 						</Field>
 						<Button
 							size="sm"
 							variant="secondary"
-							onClick={() => {
-								setOpenDeletePropertyModal(true)
-							}}
+							onClick={() => setOpenDeletePropertyModal(true)}
 						>
 							Delete Property
 						</Button>
 					</div>
 				</PermissionGuard>
-			</section>
+			</section> */}
+
+			{/* ------------------------------------------------------------------ */}
+			{/* Dialogs                                                              */}
+			{/* ------------------------------------------------------------------ */}
+
+			{property && (
+				<EditBasicDetailsDialog
+					clientId={safeString(clientUser?.client_id)}
+					property={property}
+					open={showEditBasic}
+					onOpenChange={setShowEditBasic}
+					onSuccess={() => {
+						setShowEditBasic(false)
+						handleMutationSuccess()
+					}}
+				/>
+			)}
+
+			{property && (
+				<EditLocationDialog
+					clientId={safeString(clientUser?.client_id)}
+					property={property}
+					open={showEditLocation}
+					onOpenChange={setShowEditLocation}
+					onSuccess={() => {
+						setShowEditLocation(false)
+						handleMutationSuccess()
+					}}
+				/>
+			)}
 
 			<ConfirmDeletePropertyModule
 				opened={openDeletePropertyModal}

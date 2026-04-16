@@ -170,6 +170,38 @@ export const createProperty = async (
 	}
 }
 
+export interface UpdatePropertyInput {
+	propertyId: string
+	data: Partial<CreatePropertyInput>
+}
+
+const updateProperty = async (
+	clientId: string,
+	{ propertyId, data }: UpdatePropertyInput,
+) => {
+	try {
+		const response = await fetchClient<ApiResponse<Property>>(
+			`/v1/admin/clients/${clientId}/properties/${propertyId}`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify(data),
+			},
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+
+export const useUpdateProperty = (clientId: string) =>
+	useMutation({
+		mutationFn: (data: UpdatePropertyInput) => updateProperty(clientId, data),
+	})
+
 /**
  * Delete property
  */
