@@ -175,10 +175,13 @@ export interface UpdatePropertyInput {
 	data: Partial<CreatePropertyInput>
 }
 
-const updateProperty = async ({ propertyId, ...data }: UpdatePropertyInput) => {
+const updateProperty = async (
+	clientId: string,
+	{ propertyId, data }: UpdatePropertyInput,
+) => {
 	try {
 		const response = await fetchClient<ApiResponse<Property>>(
-			`/v1/admin/properties/${propertyId}`,
+			`/v1/admin/clients/${clientId}/properties/${propertyId}`,
 			{
 				method: 'PATCH',
 				body: JSON.stringify(data),
@@ -194,8 +197,10 @@ const updateProperty = async ({ propertyId, ...data }: UpdatePropertyInput) => {
 	}
 }
 
-export const useUpdateProperty = () =>
-	useMutation({ mutationFn: updateProperty })
+export const useUpdateProperty = (clientId: string) =>
+	useMutation({
+		mutationFn: (data: UpdatePropertyInput) => updateProperty(clientId, data),
+	})
 
 /**
  * Delete property

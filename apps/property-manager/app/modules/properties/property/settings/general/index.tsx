@@ -50,17 +50,20 @@ import ConfirmDeletePropertyModule from './delete'
 import { SwitchPropertyType } from './component/switch-type'
 import { useQueryClient } from '@tanstack/react-query'
 import { QUERY_KEYS } from '~/lib/constants'
+import { useClient } from '~/providers/client-provider'
+import { useRevalidator } from 'react-router'
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 function usePropertyMutation(
+	clientId: string,
 	propertyId: string,
 	successMessage: string,
 	onSuccess: () => void,
 ) {
-	const { mutate, isPending } = useUpdateProperty()
+	const { mutate, isPending } = useUpdateProperty(clientId)
 
 	const submit = (
 		data: Parameters<typeof mutate>[0],
@@ -101,17 +104,20 @@ const editBasicSchema = z.object({
 type EditBasicSchema = z.infer<typeof editBasicSchema>
 
 function EditBasicDetailsDialog({
+	clientId,
 	property,
 	open,
 	onOpenChange,
 	onSuccess,
 }: {
+	clientId: string
 	property: Property
 	open: boolean
 	onOpenChange: (v: boolean) => void
 	onSuccess: () => void
 }) {
 	const { submit, isPending } = usePropertyMutation(
+		clientId,
 		property.id,
 		'Property details updated',
 		onSuccess,
@@ -214,17 +220,20 @@ const editLocationSchema = AddressSchema
 type EditLocationSchema = AddressInputSchema
 
 function EditLocationDialog({
+	clientId,
 	property,
 	open,
 	onOpenChange,
 	onSuccess,
 }: {
+	clientId: string
 	property: Property
 	open: boolean
 	onOpenChange: (v: boolean) => void
 	onSuccess: () => void
 }) {
 	const { submit, isPending } = usePropertyMutation(
+		clientId,
 		property.id,
 		'Location updated',
 		onSuccess,
@@ -324,7 +333,9 @@ function EditLocationDialog({
 
 export function PropertyGeneralSettingsModule() {
 	const { clientUserProperty } = useProperty()
+	const { clientUser } = useClient()
 	const queryClient = useQueryClient()
+	const revalidator = useRevalidator()
 
 	const [openDeletePropertyModal, setOpenDeletePropertyModal] = useState(false)
 	const [showEditBasic, setShowEditBasic] = useState(false)
@@ -333,6 +344,7 @@ export function PropertyGeneralSettingsModule() {
 	const property = clientUserProperty?.property
 
 	const handleMutationSuccess = () => {
+		void revalidator.revalidate()
 		void queryClient.invalidateQueries({
 			queryKey: [QUERY_KEYS.CLIENT_USER_PROPERTIES],
 		})
@@ -399,6 +411,7 @@ export function PropertyGeneralSettingsModule() {
 							<PropertyPermissionGuard roles={['MANAGER']}>
 								<SwitchPropertyType
 									property={property}
+									clientId={safeString(clientUser?.client_id)}
 									onSuccess={handleMutationSuccess}
 								/>
 							</PropertyPermissionGuard>
@@ -508,6 +521,7 @@ export function PropertyGeneralSettingsModule() {
 
 			{property && (
 				<EditBasicDetailsDialog
+					clientId={safeString(clientUser?.client_id)}
 					property={property}
 					open={showEditBasic}
 					onOpenChange={setShowEditBasic}
@@ -520,6 +534,7 @@ export function PropertyGeneralSettingsModule() {
 
 			{property && (
 				<EditLocationDialog
+					clientId={safeString(clientUser?.client_id)}
 					property={property}
 					open={showEditLocation}
 					onOpenChange={setShowEditLocation}
