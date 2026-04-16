@@ -337,7 +337,19 @@ func (s *paymentService) VerifyOfflinePayment(
 		})
 	}
 
-	transaction := s.appCtx.DB.Begin()
+	outerTx, hasOuterTx := lib.TransactionFromContext(ctx)
+	hasOuterTx = hasOuterTx && outerTx != nil
+	var transaction *gorm.DB
+	if hasOuterTx {
+		transaction = outerTx
+	} else {
+		transaction = s.appCtx.DB.Begin()
+		if transaction.Error != nil {
+			return nil, pkg.InternalServerError("failed to begin transaction", &pkg.RentLoopErrorParams{
+				Err: transaction.Error,
+			})
+		}
+	}
 	transCtx := lib.WithTransaction(ctx, transaction)
 
 	now := time.Now()
@@ -347,7 +359,9 @@ func (s *paymentService) VerifyOfflinePayment(
 	existingMetadata := map[string]any{}
 	if payment.Metadata != nil {
 		if err := json.Unmarshal(*payment.Metadata, &existingMetadata); err != nil {
-			transaction.Rollback()
+			if !hasOuterTx {
+				transaction.Rollback()
+			}
 			return nil, pkg.InternalServerError("failed to parse payment metadata", &pkg.RentLoopErrorParams{
 				Err: err,
 				Metadata: map[string]string{
@@ -372,7 +386,9 @@ func (s *paymentService) VerifyOfflinePayment(
 
 	metadataJSON, metadataJSONErr := lib.InterfaceToJSON(existingMetadata)
 	if metadataJSONErr != nil {
-		transaction.Rollback()
+		if !hasOuterTx {
+			transaction.Rollback()
+		}
 		return nil, pkg.InternalServerError("failed to marshal payment metadata", &pkg.RentLoopErrorParams{
 			Err: metadataJSONErr,
 			Metadata: map[string]string{
@@ -389,7 +405,9 @@ func (s *paymentService) VerifyOfflinePayment(
 
 		updatePaymentErr := s.repo.Update(transCtx, payment)
 		if updatePaymentErr != nil {
-			transaction.Rollback()
+			if !hasOuterTx {
+				transaction.Rollback()
+			}
 			return nil, pkg.InternalServerError("failed to update payment", &pkg.RentLoopErrorParams{
 				Err: updatePaymentErr,
 				Metadata: map[string]string{
@@ -406,7 +424,9 @@ func (s *paymentService) VerifyOfflinePayment(
 			statuses: []string{"SUCCESSFUL"},
 		})
 		if remainingBalanceErr != nil {
-			transaction.Rollback()
+			if !hasOuterTx {
+				transaction.Rollback()
+			}
 			return nil, pkg.InternalServerError("failed to calculate remaining balance", &pkg.RentLoopErrorParams{
 				Err: remainingBalanceErr,
 				Metadata: map[string]string{
@@ -436,7 +456,9 @@ func (s *paymentService) VerifyOfflinePayment(
 			PaidAt:    paidAt,
 		})
 		if updateInvoiceErr != nil {
-			transaction.Rollback()
+			if !hasOuterTx {
+				transaction.Rollback()
+			}
 			return nil, pkg.InternalServerError("failed to update invoice status", &pkg.RentLoopErrorParams{
 				Err: updateInvoiceErr,
 				Metadata: map[string]string{
@@ -465,14 +487,16 @@ func (s *paymentService) VerifyOfflinePayment(
 				"invoice_id":   payment.Invoice.ID.String(),
 				"invoice_code": payment.Invoice.Code,
 				"amount":       payment.Amount,
-				"currency":     payment.Currency,
+				"currency":     payment.Invoice.Currency,
 				"client_id":    lib.SafeString(payment.Invoice.ClientID),
 				"property_id":  lib.SafeString(payment.Invoice.PropertyID),
 			},
 			Lines: paymentLines,
 		})
 		if journalErr != nil {
-			transaction.Rollback()
+			if !hasOuterTx {
+				transaction.Rollback()
+			}
 			return nil, pkg.InternalServerError("failed to record payment journal entry", &pkg.RentLoopErrorParams{
 				Err: journalErr,
 				Metadata: map[string]string{
@@ -488,7 +512,9 @@ func (s *paymentService) VerifyOfflinePayment(
 
 		updatePaymentErr := s.repo.Update(transCtx, payment)
 		if updatePaymentErr != nil {
-			transaction.Rollback()
+			if !hasOuterTx {
+				transaction.Rollback()
+			}
 			return nil, pkg.InternalServerError("failed to update payment", &pkg.RentLoopErrorParams{
 				Err: updatePaymentErr,
 				Metadata: map[string]string{
@@ -499,15 +525,17 @@ func (s *paymentService) VerifyOfflinePayment(
 		}
 	}
 
-	if commitErr := transaction.Commit().Error; commitErr != nil {
-		transaction.Rollback()
-		return nil, pkg.InternalServerError("failed to commit transaction", &pkg.RentLoopErrorParams{
-			Err: commitErr,
-			Metadata: map[string]string{
-				"payment_id": input.PaymentID,
-				"function":   "VerifyOfflinePayment",
-			},
-		})
+	if !hasOuterTx {
+		if commitErr := transaction.Commit().Error; commitErr != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError("failed to commit transaction", &pkg.RentLoopErrorParams{
+				Err: commitErr,
+				Metadata: map[string]string{
+					"payment_id": input.PaymentID,
+					"function":   "VerifyOfflinePayment",
+				},
+			})
+		}
 	}
 
 	// Fire-and-forget payment confirmation notifications when invoice is fully paid

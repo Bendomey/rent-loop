@@ -81,7 +81,7 @@ export const PropertyTenantLeasesController = ({
 					] as Array<Filter>)
 				: []),
 		],
-		[clientUserProperty?.property_id, isMultiProperty],
+		[clientUser?.client_id, clientUserProperty?.property_id, isMultiProperty],
 	)
 
 	return (

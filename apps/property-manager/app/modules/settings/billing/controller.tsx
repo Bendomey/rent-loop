@@ -1,4 +1,4 @@
-import { Home, ToggleLeft } from 'lucide-react'
+import { ToggleLeft } from 'lucide-react'
 import { FilterSet } from '~/components/filter-set'
 
 const filters: Array<Filter> = [

@@ -110,7 +110,7 @@ export const PropertyTenantApplicationsController = ({
 				Icon: ToggleLeft,
 			},
 		],
-		[clientUserProperty?.property_id],
+		[clientUser?.client_id, clientUserProperty?.property_id],
 	)
 
 	return (

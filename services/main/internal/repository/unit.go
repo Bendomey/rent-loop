@@ -6,6 +6,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type UnitRepository interface {
@@ -14,6 +15,7 @@ type UnitRepository interface {
 	Create(context context.Context, unit *models.Unit) error
 	GetOneWithQuery(context context.Context, query GetUnitQuery) (*models.Unit, error)
 	GetOne(context context.Context, query map[string]any) (*models.Unit, error)
+	GetOneLocked(context context.Context, query map[string]any) (*models.Unit, error)
 	Update(context context.Context, unit *models.Unit) error
 	Delete(context context.Context, input DeleteUnitInput) error
 }
@@ -61,7 +63,23 @@ func (r *unitRepository) GetOneWithQuery(ctx context.Context, query GetUnitQuery
 
 func (r *unitRepository) GetOne(ctx context.Context, query map[string]any) (*models.Unit, error) {
 	var unit models.Unit
-	result := r.DB.WithContext(ctx).Where(query).First(&unit)
+	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).Where(query).First(&unit)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &unit, nil
+}
+
+// GetOneLocked fetches a single unit with a SELECT … FOR UPDATE row lock.
+// Must be called within an active transaction (via lib.WithTransaction).
+func (r *unitRepository) GetOneLocked(ctx context.Context, query map[string]any) (*models.Unit, error) {
+	var unit models.Unit
+	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where(query).
+		First(&unit)
 
 	if result.Error != nil {
 		return nil, result.Error

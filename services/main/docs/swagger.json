@@ -7727,6 +7727,80 @@
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases:bulk-onboard": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Onboard up to 10 existing tenant-lease pairs in a single transaction. Creates TenantApplication, Invoice (if deposits provided), Tenant, TenantAccount, and Lease records. Designed for landlords migrating existing tenants into Rent-Loop. rent_payment_status must be NONE, PARTIAL, or FULL. When PARTIAL, periods_paid (\u003e=1, \u003cstay_duration), billing_cycle_start_date, and payment_frequency are required.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lease"
+                ],
+                "summary": "Bulk onboard existing leases (Client User)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Bulk onboard request body (max 10 entries)",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.BulkOnboardLeasesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Bulk onboard successful"
+                    },
+                    "400": {
+                        "description": "Validation or business rule error (e.g. UnitNoLongerAvailable, PeriodsPaidInvalid)",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "422": {
+                        "description": "Request body validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests": {
             "get": {
                 "security": [
@@ -15529,6 +15603,181 @@
                 "phone": {
                     "type": "string",
                     "example": "+233281234569"
+                }
+            }
+        },
+        "handlers.BulkOnboardLeaseEntryRequest": {
+            "type": "object",
+            "required": [
+                "current_address",
+                "date_of_birth",
+                "emergency_contact_name",
+                "emergency_contact_phone",
+                "first_name",
+                "gender",
+                "id_number",
+                "id_type",
+                "last_name",
+                "lease_agreement_document_url",
+                "marital_status",
+                "move_in_date",
+                "nationality",
+                "phone",
+                "relationship_to_emergency_contact",
+                "rent_fee",
+                "rent_fee_currency",
+                "rent_payment_status",
+                "security_deposit_fee_currency",
+                "stay_duration",
+                "stay_duration_frequency",
+                "unit_id"
+            ],
+            "properties": {
+                "billing_cycle_start_date": {
+                    "type": "string"
+                },
+                "current_address": {
+                    "type": "string"
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "emergency_contact_name": {
+                    "type": "string"
+                },
+                "emergency_contact_phone": {
+                    "type": "string"
+                },
+                "employer": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string",
+                    "minLength": 2
+                },
+                "gender": {
+                    "type": "string",
+                    "enum": [
+                        "Male",
+                        "Female"
+                    ]
+                },
+                "id_number": {
+                    "type": "string"
+                },
+                "id_type": {
+                    "type": "string",
+                    "enum": [
+                        "NationalID",
+                        "Passport",
+                        "DriverLicense"
+                    ]
+                },
+                "last_name": {
+                    "type": "string",
+                    "minLength": 2
+                },
+                "lease_agreement_document_url": {
+                    "type": "string"
+                },
+                "marital_status": {
+                    "type": "string",
+                    "enum": [
+                        "Single",
+                        "Married",
+                        "Divorced",
+                        "Widowed"
+                    ]
+                },
+                "move_in_date": {
+                    "type": "string"
+                },
+                "nationality": {
+                    "type": "string"
+                },
+                "occupation": {
+                    "type": "string"
+                },
+                "other_names": {
+                    "type": "string"
+                },
+                "payment_frequency": {
+                    "type": "string",
+                    "enum": [
+                        "HOURLY",
+                        "DAILY",
+                        "MONTHLY",
+                        "QUARTERLY",
+                        "BIANNUALLY",
+                        "ANNUALLY",
+                        "ONETIME"
+                    ]
+                },
+                "periods_paid": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "relationship_to_emergency_contact": {
+                    "type": "string"
+                },
+                "rent_fee": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "rent_fee_currency": {
+                    "type": "string"
+                },
+                "rent_payment_status": {
+                    "type": "string",
+                    "enum": [
+                        "NONE",
+                        "PARTIAL",
+                        "FULL"
+                    ]
+                },
+                "security_deposit_fee": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "security_deposit_fee_currency": {
+                    "type": "string"
+                },
+                "stay_duration": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "stay_duration_frequency": {
+                    "type": "string",
+                    "enum": [
+                        "HOURS",
+                        "DAYS",
+                        "MONTHS"
+                    ]
+                },
+                "unit_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.BulkOnboardLeasesRequest": {
+            "type": "object",
+            "required": [
+                "entries"
+            ],
+            "properties": {
+                "entries": {
+                    "type": "array",
+                    "maxItems": 10,
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/handlers.BulkOnboardLeaseEntryRequest"
+                    }
                 }
             }
         },

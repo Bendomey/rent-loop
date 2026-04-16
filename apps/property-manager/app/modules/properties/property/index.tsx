@@ -1,6 +1,6 @@
+import { Users, Building2, FileText, ClipboardList } from 'lucide-react'
 import { useEffect } from 'react'
 import { Link } from 'react-router'
-import { Users, Building2, FileText, ClipboardList } from 'lucide-react'
 import { PropertySectionCards } from './components/cards'
 import { PropertyChartBar } from './components/chart'
 import { PropertyRentIncomeCards } from './components/rent-cards'
