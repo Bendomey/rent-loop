@@ -9103,7 +9103,8 @@ paths:
         Creates TenantApplication, Invoice (if deposits provided), Tenant, TenantAccount,
         and Lease records. Designed for landlords migrating existing tenants into
         Rent-Loop. rent_payment_status must be NONE, PARTIAL, or FULL. When PARTIAL,
-        periods_paid (>=1, <stay_duration) and billing_cycle_start_date are required.
+        periods_paid (>=1, <stay_duration), billing_cycle_start_date, and payment_frequency
+        are required.
       parameters:
       - description: Client ID
         in: path

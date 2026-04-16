@@ -338,11 +338,17 @@ func (s *paymentService) VerifyOfflinePayment(
 	}
 
 	outerTx, hasOuterTx := lib.TransactionFromContext(ctx)
+	hasOuterTx = hasOuterTx && outerTx != nil
 	var transaction *gorm.DB
-	if hasOuterTx && outerTx != nil {
+	if hasOuterTx {
 		transaction = outerTx
 	} else {
 		transaction = s.appCtx.DB.Begin()
+		if transaction.Error != nil {
+			return nil, pkg.InternalServerError("failed to begin transaction", &pkg.RentLoopErrorParams{
+				Err: transaction.Error,
+			})
+		}
 	}
 	transCtx := lib.WithTransaction(ctx, transaction)
 

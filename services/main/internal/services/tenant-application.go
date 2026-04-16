@@ -1253,10 +1253,11 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 
 		// 2. Build the first invoice and compute next_billing_date based on rent_payment_status.
 		//
-		// FULL / PARTIAL → PAID invoice (historical record of rent collected + security deposit).
-		//   Status=PAID skips Fincore journal entry posting.
-		// NONE → ISSUED invoice covering all unpaid periods from move_in_date to now,
-		//   plus security deposit. Tenant owes this amount.
+		// FULL / PARTIAL → ISSUED invoice immediately settled via CreateOfflinePayment +
+		//   VerifyOfflinePayment, creating an audit trail and posting the settlement journal
+		//   entry to Fincore. next_billing_date is advanced by the number of periods paid.
+		// NONE → ISSUED invoice covering all elapsed periods from move_in_date to now,
+		//   plus security deposit. Tenant still owes this amount.
 		var nextBillingDate *time.Time
 		{
 			appID := tenantApp.ID.String()
@@ -1266,17 +1267,17 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 			var lineItems []LineItemInput
 			total := int64(0)
 			var rentLineAmount int64
-			var invoiceStatus string
+			var wasAlreadyPaid bool
 
 			switch entry.RentPaymentStatus {
 			case "FULL":
 				rentLineAmount = entry.RentFee * entry.StayDuration
-				invoiceStatus = "PAID"
+				wasAlreadyPaid = true
 				// nextBillingDate stays nil — fully paid, no more invoices
 
 			case "PARTIAL":
 				rentLineAmount = entry.RentFee * *entry.PeriodsPaid
-				invoiceStatus = "PAID"
+				wasAlreadyPaid = true
 				// Advance next billing from cycle start by periods_paid steps
 				if entry.BillingCycleStartDate != nil && entry.PaymentFrequency != nil {
 					base := *entry.BillingCycleStartDate
@@ -1291,7 +1292,7 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 				}
 
 			case "NONE":
-				invoiceStatus = "ISSUED"
+				wasAlreadyPaid = false
 				// Count elapsed periods from move_in_date to now (inclusive of current period)
 				var elapsedPeriods int64
 				if entry.PaymentFrequency != nil {
@@ -1362,7 +1363,7 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 				// For FULL/PARTIAL entries the rent was already collected offline.
 				// Run the full payment flow so there is an audit trail and the
 				// settlement journal entry is posted to Fincore.
-				if invoiceStatus == "PAID" {
+				if wasAlreadyPaid {
 					invoiceID := invoice.ID.String()
 					provider := lib.SafeString(paymentAccounts[0].Provider)
 					payment, paymentErr := s.paymentService.CreateOfflinePayment(transCtx, CreateOfflinePaymentInput{

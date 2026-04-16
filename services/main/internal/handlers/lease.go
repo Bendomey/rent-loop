@@ -467,7 +467,7 @@ func (h *LeaseHandler) CancelLease(w http.ResponseWriter, r *http.Request) {
 // BulkOnboardLeases godoc
 //
 //	@Summary		Bulk onboard existing leases (Client User)
-//	@Description	Onboard up to 10 existing tenant-lease pairs in a single transaction. Creates TenantApplication, Invoice (if deposits provided), Tenant, TenantAccount, and Lease records. Designed for landlords migrating existing tenants into Rent-Loop. rent_payment_status must be NONE, PARTIAL, or FULL. When PARTIAL, periods_paid (>=1, <stay_duration) and billing_cycle_start_date are required.
+//	@Description	Onboard up to 10 existing tenant-lease pairs in a single transaction. Creates TenantApplication, Invoice (if deposits provided), Tenant, TenantAccount, and Lease records. Designed for landlords migrating existing tenants into Rent-Loop. rent_payment_status must be NONE, PARTIAL, or FULL. When PARTIAL, periods_paid (>=1, <stay_duration), billing_cycle_start_date, and payment_frequency are required.
 //	@Tags			Lease
 //	@Accept			json
 //	@Security		BearerAuth
@@ -500,7 +500,7 @@ func (h *LeaseHandler) BulkOnboardLeases(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Cross-field validation: PARTIAL requires periods_paid and billing_cycle_start_date
+	// Cross-field validation: PARTIAL requires periods_paid, billing_cycle_start_date, and payment_frequency
 	for _, e := range body.Entries {
 		if e.RentPaymentStatus == "PARTIAL" {
 			if e.PeriodsPaid == nil || *e.PeriodsPaid < 1 || *e.PeriodsPaid >= e.StayDuration {
@@ -509,6 +509,10 @@ func (h *LeaseHandler) BulkOnboardLeases(w http.ResponseWriter, r *http.Request)
 			}
 			if e.BillingCycleStartDate == nil {
 				HandleErrorResponse(w, pkg.BadRequestError("BillingCycleStartDateRequired", nil))
+				return
+			}
+			if e.PaymentFrequency == nil {
+				HandleErrorResponse(w, pkg.BadRequestError("PaymentFrequencyRequired", nil))
 				return
 			}
 		}

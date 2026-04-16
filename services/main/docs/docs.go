@@ -7742,7 +7742,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Onboard up to 10 existing tenant-lease pairs in a single transaction. Creates TenantApplication, Invoice (if deposits provided), Tenant, TenantAccount, and Lease records. Designed for landlords migrating existing tenants into Rent-Loop. rent_payment_status must be NONE, PARTIAL, or FULL. When PARTIAL, periods_paid (\u003e=1, \u003cstay_duration) and billing_cycle_start_date are required.",
+                "description": "Onboard up to 10 existing tenant-lease pairs in a single transaction. Creates TenantApplication, Invoice (if deposits provided), Tenant, TenantAccount, and Lease records. Designed for landlords migrating existing tenants into Rent-Loop. rent_payment_status must be NONE, PARTIAL, or FULL. When PARTIAL, periods_paid (\u003e=1, \u003cstay_duration), billing_cycle_start_date, and payment_frequency are required.",
                 "consumes": [
                     "application/json"
                 ],

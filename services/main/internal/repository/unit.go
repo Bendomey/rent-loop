@@ -63,7 +63,7 @@ func (r *unitRepository) GetOneWithQuery(ctx context.Context, query GetUnitQuery
 
 func (r *unitRepository) GetOne(ctx context.Context, query map[string]any) (*models.Unit, error) {
 	var unit models.Unit
-	result := lib.ResolveDB(ctx, r.DB).Where(query).First(&unit)
+	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).Where(query).First(&unit)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -76,7 +76,7 @@ func (r *unitRepository) GetOne(ctx context.Context, query map[string]any) (*mod
 // Must be called within an active transaction (via lib.WithTransaction).
 func (r *unitRepository) GetOneLocked(ctx context.Context, query map[string]any) (*models.Unit, error) {
 	var unit models.Unit
-	result := lib.ResolveDB(ctx, r.DB).
+	result := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
 		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where(query).
 		First(&unit)
