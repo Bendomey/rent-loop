@@ -153,9 +153,9 @@ export interface BulkOnboardLeaseEntryInput {
 	move_in_date: string // ISO string
 	stay_duration_frequency: 'HOURS' | 'DAYS' | 'MONTHS'
 	stay_duration: number
-	paid_through_date?: string // ISO string
-	initial_deposit_fee: number
-	initial_deposit_fee_currency: string
+	rent_payment_status: 'NONE' | 'PARTIAL' | 'FULL'
+	periods_paid?: number
+	billing_cycle_start_date?: string // ISO string
 	security_deposit_fee: number
 	security_deposit_fee_currency: string
 	lease_agreement_document_url: string

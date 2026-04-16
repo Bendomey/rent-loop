@@ -714,9 +714,9 @@ type BulkOnboardLeaseEntry struct {
 	MoveInDate                     time.Time
 	StayDurationFrequency          string
 	StayDuration                   int64
-	PaidThroughDate                *time.Time
-	InitialDepositFee              int64
-	InitialDepositFeeCurrency      string
+	RentPaymentStatus              string
+	PeriodsPaid                    *int64
+	BillingCycleStartDate          *time.Time
 	SecurityDepositFee             int64
 	SecurityDepositFeeCurrency     string
 	LeaseAgreementDocumentUrl      string
@@ -724,6 +724,7 @@ type BulkOnboardLeaseEntry struct {
 
 type BulkOnboardLeasesInput struct {
 	ClientUserID string
+	ClientID     string
 	PropertyID   string
 	Entries      []BulkOnboardLeaseEntry
 }
@@ -1098,7 +1099,7 @@ func (s *tenantApplicationService) GenerateInvoice(
 }
 
 func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input BulkOnboardLeasesInput) error {
-	if len(input.Entries) == 0 || len(input.Entries) > 20 {
+	if len(input.Entries) == 0 || len(input.Entries) > 10 {
 		return pkg.BadRequestError("BatchSizeOutOfRange", nil)
 	}
 
@@ -1186,8 +1187,6 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 			Occupation:                     occupation,
 			Employer:                       employer,
 			OccupationAddress:              "N/A",
-			InitialDepositFee:              &entry.InitialDepositFee,
-			InitialDepositFeeCurrency:      entry.InitialDepositFeeCurrency,
 			SecurityDepositFee:             &entry.SecurityDepositFee,
 			SecurityDepositFeeCurrency:     entry.SecurityDepositFeeCurrency,
 			CreatedById:                    input.ClientUserID,
@@ -1206,27 +1205,80 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 			})
 		}
 
-		// 2. Create invoice as PAID (historical record — Status=PAID skips Fincore journal entry)
-		if entry.InitialDepositFee > 0 && entry.SecurityDepositFee > 0 &&
-			entry.InitialDepositFeeCurrency != entry.SecurityDepositFeeCurrency {
-			transaction.Rollback()
-			return pkg.BadRequestError("DepositCurrencyMismatch", nil)
-		}
-		if entry.InitialDepositFee > 0 || entry.SecurityDepositFee > 0 {
+		// 2. Build the first invoice and compute next_billing_date based on rent_payment_status.
+		//
+		// FULL / PARTIAL → PAID invoice (historical record of rent collected + security deposit).
+		//   Status=PAID skips Fincore journal entry posting.
+		// NONE → ISSUED invoice covering all unpaid periods from move_in_date to now,
+		//   plus security deposit. Tenant owes this amount.
+		var nextBillingDate *time.Time
+		{
 			appID := tenantApp.ID.String()
 			propertyID := input.PropertyID
+			clientID := input.ClientID
+
 			var lineItems []LineItemInput
 			total := int64(0)
-			if entry.InitialDepositFee > 0 {
+			var rentLineAmount int64
+			var invoiceStatus string
+
+			switch entry.RentPaymentStatus {
+			case "FULL":
+				rentLineAmount = entry.RentFee * entry.StayDuration
+				invoiceStatus = "PAID"
+				// nextBillingDate stays nil — fully paid, no more invoices
+
+			case "PARTIAL":
+				rentLineAmount = entry.RentFee * *entry.PeriodsPaid
+				invoiceStatus = "PAID"
+				// Advance next billing from cycle start by periods_paid steps
+				if entry.BillingCycleStartDate != nil && entry.PaymentFrequency != nil {
+					base := *entry.BillingCycleStartDate
+					for i := int64(0); i < *entry.PeriodsPaid; i++ {
+						next := calculateNextBillingDate(base, *entry.PaymentFrequency)
+						if next == nil {
+							break
+						}
+						base = *next
+					}
+					nextBillingDate = &base
+				}
+
+			case "NONE":
+				invoiceStatus = "ISSUED"
+				// Count elapsed periods from move_in_date to now (inclusive of current period)
+				var elapsedPeriods int64
+				if entry.PaymentFrequency != nil {
+					base := entry.MoveInDate
+					for !base.After(now) {
+						next := calculateNextBillingDate(base, *entry.PaymentFrequency)
+						if next == nil {
+							break
+						}
+						base = *next
+						elapsedPeriods++
+					}
+					if elapsedPeriods > 0 {
+						nextBillingDate = &base
+					} else {
+						// Move-in is in the future; bill from move_in_date
+						moveIn := entry.MoveInDate
+						nextBillingDate = &moveIn
+					}
+				}
+				rentLineAmount = entry.RentFee * elapsedPeriods
+			}
+
+			if rentLineAmount > 0 {
 				lineItems = append(lineItems, LineItemInput{
-					Label:       "Initial Deposit",
-					Category:    "INITIAL_DEPOSIT",
+					Label:       "Rent Payment",
+					Category:    "RENT",
 					Quantity:    1,
-					UnitAmount:  entry.InitialDepositFee,
-					TotalAmount: entry.InitialDepositFee,
-					Currency:    entry.InitialDepositFeeCurrency,
+					UnitAmount:  rentLineAmount,
+					TotalAmount: rentLineAmount,
+					Currency:    entry.RentFeeCurrency,
 				})
-				total += entry.InitialDepositFee
+				total += rentLineAmount
 			}
 			if entry.SecurityDepositFee > 0 {
 				lineItems = append(lineItems, LineItemInput{
@@ -1239,22 +1291,27 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 				})
 				total += entry.SecurityDepositFee
 			}
-			_, invoiceErr := s.invoiceService.CreateInvoice(transCtx, CreateInvoiceInput{
-				PropertyID:                 &propertyID,
-				PayerType:                  "TENANT_APPLICATION",
-				PayeeType:                  "PROPERTY_OWNER",
-				ContextType:                "TENANT_APPLICATION",
-				ContextTenantApplicationID: &appID,
-				TotalAmount:                total,
-				Taxes:                      0,
-				SubTotal:                   total,
-				Currency:                   entry.InitialDepositFeeCurrency,
-				Status:                     "PAID",
-				LineItems:                  lineItems,
-			})
-			if invoiceErr != nil {
-				transaction.Rollback()
-				return invoiceErr
+
+			if len(lineItems) > 0 {
+				_, invoiceErr := s.invoiceService.CreateInvoice(transCtx, CreateInvoiceInput{
+					ClientID:                   &clientID,
+					PropertyID:                 &propertyID,
+					PayerType:                  "TENANT_APPLICATION",
+					PayeeType:                  "PROPERTY_OWNER",
+					PayeeClientID:              &clientID,
+					ContextType:                "TENANT_APPLICATION",
+					ContextTenantApplicationID: &appID,
+					TotalAmount:                total,
+					Taxes:                      0,
+					SubTotal:                   total,
+					Currency:                   entry.RentFeeCurrency,
+					Status:                     invoiceStatus,
+					LineItems:                  lineItems,
+				})
+				if invoiceErr != nil {
+					transaction.Rollback()
+					return invoiceErr
+				}
 			}
 		}
 
@@ -1298,13 +1355,15 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 		// 5. Create Lease (Active)
 		appIDStr := tenantApp.ID.String()
 		meta := map[string]any{
-			"initial_deposit_fee":           entry.InitialDepositFee,
-			"initial_deposit_fee_currency":  entry.InitialDepositFeeCurrency,
 			"security_deposit_fee":          entry.SecurityDepositFee,
 			"security_deposit_fee_currency": entry.SecurityDepositFeeCurrency,
+			"rent_payment_status":           entry.RentPaymentStatus,
 		}
-		if entry.PaidThroughDate != nil {
-			meta["paid_through_date"] = entry.PaidThroughDate.Format(time.RFC3339)
+		if entry.PeriodsPaid != nil {
+			meta["periods_paid"] = *entry.PeriodsPaid
+		}
+		if entry.BillingCycleStartDate != nil {
+			meta["billing_cycle_start_date"] = entry.BillingCycleStartDate.Format(time.RFC3339)
 		}
 		_, leaseErr := s.leaseService.CreateLease(transCtx, CreateLeaseInput{
 			Status:                    "Lease.Status.Active",
@@ -1326,13 +1385,14 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 		}
 
 		// Set ActivatedAt/ActivatedById on the lease directly (CreateLease doesn't accept these fields)
+		// nextBillingDate was computed in the invoice block above.
 		if updateErr := transaction.WithContext(ctx).
 			Model(&models.Lease{}).
 			Where("tenant_application_id = ?", appIDStr).
 			Updates(map[string]any{
 				"activated_at":      now,
 				"activated_by_id":   input.ClientUserID,
-				"next_billing_date": nil,
+				"next_billing_date": nextBillingDate,
 			}).Error; updateErr != nil {
 			transaction.Rollback()
 			return pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{

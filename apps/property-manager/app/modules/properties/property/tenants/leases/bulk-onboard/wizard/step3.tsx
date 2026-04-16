@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { DatePickerInput } from '~/components/date-picker-input'
@@ -43,9 +44,9 @@ const Schema = z.object({
 	stay_duration_frequency: z.enum(['HOURS', 'DAYS', 'MONTHS'], {
 		error: 'Required',
 	}),
-	paid_through_date: z.date().optional(),
-	initial_deposit_fee: z.number().min(0),
-	initial_deposit_fee_currency: z.string({ error: 'Required' }),
+	rent_payment_status: z.enum(['NONE', 'PARTIAL', 'FULL']),
+	periods_paid: z.number().min(1).optional(),
+	billing_cycle_start_date: z.date().optional(),
 	security_deposit_fee: z.number().min(0),
 	security_deposit_fee_currency: z.string({ error: 'Required' }),
 })
@@ -101,33 +102,68 @@ export function WizardStep3({
 			stay_duration: 0,
 			stay_duration_frequency:
 				unitDefaults?.stay_duration_frequency ?? 'MONTHS',
-			initial_deposit_fee: 0,
-			initial_deposit_fee_currency: unitDefaults?.rent_fee_currency ?? 'GHS',
+			rent_payment_status: 'NONE',
+			periods_paid: undefined,
 			security_deposit_fee: 0,
 			security_deposit_fee_currency: unitDefaults?.rent_fee_currency ?? 'GHS',
 			...initialValues,
 			move_in_date: initialValues?.move_in_date
 				? new Date(initialValues.move_in_date)
 				: undefined,
-			paid_through_date: initialValues?.paid_through_date
-				? new Date(initialValues.paid_through_date)
+			billing_cycle_start_date: initialValues?.billing_cycle_start_date
+				? new Date(initialValues.billing_cycle_start_date)
 				: undefined,
 		},
 	})
 
-	const [rentFee, stayDuration, currency, durationFreq] = form.watch([
-		'rent_fee',
-		'stay_duration',
-		'rent_fee_currency',
-		'stay_duration_frequency',
-	])
+	const [rentFee, stayDuration, currency, durationFreq, rentPaymentStatus] =
+		form.watch([
+			'rent_fee',
+			'stay_duration',
+			'rent_fee_currency',
+			'stay_duration_frequency',
+			'rent_payment_status',
+		])
+
+	useEffect(() => {
+		if (rentPaymentStatus !== 'PARTIAL') {
+			form.setValue('periods_paid', undefined)
+			form.setValue('billing_cycle_start_date', undefined)
+		}
+	}, [rentPaymentStatus, form])
+
 	const totalDue =
 		rentFee > 0 && stayDuration > 0 ? rentFee * stayDuration : null
+
+	const handleSubmit = form.handleSubmit((values) => {
+		if (values.rent_payment_status === 'PARTIAL') {
+			let hasError = false
+			if (!values.periods_paid || values.periods_paid < 1) {
+				form.setError('periods_paid', {
+					message: 'Required when partially paid',
+				})
+				hasError = true
+			} else if (values.periods_paid >= values.stay_duration) {
+				form.setError('periods_paid', {
+					message: 'Must be less than total stay duration',
+				})
+				hasError = true
+			}
+			if (!values.billing_cycle_start_date) {
+				form.setError('billing_cycle_start_date', {
+					message: 'Required when partially paid',
+				})
+				hasError = true
+			}
+			if (hasError) return
+		}
+		onNext(values)
+	})
 
 	return (
 		<Form {...form}>
 			<form
-				onSubmit={form.handleSubmit(onNext)}
+				onSubmit={handleSubmit}
 				className="mx-auto mb-10 space-y-6 md:max-w-2xl"
 			>
 				<div className="mt-10 space-y-2 border-b pb-6">
@@ -280,103 +316,121 @@ export function WizardStep3({
 							</FormItem>
 						)}
 					/>
-					<FormField
-						control={form.control}
-						name="paid_through_date"
-						render={({ field }) => (
-							<FormItem className="md:col-span-2">
-								<FormLabel>Last Payment / Paid Through Date</FormLabel>
-								<DatePickerInput
-									value={
-										field.value
-											? localizedDayjs(field.value).toDate()
-											: undefined
-									}
-									onChange={(d) => field.onChange(d)}
+					{totalDue !== null && (
+						<div className="col-span-2 border-t pt-4">
+							<div className="rounded-lg border bg-slate-50 p-4 dark:bg-slate-900">
+								<p className="text-muted-foreground mb-3 text-sm font-medium">
+									Expected total
+								</p>
+								<div className="flex items-center justify-between">
+									<span className="text-muted-foreground text-sm">
+										{currency} {rentFee.toLocaleString()} &times; {stayDuration}{' '}
+										{durationFreq?.toLowerCase() ?? 'months'}
+									</span>
+									<span className="text-lg font-bold">
+										{currency}{' '}
+										{totalDue.toLocaleString(undefined, {
+											minimumFractionDigits: 2,
+											maximumFractionDigits: 2,
+										})}
+									</span>
+								</div>
+							</div>
+						</div>
+					)}
+					<div className="col-span-2 space-y-2 border-t pt-4">
+						<p className="text-base font-semibold">Rent Payments</p>
+					</div>
+					<div className="space-y-4 md:col-span-2">
+						<FormField
+							control={form.control}
+							name="rent_payment_status"
+							render={({ field }) => (
+								<FormItem>
+									<Select onValueChange={field.onChange} value={field.value}>
+										<FormControl>
+											<SelectTrigger className="w-full">
+												<SelectValue />
+											</SelectTrigger>
+										</FormControl>
+										<SelectContent>
+											<SelectItem value="NONE">No payments made</SelectItem>
+											<SelectItem value="PARTIAL">Partially paid</SelectItem>
+											<SelectItem value="FULL">Fully paid</SelectItem>
+										</SelectContent>
+									</Select>
+									<FormDescription>
+										How much rent has already been collected from this tenant.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						{rentPaymentStatus === 'PARTIAL' && (
+							<div className="grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2">
+								<FormField
+									control={form.control}
+									name="periods_paid"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Periods already paid *</FormLabel>
+											<FormControl>
+												<Input
+													type="number"
+													min={1}
+													max={stayDuration - 1}
+													{...field}
+													value={field.value ?? ''}
+													onChange={(e) =>
+														field.onChange(
+															e.target.value === ''
+																? undefined
+																: e.target.valueAsNumber,
+														)
+													}
+												/>
+											</FormControl>
+											<FormDescription>
+												out of {stayDuration}{' '}
+												{durationFreq?.toLowerCase() ?? 'periods'} total
+											</FormDescription>
+											<FormMessage />
+										</FormItem>
+									)}
 								/>
-								<FormDescription>
-									Used to determine when the next rent billing cycle starts.
-								</FormDescription>
-								<FormMessage />
-							</FormItem>
+								<FormField
+									control={form.control}
+									name="billing_cycle_start_date"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Billing cycle start date *</FormLabel>
+											<DatePickerInput
+												value={
+													field.value
+														? localizedDayjs(field.value).toDate()
+														: undefined
+												}
+												onChange={(d) => field.onChange(d)}
+											/>
+											<FormDescription>
+												When the tenant&apos;s first billing period began.
+											</FormDescription>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</div>
 						)}
-					/>
+					</div>
 				</div>
 
-				{totalDue !== null && (
-					<div className="rounded-lg border bg-slate-50 p-4 dark:bg-slate-900">
-						<p className="text-muted-foreground mb-3 text-sm font-medium">
-							Expected total
-						</p>
-						<div className="flex items-center justify-between">
-							<span className="text-muted-foreground text-sm">
-								{currency} {rentFee.toLocaleString()} &times; {stayDuration}{' '}
-								{durationFreq?.toLowerCase() ?? 'months'}
-							</span>
-							<span className="text-lg font-bold">
-								{currency}{' '}
-								{totalDue.toLocaleString(undefined, {
-									minimumFractionDigits: 2,
-									maximumFractionDigits: 2,
-								})}
-							</span>
-						</div>
-					</div>
-				)}
-
 				<div className="space-y-2 border-t pt-4">
-					<p className="text-base font-semibold">Deposits (Optional)</p>
+					<p className="text-base font-semibold">Security Deposit (Optional)</p>
 					<p className="text-muted-foreground text-sm">
-						Leave at 0 if no deposit was collected.
+						Leave at 0 if no security deposit was collected.
 					</p>
 				</div>
 				<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-					<FormField
-						control={form.control}
-						name="initial_deposit_fee"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Initial Deposit</FormLabel>
-								<FormControl>
-									<Input
-										type="number"
-										min={0}
-										{...field}
-										onChange={(e) => field.onChange(e.target.valueAsNumber)}
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-					<FormField
-						control={form.control}
-						name="initial_deposit_fee_currency"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Currency</FormLabel>
-								<Select
-									onValueChange={field.onChange}
-									value={field.value}
-									disabled={!!unitDefaults?.rent_fee_currency}
-								>
-									<FormControl>
-										<SelectTrigger>
-											<SelectValue />
-										</SelectTrigger>
-									</FormControl>
-									<SelectContent>
-										{CURRENCIES.map((c) => (
-											<SelectItem key={c} value={c}>
-												{c}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
 					<FormField
 						control={form.control}
 						name="security_deposit_fee"

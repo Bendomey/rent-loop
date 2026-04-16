@@ -80,11 +80,13 @@ export function BulkOnboardWizard({ editingEntry }: BulkOnboardWizardProps) {
 				stay_duration: fd.stay_duration,
 				stay_duration_frequency:
 					fd.stay_duration_frequency as Step3Values['stay_duration_frequency'],
-				paid_through_date: fd.paid_through_date
-					? new Date(fd.paid_through_date)
+				rent_payment_status:
+					(fd.rent_payment_status as Step3Values['rent_payment_status']) ??
+					'NONE',
+				periods_paid: fd.periods_paid,
+				billing_cycle_start_date: fd.billing_cycle_start_date
+					? new Date(fd.billing_cycle_start_date)
 					: undefined,
-				initial_deposit_fee: fd.initial_deposit_fee,
-				initial_deposit_fee_currency: fd.initial_deposit_fee_currency,
 				security_deposit_fee: fd.security_deposit_fee,
 				security_deposit_fee_currency: fd.security_deposit_fee_currency,
 			} as Partial<Step3Values>,
@@ -123,11 +125,11 @@ export function BulkOnboardWizard({ editingEntry }: BulkOnboardWizardProps) {
 			move_in_date: localizedDayjs(s3.move_in_date).toISOString(),
 			stay_duration_frequency: s3.stay_duration_frequency,
 			stay_duration: s3.stay_duration,
-			paid_through_date: s3.paid_through_date
-				? localizedDayjs(s3.paid_through_date).toISOString()
+			rent_payment_status: s3.rent_payment_status,
+			periods_paid: s3.periods_paid,
+			billing_cycle_start_date: s3.billing_cycle_start_date
+				? localizedDayjs(s3.billing_cycle_start_date).toISOString()
 				: undefined,
-			initial_deposit_fee: s3.initial_deposit_fee,
-			initial_deposit_fee_currency: s3.initial_deposit_fee_currency,
 			security_deposit_fee: s3.security_deposit_fee,
 			security_deposit_fee_currency: s3.security_deposit_fee_currency,
 			lease_agreement_document_url: leaseUrl,

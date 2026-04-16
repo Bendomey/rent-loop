@@ -107,12 +107,16 @@ export function isDraftComplete(
 		'move_in_date',
 		'stay_duration_frequency',
 		'stay_duration',
-		'initial_deposit_fee',
-		'initial_deposit_fee_currency',
+		'rent_payment_status',
 		'security_deposit_fee',
 		'security_deposit_fee_currency',
 		'lease_agreement_document_url',
 	]
 	const missingFields = required.filter((k) => !entry[k] && entry[k] !== 0)
+	if (entry.rent_payment_status === 'PARTIAL') {
+		if (!entry.periods_paid) missingFields.push('periods_paid')
+		if (!entry.billing_cycle_start_date)
+			missingFields.push('billing_cycle_start_date')
+	}
 	return { isComplete: missingFields.length === 0, missingFields }
 }

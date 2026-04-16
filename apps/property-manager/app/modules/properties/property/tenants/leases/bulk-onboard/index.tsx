@@ -32,7 +32,7 @@ import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
-const MAX_ENTRIES = 20
+const BATCH_SIZE = 10
 
 function BulkOnboardTable() {
 	const {
@@ -71,11 +71,19 @@ function BulkOnboardTable() {
 		if (!allComplete || isSubmitting) return
 		setIsSubmitting(true)
 		try {
-			await bulkOnboard({
-				clientId,
-				propertyId,
-				entries: entries.map((e) => e.formData as BulkOnboardLeaseEntryInput),
-			})
+			const allEntries = entries.map(
+				(e) => e.formData as BulkOnboardLeaseEntryInput,
+			)
+			const batches = []
+			for (let i = 0; i < allEntries.length; i += BATCH_SIZE) {
+				batches.push(allEntries.slice(i, i + BATCH_SIZE))
+			}
+			await Promise.all(
+				batches.map((batch) =>
+					bulkOnboard({ clientId, propertyId, entries: batch }),
+				),
+			)
+
 			toast.success(
 				`${entries.length} lease${entries.length > 1 ? 's' : ''} onboarded successfully.`,
 			)
@@ -99,14 +107,13 @@ function BulkOnboardTable() {
 						Onboard Existing Tenants
 					</TypographyH2>
 					<TypographyMuted>
-						{clientUserProperty?.property?.name} · {entries.length} /{' '}
-						{MAX_ENTRIES} added
+						{clientUserProperty?.property?.name} · {entries.length} added
 					</TypographyMuted>
 				</div>
 				<div className="flex gap-2">
 					<Button
 						variant="outline"
-						disabled={entries.length >= MAX_ENTRIES || isSubmitting}
+						disabled={isSubmitting}
 						onClick={() => startEdit('new')}
 					>
 						<Plus className="mr-1 h-4 w-4" /> Add Tenant
@@ -136,14 +143,6 @@ function BulkOnboardTable() {
 					</Link>{' '}
 					instead.
 				</p>
-			</div>
-
-			{/* Progress bar */}
-			<div className="h-1 w-full rounded-full bg-slate-100 dark:bg-slate-800">
-				<div
-					className="h-1 rounded-full bg-rose-600 transition-all"
-					style={{ width: `${(entries.length / MAX_ENTRIES) * 100}%` }}
-				/>
 			</div>
 
 			{entries.length === 0 ? (
@@ -218,13 +217,6 @@ function BulkOnboardTable() {
 						</TableBody>
 					</Table>
 				</div>
-			)}
-
-			{entries.length >= MAX_ENTRIES && (
-				<p className="text-muted-foreground rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-900">
-					Maximum of {MAX_ENTRIES} tenants per batch. Submit this batch, then
-					come back to add the rest.
-				</p>
 			)}
 
 			<BlockNavigationDialog blocker={blocker} />

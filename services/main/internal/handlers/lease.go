@@ -381,40 +381,40 @@ type CancelLeaseRequest struct {
 }
 
 type BulkOnboardLeaseEntryRequest struct {
-	UnitId                         string     `json:"unit_id"                           validate:"required,uuid4"`
-	FirstName                      string     `json:"first_name"                        validate:"required,min=2"`
+	UnitId                         string     `json:"unit_id"                            validate:"required,uuid4"`
+	FirstName                      string     `json:"first_name"                         validate:"required,min=2"`
 	OtherNames                     *string    `json:"other_names,omitempty"`
-	LastName                       string     `json:"last_name"                         validate:"required,min=2"`
-	Email                          *string    `json:"email,omitempty"                   validate:"omitempty,email"`
-	Phone                          string     `json:"phone"                             validate:"required"`
-	Gender                         string     `json:"gender"                            validate:"required,oneof=Male Female"`
-	DateOfBirth                    time.Time  `json:"date_of_birth"                     validate:"required"`
-	Nationality                    string     `json:"nationality"                       validate:"required"`
-	MaritalStatus                  string     `json:"marital_status"                    validate:"required,oneof=Single Married Divorced Widowed"`
-	CurrentAddress                 string     `json:"current_address"                   validate:"required"`
-	IDType                         string     `json:"id_type"                           validate:"required,oneof=NationalID Passport DriverLicense"`
-	IDNumber                       string     `json:"id_number"                         validate:"required"`
-	EmergencyContactName           string     `json:"emergency_contact_name"            validate:"required"`
-	EmergencyContactPhone          string     `json:"emergency_contact_phone"           validate:"required"`
-	RelationshipToEmergencyContact string     `json:"relationship_to_emergency_contact" validate:"required"`
+	LastName                       string     `json:"last_name"                          validate:"required,min=2"`
+	Email                          *string    `json:"email,omitempty"                    validate:"omitempty,email"`
+	Phone                          string     `json:"phone"                              validate:"required"`
+	Gender                         string     `json:"gender"                             validate:"required,oneof=Male Female"`
+	DateOfBirth                    time.Time  `json:"date_of_birth"                      validate:"required"`
+	Nationality                    string     `json:"nationality"                        validate:"required"`
+	MaritalStatus                  string     `json:"marital_status"                     validate:"required,oneof=Single Married Divorced Widowed"`
+	CurrentAddress                 string     `json:"current_address"                    validate:"required"`
+	IDType                         string     `json:"id_type"                            validate:"required,oneof=NationalID Passport DriverLicense"`
+	IDNumber                       string     `json:"id_number"                          validate:"required"`
+	EmergencyContactName           string     `json:"emergency_contact_name"             validate:"required"`
+	EmergencyContactPhone          string     `json:"emergency_contact_phone"            validate:"required"`
+	RelationshipToEmergencyContact string     `json:"relationship_to_emergency_contact"  validate:"required"`
 	Occupation                     *string    `json:"occupation,omitempty"`
 	Employer                       *string    `json:"employer,omitempty"`
-	RentFee                        int64      `json:"rent_fee"                          validate:"required,gte=1"`
-	RentFeeCurrency                string     `json:"rent_fee_currency"                 validate:"required"`
-	PaymentFrequency               *string    `json:"payment_frequency,omitempty"       validate:"omitempty,oneof=HOURLY DAILY MONTHLY QUARTERLY BIANNUALLY ANNUALLY ONETIME"`
-	MoveInDate                     time.Time  `json:"move_in_date"                      validate:"required"`
-	StayDurationFrequency          string     `json:"stay_duration_frequency"           validate:"required,oneof=HOURS DAYS MONTHS"`
-	StayDuration                   int64      `json:"stay_duration"                     validate:"required,gte=1"`
-	PaidThroughDate                *time.Time `json:"paid_through_date,omitempty"`
-	InitialDepositFee              int64      `json:"initial_deposit_fee"               validate:"gte=0"`
-	InitialDepositFeeCurrency      string     `json:"initial_deposit_fee_currency"      validate:"required"`
-	SecurityDepositFee             int64      `json:"security_deposit_fee"              validate:"gte=0"`
-	SecurityDepositFeeCurrency     string     `json:"security_deposit_fee_currency"     validate:"required"`
-	LeaseAgreementDocumentUrl      string     `json:"lease_agreement_document_url"      validate:"required,url"`
+	RentFee                        int64      `json:"rent_fee"                           validate:"required,gte=1"`
+	RentFeeCurrency                string     `json:"rent_fee_currency"                  validate:"required"`
+	PaymentFrequency               *string    `json:"payment_frequency,omitempty"        validate:"omitempty,oneof=HOURLY DAILY MONTHLY QUARTERLY BIANNUALLY ANNUALLY ONETIME"`
+	MoveInDate                     time.Time  `json:"move_in_date"                       validate:"required"`
+	StayDurationFrequency          string     `json:"stay_duration_frequency"            validate:"required,oneof=HOURS DAYS MONTHS"`
+	StayDuration                   int64      `json:"stay_duration"                      validate:"required,gte=1"`
+	RentPaymentStatus              string     `json:"rent_payment_status"                validate:"required,oneof=NONE PARTIAL FULL"`
+	PeriodsPaid                    *int64     `json:"periods_paid,omitempty"             validate:"omitempty,gte=1"`
+	BillingCycleStartDate          *time.Time `json:"billing_cycle_start_date,omitempty"`
+	SecurityDepositFee             int64      `json:"security_deposit_fee"               validate:"gte=0"`
+	SecurityDepositFeeCurrency     string     `json:"security_deposit_fee_currency"      validate:"required"`
+	LeaseAgreementDocumentUrl      string     `json:"lease_agreement_document_url"       validate:"required,url"`
 }
 
 type BulkOnboardLeasesRequest struct {
-	Entries []BulkOnboardLeaseEntryRequest `json:"entries" validate:"required,min=1,max=20,dive"`
+	Entries []BulkOnboardLeaseEntryRequest `json:"entries" validate:"required,min=1,max=10,dive"`
 }
 
 // CancelLease godoc
@@ -467,16 +467,16 @@ func (h *LeaseHandler) CancelLease(w http.ResponseWriter, r *http.Request) {
 // BulkOnboardLeases godoc
 //
 //	@Summary		Bulk onboard existing leases (Client User)
-//	@Description	Onboard up to 20 existing tenant-lease pairs in a single transaction. Creates TenantApplication, Invoice (if deposits provided), Tenant, TenantAccount, and Lease records. Designed for landlords migrating existing tenants into Rent-Loop.
+//	@Description	Onboard up to 20 existing tenant-lease pairs in a single transaction. Creates TenantApplication, Invoice (if deposits provided), Tenant, TenantAccount, and Lease records. Designed for landlords migrating existing tenants into Rent-Loop. rent_payment_status must be NONE, PARTIAL, or FULL. When PARTIAL, periods_paid (>=1, <stay_duration) and billing_cycle_start_date are required.
 //	@Tags			Lease
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Param			client_id	path		string						true	"Client ID"
 //	@Param			property_id	path		string						true	"Property ID"
-//	@Param			body		body		BulkOnboardLeasesRequest	true	"Bulk onboard request body (max 20 entries)"
+//	@Param			body		body		BulkOnboardLeasesRequest	true	"Bulk onboard request body (max 10 entries)"
 //	@Success		204			{object}	nil							"Bulk onboard successful"
-//	@Failure		400			{object}	lib.HTTPError				"Validation or business rule error (e.g. UnitNoLongerAvailable)"
+//	@Failure		400			{object}	lib.HTTPError				"Validation or business rule error (e.g. UnitNoLongerAvailable, PeriodsPaidInvalid)"
 //	@Failure		401			{object}	string						"Invalid or absent authentication token"
 //	@Failure		422			{object}	lib.HTTPError				"Request body validation error"
 //	@Failure		500			{object}	string						"An unexpected error occurred"
@@ -494,6 +494,20 @@ func (h *LeaseHandler) BulkOnboardLeases(w http.ResponseWriter, r *http.Request)
 
 	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
 		return
+	}
+
+	// Cross-field validation: PARTIAL requires periods_paid and billing_cycle_start_date
+	for _, e := range body.Entries {
+		if e.RentPaymentStatus == "PARTIAL" {
+			if e.PeriodsPaid == nil || *e.PeriodsPaid < 1 || *e.PeriodsPaid >= e.StayDuration {
+				HandleErrorResponse(w, pkg.BadRequestError("PeriodsPaidInvalid", nil))
+				return
+			}
+			if e.BillingCycleStartDate == nil {
+				HandleErrorResponse(w, pkg.BadRequestError("BillingCycleStartDateRequired", nil))
+				return
+			}
+		}
 	}
 
 	entries := make([]services.BulkOnboardLeaseEntry, 0, len(body.Entries))
@@ -523,9 +537,9 @@ func (h *LeaseHandler) BulkOnboardLeases(w http.ResponseWriter, r *http.Request)
 			MoveInDate:                     e.MoveInDate,
 			StayDurationFrequency:          e.StayDurationFrequency,
 			StayDuration:                   e.StayDuration,
-			PaidThroughDate:                e.PaidThroughDate,
-			InitialDepositFee:              e.InitialDepositFee,
-			InitialDepositFeeCurrency:      e.InitialDepositFeeCurrency,
+			RentPaymentStatus:              e.RentPaymentStatus,
+			PeriodsPaid:                    e.PeriodsPaid,
+			BillingCycleStartDate:          e.BillingCycleStartDate,
 			SecurityDepositFee:             e.SecurityDepositFee,
 			SecurityDepositFeeCurrency:     e.SecurityDepositFeeCurrency,
 			LeaseAgreementDocumentUrl:      e.LeaseAgreementDocumentUrl,
@@ -534,6 +548,7 @@ func (h *LeaseHandler) BulkOnboardLeases(w http.ResponseWriter, r *http.Request)
 
 	err := h.services.TenantApplicationService.BulkOnboardLeases(r.Context(), services.BulkOnboardLeasesInput{
 		ClientUserID: clientUser.ID,
+		ClientID:     clientUser.ClientID,
 		PropertyID:   propertyID,
 		Entries:      entries,
 	})

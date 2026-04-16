@@ -204,12 +204,7 @@ export function PropertyTenantLeasesModule() {
 				</TypographyMuted>
 			</div>
 
-			<PropertyTenantLeasesController
-				isLoading={isLoading}
-				refetch={refetch}
-				propertyId={propertyId}
-				hasLeases={!isPending && (data?.rows?.length ?? 0) > 0}
-			/>
+			<PropertyTenantLeasesController isLoading={isLoading} refetch={refetch} />
 
 			{/* Big banner — only when there are no leases yet */}
 			{!isPending && data?.rows?.length === 0 && (
@@ -220,8 +215,7 @@ export function PropertyTenantLeasesModule() {
 							<div>
 								<p className="text-sm font-semibold">Have existing tenants?</p>
 								<p className="text-muted-foreground text-sm">
-									Quickly onboard your current tenants and their leases in
-									batches of up to 20.
+									Quickly onboard your current tenants and their leases.
 								</p>
 							</div>
 						</div>
