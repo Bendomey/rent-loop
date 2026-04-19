@@ -131,7 +131,7 @@ export function Step0() {
 				</div>
 
 				{/* Unit Selection Section */}
-				<div className="space-y-4 rounded-lg border bg-slate-50 p-6">
+				<div className="space-y-4 rounded-lg border bg-zinc-50 p-6">
 					<div className="space-y-2">
 						<Label className="text-base font-semibold">Select Unit</Label>
 						<TypographyMuted>
@@ -181,7 +181,7 @@ export function Step0() {
 										'relative cursor-pointer transition-all duration-200 hover:shadow-md',
 										isSelected
 											? 'border-2 border-rose-600 bg-rose-50'
-											: 'hover:bg-slate-50',
+											: 'hover:bg-zinc-50',
 									)}
 									onClick={() =>
 										setValue(
@@ -199,13 +199,13 @@ export function Step0() {
 											<div
 												className={cn(
 													'rounded-lg p-2',
-													isSelected ? 'bg-rose-100' : 'bg-slate-100',
+													isSelected ? 'bg-rose-100' : 'bg-zinc-100',
 												)}
 											>
 												<option.icon
 													className={cn(
 														'size-6',
-														isSelected ? 'text-rose-600' : 'text-slate-600',
+														isSelected ? 'text-rose-600' : 'text-zinc-600',
 													)}
 												/>
 											</div>

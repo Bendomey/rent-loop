@@ -21,8 +21,8 @@ function Row({
 	if (!value) return null
 	return (
 		<div className="flex justify-between gap-4 py-2 text-sm">
-			<span className="shrink-0 text-slate-500">{label}</span>
-			<span className="text-right font-medium text-slate-800">{value}</span>
+			<span className="shrink-0 text-zinc-500">{label}</span>
+			<span className="text-right font-medium text-zinc-800">{value}</span>
 		</div>
 	)
 }
@@ -36,7 +36,7 @@ function Section({
 }) {
 	return (
 		<div>
-			<p className="mb-1 text-xs font-semibold tracking-wide text-slate-400 uppercase">
+			<p className="mb-1 text-xs font-semibold tracking-wide text-zinc-400 uppercase">
 				{title}
 			</p>
 			<div className="divide-y rounded-md border px-3">{children}</div>
@@ -212,7 +212,7 @@ function EditForm({ application, code, onClose, onSaved }: EditFormProps) {
 					type="button"
 					onClick={onClose}
 					disabled={isSubmitting}
-					className="flex-1 rounded-lg border py-2 text-sm font-medium text-slate-700"
+					className="flex-1 rounded-lg border py-2 text-sm font-medium text-zinc-700"
 				>
 					Cancel
 				</button>
@@ -234,7 +234,7 @@ function Field({
 }) {
 	return (
 		<div className="flex flex-col gap-1">
-			<label htmlFor={name} className="text-xs text-slate-500">
+			<label htmlFor={name} className="text-xs text-zinc-500">
 				{label}
 			</label>
 			<input
@@ -242,7 +242,7 @@ function Field({
 				name={name}
 				type={type}
 				defaultValue={defaultValue}
-				className="rounded-md border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+				className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
 			/>
 		</div>
 	)
@@ -261,14 +261,14 @@ function SelectField({
 }) {
 	return (
 		<div className="flex flex-col gap-1">
-			<label htmlFor={name} className="text-xs text-slate-500">
+			<label htmlFor={name} className="text-xs text-zinc-500">
 				{label}
 			</label>
 			<select
 				id={name}
 				name={name}
 				defaultValue={defaultValue}
-				className="rounded-md border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+				className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
 			>
 				<option value="">— Select —</option>
 				{options.map((o) => (
@@ -336,10 +336,10 @@ export function ApplicationDetailsCard({ application, code, onUpdated }: Props) 
 			<div className="p-6">
 				<div className="flex items-start justify-between">
 					<div>
-						<p className="text-xs font-medium text-slate-400">
+						<p className="text-xs font-medium text-zinc-400">
 							Applicant Details
 						</p>
-						<p className="mt-0.5 text-base font-bold text-slate-900">
+						<p className="mt-0.5 text-base font-bold text-zinc-900">
 							{fullName || localApplication.phone}
 						</p>
 					</div>
@@ -358,7 +358,7 @@ export function ApplicationDetailsCard({ application, code, onUpdated }: Props) 
 					{editing && (
 						<button
 							onClick={() => setEditing(false)}
-							className="flex items-center gap-1 text-xs font-medium text-slate-500 transition-colors hover:text-slate-700"
+							className="flex items-center gap-1 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-700"
 							aria-label="Cancel editing"
 						>
 							<X className="h-3 w-3" /> Cancel
@@ -366,7 +366,7 @@ export function ApplicationDetailsCard({ application, code, onUpdated }: Props) 
 					)}
 				</div>
 
-				<div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+				<div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
 					{localApplication.phone && (
 						<span>{localApplication.phone}</span>
 					)}

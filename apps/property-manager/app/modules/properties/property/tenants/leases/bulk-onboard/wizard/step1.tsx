@@ -76,7 +76,7 @@ export function WizardStep1({
 				</TypographyMuted>
 			</div>
 
-			<div className="space-y-4 rounded-lg border bg-slate-50 p-6 dark:bg-slate-900">
+			<div className="space-y-4 rounded-lg border bg-zinc-50 p-6 dark:bg-zinc-900">
 				<Label className="text-base font-semibold">Unit</Label>
 				<UnitSelect
 					label=""

@@ -12,8 +12,8 @@ import {
 
 const renderPreviewField = (label: string, value?: string | null) => (
 	<div className="py-3">
-		<p className="text-sm font-medium text-slate-600">{label}</p>
-		<p className="mt-1 text-sm text-slate-900">{value || '—'}</p>
+		<p className="text-sm font-medium text-zinc-600">{label}</p>
+		<p className="mt-1 text-sm text-zinc-900">{value || '—'}</p>
 	</div>
 )
 
@@ -143,7 +143,7 @@ export function Step6() {
 					</div>
 					{formData.id_front_url && (
 						<div className="py-3">
-							<TypographyP className="text-sm font-medium text-slate-600">
+							<TypographyP className="text-sm font-medium text-zinc-600">
 								ID Front
 							</TypographyP>
 							<div className="mt-2">
@@ -157,7 +157,7 @@ export function Step6() {
 					)}
 					{formData.id_back_url && (
 						<div className="py-3">
-							<TypographyP className="text-sm font-medium text-slate-600">
+							<TypographyP className="text-sm font-medium text-zinc-600">
 								ID Back
 							</TypographyP>
 							<div className="mt-2">
@@ -220,7 +220,7 @@ export function Step6() {
 
 					{formData.proof_of_income_url && (
 						<div className="border-t pt-4">
-							<TypographyP className="mb-3 text-sm font-medium text-slate-600">
+							<TypographyP className="mb-3 text-sm font-medium text-zinc-600">
 								Proof of {isStudent ? 'Admission' : 'Income'}
 							</TypographyP>
 							<div className="mt-2">

@@ -20,14 +20,14 @@ export function TenantApply({ isValidUrl }: { isValidUrl: boolean }) {
 
 	if (!isValidUrl) {
 		return (
-			<main className="flex min-h-screen w-full items-center justify-center bg-gradient-to-b from-slate-50 to-white px-4">
+			<main className="flex min-h-screen w-full items-center justify-center bg-gradient-to-b from-zinc-50 to-white px-4">
 				<div className="w-full max-w-md">
 					<div className="space-y-4 rounded-lg bg-white p-8 text-center shadow-lg">
 						<div className="flex justify-center">
 							<AlertCircle className="h-16 w-16 text-red-500" />
 						</div>
-						<h1 className="text-2xl font-bold text-slate-900">Invalid URL</h1>
-						<p className="leading-relaxed text-slate-600">
+						<h1 className="text-2xl font-bold text-zinc-900">Invalid URL</h1>
+						<p className="leading-relaxed text-zinc-600">
 							This tenant application link is missing required parameters.
 							Please ensure you have a valid invitation link with the correct
 							URL parameters.

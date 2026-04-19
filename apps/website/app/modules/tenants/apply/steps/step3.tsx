@@ -218,8 +218,8 @@ export function Step3() {
 
 				<FieldGroup className="space-y-2">
 					{/* Personal Details Grid */}
-					<div className="space-y-5 rounded-lg border border-slate-100 bg-slate-50 p-5">
-						<h3 className="text-lg font-semibold text-slate-900">
+					<div className="space-y-5 rounded-lg border border-zinc-100 bg-zinc-50 p-5">
+						<h3 className="text-lg font-semibold text-zinc-900">
 							Personal Details
 						</h3>
 						<div className="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -387,8 +387,8 @@ export function Step3() {
 					</div>
 
 					{/* Contact & Address Section */}
-					<div className="space-y-5 rounded-lg border border-slate-100 bg-slate-50 p-5">
-						<h3 className="text-lg font-semibold text-slate-900">
+					<div className="space-y-5 rounded-lg border border-zinc-100 bg-zinc-50 p-5">
+						<h3 className="text-lg font-semibold text-zinc-900">
 							Address Information
 						</h3>
 						<div className="space-y-5">
@@ -415,8 +415,8 @@ export function Step3() {
 					</div>
 
 					{/* Profile Picture Section */}
-					<div className="space-y-5 rounded-lg border border-slate-100 bg-slate-50 p-5">
-						<h3 className="text-lg font-semibold text-slate-900">
+					<div className="space-y-5 rounded-lg border border-zinc-100 bg-zinc-50 p-5">
+						<h3 className="text-lg font-semibold text-zinc-900">
 							Profile Picture
 						</h3>
 						<ImageUpload

@@ -83,7 +83,7 @@ export function WizardStep2({
 					</TypographyMuted>
 				</div>
 
-				<div className="space-y-4 rounded-lg border bg-slate-50 p-6 dark:bg-slate-900">
+				<div className="space-y-4 rounded-lg border bg-zinc-50 p-6 dark:bg-zinc-900">
 					<p className="text-sm font-semibold">Contact</p>
 
 					<FormField
@@ -150,7 +150,7 @@ export function WizardStep2({
 					/>
 				</div>
 
-				<div className="space-y-4 rounded-lg border bg-slate-50 p-6 dark:bg-slate-900">
+				<div className="space-y-4 rounded-lg border bg-zinc-50 p-6 dark:bg-zinc-900">
 					<p className="text-sm font-semibold">Personal Details</p>
 
 					<div className="grid grid-cols-2 gap-4">
@@ -165,7 +165,7 @@ export function WizardStep2({
 										defaultValue={field.value}
 									>
 										<FormControl>
-											<SelectTrigger>
+											<SelectTrigger className="w-full">
 												<SelectValue placeholder="Select gender" />
 											</SelectTrigger>
 										</FormControl>
@@ -222,7 +222,7 @@ export function WizardStep2({
 										defaultValue={field.value}
 									>
 										<FormControl>
-											<SelectTrigger>
+											<SelectTrigger className="w-full">
 												<SelectValue placeholder="Select status" />
 											</SelectTrigger>
 										</FormControl>
@@ -254,7 +254,7 @@ export function WizardStep2({
 					/>
 				</div>
 
-				<div className="space-y-4 rounded-lg border bg-slate-50 p-6 dark:bg-slate-900">
+				<div className="space-y-4 rounded-lg border bg-zinc-50 p-6 dark:bg-zinc-900">
 					<p className="text-sm font-semibold">Identity</p>
 
 					<div className="grid grid-cols-2 gap-4">
@@ -269,7 +269,7 @@ export function WizardStep2({
 										defaultValue={field.value}
 									>
 										<FormControl>
-											<SelectTrigger>
+											<SelectTrigger className="w-full">
 												<SelectValue placeholder="Select ID type" />
 											</SelectTrigger>
 										</FormControl>
@@ -302,7 +302,7 @@ export function WizardStep2({
 					</div>
 				</div>
 
-				<div className="space-y-4 rounded-lg border bg-slate-50 p-6 dark:bg-slate-900">
+				<div className="space-y-4 rounded-lg border bg-zinc-50 p-6 dark:bg-zinc-900">
 					<p className="text-sm font-semibold">Occupation</p>
 
 					<div className="grid grid-cols-2 gap-4">

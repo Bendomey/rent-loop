@@ -58,14 +58,14 @@ function StepRouter() {
 
 	return (
 		<>
-			<div className="mb-4 rounded-md border border-zinc-200 bg-slate-50 p-3 text-sm dark:border-zinc-700 dark:bg-zinc-900">
+			<div className="mb-4 rounded-md border border-zinc-200 bg-zinc-50 p-3 text-sm dark:border-zinc-700 dark:bg-zinc-900">
 				<div className="font-semibold text-zinc-900 dark:text-zinc-50">
 					Step {Math.min(stepCount + 1, steps.length)} of {steps.length}
 				</div>
-				<div className="text-xs text-slate-500 dark:text-zinc-400">
+				<div className="text-xs text-zinc-500 dark:text-zinc-400">
 					{steps[Math.min(stepCount, steps.length - 1)]}
 				</div>
-				<div className="mt-2 h-2 w-full rounded-full bg-slate-200 dark:bg-zinc-700">
+				<div className="mt-2 h-2 w-full rounded-full bg-zinc-200 dark:bg-zinc-700">
 					<div
 						className="h-full rounded-full bg-rose-600 transition-all"
 						style={{ width: `${progress}%` }}

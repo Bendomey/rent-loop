@@ -2,13 +2,14 @@ import {
 	AlertCircle,
 	CheckCircle2,
 	Download,
+	FileSpreadsheet,
 	Info,
 	Pencil,
 	Plus,
 	Trash2,
 	Upload,
 } from 'lucide-react'
-import { useRef } from 'react'
+import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import * as XLSX from 'xlsx'
@@ -19,6 +20,12 @@ import { useBulkCreateTenantApplications } from '~/api/tenant-applications'
 import { BlockNavigationDialog } from '~/components/block-navigation-dialog'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from '~/components/ui/dialog'
 import {
 	Table,
 	TableBody,
@@ -52,48 +59,117 @@ const COLUMN_MAP: Record<string, keyof DraftApplicationEntry> = {
 	employer: 'employer',
 }
 
-function downloadTemplate() {
-	const headers = [
-		'phone',
-		'first_name',
-		'last_name',
-		'email',
-		'gender',
-		'date_of_birth',
-		'nationality',
-		'marital_status',
-		'id_type',
-		'id_number',
-		'current_address',
-		'occupation',
-		'employer',
-	]
+const TEMPLATE_FIELDS: {
+	column: string
+	required: boolean
+	description: string
+	options?: string[]
+	example: string
+}[] = [
+	{
+		column: 'phone',
+		required: true,
+		description: 'Phone number in international format.',
+		example: '+233201234567',
+	},
+	{
+		column: 'first_name',
+		required: false,
+		description: "Tenant's first name.",
+		example: 'Kwame',
+	},
+	{
+		column: 'last_name',
+		required: false,
+		description: "Tenant's last name.",
+		example: 'Mensah',
+	},
+	{
+		column: 'email',
+		required: false,
+		description: 'Email address. Used for notification delivery.',
+		example: 'kwame@example.com',
+	},
+	{
+		column: 'gender',
+		required: false,
+		description: 'Must be one of the allowed values.',
+		options: ['MALE', 'FEMALE'],
+		example: 'MALE',
+	},
+	{
+		column: 'date_of_birth',
+		required: false,
+		description: 'Date in YYYY-MM-DD format.',
+		example: '1990-06-15',
+	},
+	{
+		column: 'nationality',
+		required: false,
+		description: "Tenant's nationality.",
+		example: 'Ghanaian',
+	},
+	{
+		column: 'marital_status',
+		required: false,
+		description: 'Must be one of the allowed values.',
+		options: ['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'],
+		example: 'SINGLE',
+	},
+	{
+		column: 'id_type',
+		required: false,
+		description:
+			'Type of government-issued ID. Must be one of the allowed values.',
+		options: ['GHANA_CARD', 'NATIONAL_ID', 'PASSPORT', 'DRIVER_LICENSE'],
+		example: 'GHANA_CARD',
+	},
+	{
+		column: 'id_number',
+		required: false,
+		description: 'The ID document number.',
+		example: 'GHA-123456789-0',
+	},
+	{
+		column: 'current_address',
+		required: false,
+		description: "Tenant's current residential address.",
+		example: '12 Liberation Rd, Accra',
+	},
+	{
+		column: 'occupation',
+		required: false,
+		description: "Tenant's job title or occupation.",
+		example: 'Software Engineer',
+	},
+	{
+		column: 'employer',
+		required: false,
+		description: "Name of the tenant's employer or company.",
+		example: 'Acme Corp',
+	},
+]
+
+function doDownloadTemplate() {
+	const headers = TEMPLATE_FIELDS.map((f) => f.column)
 
 	const wb = XLSX.utils.book_new()
 	const ws = XLSX.utils.aoa_to_sheet([headers])
 
-	// Column widths
-	ws['!cols'] = headers.map(() => ({ wch: 20 }))
+	ws['!cols'] = headers.map(() => ({ wch: 22 }))
 
-	// Data validation dropdowns
-	const genderRef = 'E2:E1000'
-	const maritalRef = 'H2:H1000'
-	const idTypeRef = 'J2:J1000'
-
+	// Column indices (0-based) for enum columns
+	// gender=4, marital_status=7, id_type=8
 	if (!ws['!dataValidations']) ws['!dataValidations'] = []
 	ws['!dataValidations'].push(
+		{ sqref: 'E2:E1000', type: 'list', formula1: '"MALE,FEMALE"' },
 		{
-			sqref: genderRef,
-			type: 'list',
-			formula1: '"MALE,FEMALE"',
-		},
-		{
-			sqref: maritalRef,
+			sqref: 'H2:H1000',
 			type: 'list',
 			formula1: '"SINGLE,MARRIED,DIVORCED,WIDOWED"',
 		},
 		{
-			sqref: idTypeRef,
+			sqref: 'I2:I1000',
 			type: 'list',
 			formula1: '"GHANA_CARD,NATIONAL_ID,PASSPORT,DRIVER_LICENSE"',
 		},
@@ -164,6 +240,160 @@ function parseFileToEntries(
 	})
 }
 
+function TemplateGuideModal({
+	open,
+	onClose,
+}: {
+	open: boolean
+	onClose: () => void
+}) {
+	const handleDownload = () => {
+		doDownloadTemplate()
+		onClose()
+	}
+
+	return (
+		<Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+			<DialogContent className="flex max-h-[85vh] max-w-2xl flex-col overflow-hidden p-0">
+				{/* Fixed header */}
+				<DialogHeader className="shrink-0 px-6 pt-6 pb-4">
+					<div className="flex items-center gap-3">
+						<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900">
+							<FileSpreadsheet className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+						</div>
+						<div>
+							<DialogTitle className="text-base font-semibold">
+								Tenant Migration Template
+							</DialogTitle>
+							<p className="text-muted-foreground mt-0.5 text-xs">
+								Download the Excel template and fill in your tenants. Only{' '}
+								<span className="font-medium text-rose-600">phone</span> is
+								required — everything else is optional.
+							</p>
+						</div>
+					</div>
+				</DialogHeader>
+
+				{/* Scrollable body */}
+				<div className="scrollbar-visible min-h-0 flex-1 px-6">
+					{/* How it works */}
+					<div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300">
+						<p className="font-medium">How it works</p>
+						<ol className="mt-1.5 list-inside list-decimal space-y-1 text-xs">
+							<li>Download the template and fill in your tenants' details.</li>
+							<li>
+								Upload the completed file using the{' '}
+								<span className="font-medium">Import File</span> button.
+							</li>
+							<li>
+								Each tenant receives an SMS (and email if provided) with a link
+								to complete any missing information.
+							</li>
+							<li>
+								Manage the resulting applications from the Applications tab as
+								normal.
+							</li>
+						</ol>
+					</div>
+
+					{/* Field reference table */}
+					<div className="mt-4 pb-2">
+						<p className="mb-2 text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
+							Column Reference
+						</p>
+						<div className="rounded-lg border text-sm">
+							<table className="w-full table-fixed">
+								<colgroup>
+									<col className="w-[28%]" />
+									<col className="w-[16%]" />
+									<col className="w-[36%]" />
+									<col className="w-[20%]" />
+								</colgroup>
+								<thead>
+									<tr className="border-b bg-zinc-50 dark:bg-zinc-900">
+										<th className="px-3 py-2 text-left text-xs font-medium text-zinc-500">
+											Column
+										</th>
+										<th className="px-3 py-2 text-left text-xs font-medium text-zinc-500">
+											Required
+										</th>
+										<th className="px-3 py-2 text-left text-xs font-medium text-zinc-500">
+											Details
+										</th>
+										<th className="px-3 py-2 text-left text-xs font-medium text-zinc-500">
+											Example
+										</th>
+									</tr>
+								</thead>
+								<tbody className="divide-y">
+									{TEMPLATE_FIELDS.map((f) => (
+										<tr
+											key={f.column}
+											className="align-top transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
+										>
+											<td className="px-3 py-2.5">
+												<code className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-xs break-all text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+													{f.column}
+												</code>
+											</td>
+											<td className="px-3 py-2.5">
+												{f.required ? (
+													<span className="text-xs font-medium text-rose-600">
+														Required
+													</span>
+												) : (
+													<span className="text-xs text-zinc-400">
+														Optional
+													</span>
+												)}
+											</td>
+											<td className="px-3 py-2.5">
+												<p className="text-xs text-zinc-600 dark:text-zinc-400">
+													{f.description}
+												</p>
+												{f.options && (
+													<div className="mt-1 flex flex-wrap gap-1">
+														{f.options.map((o) => (
+															<span
+																key={o}
+																className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-[10px] text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+															>
+																{o}
+															</span>
+														))}
+													</div>
+												)}
+											</td>
+											<td className="px-3 py-2.5">
+												<span className="text-xs break-all text-zinc-500 dark:text-zinc-400">
+													{f.example}
+												</span>
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+
+				{/* Fixed action buttons */}
+				<div className="flex shrink-0 gap-2 border-t px-6 py-4">
+					<Button
+						className="flex-1 bg-rose-600 hover:bg-rose-700 dark:bg-rose-700 dark:hover:bg-rose-800"
+						onClick={handleDownload}
+					>
+						<Download className="mr-2 h-4 w-4" /> Download Template
+					</Button>
+					<Button variant="outline" className="flex-1" onClick={onClose}>
+						Close
+					</Button>
+				</div>
+			</DialogContent>
+		</Dialog>
+	)
+}
+
 function BulkOnboardTable() {
 	const {
 		entries,
@@ -179,6 +409,7 @@ function BulkOnboardTable() {
 	const navigate = useNavigate()
 	const { mutateAsync: bulkCreate } = useBulkCreateTenantApplications()
 	const fileInputRef = useRef<HTMLInputElement>(null)
+	const [templateModalOpen, setTemplateModalOpen] = useState(false)
 
 	const propertyId = safeString(clientUserProperty?.property_id)
 	const clientId = safeString(clientUser?.client_id)
@@ -202,7 +433,6 @@ function BulkOnboardTable() {
 	): Promise<void> => {
 		const file = e.target.files?.[0]
 		if (!file) return
-		// Reset input so the same file can be re-uploaded
 		e.target.value = ''
 		try {
 			const parsed = await parseFileToEntries(file)
@@ -259,6 +489,11 @@ function BulkOnboardTable() {
 
 	return (
 		<div className="mx-6 my-6 flex flex-col gap-6">
+			<TemplateGuideModal
+				open={templateModalOpen}
+				onClose={() => setTemplateModalOpen(false)}
+			/>
+
 			<div className="flex items-center justify-between">
 				<div>
 					<TypographyH2 className="text-xl font-bold">
@@ -272,7 +507,7 @@ function BulkOnboardTable() {
 					<Button
 						variant="outline"
 						disabled={isSubmitting}
-						onClick={downloadTemplate}
+						onClick={() => setTemplateModalOpen(true)}
 					>
 						<Download className="mr-1 h-4 w-4" /> Download Template
 					</Button>
@@ -333,7 +568,10 @@ function BulkOnboardTable() {
 						No tenants added yet. Import a file or add manually.
 					</TypographyMuted>
 					<div className="flex gap-2">
-						<Button variant="outline" onClick={downloadTemplate}>
+						<Button
+							variant="outline"
+							onClick={() => setTemplateModalOpen(true)}
+						>
 							<Download className="mr-1 h-4 w-4" /> Download Template
 						</Button>
 						<Button

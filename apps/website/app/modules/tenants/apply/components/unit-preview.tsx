@@ -92,9 +92,9 @@ export function UnitPreview({ unit }: { unit?: PropertyUnit }) {
 	return (
 		<div className="mx-auto space-y-6">
 			{/* Unit Name & Description */}
-			<div className="space-y-3 rounded-lg border border-slate-100 bg-slate-50 p-5">
-				<h3 className="text-2xl font-bold text-slate-900">{unit?.name}</h3>
-				<p className="text-sm leading-relaxed text-slate-600">
+			<div className="space-y-3 rounded-lg border border-zinc-100 bg-zinc-50 p-5">
+				<h3 className="text-2xl font-bold text-zinc-900">{unit?.name}</h3>
+				<p className="text-sm leading-relaxed text-zinc-600">
 					{unit?.description || 'No description available'}
 				</p>
 			</div>
@@ -105,30 +105,30 @@ export function UnitPreview({ unit }: { unit?: PropertyUnit }) {
 			{/* Key Details Grid */}
 			<div className="grid gap-4 md:grid-cols-2">
 				{/* Rent Information */}
-				<div className="space-y-4 rounded-lg border border-slate-100 bg-slate-50 p-5">
-					<TypographyH3 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+				<div className="space-y-4 rounded-lg border border-zinc-100 bg-zinc-50 p-5">
+					<TypographyH3 className="flex items-center gap-2 text-base font-semibold text-zinc-900">
 						<Wallet className="h-4 w-4 text-rose-600" />
 						Rent Information
 					</TypographyH3>
 					<div className="space-y-3 text-sm">
 						<div className="flex items-center justify-between rounded-lg bg-white p-3">
-							<span className="text-slate-600">Rent Fee:</span>
-							<span className="font-semibold text-slate-900">
+							<span className="text-zinc-600">Rent Fee:</span>
+							<span className="font-semibold text-zinc-900">
 								{unit?.rent_fee != null
 									? formatAmount(convertPesewasToCedis(unit.rent_fee))
 									: '—'}
 							</span>
 						</div>
 						<div className="flex items-center justify-between rounded-lg bg-white p-3">
-							<span className="text-slate-600">Frequency:</span>
-							<span className="font-semibold text-slate-900">
+							<span className="text-zinc-600">Frequency:</span>
+							<span className="font-semibold text-zinc-900">
 								{unit?.payment_frequency || '—'}
 							</span>
 						</div>
 						{unit?.area && (
 							<div className="flex items-center justify-between rounded-lg bg-white p-3">
-								<span className="text-slate-600">Area:</span>
-								<span className="font-semibold text-slate-900">
+								<span className="text-zinc-600">Area:</span>
+								<span className="font-semibold text-zinc-900">
 									{unit?.area} sq ft
 								</span>
 							</div>
@@ -137,20 +137,20 @@ export function UnitPreview({ unit }: { unit?: PropertyUnit }) {
 				</div>
 
 				{/* Property Info */}
-				<div className="space-y-4 rounded-lg border border-slate-100 bg-slate-50 p-5">
-					<TypographyH3 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+				<div className="space-y-4 rounded-lg border border-zinc-100 bg-zinc-50 p-5">
+					<TypographyH3 className="flex items-center gap-2 text-base font-semibold text-zinc-900">
 						<Building2 className="h-4 w-4 text-rose-600" />
 						Property Info
 					</TypographyH3>
 					<div className="space-y-3 text-sm">
 						<div className="flex items-center justify-between rounded-lg bg-white p-3">
-							<span className="text-slate-600">Type:</span>
-							<span className="font-semibold text-slate-900">
+							<span className="text-zinc-600">Type:</span>
+							<span className="font-semibold text-zinc-900">
 								{unit?.type || '—'}
 							</span>
 						</div>
 						<div className="flex items-center justify-between rounded-lg bg-white p-3">
-							<span className="text-slate-600">Status:</span>
+							<span className="text-zinc-600">Status:</span>
 							<span
 								className={`inline-flex items-center rounded-full ${getPropertyUnitStatusColor(unit?.status)} px-3 py-1 text-xs font-medium`}
 							>
@@ -159,8 +159,8 @@ export function UnitPreview({ unit }: { unit?: PropertyUnit }) {
 						</div>
 						{unit?.max_occupants_allowed && (
 							<div className="flex items-center justify-between rounded-lg bg-white p-3">
-								<span className="text-slate-600">Max Occupants:</span>
-								<span className="flex items-center gap-1 font-semibold text-slate-900">
+								<span className="text-zinc-600">Max Occupants:</span>
+								<span className="flex items-center gap-1 font-semibold text-zinc-900">
 									<Users className="h-4 w-4" />
 									{unit?.max_occupants_allowed}
 								</span>
@@ -172,8 +172,8 @@ export function UnitPreview({ unit }: { unit?: PropertyUnit }) {
 
 			{/* Features Section */}
 			{unit?.features && Object.keys(unit?.features).length > 0 && (
-				<div className="space-y-4 rounded-lg border border-slate-100 bg-slate-50 p-5">
-					<h3 className="text-base font-semibold text-slate-900">
+				<div className="space-y-4 rounded-lg border border-zinc-100 bg-zinc-50 p-5">
+					<h3 className="text-base font-semibold text-zinc-900">
 						Amenities & Features
 					</h3>
 					<div className="grid gap-2 md:grid-cols-2">
@@ -184,10 +184,10 @@ export function UnitPreview({ unit }: { unit?: PropertyUnit }) {
 							>
 								<div className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-rose-600" />
 								<div className="flex-1 text-sm">
-									<p className="font-medium text-slate-900 capitalize">
+									<p className="font-medium text-zinc-900 capitalize">
 										{key.replace(/_/g, ' ')}
 									</p>
-									<p className="text-slate-600">{value}</p>
+									<p className="text-zinc-600">{value}</p>
 								</div>
 							</div>
 						))}

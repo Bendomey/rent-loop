@@ -47,7 +47,7 @@ export function TrackingDashboard({ application, code }: Props) {
 						</span>
 						<span className="text-2xl font-extrabold">{APP_NAME.slice(4)}</span>
 					</div>
-					<span className="text-xs text-slate-400">Application Tracker</span>
+					<span className="text-xs text-zinc-400">Application Tracker</span>
 				</div>
 			</header>
 
@@ -56,8 +56,8 @@ export function TrackingDashboard({ application, code }: Props) {
 				<div className="rounded-lg border bg-white p-6">
 					<div className="flex items-start justify-between">
 						<div>
-							<p className="text-xs font-medium text-slate-400">Application</p>
-							<p className="mt-0.5 text-lg font-bold text-slate-900">#{code}</p>
+							<p className="text-xs font-medium text-zinc-400">Application</p>
+							<p className="mt-0.5 text-lg font-bold text-zinc-900">#{code}</p>
 						</div>
 						<span
 							className={cn(
@@ -71,7 +71,7 @@ export function TrackingDashboard({ application, code }: Props) {
 
 					<div className="mt-4 space-y-2">
 						{application.desired_unit && (
-							<div className="flex items-center gap-2 text-sm text-slate-500">
+							<div className="flex items-center gap-2 text-sm text-zinc-500">
 								<Building2 className="h-4 w-4" />
 								<span>
 									{application.desired_unit.name}
@@ -82,14 +82,14 @@ export function TrackingDashboard({ application, code }: Props) {
 						)}
 
 						{application.desired_unit?.property?.address && (
-							<div className="flex items-center gap-2 text-sm text-slate-500">
+							<div className="flex items-center gap-2 text-sm text-zinc-500">
 								<MapPin className="h-4 w-4" />
 								<span>{application.desired_unit.property.address}</span>
 							</div>
 						)}
 
 						{application.created_at && (
-							<div className="flex items-center gap-2 text-sm text-slate-500">
+							<div className="flex items-center gap-2 text-sm text-zinc-500">
 								<Calendar className="h-4 w-4" />
 								<span>
 									Applied {dayjs(application.created_at).format('LL')}
@@ -107,13 +107,13 @@ export function TrackingDashboard({ application, code }: Props) {
 
 				{/* Financial summary */}
 				<div className="rounded-lg border bg-white p-6">
-					<h3 className="text-sm font-semibold text-slate-900">
+					<h3 className="text-sm font-semibold text-zinc-900">
 						Financial Summary
 					</h3>
 					<dl className="mt-3 space-y-2 text-sm">
 						<div className="flex justify-between">
-							<dt className="text-slate-500">Rent</dt>
-							<dd className="font-medium text-slate-700">
+							<dt className="text-zinc-500">Rent</dt>
+							<dd className="font-medium text-zinc-700">
 								{formatAmount(convertPesewasToCedis(application.rent_fee))}
 								{application.payment_frequency &&
 									` / ${getPaymentFrequencyPeriodLabel(
@@ -125,8 +125,8 @@ export function TrackingDashboard({ application, code }: Props) {
 
 						{application.security_deposit_fee != null && (
 							<div className="flex justify-between">
-								<dt className="text-slate-500">Security Deposit</dt>
-								<dd className="font-medium text-slate-700">
+								<dt className="text-zinc-500">Security Deposit</dt>
+								<dd className="font-medium text-zinc-700">
 									{formatAmount(
 										convertPesewasToCedis(application.security_deposit_fee),
 									)}
@@ -136,8 +136,8 @@ export function TrackingDashboard({ application, code }: Props) {
 
 						{application.initial_deposit_fee != null && (
 							<div className="flex justify-between">
-								<dt className="text-slate-500">Initial Deposit</dt>
-								<dd className="font-medium text-slate-700">
+								<dt className="text-zinc-500">Initial Deposit</dt>
+								<dd className="font-medium text-zinc-700">
 									{formatAmount(
 										convertPesewasToCedis(application.initial_deposit_fee),
 									)}
@@ -147,8 +147,8 @@ export function TrackingDashboard({ application, code }: Props) {
 
 						{application.desired_move_in_date && (
 							<div className="flex justify-between">
-								<dt className="text-slate-500">Move-in Date</dt>
-								<dd className="font-medium text-slate-700">
+								<dt className="text-zinc-500">Move-in Date</dt>
+								<dd className="font-medium text-zinc-700">
 									{dayjs(application.desired_move_in_date).format('LL')}
 								</dd>
 							</div>
@@ -157,8 +157,8 @@ export function TrackingDashboard({ application, code }: Props) {
 						{application.stay_duration != null &&
 							application.stay_duration_frequency && (
 								<div className="flex justify-between">
-									<dt className="text-slate-500">Duration</dt>
-									<dd className="font-medium text-slate-700">
+									<dt className="text-zinc-500">Duration</dt>
+									<dd className="font-medium text-zinc-700">
 										{application.stay_duration}{' '}
 										{getPaymentFrequencyPeriodLabel(
 											application.stay_duration_frequency,

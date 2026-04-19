@@ -117,7 +117,7 @@ export function TenantPaymentsModule() {
 				cell: ({ getValue }) => (
 					<Badge variant="outline" className="text-muted-foreground px-1.5">
 						{getValue<string>() === 'DRAFT' ? (
-							<Pencil className="text-slate-600" />
+							<Pencil className="text-zinc-600" />
 						) : getValue<string>() === 'ISSUED' ? (
 							<Send className="text-blue-600" />
 						) : getValue<string>() === 'PAID' ? (
