@@ -127,6 +127,22 @@
 	}
 }
 
+@layer utilities {
+	.scrollbar-visible {
+		overflow-y: scroll;
+	}
+	.scrollbar-visible::-webkit-scrollbar {
+		width: 6px;
+	}
+	.scrollbar-visible::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	.scrollbar-visible::-webkit-scrollbar-thumb {
+		background-color: oklch(0.82 0.004 286.32);
+		border-radius: 9999px;
+	}
+}
+
 #nprogress .bar {
 	background: var(--primary); /* Rentloop primary color */
 	position: fixed;

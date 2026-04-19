@@ -53,9 +53,24 @@ export function PropertyTenantApplicationUnitSetup() {
 
 	if (!unit) {
 		return (
-			<div className="mt-20 text-center text-gray-500">
-				No unit has been selected for this application.
-			</div>
+			<>
+				<div className="mt-20 flex flex-col items-center justify-center gap-3 text-center">
+					<p className="text-muted-foreground text-sm">
+						No unit has been assigned to this application yet.
+					</p>
+					{!isSingleProperty && (
+						<Button variant="outline" onClick={() => setChangeUnitOpen(true)}>
+							Assign Unit
+						</Button>
+					)}
+				</div>
+				<ChangeUnitModal
+					applicationId={safeString(application?.id)}
+					propertyId={propertyId}
+					opened={changeUnitOpen}
+					setOpened={setChangeUnitOpen}
+				/>
+			</>
 		)
 	}
 

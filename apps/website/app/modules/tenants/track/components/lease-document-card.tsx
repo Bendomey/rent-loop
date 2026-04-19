@@ -24,7 +24,7 @@ const STATUS_MAP: Record<
 		label: 'Draft',
 		description:
 			'Your lease document is being prepared by the property manager.',
-		className: 'bg-slate-100 text-slate-600',
+		className: 'bg-zinc-100 text-zinc-600',
 	},
 	FINALIZED: {
 		label: 'Ready for Signing',
@@ -49,7 +49,7 @@ const STATUS_MAP: Record<
 function getIcon(status: NonNullable<Props['status']>) {
 	switch (status) {
 		case 'DRAFT':
-			return <FileText className="h-5 w-5 text-slate-400" />
+			return <FileText className="h-5 w-5 text-zinc-400" />
 		case 'FINALIZED':
 			return <FilePen className="h-5 w-5 text-blue-500" />
 		case 'SIGNING':
@@ -63,8 +63,8 @@ export function LeaseDocumentCard({ status, signingUrl, documentUrl }: Props) {
 	if (!status) {
 		return (
 			<div className="rounded-lg border bg-white p-6">
-				<h3 className="text-sm font-semibold text-slate-900">Lease Document</h3>
-				<p className="mt-3 text-sm text-slate-400">
+				<h3 className="text-sm font-semibold text-zinc-900">Lease Document</h3>
+				<p className="mt-3 text-sm text-zinc-400">
 					No lease document has been created yet
 				</p>
 			</div>
@@ -76,7 +76,7 @@ export function LeaseDocumentCard({ status, signingUrl, documentUrl }: Props) {
 	return (
 		<div className="rounded-lg border bg-white p-6">
 			<div className="flex items-center justify-between">
-				<h3 className="text-sm font-semibold text-slate-900">Lease Document</h3>
+				<h3 className="text-sm font-semibold text-zinc-900">Lease Document</h3>
 				<span
 					className={cn(
 						'rounded-full px-2.5 py-0.5 text-xs font-medium',
@@ -89,7 +89,7 @@ export function LeaseDocumentCard({ status, signingUrl, documentUrl }: Props) {
 
 			<div className="mt-4 flex items-start gap-3">
 				<div className="mt-0.5 flex-shrink-0">{getIcon(status)}</div>
-				<p className="text-sm text-slate-500">{config.description}</p>
+				<p className="text-sm text-zinc-500">{config.description}</p>
 			</div>
 
 			{/* Sign CTA — show when SIGNING and we have a signing URL */}

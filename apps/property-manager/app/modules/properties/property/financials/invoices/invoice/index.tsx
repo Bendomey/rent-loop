@@ -35,7 +35,7 @@ export function PropertyFinancialsPaymentModule() {
 							className="w-fit gap-1 px-2 py-1 text-xs font-medium"
 						>
 							{data?.status === 'DRAFT' ? (
-								<Pencil className="text-slate-600" size={14} />
+								<Pencil className="text-zinc-600" size={14} />
 							) : data?.status === 'ISSUED' ? (
 								<Send className="text-blue-600" size={14} />
 							) : data?.status === 'PAID' ? (

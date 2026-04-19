@@ -121,13 +121,13 @@ export function VerifyOtp({ code, fetcher }: Props) {
 					<>
 						{/* State A: Send code */}
 						<div className="space-y-2">
-							<h1 className="text-2xl font-bold text-slate-900">
+							<h1 className="text-2xl font-bold text-zinc-900">
 								Verify your identity
 							</h1>
-							<p className="text-sm text-slate-600">
+							<p className="text-sm text-zinc-600">
 								We&apos;ll send a verification code to the phone number
 								associated with application{' '}
-								<span className="font-semibold text-slate-900">{code}</span>
+								<span className="font-semibold text-zinc-900">{code}</span>
 							</p>
 						</div>
 
@@ -151,12 +151,12 @@ export function VerifyOtp({ code, fetcher }: Props) {
 					<>
 						{/* State B: Enter OTP */}
 						<div className="space-y-2">
-							<h1 className="text-2xl font-bold text-slate-900">
+							<h1 className="text-2xl font-bold text-zinc-900">
 								Enter verification code
 							</h1>
-							<p className="text-sm text-slate-600">
+							<p className="text-sm text-zinc-600">
 								We sent a 6-digit code to{' '}
-								<span className="font-semibold text-slate-900">
+								<span className="font-semibold text-zinc-900">
 									{maskedPhone}
 								</span>
 							</p>
@@ -182,13 +182,13 @@ export function VerifyOtp({ code, fetcher }: Props) {
 						</div>
 
 						{isVerifying && (
-							<div className="flex items-center justify-center gap-2 text-sm text-slate-500">
+							<div className="flex items-center justify-center gap-2 text-sm text-zinc-500">
 								<Spinner />
 								Verifying...
 							</div>
 						)}
 
-						<div className="text-sm text-slate-500">
+						<div className="text-sm text-zinc-500">
 							{cooldown > 0 ? (
 								<span>Resend code in {cooldown}s</span>
 							) : (
@@ -204,17 +204,17 @@ export function VerifyOtp({ code, fetcher }: Props) {
 						</div>
 
 						{/* USSD fallback card */}
-						<div className="mt-4 space-y-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-center">
-							<p className="text-xs font-medium text-slate-600">
+						<div className="mt-4 space-y-3 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-center">
+							<p className="text-xs font-medium text-zinc-600">
 								Didn&apos;t receive the code?
 							</p>
-							<p className="mt-1 text-xs text-slate-500">
+							<p className="mt-1 text-xs text-zinc-500">
 								Dial the USSD code below with your account number:
 							</p>
-							<p className="mt-2 text-center font-mono text-3xl font-bold tracking-widest text-slate-900">
+							<p className="mt-2 text-center font-mono text-3xl font-bold tracking-widest text-zinc-900">
 								*713*882#
 							</p>
-							<p className="mt-1 text-center text-xs text-slate-400">
+							<p className="mt-1 text-center text-xs text-zinc-400">
 								Works on all networks in Ghana
 							</p>
 						</div>

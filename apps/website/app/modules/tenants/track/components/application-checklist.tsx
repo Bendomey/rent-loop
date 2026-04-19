@@ -25,11 +25,11 @@ export function ApplicationChecklist({ progress }: Props) {
 
 	return (
 		<div className="rounded-lg border bg-white p-6">
-			<h3 className="text-sm font-semibold text-slate-900">Progress</h3>
+			<h3 className="text-sm font-semibold text-zinc-900">Progress</h3>
 
 			{/* Progress bar */}
 			<div className="mt-3 flex items-center gap-3">
-				<div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+				<div className="h-2 flex-1 overflow-hidden rounded-full bg-zinc-100">
 					<div
 						className={cn(
 							'h-full rounded-full transition-all',
@@ -38,7 +38,7 @@ export function ApplicationChecklist({ progress }: Props) {
 						style={{ width: `${percentage}%` }}
 					/>
 				</div>
-				<span className="text-sm font-medium text-slate-600">
+				<span className="text-sm font-medium text-zinc-600">
 					{percentage}%
 				</span>
 			</div>
@@ -54,12 +54,12 @@ export function ApplicationChecklist({ progress }: Props) {
 									<Check className="h-3 w-3 text-green-600" />
 								</div>
 							) : (
-								<Circle className="h-5 w-5 text-slate-300" />
+								<Circle className="h-5 w-5 text-zinc-300" />
 							)}
 							<span
 								className={cn(
 									'text-sm',
-									done ? 'text-slate-700' : 'text-slate-400',
+									done ? 'text-zinc-700' : 'text-zinc-400',
 								)}
 							>
 								{item.label}

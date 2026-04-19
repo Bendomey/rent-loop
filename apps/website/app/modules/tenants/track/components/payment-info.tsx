@@ -23,7 +23,7 @@ interface Props {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-	DRAFT: 'bg-slate-100 text-slate-600',
+	DRAFT: 'bg-zinc-100 text-zinc-600',
 	ISSUED: 'bg-blue-100 text-blue-700',
 	PARTIALLY_PAID: 'bg-yellow-100 text-yellow-700',
 	PAID: 'bg-green-100 text-green-700',
@@ -49,8 +49,8 @@ export function PaymentInfo({ invoice }: Props) {
 	if (!invoice) {
 		return (
 			<div className="rounded-lg border bg-white p-6">
-				<h3 className="text-sm font-semibold text-slate-900">Payment</h3>
-				<p className="mt-3 text-sm text-slate-400">
+				<h3 className="text-sm font-semibold text-zinc-900">Payment</h3>
+				<p className="mt-3 text-sm text-zinc-400">
 					No payment information yet
 				</p>
 			</div>
@@ -78,7 +78,7 @@ export function PaymentInfo({ invoice }: Props) {
 	return (
 		<div className="rounded-lg border bg-white p-6">
 			<div className="flex items-center justify-between">
-				<h3 className="text-sm font-semibold text-slate-900">Payment</h3>
+				<h3 className="text-sm font-semibold text-zinc-900">Payment</h3>
 				<span
 					className={cn(
 						'rounded-full px-2.5 py-0.5 text-xs font-medium',
@@ -89,15 +89,15 @@ export function PaymentInfo({ invoice }: Props) {
 				</span>
 			</div>
 
-			<div className="mt-3 space-y-1 text-sm text-slate-500">
+			<div className="mt-3 space-y-1 text-sm text-zinc-500">
 				<p>
 					Invoice:{' '}
-					<span className="font-medium text-slate-700">{invoice.code}</span>
+					<span className="font-medium text-zinc-700">{invoice.code}</span>
 				</p>
 				{invoice.due_date && (
 					<p>
 						Due:{' '}
-						<span className={cn('text-slate-700')}>
+						<span className={cn('text-zinc-700')}>
 							{dayjs(invoice.due_date).format('LL')}
 						</span>
 					</p>
@@ -117,7 +117,7 @@ export function PaymentInfo({ invoice }: Props) {
 				<div className="mt-4">
 					<table className="w-full text-sm">
 						<thead>
-							<tr className="border-b text-left text-xs text-slate-400">
+							<tr className="border-b text-left text-xs text-zinc-400">
 								<th className="pb-2 font-medium">Item</th>
 								<th className="pb-2 text-right font-medium">Amount</th>
 							</tr>
@@ -125,8 +125,8 @@ export function PaymentInfo({ invoice }: Props) {
 						<tbody className="divide-y">
 							{invoice.line_items.map((item, idx) => (
 								<tr key={idx}>
-									<td className="py-2 text-slate-600">{item.label}</td>
-									<td className="py-2 text-right text-slate-700">
+									<td className="py-2 text-zinc-600">{item.label}</td>
+									<td className="py-2 text-right text-zinc-700">
 										{formatAmount(convertPesewasToCedis(item.total_amount))}
 									</td>
 								</tr>
@@ -134,8 +134,8 @@ export function PaymentInfo({ invoice }: Props) {
 						</tbody>
 						<tfoot>
 							<tr className="border-t">
-								<td className="pt-2 font-semibold text-slate-900">Total</td>
-								<td className="pt-2 text-right font-semibold text-slate-900">
+								<td className="pt-2 font-semibold text-zinc-900">Total</td>
+								<td className="pt-2 text-right font-semibold text-zinc-900">
 									{formatAmount(convertPesewasToCedis(invoice.total_amount))}
 								</td>
 							</tr>
@@ -173,7 +173,7 @@ export function PaymentInfo({ invoice }: Props) {
 					) : (
 						<form onSubmit={handleSubmit} className="space-y-3">
 							<div className="space-y-1">
-								<Label className="text-xs text-slate-600">Payment Method</Label>
+								<Label className="text-xs text-zinc-600">Payment Method</Label>
 								<Select value={provider} onValueChange={setProvider}>
 									<SelectTrigger className="w-full">
 										<SelectValue placeholder="Select method" />
@@ -189,7 +189,7 @@ export function PaymentInfo({ invoice }: Props) {
 							</div>
 
 							<div className="space-y-1">
-								<Label className="text-xs text-slate-600">
+								<Label className="text-xs text-zinc-600">
 									Reference (optional)
 								</Label>
 								<Input

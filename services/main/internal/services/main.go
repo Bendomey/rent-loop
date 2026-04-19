@@ -117,15 +117,14 @@ func NewServices(params INewServicesParams) Services {
 
 	paymentAccountService := NewPaymentAccountService(params.AppCtx, params.Repository.PaymentAccountRepository)
 	tenantApplicationService := NewTenantApplicationService(TenantApplicationServiceDeps{
-		AppCtx:                params.AppCtx,
-		Repo:                  params.Repository.TenantApplicationRepository,
-		UnitService:           unitService,
-		ClientUserService:     clientUserService,
-		TenantService:         tenantService,
-		LeaseService:          leaseService,
-		TenantAccountService:  tenantAccountService,
-		InvoiceService:        invoiceService,
-		PaymentAccountService: paymentAccountService,
+		AppCtx:               params.AppCtx,
+		Repo:                 params.Repository.TenantApplicationRepository,
+		UnitService:          unitService,
+		ClientUserService:    clientUserService,
+		TenantService:        tenantService,
+		LeaseService:         leaseService,
+		TenantAccountService: tenantAccountService,
+		InvoiceService:       invoiceService,
 	})
 	signingService := NewSigningService(params.AppCtx, params.Repository.SigningRepository)
 
@@ -139,7 +138,6 @@ func NewServices(params INewServicesParams) Services {
 		LeaseService:             leaseService,
 		TenantApplicationService: tenantApplicationService,
 	})
-	tenantApplicationService.SetPaymentService(paymentService)
 
 	leaseChecklistItemService := NewLeaseChecklistItemService(
 		params.AppCtx,

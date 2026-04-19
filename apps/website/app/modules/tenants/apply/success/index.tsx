@@ -6,7 +6,7 @@ export function TenantApplySuccessModule() {
 	return (
 		<>
 			<Confetti className="h-full w-full" numberOfPieces={50} />
-			<div className="flex h-lvh flex-col items-center justify-center bg-gradient-to-b from-slate-50 to-white px-4">
+			<div className="flex h-lvh flex-col items-center justify-center bg-gradient-to-b from-zinc-50 to-white px-4">
 				<div className="mx-auto w-full max-w-md space-y-6 text-center">
 					{/* Success Icon */}
 					<div className="flex justify-center">
@@ -15,10 +15,10 @@ export function TenantApplySuccessModule() {
 
 					{/* Heading */}
 					<div className="space-y-3">
-						<h1 className="text-3xl font-bold text-slate-900 md:text-4xl">
+						<h1 className="text-3xl font-bold text-zinc-900 md:text-4xl">
 							Application Submitted!
 						</h1>
-						<p className="text-lg text-slate-600">
+						<p className="text-lg text-zinc-600">
 							Welcome to{' '}
 							<span className="text-center capitalize">
 								<span className="font-extrabold text-rose-700">
@@ -32,18 +32,18 @@ export function TenantApplySuccessModule() {
 
 					{/* Message */}
 					<div className="rounded-lg border border-green-200 bg-white p-5">
-						<p className="font-semibold text-slate-700">
+						<p className="font-semibold text-zinc-700">
 							Application Confirmed
 						</p>
-						<p className="mt-2 text-sm text-slate-600">
+						<p className="mt-2 text-sm text-zinc-600">
 							Your application details have been securely submitted
 						</p>
 					</div>
 
 					{/* Next Steps */}
 					<div className="rounded-lg border border-blue-200 bg-blue-50 p-5">
-						<h3 className="mb-2 font-semibold text-slate-900">What's Next?</h3>
-						<ul className="space-y-2 text-left text-sm text-slate-600">
+						<h3 className="mb-2 font-semibold text-zinc-900">What's Next?</h3>
+						<ul className="space-y-2 text-left text-sm text-zinc-600">
 							<li className="flex items-start">
 								<span className="mr-2 font-bold text-blue-600">1.</span>
 								<span>Verification of submitted documents</span>

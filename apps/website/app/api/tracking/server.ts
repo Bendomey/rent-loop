@@ -40,6 +40,41 @@ export async function serverGetTrackingApplication(
 	return res.parsedBody
 }
 
+export interface UpdateTrackingApplicationInput {
+	first_name?: string
+	last_name?: string
+	email?: string
+	phone?: string
+	gender?: string
+	date_of_birth?: string
+	nationality?: string
+	marital_status?: string
+	id_type?: string
+	id_number?: string
+	current_address?: string
+	emergency_contact_name?: string
+	emergency_contact_phone?: string
+	relationship_to_emergency_contact?: string
+	occupation?: string
+	employer?: string
+	occupation_address?: string
+}
+
+export async function serverUpdateTrackingApplication(
+	code: string,
+	body: UpdateTrackingApplicationInput,
+): Promise<{ data: TrackingApplication }> {
+	const res = await fetchServer<{ data: TrackingApplication }>(
+		apiUrl(`/v1/tenant-applications/code/${code}`),
+		{
+			method: 'PATCH',
+			isUnAuthorizedRequest: true,
+			body: JSON.stringify(body),
+		},
+	)
+	return res.parsedBody
+}
+
 export async function serverPayTrackingInvoice(
 	code: string,
 	invoiceId: string,

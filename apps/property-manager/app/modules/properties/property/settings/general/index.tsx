@@ -1,9 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQueryClient } from '@tanstack/react-query'
 import { Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { SwitchPropertyType } from './component/switch-type'
+import ConfirmDeletePropertyModule from './delete'
 import { useUpdateProperty } from '~/api/properties'
 import {
 	AddressInput,
@@ -43,15 +47,11 @@ import {
 	TypographyH4,
 	TypographyMuted,
 } from '~/components/ui/typography'
+import { QUERY_KEYS } from '~/lib/constants'
 import { getErrorMessage } from '~/lib/error-messages'
 import { safeString } from '~/lib/strings'
-import { useProperty } from '~/providers/property-provider'
-import ConfirmDeletePropertyModule from './delete'
-import { SwitchPropertyType } from './component/switch-type'
-import { useQueryClient } from '@tanstack/react-query'
-import { QUERY_KEYS } from '~/lib/constants'
 import { useClient } from '~/providers/client-provider'
-import { useRevalidator } from 'react-router'
+import { useProperty } from '~/providers/property-provider'
 
 // ---------------------------------------------------------------------------
 // Helpers

@@ -11,8 +11,8 @@ import {
 
 const renderPreviewField = (label: string, value?: string | null) => (
 	<div className="py-3">
-		<p className="text-sm font-medium text-slate-600">{label}</p>
-		<p className="mt-1 text-sm text-slate-900">{value || '—'}</p>
+		<p className="text-sm font-medium text-zinc-600">{label}</p>
+		<p className="mt-1 text-sm text-zinc-900">{value || '—'}</p>
 	</div>
 )
 
@@ -146,7 +146,7 @@ export function Step4() {
 					</div>
 					{formData.id_front_url && (
 						<div className="py-3">
-							<TypographyP className="text-sm font-medium text-slate-600">
+							<TypographyP className="text-sm font-medium text-zinc-600">
 								ID Front
 							</TypographyP>
 							<div className="mt-2">
@@ -160,7 +160,7 @@ export function Step4() {
 					)}
 					{formData.id_back_url && (
 						<div className="py-3">
-							<TypographyP className="text-sm font-medium text-slate-600">
+							<TypographyP className="text-sm font-medium text-zinc-600">
 								ID Back
 							</TypographyP>
 							<div className="mt-2">
@@ -222,7 +222,7 @@ export function Step4() {
 
 					{formData.proof_of_income_url && (
 						<div className="border-t pt-4">
-							<TypographyP className="mb-3 text-sm font-medium text-slate-600">
+							<TypographyP className="mb-3 text-sm font-medium text-zinc-600">
 								Proof of {isStudent ? 'Admission' : 'Income'}
 							</TypographyP>
 							{(() => {
@@ -236,7 +236,7 @@ export function Step4() {
 										href={formData.proof_of_income_url}
 										target="_blank"
 										rel="noopener noreferrer"
-										className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm text-rose-600 hover:bg-slate-50"
+										className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm text-rose-600 hover:bg-zinc-50"
 									>
 										<FileText className="h-4 w-4" />
 										<span>

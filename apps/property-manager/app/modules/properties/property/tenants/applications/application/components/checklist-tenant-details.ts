@@ -6,7 +6,6 @@ export function getTenantDetailItems(
 	return [
 		{ label: 'First name', done: Boolean(application.first_name) },
 		{ label: 'Last name', done: Boolean(application.last_name) },
-		{ label: 'Email', done: Boolean(application.email) },
 		{ label: 'Phone', done: Boolean(application.phone) },
 		{ label: 'Gender', done: Boolean(application.gender) },
 		{ label: 'Date of birth', done: Boolean(application.date_of_birth) },

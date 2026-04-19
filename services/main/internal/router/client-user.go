@@ -99,8 +99,6 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 						r.Use(middlewares.ValidatePropertyAccessMiddleware(appCtx))
 
 						r.Get("/leases", handlers.LeaseHandler.ListLeasesByProperty)
-						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
-							Post("/leases:bulk-onboard", handlers.LeaseHandler.BulkOnboardLeases)
 						r.Get("/tenants", handlers.TenantHandler.ListTenantsByProperty)
 						r.Get("/", handlers.PropertyHandler.GetPropertyById)
 						r.With(middlewares.ValidateRoleClientUserMiddleware(appCtx, "ADMIN", "OWNER")).
@@ -187,6 +185,8 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 						r.Route("/tenant-applications", func(r chi.Router) {
 							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Post("/invite", handlers.TenantApplicationHandler.SendTenantInvite)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/bulk", handlers.TenantApplicationHandler.BulkCreateTenantApplications)
 							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Post("/", handlers.TenantApplicationHandler.AdminCreateTenantApplication)
 							r.Get("/", handlers.TenantApplicationHandler.ListTenantApplications)

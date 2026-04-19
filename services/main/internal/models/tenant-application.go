@@ -23,7 +23,11 @@ type TenantApplication struct {
 	CancelledById *string
 	CancelledBy   *ClientUser
 
-	DesiredUnitId string `gorm:"not null;"`
+	// Source tracks how the application was created:
+	// "SELF" = tenant applied themselves, "ADMIN" = landlord created it, "CSV_BULK" = created via CSV/Excel upload
+	Source *string
+
+	DesiredUnitId *string
 	DesiredUnit   Unit
 
 	// move in details
@@ -31,9 +35,9 @@ type TenantApplication struct {
 	StayDurationFrequency *string // HOURLY | WEEKLY | DAILY | MONTHLY
 	StayDuration          *int64
 
-	// financial setup
-	RentFee          int64   `gorm:"not null;"` // we can inherit from unit and then make arrangement for updates!
-	RentFeeCurrency  string  `gorm:"not null;"`
+	// financial setup — inherited from unit when DesiredUnitId is set
+	RentFee          *int64
+	RentFeeCurrency  *string
 	PaymentFrequency *string // Hourly, Daily, Monthly, Quarterly, BiAnnually, Annually, OneTime
 
 	InitialDepositFee         *int64
@@ -56,19 +60,19 @@ type TenantApplication struct {
 
 	LeaseAgreementDocumentSignatures []DocumentSignature `gorm:"foreignKey:TenantApplicationID"`
 
-	// Basic details
-	FirstName       string `gorm:"not null;"`
+	// Basic details — all nullable to support partial data entry via CSV/bulk upload
+	FirstName       *string
 	OtherNames      *string
-	LastName        string `gorm:"not null;"`
+	LastName        *string
 	Email           *string
-	Phone           string    `gorm:"not null;"`
-	Gender          string    `gorm:"not null;"` // Male, Female
-	DateOfBirth     time.Time `gorm:"not null;"`
-	Nationality     string    `gorm:"not null;"`
-	MaritalStatus   string    `gorm:"not null;"` // Single, Married, Divorced, Widowed
+	Phone           string  `gorm:"not null;"`
+	Gender          *string // Male, Female
+	DateOfBirth     *time.Time
+	Nationality     *string
+	MaritalStatus   *string // Single, Married, Divorced, Widowed
 	ProfilePhotoUrl *string
 	IDType          string // NationalID, Passport, DriverLicense
-	IDNumber        string `gorm:"not null;"` // GhanaCard
+	IDNumber        *string
 	IDFrontUrl      *string
 	IDBackUrl       *string
 
@@ -76,15 +80,15 @@ type TenantApplication struct {
 	PreviousLandlordPhone *string
 	PreviousTenancyPeriod *string
 
-	CurrentAddress                 string `gorm:"not null;"`
-	EmergencyContactName           string `gorm:"not null;"`
-	EmergencyContactPhone          string `gorm:"not null;"`
-	RelationshipToEmergencyContact string `gorm:"not null;"`
+	CurrentAddress                 *string
+	EmergencyContactName           *string
+	EmergencyContactPhone          *string
+	RelationshipToEmergencyContact *string
 
-	Occupation        string  `gorm:"not null;"` // student
-	Employer          string  `gorm:"not null;"` // or school name
+	Occupation        *string // student
+	Employer          *string // or school name
 	EmployerType      *string // "WORKER" | "STUDENT"
-	OccupationAddress string  `gorm:"not null;"` // or school address
+	OccupationAddress *string // or school address
 	ProofOfIncomeUrl  *string // or admission letter url
 
 	CreatedById string

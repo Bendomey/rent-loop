@@ -92,6 +92,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.ReplacePayerTenantWithPayerLease(),
 		jobs.SeedAgreements(),
 		jobs.ExtractUsersFromClientUsers(),
+		jobs.MakeTenantApplicationFieldsNullable(),
 	})
 	if err := m.Migrate(); err != nil {
 		return fmt.Errorf("[Migration.Migrate]: %v", err)

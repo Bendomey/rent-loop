@@ -159,8 +159,8 @@ export function Step4() {
 
 				<FieldGroup className="space-y-4">
 					{/* Nationality and ID Type */}
-					<div className="rounded-lg border border-slate-100 bg-slate-50 p-5">
-						<h3 className="mb-5 text-lg font-semibold text-slate-900">
+					<div className="rounded-lg border border-zinc-100 bg-zinc-50 p-5">
+						<h3 className="mb-5 text-lg font-semibold text-zinc-900">
 							Identification Details
 						</h3>
 						<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -240,7 +240,7 @@ export function Step4() {
 					</div>
 
 					{/* ID Document Images */}
-					<div className="space-y-4 rounded-lg border border-slate-100 bg-slate-50 p-5">
+					<div className="space-y-4 rounded-lg border border-zinc-100 bg-zinc-50 p-5">
 						<div className="space-y-1">
 							<h3 className="font-semibold">ID Document Images</h3>
 							<TypographyMuted>
