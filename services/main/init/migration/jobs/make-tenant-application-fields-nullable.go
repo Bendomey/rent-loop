@@ -54,6 +54,35 @@ func MakeTenantApplicationFieldsNullable() *gormigrate.Migration {
 			).Error; err != nil {
 				return err
 			}
+
+			nonNullableColumns := []string{
+				"desired_unit_id",
+				"rent_fee",
+				"rent_fee_currency",
+				"first_name",
+				"last_name",
+				"gender",
+				"date_of_birth",
+				"nationality",
+				"marital_status",
+				"id_number",
+				"current_address",
+				"emergency_contact_name",
+				"emergency_contact_phone",
+				"relationship_to_emergency_contact",
+				"occupation",
+				"employer",
+				"occupation_address",
+			}
+
+			for _, col := range nonNullableColumns {
+				if err := db.Exec(
+					"ALTER TABLE tenant_applications ALTER COLUMN " + col + " SET NOT NULL",
+				).Error; err != nil {
+					return err
+				}
+			}
+
 			return nil
 		},
 	}

@@ -263,7 +263,7 @@ func (s *paymentService) CreateOfflinePayment(
 				return
 			}
 			message := strings.NewReplacer(
-				"{{tenant_name}}", lib.SafeString(ta.FirstName)+" "+lib.SafeString(ta.LastName),
+				"{{tenant_name}}", strings.Join(strings.Fields(lib.SafeString(ta.FirstName)+" "+lib.SafeString(ta.LastName)), " "),
 				"{{unit_name}}", "",
 				"{{invoice_code}}", invoice.Code,
 				"{{amount}}", lib.FormatAmount(lib.PesewasToCedis(invoice.TotalAmount)),

@@ -14679,6 +14679,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
+                    "403": {
+                        "description": "Not a CSV-imported application",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
                     "404": {
                         "description": "Application not found",
                         "schema": {
@@ -15484,7 +15490,7 @@ const docTemplate = `{
                 },
                 "date_of_birth": {
                     "type": "string",
-                    "example": "1990-01-01T00:00:00Z"
+                    "example": "1990-01-01"
                 },
                 "desired_move_in_date": {
                     "type": "string"
@@ -17705,7 +17711,7 @@ const docTemplate = `{
                 },
                 "date_of_birth": {
                     "type": "string",
-                    "example": "1990-01-01T00:00:00Z"
+                    "example": "1990-01-01"
                 },
                 "email": {
                     "type": "string"
@@ -17773,10 +17779,6 @@ const docTemplate = `{
                 "occupation_address": {
                     "type": "string",
                     "example": "456 Tech Ave"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "+233281234569"
                 },
                 "relationship_to_emergency_contact": {
                     "type": "string",

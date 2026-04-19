@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -295,7 +296,7 @@ type BulkCreateTenantApplicationEntry struct {
 	LastName       *string `json:"last_name,omitempty"       validate:"omitempty"                                                      example:"Doe"                                  description:"Last name"`
 	Email          *string `json:"email,omitempty"           validate:"omitempty,email"                                                example:"john.doe@example.com"                 description:"Email address"`
 	Gender         *string `json:"gender,omitempty"          validate:"omitempty,oneof=MALE FEMALE"                                    example:"MALE"                                 description:"Gender"`
-	DateOfBirth    *string `json:"date_of_birth,omitempty"   validate:"omitempty"                                                      example:"1990-01-01"                           description:"Date of birth (YYYY-MM-DD)"`
+	DateOfBirth    *string `json:"date_of_birth,omitempty"   validate:"omitempty,datetime=2006-01-02"                                  example:"1990-01-01"                           description:"Date of birth (YYYY-MM-DD)"`
 	Nationality    *string `json:"nationality,omitempty"     validate:"omitempty"                                                      example:"Ghanaian"                             description:"Nationality"`
 	MaritalStatus  *string `json:"marital_status,omitempty"  validate:"omitempty,oneof=SINGLE MARRIED DIVORCED WIDOWED"                example:"SINGLE"                               description:"Marital status"`
 	IDType         *string `json:"id_type,omitempty"         validate:"omitempty,oneof=GHANA_CARD NATIONAL_ID PASSPORT DRIVER_LICENSE" example:"GHANA_CARD"                           description:"ID type"`
@@ -350,9 +351,15 @@ func (h *TenantApplicationHandler) BulkCreateTenantApplications(w http.ResponseW
 		var dob *time.Time
 		if e.DateOfBirth != nil {
 			parsed, parseErr := time.Parse("2006-01-02", *e.DateOfBirth)
-			if parseErr == nil {
-				dob = &parsed
+			if parseErr != nil {
+				http.Error(
+					w,
+					fmt.Sprintf("invalid date_of_birth %q: expected YYYY-MM-DD", *e.DateOfBirth),
+					http.StatusUnprocessableEntity,
+				)
+				return
 			}
+			dob = &parsed
 		}
 		entries = append(entries, services.BulkCreateTenantApplicationEntry{
 			Phone:          e.Phone,
@@ -566,7 +573,7 @@ type AdminUpdateTenantApplicationRequest struct {
 	LastName                       *string                 `json:"last_name,omitempty"                         validate:"omitempty"                                                      example:"Doe"                                  description:"Last name of the applicant"`
 	Phone                          *string                 `json:"phone,omitempty"                             validate:"omitempty,e164"                                                 example:"+233281234569"                        description:"Phone number of the applicant"`
 	Gender                         *string                 `json:"gender,omitempty"                            validate:"omitempty,oneof=MALE FEMALE"                                    example:"MALE"                                 description:"Gender of the applicant"`
-	DateOfBirth                    *time.Time              `json:"date_of_birth,omitempty"                     validate:"omitempty"                                                      example:"1990-01-01T00:00:00Z"                 description:"Date of birth of the applicant"`
+	DateOfBirth                    *string                 `json:"date_of_birth,omitempty"                     validate:"omitempty,datetime=2006-01-02"                                  example:"1990-01-01"                           description:"Date of birth of the applicant (YYYY-MM-DD)"`
 	Nationality                    *string                 `json:"nationality,omitempty"                       validate:"omitempty"                                                      example:"Ghanaian"                             description:"Nationality of the applicant"`
 	MaritalStatus                  *string                 `json:"marital_status,omitempty"                    validate:"omitempty,oneof=SINGLE MARRIED DIVORCED WIDOWED"                example:"SINGLE"                               description:"Marital status of the applicant"`
 	IDNumber                       *string                 `json:"id_number,omitempty"                         validate:"omitempty"                                                      example:"GHA-123456789"                        description:"ID number of the applicant"`
@@ -576,28 +583,28 @@ type AdminUpdateTenantApplicationRequest struct {
 	RelationshipToEmergencyContact *string                 `json:"relationship_to_emergency_contact,omitempty" validate:"omitempty"                                                      example:"Sister"                               description:"Relationship to emergency contact"`
 	Occupation                     *string                 `json:"occupation,omitempty"                        validate:"omitempty"                                                      example:"Software Engineer"                    description:"Occupation of the applicant"`
 	Employer                       *string                 `json:"employer,omitempty"                          validate:"omitempty"                                                      example:"Acme Corp"                            description:"Employer of the applicant"`
-	EmployerType                   lib.Optional[string]    `json:"employer_type,omitempty"                     validate:"omitempty,oneof=WORKER STUDENT"                                 example:"WORKER"                               description:"Employer type of the applicant"     swaggertype:"string"`
+	EmployerType                   lib.Optional[string]    `json:"employer_type,omitempty"                     validate:"omitempty,oneof=WORKER STUDENT"                                 example:"WORKER"                               description:"Employer type of the applicant"              swaggertype:"string"`
 	OccupationAddress              *string                 `json:"occupation_address,omitempty"                validate:"omitempty"                                                      example:"456 Tech Ave, Accra"                  description:"Occupation address"`
-	DesiredMoveInDate              lib.Optional[time.Time] `json:"desired_move_in_date,omitempty"              validate:"omitempty"                                                                                                     description:"Desired move in date"               swaggertype:"string"`
-	StayDurationFrequency          lib.Optional[string]    `json:"stay_duration_frequency,omitempty"           validate:"omitempty"                                                                                                     description:"Stay duration frequency"            swaggertype:"string"`
-	StayDuration                   lib.Optional[int64]     `json:"stay_duration,omitempty"                     validate:"omitempty"                                                                                                     description:"Stay duration"                      swaggertype:"integer"`
-	PaymentFrequency               lib.Optional[string]    `json:"payment_frequency,omitempty"                 validate:"omitempty"                                                                                                     description:"Payment frequency"                  swaggertype:"string"`
-	InitialDepositFee              lib.Optional[int64]     `json:"initial_deposit_fee,omitempty"               validate:"omitempty"                                                                                                     description:"Initial deposit fee"                swaggertype:"integer"`
-	SecurityDepositFee             lib.Optional[int64]     `json:"security_deposit_fee,omitempty"              validate:"omitempty"                                                                                                     description:"Security deposit fee"               swaggertype:"integer"`
-	OtherNames                     lib.Optional[string]    `json:"other_names,omitempty"                       validate:"omitempty"                                                                                                     description:"Other names of the applicant"       swaggertype:"string"`
-	Email                          lib.Optional[string]    `json:"email,omitempty"                             validate:"omitempty"                                                                                                     description:"Email address of the applicant"     swaggertype:"string"`
-	ProfilePhotoUrl                lib.Optional[string]    `json:"profile_photo_url,omitempty"                 validate:"omitempty"                                                                                                     description:"Profile photo URL"                  swaggertype:"string"`
+	DesiredMoveInDate              lib.Optional[time.Time] `json:"desired_move_in_date,omitempty"              validate:"omitempty"                                                                                                     description:"Desired move in date"                        swaggertype:"string"`
+	StayDurationFrequency          lib.Optional[string]    `json:"stay_duration_frequency,omitempty"           validate:"omitempty"                                                                                                     description:"Stay duration frequency"                     swaggertype:"string"`
+	StayDuration                   lib.Optional[int64]     `json:"stay_duration,omitempty"                     validate:"omitempty"                                                                                                     description:"Stay duration"                               swaggertype:"integer"`
+	PaymentFrequency               lib.Optional[string]    `json:"payment_frequency,omitempty"                 validate:"omitempty"                                                                                                     description:"Payment frequency"                           swaggertype:"string"`
+	InitialDepositFee              lib.Optional[int64]     `json:"initial_deposit_fee,omitempty"               validate:"omitempty"                                                                                                     description:"Initial deposit fee"                         swaggertype:"integer"`
+	SecurityDepositFee             lib.Optional[int64]     `json:"security_deposit_fee,omitempty"              validate:"omitempty"                                                                                                     description:"Security deposit fee"                        swaggertype:"integer"`
+	OtherNames                     lib.Optional[string]    `json:"other_names,omitempty"                       validate:"omitempty"                                                                                                     description:"Other names of the applicant"                swaggertype:"string"`
+	Email                          lib.Optional[string]    `json:"email,omitempty"                             validate:"omitempty"                                                                                                     description:"Email address of the applicant"              swaggertype:"string"`
+	ProfilePhotoUrl                lib.Optional[string]    `json:"profile_photo_url,omitempty"                 validate:"omitempty"                                                                                                     description:"Profile photo URL"                           swaggertype:"string"`
 	IDType                         *string                 `json:"id_type,omitempty"                           validate:"omitempty,oneof=GHANA_CARD NATIONAL_ID PASSPORT DRIVER_LICENSE" example:"GHANA_CARD"                           description:"ID type of the applicant"`
-	IDFrontUrl                     lib.Optional[string]    `json:"id_front_url,omitempty"                      validate:"omitempty"                                                                                                     description:"ID front image URL"                 swaggertype:"string"`
-	IDBackUrl                      lib.Optional[string]    `json:"id_back_url,omitempty"                       validate:"omitempty"                                                                                                     description:"ID back image URL"                  swaggertype:"string"`
-	PreviousLandlordName           lib.Optional[string]    `json:"previous_landlord_name,omitempty"            validate:"omitempty"                                                                                                     description:"Previous landlord name"             swaggertype:"string"`
-	PreviousLandlordPhone          lib.Optional[string]    `json:"previous_landlord_phone,omitempty"           validate:"omitempty"                                                                                                     description:"Previous landlord phone"            swaggertype:"string"`
-	PreviousTenancyPeriod          lib.Optional[string]    `json:"previous_tenancy_period,omitempty"           validate:"omitempty"                                                                                                     description:"Previous tenancy period"            swaggertype:"string"`
-	ProofOfIncomeUrl               lib.Optional[string]    `json:"proof_of_income_url,omitempty"               validate:"omitempty"                                                                                                     description:"Proof of income URL"                swaggertype:"string"`
-	LeaseAgreementDocumentMode     lib.Optional[string]    `json:"lease_agreement_document_mode,omitempty"     validate:"omitempty"                                                                                                     description:"Lease agreement document mode"      swaggertype:"string"`
-	LeaseAgreementDocumentUrl      lib.Optional[string]    `json:"lease_agreement_document_url,omitempty"      validate:"omitempty"                                                                                                     description:"Lease agreement document URL"       swaggertype:"string"`
-	LeaseAgreementDocumentID       lib.Optional[string]    `json:"lease_agreement_document_id,omitempty"       validate:"omitempty"                                                                                                     description:"Lease agreement document ID"        swaggertype:"string"`
-	LeaseAgreementDocumentStatus   lib.Optional[string]    `json:"lease_agreement_document_status,omitempty"   validate:"omitempty"                                                                                                     description:"Lease agreement document status"    swaggertype:"string"`
+	IDFrontUrl                     lib.Optional[string]    `json:"id_front_url,omitempty"                      validate:"omitempty"                                                                                                     description:"ID front image URL"                          swaggertype:"string"`
+	IDBackUrl                      lib.Optional[string]    `json:"id_back_url,omitempty"                       validate:"omitempty"                                                                                                     description:"ID back image URL"                           swaggertype:"string"`
+	PreviousLandlordName           lib.Optional[string]    `json:"previous_landlord_name,omitempty"            validate:"omitempty"                                                                                                     description:"Previous landlord name"                      swaggertype:"string"`
+	PreviousLandlordPhone          lib.Optional[string]    `json:"previous_landlord_phone,omitempty"           validate:"omitempty"                                                                                                     description:"Previous landlord phone"                     swaggertype:"string"`
+	PreviousTenancyPeriod          lib.Optional[string]    `json:"previous_tenancy_period,omitempty"           validate:"omitempty"                                                                                                     description:"Previous tenancy period"                     swaggertype:"string"`
+	ProofOfIncomeUrl               lib.Optional[string]    `json:"proof_of_income_url,omitempty"               validate:"omitempty"                                                                                                     description:"Proof of income URL"                         swaggertype:"string"`
+	LeaseAgreementDocumentMode     lib.Optional[string]    `json:"lease_agreement_document_mode,omitempty"     validate:"omitempty"                                                                                                     description:"Lease agreement document mode"               swaggertype:"string"`
+	LeaseAgreementDocumentUrl      lib.Optional[string]    `json:"lease_agreement_document_url,omitempty"      validate:"omitempty"                                                                                                     description:"Lease agreement document URL"                swaggertype:"string"`
+	LeaseAgreementDocumentID       lib.Optional[string]    `json:"lease_agreement_document_id,omitempty"       validate:"omitempty"                                                                                                     description:"Lease agreement document ID"                 swaggertype:"string"`
+	LeaseAgreementDocumentStatus   lib.Optional[string]    `json:"lease_agreement_document_status,omitempty"   validate:"omitempty"                                                                                                     description:"Lease agreement document status"             swaggertype:"string"`
 }
 
 // AdminUpdateTenantApplication godoc
@@ -632,6 +639,20 @@ func (h *TenantApplicationHandler) AdminUpdateTenantApplication(w http.ResponseW
 		return
 	}
 
+	var parsedDOB *time.Time
+	if body.DateOfBirth != nil {
+		t, parseErr := time.Parse("2006-01-02", *body.DateOfBirth)
+		if parseErr != nil {
+			http.Error(
+				w,
+				fmt.Sprintf("invalid date_of_birth %q: expected YYYY-MM-DD", *body.DateOfBirth),
+				http.StatusUnprocessableEntity,
+			)
+			return
+		}
+		parsedDOB = &t
+	}
+
 	input := services.UpdateTenantApplicationInput{
 		TenantApplicationID:            tenantApplicationID,
 		DesiredUnitId:                  body.DesiredUnitId,
@@ -641,7 +662,7 @@ func (h *TenantApplicationHandler) AdminUpdateTenantApplication(w http.ResponseW
 		LastName:                       body.LastName,
 		Phone:                          body.Phone,
 		Gender:                         body.Gender,
-		DateOfBirth:                    body.DateOfBirth,
+		DateOfBirth:                    parsedDOB,
 		Nationality:                    body.Nationality,
 		MaritalStatus:                  body.MaritalStatus,
 		IDNumber:                       body.IDNumber,
@@ -1058,23 +1079,22 @@ func (h *TenantApplicationHandler) GetTenantApplicationByCode(w http.ResponseWri
 }
 
 type UpdateTenantApplicationByCodeRequest struct {
-	FirstName                      *string              `json:"first_name,omitempty"                        validate:"omitempty"                                                      example:"John"                 description:"First name"`
-	LastName                       *string              `json:"last_name,omitempty"                         validate:"omitempty"                                                      example:"Doe"                  description:"Last name"`
-	Email                          lib.Optional[string] `json:"email,omitempty"                             validate:"omitempty"                                                                                     description:"Email address"                     swaggertype:"string"`
-	Phone                          *string              `json:"phone,omitempty"                             validate:"omitempty,e164"                                                 example:"+233281234569"        description:"Phone number"`
-	Gender                         *string              `json:"gender,omitempty"                            validate:"omitempty,oneof=MALE FEMALE"                                    example:"MALE"                 description:"Gender"`
-	DateOfBirth                    *time.Time           `json:"date_of_birth,omitempty"                     validate:"omitempty"                                                      example:"1990-01-01T00:00:00Z" description:"Date of birth"`
-	Nationality                    *string              `json:"nationality,omitempty"                       validate:"omitempty"                                                      example:"Ghanaian"             description:"Nationality"`
-	MaritalStatus                  *string              `json:"marital_status,omitempty"                    validate:"omitempty,oneof=SINGLE MARRIED DIVORCED WIDOWED"                example:"SINGLE"               description:"Marital status"`
-	IDType                         *string              `json:"id_type,omitempty"                           validate:"omitempty,oneof=GHANA_CARD NATIONAL_ID PASSPORT DRIVER_LICENSE" example:"GHANA_CARD"           description:"ID type"`
-	IDNumber                       *string              `json:"id_number,omitempty"                         validate:"omitempty"                                                      example:"GHA-123456789"        description:"ID number"`
-	CurrentAddress                 *string              `json:"current_address,omitempty"                   validate:"omitempty"                                                      example:"123 Main St"          description:"Current address"`
-	EmergencyContactName           *string              `json:"emergency_contact_name,omitempty"            validate:"omitempty"                                                      example:"Jane Doe"             description:"Emergency contact name"`
-	EmergencyContactPhone          *string              `json:"emergency_contact_phone,omitempty"           validate:"omitempty,e164"                                                 example:"+233281434579"        description:"Emergency contact phone"`
-	RelationshipToEmergencyContact *string              `json:"relationship_to_emergency_contact,omitempty" validate:"omitempty"                                                      example:"Sister"               description:"Relationship to emergency contact"`
-	Occupation                     *string              `json:"occupation,omitempty"                        validate:"omitempty"                                                      example:"Engineer"             description:"Occupation"`
-	Employer                       *string              `json:"employer,omitempty"                          validate:"omitempty"                                                      example:"Acme Corp"            description:"Employer"`
-	OccupationAddress              *string              `json:"occupation_address,omitempty"                validate:"omitempty"                                                      example:"456 Tech Ave"         description:"Occupation address"`
+	FirstName                      *string              `json:"first_name,omitempty"                        validate:"omitempty"                                                      example:"John"          description:"First name"`
+	LastName                       *string              `json:"last_name,omitempty"                         validate:"omitempty"                                                      example:"Doe"           description:"Last name"`
+	Email                          lib.Optional[string] `json:"email,omitempty"                             validate:"omitempty"                                                                              description:"Email address"                     swaggertype:"string"`
+	Gender                         *string              `json:"gender,omitempty"                            validate:"omitempty,oneof=MALE FEMALE"                                    example:"MALE"          description:"Gender"`
+	DateOfBirth                    *string              `json:"date_of_birth,omitempty"                     validate:"omitempty,datetime=2006-01-02"                                  example:"1990-01-01"    description:"Date of birth (YYYY-MM-DD)"`
+	Nationality                    *string              `json:"nationality,omitempty"                       validate:"omitempty"                                                      example:"Ghanaian"      description:"Nationality"`
+	MaritalStatus                  *string              `json:"marital_status,omitempty"                    validate:"omitempty,oneof=SINGLE MARRIED DIVORCED WIDOWED"                example:"SINGLE"        description:"Marital status"`
+	IDType                         *string              `json:"id_type,omitempty"                           validate:"omitempty,oneof=GHANA_CARD NATIONAL_ID PASSPORT DRIVER_LICENSE" example:"GHANA_CARD"    description:"ID type"`
+	IDNumber                       *string              `json:"id_number,omitempty"                         validate:"omitempty"                                                      example:"GHA-123456789" description:"ID number"`
+	CurrentAddress                 *string              `json:"current_address,omitempty"                   validate:"omitempty"                                                      example:"123 Main St"   description:"Current address"`
+	EmergencyContactName           *string              `json:"emergency_contact_name,omitempty"            validate:"omitempty"                                                      example:"Jane Doe"      description:"Emergency contact name"`
+	EmergencyContactPhone          *string              `json:"emergency_contact_phone,omitempty"           validate:"omitempty,e164"                                                 example:"+233281434579" description:"Emergency contact phone"`
+	RelationshipToEmergencyContact *string              `json:"relationship_to_emergency_contact,omitempty" validate:"omitempty"                                                      example:"Sister"        description:"Relationship to emergency contact"`
+	Occupation                     *string              `json:"occupation,omitempty"                        validate:"omitempty"                                                      example:"Engineer"      description:"Occupation"`
+	Employer                       *string              `json:"employer,omitempty"                          validate:"omitempty"                                                      example:"Acme Corp"     description:"Employer"`
+	OccupationAddress              *string              `json:"occupation_address,omitempty"                validate:"omitempty"                                                      example:"456 Tech Ave"  description:"Occupation address"`
 }
 
 // UpdateTenantApplicationByCode godoc
@@ -1088,6 +1108,7 @@ type UpdateTenantApplicationByCodeRequest struct {
 //	@Param			body	body		UpdateTenantApplicationByCodeRequest					true	"Update Tenant Application By Code Request Body"
 //	@Success		200		{object}	object{data=transformations.OutputTenantApplication}	"Tenant application updated"
 //	@Failure		400		{object}	lib.HTTPError											"Error occurred when updating"
+//	@Failure		403		{object}	lib.HTTPError											"Not a CSV-imported application"
 //	@Failure		404		{object}	lib.HTTPError											"Application not found"
 //	@Failure		422		{object}	lib.HTTPError											"Validation error"
 //	@Failure		500		{object}	string													"An unexpected error occurred"
@@ -1101,6 +1122,11 @@ func (h *TenantApplicationHandler) UpdateTenantApplicationByCode(w http.Response
 		return
 	}
 
+	if ta.Source == nil || *ta.Source != "CSV_BULK" {
+		http.Error(w, "This endpoint is only available for CSV-imported applications", http.StatusForbidden)
+		return
+	}
+
 	var body UpdateTenantApplicationByCodeRequest
 	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
 		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
@@ -1111,14 +1137,27 @@ func (h *TenantApplicationHandler) UpdateTenantApplicationByCode(w http.Response
 		return
 	}
 
+	var parsedDOB *time.Time
+	if body.DateOfBirth != nil {
+		t, parseErr := time.Parse("2006-01-02", *body.DateOfBirth)
+		if parseErr != nil {
+			http.Error(
+				w,
+				fmt.Sprintf("invalid date_of_birth %q: expected YYYY-MM-DD", *body.DateOfBirth),
+				http.StatusUnprocessableEntity,
+			)
+			return
+		}
+		parsedDOB = &t
+	}
+
 	tenantApplicationID := ta.ID.String()
 	input := services.UpdateTenantApplicationInput{
 		TenantApplicationID:            tenantApplicationID,
 		FirstName:                      body.FirstName,
 		LastName:                       body.LastName,
-		Phone:                          body.Phone,
 		Gender:                         body.Gender,
-		DateOfBirth:                    body.DateOfBirth,
+		DateOfBirth:                    parsedDOB,
 		Nationality:                    body.Nationality,
 		MaritalStatus:                  body.MaritalStatus,
 		IDType:                         body.IDType,

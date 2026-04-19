@@ -11,13 +11,10 @@ interface PropertyUnit {
 	rent_fee: number
 	rent_fee_currency: string
 	features: Nullable<StringRecord>
-	payment_frequency:
-		| 'WEEKLY'
-		| 'DAILY'
-		| 'MONTHLY'
-		// | 'QUARTERLY'
-		// | 'BIANNUALLY'
-		// | 'ANNUALLY'
+	payment_frequency: 'WEEKLY' | 'DAILY' | 'MONTHLY'
+	// | 'QUARTERLY'
+	// | 'BIANNUALLY'
+	// | 'ANNUALLY'
 	max_occupants_allowed: Nullable<number>
 	type: 'APARTMENT' | 'HOUSE' | 'STUDIO' | 'OFFICE' | 'RETAIL'
 	status:

@@ -71,7 +71,7 @@ type TenantApplication struct {
 	Nationality     *string
 	MaritalStatus   *string // Single, Married, Divorced, Widowed
 	ProfilePhotoUrl *string
-	IDType          string // NationalID, Passport, DriverLicense
+	IDType          *string // NationalID, Passport, DriverLicense
 	IDNumber        *string
 	IDFrontUrl      *string
 	IDBackUrl       *string

@@ -486,10 +486,10 @@ export function EditPropertyAssetUnitModule() {
 										<div className="mt-2 flex items-start gap-2 rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
 											<Info className="mt-0.5 size-4 shrink-0 text-blue-500" />
 											<p className="text-sm text-blue-700 dark:text-blue-300">
-												Increase this when you want to rent this unit to multiple
-												tenants at the same time — for example, renting individual
-												rooms in a shared apartment. The default is 1 (single
-												tenant only).
+												Increase this when you want to rent this unit to
+												multiple tenants at the same time — for example, renting
+												individual rooms in a shared apartment. The default is 1
+												(single tenant only).
 											</p>
 										</div>
 									</FormItem>

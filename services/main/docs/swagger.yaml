@@ -239,7 +239,7 @@ definitions:
         example: 123 Main St, Accra
         type: string
       date_of_birth:
-        example: "1990-01-01T00:00:00Z"
+        example: "1990-01-01"
         type: string
       desired_move_in_date:
         type: string
@@ -1856,7 +1856,7 @@ definitions:
         example: 123 Main St
         type: string
       date_of_birth:
-        example: "1990-01-01T00:00:00Z"
+        example: "1990-01-01"
         type: string
       email:
         type: string
@@ -1908,9 +1908,6 @@ definitions:
         type: string
       occupation_address:
         example: 456 Tech Ave
-        type: string
-      phone:
-        example: "+233281234569"
         type: string
       relationship_to_emergency_contact:
         example: Sister
@@ -13916,6 +13913,10 @@ paths:
             type: object
         "400":
           description: Error occurred when updating
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "403":
+          description: Not a CSV-imported application
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "404":

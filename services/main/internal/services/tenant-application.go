@@ -146,7 +146,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		DateOfBirth:                    &input.DateOfBirth,
 		Nationality:                    &input.Nationality,
 		MaritalStatus:                  &input.MaritalStatus,
-		IDType:                         input.IDType,
+		IDType:                         &input.IDType,
 		IDNumber:                       &input.IDNumber,
 		IDFrontUrl:                     input.IDFrontUrl,
 		IDBackUrl:                      input.IDBackUrl,
@@ -343,7 +343,7 @@ func (s *tenantApplicationService) BulkCreateTenantApplications(
 			DateOfBirth:    entry.DateOfBirth,
 			Nationality:    entry.Nationality,
 			MaritalStatus:  entry.MaritalStatus,
-			IDType:         lib.SafeString(entry.IDType),
+			IDType:         entry.IDType,
 			IDNumber:       entry.IDNumber,
 			CurrentAddress: entry.CurrentAddress,
 			DesiredUnitId:  entry.DesiredUnitId,
@@ -586,7 +586,7 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 	}
 
 	if input.IDType != nil {
-		tenantApplication.IDType = *input.IDType
+		tenantApplication.IDType = input.IDType
 	}
 
 	if input.IDNumber != nil {
@@ -1003,7 +1003,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		Nationality:                    *tenantApplication.Nationality,
 		MaritalStatus:                  *tenantApplication.MaritalStatus,
 		ProfilePhotoUrl:                tenantApplication.ProfilePhotoUrl,
-		IDType:                         tenantApplication.IDType,
+		IDType:                         lib.SafeString(tenantApplication.IDType),
 		IDNumber:                       *tenantApplication.IDNumber,
 		IDFrontUrl:                     tenantApplication.IDFrontUrl,
 		IDBackUrl:                      tenantApplication.IDBackUrl,

@@ -64,7 +64,10 @@ interface EditFormProps {
 }
 
 function EditForm({ application, code, onClose, onSaved }: EditFormProps) {
-	const fetcher = useFetcher<{ application?: TrackingApplication | null; error?: string | null }>()
+	const fetcher = useFetcher<{
+		application?: TrackingApplication | null
+		error?: string | null
+	}>()
 	const isSubmitting = fetcher.state !== 'idle'
 
 	// When we get a successful result back, notify parent and close
@@ -242,7 +245,7 @@ function Field({
 				name={name}
 				type={type}
 				defaultValue={defaultValue}
-				className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+				className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm focus:ring-2 focus:ring-rose-500 focus:outline-none"
 			/>
 		</div>
 	)
@@ -268,7 +271,7 @@ function SelectField({
 				id={name}
 				name={name}
 				defaultValue={defaultValue}
-				className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+				className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm focus:ring-2 focus:ring-rose-500 focus:outline-none"
 			>
 				<option value="">— Select —</option>
 				{options.map((o) => (
@@ -296,7 +299,11 @@ function isPersonalInfoIncomplete(application: TrackingApplication) {
 	)
 }
 
-export function ApplicationDetailsCard({ application, code, onUpdated }: Props) {
+export function ApplicationDetailsCard({
+	application,
+	code,
+	onUpdated,
+}: Props) {
 	const [open, setOpen] = useState(false)
 	const [editing, setEditing] = useState(false)
 	const detailsRef = useRef<HTMLDivElement>(null)
@@ -367,9 +374,7 @@ export function ApplicationDetailsCard({ application, code, onUpdated }: Props) 
 				</div>
 
 				<div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
-					{localApplication.phone && (
-						<span>{localApplication.phone}</span>
-					)}
+					{localApplication.phone && <span>{localApplication.phone}</span>}
 					{localApplication.email && <span>{localApplication.email}</span>}
 				</div>
 

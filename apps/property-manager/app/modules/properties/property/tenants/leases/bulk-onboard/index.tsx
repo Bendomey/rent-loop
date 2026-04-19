@@ -9,6 +9,7 @@ import {
 	Trash2,
 	Upload,
 } from 'lucide-react'
+import dayjs from 'dayjs'
 import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
@@ -187,7 +188,7 @@ function parseFileToEntries(
 		reader.onload = (e) => {
 			try {
 				const data = e.target?.result
-				const wb = XLSX.read(data, { type: 'binary', cellDates: true })
+				const wb = XLSX.read(data, { type: 'array', cellDates: true })
 				const sheetName = wb.SheetNames[0]!
 				const ws = wb.Sheets[sheetName]!
 				const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, {
@@ -201,7 +202,7 @@ function parseFileToEntries(
 							const val = row[colKey]
 							if (val !== undefined && val !== '') {
 								if (fieldKey === 'date_of_birth' && val instanceof Date) {
-									entry[fieldKey] = val.toISOString().slice(0, 10)
+									entry[fieldKey] = dayjs(val).format('YYYY-MM-DD')
 								} else {
 									entry[fieldKey] = String(val)
 								}
@@ -236,7 +237,7 @@ function parseFileToEntries(
 			}
 		}
 		reader.onerror = () => reject(new Error('Failed to read file'))
-		reader.readAsBinaryString(file)
+		reader.readAsArrayBuffer(file)
 	})
 }
 

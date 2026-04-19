@@ -38,9 +38,7 @@ export function ApplicationChecklist({ progress }: Props) {
 						style={{ width: `${percentage}%` }}
 					/>
 				</div>
-				<span className="text-sm font-medium text-zinc-600">
-					{percentage}%
-				</span>
+				<span className="text-sm font-medium text-zinc-600">{percentage}%</span>
 			</div>
 
 			{/* Checklist items */}

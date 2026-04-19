@@ -117,6 +117,14 @@ export async function action({ request, params }: Route.ActionArgs) {
 	}
 
 	if (intent === 'updateApplication') {
+		const session = await getTrackingSession(request, code)
+		if (session.get('verified_code') !== code) {
+			return {
+				application: null,
+				error: 'Unauthorized: please verify your identity first.',
+			}
+		}
+
 		const fields = [
 			'first_name',
 			'last_name',

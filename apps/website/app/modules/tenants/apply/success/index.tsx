@@ -32,9 +32,7 @@ export function TenantApplySuccessModule() {
 
 					{/* Message */}
 					<div className="rounded-lg border border-green-200 bg-white p-5">
-						<p className="font-semibold text-zinc-700">
-							Application Confirmed
-						</p>
+						<p className="font-semibold text-zinc-700">Application Confirmed</p>
 						<p className="mt-2 text-sm text-zinc-600">
 							Your application details have been securely submitted
 						</p>

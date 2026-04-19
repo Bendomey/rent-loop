@@ -71,7 +71,7 @@ export function Home() {
 									Get started Today
 								</ExternalLink> */}
 								<ExternalLink
-									href='https://bisaform-main-bw7x.vercel.app/f/c915943frqp6'
+									href="https://bisaform-main-bw7x.vercel.app/f/c915943frqp6"
 									className="cursor-pointer rounded-md bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-rose-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600"
 								>
 									Join our waitlist

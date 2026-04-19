@@ -141,7 +141,7 @@ export function PropertyTenantApplicationBasic({ property_id }: Props) {
 				property_id,
 				data: {
 					...data,
-					date_of_birth: data.date_of_birth.toISOString(),
+					date_of_birth: dayjs(data.date_of_birth).format('YYYY-MM-DD'),
 				},
 			},
 			{

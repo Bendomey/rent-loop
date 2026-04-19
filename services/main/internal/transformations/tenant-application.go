@@ -24,8 +24,8 @@ type OutputAdminTenantApplication struct {
 
 	Source *string `json:"source,omitempty" example:"CSV_BULK"`
 
-	DesiredUnitId *string         `json:"desired_unit_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	DesiredUnit   AdminOutputUnit `json:"desired_unit"`
+	DesiredUnitId *string          `json:"desired_unit_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	DesiredUnit   *AdminOutputUnit `json:"desired_unit,omitempty"`
 
 	DesiredMoveInDate     *time.Time `json:"desired_move_in_date,omitempty"    example:"2024-07-01T00:00:00Z"`
 	StayDurationFrequency *string    `json:"stay_duration_frequency,omitempty" example:"monthly"`
@@ -60,7 +60,7 @@ type OutputAdminTenantApplication struct {
 	Nationality     *string    `json:"nationality,omitempty"       example:"Ghanaian"`
 	MaritalStatus   *string    `json:"marital_status,omitempty"    example:"single"`
 	ProfilePhotoUrl *string    `json:"profile_photo_url,omitempty" example:"https://example.com/photo.jpg"`
-	IDType          string     `json:"id_type"                     example:"GHANA_CARD"`
+	IDType          *string    `json:"id_type,omitempty"           example:"GHANA_CARD"`
 	IDNumber        *string    `json:"id_number,omitempty"         example:"ID123456"`
 	IDFrontUrl      *string    `json:"id_front_url,omitempty"      example:"https://example.com/id-front.jpg"`
 	IDBackUrl       *string    `json:"id_back_url,omitempty"       example:"https://example.com/id-back.jpg"`
@@ -104,7 +104,6 @@ func DBAdminTenantApplicationToRest(i *models.TenantApplication) any {
 		"cancelled_by":                        DBClientUserToRest(i.CancelledBy),
 		"source":                              i.Source,
 		"desired_unit_id":                     i.DesiredUnitId,
-		"desired_unit":                        DBAdminUnitToRest(&i.DesiredUnit),
 		"desired_move_in_date":                i.DesiredMoveInDate,
 		"stay_duration_frequency":             i.StayDurationFrequency,
 		"stay_duration":                       i.StayDuration,
@@ -154,6 +153,10 @@ func DBAdminTenantApplicationToRest(i *models.TenantApplication) any {
 		"updated_at":                          i.UpdatedAt,
 	}
 
+	if i.DesiredUnitId != nil {
+		data["desired_unit"] = DBAdminUnitToRest(&i.DesiredUnit)
+	}
+
 	return data
 }
 
@@ -169,8 +172,8 @@ type OutputTenantApplication struct {
 
 	Source *string `json:"source,omitempty" example:"CSV_BULK"`
 
-	DesiredUnitId *string    `json:"desired_unit_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	DesiredUnit   OutputUnit `json:"desired_unit,omitempty"`
+	DesiredUnitId *string     `json:"desired_unit_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	DesiredUnit   *OutputUnit `json:"desired_unit,omitempty"`
 
 	DesiredMoveInDate     *time.Time `json:"desired_move_in_date,omitempty"    example:"2024-07-01T00:00:00Z"`
 	StayDurationFrequency *string    `json:"stay_duration_frequency,omitempty" example:"monthly"`
@@ -202,7 +205,7 @@ type OutputTenantApplication struct {
 	Nationality     *string    `json:"nationality,omitempty"       example:"Ghanaian"`
 	MaritalStatus   *string    `json:"marital_status,omitempty"    example:"single"`
 	ProfilePhotoUrl *string    `json:"profile_photo_url,omitempty" example:"https://example.com/photo.jpg"`
-	IDType          string     `json:"id_type"                     example:"GHANA_CARD"`
+	IDType          *string    `json:"id_type,omitempty"           example:"GHANA_CARD"`
 	IDNumber        *string    `json:"id_number,omitempty"         example:"ID123456"`
 	IDFrontUrl      *string    `json:"id_front_url,omitempty"      example:"https://example.com/id-front.jpg"`
 	IDBackUrl       *string    `json:"id_back_url,omitempty"       example:"https://example.com/id-back.jpg"`
@@ -238,7 +241,6 @@ func DBTenantApplicationToRest(i *models.TenantApplication) any {
 		"cancelled_at":                        i.CancelledAt,
 		"source":                              i.Source,
 		"desired_unit_id":                     i.DesiredUnitId,
-		"desired_unit":                        DBUnitToRest(&i.DesiredUnit),
 		"desired_move_in_date":                i.DesiredMoveInDate,
 		"stay_duration_frequency":             i.StayDurationFrequency,
 		"stay_duration":                       i.StayDuration,
@@ -280,6 +282,10 @@ func DBTenantApplicationToRest(i *models.TenantApplication) any {
 		"application_payment_invoice":         DBInvoiceToRest(i.ApplicationPaymentInvoice),
 		"created_at":                          i.CreatedAt,
 		"updated_at":                          i.UpdatedAt,
+	}
+
+	if i.DesiredUnitId != nil {
+		data["desired_unit"] = DBUnitToRest(&i.DesiredUnit)
 	}
 
 	return data

@@ -50,9 +50,7 @@ export function PaymentInfo({ invoice }: Props) {
 		return (
 			<div className="rounded-lg border bg-white p-6">
 				<h3 className="text-sm font-semibold text-zinc-900">Payment</h3>
-				<p className="mt-3 text-sm text-zinc-400">
-					No payment information yet
-				</p>
+				<p className="mt-3 text-sm text-zinc-400">No payment information yet</p>
 			</div>
 		)
 	}

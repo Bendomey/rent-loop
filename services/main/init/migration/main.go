@@ -93,6 +93,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.SeedAgreements(),
 		jobs.ExtractUsersFromClientUsers(),
 		jobs.MakeTenantApplicationFieldsNullable(),
+		jobs.MakeTenantApplicationIDTypeNullable(),
 	})
 	if err := m.Migrate(); err != nil {
 		return fmt.Errorf("[Migration.Migrate]: %v", err)
