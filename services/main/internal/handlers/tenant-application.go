@@ -289,6 +289,110 @@ func (h *TenantApplicationHandler) SendTenantInvite(w http.ResponseWriter, r *ht
 	w.WriteHeader(http.StatusNoContent)
 }
 
+type BulkCreateTenantApplicationEntry struct {
+	Phone          string  `json:"phone"                     validate:"required,e164"          example:"+233281234569"                           description:"Phone number (required)"`
+	FirstName      *string `json:"first_name,omitempty"      validate:"omitempty"              example:"John"                                    description:"First name"`
+	LastName       *string `json:"last_name,omitempty"       validate:"omitempty"              example:"Doe"                                     description:"Last name"`
+	Email          *string `json:"email,omitempty"           validate:"omitempty,email"        example:"john.doe@example.com"                    description:"Email address"`
+	Gender         *string `json:"gender,omitempty"          validate:"omitempty,oneof=MALE FEMALE"          example:"MALE"           description:"Gender"`
+	DateOfBirth    *string `json:"date_of_birth,omitempty"   validate:"omitempty"              example:"1990-01-01"                              description:"Date of birth (YYYY-MM-DD)"`
+	Nationality    *string `json:"nationality,omitempty"     validate:"omitempty"              example:"Ghanaian"                                description:"Nationality"`
+	MaritalStatus  *string `json:"marital_status,omitempty"  validate:"omitempty,oneof=SINGLE MARRIED DIVORCED WIDOWED" example:"SINGLE" description:"Marital status"`
+	IDType         *string `json:"id_type,omitempty"         validate:"omitempty,oneof=GHANA_CARD NATIONAL_ID PASSPORT DRIVER_LICENSE" example:"GHANA_CARD" description:"ID type"`
+	IDNumber       *string `json:"id_number,omitempty"       validate:"omitempty"              example:"GHA-123456789"                           description:"ID number"`
+	CurrentAddress *string `json:"current_address,omitempty" validate:"omitempty"              example:"123 Main St, Accra"                      description:"Current address"`
+	DesiredUnitId  *string `json:"desired_unit_id,omitempty" validate:"omitempty,uuid"         example:"b4d0243c-6581-4104-8185-d83a45ebe41b"   description:"Unit ID"`
+	Occupation     *string `json:"occupation,omitempty"      validate:"omitempty"              example:"Software Engineer"                       description:"Occupation"`
+	Employer       *string `json:"employer,omitempty"        validate:"omitempty"              example:"Acme Corp"                               description:"Employer"`
+}
+
+type BulkCreateTenantApplicationsRequest struct {
+	Entries []BulkCreateTenantApplicationEntry `json:"entries" validate:"required,min=1,max=50,dive"`
+}
+
+// BulkCreateTenantApplications godoc
+//
+//	@Summary		Bulk create tenant applications from CSV/Excel upload (Admin)
+//	@Description	Creates multiple tenant applications at once. Only phone is required per entry; all other fields are optional. Tenants are notified via SMS (and email if provided) with a link to complete their profile.
+//	@Tags			TenantApplication
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string								true	"Property ID"
+//	@Param			body		body		BulkCreateTenantApplicationsRequest	true	"Bulk Create Tenant Applications Request Body"
+//	@Success		201			{object}	object{data=[]transformations.OutputAdminTenantApplication}	"Applications created successfully"
+//	@Failure		400			{object}	lib.HTTPError	"Error occurred when creating applications"
+//	@Failure		401			{object}	string			"Invalid or absent authentication token"
+//	@Failure		422			{object}	lib.HTTPError	"Validation error"
+//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/bulk [post]
+func (h *TenantApplicationHandler) BulkCreateTenantApplications(w http.ResponseWriter, r *http.Request) {
+	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
+	if !currentUserOk {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	propertyID := chi.URLParam(r, "property_id")
+
+	var body BulkCreateTenantApplicationsRequest
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
+		return
+	}
+
+	entries := make([]services.BulkCreateTenantApplicationEntry, 0, len(body.Entries))
+	for _, e := range body.Entries {
+		var dob *time.Time
+		if e.DateOfBirth != nil {
+			parsed, parseErr := time.Parse("2006-01-02", *e.DateOfBirth)
+			if parseErr == nil {
+				dob = &parsed
+			}
+		}
+		entries = append(entries, services.BulkCreateTenantApplicationEntry{
+			Phone:          e.Phone,
+			FirstName:      e.FirstName,
+			LastName:       e.LastName,
+			Email:          e.Email,
+			Gender:         e.Gender,
+			DateOfBirth:    dob,
+			Nationality:    e.Nationality,
+			MaritalStatus:  e.MaritalStatus,
+			IDType:         e.IDType,
+			IDNumber:       e.IDNumber,
+			CurrentAddress: e.CurrentAddress,
+			DesiredUnitId:  e.DesiredUnitId,
+			Occupation:     e.Occupation,
+			Employer:       e.Employer,
+		})
+	}
+
+	apps, err := h.service.BulkCreateTenantApplications(r.Context(), services.BulkCreateTenantApplicationsInput{
+		Entries:     entries,
+		PropertyID:  propertyID,
+		CreatedById: currentUser.ID,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	results := make([]any, 0, len(apps))
+	for _, app := range apps {
+		results = append(results, transformations.DBAdminTenantApplicationToRest(app))
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": results,
+	})
+}
+
 type ListTenantApplicationsQuery struct {
 	lib.FilterQueryInput
 	Status                       *string   `json:"status,omitempty"                          validate:"omitempty,oneof=TenantApplication.Status.InProgress TenantApplication.Status.Cancelled TenantApplication.Status.Completed"`
@@ -950,6 +1054,93 @@ func (h *TenantApplicationHandler) GetTenantApplicationByCode(w http.ResponseWri
 
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": transformations.DBTenantApplicationToRest(ta),
+	})
+}
+
+type UpdateTenantApplicationByCodeRequest struct {
+	FirstName                      *string              `json:"first_name,omitempty"                        validate:"omitempty"                                                      example:"John"          description:"First name"`
+	LastName                       *string              `json:"last_name,omitempty"                         validate:"omitempty"                                                      example:"Doe"           description:"Last name"`
+	Email                          lib.Optional[string] `json:"email,omitempty"                             validate:"omitempty"                                                                              description:"Email address"              swaggertype:"string"`
+	Phone                          *string              `json:"phone,omitempty"                             validate:"omitempty,e164"                                                 example:"+233281234569" description:"Phone number"`
+	Gender                         *string              `json:"gender,omitempty"                            validate:"omitempty,oneof=MALE FEMALE"                                    example:"MALE"          description:"Gender"`
+	DateOfBirth                    *time.Time           `json:"date_of_birth,omitempty"                     validate:"omitempty"                                                      example:"1990-01-01T00:00:00Z" description:"Date of birth"`
+	Nationality                    *string              `json:"nationality,omitempty"                       validate:"omitempty"                                                      example:"Ghanaian"      description:"Nationality"`
+	MaritalStatus                  *string              `json:"marital_status,omitempty"                    validate:"omitempty,oneof=SINGLE MARRIED DIVORCED WIDOWED"                example:"SINGLE"        description:"Marital status"`
+	IDType                         *string              `json:"id_type,omitempty"                           validate:"omitempty,oneof=GHANA_CARD NATIONAL_ID PASSPORT DRIVER_LICENSE" example:"GHANA_CARD"    description:"ID type"`
+	IDNumber                       *string              `json:"id_number,omitempty"                         validate:"omitempty"                                                      example:"GHA-123456789" description:"ID number"`
+	CurrentAddress                 *string              `json:"current_address,omitempty"                   validate:"omitempty"                                                      example:"123 Main St"   description:"Current address"`
+	EmergencyContactName           *string              `json:"emergency_contact_name,omitempty"            validate:"omitempty"                                                      example:"Jane Doe"      description:"Emergency contact name"`
+	EmergencyContactPhone          *string              `json:"emergency_contact_phone,omitempty"           validate:"omitempty,e164"                                                 example:"+233281434579" description:"Emergency contact phone"`
+	RelationshipToEmergencyContact *string              `json:"relationship_to_emergency_contact,omitempty" validate:"omitempty"                                                      example:"Sister"        description:"Relationship to emergency contact"`
+	Occupation                     *string              `json:"occupation,omitempty"                        validate:"omitempty"                                                      example:"Engineer"      description:"Occupation"`
+	Employer                       *string              `json:"employer,omitempty"                          validate:"omitempty"                                                      example:"Acme Corp"     description:"Employer"`
+	OccupationAddress              *string              `json:"occupation_address,omitempty"                validate:"omitempty"                                                      example:"456 Tech Ave"  description:"Occupation address"`
+}
+
+// UpdateTenantApplicationByCode godoc
+//
+//	@Summary		Update tenant application personal info by code (public)
+//	@Description	Allows a tenant to fill in or update their personal details on a CSV-created application using the application code.
+//	@Tags			TenantApplication
+//	@Accept			json
+//	@Produce		json
+//	@Param			code	path		string													true	"Application code"
+//	@Param			body	body		UpdateTenantApplicationByCodeRequest					true	"Update Tenant Application By Code Request Body"
+//	@Success		200		{object}	object{data=transformations.OutputTenantApplication}	"Tenant application updated"
+//	@Failure		400		{object}	lib.HTTPError											"Error occurred when updating"
+//	@Failure		404		{object}	lib.HTTPError											"Application not found"
+//	@Failure		422		{object}	lib.HTTPError											"Validation error"
+//	@Failure		500		{object}	string													"An unexpected error occurred"
+//	@Router			/api/v1/tenant-applications/code/{code} [patch]
+func (h *TenantApplicationHandler) UpdateTenantApplicationByCode(w http.ResponseWriter, r *http.Request) {
+	code := chi.URLParam(r, "code")
+
+	ta, err := h.service.GetOneTenantApplication(r.Context(), repository.GetTenantApplicationQuery{Code: code})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	var body UpdateTenantApplicationByCodeRequest
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
+		return
+	}
+
+	tenantApplicationID := ta.ID.String()
+	input := services.UpdateTenantApplicationInput{
+		TenantApplicationID:            tenantApplicationID,
+		FirstName:                      body.FirstName,
+		LastName:                       body.LastName,
+		Phone:                          body.Phone,
+		Gender:                         body.Gender,
+		DateOfBirth:                    body.DateOfBirth,
+		Nationality:                    body.Nationality,
+		MaritalStatus:                  body.MaritalStatus,
+		IDType:                         body.IDType,
+		IDNumber:                       body.IDNumber,
+		CurrentAddress:                 body.CurrentAddress,
+		EmergencyContactName:           body.EmergencyContactName,
+		EmergencyContactPhone:          body.EmergencyContactPhone,
+		RelationshipToEmergencyContact: body.RelationshipToEmergencyContact,
+		Occupation:                     body.Occupation,
+		Employer:                       body.Employer,
+		OccupationAddress:              body.OccupationAddress,
+		Email:                          body.Email,
+	}
+
+	updated, updateErr := h.service.UpdateTenantApplication(r.Context(), input)
+	if updateErr != nil {
+		HandleErrorResponse(w, updateErr)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBTenantApplicationToRest(updated),
 	})
 }
 

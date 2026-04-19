@@ -43,6 +43,7 @@ type TenantApplicationService interface {
 	GenerateInvoice(context context.Context, input GenerateInvoiceInput) (*models.Invoice, error)
 	ApproveTenantApplication(context context.Context, input ApproveTenantApplicationInput) error
 	BulkOnboardLeases(ctx context.Context, input BulkOnboardLeasesInput) error
+	BulkCreateTenantApplications(ctx context.Context, input BulkCreateTenantApplicationsInput) ([]*models.TenantApplication, error)
 	SetPaymentService(ps PaymentService)
 }
 
@@ -135,34 +136,36 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		return nil, pkg.BadRequestError("UnitNotAvailable", nil)
 	}
 
+	source := "SELF"
 	tenantApplication := models.TenantApplication{
-		DesiredUnitId:                  input.DesiredUnitId,
-		RentFee:                        unit.RentFee,
-		RentFeeCurrency:                unit.RentFeeCurrency,
+		DesiredUnitId:                  &input.DesiredUnitId,
+		RentFee:                        &unit.RentFee,
+		RentFeeCurrency:                &unit.RentFeeCurrency,
 		StayDurationFrequency:          &unit.PaymentFrequency,
 		PaymentFrequency:               &unit.PaymentFrequency,
-		FirstName:                      input.FirstName,
+		Source:                         &source,
+		FirstName:                      &input.FirstName,
 		OtherNames:                     input.OtherNames,
-		LastName:                       input.LastName,
+		LastName:                       &input.LastName,
 		Email:                          input.Email,
 		Phone:                          input.Phone,
-		Gender:                         input.Gender,
-		DateOfBirth:                    input.DateOfBirth,
-		Nationality:                    input.Nationality,
-		MaritalStatus:                  input.MaritalStatus,
+		Gender:                         &input.Gender,
+		DateOfBirth:                    &input.DateOfBirth,
+		Nationality:                    &input.Nationality,
+		MaritalStatus:                  &input.MaritalStatus,
 		IDType:                         input.IDType,
-		IDNumber:                       input.IDNumber,
+		IDNumber:                       &input.IDNumber,
 		IDFrontUrl:                     input.IDFrontUrl,
 		IDBackUrl:                      input.IDBackUrl,
-		CurrentAddress:                 input.CurrentAddress,
-		EmergencyContactName:           input.EmergencyContactName,
-		EmergencyContactPhone:          input.EmergencyContactPhone,
-		RelationshipToEmergencyContact: input.RelationshipToEmergencyContact,
-		Occupation:                     input.Occupation,
-		Employer:                       input.Employer,
+		CurrentAddress:                 &input.CurrentAddress,
+		EmergencyContactName:           &input.EmergencyContactName,
+		EmergencyContactPhone:          &input.EmergencyContactPhone,
+		RelationshipToEmergencyContact: &input.RelationshipToEmergencyContact,
+		Occupation:                     &input.Occupation,
+		Employer:                       &input.Employer,
 		EmployerType:                   &input.EmployerType,
 		ProofOfIncomeUrl:               input.ProofOfIncomeUrl,
-		OccupationAddress:              input.OccupationAddress,
+		OccupationAddress:              &input.OccupationAddress,
 		ProfilePhotoUrl:                input.ProfilePhotoUrl,
 		CreatedById:                    input.CreatedById,
 		Status:                         "TenantApplication.Status.InProgress",
@@ -180,7 +183,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 	}
 
 	r := strings.NewReplacer(
-		"{{applicant_name}}", tenantApplication.FirstName,
+		"{{applicant_name}}", input.FirstName,
 		"{{unit_name}}", unit.Name,
 		"{{application_code}}", tenantApplication.Code,
 		"{{submission_date}}", tenantApplication.CreatedAt.Format("2006-01-02 at 03:04 PM"),
@@ -269,6 +272,156 @@ func (s *tenantApplicationService) InviteTenant(ctx context.Context, input Invit
 	}
 
 	return nil
+}
+
+type BulkCreateTenantApplicationEntry struct {
+	Phone         string
+	FirstName     *string
+	LastName      *string
+	Email         *string
+	Gender        *string
+	DateOfBirth   *time.Time
+	Nationality   *string
+	MaritalStatus *string
+	IDType        *string
+	IDNumber      *string
+	CurrentAddress *string
+	DesiredUnitId  *string
+	Occupation     *string
+	Employer       *string
+}
+
+type BulkCreateTenantApplicationsInput struct {
+	Entries      []BulkCreateTenantApplicationEntry
+	PropertyID   string
+	CreatedById  string
+}
+
+func (s *tenantApplicationService) BulkCreateTenantApplications(
+	ctx context.Context,
+	input BulkCreateTenantApplicationsInput,
+) ([]*models.TenantApplication, error) {
+	source := "CSV_BULK"
+
+	type notificationPayload struct {
+		phone string
+		email *string
+		code  string
+	}
+	var notifications []notificationPayload
+	var created []*models.TenantApplication
+
+	transaction := s.appCtx.DB.Begin()
+	if transaction.Error != nil {
+		return nil, pkg.InternalServerError(transaction.Error.Error(), &pkg.RentLoopErrorParams{
+			Err: transaction.Error,
+			Metadata: map[string]string{
+				"function": "BulkCreateTenantApplications",
+				"action":   "beginning transaction",
+			},
+		})
+	}
+	transCtx := lib.WithTransaction(ctx, transaction)
+
+	for _, entry := range input.Entries {
+		if entry.DesiredUnitId != nil {
+			unit, err := s.unitService.GetUnitByID(transCtx, *entry.DesiredUnitId)
+			if err != nil {
+				transaction.Rollback()
+				return nil, err
+			}
+			if unit.PropertyID != input.PropertyID {
+				transaction.Rollback()
+				return nil, pkg.BadRequestError("UnitsNotUnderProperty", nil)
+			}
+			if unit.Status != "Unit.Status.Available" && unit.Status != "Unit.Status.PartiallyOccupied" {
+				transaction.Rollback()
+				return nil, pkg.BadRequestError("UnitNoLongerAvailable", nil)
+			}
+		}
+
+		app := models.TenantApplication{
+			Source:        &source,
+			Phone:         entry.Phone,
+			FirstName:     entry.FirstName,
+			LastName:      entry.LastName,
+			Email:         entry.Email,
+			Gender:        entry.Gender,
+			DateOfBirth:   entry.DateOfBirth,
+			Nationality:   entry.Nationality,
+			MaritalStatus: entry.MaritalStatus,
+			IDType:        lib.SafeString(entry.IDType),
+			IDNumber:      entry.IDNumber,
+			CurrentAddress: entry.CurrentAddress,
+			DesiredUnitId: entry.DesiredUnitId,
+			Occupation:    entry.Occupation,
+			Employer:      entry.Employer,
+			CreatedById:   input.CreatedById,
+			Status:        "TenantApplication.Status.InProgress",
+		}
+
+		if err := s.repo.Create(transCtx, &app); err != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+				Err: err,
+				Metadata: map[string]string{
+					"function": "BulkCreateTenantApplications",
+					"action":   "creating tenant application",
+				},
+			})
+		}
+
+		notifications = append(notifications, notificationPayload{
+			phone: entry.Phone,
+			email: entry.Email,
+			code:  app.Code,
+		})
+		appCopy := app
+		created = append(created, &appCopy)
+	}
+
+	if err := transaction.Commit().Error; err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "BulkCreateTenantApplications",
+				"action":   "committing transaction",
+			},
+		})
+	}
+
+	for _, n := range notifications {
+		code := n.code
+		email := n.email
+		phone := n.phone
+
+		r := strings.NewReplacer(
+			"{{application_code}}", code,
+		)
+		smsMsg := lib.ApplyGlobalVariableTemplate(s.appCtx.Config, r.Replace(lib.TENANT_CSV_CREATED_SMS_BODY))
+		emailBody := lib.ApplyGlobalVariableTemplate(s.appCtx.Config, r.Replace(lib.TENANT_CSV_CREATED_BODY))
+
+		go s.appCtx.Clients.GatekeeperAPI.SendSMS(
+			context.Background(),
+			gatekeeper.SendSMSInput{
+				Recipient: phone,
+				Message:   smsMsg,
+			},
+		)
+
+		if email != nil {
+			go pkg.SendEmail(
+				s.appCtx.Config,
+				pkg.SendEmailInput{
+					Recipient: *email,
+					Subject:   lib.TENANT_CSV_CREATED_SUBJECT,
+					TextBody:  emailBody,
+				},
+			)
+		}
+	}
+
+	return created, nil
 }
 
 func (s *tenantApplicationService) ListTenantApplications(
@@ -400,23 +553,23 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 
 	// Required fields - only update if a non-nil value was sent
 	if input.DesiredUnitId != nil {
-		tenantApplication.DesiredUnitId = *input.DesiredUnitId
+		tenantApplication.DesiredUnitId = input.DesiredUnitId
 	}
 
 	if input.RentFee != nil {
-		tenantApplication.RentFee = *input.RentFee
+		tenantApplication.RentFee = input.RentFee
 	}
 
 	if input.RentFeeCurrency != nil {
-		tenantApplication.RentFeeCurrency = *input.RentFeeCurrency
+		tenantApplication.RentFeeCurrency = input.RentFeeCurrency
 	}
 
 	if input.FirstName != nil {
-		tenantApplication.FirstName = *input.FirstName
+		tenantApplication.FirstName = input.FirstName
 	}
 
 	if input.LastName != nil {
-		tenantApplication.LastName = *input.LastName
+		tenantApplication.LastName = input.LastName
 	}
 
 	if input.Phone != nil {
@@ -424,19 +577,19 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 	}
 
 	if input.Gender != nil {
-		tenantApplication.Gender = *input.Gender
+		tenantApplication.Gender = input.Gender
 	}
 
 	if input.DateOfBirth != nil {
-		tenantApplication.DateOfBirth = *input.DateOfBirth
+		tenantApplication.DateOfBirth = input.DateOfBirth
 	}
 
 	if input.Nationality != nil {
-		tenantApplication.Nationality = *input.Nationality
+		tenantApplication.Nationality = input.Nationality
 	}
 
 	if input.MaritalStatus != nil {
-		tenantApplication.MaritalStatus = *input.MaritalStatus
+		tenantApplication.MaritalStatus = input.MaritalStatus
 	}
 
 	if input.IDType != nil {
@@ -444,35 +597,35 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 	}
 
 	if input.IDNumber != nil {
-		tenantApplication.IDNumber = *input.IDNumber
+		tenantApplication.IDNumber = input.IDNumber
 	}
 
 	if input.CurrentAddress != nil {
-		tenantApplication.CurrentAddress = *input.CurrentAddress
+		tenantApplication.CurrentAddress = input.CurrentAddress
 	}
 
 	if input.EmergencyContactName != nil {
-		tenantApplication.EmergencyContactName = *input.EmergencyContactName
+		tenantApplication.EmergencyContactName = input.EmergencyContactName
 	}
 
 	if input.EmergencyContactPhone != nil {
-		tenantApplication.EmergencyContactPhone = *input.EmergencyContactPhone
+		tenantApplication.EmergencyContactPhone = input.EmergencyContactPhone
 	}
 
 	if input.RelationshipToEmergencyContact != nil {
-		tenantApplication.RelationshipToEmergencyContact = *input.RelationshipToEmergencyContact
+		tenantApplication.RelationshipToEmergencyContact = input.RelationshipToEmergencyContact
 	}
 
 	if input.Occupation != nil {
-		tenantApplication.Occupation = *input.Occupation
+		tenantApplication.Occupation = input.Occupation
 	}
 
 	if input.Employer != nil {
-		tenantApplication.Employer = *input.Employer
+		tenantApplication.Employer = input.Employer
 	}
 
 	if input.OccupationAddress != nil {
-		tenantApplication.OccupationAddress = *input.OccupationAddress
+		tenantApplication.OccupationAddress = input.OccupationAddress
 	}
 
 	// Nullable fields - update if field was explicitly sent (allows setting to null)
@@ -663,8 +816,12 @@ func (s *tenantApplicationService) CancelTenantApplication(
 		})
 	}
 
+	cancelledApplicantName := ""
+	if tenantApplication.FirstName != nil {
+		cancelledApplicantName = *tenantApplication.FirstName
+	}
 	r := strings.NewReplacer(
-		"{{applicant_name}}", tenantApplication.FirstName,
+		"{{applicant_name}}", cancelledApplicantName,
 		"{{application_code}}", tenantApplication.Code,
 		"{{reason}}", input.Reason,
 	)
@@ -770,6 +927,45 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 	}
 
 	// validate fields required for lease creation are all set
+	if tenantApplication.DesiredUnitId == nil {
+		return pkg.BadRequestError("ApplicationMissingUnit", nil)
+	}
+	if tenantApplication.FirstName == nil || *tenantApplication.FirstName == "" {
+		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+	}
+	if tenantApplication.LastName == nil || *tenantApplication.LastName == "" {
+		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+	}
+	if tenantApplication.Gender == nil || *tenantApplication.Gender == "" {
+		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+	}
+	if tenantApplication.DateOfBirth == nil {
+		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+	}
+	if tenantApplication.Nationality == nil || *tenantApplication.Nationality == "" {
+		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+	}
+	if tenantApplication.MaritalStatus == nil || *tenantApplication.MaritalStatus == "" {
+		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+	}
+	if tenantApplication.IDNumber == nil || *tenantApplication.IDNumber == "" {
+		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+	}
+	if tenantApplication.CurrentAddress == nil || *tenantApplication.CurrentAddress == "" {
+		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+	}
+	if tenantApplication.EmergencyContactName == nil || *tenantApplication.EmergencyContactName == "" {
+		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+	}
+	if tenantApplication.EmergencyContactPhone == nil || *tenantApplication.EmergencyContactPhone == "" {
+		return pkg.BadRequestError("ApplicationMissingPersonalInfo", nil)
+	}
+	if tenantApplication.RentFee == nil {
+		return pkg.BadRequestError("ApplicationMissingRentDetails", nil)
+	}
+	if tenantApplication.RentFeeCurrency == nil || *tenantApplication.RentFeeCurrency == "" {
+		return pkg.BadRequestError("ApplicationMissingRentDetails", nil)
+	}
 	if tenantApplication.DesiredMoveInDate == nil {
 		return pkg.BadRequestError("ApplicationMissingMoveInDate", nil)
 	}
@@ -783,7 +979,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		return pkg.BadRequestError("ApplicationMissingLeaseAgreementDocument", nil)
 	}
 
-	unit, getUnitErr := s.unitService.GetUnitByID(ctx, tenantApplication.DesiredUnitId)
+	unit, getUnitErr := s.unitService.GetUnitByID(ctx, *tenantApplication.DesiredUnitId)
 	if getUnitErr != nil {
 		return getUnitErr
 	}
@@ -826,28 +1022,44 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		})
 	}
 
-	// create tenant
+	// create tenant — all pointer fields are guarded above so derefs are safe
+	occupationVal := ""
+	if tenantApplication.Occupation != nil {
+		occupationVal = *tenantApplication.Occupation
+	}
+	employerVal := ""
+	if tenantApplication.Employer != nil {
+		employerVal = *tenantApplication.Employer
+	}
+	occupationAddressVal := ""
+	if tenantApplication.OccupationAddress != nil {
+		occupationAddressVal = *tenantApplication.OccupationAddress
+	}
+	relationshipVal := ""
+	if tenantApplication.RelationshipToEmergencyContact != nil {
+		relationshipVal = *tenantApplication.RelationshipToEmergencyContact
+	}
 	tenantInput := CreateTenantInput{
-		FirstName:                      tenantApplication.FirstName,
+		FirstName:                      *tenantApplication.FirstName,
 		OtherNames:                     tenantApplication.OtherNames,
-		LastName:                       tenantApplication.LastName,
+		LastName:                       *tenantApplication.LastName,
 		Email:                          tenantApplication.Email,
 		Phone:                          tenantApplication.Phone,
-		Gender:                         tenantApplication.Gender,
-		DateOfBirth:                    tenantApplication.DateOfBirth,
-		Nationality:                    tenantApplication.Nationality,
-		MaritalStatus:                  tenantApplication.MaritalStatus,
+		Gender:                         *tenantApplication.Gender,
+		DateOfBirth:                    *tenantApplication.DateOfBirth,
+		Nationality:                    *tenantApplication.Nationality,
+		MaritalStatus:                  *tenantApplication.MaritalStatus,
 		ProfilePhotoUrl:                tenantApplication.ProfilePhotoUrl,
 		IDType:                         tenantApplication.IDType,
-		IDNumber:                       tenantApplication.IDNumber,
+		IDNumber:                       *tenantApplication.IDNumber,
 		IDFrontUrl:                     tenantApplication.IDFrontUrl,
 		IDBackUrl:                      tenantApplication.IDBackUrl,
-		EmergencyContactName:           tenantApplication.EmergencyContactName,
-		EmergencyContactPhone:          tenantApplication.EmergencyContactPhone,
-		RelationshipToEmergencyContact: tenantApplication.RelationshipToEmergencyContact,
-		Occupation:                     tenantApplication.Occupation,
-		Employer:                       tenantApplication.Employer,
-		OccupationAddress:              tenantApplication.OccupationAddress,
+		EmergencyContactName:           *tenantApplication.EmergencyContactName,
+		EmergencyContactPhone:          *tenantApplication.EmergencyContactPhone,
+		RelationshipToEmergencyContact: relationshipVal,
+		Occupation:                     occupationVal,
+		Employer:                       employerVal,
+		OccupationAddress:              occupationAddressVal,
 		ProofOfIncomeUrl:               tenantApplication.ProofOfIncomeUrl,
 		CreatedById:                    input.ClientUserID,
 	}
@@ -868,11 +1080,11 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 	}
 	leaseInput := CreateLeaseInput{
 		Status:                    "Lease.Status.Pending",
-		UnitId:                    tenantApplication.DesiredUnitId,
+		UnitId:                    *tenantApplication.DesiredUnitId,
 		TenantId:                  tenant.ID.String(),
 		TenantApplicationId:       tenantApplication.ID.String(),
-		RentFee:                   tenantApplication.RentFee,
-		RentFeeCurrency:           tenantApplication.RentFeeCurrency,
+		RentFee:                   *tenantApplication.RentFee,
+		RentFeeCurrency:           *tenantApplication.RentFeeCurrency,
 		PaymentFrequency:          tenantApplication.PaymentFrequency,
 		Meta:                      meta,
 		MoveInDate:                *tenantApplication.DesiredMoveInDate,
@@ -936,8 +1148,12 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 	}
 
 	// send email
+	approvedApplicantName := ""
+	if tenantApplication.FirstName != nil {
+		approvedApplicantName = *tenantApplication.FirstName
+	}
 	r := strings.NewReplacer(
-		"{{applicant_name}}", tenantApplication.FirstName,
+		"{{applicant_name}}", approvedApplicantName,
 		"{{unit_name}}", unit.Name,
 		"{{application_code}}", tenantApplication.Code,
 		"{{phone_number}}", tenantAccount.PhoneNumber,
@@ -1017,6 +1233,14 @@ func (s *tenantApplicationService) GenerateInvoice(
 		})
 	}
 
+	// Require a unit to be assigned before generating an invoice
+	if tenantApplication.DesiredUnitId == nil {
+		return nil, pkg.BadRequestError("ApplicationMissingUnit", nil)
+	}
+	if tenantApplication.RentFeeCurrency == nil {
+		return nil, pkg.BadRequestError("ApplicationMissingRentDetails", nil)
+	}
+
 	// Validate that at least one of security deposit or initial deposit is set
 	hasSecurityDeposit := tenantApplication.SecurityDepositFee != nil && *tenantApplication.SecurityDepositFee > 0
 	hasInitialDeposit := tenantApplication.InitialDepositFee != nil && *tenantApplication.InitialDepositFee > 0
@@ -1088,7 +1312,7 @@ func (s *tenantApplicationService) GenerateInvoice(
 		TotalAmount:                totalAmount,
 		Taxes:                      0,
 		SubTotal:                   totalAmount,
-		Currency:                   tenantApplication.RentFeeCurrency,
+		Currency:                   *tenantApplication.RentFeeCurrency,
 		Status:                     "ISSUED",
 		DueDate:                    input.DueDate,
 		LineItems:                  lineItems,
@@ -1202,37 +1426,40 @@ func (s *tenantApplicationService) BulkOnboardLeases(ctx context.Context, input 
 		if entry.Employer != nil {
 			employer = *entry.Employer
 		}
+		occupationAddr := "N/A"
+		bulkSource := "ADMIN"
 
 		// 1. Create TenantApplication (Completed immediately)
 		leaseDocMode := "MANUAL"
 		tenantApp := models.TenantApplication{
-			DesiredUnitId:                  entry.UnitId,
-			RentFee:                        entry.RentFee,
-			RentFeeCurrency:                entry.RentFeeCurrency,
+			DesiredUnitId:                  &entry.UnitId,
+			RentFee:                        &entry.RentFee,
+			RentFeeCurrency:                &entry.RentFeeCurrency,
 			PaymentFrequency:               entry.PaymentFrequency,
 			DesiredMoveInDate:              &entry.MoveInDate,
 			StayDurationFrequency:          &entry.StayDurationFrequency,
 			StayDuration:                   &entry.StayDuration,
 			LeaseAgreementDocumentMode:     &leaseDocMode,
 			LeaseAgreementDocumentUrl:      &entry.LeaseAgreementDocumentUrl,
-			FirstName:                      entry.FirstName,
+			Source:                         &bulkSource,
+			FirstName:                      &entry.FirstName,
 			OtherNames:                     entry.OtherNames,
-			LastName:                       entry.LastName,
+			LastName:                       &entry.LastName,
 			Email:                          entry.Email,
 			Phone:                          entry.Phone,
-			Gender:                         entry.Gender,
-			DateOfBirth:                    entry.DateOfBirth,
-			Nationality:                    entry.Nationality,
-			MaritalStatus:                  entry.MaritalStatus,
-			CurrentAddress:                 entry.CurrentAddress,
+			Gender:                         &entry.Gender,
+			DateOfBirth:                    &entry.DateOfBirth,
+			Nationality:                    &entry.Nationality,
+			MaritalStatus:                  &entry.MaritalStatus,
+			CurrentAddress:                 &entry.CurrentAddress,
 			IDType:                         entry.IDType,
-			IDNumber:                       entry.IDNumber,
-			EmergencyContactName:           entry.EmergencyContactName,
-			EmergencyContactPhone:          entry.EmergencyContactPhone,
-			RelationshipToEmergencyContact: entry.RelationshipToEmergencyContact,
-			Occupation:                     occupation,
-			Employer:                       employer,
-			OccupationAddress:              "N/A",
+			IDNumber:                       &entry.IDNumber,
+			EmergencyContactName:           &entry.EmergencyContactName,
+			EmergencyContactPhone:          &entry.EmergencyContactPhone,
+			RelationshipToEmergencyContact: &entry.RelationshipToEmergencyContact,
+			Occupation:                     &occupation,
+			Employer:                       &employer,
+			OccupationAddress:              &occupationAddr,
 			SecurityDepositFee:             &entry.SecurityDepositFee,
 			SecurityDepositFeeCurrency:     entry.SecurityDepositFeeCurrency,
 			CreatedById:                    input.ClientUserID,

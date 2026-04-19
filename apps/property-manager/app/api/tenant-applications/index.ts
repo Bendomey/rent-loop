@@ -493,3 +493,57 @@ const payApplicationInvoice = async ({
 
 export const usePayApplicationInvoice = () =>
 	useMutation({ mutationFn: payApplicationInvoice })
+
+/**
+ * Bulk create tenant applications from CSV/Excel upload.
+ */
+export interface BulkCreateTenantApplicationEntry {
+	phone: string
+	first_name?: string
+	last_name?: string
+	email?: string
+	gender?: string
+	date_of_birth?: string
+	nationality?: string
+	marital_status?: string
+	id_type?: string
+	id_number?: string
+	current_address?: string
+	desired_unit_id?: string
+	occupation?: string
+	employer?: string
+}
+
+interface BulkCreateTenantApplicationsInput {
+	client_id: string
+	property_id: string
+	entries: BulkCreateTenantApplicationEntry[]
+}
+
+const bulkCreateTenantApplications = async ({
+	client_id,
+	property_id,
+	entries,
+}: BulkCreateTenantApplicationsInput) => {
+	try {
+		const response = await fetchClient<ApiResponse<TenantApplication[]>>(
+			`/v1/admin/clients/${client_id}/properties/${property_id}/tenant-applications/bulk`,
+			{
+				method: 'POST',
+				body: JSON.stringify({ entries }),
+			},
+		)
+		return response.parsedBody.data
+	} catch (error) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const useBulkCreateTenantApplications = () =>
+	useMutation({ mutationFn: bulkCreateTenantApplications })

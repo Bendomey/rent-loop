@@ -636,6 +636,30 @@ The Rentloop Team
 )
 
 const (
+	TENANT_CSV_CREATED_SUBJECT = "Complete Your Tenant Profile on Rentloop"
+	TENANT_CSV_CREATED_BODY    = `Hi,
+
+Your landlord has started a tenant application on your behalf on Rentloop.
+
+To complete your profile, please visit your application tracking page and fill in your details:
+
+{{website_url}}/tenant-applications/{{application_code}}
+
+Your Application Code: {{application_code}}
+
+This information is needed to process your tenancy. It should only take a few minutes to complete.
+
+If you weren't expecting this or have any questions, please contact us.
+
+{{SUPPORT_DETAILS_TEMPLATE}}
+
+Best regards,
+The Rentloop team
+`
+	TENANT_CSV_CREATED_SMS_BODY = `Your landlord started a tenancy application for you on Rentloop. Complete your profile: {{website_url}}/tenant-applications/{{application_code}}`
+)
+
+const (
 	INVOICE_VOIDED_SUBJECT = "Your Invoice Has Been Cancelled"
 	INVOICE_VOIDED_BODY    = `Hi {{tenant_name}},
 

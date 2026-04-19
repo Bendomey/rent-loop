@@ -100,7 +100,7 @@ export function TrackingDashboard({ application, code }: Props) {
 				</div>
 
 				{/* Application details */}
-				<ApplicationDetailsCard application={application} />
+				<ApplicationDetailsCard application={application} code={code} />
 
 				{/* Progress checklist */}
 				<ApplicationChecklist progress={application.checklist_progress} />

@@ -25,10 +25,11 @@ type FormValues = z.infer<typeof Schema>
 interface Step1Props {
 	initialValues?: Partial<FormValues>
 	onNext: (values: FormValues & { unit: PropertyUnit | null }) => void
+	onSkip?: () => void
 	onCancel: () => void
 }
 
-export function WizardStep1({ initialValues, onNext, onCancel }: Step1Props) {
+export function WizardStep1({ initialValues, onNext, onSkip, onCancel }: Step1Props) {
 	const { clientUserProperty } = useProperty()
 	const { entries, editingEntryId } = useBulkOnboard()
 	const propertyId = safeString(clientUserProperty?.property_id)
@@ -36,7 +37,8 @@ export function WizardStep1({ initialValues, onNext, onCancel }: Step1Props) {
 	// Exclude units already used in the current batch (except the one being edited)
 	const excludedUnitIds = entries
 		.filter((e) => e.id !== editingEntryId)
-		.map((e) => e.unit_id)
+		.map((e) => e.desired_unit_id)
+		.filter((id): id is string => !!id)
 
 	const [selectedUnit, setSelectedUnit] = useState<PropertyUnit | null>(null)
 
@@ -64,7 +66,8 @@ export function WizardStep1({ initialValues, onNext, onCancel }: Step1Props) {
 			<div className="mt-10 space-y-2 border-b pb-6">
 				<TypographyH2 className="text-2xl font-bold">Select Unit</TypographyH2>
 				<TypographyMuted>
-					Choose which unit this tenant is occupying.
+					Optionally choose the unit this tenant will occupy. You can skip this
+					if the unit is not yet assigned.
 				</TypographyMuted>
 			</div>
 
@@ -91,13 +94,20 @@ export function WizardStep1({ initialValues, onNext, onCancel }: Step1Props) {
 				<Button type="button" variant="outline" onClick={onCancel}>
 					Back to Overview
 				</Button>
-				<Button
-					type="submit"
-					disabled={!watch('unit_id')}
-					className="bg-rose-600 hover:bg-rose-700 dark:bg-rose-700 dark:hover:bg-rose-800"
-				>
-					Next <ArrowRight className="ml-2 h-4 w-4" />
-				</Button>
+				<div className="flex gap-2">
+					{onSkip && (
+						<Button type="button" variant="ghost" onClick={onSkip}>
+							Skip (no unit yet)
+						</Button>
+					)}
+					<Button
+						type="submit"
+						disabled={!watch('unit_id')}
+						className="bg-rose-600 hover:bg-rose-700 dark:bg-rose-700 dark:hover:bg-rose-800"
+					>
+						Next <ArrowRight className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
 			</div>
 		</form>
 	)

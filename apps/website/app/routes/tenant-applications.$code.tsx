@@ -4,6 +4,7 @@ import {
 	serverGetTrackingApplication,
 	serverPayTrackingInvoice,
 	serverSendTrackingOtp,
+	serverUpdateTrackingApplication,
 	serverVerifyTrackingOtp,
 } from '~/api/tracking/server'
 import { getDomainUrl, getDisplayUrl } from '~/lib/misc'
@@ -112,6 +113,55 @@ export async function action({ request, params }: Route.ActionArgs) {
 				}
 			}
 			return { application: null, maskedPhone: null, error: msg }
+		}
+	}
+
+	if (intent === 'updateApplication') {
+		const fields = [
+			'first_name',
+			'last_name',
+			'email',
+			'phone',
+			'gender',
+			'date_of_birth',
+			'nationality',
+			'marital_status',
+			'id_type',
+			'id_number',
+			'current_address',
+			'emergency_contact_name',
+			'emergency_contact_phone',
+			'relationship_to_emergency_contact',
+			'occupation',
+			'employer',
+			'occupation_address',
+		] as const
+		const body: Record<string, string> = {}
+		for (const f of fields) {
+			const val = formData.get(f)
+			if (val && typeof val === 'string' && val.trim()) {
+				body[f] = val.trim()
+			}
+		}
+		try {
+			const result = await serverUpdateTrackingApplication(code, body)
+			const application: TrackingApplication = {
+				...(result.data as any),
+				checklist_progress: buildChecklistProgress(result.data as any),
+				lease_agreement_document_signing_url: null,
+			}
+			return { application, error: null }
+		} catch (err: unknown) {
+			let msg = 'Failed to save changes'
+			if (err instanceof Response) {
+				try {
+					const body = await err.json()
+					msg = body?.errors?.message ?? msg
+				} catch {
+					// ignore
+				}
+			}
+			return { application: null, error: msg }
 		}
 	}
 

@@ -188,6 +188,8 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Post("/invite", handlers.TenantApplicationHandler.SendTenantInvite)
 							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/bulk", handlers.TenantApplicationHandler.BulkCreateTenantApplications)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 								Post("/", handlers.TenantApplicationHandler.AdminCreateTenantApplication)
 							r.Get("/", handlers.TenantApplicationHandler.ListTenantApplications)
 							r.Get(

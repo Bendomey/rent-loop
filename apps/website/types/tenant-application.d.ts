@@ -54,29 +54,30 @@ interface TenantApplication {
 interface TrackingApplication {
 	code: string
 	status: TenantApplication['status']
+	source: Nullable<string>
 	// Personal info
-	first_name: string
-	last_name: string
+	first_name: Nullable<string>
+	last_name: Nullable<string>
 	other_names: Nullable<string>
 	email: Nullable<string>
 	phone: string
-	gender: string
-	date_of_birth: string
-	nationality: string
-	marital_status: string
+	gender: Nullable<string>
+	date_of_birth: Nullable<string>
+	nationality: Nullable<string>
+	marital_status: Nullable<string>
 	// Identity
 	id_type: Nullable<string>
-	id_number: string
+	id_number: Nullable<string>
 	// Current residence
-	current_address: string
+	current_address: Nullable<string>
 	// Employment
-	occupation: string
-	employer: string
-	occupation_address: string
+	occupation: Nullable<string>
+	employer: Nullable<string>
+	occupation_address: Nullable<string>
 	// Emergency contact
-	emergency_contact_name: string
-	emergency_contact_phone: string
-	relationship_to_emergency_contact: string
+	emergency_contact_name: Nullable<string>
+	emergency_contact_phone: Nullable<string>
+	relationship_to_emergency_contact: Nullable<string>
 	// Rental history
 	previous_landlord_name: Nullable<string>
 	previous_landlord_phone: Nullable<string>

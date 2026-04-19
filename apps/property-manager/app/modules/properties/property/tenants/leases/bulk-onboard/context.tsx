@@ -1,24 +1,31 @@
 import { createContext, useContext, useState } from 'react'
-import type { BulkOnboardLeaseEntryInput } from '~/api/leases'
+import type { BulkCreateTenantApplicationEntry } from '~/api/tenant-applications'
 
-export interface DraftLeaseEntry {
+export interface DraftApplicationEntry {
 	id: string // local uuid for table keying — use crypto.randomUUID()
-	unit_id: string
-	unit_name: string
-	tenant_name: string // derived: first_name + ' ' + last_name
-	rent_fee: number
-	rent_fee_currency: string
-	lease_agreement_document_url: string
-	formData: Partial<BulkOnboardLeaseEntryInput>
-	isComplete: boolean
-	missingFields: string[]
+	phone: string
+	first_name?: string
+	last_name?: string
+	email?: string
+	gender?: string
+	date_of_birth?: string
+	nationality?: string
+	marital_status?: string
+	id_type?: string
+	id_number?: string
+	current_address?: string
+	desired_unit_id?: string
+	unit_name?: string // display name, resolved from desired_unit_id
+	occupation?: string
+	employer?: string
 }
 
 interface BulkOnboardContextType {
-	entries: DraftLeaseEntry[]
+	entries: DraftApplicationEntry[]
 	editingEntryId: string | null // null = table view; set to entry.id = edit mode; 'new' = new entry wizard
 	isSubmitting: boolean
-	addOrUpdateEntry: (entry: DraftLeaseEntry) => void
+	addOrUpdateEntry: (entry: DraftApplicationEntry) => void
+	addManyEntries: (entries: DraftApplicationEntry[]) => void
 	removeEntry: (id: string) => void
 	startEdit: (id: string | null) => void
 	setIsSubmitting: (v: boolean) => void
@@ -33,11 +40,11 @@ export function BulkOnboardProvider({
 }: {
 	children: React.ReactNode
 }) {
-	const [entries, setEntries] = useState<DraftLeaseEntry[]>([])
+	const [entries, setEntries] = useState<DraftApplicationEntry[]>([])
 	const [editingEntryId, setEditingEntryId] = useState<string | null>(null)
 	const [isSubmitting, setIsSubmitting] = useState(false)
 
-	const addOrUpdateEntry = (entry: DraftLeaseEntry) => {
+	const addOrUpdateEntry = (entry: DraftApplicationEntry) => {
 		setEntries((prev) => {
 			const existing = prev.findIndex((e) => e.id === entry.id)
 			if (existing >= 0) {
@@ -47,6 +54,10 @@ export function BulkOnboardProvider({
 			}
 			return [...prev, entry]
 		})
+	}
+
+	const addManyEntries = (newEntries: DraftApplicationEntry[]) => {
+		setEntries((prev) => [...prev, ...newEntries])
 	}
 
 	const removeEntry = (id: string) => {
@@ -62,6 +73,7 @@ export function BulkOnboardProvider({
 				editingEntryId,
 				isSubmitting,
 				addOrUpdateEntry,
+				addManyEntries,
 				removeEntry,
 				startEdit,
 				setIsSubmitting,
@@ -79,44 +91,23 @@ export function useBulkOnboard() {
 	return ctx
 }
 
-export function isDraftComplete(
-	entry: Partial<BulkOnboardLeaseEntryInput> & {
-		lease_agreement_document_url?: string
-	},
-): {
-	isComplete: boolean
-	missingFields: string[]
-} {
-	const required: Array<keyof BulkOnboardLeaseEntryInput> = [
-		'unit_id',
-		'first_name',
-		'last_name',
-		'phone',
-		'gender',
-		'date_of_birth',
-		'nationality',
-		'marital_status',
-		'current_address',
-		'id_type',
-		'id_number',
-		'emergency_contact_name',
-		'emergency_contact_phone',
-		'relationship_to_emergency_contact',
-		'rent_fee',
-		'rent_fee_currency',
-		'move_in_date',
-		'stay_duration_frequency',
-		'stay_duration',
-		'rent_payment_status',
-		'security_deposit_fee',
-		'security_deposit_fee_currency',
-		'lease_agreement_document_url',
-	]
-	const missingFields = required.filter((k) => !entry[k] && entry[k] !== 0)
-	if (entry.rent_payment_status === 'PARTIAL') {
-		if (!entry.periods_paid) missingFields.push('periods_paid')
-		if (!entry.billing_cycle_start_date)
-			missingFields.push('billing_cycle_start_date')
+export function toDraftApiEntry(
+	e: DraftApplicationEntry,
+): BulkCreateTenantApplicationEntry {
+	return {
+		phone: e.phone,
+		first_name: e.first_name || undefined,
+		last_name: e.last_name || undefined,
+		email: e.email || undefined,
+		gender: e.gender || undefined,
+		date_of_birth: e.date_of_birth || undefined,
+		nationality: e.nationality || undefined,
+		marital_status: e.marital_status || undefined,
+		id_type: e.id_type || undefined,
+		id_number: e.id_number || undefined,
+		current_address: e.current_address || undefined,
+		desired_unit_id: e.desired_unit_id || undefined,
+		occupation: e.occupation || undefined,
+		employer: e.employer || undefined,
 	}
-	return { isComplete: missingFields.length === 0, missingFields }
 }
