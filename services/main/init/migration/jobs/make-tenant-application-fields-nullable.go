@@ -34,7 +34,7 @@ func MakeTenantApplicationFieldsNullable() *gormigrate.Migration {
 
 			for _, col := range nullableColumns {
 				if err := db.Exec(
-					"ALTER TABLE tenant_applications ALTER COLUMN "+col+" DROP NOT NULL",
+					"ALTER TABLE tenant_applications ALTER COLUMN " + col + " DROP NOT NULL",
 				).Error; err != nil {
 					return err
 				}

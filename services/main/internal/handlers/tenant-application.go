@@ -290,20 +290,20 @@ func (h *TenantApplicationHandler) SendTenantInvite(w http.ResponseWriter, r *ht
 }
 
 type BulkCreateTenantApplicationEntry struct {
-	Phone          string  `json:"phone"                     validate:"required,e164"          example:"+233281234569"                           description:"Phone number (required)"`
-	FirstName      *string `json:"first_name,omitempty"      validate:"omitempty"              example:"John"                                    description:"First name"`
-	LastName       *string `json:"last_name,omitempty"       validate:"omitempty"              example:"Doe"                                     description:"Last name"`
-	Email          *string `json:"email,omitempty"           validate:"omitempty,email"        example:"john.doe@example.com"                    description:"Email address"`
-	Gender         *string `json:"gender,omitempty"          validate:"omitempty,oneof=MALE FEMALE"          example:"MALE"           description:"Gender"`
-	DateOfBirth    *string `json:"date_of_birth,omitempty"   validate:"omitempty"              example:"1990-01-01"                              description:"Date of birth (YYYY-MM-DD)"`
-	Nationality    *string `json:"nationality,omitempty"     validate:"omitempty"              example:"Ghanaian"                                description:"Nationality"`
-	MaritalStatus  *string `json:"marital_status,omitempty"  validate:"omitempty,oneof=SINGLE MARRIED DIVORCED WIDOWED" example:"SINGLE" description:"Marital status"`
-	IDType         *string `json:"id_type,omitempty"         validate:"omitempty,oneof=GHANA_CARD NATIONAL_ID PASSPORT DRIVER_LICENSE" example:"GHANA_CARD" description:"ID type"`
-	IDNumber       *string `json:"id_number,omitempty"       validate:"omitempty"              example:"GHA-123456789"                           description:"ID number"`
-	CurrentAddress *string `json:"current_address,omitempty" validate:"omitempty"              example:"123 Main St, Accra"                      description:"Current address"`
-	DesiredUnitId  *string `json:"desired_unit_id,omitempty" validate:"omitempty,uuid"         example:"b4d0243c-6581-4104-8185-d83a45ebe41b"   description:"Unit ID"`
-	Occupation     *string `json:"occupation,omitempty"      validate:"omitempty"              example:"Software Engineer"                       description:"Occupation"`
-	Employer       *string `json:"employer,omitempty"        validate:"omitempty"              example:"Acme Corp"                               description:"Employer"`
+	Phone          string  `json:"phone"                     validate:"required,e164"                                                  example:"+233281234569"                        description:"Phone number (required)"`
+	FirstName      *string `json:"first_name,omitempty"      validate:"omitempty"                                                      example:"John"                                 description:"First name"`
+	LastName       *string `json:"last_name,omitempty"       validate:"omitempty"                                                      example:"Doe"                                  description:"Last name"`
+	Email          *string `json:"email,omitempty"           validate:"omitempty,email"                                                example:"john.doe@example.com"                 description:"Email address"`
+	Gender         *string `json:"gender,omitempty"          validate:"omitempty,oneof=MALE FEMALE"                                    example:"MALE"                                 description:"Gender"`
+	DateOfBirth    *string `json:"date_of_birth,omitempty"   validate:"omitempty"                                                      example:"1990-01-01"                           description:"Date of birth (YYYY-MM-DD)"`
+	Nationality    *string `json:"nationality,omitempty"     validate:"omitempty"                                                      example:"Ghanaian"                             description:"Nationality"`
+	MaritalStatus  *string `json:"marital_status,omitempty"  validate:"omitempty,oneof=SINGLE MARRIED DIVORCED WIDOWED"                example:"SINGLE"                               description:"Marital status"`
+	IDType         *string `json:"id_type,omitempty"         validate:"omitempty,oneof=GHANA_CARD NATIONAL_ID PASSPORT DRIVER_LICENSE" example:"GHANA_CARD"                           description:"ID type"`
+	IDNumber       *string `json:"id_number,omitempty"       validate:"omitempty"                                                      example:"GHA-123456789"                        description:"ID number"`
+	CurrentAddress *string `json:"current_address,omitempty" validate:"omitempty"                                                      example:"123 Main St, Accra"                   description:"Current address"`
+	DesiredUnitId  *string `json:"desired_unit_id,omitempty" validate:"omitempty,uuid"                                                 example:"b4d0243c-6581-4104-8185-d83a45ebe41b" description:"Unit ID"`
+	Occupation     *string `json:"occupation,omitempty"      validate:"omitempty"                                                      example:"Software Engineer"                    description:"Occupation"`
+	Employer       *string `json:"employer,omitempty"        validate:"omitempty"                                                      example:"Acme Corp"                            description:"Employer"`
 }
 
 type BulkCreateTenantApplicationsRequest struct {
@@ -318,13 +318,13 @@ type BulkCreateTenantApplicationsRequest struct {
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			property_id	path		string								true	"Property ID"
-//	@Param			body		body		BulkCreateTenantApplicationsRequest	true	"Bulk Create Tenant Applications Request Body"
+//	@Param			property_id	path		string														true	"Property ID"
+//	@Param			body		body		BulkCreateTenantApplicationsRequest							true	"Bulk Create Tenant Applications Request Body"
 //	@Success		201			{object}	object{data=[]transformations.OutputAdminTenantApplication}	"Applications created successfully"
-//	@Failure		400			{object}	lib.HTTPError	"Error occurred when creating applications"
-//	@Failure		401			{object}	string			"Invalid or absent authentication token"
-//	@Failure		422			{object}	lib.HTTPError	"Validation error"
-//	@Failure		500			{object}	string			"An unexpected error occurred"
+//	@Failure		400			{object}	lib.HTTPError												"Error occurred when creating applications"
+//	@Failure		401			{object}	string														"Invalid or absent authentication token"
+//	@Failure		422			{object}	lib.HTTPError												"Validation error"
+//	@Failure		500			{object}	string														"An unexpected error occurred"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/bulk [post]
 func (h *TenantApplicationHandler) BulkCreateTenantApplications(w http.ResponseWriter, r *http.Request) {
 	currentUser, currentUserOk := lib.ClientUserFromContext(r.Context())
@@ -1058,23 +1058,23 @@ func (h *TenantApplicationHandler) GetTenantApplicationByCode(w http.ResponseWri
 }
 
 type UpdateTenantApplicationByCodeRequest struct {
-	FirstName                      *string              `json:"first_name,omitempty"                        validate:"omitempty"                                                      example:"John"          description:"First name"`
-	LastName                       *string              `json:"last_name,omitempty"                         validate:"omitempty"                                                      example:"Doe"           description:"Last name"`
-	Email                          lib.Optional[string] `json:"email,omitempty"                             validate:"omitempty"                                                                              description:"Email address"              swaggertype:"string"`
-	Phone                          *string              `json:"phone,omitempty"                             validate:"omitempty,e164"                                                 example:"+233281234569" description:"Phone number"`
-	Gender                         *string              `json:"gender,omitempty"                            validate:"omitempty,oneof=MALE FEMALE"                                    example:"MALE"          description:"Gender"`
+	FirstName                      *string              `json:"first_name,omitempty"                        validate:"omitempty"                                                      example:"John"                 description:"First name"`
+	LastName                       *string              `json:"last_name,omitempty"                         validate:"omitempty"                                                      example:"Doe"                  description:"Last name"`
+	Email                          lib.Optional[string] `json:"email,omitempty"                             validate:"omitempty"                                                                                     description:"Email address"                     swaggertype:"string"`
+	Phone                          *string              `json:"phone,omitempty"                             validate:"omitempty,e164"                                                 example:"+233281234569"        description:"Phone number"`
+	Gender                         *string              `json:"gender,omitempty"                            validate:"omitempty,oneof=MALE FEMALE"                                    example:"MALE"                 description:"Gender"`
 	DateOfBirth                    *time.Time           `json:"date_of_birth,omitempty"                     validate:"omitempty"                                                      example:"1990-01-01T00:00:00Z" description:"Date of birth"`
-	Nationality                    *string              `json:"nationality,omitempty"                       validate:"omitempty"                                                      example:"Ghanaian"      description:"Nationality"`
-	MaritalStatus                  *string              `json:"marital_status,omitempty"                    validate:"omitempty,oneof=SINGLE MARRIED DIVORCED WIDOWED"                example:"SINGLE"        description:"Marital status"`
-	IDType                         *string              `json:"id_type,omitempty"                           validate:"omitempty,oneof=GHANA_CARD NATIONAL_ID PASSPORT DRIVER_LICENSE" example:"GHANA_CARD"    description:"ID type"`
-	IDNumber                       *string              `json:"id_number,omitempty"                         validate:"omitempty"                                                      example:"GHA-123456789" description:"ID number"`
-	CurrentAddress                 *string              `json:"current_address,omitempty"                   validate:"omitempty"                                                      example:"123 Main St"   description:"Current address"`
-	EmergencyContactName           *string              `json:"emergency_contact_name,omitempty"            validate:"omitempty"                                                      example:"Jane Doe"      description:"Emergency contact name"`
-	EmergencyContactPhone          *string              `json:"emergency_contact_phone,omitempty"           validate:"omitempty,e164"                                                 example:"+233281434579" description:"Emergency contact phone"`
-	RelationshipToEmergencyContact *string              `json:"relationship_to_emergency_contact,omitempty" validate:"omitempty"                                                      example:"Sister"        description:"Relationship to emergency contact"`
-	Occupation                     *string              `json:"occupation,omitempty"                        validate:"omitempty"                                                      example:"Engineer"      description:"Occupation"`
-	Employer                       *string              `json:"employer,omitempty"                          validate:"omitempty"                                                      example:"Acme Corp"     description:"Employer"`
-	OccupationAddress              *string              `json:"occupation_address,omitempty"                validate:"omitempty"                                                      example:"456 Tech Ave"  description:"Occupation address"`
+	Nationality                    *string              `json:"nationality,omitempty"                       validate:"omitempty"                                                      example:"Ghanaian"             description:"Nationality"`
+	MaritalStatus                  *string              `json:"marital_status,omitempty"                    validate:"omitempty,oneof=SINGLE MARRIED DIVORCED WIDOWED"                example:"SINGLE"               description:"Marital status"`
+	IDType                         *string              `json:"id_type,omitempty"                           validate:"omitempty,oneof=GHANA_CARD NATIONAL_ID PASSPORT DRIVER_LICENSE" example:"GHANA_CARD"           description:"ID type"`
+	IDNumber                       *string              `json:"id_number,omitempty"                         validate:"omitempty"                                                      example:"GHA-123456789"        description:"ID number"`
+	CurrentAddress                 *string              `json:"current_address,omitempty"                   validate:"omitempty"                                                      example:"123 Main St"          description:"Current address"`
+	EmergencyContactName           *string              `json:"emergency_contact_name,omitempty"            validate:"omitempty"                                                      example:"Jane Doe"             description:"Emergency contact name"`
+	EmergencyContactPhone          *string              `json:"emergency_contact_phone,omitempty"           validate:"omitempty,e164"                                                 example:"+233281434579"        description:"Emergency contact phone"`
+	RelationshipToEmergencyContact *string              `json:"relationship_to_emergency_contact,omitempty" validate:"omitempty"                                                      example:"Sister"               description:"Relationship to emergency contact"`
+	Occupation                     *string              `json:"occupation,omitempty"                        validate:"omitempty"                                                      example:"Engineer"             description:"Occupation"`
+	Employer                       *string              `json:"employer,omitempty"                          validate:"omitempty"                                                      example:"Acme Corp"            description:"Employer"`
+	OccupationAddress              *string              `json:"occupation_address,omitempty"                validate:"omitempty"                                                      example:"456 Tech Ave"         description:"Occupation address"`
 }
 
 // UpdateTenantApplicationByCode godoc

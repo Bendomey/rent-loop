@@ -29,7 +29,12 @@ interface Step1Props {
 	onCancel: () => void
 }
 
-export function WizardStep1({ initialValues, onNext, onSkip, onCancel }: Step1Props) {
+export function WizardStep1({
+	initialValues,
+	onNext,
+	onSkip,
+	onCancel,
+}: Step1Props) {
 	const { clientUserProperty } = useProperty()
 	const { entries, editingEntryId } = useBulkOnboard()
 	const propertyId = safeString(clientUserProperty?.property_id)

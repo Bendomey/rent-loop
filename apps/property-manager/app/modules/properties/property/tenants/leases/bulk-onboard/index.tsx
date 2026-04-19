@@ -12,11 +12,7 @@ import { useRef } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import * as XLSX from 'xlsx'
-import {
-	BulkOnboardProvider,
-	toDraftApiEntry,
-	useBulkOnboard,
-} from './context'
+import { BulkOnboardProvider, toDraftApiEntry, useBulkOnboard } from './context'
 import type { DraftApplicationEntry } from './context'
 import { BulkOnboardWizard } from './wizard'
 import { useBulkCreateTenantApplications } from '~/api/tenant-applications'
@@ -138,7 +134,8 @@ function parseFileToEntries(
 						return entry
 					})
 					.filter(
-						(e): e is Record<string, string> & { phone: string } => !!e['phone'],
+						(e): e is Record<string, string> & { phone: string } =>
+							!!e['phone'],
 					)
 
 				resolve(
@@ -210,7 +207,9 @@ function BulkOnboardTable() {
 		try {
 			const parsed = await parseFileToEntries(file)
 			if (parsed.length === 0) {
-				toast.error('No valid rows found. Make sure the phone column is filled.')
+				toast.error(
+					'No valid rows found. Make sure the phone column is filled.',
+				)
 				return
 			}
 			const newEntries: DraftApplicationEntry[] = parsed.map((p) => ({
@@ -235,7 +234,11 @@ function BulkOnboardTable() {
 			}
 			await Promise.all(
 				batches.map((batch) =>
-					bulkCreate({ client_id: clientId, property_id: propertyId, entries: batch }),
+					bulkCreate({
+						client_id: clientId,
+						property_id: propertyId,
+						entries: batch,
+					}),
 				),
 			)
 
@@ -308,9 +311,8 @@ function BulkOnboardTable() {
 			<div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300">
 				<Info className="mt-0.5 h-4 w-4 shrink-0" />
 				<p>
-					Use the{' '}
-					<span className="font-medium">Import File</span> button to upload a
-					CSV or Excel file with your tenants. Download the{' '}
+					Use the <span className="font-medium">Import File</span> button to
+					upload a CSV or Excel file with your tenants. Download the{' '}
 					<span className="font-medium">template</span> for the correct format.
 					Only phone number is required — tenants will receive an SMS to
 					complete their profile. For new tenant applications with full details,

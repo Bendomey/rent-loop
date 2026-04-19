@@ -2,15 +2,15 @@ import { useState } from 'react'
 import type { DraftApplicationEntry } from '../context'
 import { useBulkOnboard } from '../context'
 import { WizardStep1 } from './step1'
-import { WizardStep2New } from './step2-new'
-import type { Step2NewValues } from './step2-new'
+import { WizardStep2 } from './step2'
+import type { Step2Values } from './step2'
 
 const TOTAL_STEPS = 2
 
 interface WizardData {
 	desired_unit_id?: string
 	unit_name?: string
-	step2: Partial<Step2NewValues>
+	step2: Partial<Step2Values>
 }
 
 interface BulkOnboardWizardProps {
@@ -30,14 +30,14 @@ export function BulkOnboardWizard({ editingEntry }: BulkOnboardWizardProps) {
 				first_name: editingEntry.first_name,
 				last_name: editingEntry.last_name,
 				email: editingEntry.email,
-				gender: editingEntry.gender as Step2NewValues['gender'],
+				gender: editingEntry.gender as Step2Values['gender'],
 				date_of_birth: editingEntry.date_of_birth
 					? new Date(editingEntry.date_of_birth)
 					: undefined,
 				nationality: editingEntry.nationality,
 				marital_status:
-					editingEntry.marital_status as Step2NewValues['marital_status'],
-				id_type: editingEntry.id_type as Step2NewValues['id_type'],
+					editingEntry.marital_status as Step2Values['marital_status'],
+				id_type: editingEntry.id_type as Step2Values['id_type'],
 				id_number: editingEntry.id_number,
 				current_address: editingEntry.current_address,
 				occupation: editingEntry.occupation,
@@ -48,7 +48,7 @@ export function BulkOnboardWizard({ editingEntry }: BulkOnboardWizardProps) {
 
 	const progressPct = (step / TOTAL_STEPS) * 100
 
-	const handleSave = (values: Step2NewValues) => {
+	const handleSave = (values: Step2Values) => {
 		const entry: DraftApplicationEntry = {
 			id: editingEntry?.id ?? crypto.randomUUID(),
 			phone: values.phone,
@@ -113,7 +113,7 @@ export function BulkOnboardWizard({ editingEntry }: BulkOnboardWizardProps) {
 							/>
 						)}
 						{step === 2 && (
-							<WizardStep2New
+							<WizardStep2
 								initialValues={data.step2}
 								onSave={(v) => {
 									setData((d) => ({ ...d, step2: v }))

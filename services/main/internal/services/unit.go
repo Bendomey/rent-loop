@@ -20,7 +20,6 @@ type UnitService interface {
 	CreateUnit(context context.Context, input CreateUnitInput) (*models.Unit, error)
 	GetUnit(context context.Context, query repository.GetUnitQuery) (*models.Unit, error)
 	GetUnitByID(context context.Context, id string) (*models.Unit, error)
-	GetUnitByIDForUpdate(context context.Context, id string) (*models.Unit, error)
 	UpdateUnit(context context.Context, input UpdateUnitInput) (*models.Unit, error)
 	UpdateUnitStatus(ctx context.Context, input UpdateUnitStatusInput) error
 	SetSystemUnitStatus(ctx context.Context, input UpdateUnitStatusInput) error
@@ -184,26 +183,6 @@ func (s *unitService) GetUnitByID(ctx context.Context, id string) (*models.Unit,
 			Metadata: map[string]string{
 				"function": "GetUnitByID",
 				"action":   "fetching unit",
-			},
-		})
-	}
-
-	return unit, nil
-}
-
-func (s *unitService) GetUnitByIDForUpdate(ctx context.Context, id string) (*models.Unit, error) {
-	unit, getUnitErr := s.repo.GetOneLocked(ctx, map[string]any{"id": id})
-	if getUnitErr != nil {
-		if errors.Is(getUnitErr, gorm.ErrRecordNotFound) {
-			return nil, pkg.NotFoundError("UnitNotFound", &pkg.RentLoopErrorParams{
-				Err: getUnitErr,
-			})
-		}
-		return nil, pkg.InternalServerError(getUnitErr.Error(), &pkg.RentLoopErrorParams{
-			Err: getUnitErr,
-			Metadata: map[string]string{
-				"function": "GetUnitByIDForUpdate",
-				"action":   "fetching unit with lock",
 			},
 		})
 	}
