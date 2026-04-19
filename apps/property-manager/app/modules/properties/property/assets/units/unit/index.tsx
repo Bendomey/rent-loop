@@ -95,9 +95,9 @@ const paymentFrequencyLabels: Record<
 	WEEKLY: 'Weekly',
 	DAILY: 'Daily',
 	MONTHLY: 'Monthly',
-	QUARTERLY: 'Quarterly',
-	BIANNUALLY: 'Biannually',
-	ANNUALLY: 'Annually',
+	// QUARTERLY: 'Quarterly',
+	// BIANNUALLY: 'Biannually',
+	// ANNUALLY: 'Annually',
 }
 
 const selectableStatuses: Array<{

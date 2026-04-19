@@ -15,9 +15,9 @@ interface PropertyUnit {
 		| 'WEEKLY'
 		| 'DAILY'
 		| 'MONTHLY'
-		| 'QUARTERLY'
-		| 'BIANNUALLY'
-		| 'ANNUALLY'
+		// | 'QUARTERLY'
+		// | 'BIANNUALLY'
+		// | 'ANNUALLY'
 	max_occupants_allowed: Nullable<number>
 	type: 'APARTMENT' | 'HOUSE' | 'STUDIO' | 'OFFICE' | 'RETAIL'
 	status:

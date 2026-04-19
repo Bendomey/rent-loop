@@ -7,6 +7,8 @@ import {
 	Home,
 	Info,
 	LayoutGrid,
+	Minus,
+	Plus,
 	Store,
 } from 'lucide-react'
 import { useEffect } from 'react'
@@ -80,7 +82,7 @@ const ValidationSchema = z.object({
 	rent_fee: z.number().positive('Rent fee must be a positive number'),
 	rent_fee_currency: z.string().min(1, 'Currency is required'),
 	payment_frequency: z.enum(
-		['WEEKLY', 'DAILY', 'MONTHLY', 'QUARTERLY', 'BIANNUALLY', 'ANNUALLY'],
+		['DAILY', 'WEEKLY', 'MONTHLY'], // 'QUARTERLY', 'BIANNUALLY', 'ANNUALLY'
 		{ error: 'Please select a payment frequency' },
 	),
 })
@@ -126,12 +128,12 @@ const paymentFrequencies: Array<{
 	label: string
 	value: FormSchema['payment_frequency']
 }> = [
-	{ label: 'Weekly', value: 'WEEKLY' },
 	{ label: 'Daily', value: 'DAILY' },
+	{ label: 'Weekly', value: 'WEEKLY' },
 	{ label: 'Monthly', value: 'MONTHLY' },
-	{ label: 'Quarterly', value: 'QUARTERLY' },
-	{ label: 'Biannually', value: 'BIANNUALLY' },
-	{ label: 'Annually', value: 'ANNUALLY' },
+	// { label: 'Quarterly', value: 'QUARTERLY' },
+	// { label: 'Biannually', value: 'BIANNUALLY' },
+	// { label: 'Annually', value: 'ANNUALLY' },
 ]
 
 export function EditPropertyAssetUnitModule() {
@@ -457,19 +459,39 @@ export function EditPropertyAssetUnitModule() {
 									<FormItem>
 										<FormLabel>Max Occupants Allowed</FormLabel>
 										<FormControl>
-											<Input
-												type="number"
-												placeholder="e.g., 4"
-												min={1}
-												{...field}
-												onChange={(e) => field.onChange(e.target.valueAsNumber)}
-											/>
+											<div className="flex items-center gap-3">
+												<Button
+													type="button"
+													variant="outline"
+													size="icon"
+													disabled={field.value <= 1}
+													onClick={() => field.onChange(field.value - 1)}
+												>
+													<Minus className="size-4" />
+												</Button>
+												<span className="w-8 text-center text-sm font-medium">
+													{field.value}
+												</span>
+												<Button
+													type="button"
+													variant="outline"
+													size="icon"
+													onClick={() => field.onChange(field.value + 1)}
+												>
+													<Plus className="size-4" />
+												</Button>
+											</div>
 										</FormControl>
 										<FormMessage />
-										<FormDescription>
-											The maximum number of people that can live in this unit at
-											the same time.
-										</FormDescription>
+										<div className="mt-2 flex items-start gap-2 rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
+											<Info className="mt-0.5 size-4 shrink-0 text-blue-500" />
+											<p className="text-sm text-blue-700 dark:text-blue-300">
+												Increase this when you want to rent this unit to multiple
+												tenants at the same time — for example, renting individual
+												rooms in a shared apartment. The default is 1 (single
+												tenant only).
+											</p>
+										</div>
 									</FormItem>
 								)}
 							/>
