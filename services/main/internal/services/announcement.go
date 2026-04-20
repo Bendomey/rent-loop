@@ -8,6 +8,7 @@ import (
 
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -386,15 +387,20 @@ func (s *announcementService) fanOutNotifications(ctx context.Context, a *models
 		"priority":        a.Priority,
 	}
 
-	emailBody := strings.ReplaceAll(lib.ANNOUNCEMENT_EMAIL_BODY, "{{announcement_title}}", a.Title)
-	emailBody = strings.ReplaceAll(emailBody, "{{announcement_content}}", a.Content)
-	emailBody = strings.ReplaceAll(emailBody, "{{announcement_type}}", a.Type)
+	announcementEmailData := emailtemplates.AnnouncementData{
+		AnnouncementType:    a.Type,
+		AnnouncementTitle:   a.Title,
+		AnnouncementContent: a.Content,
+	}
+	htmlBody, textBody, _ := s.appCtx.EmailEngine.Render("announcement/notification", announcementEmailData)
 
 	var emailRecipients []pkg.BulkEmailRecipient
 	var smsRecipients []string
 
-	smsMsg := strings.ReplaceAll(lib.ANNOUNCEMENT_SMS_BODY, "{{announcement_title}}", a.Title)
-	smsMsg = strings.ReplaceAll(smsMsg, "{{announcement_content}}", a.Content)
+	smsMsg := strings.NewReplacer(
+		"{{announcement_title}}", a.Title,
+		"{{announcement_content}}", a.Content,
+	).Replace(lib.ANNOUNCEMENT_SMS_BODY)
 
 	for _, account := range *accounts {
 		accountID := account.ID.String()
@@ -417,7 +423,8 @@ func (s *announcementService) fanOutNotifications(ctx context.Context, a *models
 			emailRecipients = append(emailRecipients, pkg.BulkEmailRecipient{
 				To:       *tenant.Email,
 				Subject:  lib.ANNOUNCEMENT_EMAIL_SUBJECT,
-				TextBody: emailBody,
+				HtmlBody: htmlBody,
+				TextBody: textBody,
 			})
 		}
 

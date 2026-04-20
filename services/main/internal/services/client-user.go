@@ -7,6 +7,7 @@ import (
 
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -164,46 +165,58 @@ func (s *clientUserService) CreateClientUser(
 
 	if plainPassword != "" {
 		// New user — send credentials
-		r := strings.NewReplacer(
+		addedSMS := strings.NewReplacer(
 			"{{name}}", input.Name,
 			"{{client_name}}", client.Name,
 			"{{email}}", input.Email,
 			"{{password}}", plainPassword,
-		)
+		).Replace(lib.CLIENT_USER_ADDED_SMS_BODY)
+		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render("client-user/added", emailtemplates.ClientUserAddedData{
+			Name:       input.Name,
+			ClientName: client.Name,
+			Email:      input.Email,
+			Password:   plainPassword,
+		})
 		go pkg.SendEmail(
 			s.appCtx.Config,
 			pkg.SendEmailInput{
 				Recipient: input.Email,
 				Subject:   lib.CLIENT_USER_ADDED_SUBJECT,
-				TextBody:  r.Replace(lib.CLIENT_USER_ADDED_BODY),
+				HtmlBody:  htmlBody,
+				TextBody:  textBody,
 			},
 		)
 		go s.appCtx.Clients.GatekeeperAPI.SendSMS(
 			context.Background(),
 			gatekeeper.SendSMSInput{
 				Recipient: input.Phone,
-				Message:   r.Replace(lib.CLIENT_USER_ADDED_SMS_BODY),
+				Message:   addedSMS,
 			},
 		)
 	} else {
 		// Existing user — notify them they've been added to a new client
-		r := strings.NewReplacer(
+		existingSMS := strings.NewReplacer(
 			"{{name}}", input.Name,
 			"{{client_name}}", client.Name,
-		)
+		).Replace(lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_SMS_BODY)
+		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render("client-user/added-existing-account", emailtemplates.ClientUserAddedExistingAccountData{
+			Name:       input.Name,
+			ClientName: client.Name,
+		})
 		go pkg.SendEmail(
 			s.appCtx.Config,
 			pkg.SendEmailInput{
 				Recipient: input.Email,
 				Subject:   lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_SUBJECT,
-				TextBody:  r.Replace(lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_BODY),
+				HtmlBody:  htmlBody,
+				TextBody:  textBody,
 			},
 		)
 		go s.appCtx.Clients.GatekeeperAPI.SendSMS(
 			context.Background(),
 			gatekeeper.SendSMSInput{
 				Recipient: input.Phone,
-				Message:   r.Replace(lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_SMS_BODY),
+				Message:   existingSMS,
 			},
 		)
 	}
@@ -370,16 +383,19 @@ func (s *clientUserService) ActivateClientUser(
 		})
 	}
 
-	r := strings.NewReplacer("{{name}}", user.Name)
-	message := r.Replace(lib.CLIENT_USER_ACTIVATED_BODY)
-	smsMessage := r.Replace(lib.CLIENT_USER_ACTIVATED_SMS_BODY)
+	smsMessage := strings.NewReplacer("{{name}}", user.Name).Replace(lib.CLIENT_USER_ACTIVATED_SMS_BODY)
 
+	htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+		"client-user/activated",
+		emailtemplates.ClientUserActivatedData{Name: user.Name},
+	)
 	go pkg.SendEmail(
 		s.appCtx.Config,
 		pkg.SendEmailInput{
 			Recipient: user.Email,
 			Subject:   lib.CLIENT_USER_ACTIVATED_SUBJECT,
-			TextBody:  message,
+			HtmlBody:  htmlBody,
+			TextBody:  textBody,
 		},
 	)
 
@@ -449,19 +465,22 @@ func (s *clientUserService) DeactivateClientUser(
 		})
 	}
 
-	r := strings.NewReplacer(
+	smsMessage := strings.NewReplacer(
 		"{{name}}", user.Name,
 		"{{reason}}", input.Reason,
-	)
-	message := r.Replace(lib.CLIENT_USER_DEACTIVATED_BODY)
-	smsMessage := r.Replace(lib.CLIENT_USER_DEACTIVATED_SMS_BODY)
+	).Replace(lib.CLIENT_USER_DEACTIVATED_SMS_BODY)
 
+	htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+		"client-user/deactivated",
+		emailtemplates.ClientUserDeactivatedData{Name: user.Name, Reason: input.Reason},
+	)
 	go pkg.SendEmail(
 		s.appCtx.Config,
 		pkg.SendEmailInput{
 			Recipient: user.Email,
 			Subject:   lib.CLIENT_USER_DEACTIVATED_SUBJECT,
-			TextBody:  message,
+			HtmlBody:  htmlBody,
+			TextBody:  textBody,
 		},
 	)
 

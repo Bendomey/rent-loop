@@ -11,6 +11,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/accounting"
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -242,17 +243,21 @@ func (s *paymentService) CreateOfflinePayment(
 				lease.ActivatedBy.User.Email == "" {
 				return
 			}
-			message := strings.NewReplacer(
-				"{{tenant_name}}", lease.Tenant.FirstName,
-				"{{unit_name}}", lease.Unit.Name,
-				"{{invoice_code}}", invoice.Code,
-				"{{amount}}", lib.FormatAmount(lib.PesewasToCedis(invoice.TotalAmount)),
-				"{{currency}}", invoice.Currency,
-			).Replace(lib.ApplyGlobalVariableTemplate(s.appCtx.Config, lib.PM_OFFLINE_PAYMENT_SUBMITTED_BODY))
+			htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+				"payment/offline-submitted",
+				emailtemplates.OfflinePaymentSubmittedData{
+					TenantName:  lease.Tenant.FirstName,
+					UnitName:    lease.Unit.Name,
+					InvoiceCode: invoice.Code,
+					Amount:      lib.FormatAmount(lib.PesewasToCedis(invoice.TotalAmount)),
+					Currency:    invoice.Currency,
+				},
+			)
 			pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 				Recipient: lease.ActivatedBy.User.Email,
 				Subject:   lib.PM_OFFLINE_PAYMENT_SUBMITTED_SUBJECT,
-				TextBody:  message,
+				HtmlBody:  htmlBody,
+				TextBody:  textBody,
 			})
 		} else if invoice.ContextTenantApplicationID != nil && s.tenantApplicationService != nil {
 			ta, taErr := s.tenantApplicationService.GetOneTenantApplication(bgCtx, repository.GetTenantApplicationQuery{
@@ -262,17 +267,19 @@ func (s *paymentService) CreateOfflinePayment(
 			if taErr != nil || ta.CreatedBy.User.Email == "" {
 				return
 			}
-			message := strings.NewReplacer(
-				"{{tenant_name}}", strings.Join(strings.Fields(lib.SafeString(ta.FirstName)+" "+lib.SafeString(ta.LastName)), " "),
-				"{{unit_name}}", "",
-				"{{invoice_code}}", invoice.Code,
-				"{{amount}}", lib.FormatAmount(lib.PesewasToCedis(invoice.TotalAmount)),
-				"{{currency}}", invoice.Currency,
-			).Replace(lib.ApplyGlobalVariableTemplate(s.appCtx.Config, lib.PM_OFFLINE_PAYMENT_SUBMITTED_BODY))
+			tenantName := strings.Join(strings.Fields(lib.SafeString(ta.FirstName)+" "+lib.SafeString(ta.LastName)), " ")
+			htmlBody, textBody, _ := s.appCtx.EmailEngine.Render("payment/offline-submitted", emailtemplates.OfflinePaymentSubmittedData{
+				TenantName:  tenantName,
+				UnitName:    "",
+				InvoiceCode: invoice.Code,
+				Amount:      lib.FormatAmount(lib.PesewasToCedis(invoice.TotalAmount)),
+				Currency:    invoice.Currency,
+			})
 			pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 				Recipient: ta.CreatedBy.User.Email,
 				Subject:   lib.PM_OFFLINE_PAYMENT_SUBMITTED_SUBJECT,
-				TextBody:  message,
+				HtmlBody:  htmlBody,
+				TextBody:  textBody,
 			})
 		}
 	}()
@@ -545,21 +552,28 @@ func (s *paymentService) VerifyOfflinePayment(
 		if payment.Invoice.ContextLease != nil {
 			unitName = payment.Invoice.ContextLease.Unit.Name
 		}
-		r := strings.NewReplacer(
+		smsR := strings.NewReplacer(
 			"{{tenant_name}}", tenant.FirstName,
 			"{{invoice_code}}", payment.Invoice.Code,
 			"{{unit_name}}", unitName,
 			"{{currency}}", payment.Invoice.Currency,
 			"{{amount}}", lib.FormatAmount(lib.PesewasToCedis(int64(payment.Invoice.TotalAmount))),
 		)
-		message := r.Replace(lib.INVOICE_PAID_BODY)
-		smsMessage := r.Replace(lib.INVOICE_PAID_SMS_BODY)
+		smsMessage := smsR.Replace(lib.INVOICE_PAID_SMS_BODY)
 
+		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render("invoice/paid", emailtemplates.InvoicePaidData{
+			TenantName:  tenant.FirstName,
+			InvoiceCode: payment.Invoice.Code,
+			UnitName:    unitName,
+			Currency:    payment.Invoice.Currency,
+			Amount:      lib.FormatAmount(lib.PesewasToCedis(int64(payment.Invoice.TotalAmount))),
+		})
 		if tenant.Email != nil {
 			go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 				Recipient: *tenant.Email,
 				Subject:   lib.INVOICE_PAID_SUBJECT,
-				TextBody:  message,
+				HtmlBody:  htmlBody,
+				TextBody:  textBody,
 			})
 		}
 
@@ -580,7 +594,7 @@ func (s *paymentService) VerifyOfflinePayment(
 		if tenant.TenantAccount != nil {
 			tenantAccountID := tenant.TenantAccount.ID.String()
 			invoiceID := payment.Invoice.ID.String()
-			templatedMessage := lib.ApplyGlobalVariableTemplate(s.appCtx.Config, message)
+			templatedMessage := textBody
 			go func() {
 				if err := s.notificationService.SendToTenantAccount(
 					context.Background(),

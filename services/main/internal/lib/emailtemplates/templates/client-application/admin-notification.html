@@ -1,0 +1,42 @@
+{{define "preview"}}A new property manager application is waiting for your review.{{end}}
+{{define "content"}}
+<h1 class="headline" style="margin:0 0 14px;font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#111110;line-height:1.2;letter-spacing:0.2px;">New application received.</h1>
+<p style="margin:0 0 24px;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;color:#444444;line-height:1.7;">A new property manager application has been submitted on Rentloop and is awaiting your review.</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-radius:8px;overflow:hidden;margin-bottom:28px;border:1px solid #EAEAE8;">
+  <tbody>
+    <tr style="background:#F8F7F4;">
+      <td style="padding:11px 18px;font-size:13px;color:#888888;font-family:'DM Sans',Arial,sans-serif;font-weight:500;border-bottom:1px solid #EAEAE8;">Name</td>
+      <td style="padding:11px 18px;font-size:13px;color:#111111;font-family:'DM Sans',Arial,sans-serif;font-weight:500;text-align:right;border-bottom:1px solid #EAEAE8;">{{.Data.ApplicantName}}</td>
+    </tr>
+    <tr style="background:#FFFFFF;">
+      <td style="padding:11px 18px;font-size:13px;color:#888888;font-family:'DM Sans',Arial,sans-serif;font-weight:500;border-bottom:1px solid #EAEAE8;">Email</td>
+      <td style="padding:11px 18px;font-size:13px;color:#111111;font-family:'DM Sans',Arial,sans-serif;font-weight:500;text-align:right;border-bottom:1px solid #EAEAE8;">{{.Data.ApplicantEmail}}</td>
+    </tr>
+    <tr style="background:#F8F7F4;">
+      <td style="padding:11px 18px;font-size:13px;color:#888888;font-family:'DM Sans',Arial,sans-serif;font-weight:500;border-bottom:1px solid #EAEAE8;">Phone</td>
+      <td style="padding:11px 18px;font-size:13px;color:#111111;font-family:'DM Sans',Arial,sans-serif;font-weight:500;text-align:right;border-bottom:1px solid #EAEAE8;">{{.Data.ApplicantPhone}}</td>
+    </tr>
+    <tr style="background:#FFFFFF;">
+      <td style="padding:11px 18px;font-size:13px;color:#888888;font-family:'DM Sans',Arial,sans-serif;font-weight:500;border-bottom:1px solid #EAEAE8;">Type</td>
+      <td style="padding:11px 18px;font-size:13px;color:#111111;font-family:'DM Sans',Arial,sans-serif;font-weight:500;text-align:right;border-bottom:1px solid #EAEAE8;">{{.Data.ApplicantType}}</td>
+    </tr>
+    <tr style="background:#F8F7F4;">
+      <td style="padding:11px 18px;font-size:13px;color:#888888;font-family:'DM Sans',Arial,sans-serif;font-weight:500;border-bottom:1px solid #EAEAE8;">Sub-Type</td>
+      <td style="padding:11px 18px;font-size:13px;color:#111111;font-family:'DM Sans',Arial,sans-serif;font-weight:500;text-align:right;border-bottom:1px solid #EAEAE8;">{{.Data.ApplicantSubType}}</td>
+    </tr>
+    <tr style="background:#FFFFFF;">
+      <td style="padding:11px 18px;font-size:13px;color:#888888;font-family:'DM Sans',Arial,sans-serif;font-weight:500;border-bottom:none;">Location</td>
+      <td style="padding:11px 18px;font-size:13px;color:#111111;font-family:'DM Sans',Arial,sans-serif;font-weight:500;text-align:right;border-bottom:none;">{{.Data.ApplicantCity}}, {{.Data.ApplicantRegion}}</td>
+    </tr>
+  </tbody>
+</table>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:12px;">
+  <tr>
+    <td align="center">
+      <a href="{{.Base.AdminPortalURL}}" style="display:inline-block;background:#C8003A;color:#ffffff;font-family:'DM Sans',Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;padding:13px 40px;border-radius:9px;letter-spacing:0.2px;">Review in Dashboard</a>
+    </td>
+  </tr>
+</table>
+{{end}}

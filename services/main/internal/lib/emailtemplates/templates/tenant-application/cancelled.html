@@ -1,0 +1,21 @@
+{{define "preview"}}Your Rentloop tenant application has been cancelled.{{end}}
+{{define "content"}}
+<h1 class="headline" style="margin:0 0 14px;font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#111110;line-height:1.2;letter-spacing:0.2px;">Application cancelled.</h1>
+<p style="margin:0 0 20px;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;color:#444444;line-height:1.7;">Hello {{.Data.ApplicantName}},</p>
+<p style="margin:0 0 24px;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;color:#444444;line-height:1.7;">Your tenant application has been cancelled. Please review the details below.</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-radius:8px;overflow:hidden;margin-bottom:28px;border:1px solid #EAEAE8;">
+  <tbody>
+    <tr style="background:#F8F7F4;">
+      <td style="padding:11px 18px;font-size:13px;color:#888888;font-family:'DM Sans',Arial,sans-serif;font-weight:500;border-bottom:1px solid #EAEAE8;">Application Code</td>
+      <td style="padding:11px 18px;font-size:13px;color:#111111;font-family:'DM Sans',Arial,sans-serif;font-weight:500;text-align:right;border-bottom:1px solid #EAEAE8;">{{.Data.ApplicationCode}}</td>
+    </tr>
+    <tr style="background:#FFFFFF;">
+      <td style="padding:11px 18px;font-size:13px;color:#888888;font-family:'DM Sans',Arial,sans-serif;font-weight:500;border-bottom:none;">Reason</td>
+      <td style="padding:11px 18px;font-size:13px;color:#111111;font-family:'DM Sans',Arial,sans-serif;font-weight:500;text-align:right;border-bottom:none;">{{.Data.Reason}}</td>
+    </tr>
+  </tbody>
+</table>
+
+<p style="margin:0;font-family:'DM Sans',Arial,sans-serif;font-size:12.5px;color:#aaaaaa;line-height:1.6;">If you believe this was done in error, please contact our support team for further clarification.</p>
+{{end}}

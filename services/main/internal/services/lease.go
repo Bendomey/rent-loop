@@ -10,6 +10,7 @@ import (
 
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -423,21 +424,25 @@ func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInp
 
 	startDate := lease.MoveInDate.Format("January 2, 2006")
 
-	r := strings.NewReplacer(
+	smsMessage := strings.NewReplacer(
 		"{{tenant_name}}", lease.Tenant.FirstName,
 		"{{unit_name}}", lease.Unit.Name,
 		"{{move_in_date}}", startDate,
-	)
-	message := r.Replace(lib.LEASE_ACTIVATED_BODY)
-	smsMessage := r.Replace(lib.LEASE_ACTIVATED_SMS_BODY)
+	).Replace(lib.LEASE_ACTIVATED_SMS_BODY)
 
 	if lease.Tenant.Email != nil {
+		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render("lease/activated", emailtemplates.LeaseActivatedData{
+			TenantName: lease.Tenant.FirstName,
+			UnitName:   lease.Unit.Name,
+			MoveInDate: startDate,
+		})
 		go pkg.SendEmail(
 			s.appCtx.Config,
 			pkg.SendEmailInput{
 				Recipient: *lease.Tenant.Email,
 				Subject:   lib.LEASE_ACTIVATED_SUBJECT,
-				TextBody:  message,
+				HtmlBody:  htmlBody,
+				TextBody:  textBody,
 			},
 		)
 	}
@@ -557,23 +562,32 @@ func (s *leaseService) GenerateLeaseRentInvoice(ctx context.Context, leaseID str
 	currency := lease.RentFeeCurrency
 	amount := lib.FormatAmount(lib.PesewasToCedis(int64(lease.RentFee)))
 
-	r := strings.NewReplacer(
+	smsMessage := strings.NewReplacer(
 		"{{tenant_name}}", tenantName,
 		"{{unit_name}}", unitName,
 		"{{invoice_code}}", invoiceCode,
 		"{{currency}}", currency,
 		"{{amount}}", amount,
-	)
-	message := r.Replace(lib.RENT_INVOICE_GENERATED_BODY)
-	smsMessage := r.Replace(lib.RENT_INVOICE_GENERATED_SMS_BODY)
+	).Replace(lib.RENT_INVOICE_GENERATED_SMS_BODY)
 
 	if lease.Tenant.Email != nil {
+		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+			"invoice/rent-generated",
+			emailtemplates.RentInvoiceGeneratedData{
+				TenantName:  tenantName,
+				InvoiceCode: invoiceCode,
+				UnitName:    unitName,
+				Currency:    currency,
+				Amount:      amount,
+			},
+		)
 		go pkg.SendEmail(
 			s.appCtx.Config,
 			pkg.SendEmailInput{
 				Recipient: *lease.Tenant.Email,
 				Subject:   lib.RENT_INVOICE_GENERATED_SUBJECT,
-				TextBody:  message,
+				HtmlBody:  htmlBody,
+				TextBody:  textBody,
 			},
 		)
 	}
@@ -657,21 +671,25 @@ func (s *leaseService) CancelLease(ctx context.Context, input CancelLeaseInput) 
 		})
 	}
 
-	r := strings.NewReplacer(
+	smsMessage := strings.NewReplacer(
 		"{{tenant_name}}", lease.Tenant.FirstName,
 		"{{unit_name}}", lease.Unit.Name,
 		"{{cancellation_reason}}", input.CancellationReason,
-	)
-	message := r.Replace(lib.LEASE_CANCELLED_BODY)
-	smsMessage := r.Replace(lib.LEASE_CANCELLED_SMS_BODY)
+	).Replace(lib.LEASE_CANCELLED_SMS_BODY)
 
 	if lease.Tenant.Email != nil {
+		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render("lease/cancelled", emailtemplates.LeaseCancelledData{
+			TenantName:         lease.Tenant.FirstName,
+			UnitName:           lease.Unit.Name,
+			CancellationReason: input.CancellationReason,
+		})
 		go pkg.SendEmail(
 			s.appCtx.Config,
 			pkg.SendEmailInput{
 				Recipient: *lease.Tenant.Email,
 				Subject:   lib.LEASE_CANCELLED_SUBJECT,
-				TextBody:  message,
+				HtmlBody:  htmlBody,
+				TextBody:  textBody,
 			},
 		)
 	}

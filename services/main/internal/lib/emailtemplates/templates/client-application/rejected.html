@@ -1,0 +1,17 @@
+{{define "preview"}}An update on your Rentloop application.{{end}}
+{{define "content"}}
+<h1 class="headline" style="margin:0 0 14px;font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#111110;line-height:1.2;letter-spacing:0.2px;">Application not approved.</h1>
+<p style="margin:0 0 20px;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;color:#444444;line-height:1.7;">Hi {{.Data.OwnerName}},</p>
+<p style="margin:0 0 24px;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;color:#444444;line-height:1.7;">Thank you for your interest in joining Rentloop. After reviewing your application, we're unable to approve it at this time.</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-radius:8px;overflow:hidden;margin-bottom:28px;border:1px solid #EAEAE8;">
+  <tbody>
+    <tr style="background:#F8F7F4;">
+      <td style="padding:11px 18px;font-size:13px;color:#888888;font-family:'DM Sans',Arial,sans-serif;font-weight:500;border-bottom:none;">Reason</td>
+      <td style="padding:11px 18px;font-size:13px;color:#111111;font-family:'DM Sans',Arial,sans-serif;font-weight:500;text-align:right;border-bottom:none;">{{.Data.RejectionReason}}</td>
+    </tr>
+  </tbody>
+</table>
+
+<p style="margin:0;font-family:'DM Sans',Arial,sans-serif;font-size:12.5px;color:#aaaaaa;line-height:1.6;">We encourage you to review the feedback above and reapply once the issue has been resolved. If you have questions, please contact our support team.</p>
+{{end}}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -308,27 +309,31 @@ func (s *signingService) sendSigningTokenNotification(
 	expiresAt := token.ExpiresAt.Format("January 2, 2006 at 15:04 UTC")
 
 	subject := lib.SIGNING_TOKEN_INVITE_SUBJECT
-	body := lib.SIGNING_TOKEN_INVITE_BODY
+	templateName := "document/signing-invite"
 	smsBody := lib.SIGNING_TOKEN_INVITE_SMS_BODY
 	if isResend {
 		subject = lib.SIGNING_TOKEN_RESENT_SUBJECT
-		body = lib.SIGNING_TOKEN_RESENT_BODY
+		templateName = "document/signing-resent"
 		smsBody = lib.SIGNING_TOKEN_RESENT_SMS_BODY
 	}
 
-	message := strings.ReplaceAll(body, "{{signer_name}}", signerName)
-	message = strings.ReplaceAll(message, "{{token}}", token.Token)
-	message = strings.ReplaceAll(message, "{{expires_at}}", expiresAt)
-
-	smsMessage := strings.ReplaceAll(smsBody, "{{signer_name}}", signerName)
-	smsMessage = strings.ReplaceAll(smsMessage, "{{token}}", token.Token)
-	smsMessage = strings.ReplaceAll(smsMessage, "{{expires_at}}", expiresAt)
+	smsMessage := strings.NewReplacer(
+		"{{signer_name}}", signerName,
+		"{{token}}", token.Token,
+		"{{expires_at}}", expiresAt,
+	).Replace(smsBody)
 
 	if token.SignerEmail != nil {
+		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(templateName, emailtemplates.SigningTokenData{
+			SignerName: signerName,
+			Token:      token.Token,
+			ExpiresAt:  expiresAt,
+		})
 		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 			Recipient: *token.SignerEmail,
 			Subject:   subject,
-			TextBody:  message,
+			HtmlBody:  htmlBody,
+			TextBody:  textBody,
 		})
 	}
 

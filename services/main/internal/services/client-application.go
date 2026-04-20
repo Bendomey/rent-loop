@@ -7,6 +7,7 @@ import (
 
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -146,31 +147,36 @@ func (s *clientApplicationService) CreateClientApplication(
 		})
 	}
 
-	message := lib.CLIENT_APPLICATION_SUBMITTED_BODY
-	message = strings.ReplaceAll(message, "{{owner_name}}", input.ContactName)
+	smsMessage := strings.ReplaceAll(lib.CLIENT_APPLICATION_SUBMITTED_SMS_BODY, "{{owner_name}}", input.ContactName)
 
-	smsMessage := lib.CLIENT_APPLICATION_SUBMITTED_SMS_BODY
-	smsMessage = strings.ReplaceAll(smsMessage, "{{owner_name}}", input.ContactName)
-
+	htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+		"client-application/submitted",
+		emailtemplates.ClientApplicationSubmittedData{OwnerName: input.ContactName},
+	)
 	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 		Recipient: input.ContactEmail,
 		Subject:   lib.CLIENT_APPLICATION_SUBMITTED_SUBJECT,
-		TextBody:  message,
+		HtmlBody:  htmlBody,
+		TextBody:  textBody,
 	})
 
-	adminMessage := lib.CLIENT_APPLICATION_ADMIN_NOTIFICATION_BODY
-	adminMessage = strings.ReplaceAll(adminMessage, "{{applicant_name}}", input.ContactName)
-	adminMessage = strings.ReplaceAll(adminMessage, "{{applicant_email}}", input.ContactEmail)
-	adminMessage = strings.ReplaceAll(adminMessage, "{{applicant_phone}}", input.ContactPhoneNumber)
-	adminMessage = strings.ReplaceAll(adminMessage, "{{applicant_type}}", input.Type)
-	adminMessage = strings.ReplaceAll(adminMessage, "{{applicant_sub_type}}", input.SubType)
-	adminMessage = strings.ReplaceAll(adminMessage, "{{applicant_city}}", input.City)
-	adminMessage = strings.ReplaceAll(adminMessage, "{{applicant_region}}", input.Region)
-
+	adminHtml, adminText, _ := s.appCtx.EmailEngine.Render(
+		"client-application/admin-notification",
+		emailtemplates.ClientApplicationAdminNotificationData{
+			ApplicantName:    input.ContactName,
+			ApplicantEmail:   input.ContactEmail,
+			ApplicantPhone:   input.ContactPhoneNumber,
+			ApplicantType:    input.Type,
+			ApplicantSubType: input.SubType,
+			ApplicantCity:    input.City,
+			ApplicantRegion:  input.Region,
+		},
+	)
 	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 		Recipient: "rentloopapp@gmail.com",
 		Subject:   lib.CLIENT_APPLICATION_ADMIN_NOTIFICATION_SUBJECT,
-		TextBody:  adminMessage,
+		HtmlBody:  adminHtml,
+		TextBody:  adminText,
 	})
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
@@ -222,17 +228,23 @@ func (s *clientApplicationService) RejectClientApplication(
 		})
 	}
 
-	r := strings.NewReplacer(
+	smsMessage := strings.NewReplacer(
 		"{{owner_name}}", clientApplication.ContactName,
 		"{{rejection_reason}}", input.Reason,
-	)
-	message := r.Replace(lib.CLIENT_APPLICATION_REJECTED_BODY)
-	smsMessage := r.Replace(lib.CLIENT_APPLICATION_REJECTED_SMS_BODY)
+	).Replace(lib.CLIENT_APPLICATION_REJECTED_SMS_BODY)
 
+	htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+		"client-application/rejected",
+		emailtemplates.ClientApplicationRejectedData{
+			OwnerName:       clientApplication.ContactName,
+			RejectionReason: input.Reason,
+		},
+	)
 	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 		Recipient: clientApplication.ContactEmail,
 		Subject:   lib.CLIENT_APPLICATION_REJECTED_SUBJECT,
-		TextBody:  message,
+		HtmlBody:  htmlBody,
+		TextBody:  textBody,
 	})
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
@@ -359,33 +371,47 @@ func (s *clientApplicationService) ApproveClientApplication(
 	}
 
 	if ownerUserCreated {
-		r := strings.NewReplacer(
+		acceptedSMS := strings.NewReplacer(
 			"{{owner_name}}", clientApplication.ContactName,
 			"{{email}}", clientApplication.ContactEmail,
 			"{{password}}", password,
+		).Replace(lib.CLIENT_APPLICATION_ACCEPTED_SMS_BODY)
+		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+			"client-application/accepted",
+			emailtemplates.ClientApplicationAcceptedData{
+				OwnerName: clientApplication.ContactName,
+				Email:     clientApplication.ContactEmail,
+				Password:  password,
+			},
 		)
 		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 			Recipient: clientApplication.ContactEmail,
 			Subject:   lib.CLIENT_APPLICATION_ACCEPTED_SUBJECT,
-			TextBody:  r.Replace(lib.CLIENT_APPLICATION_ACCEPTED_BODY),
+			HtmlBody:  htmlBody,
+			TextBody:  textBody,
 		})
 		go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
 			Recipient: clientApplication.ContactPhoneNumber,
-			Message:   r.Replace(lib.CLIENT_APPLICATION_ACCEPTED_SMS_BODY),
+			Message:   acceptedSMS,
 		})
 	} else {
-		r := strings.NewReplacer(
+		existingSMS := strings.NewReplacer(
 			"{{name}}", clientApplication.ContactName,
 			"{{client_name}}", client.Name,
-		)
+		).Replace(lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_SMS_BODY)
+		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render("client-user/added-existing-account", emailtemplates.ClientUserAddedExistingAccountData{
+			Name:       clientApplication.ContactName,
+			ClientName: client.Name,
+		})
 		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 			Recipient: clientApplication.ContactEmail,
 			Subject:   lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_SUBJECT,
-			TextBody:  r.Replace(lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_BODY),
+			HtmlBody:  htmlBody,
+			TextBody:  textBody,
 		})
 		go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
 			Recipient: clientApplication.ContactPhoneNumber,
-			Message:   r.Replace(lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_SMS_BODY),
+			Message:   existingSMS,
 		})
 	}
 

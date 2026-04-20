@@ -8,6 +8,7 @@ import (
 
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -176,22 +177,29 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		})
 	}
 
-	r := strings.NewReplacer(
+	smsMessage := strings.NewReplacer(
 		"{{applicant_name}}", input.FirstName,
 		"{{unit_name}}", unit.Name,
 		"{{application_code}}", tenantApplication.Code,
-		"{{submission_date}}", tenantApplication.CreatedAt.Format("2006-01-02 at 03:04 PM"),
-	)
-	message := r.Replace(lib.TENANT_APPLICATION_SUBMITTED_BODY)
-	smsMessage := r.Replace(lib.TENANT_APPLICATION_SUBMITTED_SMS_BODY)
+	).Replace(lib.TENANT_APPLICATION_SUBMITTED_SMS_BODY)
 
 	if input.Email != nil {
+		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+			"tenant-application/submitted",
+			emailtemplates.TenantApplicationSubmittedData{
+				ApplicantName:   input.FirstName,
+				UnitName:        unit.Name,
+				ApplicationCode: tenantApplication.Code,
+				SubmissionDate:  tenantApplication.CreatedAt.Format("2006-01-02 at 03:04 PM"),
+			},
+		)
 		go pkg.SendEmail(
 			s.appCtx.Config,
 			pkg.SendEmailInput{
 				Recipient: *input.Email,
 				Subject:   lib.TENANT_APPLICATION_SUBMITTED_SUBJECT,
-				TextBody:  message,
+				HtmlBody:  htmlBody,
+				TextBody:  textBody,
 			},
 		)
 	}
@@ -235,22 +243,27 @@ func (s *tenantApplicationService) InviteTenant(ctx context.Context, input Invit
 		return getUnitErr
 	}
 
-	r := strings.NewReplacer(
+	smsMessage := strings.NewReplacer(
 		"{{unit_id}}", input.UnitId,
 		"{{admin_id}}", input.AdminId,
-		"{{admin_email}}", admin.User.Email,
-	)
-
-	message := r.Replace(lib.TENANT_INVITED_BODY)
-	smsMessage := r.Replace(lib.TENANT_INVITED_SMS_BODY)
+	).Replace(lib.TENANT_INVITED_SMS_BODY)
 
 	if input.Email != nil {
+		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+			"tenant-application/invited",
+			emailtemplates.TenantInvitedData{
+				UnitID:     input.UnitId,
+				AdminID:    input.AdminId,
+				AdminEmail: admin.User.Email,
+			},
+		)
 		go pkg.SendEmail(
 			s.appCtx.Config,
 			pkg.SendEmailInput{
 				Recipient: *input.Email,
 				Subject:   lib.TENANT_INVITED_SUBJECT,
-				TextBody:  message,
+				HtmlBody:  htmlBody,
+				TextBody:  textBody,
 			},
 		)
 	}
@@ -390,11 +403,7 @@ func (s *tenantApplicationService) BulkCreateTenantApplications(
 		email := n.email
 		phone := n.phone
 
-		r := strings.NewReplacer(
-			"{{application_code}}", code,
-		)
-		smsMsg := lib.ApplyGlobalVariableTemplate(s.appCtx.Config, r.Replace(lib.TENANT_CSV_CREATED_SMS_BODY))
-		emailBody := lib.ApplyGlobalVariableTemplate(s.appCtx.Config, r.Replace(lib.TENANT_CSV_CREATED_BODY))
+		smsMsg := strings.NewReplacer("{{application_code}}", code).Replace(lib.TENANT_CSV_CREATED_SMS_BODY)
 
 		go s.appCtx.Clients.GatekeeperAPI.SendSMS(
 			context.Background(),
@@ -405,12 +414,19 @@ func (s *tenantApplicationService) BulkCreateTenantApplications(
 		)
 
 		if email != nil {
+			htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+				"tenant-application/csv-created",
+				emailtemplates.TenantCSVCreatedData{
+					ApplicationCode: code,
+				},
+			)
 			go pkg.SendEmail(
 				s.appCtx.Config,
 				pkg.SendEmailInput{
 					Recipient: *email,
 					Subject:   lib.TENANT_CSV_CREATED_SUBJECT,
-					TextBody:  emailBody,
+					HtmlBody:  htmlBody,
+					TextBody:  textBody,
 				},
 			)
 		}
@@ -820,21 +836,28 @@ func (s *tenantApplicationService) CancelTenantApplication(
 	if tenantApplication.FirstName != nil {
 		cancelledApplicantName = *tenantApplication.FirstName
 	}
-	r := strings.NewReplacer(
+	smsMessage := strings.NewReplacer(
 		"{{applicant_name}}", cancelledApplicantName,
 		"{{application_code}}", tenantApplication.Code,
 		"{{reason}}", input.Reason,
-	)
-	message := r.Replace(lib.TENANT_CANCELLED_BODY)
-	smsMessage := r.Replace(lib.TENANT_CANCELLED_SMS_BODY)
+	).Replace(lib.TENANT_CANCELLED_SMS_BODY)
 
 	if tenantApplication.Email != nil {
+		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+			"tenant-application/cancelled",
+			emailtemplates.TenantApplicationCancelledData{
+				ApplicantName:   cancelledApplicantName,
+				ApplicationCode: tenantApplication.Code,
+				Reason:          input.Reason,
+			},
+		)
 		go pkg.SendEmail(
 			s.appCtx.Config,
 			pkg.SendEmailInput{
 				Recipient: *tenantApplication.Email,
 				Subject:   lib.TENANT_CANCELLED_SUBJECT,
-				TextBody:  message,
+				HtmlBody:  htmlBody,
+				TextBody:  textBody,
 			},
 		)
 	}
@@ -1112,22 +1135,30 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 	if tenantApplication.FirstName != nil {
 		approvedApplicantName = *tenantApplication.FirstName
 	}
-	r := strings.NewReplacer(
+	smsMessage := strings.NewReplacer(
 		"{{applicant_name}}", approvedApplicantName,
 		"{{unit_name}}", unit.Name,
 		"{{application_code}}", tenantApplication.Code,
 		"{{phone_number}}", tenantAccount.PhoneNumber,
-	)
-	message := r.Replace(lib.TENANT_APPLICATION_APPROVED_BODY)
-	smsMessage := r.Replace(lib.TENANT_APPLICATION_APPROVED_SMS_BODY)
+	).Replace(lib.TENANT_APPLICATION_APPROVED_SMS_BODY)
 
 	if tenantApplication.Email != nil {
+		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+			"tenant-application/approved",
+			emailtemplates.TenantApplicationApprovedData{
+				ApplicantName:   approvedApplicantName,
+				UnitName:        unit.Name,
+				ApplicationCode: tenantApplication.Code,
+				PhoneNumber:     tenantAccount.PhoneNumber,
+			},
+		)
 		go pkg.SendEmail(
 			s.appCtx.Config,
 			pkg.SendEmailInput{
 				Recipient: *tenantApplication.Email,
 				Subject:   lib.TENANT_APPLICATION_APPROVED_SUBJECT,
-				TextBody:  message,
+				HtmlBody:  htmlBody,
+				TextBody:  textBody,
 			},
 		)
 	}
