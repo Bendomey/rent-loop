@@ -11,6 +11,7 @@ import { Step3 } from './steps/step3'
 import { Step4 } from './steps/step4'
 import { Step5 } from './steps/step5'
 import { Step6 } from './steps/step6'
+import { TawkChatLink } from '~/components/tawk-chat-link'
 import { TypographyH3, TypographyMuted } from '~/components/ui/typography'
 import { APP_NAME } from '~/lib/constants'
 
@@ -67,7 +68,7 @@ export function TenantApply({ isValidUrl }: { isValidUrl: boolean }) {
 				className="bg-rose-600"
 				style={{ height: '3px', width: `${(stepCount / STEP) * 100}%` }}
 			/>
-			<div className="flex min-h-[88vh] items-center justify-center">
+			<div className="flex min-h-[82vh] items-center justify-center">
 				<div className="w-full max-w-4xl px-4 md:px-0">
 					{stepCount === 0 ? <Step0 /> : null}
 					{stepCount === 1 ? <Step1 /> : null}
@@ -78,6 +79,7 @@ export function TenantApply({ isValidUrl }: { isValidUrl: boolean }) {
 					{stepCount === 6 ? <Step6 /> : null}
 				</div>
 			</div>
+			<TawkChatLink />
 		</main>
 	)
 }

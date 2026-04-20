@@ -2,6 +2,7 @@ import './app.css'
 
 import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat.js'
+import { useEffect } from 'react'
 import {
 	isRouteErrorResponse,
 	Links,
@@ -10,6 +11,7 @@ import {
 	Scripts,
 	ScrollRestoration,
 	useLoaderData,
+	useLocation,
 } from 'react-router'
 import type { Route } from './+types/root'
 import { GoogleAnalytics } from './components/google-analytics'
@@ -17,6 +19,7 @@ import { TopbarLoader } from './components/top-bar-loader'
 import { environmentVariables } from './lib/actions/env.server'
 import { NotFoundModule } from './modules/404-page'
 import { Providers } from './providers'
+import { TAWK_HIDDEN_PATHS } from './lib/constants'
 
 dayjs.locale('en-gb')
 dayjs.extend(localizedFormat)
@@ -66,6 +69,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 				<script>
 					{`
 						var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+						Tawk_API.onChatMinimized=function(){
+							var hiddenPaths=${JSON.stringify(TAWK_HIDDEN_PATHS)};
+							var onHiddenPage=hiddenPaths.some(function(p){return window.location.pathname.startsWith(p);});
+							if(onHiddenPage){Tawk_API.hideWidget();}
+						};
 						(function(){
 							var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
 							s1.async=true;
@@ -83,6 +91,44 @@ export function Layout({ children }: { children: React.ReactNode }) {
 	)
 }
 
+function TawkVisibility() {
+	const location = useLocation()
+
+	useEffect(() => {
+		if (typeof window === 'undefined') return
+
+		const shouldHide = TAWK_HIDDEN_PATHS.some((path) =>
+			location.pathname.startsWith(path),
+		)
+
+		const apply = () => {
+			if (!window.Tawk_API) return false
+			if (shouldHide && typeof window.Tawk_API.hideWidget === 'function') {
+				window.Tawk_API.hideWidget()
+				return true
+			} else if (
+				!shouldHide &&
+				typeof window.Tawk_API.showWidget === 'function'
+			) {
+				window.Tawk_API.showWidget()
+				return true
+			}
+			return false
+		}
+
+		if (!apply()) {
+			window.Tawk_API = window.Tawk_API || ({} as typeof window.Tawk_API)
+			const prev = window.Tawk_API.onLoad
+			window.Tawk_API.onLoad = function () {
+				prev?.()
+				apply()
+			}
+		}
+	}, [location.pathname])
+
+	return null
+}
+
 export default function App() {
 	const { ENV } = useLoaderData<typeof loader>()
 
@@ -92,6 +138,7 @@ export default function App() {
 	return (
 		<Providers>
 			<GoogleAnalytics gaId={ENV.GOOGLE_ANALYTICS_ID} />
+			<TawkVisibility />
 			<Outlet />
 		</Providers>
 	)

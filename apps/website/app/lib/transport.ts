@@ -7,6 +7,10 @@ declare global {
 			toggle: () => void
 			minimize: () => void
 			maximize: () => void
+			hideWidget: () => void
+			showWidget: () => void
+			onLoad: () => void
+			onChatMinimized: () => void
 		}
 	}
 }

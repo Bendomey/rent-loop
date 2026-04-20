@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FetcherWithComponents } from 'react-router'
 import { toast } from 'sonner'
 
+import { TawkChatLink } from '~/components/tawk-chat-link'
 import { Button } from '~/components/ui/button'
 import {
 	InputOTP,
@@ -220,6 +221,7 @@ export function VerifyOtp({ code, fetcher }: Props) {
 						</div>
 					</>
 				)}
+				<TawkChatLink />
 			</div>
 		</div>
 	)
