@@ -224,7 +224,7 @@ const tiers = [
 	{
 		name: 'Starter',
 		range: '4 – 50 units',
-		price: 'GHS 199 – 499',
+		price: 'GHS 99 – 399',
 		priceSuffix: '/month',
 		description:
 			'Flat monthly rate applied automatically once you add a 4th unit.',
@@ -234,7 +234,7 @@ const tiers = [
 	{
 		name: 'Growth',
 		range: '51 – 150 units',
-		price: 'GHS 500 – 1,299',
+		price: 'GHS 400 – 899',
 		priceSuffix: '/month',
 		description: 'Flat monthly rate applied automatically at 51 units.',
 		highlighted: false,
@@ -251,7 +251,7 @@ const faqs = [
 	{
 		question: 'How does billing work?',
 		answer:
-			'You pay a flat monthly fee based on your total unit count. Your first 3 units are completely free. From 4 to 50 units you move to the Starter plan (GHS 199–499/month), and from 51 to 150 units you move to the Growth plan (GHS 500–1,299/month). Your plan updates automatically as you add or remove units.',
+			'You pay a flat monthly fee based on your total unit count. Your first 3 units are completely free. From 4 to 50 units you move to the Starter plan (GHS 99–399/month), and from 51 to 150 units you move to the Growth plan (GHS 400–899/month). Your plan updates automatically as you add or remove units.',
 	},
 	{
 		question: 'What counts as a unit?',
