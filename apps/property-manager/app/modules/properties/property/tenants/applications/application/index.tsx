@@ -142,7 +142,10 @@ export function PropertyTenantApplicationContainer() {
 					</PropertyPermissionGuard>
 				) : null}
 				<div id="application-checklist">
-					<PropertyTenantApplicationChecklist application={tenantApplication} />
+					<PropertyTenantApplicationChecklist
+						propertyId={safeString(clientUserProperty?.property_id)}
+						application={tenantApplication}
+					/>
 				</div>
 			</div>
 			<CancelTenantApplicationModal

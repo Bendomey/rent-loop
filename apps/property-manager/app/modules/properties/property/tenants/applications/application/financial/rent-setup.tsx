@@ -54,8 +54,10 @@ export function RentSetup({
 				<div>
 					<h3 className="text-sm font-medium">Rent</h3>
 					<p className="text-xs text-zinc-500">
-						Unit default: {formatAmount(defaultRentAmount)} /{' '}
-						{defaultPaymentFrequency.toLowerCase()}
+						Unit default: {formatAmount(defaultRentAmount)}
+						{defaultPaymentFrequency
+							? ` / ${defaultPaymentFrequency.toLowerCase()}`
+							: ''}
 					</p>
 				</div>
 				{isModified && (

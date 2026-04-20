@@ -21,10 +21,14 @@ import { cn } from '~/lib/utils'
 
 interface Props {
 	application: TenantApplication
+	propertyId: string
 }
 
-export function PropertyTenantApplicationChecklist({ application }: Props) {
-	const baseUrl = `/properties/${application.desired_unit?.property_id}/tenants/applications/${application.id}`
+export function PropertyTenantApplicationChecklist({
+	application,
+	propertyId,
+}: Props) {
+	const baseUrl = `/properties/${propertyId}/tenants/applications/${application.id}`
 
 	const {
 		progress,

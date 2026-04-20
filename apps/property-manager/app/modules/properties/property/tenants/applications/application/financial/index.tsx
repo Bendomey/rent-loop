@@ -51,10 +51,10 @@ export function PropertyTenantApplicationFinancial() {
 
 	// API stores fees in pesewas — convert to cedis for display/form state
 	const savedRentFee = convertPesewasToCedis(
-		tenantApplication.rent_fee || unit.rent_fee,
+		tenantApplication.rent_fee || unit?.rent_fee || 0,
 	)
 	const savedPaymentFrequency =
-		tenantApplication.payment_frequency || unit.payment_frequency
+		tenantApplication.payment_frequency || unit?.payment_frequency
 	const savedSecurityDepositFee = convertPesewasToCedis(
 		tenantApplication.security_deposit_fee ?? 0,
 	)
@@ -158,7 +158,7 @@ export function PropertyTenantApplicationFinancial() {
 						<div className="grid grid-cols-2 gap-4">
 							<FieldDisplay
 								label="Agreed Rent Fee"
-								value={`${formatAmount(savedRentFee)} / ${getPaymentFrequencyLabel(savedPaymentFrequency)}`}
+								value={`${formatAmount(savedRentFee)}${savedPaymentFrequency ? ` / ${getPaymentFrequencyLabel(savedPaymentFrequency)}` : ''}`}
 							/>
 							<FieldDisplay
 								label="Security Deposit"
@@ -176,8 +176,8 @@ export function PropertyTenantApplicationFinancial() {
 							<RentSetup
 								rentAmount={rentAmount}
 								paymentFrequency={paymentFrequency}
-								defaultRentAmount={convertPesewasToCedis(unit.rent_fee)}
-								defaultPaymentFrequency={unit.payment_frequency}
+								defaultRentAmount={convertPesewasToCedis(unit?.rent_fee ?? 0)}
+								defaultPaymentFrequency={unit?.payment_frequency}
 								onRentAmountChange={setRentAmount}
 								onPaymentFrequencyChange={setPaymentFrequency}
 								onReset={handleReset}
