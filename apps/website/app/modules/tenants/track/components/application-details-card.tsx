@@ -1,9 +1,86 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import dayjs from 'dayjs'
 import { ChevronDown, Pencil, X } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
+import { useForm, type Resolver } from 'react-hook-form'
 import { useFetcher } from 'react-router'
+import { z } from 'zod'
 
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from '~/components/ui/form'
+import { Input } from '~/components/ui/input'
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '~/components/ui/select'
 import { cn } from '~/lib/utils'
+
+type EmployerType = 'STUDENT' | 'WORKER'
+
+const editSchema = z
+	.object({
+		first_name: z
+			.string({ error: 'First name is required' })
+			.min(2, 'Please enter a valid name'),
+		last_name: z
+			.string({ error: 'Last name is required' })
+			.min(2, 'Please enter a valid name'),
+		email: z
+			.string()
+			.email('Please enter a valid email address')
+			.optional()
+			.or(z.literal('')),
+		gender: z.enum(['MALE', 'FEMALE'], { error: 'Please select a gender' }),
+		date_of_birth: z
+			.string({ error: 'Date of birth is required' })
+			.min(1, 'Date of birth is required'),
+		nationality: z.string().optional(),
+		marital_status: z.enum(['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'], {
+			error: 'Please select a marital status',
+		}),
+		current_address: z.string().optional(),
+		id_type: z.enum(
+			['GHANA_CARD', 'NATIONAL_ID', 'PASSPORT', 'DRIVER_LICENSE'],
+			{ error: 'Please select an ID type' },
+		),
+		id_number: z
+			.string({ error: 'ID number is required' })
+			.min(1, 'ID number is required'),
+		emergency_contact_name: z
+			.string({ error: 'Contact name is required' })
+			.min(2, 'Please enter a valid name'),
+		emergency_contact_phone: z
+			.string({ error: 'Contact phone is required' })
+			.min(9, 'Please enter a valid phone number'),
+		relationship_to_emergency_contact: z.string().optional(),
+		employer_type: z.enum(['WORKER', 'STUDENT'], {
+			error: 'Please select an employment type',
+		}),
+		occupation: z.string().optional(),
+		employer: z
+			.string({ error: 'This field is required' })
+			.min(2, 'Please enter a valid name'),
+	})
+	.superRefine((data, ctx) => {
+		if (data.employer_type === 'WORKER' && !data.occupation?.trim()) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: 'Please enter your occupation',
+				path: ['occupation'],
+			})
+		}
+	})
+
+type EditSchema = z.infer<typeof editSchema>
 
 interface Props {
 	application: TrackingApplication
@@ -63,224 +140,378 @@ interface EditFormProps {
 	onSaved: (updated: TrackingApplication) => void
 }
 
-function EditForm({ application, code, onClose, onSaved }: EditFormProps) {
+function EditForm({ application, onClose, onSaved }: EditFormProps) {
 	const fetcher = useFetcher<{
 		application?: TrackingApplication | null
 		error?: string | null
 	}>()
 	const isSubmitting = fetcher.state !== 'idle'
 
-	// When we get a successful result back, notify parent and close
+	const rhf = useForm<EditSchema>({
+		resolver: zodResolver(editSchema) as Resolver<EditSchema>,
+		defaultValues: {
+			first_name: application.first_name ?? '',
+			last_name: application.last_name ?? '',
+			email: application.email ?? '',
+			gender: (application.gender as EditSchema['gender']) ?? undefined,
+			date_of_birth: application.date_of_birth
+				? dayjs(application.date_of_birth).format('YYYY-MM-DD')
+				: '',
+			nationality: application.nationality ?? '',
+			marital_status: (application.marital_status as EditSchema['marital_status']) ?? undefined,
+			current_address: application.current_address ?? '',
+			id_type: (application.id_type as EditSchema['id_type']) ?? undefined,
+			id_number: application.id_number ?? '',
+			emergency_contact_name: application.emergency_contact_name ?? '',
+			emergency_contact_phone: application.emergency_contact_phone ?? '',
+			relationship_to_emergency_contact:
+				application.relationship_to_emergency_contact ?? '',
+			employer_type:
+				application.employer_type === 'STUDENT' ? 'STUDENT' : 'WORKER',
+			occupation: application.occupation ?? '',
+			employer: application.employer ?? '',
+		},
+	})
+
+	const isStudent = rhf.watch('employer_type') === 'STUDENT'
+
 	useEffect(() => {
 		if (fetcher.data?.application) {
 			onSaved(fetcher.data.application)
 		}
 	}, [fetcher.data, onSaved])
 
+	const onSubmit = (data: EditSchema) => {
+		const fd = new FormData()
+		fd.append('intent', 'updateApplication')
+		for (const [key, val] of Object.entries(data)) {
+			if (val != null && val !== '') fd.append(key, val)
+		}
+		fetcher.submit(fd, { method: 'post' })
+	}
+
 	return (
-		<fetcher.Form method="post" className="space-y-4 border-t px-6 py-5">
-			<input type="hidden" name="intent" value="updateApplication" />
-
-			<div className="grid grid-cols-2 gap-3">
-				<Field
-					label="First Name"
-					name="first_name"
-					defaultValue={application.first_name ?? ''}
-				/>
-				<Field
-					label="Last Name"
-					name="last_name"
-					defaultValue={application.last_name ?? ''}
-				/>
-			</div>
-
-			<Field
-				label="Email"
-				name="email"
-				type="email"
-				defaultValue={application.email ?? ''}
-			/>
-
-			<div className="grid grid-cols-2 gap-3">
-				<SelectField
-					label="Gender"
-					name="gender"
-					defaultValue={application.gender ?? ''}
-					options={[
-						{ value: 'MALE', label: 'Male' },
-						{ value: 'FEMALE', label: 'Female' },
-					]}
-				/>
-				<Field
-					label="Date of Birth"
-					name="date_of_birth"
-					type="date"
-					defaultValue={
-						application.date_of_birth
-							? dayjs(application.date_of_birth).format('YYYY-MM-DD')
-							: ''
-					}
-				/>
-			</div>
-
-			<div className="grid grid-cols-2 gap-3">
-				<Field
-					label="Nationality"
-					name="nationality"
-					defaultValue={application.nationality ?? ''}
-				/>
-				<SelectField
-					label="Marital Status"
-					name="marital_status"
-					defaultValue={application.marital_status ?? ''}
-					options={[
-						{ value: 'SINGLE', label: 'Single' },
-						{ value: 'MARRIED', label: 'Married' },
-						{ value: 'DIVORCED', label: 'Divorced' },
-						{ value: 'WIDOWED', label: 'Widowed' },
-					]}
-				/>
-			</div>
-
-			<Field
-				label="Current Address"
-				name="current_address"
-				defaultValue={application.current_address ?? ''}
-			/>
-
-			<div className="grid grid-cols-2 gap-3">
-				<SelectField
-					label="ID Type"
-					name="id_type"
-					defaultValue={application.id_type ?? ''}
-					options={[
-						{ value: 'GHANA_CARD', label: 'Ghana Card' },
-						{ value: 'NATIONAL_ID', label: 'National ID' },
-						{ value: 'PASSPORT', label: 'Passport' },
-						{ value: 'DRIVER_LICENSE', label: "Driver's License" },
-					]}
-				/>
-				<Field
-					label="ID Number"
-					name="id_number"
-					defaultValue={application.id_number ?? ''}
-				/>
-			</div>
-
-			<div className="grid grid-cols-2 gap-3">
-				<Field
-					label="Emergency Contact Name"
-					name="emergency_contact_name"
-					defaultValue={application.emergency_contact_name ?? ''}
-				/>
-				<Field
-					label="Emergency Contact Phone"
-					name="emergency_contact_phone"
-					defaultValue={application.emergency_contact_phone ?? ''}
-				/>
-			</div>
-
-			<Field
-				label="Relationship to Emergency Contact"
-				name="relationship_to_emergency_contact"
-				defaultValue={application.relationship_to_emergency_contact ?? ''}
-			/>
-
-			<div className="grid grid-cols-2 gap-3">
-				<Field
-					label="Occupation"
-					name="occupation"
-					defaultValue={application.occupation ?? ''}
-				/>
-				<Field
-					label="Employer"
-					name="employer"
-					defaultValue={application.employer ?? ''}
-				/>
-			</div>
-
-			{fetcher.data?.error && (
-				<p className="text-sm text-red-600">{fetcher.data.error}</p>
-			)}
-
-			<div className="flex gap-2 border-t pt-4">
-				<button
-					type="submit"
-					disabled={isSubmitting}
-					className="flex-1 rounded-lg bg-rose-600 py-2 text-sm font-medium text-white disabled:opacity-60"
-				>
-					{isSubmitting ? 'Saving…' : 'Save Changes'}
-				</button>
-				<button
-					type="button"
-					onClick={onClose}
-					disabled={isSubmitting}
-					className="flex-1 rounded-lg border py-2 text-sm font-medium text-zinc-700"
-				>
-					Cancel
-				</button>
-			</div>
-		</fetcher.Form>
-	)
-}
-
-function Field({
-	label,
-	name,
-	type = 'text',
-	defaultValue,
-}: {
-	label: string
-	name: string
-	type?: string
-	defaultValue?: string
-}) {
-	return (
-		<div className="flex flex-col gap-1">
-			<label htmlFor={name} className="text-xs text-zinc-500">
-				{label}
-			</label>
-			<input
-				id={name}
-				name={name}
-				type={type}
-				defaultValue={defaultValue}
-				className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm focus:ring-2 focus:ring-rose-500 focus:outline-none"
-			/>
-		</div>
-	)
-}
-
-function SelectField({
-	label,
-	name,
-	defaultValue,
-	options,
-}: {
-	label: string
-	name: string
-	defaultValue?: string
-	options: { value: string; label: string }[]
-}) {
-	return (
-		<div className="flex flex-col gap-1">
-			<label htmlFor={name} className="text-xs text-zinc-500">
-				{label}
-			</label>
-			<select
-				id={name}
-				name={name}
-				defaultValue={defaultValue}
-				className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm focus:ring-2 focus:ring-rose-500 focus:outline-none"
+		<Form {...rhf}>
+			<form
+				onSubmit={rhf.handleSubmit(onSubmit)}
+				className="divide-y border-t [&_[data-slot=form-label]]:text-xs [&_[data-slot=form-label]]:font-normal [&_[data-slot=form-label]]:text-zinc-500"
 			>
-				<option value="">— Select —</option>
-				{options.map((o) => (
-					<option key={o.value} value={o.value}>
-						{o.label}
-					</option>
-				))}
-			</select>
-		</div>
+				{/* Personal */}
+				<div className="space-y-3 px-6 py-5">
+					<p className="text-xs font-semibold tracking-wide text-zinc-400 uppercase">
+						Personal
+					</p>
+					<div className="grid grid-cols-2 gap-3">
+						<FormField
+							control={rhf.control}
+							name="first_name"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>First Name <span className="text-destructive">*</span></FormLabel>
+									<FormControl>
+										<Input placeholder="First name" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={rhf.control}
+							name="last_name"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Last Name <span className="text-destructive">*</span></FormLabel>
+									<FormControl>
+										<Input placeholder="Last name" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
+
+					<FormField
+						control={rhf.control}
+						name="email"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Email</FormLabel>
+								<FormControl>
+									<Input type="email" placeholder="Email address" {...field} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+
+					<div className="grid grid-cols-2 gap-3">
+						<FormField
+							control={rhf.control}
+							name="gender"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Gender <span className="text-destructive">*</span></FormLabel>
+									<Select onValueChange={field.onChange} defaultValue={field.value}>
+										<FormControl className="w-full">
+											<SelectTrigger>
+												<SelectValue placeholder="Select gender" />
+											</SelectTrigger>
+										</FormControl>
+										<SelectContent>
+											<SelectItem value="MALE">Male</SelectItem>
+											<SelectItem value="FEMALE">Female</SelectItem>
+										</SelectContent>
+									</Select>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={rhf.control}
+							name="date_of_birth"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Date of Birth <span className="text-destructive">*</span></FormLabel>
+									<FormControl>
+										<Input type="date" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
+
+					<div className="grid grid-cols-2 gap-3">
+						<FormField
+							control={rhf.control}
+							name="nationality"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Nationality</FormLabel>
+									<FormControl>
+										<Input placeholder="Nationality" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={rhf.control}
+							name="marital_status"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Marital Status <span className="text-destructive">*</span></FormLabel>
+									<Select onValueChange={field.onChange} defaultValue={field.value}>
+										<FormControl className="w-full">
+											<SelectTrigger>
+												<SelectValue placeholder="Select status" />
+											</SelectTrigger>
+										</FormControl>
+										<SelectContent>
+											<SelectItem value="SINGLE">Single</SelectItem>
+											<SelectItem value="MARRIED">Married</SelectItem>
+											<SelectItem value="DIVORCED">Divorced</SelectItem>
+											<SelectItem value="WIDOWED">Widowed</SelectItem>
+										</SelectContent>
+									</Select>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
+
+					<FormField
+						control={rhf.control}
+						name="current_address"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Current Address</FormLabel>
+								<FormControl>
+									<Input placeholder="Current address" {...field} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				</div>
+
+				{/* Identity */}
+				<div className="space-y-3 px-6 py-5">
+					<p className="text-xs font-semibold tracking-wide text-zinc-400 uppercase">
+						Identity
+					</p>
+					<div className="grid grid-cols-2 gap-3">
+						<FormField
+							control={rhf.control}
+							name="id_type"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>ID Type <span className="text-destructive">*</span></FormLabel>
+									<Select onValueChange={field.onChange} defaultValue={field.value}>
+										<FormControl className="w-full">
+											<SelectTrigger>
+												<SelectValue placeholder="Select ID type" />
+											</SelectTrigger>
+										</FormControl>
+										<SelectContent>
+											<SelectItem value="GHANA_CARD">Ghana Card</SelectItem>
+											<SelectItem value="NATIONAL_ID">National ID</SelectItem>
+											<SelectItem value="PASSPORT">Passport</SelectItem>
+											<SelectItem value="DRIVER_LICENSE">Driver's License</SelectItem>
+										</SelectContent>
+									</Select>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={rhf.control}
+							name="id_number"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>ID Number <span className="text-destructive">*</span></FormLabel>
+									<FormControl>
+										<Input placeholder="ID number" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
+				</div>
+
+				{/* Emergency Contact */}
+				<div className="space-y-3 px-6 py-5">
+					<p className="text-xs font-semibold tracking-wide text-zinc-400 uppercase">
+						Emergency Contact
+					</p>
+					<div className="grid grid-cols-2 gap-3">
+						<FormField
+							control={rhf.control}
+							name="emergency_contact_name"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Full Name <span className="text-destructive">*</span></FormLabel>
+									<FormControl>
+										<Input placeholder="Full name" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={rhf.control}
+							name="emergency_contact_phone"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Phone <span className="text-destructive">*</span></FormLabel>
+									<FormControl>
+										<Input type="tel" placeholder="Phone number" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
+					<FormField
+						control={rhf.control}
+						name="relationship_to_emergency_contact"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Relationship</FormLabel>
+								<FormControl>
+									<Input placeholder="e.g. Sibling, Parent" {...field} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				</div>
+
+				{/* Employment */}
+				<div className="space-y-3 px-6 py-5">
+					<p className="text-xs font-semibold tracking-wide text-zinc-400 uppercase">
+						Employment
+					</p>
+					<div className="inline-flex rounded-lg border border-zinc-200 bg-zinc-100 p-0.5">
+						{(['WORKER', 'STUDENT'] as EmployerType[]).map((type) => (
+							<button
+								key={type}
+								type="button"
+								onClick={() => rhf.setValue('employer_type', type, { shouldValidate: true })}
+								className={cn(
+									'rounded-md px-4 py-1 text-sm font-medium transition-all',
+									rhf.watch('employer_type') === type
+										? 'bg-white text-zinc-900 shadow-sm'
+										: 'text-zinc-500 hover:text-zinc-700',
+								)}
+							>
+								{type === 'WORKER' ? 'Worker' : 'Student'}
+							</button>
+						))}
+					</div>
+
+					<div className={cn('grid gap-3', isStudent ? 'grid-cols-1' : 'grid-cols-2')}>
+						{!isStudent && (
+							<FormField
+								control={rhf.control}
+								name="occupation"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Occupation <span className="text-destructive">*</span></FormLabel>
+										<FormControl>
+											<Input placeholder="e.g. Software Engineer" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						)}
+						<FormField
+							control={rhf.control}
+							name="employer"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>
+										{isStudent ? 'Institution / School' : 'Employer'}{' '}
+										<span className="text-destructive">*</span>
+									</FormLabel>
+									<FormControl>
+										<Input
+											placeholder={isStudent ? 'Institution or school name' : 'Company name'}
+											{...field}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
+				</div>
+
+				{/* Actions */}
+				<div className="flex items-center justify-between px-6 py-4">
+					<button
+						type="button"
+						onClick={onClose}
+						disabled={isSubmitting}
+						className="text-sm text-zinc-500 hover:text-zinc-700 disabled:opacity-50"
+					>
+						Cancel
+					</button>
+					{fetcher.data?.error && (
+						<p className="text-sm text-red-600">{fetcher.data.error}</p>
+					)}
+					<button
+						type="submit"
+						disabled={isSubmitting}
+						className="rounded-lg bg-rose-600 px-5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+					>
+						{isSubmitting ? 'Saving…' : 'Save Changes'}
+					</button>
+				</div>
+			</form>
+		</Form>
 	)
 }
 
