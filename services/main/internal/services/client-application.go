@@ -303,6 +303,10 @@ func (s *clientApplicationService) ApproveClientApplication(
 		WebsiteUrl:          clientApplication.WebsiteURL,
 		SupportPhone:        clientApplication.SupportPhone,
 		SupportEmail:        clientApplication.SupportEmail,
+		IDType:              clientApplication.IDType,
+		IDNumber:            clientApplication.IDNumber,
+		IDExpiry:            clientApplication.IDExpiry,
+		IDDocumentURL:       clientApplication.IDDocumentURL,
 		ClientApplicationId: clientApplication.ID.String(),
 	}
 

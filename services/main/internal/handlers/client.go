@@ -39,12 +39,17 @@ type UpdateClientRequest struct {
 	City               *string              `json:"city"                validate:"omitempty,min=2"`
 	Latitude           *float64             `json:"latitude"`
 	Longitude          *float64             `json:"longitude"`
+	// individual identity fields
+	IDType        lib.Optional[string] `json:"id_type"             validate:"omitempty,oneof=DRIVERS_LICENSE PASSPORT NATIONAL_ID"       swaggertype:"string"`
+	IDNumber      lib.Optional[string] `json:"id_number"                                                                                 swaggertype:"string"`
+	IDExpiry      lib.Optional[string] `json:"id_expiry"                                                                                 swaggertype:"string"`
+	IDDocumentURL lib.Optional[string] `json:"id_document_url"     validate:"omitempty,url"                                              swaggertype:"string"`
 }
 
 // UpdateClient godoc
 //
 //	@Summary		Update client details
-//	@Description	Update the client's type, sub type, or company details
+//	@Description	Update the client's type, sub type, company details, or individual identity fields
 //	@Tags			Clients
 //	@Accept			json
 //	@Security		BearerAuth
@@ -100,6 +105,10 @@ func (h *clientHandler) UpdateClient(w http.ResponseWriter, r *http.Request) {
 		City:               body.City,
 		Latitude:           body.Latitude,
 		Longitude:          body.Longitude,
+		IDType:             body.IDType,
+		IDNumber:           body.IDNumber,
+		IDExpiry:           body.IDExpiry,
+		IDDocumentURL:      body.IDDocumentURL,
 	}
 
 	client, err := h.service.UpdateClient(r.Context(), input)

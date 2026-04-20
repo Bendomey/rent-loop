@@ -27,6 +27,11 @@ type UpdateClientInput struct {
 	City               *string
 	Latitude           *float64
 	Longitude          *float64
+	// individual identity fields
+	IDType        lib.Optional[string]
+	IDNumber      lib.Optional[string]
+	IDExpiry      lib.Optional[string]
+	IDDocumentURL lib.Optional[string]
 }
 
 type ClientService interface {
@@ -166,6 +171,22 @@ func (s *clientService) UpdateClient(ctx context.Context, input UpdateClientInpu
 
 	if input.Longitude != nil {
 		client.Longitude = *input.Longitude
+	}
+
+	if input.IDType.IsSet {
+		client.IDType = input.IDType.Ptr()
+	}
+
+	if input.IDNumber.IsSet {
+		client.IDNumber = input.IDNumber.Ptr()
+	}
+
+	if input.IDExpiry.IsSet {
+		client.IDExpiry = input.IDExpiry.Ptr()
+	}
+
+	if input.IDDocumentURL.IsSet {
+		client.IDDocumentURL = input.IDDocumentURL.Ptr()
 	}
 
 	if updateErr := s.repo.Update(ctx, client); updateErr != nil {

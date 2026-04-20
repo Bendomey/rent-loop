@@ -17,6 +17,10 @@ export interface UpdateClientInput {
 	city?: string
 	latitude?: number
 	longitude?: number
+	id_type?: Client['id_type'] | null
+	id_number?: string | null
+	id_expiry?: string | null
+	id_document_url?: string | null
 }
 
 const updateClient = async ({ clientId, ...body }: UpdateClientInput) => {

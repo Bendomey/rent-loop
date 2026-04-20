@@ -20,6 +20,12 @@ type Client struct {
 	SupportPhone       *string
 	SupportEmail       *string
 
+	// individual specific fields
+	IDType        *string // DRIVERS_LICENSE | PASSPORT | NATIONAL_ID
+	IDNumber      *string
+	IDExpiry      *string
+	IDDocumentURL *string
+
 	ClientApplicationId string `gorm:"not null;"`
 	ClientApplication   ClientApplication
 

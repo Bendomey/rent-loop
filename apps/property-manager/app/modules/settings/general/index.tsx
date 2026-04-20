@@ -7,12 +7,16 @@ import {
 	Pencil,
 	TriangleAlert,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useGetClientUser } from '~/api/client-users'
 import { useUpdateClient } from '~/api/clients'
+import { DatePickerInput } from '~/components/date-picker-input'
+import { ImageUpload } from '~/components/ui/image-upload'
+import { useUploadObject } from '~/hooks/use-upload-object'
+import { localizedDayjs } from '~/lib/date'
 import {
 	AddressInput,
 	AddressSchema,
@@ -774,11 +778,6 @@ function SwitchToIndividualForm({
 					)}
 				/>
 
-				<p className="text-muted-foreground text-sm">
-					Identity documents (ID type, number, expiry) are managed separately.
-					Contact support if you need to update them.
-				</p>
-
 				<div className="flex justify-end gap-3 pt-2">
 					<Button type="submit" disabled={isPending} className="min-w-[140px]">
 						{isPending ? <Spinner /> : null}
@@ -787,6 +786,211 @@ function SwitchToIndividualForm({
 				</div>
 			</form>
 		</Form>
+	)
+}
+
+// ---------------------------------------------------------------------------
+// Edit Identity dialog
+// ---------------------------------------------------------------------------
+
+const idTypeOptions = [
+	{ label: 'National ID', value: 'NATIONAL_ID' },
+	{ label: 'Passport', value: 'PASSPORT' },
+	{ label: "Driver's License", value: 'DRIVERS_LICENSE' },
+] as const
+
+const editIdentitySchema = z.object({
+	id_type: z
+		.enum(['DRIVERS_LICENSE', 'PASSPORT', 'NATIONAL_ID'])
+		.optional()
+		.nullable(),
+	id_number: z.string().optional().nullable(),
+	id_expiry: z.date().optional().nullable(),
+	id_document_url: z.string().optional().nullable(),
+})
+
+type EditIdentitySchema = z.infer<typeof editIdentitySchema>
+
+const startIdExpiryDate = localizedDayjs()
+	.subtract(2, 'month')
+	.startOf('day')
+	.toDate()
+const maxIdExpiryDate = localizedDayjs().add(20, 'year').toDate()
+
+function EditIdentityDialog({
+	client,
+	open,
+	onOpenChange,
+	onSuccess,
+}: {
+	client: NonNullable<Client>
+	open: boolean
+	onOpenChange: (v: boolean) => void
+	onSuccess: () => void
+}) {
+	const { submit, isPending } = useClientMutation(
+		client.id,
+		'Identity updated',
+		onSuccess,
+	)
+
+	const {
+		upload,
+		objectUrl,
+		isLoading: isUploading,
+	} = useUploadObject('property-owners/id-documents')
+
+	const rhf = useForm<EditIdentitySchema>({
+		resolver: zodResolver(editIdentitySchema),
+		defaultValues: {
+			id_type: client.id_type ?? null,
+			id_number: safeString(client.id_number) || null,
+			id_expiry: client.id_expiry ? new Date(client.id_expiry) : null,
+			id_document_url: safeString(client.id_document_url) || null,
+		},
+	})
+
+	const { control, handleSubmit, setValue, watch } = rhf
+
+	useEffect(() => {
+		if (objectUrl) {
+			setValue('id_document_url', objectUrl, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [objectUrl])
+
+	const onSubmit = (data: EditIdentitySchema) => {
+		submit({
+			clientId: client.id,
+			id_type: data.id_type ?? null,
+			id_number: data.id_number ?? null,
+			id_expiry: data.id_expiry
+				? localizedDayjs(data.id_expiry).format('YYYY-MM-DD')
+				: null,
+			id_document_url: data.id_document_url ?? null,
+		})
+	}
+
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent className="max-w-sm rounded-xl">
+				<DialogHeader>
+					<DialogTitle>Edit Identity</DialogTitle>
+					<DialogDescription>
+						Update your identity document details.
+					</DialogDescription>
+				</DialogHeader>
+
+				<Form {...rhf}>
+					<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+						<FormItem>
+							<FormLabel>ID Type</FormLabel>
+							<div className="flex flex-wrap gap-2">
+								{idTypeOptions.map((opt) => {
+									const isSelected = watch('id_type') === opt.value
+									return (
+										<Button
+											key={opt.value}
+											type="button"
+											variant={isSelected ? 'default' : 'outline'}
+											size="sm"
+											onClick={() =>
+												setValue('id_type', isSelected ? null : opt.value, {
+													shouldDirty: true,
+													shouldValidate: true,
+												})
+											}
+										>
+											{opt.label}
+										</Button>
+									)
+								})}
+							</div>
+						</FormItem>
+
+						<FormField
+							name="id_number"
+							control={control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>ID Number</FormLabel>
+									<FormControl>
+										<Input
+											{...field}
+											value={field.value ?? ''}
+											onChange={(e) => field.onChange(e.target.value || null)}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<FormField
+							name="id_expiry"
+							control={control}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>ID Expiry</FormLabel>
+									<FormControl>
+										<DatePickerInput
+											value={field.value ?? undefined}
+											onChange={(date) => field.onChange(date ?? null)}
+											disabled={(date) => date < startIdExpiryDate}
+											startMonth={startIdExpiryDate}
+											endMonth={maxIdExpiryDate}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<ImageUpload
+							shape="square"
+							hint="Optional"
+							acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
+							error={rhf.formState.errors?.id_document_url?.message}
+							fileCallback={upload}
+							isUploading={isUploading}
+							dismissCallback={() => {
+								setValue('id_document_url', null, {
+									shouldDirty: true,
+									shouldValidate: true,
+								})
+							}}
+							imageSrc={safeString(watch('id_document_url'))}
+							label="ID Document"
+							name="id_document"
+							validation={{
+								maxByteSize: 5120000, // 5MB
+							}}
+						/>
+
+						<div className="flex justify-end gap-3 pt-1">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => onOpenChange(false)}
+							>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								disabled={isPending}
+								className="min-w-[80px]"
+							>
+								{isPending ? <Spinner /> : null}
+								Save
+							</Button>
+						</div>
+					</form>
+				</Form>
+			</DialogContent>
+		</Dialog>
 	)
 }
 
@@ -808,6 +1012,7 @@ export function GeneralSettingsModule() {
 	const [showEditProfile, setShowEditProfile] = useState(false)
 	const [showEditCompany, setShowEditCompany] = useState(false)
 	const [showEditLocation, setShowEditLocation] = useState(false)
+	const [showEditIdentity, setShowEditIdentity] = useState(false)
 
 	const client = currentUser?.client
 	const isCompany = client?.type === 'COMPANY'
@@ -1020,6 +1225,72 @@ export function GeneralSettingsModule() {
 				</div>
 			</section>
 
+			{/* Identity — only for INDIVIDUAL */}
+			{!isCompany && (
+				<section className="bg-card relative grid gap-8 rounded-xl border p-4 shadow-sm sm:grid-cols-3 sm:items-start md:p-6">
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						className="absolute top-3 right-3 gap-1.5 text-xs"
+						onClick={() => setShowEditIdentity(true)}
+					>
+						<Pencil className="size-3.5" />
+						Edit
+					</Button>
+
+					<div className="space-y-2">
+						<TypographyH4 className="text-lg font-semibold">
+							Identity
+						</TypographyH4>
+						<TypographyMuted className="text-sm">
+							Your government-issued identification.
+						</TypographyMuted>
+					</div>
+
+					<div className="space-y-5 sm:col-span-2">
+						<div className="grid gap-5 sm:grid-cols-2">
+							<div className="space-y-1">
+								<Label className="text-sm font-medium">ID Type</Label>
+								<p className="text-muted-foreground text-sm">
+									{client?.id_type
+										? (idTypeOptions.find((o) => o.value === client.id_type)
+												?.label ?? '—')
+										: '—'}
+								</p>
+							</div>
+							<div className="space-y-1">
+								<Label className="text-sm font-medium">ID Number</Label>
+								<p className="text-muted-foreground text-sm">
+									{safeString(client?.id_number) || '—'}
+								</p>
+							</div>
+							<div className="space-y-1">
+								<Label className="text-sm font-medium">Expiry Date</Label>
+								<p className="text-muted-foreground text-sm">
+									{client?.id_expiry
+										? localizedDayjs(client.id_expiry).format('MMM D, YYYY')
+										: '—'}
+								</p>
+							</div>
+							{client?.id_document_url && (
+								<div className="space-y-1">
+									<Label className="text-sm font-medium">ID Document</Label>
+									<a
+										href={client.id_document_url}
+										target="_blank"
+										rel="noreferrer"
+										className="text-primary text-sm underline underline-offset-4"
+									>
+										View document
+									</a>
+								</div>
+							)}
+						</div>
+					</div>
+				</section>
+			)}
+
 			{/* ------------------------------------------------------------------ */}
 			{/* Dialogs                                                              */}
 			{/* ------------------------------------------------------------------ */}
@@ -1058,6 +1329,19 @@ export function GeneralSettingsModule() {
 					onOpenChange={setShowEditLocation}
 					onSuccess={() => {
 						setShowEditLocation(false)
+						handleMutationSuccess()
+					}}
+				/>
+			)}
+
+			{/* Edit Identity */}
+			{client && !isCompany && (
+				<EditIdentityDialog
+					client={client}
+					open={showEditIdentity}
+					onOpenChange={setShowEditIdentity}
+					onSuccess={() => {
+						setShowEditIdentity(false)
 						handleMutationSuccess()
 					}}
 				/>

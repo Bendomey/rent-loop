@@ -59,6 +59,11 @@ interface Client {
 	support_email: Nullable<string>
 	support_phone: Nullable<string>
 
+	id_type: Nullable<'DRIVERS_LICENSE' | 'PASSPORT' | 'NATIONAL_ID'>
+	id_number: Nullable<string>
+	id_expiry: Nullable<string>
+	id_document_url: Nullable<string>
+
 	client_application_id: string
 	client_application: Nullable<ClientApplication>
 

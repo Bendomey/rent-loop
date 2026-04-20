@@ -97,10 +97,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 		? (agreements?.every((a) => a.user_has_accepted) ?? true)
 		: true
 
+	const client = clientData.clientUser.client
+	const isIndividual = client?.type === 'INDIVIDUAL'
+	const isIdentityComplete =
+		!isIndividual || Boolean(client?.id_type && client?.id_number)
+
 	return {
 		hasAcceptedAllAgreements,
 		propertiesCount: properties?.meta?.total || 0,
 		paymentAccountsCount: paymentAccounts?.meta?.total || 0,
+		isIndividual,
+		isIdentityComplete,
 	}
 }
 
@@ -135,6 +142,8 @@ export default function AuthDashboard({
 					hasAcceptedAllAgreements={
 						loaderData?.hasAcceptedAllAgreements ?? true
 					}
+					isIndividual={loaderData?.isIndividual ?? false}
+					isIdentityComplete={loaderData?.isIdentityComplete ?? true}
 				/>
 				<header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
 					<div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">

@@ -1534,6 +1534,19 @@ definitions:
       description:
         maxLength: 500
         type: string
+      id_document_url:
+        type: string
+      id_expiry:
+        type: string
+      id_number:
+        type: string
+      id_type:
+        description: individual identity fields
+        enum:
+        - DRIVERS_LICENSE
+        - PASSPORT
+        - NATIONAL_ID
+        type: string
       latitude:
         type: number
       longitude:
@@ -4762,7 +4775,8 @@ paths:
     patch:
       consumes:
       - application/json
-      description: Update the client's type, sub type, or company details
+      description: Update the client's type, sub type, company details, or individual
+        identity fields
       parameters:
       - description: Client ID
         in: path

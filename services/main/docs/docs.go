@@ -807,7 +807,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update the client's type, sub type, or company details",
+                "description": "Update the client's type, sub type, company details, or individual identity fields",
                 "consumes": [
                     "application/json"
                 ],
@@ -17264,6 +17264,24 @@ const docTemplate = `{
                 "description": {
                     "type": "string",
                     "maxLength": 500
+                },
+                "id_document_url": {
+                    "type": "string"
+                },
+                "id_expiry": {
+                    "type": "string"
+                },
+                "id_number": {
+                    "type": "string"
+                },
+                "id_type": {
+                    "description": "individual identity fields",
+                    "type": "string",
+                    "enum": [
+                        "DRIVERS_LICENSE",
+                        "PASSPORT",
+                        "NATIONAL_ID"
+                    ]
                 },
                 "latitude": {
                     "type": "number"

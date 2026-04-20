@@ -18,11 +18,15 @@ interface Props {
 	propertiesCount: number
 	paymentAccountsCount: number
 	hasAcceptedAllAgreements: boolean
+	isIndividual: boolean
+	isIdentityComplete: boolean
 }
 export function ClientChecklist({
 	propertiesCount,
 	paymentAccountsCount,
 	hasAcceptedAllAgreements,
+	isIndividual,
+	isIdentityComplete,
 }: Props) {
 	const isProfileComplete = true // for now we are not asking users to complete their profile, but we can easily add this back in the future by passing a prop from the loader.
 	const isPropertiesComplete = propertiesCount > 0
@@ -31,6 +35,7 @@ export function ClientChecklist({
 	const steps = [
 		hasAcceptedAllAgreements,
 		isProfileComplete,
+		...(isIndividual ? [isIdentityComplete] : []),
 		isPropertiesComplete,
 		isPaymentAccountsComplete,
 	]
@@ -103,6 +108,31 @@ export function ClientChecklist({
 								</Alert>
 							</Link>
 						</DialogClose>
+						{isIndividual && (
+							<DialogClose asChild>
+								<Link to="/settings/general">
+									<Alert
+										className={cn('mb-3 w-full cursor-pointer', {
+											'border-green-200 bg-green-50 text-green-900 dark:border-green-900 dark:bg-green-950 dark:text-green-50':
+												isIdentityComplete,
+											'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50':
+												!isIdentityComplete,
+										})}
+									>
+										{isIdentityComplete ? (
+											<CircleCheck />
+										) : (
+											<AlertTriangleIcon />
+										)}
+										<AlertTitle>Add your identity details</AlertTitle>
+										<AlertDescription className="text-xs">
+											Provide your ID type and number to verify your identity as
+											an individual property owner.
+										</AlertDescription>
+									</Alert>
+								</Link>
+							</DialogClose>
+						)}
 						<DialogClose asChild>
 							<Link to="/properties">
 								<Alert

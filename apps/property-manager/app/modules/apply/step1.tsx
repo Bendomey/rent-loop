@@ -82,30 +82,6 @@ const ValidationSchema = z
 					path: ['date_of_birth'],
 				})
 			}
-
-			if (!data.id_type) {
-				ctx.addIssue({
-					code: 'custom',
-					message: 'Please select an ID type',
-					path: ['id_type'],
-				})
-			}
-
-			if (!data.id_number) {
-				ctx.addIssue({
-					code: 'custom',
-					message: 'Please enter your ID number',
-					path: ['id_number'],
-				})
-			}
-
-			if (!data.id_expiry) {
-				ctx.addIssue({
-					code: 'custom',
-					message: 'Please enter your ID expiry date',
-					path: ['id_expiry'],
-				})
-			}
 		}
 	})
 
@@ -337,6 +313,7 @@ export function Step1() {
 												</SelectContent>
 											</Select>
 										</FormControl>
+										<FormDescription>Optional</FormDescription>
 										<FormMessage />
 									</FormItem>
 								)}
@@ -352,6 +329,7 @@ export function Step1() {
 											<FormControl>
 												<Input type="text" {...field} />
 											</FormControl>
+											<FormDescription>Optional</FormDescription>
 											<FormMessage />
 										</FormItem>
 									)}
@@ -371,6 +349,7 @@ export function Step1() {
 													endMonth={maxIdExpiryDate}
 												/>
 											</FormControl>
+											<FormDescription>Optional</FormDescription>
 											<FormMessage />
 										</FormItem>
 									)}
