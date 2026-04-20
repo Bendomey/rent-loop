@@ -27,6 +27,9 @@ type TenantApplication struct {
 	// "SELF" = tenant applied themselves, "ADMIN" = landlord created it, "CSV_BULK" = created via CSV/Excel upload
 	Source *string
 
+	PropertyId *string
+	Property   *Property
+
 	DesiredUnitId *string
 	DesiredUnit   Unit
 

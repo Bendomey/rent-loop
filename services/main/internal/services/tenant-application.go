@@ -131,6 +131,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 
 	source := "SELF"
 	tenantApplication := models.TenantApplication{
+		PropertyId:                     &unit.PropertyID,
 		DesiredUnitId:                  &input.DesiredUnitId,
 		RentFee:                        &unit.RentFee,
 		RentFeeCurrency:                &unit.RentFeeCurrency,
@@ -335,6 +336,7 @@ func (s *tenantApplicationService) BulkCreateTenantApplications(
 
 		app := models.TenantApplication{
 			Source:         &source,
+			PropertyId:     &input.PropertyID,
 			Phone:          entry.Phone,
 			FirstName:      entry.FirstName,
 			LastName:       entry.LastName,
@@ -546,7 +548,12 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 
 	// Required fields - only update if a non-nil value was sent
 	if input.DesiredUnitId != nil {
+		unit, getUnitErr := s.unitService.GetUnitByID(ctx, *input.DesiredUnitId)
+		if getUnitErr != nil {
+			return nil, getUnitErr
+		}
 		tenantApplication.DesiredUnitId = input.DesiredUnitId
+		tenantApplication.PropertyId = &unit.PropertyID
 	}
 
 	if input.RentFee != nil {

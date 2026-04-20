@@ -146,8 +146,7 @@ func tenantApplicationPropertyIdFilterScope(propertyId *string) func(db *gorm.DB
 			return db
 		}
 
-		return db.Joins("JOIN units ON tenant_applications.desired_unit_id = units.id").
-			Where("units.property_id = ?", *propertyId)
+		return db.Where("tenant_applications.property_id = ?", *propertyId)
 	}
 }
 
