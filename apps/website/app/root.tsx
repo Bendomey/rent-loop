@@ -70,7 +70,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 					{`
 						var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
 						Tawk_API.onChatMinimized=function(){
-							var hiddenPaths=['/tenants/apply','/tenant-applications'];
+							var hiddenPaths=${JSON.stringify(TAWK_HIDDEN_PATHS)};
 							var onHiddenPage=hiddenPaths.some(function(p){return window.location.pathname.startsWith(p);});
 							if(onHiddenPage){Tawk_API.hideWidget();}
 						};
@@ -90,7 +90,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 		</html>
 	)
 }
-
 
 function TawkVisibility() {
 	const location = useLocation()

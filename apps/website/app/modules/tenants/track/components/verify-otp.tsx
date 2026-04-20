@@ -222,7 +222,7 @@ export function VerifyOtp({ code, fetcher }: Props) {
 					</>
 				)}
 				<TawkChatLink />
-		</div>
+			</div>
 		</div>
 	)
 }

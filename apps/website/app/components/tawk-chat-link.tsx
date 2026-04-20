@@ -12,7 +12,7 @@ export function TawkChatLink() {
 			<button
 				type="button"
 				onClick={handleClick}
-				className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-rose-600 transition-colors"
+				className="inline-flex items-center gap-2 text-sm text-zinc-500 transition-colors hover:text-rose-600"
 			>
 				<MessageCircle className="h-4 w-4" />
 				Need help? Chat with us
