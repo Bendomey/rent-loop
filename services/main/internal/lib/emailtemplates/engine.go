@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"html"
 	"html/template"
 	"io/fs"
 	"regexp"
@@ -109,8 +110,8 @@ var (
 )
 
 // htmlToText strips HTML tags and normalizes whitespace for the plain-text fallback.
-func htmlToText(html string) string {
-	s := strings.ReplaceAll(html, "</p>", "\n\n")
+func htmlToText(src string) string {
+	s := strings.ReplaceAll(src, "</p>", "\n\n")
 	s = strings.ReplaceAll(s, "</div>", "\n")
 	s = strings.ReplaceAll(s, "<br>", "\n")
 	s = strings.ReplaceAll(s, "<br/>", "\n")
@@ -121,6 +122,7 @@ func htmlToText(html string) string {
 	s = strings.ReplaceAll(s, "</h2>", "\n\n")
 	s = strings.ReplaceAll(s, "</h3>", "\n\n")
 	s = tagRe.ReplaceAllString(s, "")
+	s = html.UnescapeString(s)
 
 	lines := strings.Split(s, "\n")
 	for i, line := range lines {

@@ -218,7 +218,7 @@ func (s *maintenanceRequestService) CreateByTenant(
 		if lease.ActivatedById == nil || lease.ActivatedBy == nil || lease.ActivatedBy.User.Email == "" {
 			return
 		}
-		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+		htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
 			"maintenance/request-created",
 			emailtemplates.MaintenanceRequestCreatedData{
 				TenantName: lease.Tenant.FirstName,
@@ -228,6 +228,10 @@ func (s *maintenanceRequestService) CreateByTenant(
 				Priority:   mr.Priority,
 			},
 		)
+		if renderErr != nil {
+			log.WithError(renderErr).Error("failed to render maintenance-request-created email template")
+			return
+		}
 		pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 			Recipient: lease.ActivatedBy.User.Email,
 			Subject:   lib.PM_MAINTENANCE_REQUEST_CREATED_SUBJECT,

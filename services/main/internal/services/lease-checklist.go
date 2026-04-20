@@ -12,6 +12,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/lib/pq"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -531,7 +532,7 @@ func (s *leaseChecklistService) AcknowledgeLeaseChecklist(
 		if leaseErr != nil {
 			return
 		}
-		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+		htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
 			"payment/checklist-acknowledged",
 			emailtemplates.ChecklistAcknowledgedData{
 				TenantName:    lease.Tenant.FirstName,
@@ -540,6 +541,10 @@ func (s *leaseChecklistService) AcknowledgeLeaseChecklist(
 				Action:        input.Action,
 			},
 		)
+		if renderErr != nil {
+			log.WithError(renderErr).Error("failed to render checklist-acknowledged email template")
+			return
+		}
 		pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 			Recipient: checklist.CreatedBy.User.Email,
 			Subject:   lib.PM_CHECKLIST_ACKNOWLEDGED_SUBJECT,

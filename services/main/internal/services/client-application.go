@@ -12,6 +12,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	gonanoid "github.com/matoous/go-nanoid"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -149,18 +150,21 @@ func (s *clientApplicationService) CreateClientApplication(
 
 	smsMessage := strings.ReplaceAll(lib.CLIENT_APPLICATION_SUBMITTED_SMS_BODY, "{{owner_name}}", input.ContactName)
 
-	htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+	if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
 		"client-application/submitted",
 		emailtemplates.ClientApplicationSubmittedData{OwnerName: input.ContactName},
-	)
-	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-		Recipient: input.ContactEmail,
-		Subject:   lib.CLIENT_APPLICATION_SUBMITTED_SUBJECT,
-		HtmlBody:  htmlBody,
-		TextBody:  textBody,
-	})
+	); renderErr != nil {
+		log.WithError(renderErr).Error("failed to render client-application/submitted email template")
+	} else {
+		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+			Recipient: input.ContactEmail,
+			Subject:   lib.CLIENT_APPLICATION_SUBMITTED_SUBJECT,
+			HtmlBody:  htmlBody,
+			TextBody:  textBody,
+		})
+	}
 
-	adminHtml, adminText, _ := s.appCtx.EmailEngine.Render(
+	if adminHtml, adminText, renderErr := s.appCtx.EmailEngine.Render(
 		"client-application/admin-notification",
 		emailtemplates.ClientApplicationAdminNotificationData{
 			ApplicantName:    input.ContactName,
@@ -171,13 +175,16 @@ func (s *clientApplicationService) CreateClientApplication(
 			ApplicantCity:    input.City,
 			ApplicantRegion:  input.Region,
 		},
-	)
-	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-		Recipient: "rentloopapp@gmail.com",
-		Subject:   lib.CLIENT_APPLICATION_ADMIN_NOTIFICATION_SUBJECT,
-		HtmlBody:  adminHtml,
-		TextBody:  adminText,
-	})
+	); renderErr != nil {
+		log.WithError(renderErr).Error("failed to render client-application/admin-notification email template")
+	} else {
+		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+			Recipient: "rentloopapp@gmail.com",
+			Subject:   lib.CLIENT_APPLICATION_ADMIN_NOTIFICATION_SUBJECT,
+			HtmlBody:  adminHtml,
+			TextBody:  adminText,
+		})
+	}
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
 		Recipient: input.ContactPhoneNumber,
@@ -376,20 +383,23 @@ func (s *clientApplicationService) ApproveClientApplication(
 			"{{email}}", clientApplication.ContactEmail,
 			"{{password}}", password,
 		).Replace(lib.CLIENT_APPLICATION_ACCEPTED_SMS_BODY)
-		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+		if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
 			"client-application/accepted",
 			emailtemplates.ClientApplicationAcceptedData{
 				OwnerName: clientApplication.ContactName,
 				Email:     clientApplication.ContactEmail,
 				Password:  password,
 			},
-		)
-		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-			Recipient: clientApplication.ContactEmail,
-			Subject:   lib.CLIENT_APPLICATION_ACCEPTED_SUBJECT,
-			HtmlBody:  htmlBody,
-			TextBody:  textBody,
-		})
+		); renderErr != nil {
+			log.WithError(renderErr).Error("failed to render client-application/accepted email template")
+		} else {
+			go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+				Recipient: clientApplication.ContactEmail,
+				Subject:   lib.CLIENT_APPLICATION_ACCEPTED_SUBJECT,
+				HtmlBody:  htmlBody,
+				TextBody:  textBody,
+			})
+		}
 		go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
 			Recipient: clientApplication.ContactPhoneNumber,
 			Message:   acceptedSMS,
@@ -399,16 +409,19 @@ func (s *clientApplicationService) ApproveClientApplication(
 			"{{name}}", clientApplication.ContactName,
 			"{{client_name}}", client.Name,
 		).Replace(lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_SMS_BODY)
-		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render("client-user/added-existing-account", emailtemplates.ClientUserAddedExistingAccountData{
+		if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render("client-user/added-existing-account", emailtemplates.ClientUserAddedExistingAccountData{
 			Name:       clientApplication.ContactName,
 			ClientName: client.Name,
-		})
-		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-			Recipient: clientApplication.ContactEmail,
-			Subject:   lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_SUBJECT,
-			HtmlBody:  htmlBody,
-			TextBody:  textBody,
-		})
+		}); renderErr != nil {
+			log.WithError(renderErr).Error("failed to render client-user/added-existing-account email template")
+		} else {
+			go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+				Recipient: clientApplication.ContactEmail,
+				Subject:   lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_SUBJECT,
+				HtmlBody:  htmlBody,
+				TextBody:  textBody,
+			})
+		}
 		go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
 			Recipient: clientApplication.ContactPhoneNumber,
 			Message:   existingSMS,

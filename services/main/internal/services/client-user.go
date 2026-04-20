@@ -12,6 +12,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	gonanoid "github.com/matoous/go-nanoid"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -171,21 +172,24 @@ func (s *clientUserService) CreateClientUser(
 			"{{email}}", input.Email,
 			"{{password}}", plainPassword,
 		).Replace(lib.CLIENT_USER_ADDED_SMS_BODY)
-		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render("client-user/added", emailtemplates.ClientUserAddedData{
+		if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render("client-user/added", emailtemplates.ClientUserAddedData{
 			Name:       input.Name,
 			ClientName: client.Name,
 			Email:      input.Email,
 			Password:   plainPassword,
-		})
-		go pkg.SendEmail(
-			s.appCtx.Config,
-			pkg.SendEmailInput{
-				Recipient: input.Email,
-				Subject:   lib.CLIENT_USER_ADDED_SUBJECT,
-				HtmlBody:  htmlBody,
-				TextBody:  textBody,
-			},
-		)
+		}); renderErr != nil {
+			log.WithError(renderErr).Error("failed to render client-user/added email template")
+		} else {
+			go pkg.SendEmail(
+				s.appCtx.Config,
+				pkg.SendEmailInput{
+					Recipient: input.Email,
+					Subject:   lib.CLIENT_USER_ADDED_SUBJECT,
+					HtmlBody:  htmlBody,
+					TextBody:  textBody,
+				},
+			)
+		}
 		go s.appCtx.Clients.GatekeeperAPI.SendSMS(
 			context.Background(),
 			gatekeeper.SendSMSInput{
@@ -199,19 +203,22 @@ func (s *clientUserService) CreateClientUser(
 			"{{name}}", input.Name,
 			"{{client_name}}", client.Name,
 		).Replace(lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_SMS_BODY)
-		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render("client-user/added-existing-account", emailtemplates.ClientUserAddedExistingAccountData{
+		if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render("client-user/added-existing-account", emailtemplates.ClientUserAddedExistingAccountData{
 			Name:       input.Name,
 			ClientName: client.Name,
-		})
-		go pkg.SendEmail(
-			s.appCtx.Config,
-			pkg.SendEmailInput{
-				Recipient: input.Email,
-				Subject:   lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_SUBJECT,
-				HtmlBody:  htmlBody,
-				TextBody:  textBody,
-			},
-		)
+		}); renderErr != nil {
+			log.WithError(renderErr).Error("failed to render client-user/added-existing-account email template")
+		} else {
+			go pkg.SendEmail(
+				s.appCtx.Config,
+				pkg.SendEmailInput{
+					Recipient: input.Email,
+					Subject:   lib.CLIENT_USER_ADDED_EXISTING_ACCOUNT_SUBJECT,
+					HtmlBody:  htmlBody,
+					TextBody:  textBody,
+				},
+			)
+		}
 		go s.appCtx.Clients.GatekeeperAPI.SendSMS(
 			context.Background(),
 			gatekeeper.SendSMSInput{
@@ -385,19 +392,22 @@ func (s *clientUserService) ActivateClientUser(
 
 	smsMessage := strings.NewReplacer("{{name}}", user.Name).Replace(lib.CLIENT_USER_ACTIVATED_SMS_BODY)
 
-	htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+	if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
 		"client-user/activated",
 		emailtemplates.ClientUserActivatedData{Name: user.Name},
-	)
-	go pkg.SendEmail(
-		s.appCtx.Config,
-		pkg.SendEmailInput{
-			Recipient: user.Email,
-			Subject:   lib.CLIENT_USER_ACTIVATED_SUBJECT,
-			HtmlBody:  htmlBody,
-			TextBody:  textBody,
-		},
-	)
+	); renderErr != nil {
+		log.WithError(renderErr).Error("failed to render client-user/activated email template")
+	} else {
+		go pkg.SendEmail(
+			s.appCtx.Config,
+			pkg.SendEmailInput{
+				Recipient: user.Email,
+				Subject:   lib.CLIENT_USER_ACTIVATED_SUBJECT,
+				HtmlBody:  htmlBody,
+				TextBody:  textBody,
+			},
+		)
+	}
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
 		context.Background(),
@@ -470,19 +480,22 @@ func (s *clientUserService) DeactivateClientUser(
 		"{{reason}}", input.Reason,
 	).Replace(lib.CLIENT_USER_DEACTIVATED_SMS_BODY)
 
-	htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+	if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
 		"client-user/deactivated",
 		emailtemplates.ClientUserDeactivatedData{Name: user.Name, Reason: input.Reason},
-	)
-	go pkg.SendEmail(
-		s.appCtx.Config,
-		pkg.SendEmailInput{
-			Recipient: user.Email,
-			Subject:   lib.CLIENT_USER_DEACTIVATED_SUBJECT,
-			HtmlBody:  htmlBody,
-			TextBody:  textBody,
-		},
-	)
+	); renderErr != nil {
+		log.WithError(renderErr).Error("failed to render client-user/deactivated email template")
+	} else {
+		go pkg.SendEmail(
+			s.appCtx.Config,
+			pkg.SendEmailInput{
+				Recipient: user.Email,
+				Subject:   lib.CLIENT_USER_DEACTIVATED_SUBJECT,
+				HtmlBody:  htmlBody,
+				TextBody:  textBody,
+			},
+		)
+	}
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
 		context.Background(),

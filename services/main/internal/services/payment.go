@@ -243,7 +243,7 @@ func (s *paymentService) CreateOfflinePayment(
 				lease.ActivatedBy.User.Email == "" {
 				return
 			}
-			htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+			htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
 				"payment/offline-submitted",
 				emailtemplates.OfflinePaymentSubmittedData{
 					TenantName:  lease.Tenant.FirstName,
@@ -253,6 +253,10 @@ func (s *paymentService) CreateOfflinePayment(
 					Currency:    invoice.Currency,
 				},
 			)
+			if renderErr != nil {
+				logrus.WithError(renderErr).Error("failed to render payment/offline-submitted email template")
+				return
+			}
 			pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 				Recipient: lease.ActivatedBy.User.Email,
 				Subject:   lib.PM_OFFLINE_PAYMENT_SUBMITTED_SUBJECT,
@@ -268,13 +272,17 @@ func (s *paymentService) CreateOfflinePayment(
 				return
 			}
 			tenantName := strings.Join(strings.Fields(lib.SafeString(ta.FirstName)+" "+lib.SafeString(ta.LastName)), " ")
-			htmlBody, textBody, _ := s.appCtx.EmailEngine.Render("payment/offline-submitted", emailtemplates.OfflinePaymentSubmittedData{
+			htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render("payment/offline-submitted", emailtemplates.OfflinePaymentSubmittedData{
 				TenantName:  tenantName,
 				UnitName:    "",
 				InvoiceCode: invoice.Code,
 				Amount:      lib.FormatAmount(lib.PesewasToCedis(invoice.TotalAmount)),
 				Currency:    invoice.Currency,
 			})
+			if renderErr != nil {
+				logrus.WithError(renderErr).Error("failed to render payment/offline-submitted email template")
+				return
+			}
 			pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 				Recipient: ta.CreatedBy.User.Email,
 				Subject:   lib.PM_OFFLINE_PAYMENT_SUBMITTED_SUBJECT,
@@ -561,14 +569,16 @@ func (s *paymentService) VerifyOfflinePayment(
 		)
 		smsMessage := smsR.Replace(lib.INVOICE_PAID_SMS_BODY)
 
-		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render("invoice/paid", emailtemplates.InvoicePaidData{
+		htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render("invoice/paid", emailtemplates.InvoicePaidData{
 			TenantName:  tenant.FirstName,
 			InvoiceCode: payment.Invoice.Code,
 			UnitName:    unitName,
 			Currency:    payment.Invoice.Currency,
 			Amount:      lib.FormatAmount(lib.PesewasToCedis(int64(payment.Invoice.TotalAmount))),
 		})
-		if tenant.Email != nil {
+		if renderErr != nil {
+			logrus.WithError(renderErr).Error("failed to render invoice/paid email template")
+		} else if tenant.Email != nil {
 			go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 				Recipient: *tenant.Email,
 				Subject:   lib.INVOICE_PAID_SUBJECT,

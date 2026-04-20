@@ -14,6 +14,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -431,20 +432,23 @@ func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInp
 	).Replace(lib.LEASE_ACTIVATED_SMS_BODY)
 
 	if lease.Tenant.Email != nil {
-		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render("lease/activated", emailtemplates.LeaseActivatedData{
+		if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render("lease/activated", emailtemplates.LeaseActivatedData{
 			TenantName: lease.Tenant.FirstName,
 			UnitName:   lease.Unit.Name,
 			MoveInDate: startDate,
-		})
-		go pkg.SendEmail(
-			s.appCtx.Config,
-			pkg.SendEmailInput{
-				Recipient: *lease.Tenant.Email,
-				Subject:   lib.LEASE_ACTIVATED_SUBJECT,
-				HtmlBody:  htmlBody,
-				TextBody:  textBody,
-			},
-		)
+		}); renderErr != nil {
+			log.WithError(renderErr).Error("failed to render lease/activated email template")
+		} else {
+			go pkg.SendEmail(
+				s.appCtx.Config,
+				pkg.SendEmailInput{
+					Recipient: *lease.Tenant.Email,
+					Subject:   lib.LEASE_ACTIVATED_SUBJECT,
+					HtmlBody:  htmlBody,
+					TextBody:  textBody,
+				},
+			)
+		}
 	}
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
@@ -571,7 +575,7 @@ func (s *leaseService) GenerateLeaseRentInvoice(ctx context.Context, leaseID str
 	).Replace(lib.RENT_INVOICE_GENERATED_SMS_BODY)
 
 	if lease.Tenant.Email != nil {
-		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+		if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
 			"invoice/rent-generated",
 			emailtemplates.RentInvoiceGeneratedData{
 				TenantName:  tenantName,
@@ -580,16 +584,19 @@ func (s *leaseService) GenerateLeaseRentInvoice(ctx context.Context, leaseID str
 				Currency:    currency,
 				Amount:      amount,
 			},
-		)
-		go pkg.SendEmail(
-			s.appCtx.Config,
-			pkg.SendEmailInput{
-				Recipient: *lease.Tenant.Email,
-				Subject:   lib.RENT_INVOICE_GENERATED_SUBJECT,
-				HtmlBody:  htmlBody,
-				TextBody:  textBody,
-			},
-		)
+		); renderErr != nil {
+			log.WithError(renderErr).Error("failed to render invoice/rent-generated email template")
+		} else {
+			go pkg.SendEmail(
+				s.appCtx.Config,
+				pkg.SendEmailInput{
+					Recipient: *lease.Tenant.Email,
+					Subject:   lib.RENT_INVOICE_GENERATED_SUBJECT,
+					HtmlBody:  htmlBody,
+					TextBody:  textBody,
+				},
+			)
+		}
 	}
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(
@@ -678,20 +685,23 @@ func (s *leaseService) CancelLease(ctx context.Context, input CancelLeaseInput) 
 	).Replace(lib.LEASE_CANCELLED_SMS_BODY)
 
 	if lease.Tenant.Email != nil {
-		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render("lease/cancelled", emailtemplates.LeaseCancelledData{
+		if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render("lease/cancelled", emailtemplates.LeaseCancelledData{
 			TenantName:         lease.Tenant.FirstName,
 			UnitName:           lease.Unit.Name,
 			CancellationReason: input.CancellationReason,
-		})
-		go pkg.SendEmail(
-			s.appCtx.Config,
-			pkg.SendEmailInput{
-				Recipient: *lease.Tenant.Email,
-				Subject:   lib.LEASE_CANCELLED_SUBJECT,
-				HtmlBody:  htmlBody,
-				TextBody:  textBody,
-			},
-		)
+		}); renderErr != nil {
+			log.WithError(renderErr).Error("failed to render lease/cancelled email template")
+		} else {
+			go pkg.SendEmail(
+				s.appCtx.Config,
+				pkg.SendEmailInput{
+					Recipient: *lease.Tenant.Email,
+					Subject:   lib.LEASE_CANCELLED_SUBJECT,
+					HtmlBody:  htmlBody,
+					TextBody:  textBody,
+				},
+			)
+		}
 	}
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(

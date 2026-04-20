@@ -392,7 +392,10 @@ func (s *announcementService) fanOutNotifications(ctx context.Context, a *models
 		AnnouncementTitle:   a.Title,
 		AnnouncementContent: a.Content,
 	}
-	htmlBody, textBody, _ := s.appCtx.EmailEngine.Render("announcement/notification", announcementEmailData)
+	htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render("announcement/notification", announcementEmailData)
+	if renderErr != nil {
+		log.WithError(renderErr).Error("failed to render announcement/notification email template")
+	}
 
 	var emailRecipients []pkg.BulkEmailRecipient
 	var smsRecipients []string
@@ -434,7 +437,7 @@ func (s *announcementService) fanOutNotifications(ctx context.Context, a *models
 		}
 	}
 
-	if len(emailRecipients) > 0 {
+	if renderErr == nil && len(emailRecipients) > 0 {
 		go func() {
 			if sendErr := pkg.SendBulkEmail(ctx, s.appCtx.Config, emailRecipients); sendErr != nil {
 				log.WithError(sendErr).WithField("announcementID", a.ID.String()).

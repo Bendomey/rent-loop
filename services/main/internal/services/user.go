@@ -15,6 +15,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/dgrijalva/jwt-go"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -224,16 +225,19 @@ func (s *userService) UpdatePassword(ctx context.Context, input UpdateUserPasswo
 
 	smsMessage := strings.NewReplacer("{{name}}", user.Name).Replace(lib.CLIENT_USER_PASSWORD_UPDATED_SMS_BODY)
 
-	htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+	if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
 		"client-user/password-updated",
 		emailtemplates.ClientUserPasswordUpdatedData{Name: user.Name},
-	)
-	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-		Recipient: user.Email,
-		Subject:   lib.CLIENT_USER_PASSWORD_UPDATED_SUBJECT,
-		HtmlBody:  htmlBody,
-		TextBody:  textBody,
-	})
+	); renderErr != nil {
+		log.WithError(renderErr).Error("failed to render password-updated email template")
+	} else {
+		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+			Recipient: user.Email,
+			Subject:   lib.CLIENT_USER_PASSWORD_UPDATED_SUBJECT,
+			HtmlBody:  htmlBody,
+			TextBody:  textBody,
+		})
+	}
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(context.Background(), gatekeeper.SendSMSInput{
 		Recipient: user.PhoneNumber,
 		Message:   smsMessage,
@@ -264,16 +268,19 @@ func (s *userService) SendForgotPasswordResetLink(ctx context.Context, email str
 		})
 	}
 
-	htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+	if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
 		"client-user/password-reset",
 		emailtemplates.ClientUserPasswordResetData{Name: user.Name, ResetToken: token},
-	)
-	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-		Recipient: user.Email,
-		Subject:   lib.CLIENT_USER_PASSWORD_RESET_SUBJECT,
-		HtmlBody:  htmlBody,
-		TextBody:  textBody,
-	})
+	); renderErr != nil {
+		log.WithError(renderErr).Error("failed to render password-reset email template")
+	} else {
+		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+			Recipient: user.Email,
+			Subject:   lib.CLIENT_USER_PASSWORD_RESET_SUBJECT,
+			HtmlBody:  htmlBody,
+			TextBody:  textBody,
+		})
+	}
 
 	return user, nil
 }

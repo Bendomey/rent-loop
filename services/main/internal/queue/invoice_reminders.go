@@ -133,7 +133,14 @@ func handleInvoiceReminder(
 			channelSucceeded := false
 
 			if tenant.Email != nil {
-				htmlBody, textBody, _ := appCtx.EmailEngine.Render(emailTemplateName, reminderData)
+				htmlBody, textBody, renderErr := appCtx.EmailEngine.Render(emailTemplateName, reminderData)
+				if renderErr != nil {
+					log.WithError(renderErr).
+						WithField("invoice_id", invoice.ID.String()).
+						Error("[Cron] failed to render invoice reminder email template")
+					failCount++
+					continue
+				}
 				if err := pkg.SendEmail(appCtx.Config, pkg.SendEmailInput{
 					Recipient: *tenant.Email,
 					Subject:   subject,

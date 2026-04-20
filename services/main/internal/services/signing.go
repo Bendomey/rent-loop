@@ -12,6 +12,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -324,17 +325,20 @@ func (s *signingService) sendSigningTokenNotification(
 	).Replace(smsBody)
 
 	if token.SignerEmail != nil {
-		htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(templateName, emailtemplates.SigningTokenData{
+		if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(templateName, emailtemplates.SigningTokenData{
 			SignerName: signerName,
 			Token:      token.Token,
 			ExpiresAt:  expiresAt,
-		})
-		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-			Recipient: *token.SignerEmail,
-			Subject:   subject,
-			HtmlBody:  htmlBody,
-			TextBody:  textBody,
-		})
+		}); renderErr != nil {
+			log.WithError(renderErr).Error("failed to render signing email template")
+		} else {
+			go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+				Recipient: *token.SignerEmail,
+				Subject:   subject,
+				HtmlBody:  htmlBody,
+				TextBody:  textBody,
+			})
+		}
 	}
 
 	if token.SignerPhone != nil {
