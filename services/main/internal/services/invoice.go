@@ -11,11 +11,13 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/config"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/lib/pq"
 	gonanoid "github.com/matoous/go-nanoid"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -295,27 +297,40 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 					"context_type": contextType,
 				},
 			)
-			r := strings.NewReplacer(
+			smsR := strings.NewReplacer(
 				"{{tenant_name}}", tenant.FirstName,
 				"{{invoice_code}}", invoiceCode,
 				"{{currency}}", invoiceCurrency,
 				"{{amount}}", invoiceAmount,
 			)
 			if tenant.Email != nil {
-				go pkg.SendEmail(
-					s.appCtx.Config,
-					pkg.SendEmailInput{
-						Recipient: *tenant.Email,
-						Subject:   lib.INVOICE_CREATED_SUBJECT,
-						TextBody:  r.Replace(lib.INVOICE_CREATED_BODY),
+				if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
+					"invoice/created",
+					emailtemplates.InvoiceCreatedData{
+						TenantName:  tenant.FirstName,
+						InvoiceCode: invoiceCode,
+						Currency:    invoiceCurrency,
+						Amount:      invoiceAmount,
 					},
-				)
+				); renderErr != nil {
+					log.WithError(renderErr).Error("failed to render invoice/created email template")
+				} else {
+					go pkg.SendEmail(
+						s.appCtx.Config,
+						pkg.SendEmailInput{
+							Recipient: *tenant.Email,
+							Subject:   lib.INVOICE_CREATED_SUBJECT,
+							HtmlBody:  htmlBody,
+							TextBody:  textBody,
+						},
+					)
+				}
 			}
 			go s.appCtx.Clients.GatekeeperAPI.SendSMS(
 				ctx,
 				gatekeeper.SendSMSInput{
 					Recipient: tenant.Phone,
-					Message:   r.Replace(lib.INVOICE_CREATED_SMS_BODY),
+					Message:   smsR.Replace(lib.INVOICE_CREATED_SMS_BODY),
 				},
 			)
 		}()
@@ -603,25 +618,33 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, input VoidInvoiceInput
 					"invoice_code": invoiceCode,
 				},
 			)
-			r := strings.NewReplacer(
+			smsR := strings.NewReplacer(
 				"{{tenant_name}}", tenant.FirstName,
 				"{{invoice_code}}", invoiceCode,
 			)
 			if tenant.Email != nil {
-				go pkg.SendEmail(
-					s.appCtx.Config,
-					pkg.SendEmailInput{
-						Recipient: *tenant.Email,
-						Subject:   lib.INVOICE_VOIDED_SUBJECT,
-						TextBody:  r.Replace(lib.INVOICE_VOIDED_BODY),
-					},
-				)
+				if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render("invoice/voided", emailtemplates.InvoiceVoidedData{
+					TenantName:  tenant.FirstName,
+					InvoiceCode: invoiceCode,
+				}); renderErr != nil {
+					log.WithError(renderErr).Error("failed to render invoice/voided email template")
+				} else {
+					go pkg.SendEmail(
+						s.appCtx.Config,
+						pkg.SendEmailInput{
+							Recipient: *tenant.Email,
+							Subject:   lib.INVOICE_VOIDED_SUBJECT,
+							HtmlBody:  htmlBody,
+							TextBody:  textBody,
+						},
+					)
+				}
 			}
 			go s.appCtx.Clients.GatekeeperAPI.SendSMS(
 				ctx,
 				gatekeeper.SendSMSInput{
 					Recipient: tenant.Phone,
-					Message:   r.Replace(lib.INVOICE_VOIDED_SMS_BODY),
+					Message:   smsR.Replace(lib.INVOICE_VOIDED_SMS_BODY),
 				},
 			)
 		}()

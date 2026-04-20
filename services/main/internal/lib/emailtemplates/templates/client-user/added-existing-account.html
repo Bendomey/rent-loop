@@ -1,0 +1,15 @@
+{{define "preview"}}You've been added to {{.Data.ClientName}} on Rentloop.{{end}}
+{{define "content"}}
+<h1 class="headline" style="margin:0 0 14px;font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#111110;line-height:1.2;letter-spacing:0.2px;">You've been added to a new account.</h1>
+<p style="margin:0 0 20px;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;color:#444444;line-height:1.7;">Hi {{.Data.Name}},</p>
+<p style="margin:0 0 28px;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;color:#444444;line-height:1.7;">You've been added to <strong>{{.Data.ClientName}}</strong> on Rentloop. Log in with your existing credentials to get started.</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:12px;">
+  <tr>
+    <td align="center">
+      <a href="{{.Base.PropertyManagerPortalURL}}" style="display:inline-block;background:#C8003A;color:#ffffff;font-family:'DM Sans',Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;padding:13px 40px;border-radius:9px;letter-spacing:0.2px;">Log In</a>
+    </td>
+  </tr>
+</table>
+<p style="margin:0;font-family:'DM Sans',Arial,sans-serif;font-size:12.5px;color:#aaaaaa;text-align:center;line-height:1.6;">Use your existing Rentloop email and password.</p>
+{{end}}

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
+      body,table,td,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;}
+      table,td{mso-table-lspace:0pt;mso-table-rspace:0pt;}
+      img{-ms-interpolation-mode:bicubic;border:0;outline:none;text-decoration:none;}
+      body{margin:0;padding:0;background:#F5F4F1;}
+      a{color:#C8003A;}
+      @media only screen and (max-width:600px){
+        .email-container{width:100%!important;max-width:100%!important;}
+        .content-pad{padding:24px 20px!important;}
+        .headline{font-size:24px!important;}
+      }
+    </style>
+  </head>
+  <body style="margin:0;padding:0;background-color:#F5F4F1;">
+    <!-- Preview text -->
+    <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">
+      {{block "preview" .}}You have a new notification from Rentloop.{{end}}&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;
+    </div>
+
+    <!-- Outer wrapper -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5F4F1;">
+      <tr>
+        <td align="center" style="padding:40px 20px;">
+          <!-- Email container -->
+          <table
+            class="email-container"
+            width="560"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            style="max-width:560px;width:100%;"
+          >
+            <!-- Wordmark -->
+            <tr>
+              <td align="center" style="padding:0 0 28px;">
+                <span style="font-family:'DM Sans',Arial,sans-serif;font-size:30px;font-weight:700;letter-spacing:-0.3px;color:#111110;">rent<span style="color:#C8003A;">loop</span></span>
+              </td>
+            </tr>
+
+            <!-- Card -->
+            <tr>
+              <td style="background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.07);">
+                <!-- Top accent line -->
+                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td height="3" style="background:#C8003A;font-size:0;line-height:0;">&nbsp;</td>
+                  </tr>
+                </table>
+                <!-- Content -->
+                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td class="content-pad" style="padding:36px 40px;">
+                      {{block "content" .}}{{end}}
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td align="center" style="padding:24px 0 0;">
+                <p style="margin:0 0 4px;font-family:'DM Sans',Arial,sans-serif;font-size:12px;color:#aaaaaa;line-height:1.8;">
+                  Rentloop Property Management &middot; Accra, Ghana
+                </p>
+                <p style="margin:0 0 4px;font-family:'DM Sans',Arial,sans-serif;font-size:12px;color:#aaaaaa;line-height:1.8;">
+                  Questions? <a href="mailto:{{.Base.SupportEmail}}" style="color:#aaaaaa;text-decoration:underline;">{{.Base.SupportEmail}}</a> &nbsp;&middot;&nbsp; {{.Base.SupportPhone}}
+                </p>
+                <p style="margin:0;font-family:'DM Sans',Arial,sans-serif;font-size:12px;color:#aaaaaa;">
+                  <a href="{{.Base.WebsiteURL}}" style="color:#aaaaaa;text-decoration:underline;">Website</a>
+                  &nbsp;&middot;&nbsp;
+                  <a href="{{.Base.WebsiteURL}}/privacy-policy" style="color:#aaaaaa;text-decoration:underline;">Privacy Policy</a>
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

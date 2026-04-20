@@ -8,6 +8,7 @@ import (
 
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -386,15 +387,23 @@ func (s *announcementService) fanOutNotifications(ctx context.Context, a *models
 		"priority":        a.Priority,
 	}
 
-	emailBody := strings.ReplaceAll(lib.ANNOUNCEMENT_EMAIL_BODY, "{{announcement_title}}", a.Title)
-	emailBody = strings.ReplaceAll(emailBody, "{{announcement_content}}", a.Content)
-	emailBody = strings.ReplaceAll(emailBody, "{{announcement_type}}", a.Type)
+	announcementEmailData := emailtemplates.AnnouncementData{
+		AnnouncementType:    a.Type,
+		AnnouncementTitle:   a.Title,
+		AnnouncementContent: a.Content,
+	}
+	htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render("announcement/notification", announcementEmailData)
+	if renderErr != nil {
+		log.WithError(renderErr).Error("failed to render announcement/notification email template")
+	}
 
 	var emailRecipients []pkg.BulkEmailRecipient
 	var smsRecipients []string
 
-	smsMsg := strings.ReplaceAll(lib.ANNOUNCEMENT_SMS_BODY, "{{announcement_title}}", a.Title)
-	smsMsg = strings.ReplaceAll(smsMsg, "{{announcement_content}}", a.Content)
+	smsMsg := strings.NewReplacer(
+		"{{announcement_title}}", a.Title,
+		"{{announcement_content}}", a.Content,
+	).Replace(lib.ANNOUNCEMENT_SMS_BODY)
 
 	for _, account := range *accounts {
 		accountID := account.ID.String()
@@ -417,7 +426,8 @@ func (s *announcementService) fanOutNotifications(ctx context.Context, a *models
 			emailRecipients = append(emailRecipients, pkg.BulkEmailRecipient{
 				To:       *tenant.Email,
 				Subject:  lib.ANNOUNCEMENT_EMAIL_SUBJECT,
-				TextBody: emailBody,
+				HtmlBody: htmlBody,
+				TextBody: textBody,
 			})
 		}
 
@@ -427,7 +437,7 @@ func (s *announcementService) fanOutNotifications(ctx context.Context, a *models
 		}
 	}
 
-	if len(emailRecipients) > 0 {
+	if renderErr == nil && len(emailRecipients) > 0 {
 		go func() {
 			if sendErr := pkg.SendBulkEmail(ctx, s.appCtx.Config, emailRecipients); sendErr != nil {
 				log.WithError(sendErr).WithField("announcementID", a.ID.String()).
