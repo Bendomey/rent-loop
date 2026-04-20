@@ -133,6 +133,10 @@ function formatIdType(t: string) {
 	return t.replace(/_/g, ' ')
 }
 
+function Req() {
+	return <span className="text-destructive"> *</span>
+}
+
 interface EditFormProps {
 	application: TrackingApplication
 	code: string
@@ -158,7 +162,9 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 				? dayjs(application.date_of_birth).format('YYYY-MM-DD')
 				: '',
 			nationality: application.nationality ?? '',
-			marital_status: (application.marital_status as EditSchema['marital_status']) ?? undefined,
+			marital_status:
+				(application.marital_status as EditSchema['marital_status']) ??
+				undefined,
 			current_address: application.current_address ?? '',
 			id_type: (application.id_type as EditSchema['id_type']) ?? undefined,
 			id_number: application.id_number ?? '',
@@ -177,7 +183,10 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 
 	useEffect(() => {
 		if (fetcher.data?.application) {
-			onSaved(fetcher.data.application)
+			onSaved({
+				...fetcher.data.application,
+				employer_type: rhf.getValues('employer_type'),
+			})
 		}
 	}, [fetcher.data, onSaved])
 
@@ -187,14 +196,14 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 		for (const [key, val] of Object.entries(data)) {
 			if (val != null && val !== '') fd.append(key, val)
 		}
-		fetcher.submit(fd, { method: 'post' })
+		void fetcher.submit(fd, { method: 'post' })
 	}
 
 	return (
 		<Form {...rhf}>
 			<form
 				onSubmit={rhf.handleSubmit(onSubmit)}
-				className="divide-y border-t [&_[data-slot=form-label]]:text-xs [&_[data-slot=form-label]]:font-normal [&_[data-slot=form-label]]:text-zinc-500"
+				className="divide-y border-t [&_[data-slot=form-item]]:gap-1 [&_[data-slot=form-label]]:text-xs [&_[data-slot=form-label]]:font-normal [&_[data-slot=form-label]]:text-zinc-500 [&_[data-slot=form-message]]:text-xs"
 			>
 				{/* Personal */}
 				<div className="space-y-3 px-6 py-5">
@@ -207,7 +216,9 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 							name="first_name"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>First Name <span className="text-destructive">*</span></FormLabel>
+									<FormLabel>
+										First Name <Req />
+									</FormLabel>
 									<FormControl>
 										<Input placeholder="First name" {...field} />
 									</FormControl>
@@ -220,7 +231,9 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 							name="last_name"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Last Name <span className="text-destructive">*</span></FormLabel>
+									<FormLabel>
+										Last Name <Req />
+									</FormLabel>
 									<FormControl>
 										<Input placeholder="Last name" {...field} />
 									</FormControl>
@@ -250,8 +263,13 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 							name="gender"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Gender <span className="text-destructive">*</span></FormLabel>
-									<Select onValueChange={field.onChange} defaultValue={field.value}>
+									<FormLabel>
+										Gender <Req />
+									</FormLabel>
+									<Select
+										onValueChange={field.onChange}
+										defaultValue={field.value}
+									>
 										<FormControl className="w-full">
 											<SelectTrigger>
 												<SelectValue placeholder="Select gender" />
@@ -271,7 +289,9 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 							name="date_of_birth"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Date of Birth <span className="text-destructive">*</span></FormLabel>
+									<FormLabel>
+										Date of Birth <Req />
+									</FormLabel>
 									<FormControl>
 										<Input type="date" {...field} />
 									</FormControl>
@@ -300,8 +320,13 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 							name="marital_status"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Marital Status <span className="text-destructive">*</span></FormLabel>
-									<Select onValueChange={field.onChange} defaultValue={field.value}>
+									<FormLabel>
+										Marital Status <Req />
+									</FormLabel>
+									<Select
+										onValueChange={field.onChange}
+										defaultValue={field.value}
+									>
 										<FormControl className="w-full">
 											<SelectTrigger>
 												<SelectValue placeholder="Select status" />
@@ -346,8 +371,13 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 							name="id_type"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>ID Type <span className="text-destructive">*</span></FormLabel>
-									<Select onValueChange={field.onChange} defaultValue={field.value}>
+									<FormLabel>
+										ID Type <Req />
+									</FormLabel>
+									<Select
+										onValueChange={field.onChange}
+										defaultValue={field.value}
+									>
 										<FormControl className="w-full">
 											<SelectTrigger>
 												<SelectValue placeholder="Select ID type" />
@@ -357,7 +387,9 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 											<SelectItem value="GHANA_CARD">Ghana Card</SelectItem>
 											<SelectItem value="NATIONAL_ID">National ID</SelectItem>
 											<SelectItem value="PASSPORT">Passport</SelectItem>
-											<SelectItem value="DRIVER_LICENSE">Driver's License</SelectItem>
+											<SelectItem value="DRIVER_LICENSE">
+												Driver's License
+											</SelectItem>
 										</SelectContent>
 									</Select>
 									<FormMessage />
@@ -369,7 +401,9 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 							name="id_number"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>ID Number <span className="text-destructive">*</span></FormLabel>
+									<FormLabel>
+										ID Number <Req />
+									</FormLabel>
 									<FormControl>
 										<Input placeholder="ID number" {...field} />
 									</FormControl>
@@ -391,7 +425,9 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 							name="emergency_contact_name"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Full Name <span className="text-destructive">*</span></FormLabel>
+									<FormLabel>
+										Full Name <Req />
+									</FormLabel>
 									<FormControl>
 										<Input placeholder="Full name" {...field} />
 									</FormControl>
@@ -404,7 +440,9 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 							name="emergency_contact_phone"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Phone <span className="text-destructive">*</span></FormLabel>
+									<FormLabel>
+										Phone <Req />
+									</FormLabel>
 									<FormControl>
 										<Input type="tel" placeholder="Phone number" {...field} />
 									</FormControl>
@@ -433,14 +471,16 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 					<p className="text-xs font-semibold tracking-wide text-zinc-400 uppercase">
 						Employment
 					</p>
-					<div className="inline-flex rounded-lg border border-zinc-200 bg-zinc-100 p-0.5">
+					<div className="inline-flex w-1/2 rounded-lg border border-zinc-200 bg-zinc-100 p-0.5">
 						{(['WORKER', 'STUDENT'] as EmployerType[]).map((type) => (
 							<button
 								key={type}
 								type="button"
-								onClick={() => rhf.setValue('employer_type', type, { shouldValidate: true })}
+								onClick={() =>
+									rhf.setValue('employer_type', type, { shouldValidate: true })
+								}
 								className={cn(
-									'rounded-md px-4 py-1 text-sm font-medium transition-all',
+									'w-full rounded-md px-4 py-1 text-sm font-medium transition-all',
 									rhf.watch('employer_type') === type
 										? 'bg-white text-zinc-900 shadow-sm'
 										: 'text-zinc-500 hover:text-zinc-700',
@@ -451,14 +491,21 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 						))}
 					</div>
 
-					<div className={cn('grid gap-3', isStudent ? 'grid-cols-1' : 'grid-cols-2')}>
+					<div
+						className={cn(
+							'grid gap-3',
+							isStudent ? 'grid-cols-1' : 'grid-cols-2',
+						)}
+					>
 						{!isStudent && (
 							<FormField
 								control={rhf.control}
 								name="occupation"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Occupation <span className="text-destructive">*</span></FormLabel>
+										<FormLabel>
+											Occupation <Req />
+										</FormLabel>
 										<FormControl>
 											<Input placeholder="e.g. Software Engineer" {...field} />
 										</FormControl>
@@ -473,12 +520,15 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>
-										{isStudent ? 'Institution / School' : 'Employer'}{' '}
-										<span className="text-destructive">*</span>
+										{isStudent ? 'Institution / School' : 'Employer'} <Req />
 									</FormLabel>
 									<FormControl>
 										<Input
-											placeholder={isStudent ? 'Institution or school name' : 'Company name'}
+											placeholder={
+												isStudent
+													? 'Institution or school name'
+													: 'Company name'
+											}
 											{...field}
 										/>
 									</FormControl>
@@ -490,12 +540,12 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 				</div>
 
 				{/* Actions */}
-				<div className="flex items-center justify-between px-6 py-4">
+				<div className="flex items-center justify-between gap-2 px-6 py-4 pt-5">
 					<button
 						type="button"
 						onClick={onClose}
 						disabled={isSubmitting}
-						className="text-sm text-zinc-500 hover:text-zinc-700 disabled:opacity-50"
+						className="w-full rounded-lg border py-2 text-sm text-zinc-500 hover:text-zinc-700 disabled:opacity-50"
 					>
 						Cancel
 					</button>
@@ -505,7 +555,7 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 					<button
 						type="submit"
 						disabled={isSubmitting}
-						className="rounded-lg bg-rose-600 px-5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+						className="w-full rounded-lg bg-rose-600 px-5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
 					>
 						{isSubmitting ? 'Saving…' : 'Save Changes'}
 					</button>
