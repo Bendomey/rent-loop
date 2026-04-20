@@ -240,19 +240,22 @@ func (s *clientApplicationService) RejectClientApplication(
 		"{{rejection_reason}}", input.Reason,
 	).Replace(lib.CLIENT_APPLICATION_REJECTED_SMS_BODY)
 
-	htmlBody, textBody, _ := s.appCtx.EmailEngine.Render(
+	if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
 		"client-application/rejected",
 		emailtemplates.ClientApplicationRejectedData{
 			OwnerName:       clientApplication.ContactName,
 			RejectionReason: input.Reason,
 		},
-	)
-	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-		Recipient: clientApplication.ContactEmail,
-		Subject:   lib.CLIENT_APPLICATION_REJECTED_SUBJECT,
-		HtmlBody:  htmlBody,
-		TextBody:  textBody,
-	})
+	); renderErr != nil {
+		log.WithError(renderErr).Error("failed to render client-application/rejected email template")
+	} else {
+		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+			Recipient: clientApplication.ContactEmail,
+			Subject:   lib.CLIENT_APPLICATION_REJECTED_SUBJECT,
+			HtmlBody:  htmlBody,
+			TextBody:  textBody,
+		})
+	}
 
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(ctx, gatekeeper.SendSMSInput{
 		Recipient: clientApplication.ContactPhoneNumber,

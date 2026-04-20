@@ -605,6 +605,9 @@ func (s *paymentService) VerifyOfflinePayment(
 			tenantAccountID := tenant.TenantAccount.ID.String()
 			invoiceID := payment.Invoice.ID.String()
 			templatedMessage := textBody
+			if renderErr != nil {
+				templatedMessage = smsMessage
+			}
 			go func() {
 				if err := s.notificationService.SendToTenantAccount(
 					context.Background(),
