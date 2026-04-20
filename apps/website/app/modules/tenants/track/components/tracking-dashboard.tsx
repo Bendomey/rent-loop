@@ -5,6 +5,7 @@ import { ApplicationChecklist } from './application-checklist'
 import { ApplicationDetailsCard } from './application-details-card'
 import { LeaseDocumentCard } from './lease-document-card'
 import { PaymentInfo } from './payment-info'
+import { TawkChatLink } from '~/components/tawk-chat-link'
 import { APP_NAME } from '~/lib/constants'
 import { formatAmount, convertPesewasToCedis } from '~/lib/format-amount'
 import { getPaymentFrequencyPeriodLabel } from '~/lib/properties.utils'
@@ -182,6 +183,8 @@ export function TrackingDashboard({ application, code }: Props) {
 					invoice={application.application_payment_invoice}
 					code={code}
 				/>
+
+				<TawkChatLink />
 			</main>
 		</div>
 	)
