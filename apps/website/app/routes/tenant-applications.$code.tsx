@@ -140,6 +140,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 			'emergency_contact_name',
 			'emergency_contact_phone',
 			'relationship_to_emergency_contact',
+			'employer_type',
 			'occupation',
 			'employer',
 			'occupation_address',

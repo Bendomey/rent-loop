@@ -71,6 +71,7 @@ interface TrackingApplication {
 	// Current residence
 	current_address: Nullable<string>
 	// Employment
+	employer_type: Nullable<'WORKER' | 'STUDENT'>
 	occupation: Nullable<string>
 	employer: Nullable<string>
 	occupation_address: Nullable<string>
