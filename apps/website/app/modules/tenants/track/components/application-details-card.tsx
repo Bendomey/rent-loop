@@ -471,7 +471,7 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 					<p className="text-xs font-semibold tracking-wide text-zinc-400 uppercase">
 						Employment
 					</p>
-					<div className="inline-flex w-1/2 rounded-lg border border-zinc-200 bg-zinc-100 p-0.5">
+					<div className="inline-flex md:w-1/2 rounded-lg border border-zinc-200 bg-zinc-100 p-0.5">
 						{(['WORKER', 'STUDENT'] as EmployerType[]).map((type) => (
 							<button
 								key={type}
