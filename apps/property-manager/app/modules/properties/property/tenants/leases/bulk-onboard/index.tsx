@@ -1,3 +1,4 @@
+import dayjs from 'dayjs'
 import {
 	AlertCircle,
 	CheckCircle2,
@@ -9,7 +10,6 @@ import {
 	Trash2,
 	Upload,
 } from 'lucide-react'
-import dayjs from 'dayjs'
 import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
@@ -152,32 +152,10 @@ const TEMPLATE_FIELDS: {
 ]
 
 function doDownloadTemplate() {
-	const headers = TEMPLATE_FIELDS.map((f) => f.column)
-
-	const wb = XLSX.utils.book_new()
-	const ws = XLSX.utils.aoa_to_sheet([headers])
-
-	ws['!cols'] = headers.map(() => ({ wch: 22 }))
-
-	// Column indices (0-based) for enum columns
-	// gender=4, marital_status=7, id_type=8
-	if (!ws['!dataValidations']) ws['!dataValidations'] = []
-	ws['!dataValidations'].push(
-		{ sqref: 'E2:E1000', type: 'list', formula1: '"MALE,FEMALE"' },
-		{
-			sqref: 'H2:H1000',
-			type: 'list',
-			formula1: '"SINGLE,MARRIED,DIVORCED,WIDOWED"',
-		},
-		{
-			sqref: 'I2:I1000',
-			type: 'list',
-			formula1: '"GHANA_CARD,NATIONAL_ID,PASSPORT,DRIVER_LICENSE"',
-		},
-	)
-
-	XLSX.utils.book_append_sheet(wb, ws, 'Tenants')
-	XLSX.writeFile(wb, 'tenant-migration-template.xlsx')
+	const a = document.createElement('a')
+	a.href = '/templates/tenant-migration-template.xlsx'
+	a.download = 'tenant-migration-template.xlsx'
+	a.click()
 }
 
 function parseFileToEntries(

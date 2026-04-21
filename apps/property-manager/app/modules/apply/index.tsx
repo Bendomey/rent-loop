@@ -4,7 +4,7 @@ import { Step0 } from './step0'
 import { Step1 } from './step1'
 import { Step2 } from './step2'
 import { Step3 } from './step3'
-import { TypographyH3 } from '~/components/ui/typography'
+import { TypographyH1 } from '~/components/ui/typography'
 import { APP_NAME } from '~/lib/constants'
 
 const STEPS = 4
@@ -16,13 +16,12 @@ function Apply() {
 		<main className="w-full">
 			<div className="border-b py-4 md:py-6">
 				<Link to="/login">
-					<TypographyH3 className="text-center capitalize">
-						Welcome to{' '}
+					<TypographyH1 className="text-center">
 						<span className="font-extrabold text-rose-700">
-							{APP_NAME.slice(0, 4)}{' '}
+							{APP_NAME.slice(0, 4)}
 						</span>
 						<span className="font-extrabold">{APP_NAME.slice(4)}</span>
-					</TypographyH3>
+					</TypographyH1>
 				</Link>
 			</div>
 			<div

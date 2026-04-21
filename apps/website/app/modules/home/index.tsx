@@ -8,6 +8,7 @@ import { Link } from 'react-router'
 import { ExternalLink } from '~/components/layout/ExternalLink'
 import { Footer } from '~/components/layout/footer'
 import { Header } from '~/components/layout/header'
+import { PROPERTY_MANAGER_APP_URL } from '~/lib/constants'
 
 export function Home() {
 	return (
@@ -64,18 +65,18 @@ export function Home() {
 								tenancy management.
 							</p>
 							<div className="mt-10 flex items-center justify-center gap-x-6">
-								{/* <ExternalLink
+								<ExternalLink
 									href={`${PROPERTY_MANAGER_APP_URL}/apply`}
 									className="rounded-md bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-rose-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600"
 								>
 									Get started Today
-								</ExternalLink> */}
-								<ExternalLink
+								</ExternalLink>
+								{/* <ExternalLink
 									href="https://bisaform-main-bw7x.vercel.app/f/c915943frqp6"
 									className="cursor-pointer rounded-md bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-rose-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600"
 								>
 									Join our waitlist
-								</ExternalLink>
+								</ExternalLink> */}
 								<Link
 									to="/blog/what-is-rentloop"
 									className="text-sm/6 font-semibold text-gray-900 hover:text-rose-600"
