@@ -3,10 +3,10 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"strings"
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
@@ -218,17 +218,25 @@ func (s *maintenanceRequestService) CreateByTenant(
 		if lease.ActivatedById == nil || lease.ActivatedBy == nil || lease.ActivatedBy.User.Email == "" {
 			return
 		}
-		message := strings.NewReplacer(
-			"{{tenant_name}}", lease.Tenant.FirstName,
-			"{{unit_name}}", lease.Unit.Name,
-			"{{title}}", mr.Title,
-			"{{category}}", mr.Category,
-			"{{priority}}", mr.Priority,
-		).Replace(lib.ApplyGlobalVariableTemplate(s.appCtx.Config, lib.PM_MAINTENANCE_REQUEST_CREATED_BODY))
+		htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
+			"maintenance/request-created",
+			emailtemplates.MaintenanceRequestCreatedData{
+				TenantName: lease.Tenant.FirstName,
+				UnitName:   lease.Unit.Name,
+				Title:      mr.Title,
+				Category:   mr.Category,
+				Priority:   mr.Priority,
+			},
+		)
+		if renderErr != nil {
+			log.WithError(renderErr).Error("failed to render maintenance-request-created email template")
+			return
+		}
 		pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 			Recipient: lease.ActivatedBy.User.Email,
 			Subject:   lib.PM_MAINTENANCE_REQUEST_CREATED_SUBJECT,
-			TextBody:  message,
+			HtmlBody:  htmlBody,
+			TextBody:  textBody,
 		})
 	}()
 

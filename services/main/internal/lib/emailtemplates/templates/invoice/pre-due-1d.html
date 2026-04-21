@@ -1,0 +1,32 @@
+{{define "preview"}}Your rent for {{.Data.UnitName}} is due tomorrow.{{end}}
+{{define "content"}}
+<h1 class="headline" style="margin:0 0 14px;font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#111110;line-height:1.2;letter-spacing:0.2px;">Your rent is due tomorrow.</h1>
+<p style="margin:0 0 20px;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;color:#444444;line-height:1.7;">Hi {{.Data.TenantName}},</p>
+<p style="margin:0 0 24px;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;color:#444444;line-height:1.7;">This is a friendly reminder that your rent invoice for <strong>{{.Data.UnitName}}</strong> is due tomorrow. Please ensure payment is made on time.</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-radius:8px;overflow:hidden;margin-bottom:28px;border:1px solid #EAEAE8;">
+  <tbody>
+    <tr style="background:#F8F7F4;">
+      <td style="padding:11px 18px;font-size:13px;color:#888888;font-family:'DM Sans',Arial,sans-serif;font-weight:500;border-bottom:1px solid #EAEAE8;">Invoice</td>
+      <td style="padding:11px 18px;font-size:13px;color:#111111;font-family:'DM Sans',Arial,sans-serif;font-weight:500;text-align:right;border-bottom:1px solid #EAEAE8;">{{.Data.InvoiceCode}}</td>
+    </tr>
+    <tr style="background:#FFFFFF;">
+      <td style="padding:11px 18px;font-size:13px;color:#888888;font-family:'DM Sans',Arial,sans-serif;font-weight:500;border-bottom:1px solid #EAEAE8;">Amount Due</td>
+      <td style="padding:11px 18px;font-size:13px;color:#111111;font-family:'DM Sans',Arial,sans-serif;font-weight:700;text-align:right;border-bottom:1px solid #EAEAE8;">{{.Data.Currency}} {{.Data.Amount}}</td>
+    </tr>
+    <tr style="background:#F8F7F4;">
+      <td style="padding:11px 18px;font-size:13px;color:#888888;font-family:'DM Sans',Arial,sans-serif;font-weight:500;border-bottom:none;">Due Date</td>
+      <td style="padding:11px 18px;font-size:13px;color:#111111;font-family:'DM Sans',Arial,sans-serif;font-weight:700;text-align:right;border-bottom:none;">{{.Data.DueDate}}</td>
+    </tr>
+  </tbody>
+</table>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:12px;">
+  <tr>
+    <td align="center">
+      <a href="{{.Base.TenantPortalURL}}" style="display:inline-block;background:#C8003A;color:#ffffff;font-family:'DM Sans',Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;padding:13px 40px;border-radius:9px;letter-spacing:0.2px;">Pay Now</a>
+    </td>
+  </tr>
+</table>
+<p style="margin:0;font-family:'DM Sans',Arial,sans-serif;font-size:12.5px;color:#aaaaaa;text-align:center;line-height:1.6;">You can pay directly through the Rentloop app.</p>
+{{end}}

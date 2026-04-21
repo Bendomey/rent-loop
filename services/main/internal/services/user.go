@@ -10,10 +10,12 @@ import (
 	"github.com/Bendomey/goutilities/pkg/validatehash"
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/gatekeeper"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/dgrijalva/jwt-go"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -221,15 +223,21 @@ func (s *userService) UpdatePassword(ctx context.Context, input UpdateUserPasswo
 		})
 	}
 
-	r := strings.NewReplacer("{{name}}", user.Name)
-	message := r.Replace(lib.CLIENT_USER_PASSWORD_UPDATED_BODY)
-	smsMessage := r.Replace(lib.CLIENT_USER_PASSWORD_UPDATED_SMS_BODY)
+	smsMessage := strings.NewReplacer("{{name}}", user.Name).Replace(lib.CLIENT_USER_PASSWORD_UPDATED_SMS_BODY)
 
-	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-		Recipient: user.Email,
-		Subject:   lib.CLIENT_USER_PASSWORD_UPDATED_SUBJECT,
-		TextBody:  message,
-	})
+	if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
+		"client-user/password-updated",
+		emailtemplates.ClientUserPasswordUpdatedData{Name: user.Name},
+	); renderErr != nil {
+		log.WithError(renderErr).Error("failed to render password-updated email template")
+	} else {
+		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+			Recipient: user.Email,
+			Subject:   lib.CLIENT_USER_PASSWORD_UPDATED_SUBJECT,
+			HtmlBody:  htmlBody,
+			TextBody:  textBody,
+		})
+	}
 	go s.appCtx.Clients.GatekeeperAPI.SendSMS(context.Background(), gatekeeper.SendSMSInput{
 		Recipient: user.PhoneNumber,
 		Message:   smsMessage,
@@ -260,14 +268,19 @@ func (s *userService) SendForgotPasswordResetLink(ctx context.Context, email str
 		})
 	}
 
-	r := strings.NewReplacer("{{name}}", user.Name, "{{reset_token}}", token)
-	message := r.Replace(lib.CLIENT_USER_PASSWORD_RESET_BODY)
-
-	go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
-		Recipient: user.Email,
-		Subject:   lib.CLIENT_USER_PASSWORD_RESET_SUBJECT,
-		TextBody:  message,
-	})
+	if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
+		"client-user/password-reset",
+		emailtemplates.ClientUserPasswordResetData{Name: user.Name, ResetToken: token},
+	); renderErr != nil {
+		log.WithError(renderErr).Error("failed to render password-reset email template")
+	} else {
+		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+			Recipient: user.Email,
+			Subject:   lib.CLIENT_USER_PASSWORD_RESET_SUBJECT,
+			HtmlBody:  htmlBody,
+			TextBody:  textBody,
+		})
+	}
 
 	return user, nil
 }

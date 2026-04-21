@@ -1,0 +1,15 @@
+{{define "preview"}}Your Rentloop verification code is inside.{{end}}
+{{define "content"}}
+<h1 class="headline" style="margin:0 0 14px;font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#111110;line-height:1.2;letter-spacing:0.2px;">Your verification code.</h1>
+<p style="margin:0 0 24px;font-family:'DM Sans',Arial,sans-serif;font-size:14.5px;color:#444444;line-height:1.7;">Enter the code below in the Rentloop app to verify your identity. It's valid for the next <strong>{{.Data.ExpiryDuration}}</strong>.</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
+  <tr>
+    <td align="center" style="background:#F8F7F4;border-radius:8px;border:1px solid #EAEAE8;padding:28px 20px;">
+      <span style="font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:42px;font-weight:400;letter-spacing:10px;color:#111110;">{{.Data.VerificationCode}}</span>
+    </td>
+  </tr>
+</table>
+
+<p style="margin:0;font-family:'DM Sans',Arial,sans-serif;font-size:12.5px;color:#aaaaaa;line-height:1.6;">If you did not request this code, you can safely ignore this message. For your security, never share this code with anyone — our team will never ask for it.</p>
+{{end}}

@@ -8,6 +8,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/db"
 	"github.com/Bendomey/rent-loop/services/main/internal/handlers"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/queue"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/internal/router"
@@ -47,12 +48,19 @@ func main() {
 
 	clients := clients.NewClients(cfg)
 
+	emailEngine, err := emailtemplates.New(cfg)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Fatal("failed to parse email templates:", err)
+	}
+
 	appCtx := pkg.AppContext{
-		DB:        database,
-		RDB:       redis,
-		Config:    cfg,
-		Validator: lib.NewValidator(),
-		Clients:   clients,
+		DB:          database,
+		RDB:         redis,
+		Config:      cfg,
+		Validator:   lib.NewValidator(),
+		Clients:     clients,
+		EmailEngine: emailEngine,
 	}
 
 	repository := repository.NewRepository(database)

@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/lib/pq"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -531,16 +532,24 @@ func (s *leaseChecklistService) AcknowledgeLeaseChecklist(
 		if leaseErr != nil {
 			return
 		}
-		message := strings.NewReplacer(
-			"{{tenant_name}}", lease.Tenant.FirstName,
-			"{{unit_name}}", lease.Unit.Name,
-			"{{checklist_type}}", checklist.Type,
-			"{{action}}", input.Action,
-		).Replace(lib.ApplyGlobalVariableTemplate(s.appCtx.Config, lib.PM_CHECKLIST_ACKNOWLEDGED_BODY))
+		htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
+			"payment/checklist-acknowledged",
+			emailtemplates.ChecklistAcknowledgedData{
+				TenantName:    lease.Tenant.FirstName,
+				UnitName:      lease.Unit.Name,
+				ChecklistType: checklist.Type,
+				Action:        input.Action,
+			},
+		)
+		if renderErr != nil {
+			log.WithError(renderErr).Error("failed to render checklist-acknowledged email template")
+			return
+		}
 		pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
 			Recipient: checklist.CreatedBy.User.Email,
 			Subject:   lib.PM_CHECKLIST_ACKNOWLEDGED_SUBJECT,
-			TextBody:  message,
+			HtmlBody:  htmlBody,
+			TextBody:  textBody,
 		})
 	}()
 
