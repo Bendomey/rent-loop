@@ -208,6 +208,46 @@ export function Step2() {
 					</Button>
 				</div>
 
+				{/* USSD fallback */}
+				<div className="mt-4 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-4 text-center">
+					<TypographySmall className="font-semibold text-zinc-800">
+						Didn&apos;t receive the code?
+					</TypographySmall>
+					<TypographyMuted className="mt-1 text-xs leading-relaxed">
+						Dial the USSD code below to retrieve it:
+					</TypographyMuted>
+					<div className="mt-3 flex justify-center">
+						<button
+							type="button"
+							onClick={() => {
+								void navigator.clipboard.writeText('*713*882#')
+							}}
+							className="flex items-center gap-2 rounded-lg bg-rose-50 px-4 py-2 text-rose-600 transition-colors hover:bg-rose-100"
+						>
+							<span className="text-base font-extrabold tracking-widest">
+								*713*882#
+							</span>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="14"
+								height="14"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+								<path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+							</svg>
+						</button>
+					</div>
+					<TypographyMuted className="mt-2 text-xs text-zinc-400">
+						Works on all networks in Ghana
+					</TypographyMuted>
+				</div>
+
 				<div className="mt-10 flex flex-col-reverse gap-3 border-t pt-6 md:flex-row md:justify-between">
 					<Button
 						disabled={isLoading}
