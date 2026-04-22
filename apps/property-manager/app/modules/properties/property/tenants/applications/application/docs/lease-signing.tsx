@@ -1,6 +1,6 @@
 import type { SerializedEditorState } from 'lexical'
 import { useState } from 'react'
-import { useLoaderData, useRevalidator } from 'react-router'
+import { useLoaderData, useParams, useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 
 import { useAdminUpdateDocument } from '~/api/documents'
@@ -22,16 +22,16 @@ import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId_.tenants.applications.$applicationId.signing.$documentId'
 
 export function LeaseSigningModule() {
-	const { tenantApplication, clientUserProperty } =
-		useLoaderData<typeof loader>()
+	const { tenantApplication } = useLoaderData<typeof loader>()
 	const { clientUser } = useClient()
+	const { propertyId } = useParams()
 	const signDocumentDirect = useSignDocumentDirect()
 	const updateDocument = useAdminUpdateDocument()
 	const updateTenantApplication = useAdminUpdateTenantApplication()
 	const revalidator = useRevalidator()
 	const [isSigning, setIsSigning] = useState(false)
 
-	if (!tenantApplication) return null
+	if (!tenantApplication || !propertyId) return null
 
 	const editorState: SerializedEditorState = tenantApplication
 		.lease_agreement_document?.content
@@ -85,7 +85,7 @@ export function LeaseSigningModule() {
 			// 2. Submit direct signature record (backend creates document_signatures entry)
 			await signDocumentDirect.mutateAsync({
 				client_id: safeString(clientUser?.client_id),
-				property_id: safeString(clientUserProperty?.property_id),
+				property_id: propertyId,
 				document_id: tenantApplication.lease_agreement_document.id,
 				signature_url: safeString(uploadResult.url),
 				tenant_application_id: tenantApplication.id,
@@ -115,7 +115,7 @@ export function LeaseSigningModule() {
 			await updateTenantApplication.mutateAsync({
 				client_id: safeString(clientUser?.client_id),
 				id: tenantApplication.id,
-				property_id: safeString(clientUserProperty?.property_id),
+				property_id: propertyId,
 				data: {
 					lease_agreement_document_status: allSigned ? 'SIGNED' : 'SIGNING',
 				},

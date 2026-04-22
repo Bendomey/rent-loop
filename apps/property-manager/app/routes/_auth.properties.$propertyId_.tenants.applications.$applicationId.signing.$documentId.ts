@@ -3,13 +3,12 @@ import type { Route } from './+types/_auth.properties.$propertyId_.tenants.appli
 import { getAdminPropertyTenantApplicationForServer } from '~/api/tenant-applications'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
-import { propertyContext } from '~/lib/actions/property.context.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
 import { safeString } from '~/lib/strings'
 import { LeaseSigningModule } from '~/modules/properties/property/tenants/applications/application/docs/lease-signing'
 
-export async function loader({ request, params, context }: Route.LoaderArgs) {
+export async function loader({ request, params }: Route.LoaderArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 	const authSession = await getAuthSession(request.headers.get('Cookie'))
 	const authToken = authSession.get('authToken')
@@ -17,7 +16,6 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 		return redirect('/login')
 	}
 
-	const clientUserProperty = context.get(propertyContext)
 	const clientId = safeString(authSession.get('selectedClientId'))
 
 	try {
@@ -41,7 +39,6 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 			origin: getDomainUrl(request),
 			document: tenantApplication?.lease_agreement_document,
 			tenantApplication,
-			clientUserProperty,
 		}
 	} catch {
 		throw new Response(null, { status: 404, statusText: 'Not Found' })
