@@ -43,7 +43,7 @@ func BackfillUnitDateBlocksFromLeases() *gormigrate.Migration {
 		},
 		Rollback: func(db *gorm.DB) error {
 			return db.Exec(
-				`DELETE FROM unit_date_blocks WHERE block_type = 'LEASE' AND reason = 'Active lease (backfill)'`,
+				`DELETE FROM unit_date_blocks WHERE block_type = 'LEASE' AND lease_id IS NOT NULL AND reason = 'Active lease (backfill)'`,
 			).Error
 		},
 	}
