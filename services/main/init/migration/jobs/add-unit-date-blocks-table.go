@@ -9,7 +9,7 @@ func AddUnitDateBlocksTable() *gormigrate.Migration {
 	return &gormigrate.Migration{
 		ID: "202604230003_ADD_UNIT_DATE_BLOCKS_TABLE",
 		Migrate: func(db *gorm.DB) error {
-			return db.Exec(`
+			if err := db.Exec(`
 				CREATE TABLE IF NOT EXISTS unit_date_blocks (
 					id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 					created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -24,7 +24,15 @@ func AddUnitDateBlocksTable() *gormigrate.Migration {
 					reason TEXT NOT NULL DEFAULT '',
 					created_by_client_user_id UUID REFERENCES client_users(id)
 				)
-			`).Error
+			`).Error; err != nil {
+				return err
+			}
+			// Composite index for availability range queries
+			if err := db.Exec(`CREATE INDEX IF NOT EXISTS idx_unit_date_blocks_unit_dates ON unit_date_blocks (unit_id, start_date, end_date)`).Error; err != nil {
+				return err
+			}
+			// Partial unique index to prevent duplicate lease blocks (enables ON CONFLICT DO NOTHING in backfill)
+			return db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_unit_date_blocks_unit_lease ON unit_date_blocks (unit_id, lease_id) WHERE lease_id IS NOT NULL AND deleted_at IS NULL`).Error
 		},
 		Rollback: func(db *gorm.DB) error {
 			return db.Exec(`DROP TABLE IF EXISTS unit_date_blocks`).Error
