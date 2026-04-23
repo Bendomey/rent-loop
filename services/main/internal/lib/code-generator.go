@@ -25,3 +25,26 @@ func GenerateCode(db *gorm.DB, model any) (*string, error) {
 
 	return &uniqueCode, nil
 }
+
+func GenerateTrackingCode(db *gorm.DB, model any) (*string, error) {
+	code, err := gonanoid.Generate("abcdefghijklmnopqrstuvwxyz0123456789", 16)
+	if err != nil {
+		return nil, err
+	}
+
+	codeExistsCount := int64(0)
+	db.Model(model).Where("tracking_code = ?", code).Count(&codeExistsCount)
+	if codeExistsCount > 0 {
+		return GenerateTrackingCode(db, model)
+	}
+
+	return &code, nil
+}
+
+func GenerateCheckInCode() (string, error) {
+	code, err := gonanoid.Generate("0123456789", 5)
+	if err != nil {
+		return "", err
+	}
+	return code, nil
+}
