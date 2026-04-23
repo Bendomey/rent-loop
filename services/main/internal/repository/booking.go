@@ -73,7 +73,7 @@ func (r *bookingRepository) GetByTrackingCode(
 
 func (r *bookingRepository) List(ctx context.Context, filter ListBookingsFilter) (*[]models.Booking, error) {
 	var bookings []models.Booking
-	db := r.DB.WithContext(ctx).Where("bookings.deleted_at IS NULL")
+	db := r.DB.WithContext(ctx)
 
 	if filter.PropertyID != nil {
 		db = db.Where("property_id = ?", *filter.PropertyID)
@@ -85,8 +85,10 @@ func (r *bookingRepository) List(ctx context.Context, filter ListBookingsFilter)
 		db = db.Where("status = ?", *filter.Status)
 	}
 
-	offset := (filter.Page - 1) * filter.PageSize
-	db = db.Order(filter.OrderBy + " " + filter.Order).Offset(offset).Limit(filter.PageSize)
+	db = db.Scopes(
+		PaginationScope(filter.Page, filter.PageSize),
+		OrderScope("bookings", filter.OrderBy, filter.Order),
+	)
 
 	if filter.Populate != nil {
 		for _, field := range *filter.Populate {
@@ -102,7 +104,7 @@ func (r *bookingRepository) List(ctx context.Context, filter ListBookingsFilter)
 
 func (r *bookingRepository) Count(ctx context.Context, filter ListBookingsFilter) (int64, error) {
 	var count int64
-	db := r.DB.WithContext(ctx).Model(&models.Booking{}).Where("deleted_at IS NULL")
+	db := r.DB.WithContext(ctx).Model(&models.Booking{})
 	if filter.PropertyID != nil {
 		db = db.Where("property_id = ?", *filter.PropertyID)
 	}
@@ -125,9 +127,10 @@ func (r *bookingRepository) HasOverlappingBlock(
 	startDate, endDate interface{},
 ) (bool, error) {
 	var count int64
-	err := r.DB.WithContext(ctx).
+	db := lib.ResolveDB(ctx, r.DB)
+	err := db.WithContext(ctx).
 		Model(&models.UnitDateBlock{}).
-		Where("unit_id = ? AND deleted_at IS NULL AND start_date < ? AND end_date > ?", unitID, endDate, startDate).
+		Where("unit_id = ? AND start_date < ? AND end_date > ?", unitID, endDate, startDate).
 		Count(&count).Error
 	return count > 0, err
 }
