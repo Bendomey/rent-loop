@@ -49,6 +49,8 @@ func updateMigration(db *gorm.DB) error {
 		&models.Expense{},
 		&models.Agreement{},
 		&models.AgreementAcceptance{},
+		&models.Booking{},
+		&models.UnitDateBlock{},
 	)
 	return err
 }
