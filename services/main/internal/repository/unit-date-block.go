@@ -12,6 +12,7 @@ import (
 type UnitDateBlockRepository interface {
 	Create(ctx context.Context, block *models.UnitDateBlock) error
 	Delete(ctx context.Context, id string) error
+	DeleteByBookingID(ctx context.Context, bookingID string) error
 	GetByID(ctx context.Context, id string) (*models.UnitDateBlock, error)
 	ListByUnit(ctx context.Context, unitID string, from, to time.Time) (*[]models.UnitDateBlock, error)
 }
@@ -33,6 +34,10 @@ func (r *unitDateBlockRepository) Delete(ctx context.Context, id string) error {
 	return r.DB.WithContext(ctx).Where("id = ?", id).Delete(&models.UnitDateBlock{}).Error
 }
 
+func (r *unitDateBlockRepository) DeleteByBookingID(ctx context.Context, bookingID string) error {
+	return r.DB.WithContext(ctx).Where("booking_id = ?", bookingID).Delete(&models.UnitDateBlock{}).Error
+}
+
 func (r *unitDateBlockRepository) GetByID(ctx context.Context, id string) (*models.UnitDateBlock, error) {
 	var block models.UnitDateBlock
 	if err := r.DB.WithContext(ctx).Where("id = ?", id).First(&block).Error; err != nil {
@@ -41,7 +46,11 @@ func (r *unitDateBlockRepository) GetByID(ctx context.Context, id string) (*mode
 	return &block, nil
 }
 
-func (r *unitDateBlockRepository) ListByUnit(ctx context.Context, unitID string, from, to time.Time) (*[]models.UnitDateBlock, error) {
+func (r *unitDateBlockRepository) ListByUnit(
+	ctx context.Context,
+	unitID string,
+	from, to time.Time,
+) (*[]models.UnitDateBlock, error) {
 	var blocks []models.UnitDateBlock
 	err := r.DB.WithContext(ctx).
 		Where("unit_id = ? AND start_date < ? AND end_date > ?", unitID, to, from).

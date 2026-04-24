@@ -9,6 +9,7 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	log "github.com/sirupsen/logrus"
 )
 
 type BookingService interface {
@@ -27,6 +28,7 @@ type bookingService struct {
 	appCtx               pkg.AppContext
 	repo                 repository.BookingRepository
 	unitDateBlockService UnitDateBlockService
+	unitDateBlockRepo    repository.UnitDateBlockRepository
 	tenantService        TenantService
 	invoiceService       InvoiceService
 }
@@ -35,6 +37,7 @@ type BookingServiceDeps struct {
 	AppCtx               pkg.AppContext
 	Repo                 repository.BookingRepository
 	UnitDateBlockService UnitDateBlockService
+	UnitDateBlockRepo    repository.UnitDateBlockRepository
 	TenantService        TenantService
 	InvoiceService       InvoiceService
 }
@@ -44,6 +47,7 @@ func NewBookingService(deps BookingServiceDeps) BookingService {
 		appCtx:               deps.AppCtx,
 		repo:                 deps.Repo,
 		unitDateBlockService: deps.UnitDateBlockService,
+		unitDateBlockRepo:    deps.UnitDateBlockRepo,
 		tenantService:        deps.TenantService,
 		invoiceService:       deps.InvoiceService,
 	}
@@ -149,14 +153,20 @@ func (s *bookingService) ConfirmBooking(ctx context.Context, input ConfirmBookin
 	}
 
 	bookingID := booking.ID.String()
-	go s.unitDateBlockService.CreateSystemBlock(context.Background(), CreateSystemBlockInput{
-		UnitID:    booking.UnitID,
-		StartDate: booking.CheckInDate,
-		EndDate:   booking.CheckOutDate,
-		BlockType: "BOOKING",
-		BookingID: &bookingID,
-		Reason:    "Confirmed booking",
-	})
+	go func() {
+		if _, err := s.unitDateBlockService.CreateSystemBlock(context.Background(), CreateSystemBlockInput{
+			UnitID:    booking.UnitID,
+			StartDate: booking.CheckInDate,
+			EndDate:   booking.CheckOutDate,
+			BlockType: "BOOKING",
+			BookingID: &bookingID,
+			Reason:    "Confirmed booking",
+		}); err != nil {
+			log.WithError(err).
+				WithField("booking_id", bookingID).
+				Error("failed to create date block after booking confirmation")
+		}
+	}()
 
 	go s.sendBookingConfirmedNotification(booking)
 
@@ -238,8 +248,11 @@ func (s *bookingService) GetBookingByTrackingCode(ctx context.Context, trackingC
 }
 
 func (s *bookingService) removeBookingDateBlock(ctx context.Context, bookingID string) {
-	var block models.UnitDateBlock
-	s.appCtx.DB.Where("booking_id = ? AND deleted_at IS NULL", bookingID).Delete(&block)
+	if err := s.unitDateBlockRepo.DeleteByBookingID(ctx, bookingID); err != nil {
+		log.WithError(err).
+			WithField("booking_id", bookingID).
+			Error("failed to remove booking date block on cancellation")
+	}
 }
 
 func (s *bookingService) sendBookingCreatedNotification(booking *models.Booking, tenant *models.Tenant) {

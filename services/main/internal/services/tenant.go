@@ -208,13 +208,17 @@ func (s *tenantService) FindOrCreateLightTenant(
 	ctx context.Context,
 	input FindOrCreateLightTenantInput,
 ) (*models.Tenant, error) {
-	// Try to find by phone first
-	existing, err := s.GetTenantByPhone(ctx, input.Phone)
-	if err == nil && existing != nil {
+	// Try to find existing tenant by phone
+	existing, err := s.repo.FindOne(ctx, map[string]any{"phone": input.Phone})
+	if err == nil {
 		return existing, nil
 	}
+	// Only proceed to create if the record genuinely doesn't exist
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
 
-	// Create new light tenant (only booking-relevant fields; required non-nullable fields default to empty/zero)
+	// Create new light tenant (only booking-relevant fields)
 	email := input.Email
 	tenant := &models.Tenant{
 		FirstName: input.FirstName,

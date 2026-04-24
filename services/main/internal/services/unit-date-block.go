@@ -108,5 +108,6 @@ func (s *unitDateBlockService) DeleteBlock(ctx context.Context, id string, reque
 	if block.BlockType == "BOOKING" || block.BlockType == "LEASE" {
 		return errors.New("cannot delete system-managed blocks directly; cancel the booking or lease instead")
 	}
+	// TODO: verify requestingClientUserID owns the block's property before deleting
 	return s.repo.Delete(ctx, id)
 }
