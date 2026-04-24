@@ -34,6 +34,8 @@ type Services struct {
 	MaintenanceRequestService MaintenanceRequestService
 	ExpenseService            ExpenseService
 	AgreementService          AgreementService
+	UnitDateBlockService      UnitDateBlockService
+	BookingService            BookingService
 }
 
 type INewServicesParams struct {
@@ -179,6 +181,15 @@ func NewServices(params INewServicesParams) Services {
 
 	agreementService := NewAgreementService(params.Repository.AgreementRepository)
 
+	bookingService := NewBookingService(BookingServiceDeps{
+		AppCtx:               params.AppCtx,
+		Repo:                 params.Repository.BookingRepository,
+		UnitDateBlockService: unitDateBlockService,
+		UnitDateBlockRepo:    params.Repository.UnitDateBlockRepository,
+		TenantService:        tenantService,
+		InvoiceService:       invoiceService,
+	})
+
 	expenseService := NewExpenseService(ExpenseServiceDeps{
 		AppCtx:         params.AppCtx,
 		Repo:           params.Repository.ExpenseRepository,
@@ -217,5 +228,7 @@ func NewServices(params INewServicesParams) Services {
 		MaintenanceRequestService: maintenanceRequestService,
 		ExpenseService:            expenseService,
 		AgreementService:          agreementService,
+		UnitDateBlockService:      unitDateBlockService,
+		BookingService:            bookingService,
 	}
 }
