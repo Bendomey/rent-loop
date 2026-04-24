@@ -127,22 +127,22 @@ export function PropertyTenantApplicationContainer() {
 							</Button>
 						</div>
 					</PropertyPermissionGuard>
-				) : // ) : tenantApplication.status ===
-				//   'TenantApplication.Status.Cancelled' ? (
-				// 	<PropertyPermissionGuard roles={['MANAGER']}>
-				// 		<div
-				// 			id="application-actions"
-				// 			className="mb-3 flex w-full flex-row items-center justify-end space-x-2"
-				// 		>
-				// 			<Button
-				// 				variant="destructive"
-				// 				onClick={() => setOpenDeleteModal(true)}
-				// 			>
-				// 				Delete application
-				// 			</Button>
-				// 		</div>
-				// 	</PropertyPermissionGuard>
-				null}
+				) : tenantApplication.status ===
+				  'TenantApplication.Status.Cancelled' ? (
+					<PropertyPermissionGuard roles={['MANAGER']}>
+						<div
+							id="application-actions"
+							className="mb-3 flex w-full flex-row items-center justify-end space-x-2"
+						>
+							<Button
+								variant="destructive"
+								onClick={() => setOpenDeleteModal(true)}
+							>
+								Delete application
+							</Button>
+						</div>
+					</PropertyPermissionGuard>
+				) : null}
 				<div id="application-checklist">
 					<PropertyTenantApplicationChecklist
 						propertyId={safeString(clientUserProperty?.property_id)}
