@@ -17,12 +17,14 @@ import { localizedDayjs } from '~/lib/date'
 import { safeString } from '~/lib/strings'
 import { TENANT_APPLICATION_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
 import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.applications.$applicationId'
+import DeleteTenantApplicationModal from '../delete'
 
 export function PropertyTenantApplicationContainer() {
 	const { tenantApplication, clientUserProperty } =
 		useLoaderData<typeof loader>()
 	const [openCancelModal, setOpenCancelModal] = useState(false)
 	const [openApproveModal, setOpenApproveModal] = useState(false)
+	const [openDeleteModal, setOpenDeleteModal] = useState(false)
 
 	const { startTour, hasCompletedTour } = useTour(
 		TOUR_KEYS.TENANT_APPLICATION,
@@ -125,21 +127,21 @@ export function PropertyTenantApplicationContainer() {
 							</Button>
 						</div>
 					</PropertyPermissionGuard>
-				) : tenantApplication.status ===
-				  'TenantApplication.Status.Cancelled' ? (
-					<PropertyPermissionGuard roles={['MANAGER']}>
-						<div
-							id="application-actions"
-							className="mb-3 flex w-full flex-row items-center justify-end space-x-2"
-						>
-							<Button
-								variant="destructive"
-								onClick={() => setOpenApproveModal(true)}
-							>
-								Delete application
-							</Button>
-						</div>
-					</PropertyPermissionGuard>
+				// ) : tenantApplication.status ===
+				//   'TenantApplication.Status.Cancelled' ? (
+				// 	<PropertyPermissionGuard roles={['MANAGER']}>
+				// 		<div
+				// 			id="application-actions"
+				// 			className="mb-3 flex w-full flex-row items-center justify-end space-x-2"
+				// 		>
+				// 			<Button
+				// 				variant="destructive"
+				// 				onClick={() => setOpenDeleteModal(true)}
+				// 			>
+				// 				Delete application
+				// 			</Button>
+				// 		</div>
+				// 	</PropertyPermissionGuard>
 				) : null}
 				<div id="application-checklist">
 					<PropertyTenantApplicationChecklist
@@ -157,6 +159,12 @@ export function PropertyTenantApplicationContainer() {
 			<ApproveTenantApplicationModal
 				opened={openApproveModal}
 				setOpened={setOpenApproveModal}
+				data={tenantApplication}
+				propertyId={safeString(clientUserProperty?.property_id)}
+			/>
+			<DeleteTenantApplicationModal
+				opened={openDeleteModal}
+				setOpened={setOpenDeleteModal}
 				data={tenantApplication}
 				propertyId={safeString(clientUserProperty?.property_id)}
 			/>
