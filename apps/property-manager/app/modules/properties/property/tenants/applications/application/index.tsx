@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet, useLoaderData } from 'react-router'
 import ApproveTenantApplicationModal from '../approve'
 import CancelTenantApplicationModal from '../cancel'
+import DeleteTenantApplicationModal from '../delete'
 import { PropertyTenantApplicationChecklist } from './components/checklist'
 import { useCalculateChecklist } from './components/use-calculate-checklist'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
@@ -17,7 +18,6 @@ import { localizedDayjs } from '~/lib/date'
 import { safeString } from '~/lib/strings'
 import { TENANT_APPLICATION_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
 import type { loader } from '~/routes/_auth.properties.$propertyId.tenants.applications.$applicationId'
-import DeleteTenantApplicationModal from '../delete'
 
 export function PropertyTenantApplicationContainer() {
 	const { tenantApplication, clientUserProperty } =
@@ -127,7 +127,7 @@ export function PropertyTenantApplicationContainer() {
 							</Button>
 						</div>
 					</PropertyPermissionGuard>
-				// ) : tenantApplication.status ===
+				) : // ) : tenantApplication.status ===
 				//   'TenantApplication.Status.Cancelled' ? (
 				// 	<PropertyPermissionGuard roles={['MANAGER']}>
 				// 		<div
@@ -142,7 +142,7 @@ export function PropertyTenantApplicationContainer() {
 				// 			</Button>
 				// 		</div>
 				// 	</PropertyPermissionGuard>
-				) : null}
+				null}
 				<div id="application-checklist">
 					<PropertyTenantApplicationChecklist
 						propertyId={safeString(clientUserProperty?.property_id)}
