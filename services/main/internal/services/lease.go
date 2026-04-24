@@ -31,10 +31,11 @@ type LeaseService interface {
 }
 
 type leaseService struct {
-	appCtx              pkg.AppContext
-	repo                repository.LeaseRepository
-	invoiceService      InvoiceService
-	notificationService NotificationService
+	appCtx               pkg.AppContext
+	repo                 repository.LeaseRepository
+	invoiceService       InvoiceService
+	notificationService  NotificationService
+	unitDateBlockService UnitDateBlockService
 }
 
 func NewLeaseService(
@@ -42,12 +43,14 @@ func NewLeaseService(
 	repo repository.LeaseRepository,
 	invoiceService InvoiceService,
 	notificationService NotificationService,
+	unitDateBlockService UnitDateBlockService,
 ) LeaseService {
 	return &leaseService{
-		appCtx:              appCtx,
-		repo:                repo,
-		invoiceService:      invoiceService,
-		notificationService: notificationService,
+		appCtx:               appCtx,
+		repo:                 repo,
+		invoiceService:       invoiceService,
+		notificationService:  notificationService,
+		unitDateBlockService: unitDateBlockService,
 	}
 }
 
@@ -422,6 +425,20 @@ func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInp
 			},
 		})
 	}
+
+	// Create UnitDateBlock for the lease duration (for availability calendar)
+	go func() {
+		leaseID := lease.ID.String()
+		endDate := time.Date(2099, 1, 1, 0, 0, 0, 0, time.UTC)
+		_, _ = s.unitDateBlockService.CreateSystemBlock(context.Background(), CreateSystemBlockInput{
+			UnitID:    lease.UnitId,
+			StartDate: lease.MoveInDate,
+			EndDate:   endDate,
+			BlockType: "LEASE",
+			LeaseID:   &leaseID,
+			Reason:    "Active lease",
+		})
+	}()
 
 	startDate := lease.MoveInDate.Format("January 2, 2006")
 

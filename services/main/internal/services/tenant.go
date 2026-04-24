@@ -19,6 +19,7 @@ type TenantService interface {
 	GetTenantByID(context context.Context, query repository.GetTenantQuery) (*models.Tenant, error)
 	ListTenantsByProperty(context context.Context, filter repository.ListTenantsFilter) (*[]models.Tenant, error)
 	CountTenantsByProperty(context context.Context, filter repository.ListTenantsFilter) (int64, error)
+	FindOrCreateLightTenant(ctx context.Context, input FindOrCreateLightTenantInput) (*models.Tenant, error)
 }
 
 type tenantService struct {
@@ -193,4 +194,37 @@ func (s *tenantService) CountTenantsByProperty(
 		})
 	}
 	return count, nil
+}
+
+type FindOrCreateLightTenantInput struct {
+	FirstName string
+	LastName  string
+	Phone     string
+	Email     string
+	IDNumber  string
+}
+
+func (s *tenantService) FindOrCreateLightTenant(
+	ctx context.Context,
+	input FindOrCreateLightTenantInput,
+) (*models.Tenant, error) {
+	// Try to find by phone first
+	existing, err := s.GetTenantByPhone(ctx, input.Phone)
+	if err == nil && existing != nil {
+		return existing, nil
+	}
+
+	// Create new light tenant (only booking-relevant fields; required non-nullable fields default to empty/zero)
+	email := input.Email
+	tenant := &models.Tenant{
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
+		Phone:     input.Phone,
+		Email:     &email,
+		IDNumber:  input.IDNumber,
+	}
+	if createErr := s.repo.Create(ctx, tenant); createErr != nil {
+		return nil, createErr
+	}
+	return tenant, nil
 }
