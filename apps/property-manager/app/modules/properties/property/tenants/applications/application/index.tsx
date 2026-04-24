@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet, useLoaderData } from 'react-router'
 import ApproveTenantApplicationModal from '../approve'
 import CancelTenantApplicationModal from '../cancel'
+import DeleteTenantApplicationModal from '../delete'
 import { PropertyTenantApplicationChecklist } from './components/checklist'
 import { useCalculateChecklist } from './components/use-calculate-checklist'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
@@ -23,6 +24,7 @@ export function PropertyTenantApplicationContainer() {
 		useLoaderData<typeof loader>()
 	const [openCancelModal, setOpenCancelModal] = useState(false)
 	const [openApproveModal, setOpenApproveModal] = useState(false)
+	const [openDeleteModal, setOpenDeleteModal] = useState(false)
 
 	const { startTour, hasCompletedTour } = useTour(
 		TOUR_KEYS.TENANT_APPLICATION,
@@ -134,7 +136,7 @@ export function PropertyTenantApplicationContainer() {
 						>
 							<Button
 								variant="destructive"
-								onClick={() => setOpenApproveModal(true)}
+								onClick={() => setOpenDeleteModal(true)}
 							>
 								Delete application
 							</Button>
@@ -157,6 +159,12 @@ export function PropertyTenantApplicationContainer() {
 			<ApproveTenantApplicationModal
 				opened={openApproveModal}
 				setOpened={setOpenApproveModal}
+				data={tenantApplication}
+				propertyId={safeString(clientUserProperty?.property_id)}
+			/>
+			<DeleteTenantApplicationModal
+				opened={openDeleteModal}
+				setOpened={setOpenDeleteModal}
 				data={tenantApplication}
 				propertyId={safeString(clientUserProperty?.property_id)}
 			/>
