@@ -22,7 +22,7 @@ type Booking struct {
 	Unit       Unit
 	PropertyID string `gorm:"not null;index;"`
 	Property   Property
-	TenantID   string `gorm:"not null;"`
+	TenantID   string `gorm:"not null;index;"`
 	Tenant     Tenant
 
 	CheckInDate  time.Time `gorm:"not null;"`

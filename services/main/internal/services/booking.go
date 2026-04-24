@@ -145,28 +145,36 @@ func (s *bookingService) ConfirmBooking(ctx context.Context, input ConfirmBookin
 		return nil, codeErr
 	}
 
+	// Atomically update status + create date block to prevent double-booking races.
+	tx := s.appCtx.DB.Begin()
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+	transCtx := lib.WithTransaction(ctx, tx)
+
 	booking.Status = "CONFIRMED"
 	booking.CheckInCode = checkInCode
-
-	if err := s.repo.Update(ctx, booking); err != nil {
+	if err := s.repo.Update(transCtx, booking); err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
 	bookingID := booking.ID.String()
-	go func() {
-		if _, err := s.unitDateBlockService.CreateSystemBlock(context.Background(), CreateSystemBlockInput{
-			UnitID:    booking.UnitID,
-			StartDate: booking.CheckInDate,
-			EndDate:   booking.CheckOutDate,
-			BlockType: "BOOKING",
-			BookingID: &bookingID,
-			Reason:    "Confirmed booking",
-		}); err != nil {
-			log.WithError(err).
-				WithField("booking_id", bookingID).
-				Error("failed to create date block after booking confirmation")
-		}
-	}()
+	if _, err := s.unitDateBlockService.CreateSystemBlock(transCtx, CreateSystemBlockInput{
+		UnitID:    booking.UnitID,
+		StartDate: booking.CheckInDate,
+		EndDate:   booking.CheckOutDate,
+		BlockType: "BOOKING",
+		BookingID: &bookingID,
+		Reason:    "Confirmed booking",
+	}); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
 
 	go s.sendBookingConfirmedNotification(booking)
 
@@ -208,8 +216,8 @@ func (s *bookingService) CancelBooking(ctx context.Context, input CancelBookingI
 	if err != nil {
 		return nil, errors.New("booking not found")
 	}
-	if booking.Status == "COMPLETED" {
-		return nil, errors.New("completed bookings cannot be cancelled")
+	if booking.Status == "COMPLETED" || booking.Status == "CHECKED_IN" {
+		return nil, errors.New("only PENDING or CONFIRMED bookings can be cancelled")
 	}
 
 	booking.Status = "CANCELLED"

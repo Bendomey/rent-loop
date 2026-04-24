@@ -143,7 +143,34 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 									Patch("/status:maintenance", handlers.UnitHandler.UpdateUnitToMaintenanceStatus)
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 									Patch("/status:available", handlers.UnitHandler.UpdateUnitToAvailableStatus)
+								r.Get("/availability", handlers.BookingHandler.GetAvailability)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Post("/date-blocks", handlers.BookingHandler.CreateDateBlock)
 							})
+						})
+
+						// bookings
+						r.Route("/bookings", func(r chi.Router) {
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/", handlers.BookingHandler.CreateBooking)
+							r.Get("/", handlers.BookingHandler.ListBookings)
+							r.Route("/{booking_id}", func(r chi.Router) {
+								r.Get("/", handlers.BookingHandler.GetBooking)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Patch("/confirm", handlers.BookingHandler.ConfirmBooking)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Patch("/check-in", handlers.BookingHandler.CheckInBooking)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Patch("/complete", handlers.BookingHandler.CompleteBooking)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Patch("/cancel", handlers.BookingHandler.CancelBooking)
+							})
+						})
+
+						// date block deletion (block_id only, no unit context needed)
+						r.Route("/date-blocks/{block_id}", func(r chi.Router) {
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Delete("/", handlers.BookingHandler.DeleteDateBlock)
 						})
 
 						// property-scoped expenses

@@ -454,6 +454,13 @@ definitions:
     required:
     - entries
     type: object
+  handlers.CancelBookingRequest:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
   handlers.CancelLeaseRequest:
     properties:
       cancellation_reason:
@@ -523,6 +530,42 @@ definitions:
     - priority
     - title
     - type
+    type: object
+  handlers.CreateBookingRequest:
+    properties:
+      check_in_date:
+        type: string
+      check_out_date:
+        type: string
+      currency:
+        type: string
+      guest_email:
+        type: string
+      guest_first_name:
+        type: string
+      guest_id_number:
+        type: string
+      guest_last_name:
+        type: string
+      guest_phone:
+        type: string
+      notes:
+        type: string
+      rate:
+        type: integer
+      unit_id:
+        type: string
+    required:
+    - check_in_date
+    - check_out_date
+    - currency
+    - guest_email
+    - guest_first_name
+    - guest_id_number
+    - guest_last_name
+    - guest_phone
+    - rate
+    - unit_id
     type: object
   handlers.CreateClientApplicationRequest:
     properties:
@@ -631,6 +674,25 @@ definitions:
         type: string
     required:
     - content
+    type: object
+  handlers.CreateDateBlockRequest:
+    properties:
+      block_type:
+        enum:
+        - MAINTENANCE
+        - PERSONAL
+        - OTHER
+        type: string
+      end_date:
+        type: string
+      reason:
+        type: string
+      start_date:
+        type: string
+    required:
+    - block_type
+    - end_date
+    - start_date
     type: object
   handlers.CreateDocumentRequest:
     properties:
@@ -1341,6 +1403,37 @@ definitions:
     required:
     - amount
     - provider
+    type: object
+  handlers.PublicCreateBookingRequest:
+    properties:
+      check_in_date:
+        type: string
+      check_out_date:
+        type: string
+      currency:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id_number:
+        type: string
+      last_name:
+        type: string
+      phone:
+        type: string
+      rate:
+        type: integer
+    required:
+    - check_in_date
+    - check_out_date
+    - currency
+    - email
+    - first_name
+    - id_number
+    - last_name
+    - phone
+    - rate
     type: object
   handlers.RegisterFcmTokenRequest:
     properties:
@@ -5327,6 +5420,129 @@ paths:
       summary: Schedule an announcement (Admin)
       tags:
       - Announcements
+  /api/v1/admin/clients/{client_id}/bookings/{booking_id}:
+    get:
+      parameters:
+      - description: Booking ID
+        in: path
+        name: booking_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                type: object
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a booking by ID
+      tags:
+      - Booking
+  /api/v1/admin/clients/{client_id}/bookings/{booking_id}/cancel:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Booking ID
+        in: path
+        name: booking_id
+        required: true
+        type: string
+      - description: Cancellation request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CancelBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                type: object
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Cancel a booking
+      tags:
+      - Booking
+  /api/v1/admin/clients/{client_id}/bookings/{booking_id}/check-in:
+    put:
+      parameters:
+      - description: Booking ID
+        in: path
+        name: booking_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                type: object
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Mark a booking as checked in
+      tags:
+      - Booking
+  /api/v1/admin/clients/{client_id}/bookings/{booking_id}/complete:
+    put:
+      parameters:
+      - description: Booking ID
+        in: path
+        name: booking_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                type: object
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Mark a booking as completed
+      tags:
+      - Booking
+  /api/v1/admin/clients/{client_id}/bookings/{booking_id}/confirm:
+    put:
+      parameters:
+      - description: Booking ID
+        in: path
+        name: booking_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                type: object
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Confirm a pending booking
+      tags:
+      - Booking
   /api/v1/admin/clients/{client_id}/checklist-templates:
     get:
       consumes:
@@ -6034,6 +6250,29 @@ paths:
       summary: Get the currently authenticated client user (Admin)
       tags:
       - ClientUsers
+  /api/v1/admin/clients/{client_id}/date-blocks/{block_id}:
+    delete:
+      parameters:
+      - description: Block ID
+        in: path
+        name: block_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a manual date block
+      tags:
+      - Booking
   /api/v1/admin/clients/{client_id}/documents:
     get:
       consumes:
@@ -7227,6 +7466,63 @@ paths:
       summary: Create unit (Admin)
       tags:
       - Units
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/bookings:
+    get:
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                type: object
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List bookings for a property
+      tags:
+      - Booking
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Create booking request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                type: object
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a booking (manager)
+      tags:
+      - Booking
   /api/v1/admin/clients/{client_id}/properties/{property_id}/client-users:link:
     post:
       consumes:
@@ -11924,6 +12220,70 @@ paths:
       summary: Get property by slug (Admin)
       tags:
       - Properties
+  /api/v1/admin/clients/{client_id}/units/{unit_id}/availability:
+    get:
+      parameters:
+      - description: Unit ID
+        in: path
+        name: unit_id
+        required: true
+        type: string
+      - description: Start date (RFC3339)
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: End date (RFC3339)
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                type: object
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get availability for a unit (manager)
+      tags:
+      - Booking
+  /api/v1/admin/clients/{client_id}/units/{unit_id}/date-blocks:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Unit ID
+        in: path
+        name: unit_id
+        required: true
+        type: string
+      - description: Date block request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateDateBlockRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                type: object
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a manual date block for a unit
+      tags:
+      - Booking
   /api/v1/admin/clients/apply:
     post:
       consumes:
@@ -13477,6 +13837,90 @@ paths:
       summary: Create an offline payment
       tags:
       - Payments
+  /api/v1/public/bookings/{tracking_code}:
+    get:
+      parameters:
+      - description: Tracking Code
+        in: path
+        name: tracking_code
+        required: true
+        type: string
+      - description: Guest phone number
+        in: query
+        name: phone
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                type: object
+            type: object
+      summary: Get booking status by tracking code (phone-verified)
+      tags:
+      - Public
+  /api/v1/public/units/{unit_slug}/availability:
+    get:
+      parameters:
+      - description: Unit Slug
+        in: path
+        name: unit_slug
+        required: true
+        type: string
+      - description: Start date (RFC3339)
+        in: query
+        name: from
+        type: string
+      - description: End date (RFC3339)
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                type: object
+            type: object
+      summary: Get availability for a unit (public)
+      tags:
+      - Public
+  /api/v1/public/units/{unit_slug}/bookings:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Unit Slug
+        in: path
+        name: unit_slug
+        required: true
+        type: string
+      - description: Booking request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.PublicCreateBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                type: object
+            type: object
+      summary: Create a booking as a guest (public)
+      tags:
+      - Public
   /api/v1/signing/{token}/sign:
     post:
       consumes:

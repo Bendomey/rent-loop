@@ -31,11 +31,15 @@ func (r *unitDateBlockRepository) Create(ctx context.Context, block *models.Unit
 }
 
 func (r *unitDateBlockRepository) Delete(ctx context.Context, id string) error {
-	return r.DB.WithContext(ctx).Where("id = ?", id).Delete(&models.UnitDateBlock{}).Error
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Where("id = ?", id).Delete(&models.UnitDateBlock{}).Error
 }
 
 func (r *unitDateBlockRepository) DeleteByBookingID(ctx context.Context, bookingID string) error {
-	return r.DB.WithContext(ctx).Where("booking_id = ?", bookingID).Delete(&models.UnitDateBlock{}).Error
+	return lib.ResolveDB(ctx, r.DB).
+		WithContext(ctx).
+		Where("booking_id = ?", bookingID).
+		Delete(&models.UnitDateBlock{}).
+		Error
 }
 
 func (r *unitDateBlockRepository) GetByID(ctx context.Context, id string) (*models.UnitDateBlock, error) {

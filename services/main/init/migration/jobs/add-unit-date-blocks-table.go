@@ -27,12 +27,18 @@ func AddUnitDateBlocksTable() *gormigrate.Migration {
 			`).Error; err != nil {
 				return err
 			}
+			// Index on block_type for filtering by type
+			if err := db.Exec(`CREATE INDEX IF NOT EXISTS idx_unit_date_blocks_block_type ON unit_date_blocks (block_type)`).Error; err != nil {
+				return err
+			}
 			// Composite index for availability range queries
 			if err := db.Exec(`CREATE INDEX IF NOT EXISTS idx_unit_date_blocks_unit_dates ON unit_date_blocks (unit_id, start_date, end_date)`).Error; err != nil {
 				return err
 			}
 			// Partial unique index to prevent duplicate lease blocks (enables ON CONFLICT DO NOTHING in backfill)
-			return db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_unit_date_blocks_unit_lease ON unit_date_blocks (unit_id, lease_id) WHERE lease_id IS NOT NULL AND deleted_at IS NULL`).Error
+			return db.Exec(
+				`CREATE UNIQUE INDEX IF NOT EXISTS idx_unit_date_blocks_unit_lease ON unit_date_blocks (unit_id, lease_id) WHERE lease_id IS NOT NULL AND deleted_at IS NULL`,
+			).Error
 		},
 		Rollback: func(db *gorm.DB) error {
 			return db.Exec(`DROP TABLE IF EXISTS unit_date_blocks`).Error

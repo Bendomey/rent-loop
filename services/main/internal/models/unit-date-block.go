@@ -19,7 +19,7 @@ type UnitDateBlock struct {
 	StartDate time.Time `gorm:"not null;type:date;"`
 	EndDate   time.Time `gorm:"not null;type:date;"`
 
-	BlockType string `gorm:"not null;"`
+	BlockType string `gorm:"not null;index;"`
 
 	BookingID *string `gorm:"index;"`
 	Booking   *Booking
