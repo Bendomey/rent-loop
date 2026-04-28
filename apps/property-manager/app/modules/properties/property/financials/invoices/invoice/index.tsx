@@ -27,7 +27,7 @@ export function PropertyFinancialsPaymentModule() {
 
 	return (
 		<div className="m-6 grid grid-cols-1 gap-10 lg:grid-cols-12">
-			<div className="lg:col-span-5 xl:col-span-4">
+			<div className="col-span-1 lg:col-span-5 xl:col-span-4">
 				<Card className="shadow-sm">
 					<CardHeader>
 						<Badge
@@ -180,7 +180,7 @@ export function PropertyFinancialsPaymentModule() {
 					</CardContent>
 				</Card>
 			</div>
-			<div className="lg:col-span-7 xl:col-span-8">
+			<div className="col-span-1 lg:col-span-7 xl:col-span-8">
 				<Tabs defaultValue="line-items" className="w-full">
 					<TabsList>
 						<TabsTrigger value="line-items">Invoice Items</TabsTrigger>

@@ -110,7 +110,7 @@ export function PropertyAssetBlocksModule() {
 				<GridElement
 					boxHeight={62}
 					isLoading={isLoading}
-					gridColumns={{ sm: 2, md: 2, lg: 3, xl: 4 }}
+					gridColumns={{ sm: 1, md: 2, lg: 3, xl: 4 }}
 					gridElement={({ data }: { data: PropertyBlock }) => (
 						<Card
 							key={data.id}

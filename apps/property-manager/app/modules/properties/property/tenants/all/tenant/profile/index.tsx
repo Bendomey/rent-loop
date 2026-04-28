@@ -37,20 +37,20 @@ function InfoRow({
 export function TenantProfileModule({ tenant }: { tenant: Tenant }) {
 	return (
 		<div className="mt-3 space-y-3">
-			<div className="grid grid-cols-3 gap-2">
-				<Card className="@container/card shadow-none">
+			<div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
+				<Card className="@container/card col-span-2 shadow-none lg:col-span-1">
 					<CardHeader>
-						<CardDescription>Total Leases</CardDescription>
+						<CardDescription>Total Payments</CardDescription>
 						<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-							1
+							GHS1,250.00
 						</CardTitle>
 					</CardHeader>
 				</Card>
 				<Card className="@container/card shadow-none">
 					<CardHeader>
-						<CardDescription>Total Payments</CardDescription>
+						<CardDescription>Total Leases</CardDescription>
 						<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-							GHS1,250.00
+							1
 						</CardTitle>
 					</CardHeader>
 				</Card>
