@@ -59,12 +59,12 @@ export default function SettingsDashboard({}: Route.ComponentProps) {
 	]
 
 	return (
-		<main className="h-[calc(100vh+160px)] md:h-[calc(100vh-120px)]">
+		<main className="min-h-[calc(100vh-64px)]">
 			<div className="border-b px-5 py-3">
 				<TypographyH4>Settings</TypographyH4>
 			</div>
-			<div className="flex h-full">
-				<div className="h-full w-4/12 overflow-auto border-r">
+			<div className="flex flex-col md:flex-row md:h-[calc(100vh-120px)]">
+				<div className="w-full shrink-0 overflow-auto border-b md:w-56 md:border-r md:border-b-0">
 					<NavMain
 						items={generalMenus}
 						baseRoute="/settings"
