@@ -98,11 +98,14 @@ export function PropertyTenantApplicationsModule() {
 				accessorKey: 'name',
 				header: 'Name',
 				cell: ({ row }) => {
+					const hasName = row.original.first_name || row.original.last_name
 					return (
 						<div className="flex min-w-32 flex-col">
-							<span className="e truncate text-xs">
-								{`${row.original.first_name} ${row.original.other_names ? row.original.other_names + ' ' : ''}${row.original.last_name}`}
-							</span>
+							{hasName && (
+								<span className="e truncate text-xs">
+									{`${row.original.first_name ?? ''} ${row.original.other_names ? row.original.other_names + ' ' : ''}${row.original.last_name ?? ''}`.trim()}
+								</span>
+							)}
 							<Link
 								to={`/properties/${clientUserProperty?.property_id}/tenants/applications/${row.original.id}`}
 								aria-label={`View details for application`}
