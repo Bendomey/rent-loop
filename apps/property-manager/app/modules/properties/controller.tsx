@@ -76,7 +76,7 @@ export const PropertiesController = ({
 						Manage the properties you own or oversee.
 					</TypographyMuted>
 				</div>
-				<div className="flex items-center justify-end gap-2">
+				<div className="flex items-center justify-between gap-2 md:justify-end">
 					<Link to="/properties/new">
 						<Button
 							variant="default"
