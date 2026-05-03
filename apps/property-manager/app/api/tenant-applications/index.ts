@@ -126,7 +126,7 @@ export interface CreatePropertyTenantApplicationInput {
 	first_name: string
 	other_names: Maybe<string>
 	last_name: string
-	email?: string | null
+	email?: string
 	phone: string
 	gender: TenantApplication['gender']
 	marital_status: TenantApplication['marital_status']
