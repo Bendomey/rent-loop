@@ -86,7 +86,7 @@ const (
 
 const (
 	TENANT_INVITED_SMS_BODY               = `You've been invited to apply for a tenancy. Apply here: {{website_url}}/tenants/apply?unit={{unit_id}}&referred_by={{admin_id}}`
-	TENANT_APPLICATION_SUBMITTED_SMS_BODY = `Hi {{applicant_name}}, your application ({{application_code}}) for {{unit_name}} has been submitted. We'll be in touch.`
+	TENANT_APPLICATION_SUBMITTED_SMS_BODY = `Hi {{applicant_name}}, your application ({{application_code}}) for {{unit_name}} has been submitted. Track your application here: {{website_url}}/tenant-applications/{{application_code}}. We'll be in touch.`
 	TENANT_CANCELLED_SMS_BODY             = `Hi {{applicant_name}}, your application ({{application_code}}) has been cancelled. Reason: {{reason}}`
 	TENANT_APPLICATION_APPROVED_SMS_BODY  = `Hi {{applicant_name}}, your application for {{unit_name}} is approved! Log in to the Rentloop app with phone: {{phone_number}}`
 )

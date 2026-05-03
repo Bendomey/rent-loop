@@ -18,7 +18,7 @@ const CreateTenantApplicationSchema = z.object({
 	first_name: z.string().min(1, 'First name is required'),
 	other_names: z.string().nullable().default(null),
 	last_name: z.string().min(1, 'Last name is required'),
-	email: z.email('Invalid email address'),
+	email: z.email('Invalid email address').optional(),
 	phone: z.string().min(1, 'Phone number is required'),
 	gender: z.enum(['MALE', 'FEMALE']),
 	marital_status: z.enum(['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED']),
@@ -73,9 +73,8 @@ export async function action({ request }: Route.ActionArgs) {
 	const clientId = safeString(authSession.get('selectedClientId'))
 
 	const formData = await request.formData()
-	const result = CreateTenantApplicationSchema.safeParse(
-		Object.fromEntries(formData),
-	)
+	const cleanedData = replaceNullUndefinedWithUndefined(Object.fromEntries(formData))
+	const result = CreateTenantApplicationSchema.safeParse(cleanedData)
 
 	if (!result.success) {
 		return {
@@ -85,16 +84,13 @@ export async function action({ request }: Route.ActionArgs) {
 	}
 
 	try {
-		const tenantApplication = await createTenantApplication(
-			replaceNullUndefinedWithUndefined({
-				...result.data,
-				client_id: clientId,
-			}),
-			{
-				baseUrl,
-				authToken: authSession.get('authToken'),
-			},
-		)
+		const tenantApplication = await createTenantApplication({
+			...result.data,
+			client_id: clientId,
+		}, {
+			baseUrl,
+			authToken: authSession.get('authToken'),
+		})
 
 		if (!tenantApplication) {
 			throw new Error('Tenant application creation returned no data')
