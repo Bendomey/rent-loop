@@ -73,7 +73,9 @@ export async function action({ request }: Route.ActionArgs) {
 	const clientId = safeString(authSession.get('selectedClientId'))
 
 	const formData = await request.formData()
-	const cleanedData = replaceNullUndefinedWithUndefined(Object.fromEntries(formData))
+	const cleanedData = replaceNullUndefinedWithUndefined(
+		Object.fromEntries(formData),
+	)
 	const result = CreateTenantApplicationSchema.safeParse(cleanedData)
 
 	if (!result.success) {
@@ -84,13 +86,16 @@ export async function action({ request }: Route.ActionArgs) {
 	}
 
 	try {
-		const tenantApplication = await createTenantApplication({
-			...result.data,
-			client_id: clientId,
-		}, {
-			baseUrl,
-			authToken: authSession.get('authToken'),
-		})
+		const tenantApplication = await createTenantApplication(
+			{
+				...result.data,
+				client_id: clientId,
+			},
+			{
+				baseUrl,
+				authToken: authSession.get('authToken'),
+			},
+		)
 
 		if (!tenantApplication) {
 			throw new Error('Tenant application creation returned no data')

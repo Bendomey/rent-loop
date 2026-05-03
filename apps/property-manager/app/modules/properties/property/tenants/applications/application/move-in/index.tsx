@@ -147,7 +147,7 @@ export function PropertyTenantApplicationMoveIn() {
 				<CardHeader>
 					<CardTitle className="flex items-center justify-between">
 						Move In Setup
-						{application?.status !== 'TenantApplication.Status.Cancelled' && (
+						{application?.status === 'TenantApplication.Status.InProgress' && (
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<span>
