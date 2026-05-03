@@ -15,7 +15,6 @@ import (
 type Booking struct {
 	BaseModelSoftDelete
 	Code         string `gorm:"not null;uniqueIndex;"`
-	TrackingCode string `gorm:"not null;uniqueIndex;"`
 	CheckInCode  string `gorm:"not null;default:''"`
 
 	UnitID     string `gorm:"not null;index;"`
@@ -56,16 +55,6 @@ func (b *Booking) BeforeCreate(tx *gorm.DB) error {
 		return genErr
 	}
 	b.Code = *uniqueCode
-
-	trackingCode, trackingErr := lib.GenerateTrackingCode(tx, &Booking{})
-	if trackingErr != nil {
-		raven.CaptureError(trackingErr, map[string]string{
-			"function": "BeforeCreateBookingHook",
-			"action":   "Generating a tracking code",
-		})
-		return trackingErr
-	}
-	b.TrackingCode = *trackingCode
 
 	return nil
 }

@@ -264,7 +264,7 @@ func (s *bookingService) removeBookingDateBlock(ctx context.Context, bookingID s
 }
 
 func (s *bookingService) sendBookingCreatedNotification(booking *models.Booking, tenant *models.Tenant) {
-	trackingURL := s.appCtx.Config.Portals.WebsiteURL + "/bookings/track/" + booking.TrackingCode
+	trackingURL := s.appCtx.Config.Portals.WebsiteURL + "/bookings/track/" + booking.Code
 	_ = trackingURL // TODO: wire into pkg.SendSMS/SendEmail
 }
 

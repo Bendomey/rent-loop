@@ -99,7 +99,6 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddClientIdentityFields(),
 		jobs.AddTenantApplicationPropertyId(),
 		jobs.AddPropertyBookingFields(),
-		jobs.AddBookingsTable(),
 		jobs.AddUnitDateBlocksTable(),
 		jobs.BackfillUnitDateBlocksFromLeases(),
 	})

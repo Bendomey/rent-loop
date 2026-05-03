@@ -162,7 +162,7 @@ func Load() Config {
 		},
 		ResendAPIKey: getEnv("RESEND_API_KEY", "fake-api-key"),
 		SupportData: IRentloopSupport{
-			Email: getEnv("SUPPORT_EMAIL", "rentloopapp@gmail.com"),
+			Email: getEnv("SUPPORT_EMAIL", "support@rentloopapp.com"),
 			Phone: getEnv("SUPPORT_PHONE", "+233201080802"),
 		},
 		Portals: IRentloopPortals{

@@ -19,7 +19,6 @@ func DBBookingToRest(i *models.Booking) any {
 	data := map[string]any{
 		"id":                        i.ID.String(),
 		"code":                      i.Code,
-		"tracking_code":             i.TrackingCode,
 		"check_in_code":             checkInCode,
 		"unit_id":                   i.UnitID,
 		"unit":                      DBAdminUnitToRest(&i.Unit),
@@ -67,7 +66,6 @@ func DBPublicBookingToRest(i *models.Booking) any {
 
 	data := map[string]any{
 		"code":           i.Code,
-		"tracking_code":  i.TrackingCode,
 		"check_in_code":  checkInCode,
 		"check_in_date":  i.CheckInDate,
 		"check_out_date": i.CheckOutDate,

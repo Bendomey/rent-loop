@@ -9,28 +9,6 @@ func AddUnitDateBlocksTable() *gormigrate.Migration {
 	return &gormigrate.Migration{
 		ID: "202604230003_ADD_UNIT_DATE_BLOCKS_TABLE",
 		Migrate: func(db *gorm.DB) error {
-			if err := db.Exec(`
-				CREATE TABLE IF NOT EXISTS unit_date_blocks (
-					id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-					created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-					updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-					deleted_at TIMESTAMPTZ,
-					unit_id UUID NOT NULL REFERENCES units(id),
-					start_date DATE NOT NULL,
-					end_date DATE NOT NULL,
-					block_type VARCHAR NOT NULL,
-					booking_id UUID REFERENCES bookings(id),
-					lease_id UUID REFERENCES leases(id),
-					reason TEXT NOT NULL DEFAULT '',
-					created_by_client_user_id UUID REFERENCES client_users(id)
-				)
-			`).Error; err != nil {
-				return err
-			}
-			// Index on block_type for filtering by type
-			if err := db.Exec(`CREATE INDEX IF NOT EXISTS idx_unit_date_blocks_block_type ON unit_date_blocks (block_type)`).Error; err != nil {
-				return err
-			}
 			// Composite index for availability range queries
 			if err := db.Exec(`CREATE INDEX IF NOT EXISTS idx_unit_date_blocks_unit_dates ON unit_date_blocks (unit_id, start_date, end_date)`).Error; err != nil {
 				return err
@@ -41,7 +19,15 @@ func AddUnitDateBlocksTable() *gormigrate.Migration {
 			).Error
 		},
 		Rollback: func(db *gorm.DB) error {
-			return db.Exec(`DROP TABLE IF EXISTS unit_date_blocks`).Error
+			if err := db.Exec(`DROP INDEX IF EXISTS idx_unit_date_blocks_unit_dates`).Error; err != nil {
+				return err
+			}
+
+			if err := db.Exec(`DROP INDEX IF EXISTS idx_unit_date_blocks_unit_lease`).Error; err != nil {
+				return err
+			}
+
+			return nil
 		},
 	}
 }

@@ -107,6 +107,12 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// strings.Contains(property.Modes, )
+	// if property.Modes == nil || !property.Modes.Contains(repository.BookingModeManager) {
+	// 	http.Error(w, "bookings cannot be created for this property", http.StatusBadRequest)
+	// 	return
+	// }
+
 	clientUserID := clientUser.ID
 	booking, err := h.bookingService.CreateBooking(r.Context(), services.CreateBookingInput{
 		UnitID:                 body.UnitID,
