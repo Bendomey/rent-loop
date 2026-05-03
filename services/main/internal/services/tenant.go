@@ -19,6 +19,7 @@ type TenantService interface {
 	GetTenantByID(context context.Context, query repository.GetTenantQuery) (*models.Tenant, error)
 	ListTenantsByProperty(context context.Context, filter repository.ListTenantsFilter) (*[]models.Tenant, error)
 	CountTenantsByProperty(context context.Context, filter repository.ListTenantsFilter) (int64, error)
+	FindOrCreateLightTenant(ctx context.Context, input FindOrCreateLightTenantInput) (*models.Tenant, error)
 }
 
 type tenantService struct {
@@ -193,4 +194,41 @@ func (s *tenantService) CountTenantsByProperty(
 		})
 	}
 	return count, nil
+}
+
+type FindOrCreateLightTenantInput struct {
+	FirstName string
+	LastName  string
+	Phone     string
+	Email     string
+	IDNumber  string
+}
+
+func (s *tenantService) FindOrCreateLightTenant(
+	ctx context.Context,
+	input FindOrCreateLightTenantInput,
+) (*models.Tenant, error) {
+	// Try to find existing tenant by phone
+	existing, err := s.repo.FindOne(ctx, map[string]any{"phone": input.Phone})
+	if err == nil {
+		return existing, nil
+	}
+	// Only proceed to create if the record genuinely doesn't exist
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	// Create new light tenant (only booking-relevant fields)
+	email := input.Email
+	tenant := &models.Tenant{
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
+		Phone:     input.Phone,
+		Email:     &email,
+		IDNumber:  input.IDNumber,
+	}
+	if createErr := s.repo.Create(ctx, tenant); createErr != nil {
+		return nil, createErr
+	}
+	return tenant, nil
 }

@@ -31,10 +31,11 @@ type LeaseService interface {
 }
 
 type leaseService struct {
-	appCtx              pkg.AppContext
-	repo                repository.LeaseRepository
-	invoiceService      InvoiceService
-	notificationService NotificationService
+	appCtx               pkg.AppContext
+	repo                 repository.LeaseRepository
+	invoiceService       InvoiceService
+	notificationService  NotificationService
+	unitDateBlockService UnitDateBlockService
 }
 
 func NewLeaseService(
@@ -42,12 +43,14 @@ func NewLeaseService(
 	repo repository.LeaseRepository,
 	invoiceService InvoiceService,
 	notificationService NotificationService,
+	unitDateBlockService UnitDateBlockService,
 ) LeaseService {
 	return &leaseService{
-		appCtx:              appCtx,
-		repo:                repo,
-		invoiceService:      invoiceService,
-		notificationService: notificationService,
+		appCtx:               appCtx,
+		repo:                 repo,
+		invoiceService:       invoiceService,
+		notificationService:  notificationService,
+		unitDateBlockService: unitDateBlockService,
 	}
 }
 
@@ -423,6 +426,20 @@ func (s *leaseService) ActivateLease(ctx context.Context, input ActivateLeaseInp
 		})
 	}
 
+	// Create UnitDateBlock for the lease duration (for availability calendar)
+	go func() {
+		leaseID := lease.ID.String()
+		endDate := leaseEndDate(lease.MoveInDate, lease.StayDuration, lease.StayDurationFrequency)
+		_, _ = s.unitDateBlockService.CreateSystemBlock(context.Background(), CreateSystemBlockInput{
+			UnitID:    lease.UnitId,
+			StartDate: lease.MoveInDate,
+			EndDate:   endDate,
+			BlockType: "LEASE",
+			LeaseID:   &leaseID,
+			Reason:    "Active lease",
+		})
+	}()
+
 	startDate := lease.MoveInDate.Format("January 2, 2006")
 
 	smsMessage := strings.NewReplacer(
@@ -713,4 +730,22 @@ func (s *leaseService) CancelLease(ctx context.Context, input CancelLeaseInput) 
 	)
 
 	return nil
+}
+
+// leaseEndDate calculates the expected end date from a lease's move-in date, duration, and frequency.
+// Mirrors the backfill migration logic. Falls back to 2099-01-01 for open-ended leases.
+func leaseEndDate(moveIn time.Time, duration int64, frequency string) time.Time {
+	if duration == 0 || frequency == "" {
+		return time.Date(2099, 1, 1, 0, 0, 0, 0, time.UTC)
+	}
+	switch strings.ToLower(frequency) {
+	case "hours", "hour":
+		return moveIn.Add(time.Duration(duration) * time.Hour)
+	case "days", "day":
+		return moveIn.AddDate(0, 0, int(duration))
+	case "months", "month":
+		return moveIn.AddDate(0, int(duration), 0)
+	default:
+		return time.Date(2099, 1, 1, 0, 0, 0, 0, time.UTC)
+	}
 }
