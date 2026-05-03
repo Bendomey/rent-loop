@@ -52,7 +52,7 @@ export function PropertyTenantApplicationContainer() {
 
 	return (
 		<div className="m-5 grid grid-cols-12 gap-4">
-			<div className="col-span-8">
+			<div className="col-span-12 lg:col-span-8">
 				<div id="application-header" className="space-y-1">
 					<div className="flex items-center space-x-3">
 						<h1 className="text-3xl font-bold">
@@ -94,7 +94,7 @@ export function PropertyTenantApplicationContainer() {
 					<Outlet context={{ tenantApplication }} />
 				</div>
 			</div>
-			<div className="col-span-4">
+			<div className="col-span-12 lg:col-span-4">
 				{tenantApplication?.status === 'TenantApplication.Status.InProgress' ? (
 					<PropertyPermissionGuard roles={['MANAGER']}>
 						<div

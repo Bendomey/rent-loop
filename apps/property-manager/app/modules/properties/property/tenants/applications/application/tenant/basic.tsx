@@ -195,8 +195,8 @@ export function PropertyTenantApplicationBasic({ property_id }: Props) {
 				</CardHeader>
 
 				<CardContent>
-					<div className="flex gap-6">
-						<div className="shrink-0">
+					<div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
+						<div className="shrink-0 self-start">
 							{application?.profile_photo_url ? (
 								<img
 									src={application.profile_photo_url}
@@ -323,7 +323,7 @@ export function PropertyTenantApplicationBasic({ property_id }: Props) {
 									)}
 								/>
 							</div>
-							<div className="col-span-2">
+							<div className="md:col-span-2">
 								<FormField
 									name="other_names"
 									control={rhfMethods.control}
@@ -429,7 +429,7 @@ export function PropertyTenantApplicationBasic({ property_id }: Props) {
 									)}
 								/>
 							</div>
-							<div className="col-span-2">
+							<div className="md:col-span-2">
 								<FormField
 									name="date_of_birth"
 									control={rhfMethods.control}

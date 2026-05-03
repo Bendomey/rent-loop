@@ -55,7 +55,7 @@ export const PropertiesController = ({
 }) => {
 	return (
 		<div className="flex w-full flex-col gap-2">
-			<div className="flex flex-row items-center justify-between">
+			<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 				<div>
 					<div className="flex items-center gap-2">
 						<TypographyH4>My Properties</TypographyH4>
@@ -76,7 +76,7 @@ export const PropertiesController = ({
 						Manage the properties you own or oversee.
 					</TypographyMuted>
 				</div>
-				<div className="flex items-center justify-end gap-2">
+				<div className="flex items-center justify-between gap-2 md:justify-end">
 					<Link to="/properties/new">
 						<Button
 							variant="default"
