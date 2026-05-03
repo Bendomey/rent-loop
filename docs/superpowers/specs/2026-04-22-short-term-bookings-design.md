@@ -50,6 +50,18 @@ Property.Modes []string  // values: "LEASE", "BOOKING"
 - **Migration:** Backfill all existing properties with `["LEASE"]`
 - **Default for new properties:** set during creation wizard; no default assumed
 
+### UnitDateBlock Backfill (Migration)
+
+As part of the migration, create `UnitDateBlock` records for all currently active (and pending) leases:
+
+- `BlockType = LEASE` (add this as a new enum value alongside BOOKING | MAINTENANCE | PERSONAL | OTHER)
+- `StartDate = lease.MoveInDate`
+- `EndDate` = calculated from `MoveInDate + (StayDuration × StayDurationFrequency)`, or open-ended if the lease has no fixed end date
+- `BookingID = null`, `LeaseID = lease.ID` (add `LeaseID` nullable FK to `UnitDateBlock`)
+- `Reason = "Active lease"`
+
+This ensures the availability calendar is accurate for mixed-mode properties from day one. Going forward, new leases created on LEASE+BOOKING properties should also create a corresponding `UnitDateBlock` at activation time.
+
 ### UI Behavior
 
 | Modes | Tabs shown in property manager |
@@ -75,9 +87,8 @@ Booking
 ├── TenantID        uuid, FK → Tenant (reused model, subset of fields populated)
 ├── CheckInDate     date
 ├── CheckOutDate    date
-├── NightlyRate     int64 (smallest currency unit, copied from unit RentFee at booking time)
+├── Rate            int64 (smallest currency unit; calculated as unit.RentFee × frequency count set by booking agent)
 ├── Currency        string
-├── TotalAmount     int64 (nights × nightly rate)
 ├── Status          enum: PENDING | CONFIRMED | CHECKED_IN | COMPLETED | CANCELLED
 ├── CancellationReason  string, nullable
 ├── Notes           string, nullable (manager notes)
@@ -99,10 +110,11 @@ UnitDateBlock
 ├── UnitID          uuid, FK → Unit
 ├── StartDate       date
 ├── EndDate         date
-├── BlockType       enum: BOOKING | MAINTENANCE | PERSONAL | OTHER
+├── BlockType       enum: BOOKING | LEASE | MAINTENANCE | PERSONAL | OTHER
 ├── BookingID       uuid, nullable (set when BlockType=BOOKING)
+├── LeaseID         uuid, nullable (set when BlockType=LEASE)
 ├── Reason          string, nullable (for manual blocks)
-├── CreatedByClientUserID   uuid, nullable, FK → ClientUser (null for system-created booking blocks)
+├── CreatedByClientUserID   uuid, nullable, FK → ClientUser (null for system-created booking/lease blocks)
 ├── CreatedAt, UpdatedAt, DeletedAt
 ```
 
@@ -204,7 +216,7 @@ For booking-mode units, the unit detail page shows:
 **Route:** `/book/:propertySlug/:unitSlug`
 
 Sections:
-1. Unit details: name, photos, description, features, nightly rate
+1. Unit details: name, photos, description, features, rate (unit RentFee + frequency)
 2. Availability calendar (read-only — shows available / blocked dates)
 3. Date picker: check-in and check-out selection
 4. Guest info form: first name, last name, phone, email, ID number
@@ -262,8 +274,9 @@ Critical path for `confirm` action:
 - `internal/models/booking.go` — new file
 - `internal/models/unit-date-block.go` — new file
 - `internal/services/booking.go` — new file (booking lifecycle logic)
+- `internal/services/lease.go` — update lease activation to create a `UnitDateBlock` (BlockType=LEASE)
 - `internal/handlers/booking.go` — new file (API handlers)
-- DB migrations — properties.modes column, bookings table, unit_date_blocks table
+- DB migrations — properties.modes column, bookings table, unit_date_blocks table, backfill UnitDateBlocks from active/pending leases
 
 **Frontend — Property Manager (`apps/property-manager`):**
 - `app/routes/_auth._dashboard.properties.new/` — add mode selection step
