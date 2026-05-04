@@ -11,10 +11,10 @@ import (
 type BookingRepository interface {
 	Create(ctx context.Context, booking *models.Booking) error
 	Update(ctx context.Context, booking *models.Booking) error
-	GetByID(ctx context.Context, id string, populate []string) (*models.Booking, error)
+	GetByIDWithPopulate(ctx context.Context, query GetBookingQuery) (*models.Booking, error)
 	GetByTrackingCode(ctx context.Context, trackingCode string, populate []string) (*models.Booking, error)
-	List(ctx context.Context, filter ListBookingsFilter) (*[]models.Booking, error)
-	Count(ctx context.Context, filter ListBookingsFilter) (int64, error)
+	List(ctx context.Context, filterQuery lib.FilterQuery, filters ListBookingsFilter) (*[]models.Booking, error)
+	Count(ctx context.Context, filterQuery lib.FilterQuery, filter ListBookingsFilter) (int64, error)
 	HasOverlappingBlock(ctx context.Context, unitID string, startDate, endDate interface{}) (bool, error)
 }
 
@@ -34,23 +34,31 @@ type ListBookingsFilter struct {
 }
 
 func (r *bookingRepository) Create(ctx context.Context, booking *models.Booking) error {
-	db := lib.ResolveDB(ctx, r.DB)
-	return db.WithContext(ctx).Create(booking).Error
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Create(booking).Error
 }
 
 func (r *bookingRepository) Update(ctx context.Context, booking *models.Booking) error {
-	db := lib.ResolveDB(ctx, r.DB)
-	return db.WithContext(ctx).Save(booking).Error
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Save(booking).Error
 }
 
-func (r *bookingRepository) GetByID(ctx context.Context, id string, populate []string) (*models.Booking, error) {
+type GetBookingQuery struct {
+	ID       string
+	Populate *[]string
+}
+
+func (r *bookingRepository) GetByIDWithPopulate(ctx context.Context, query GetBookingQuery) (*models.Booking, error) {
 	var booking models.Booking
-	db := r.DB.WithContext(ctx).Where("id = ?", id)
-	for _, field := range populate {
-		db = db.Preload(field)
+	db := lib.ResolveDB(ctx, r.DB).WithContext(ctx).Where("id = ?", query.ID)
+
+	if query.Populate != nil {
+		for _, field := range *query.Populate {
+			db = db.Preload(field)
+		}
 	}
-	if err := db.First(&booking).Error; err != nil {
-		return nil, err
+
+	result := db.First(&booking)
+	if result.Error != nil {
+		return nil, result.Error
 	}
 	return &booking, nil
 }
@@ -61,37 +69,40 @@ func (r *bookingRepository) GetByTrackingCode(
 	populate []string,
 ) (*models.Booking, error) {
 	var booking models.Booking
-	db := r.DB.WithContext(ctx).Where("tracking_code = ?", trackingCode)
+	db := r.DB.WithContext(ctx).Where("code = ?", trackingCode)
+
 	for _, field := range populate {
 		db = db.Preload(field)
 	}
+
 	if err := db.First(&booking).Error; err != nil {
 		return nil, err
 	}
+
 	return &booking, nil
 }
 
-func (r *bookingRepository) List(ctx context.Context, filter ListBookingsFilter) (*[]models.Booking, error) {
+func (r *bookingRepository) List(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters ListBookingsFilter,
+) (*[]models.Booking, error) {
 	var bookings []models.Booking
-	db := r.DB.WithContext(ctx)
 
-	if filter.PropertyID != nil {
-		db = db.Where("property_id = ?", *filter.PropertyID)
-	}
-	if filter.UnitID != nil {
-		db = db.Where("unit_id = ?", *filter.UnitID)
-	}
-	if filter.Status != nil {
-		db = db.Where("status = ?", *filter.Status)
-	}
+	db := r.DB.WithContext(ctx).
+		Scopes(
+			IDsFilterScope("bookings", filterQuery.IDs),
+			DateRangeScope("bookings", filterQuery.DateRange),
+			SearchScope("bookings", filterQuery.Search),
+			bookingPropertyIDScope(filters.PropertyID),
+			bookingUnitIDScope(filters.UnitID),
+			bookingStatusScope(filters.Status),
+			PaginationScope(filterQuery.Page, filterQuery.PageSize),
+			OrderScope("bookings", filterQuery.OrderBy, filterQuery.Order),
+		)
 
-	db = db.Scopes(
-		PaginationScope(filter.Page, filter.PageSize),
-		OrderScope("bookings", filter.OrderBy, filter.Order),
-	)
-
-	if filter.Populate != nil {
-		for _, field := range *filter.Populate {
+	if filterQuery.Populate != nil {
+		for _, field := range *filterQuery.Populate {
 			db = db.Preload(field)
 		}
 	}
@@ -102,21 +113,27 @@ func (r *bookingRepository) List(ctx context.Context, filter ListBookingsFilter)
 	return &bookings, nil
 }
 
-func (r *bookingRepository) Count(ctx context.Context, filter ListBookingsFilter) (int64, error) {
+func (r *bookingRepository) Count(
+	ctx context.Context,
+	filterQuery lib.FilterQuery,
+	filters ListBookingsFilter,
+) (int64, error) {
 	var count int64
-	db := r.DB.WithContext(ctx).Model(&models.Booking{})
-	if filter.PropertyID != nil {
-		db = db.Where("property_id = ?", *filter.PropertyID)
-	}
-	if filter.UnitID != nil {
-		db = db.Where("unit_id = ?", *filter.UnitID)
-	}
-	if filter.Status != nil {
-		db = db.Where("status = ?", *filter.Status)
-	}
+	db := r.DB.WithContext(ctx).
+		Model(&models.Booking{}).
+		Scopes(
+			IDsFilterScope("bookings", filterQuery.IDs),
+			DateRangeScope("bookings", filterQuery.DateRange),
+			SearchScope("bookings", filterQuery.Search),
+			bookingPropertyIDScope(filters.PropertyID),
+			bookingUnitIDScope(filters.UnitID),
+			bookingStatusScope(filters.Status),
+		)
+
 	if err := db.Count(&count).Error; err != nil {
 		return 0, err
 	}
+
 	return count, nil
 }
 
@@ -127,10 +144,36 @@ func (r *bookingRepository) HasOverlappingBlock(
 	startDate, endDate interface{},
 ) (bool, error) {
 	var count int64
-	db := lib.ResolveDB(ctx, r.DB)
-	err := db.WithContext(ctx).
+	err := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
 		Model(&models.UnitDateBlock{}).
 		Where("unit_id = ? AND start_date < ? AND end_date > ?", unitID, endDate, startDate).
 		Count(&count).Error
 	return count > 0, err
+}
+
+func bookingPropertyIDScope(propertyID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if propertyID != nil {
+			return db.Where("property_id = ?", *propertyID)
+		}
+		return db
+	}
+}
+
+func bookingUnitIDScope(unitID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if unitID != nil {
+			return db.Where("unit_id = ?", *unitID)
+		}
+		return db
+	}
+}
+
+func bookingStatusScope(status *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if status != nil {
+			return db.Where("status = ?", *status)
+		}
+		return db
+	}
 }

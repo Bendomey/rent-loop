@@ -200,8 +200,10 @@ type FindOrCreateLightTenantInput struct {
 	FirstName string
 	LastName  string
 	Phone     string
-	Email     string
+	Email     *string
+	IDType    string
 	IDNumber  string
+	Gender    string
 }
 
 func (s *tenantService) FindOrCreateLightTenant(
@@ -219,13 +221,14 @@ func (s *tenantService) FindOrCreateLightTenant(
 	}
 
 	// Create new light tenant (only booking-relevant fields)
-	email := input.Email
 	tenant := &models.Tenant{
 		FirstName: input.FirstName,
 		LastName:  input.LastName,
 		Phone:     input.Phone,
-		Email:     &email,
+		Email:     input.Email,
+		IDType:    input.IDType,
 		IDNumber:  input.IDNumber,
+		Gender:    input.Gender,
 	}
 	if createErr := s.repo.Create(ctx, tenant); createErr != nil {
 		return nil, createErr

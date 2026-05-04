@@ -30,8 +30,7 @@ type Property struct {
 	Type   string `gorm:"not null;index;"` // SINGLE | MULTI
 	Status string `gorm:"not null;index;"` // ACTIVE | MAINTENANCE | INACTIVE
 
-	Modes                         pq.StringArray `gorm:"type:text[];default:'{}'"` // LEASE | BOOKING
-	BookingRequiresUpfrontPayment bool           `gorm:"not null;default:false"`
+	Modes pq.StringArray `gorm:"type:text[];default:'{}'"` // LEASE | BOOKING
 
 	CreatedByID string `gorm:"not null;"`
 	CreatedBy   ClientUser

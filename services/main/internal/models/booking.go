@@ -14,8 +14,8 @@ import (
 
 type Booking struct {
 	BaseModelSoftDelete
-	Code         string `gorm:"not null;uniqueIndex;"`
-	CheckInCode  string `gorm:"not null;default:''"`
+	Code        string `gorm:"not null;uniqueIndex;"`
+	CheckInCode string `gorm:"not null;default:''"`
 
 	UnitID     string `gorm:"not null;index;"`
 	Unit       Unit
@@ -27,12 +27,25 @@ type Booking struct {
 	CheckInDate  time.Time `gorm:"not null;"`
 	CheckOutDate time.Time `gorm:"not null;"`
 
+	CheckedInAt   *time.Time // when they actually checked in.
+	CheckedInByID *string    // ClientUser ID who performed the check-in
+	CheckedInBy   *ClientUser
+
+	CheckedOutAt   *time.Time // when they actually checked out.
+	CheckedOutByID *string    // ClientUser ID who performed the check-out
+	CheckedOutBy   *ClientUser
+
 	Rate     int64  `gorm:"not null;"`
 	Currency string `gorm:"not null;"`
 
-	Status             string `gorm:"not null;default:'PENDING';index;"`
+	Status string `gorm:"not null;default:'PENDING';index;"`
+
+	CanceledAt         *time.Time
+	CanceledByID       *string
+	CanceledBy         *ClientUser
 	CancellationReason string `gorm:"not null;default:''"`
-	Notes              string `gorm:"not null;default:''"`
+
+	Notes string `gorm:"not null;default:''"`
 
 	BookingSource          string  `gorm:"not null;"`
 	RequiresUpfrontPayment bool    `gorm:"not null;default:false"`

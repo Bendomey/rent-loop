@@ -1660,208 +1660,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/clients/{client_id}/bookings/{booking_id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Booking"
-                ],
-                "summary": "Get a booking by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Booking ID",
-                        "name": "booking_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/clients/{client_id}/bookings/{booking_id}/cancel": {
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Booking"
-                ],
-                "summary": "Cancel a booking",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Booking ID",
-                        "name": "booking_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Cancellation request",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.CancelBookingRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/clients/{client_id}/bookings/{booking_id}/check-in": {
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Booking"
-                ],
-                "summary": "Mark a booking as checked in",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Booking ID",
-                        "name": "booking_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/clients/{client_id}/bookings/{booking_id}/complete": {
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Booking"
-                ],
-                "summary": "Mark a booking as completed",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Booking ID",
-                        "name": "booking_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/clients/{client_id}/bookings/{booking_id}/confirm": {
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Booking"
-                ],
-                "summary": "Confirm a pending booking",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Booking ID",
-                        "name": "booking_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/admin/clients/{client_id}/checklist-templates": {
             "get": {
                 "security": [
@@ -2956,44 +2754,6 @@ const docTemplate = `{
                         "description": "An unexpected error occurred",
                         "schema": {
                             "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/clients/{client_id}/date-blocks/{block_id}": {
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Booking"
-                ],
-                "summary": "Delete a manual date block",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Block ID",
-                        "name": "block_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string"
-                                }
-                            }
                         }
                     }
                 }
@@ -5074,6 +4834,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
+                "description": "Get a list of bookings for a property, with optional filtering by status. This endpoint is intended for manager use to view all bookings for their properties.",
                 "produces": [
                     "application/json"
                 ],
@@ -5082,6 +4843,103 @@ const docTemplate = `{
                 ],
                 "summary": "List bookings for a property",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "example": [
+                            "a8098c1a-f86e-11da-bd1a-00112444be1e"
+                        ],
+                        "name": "ids",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "search_fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "PENDING",
+                            "CONFIRMED",
+                            "CHECKED_IN",
+                            "CANCELLED"
+                        ],
+                        "type": "string",
+                        "example": "PENDING",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "550e8400-e29b-41d4-a716-446655440000",
+                        "name": "unit_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Property ID",
@@ -5103,9 +4961,38 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "type": "object"
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "$ref": "#/definitions/lib.HTTPReturnPaginatedMetaResponse"
+                                        },
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/transformations.AdminOutputBooking"
+                                            }
+                                        }
+                                    }
                                 }
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
@@ -5127,6 +5014,13 @@ const docTemplate = `{
                 ],
                 "summary": "Create a booking (manager)",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Property ID",
@@ -5151,9 +5045,390 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "type": "object"
+                                    "$ref": "#/definitions/transformations.AdminOutputBooking"
                                 }
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/bookings/{booking_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a booking by ID. This endpoint is intended for manager use to view details of a specific booking for their properties. For tenants to view their own bookings, use the tenant-facing endpoint instead.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Get a booking by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Booking ID",
+                        "name": "booking_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.AdminOutputBooking"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/bookings/{booking_id}/cancel": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Cancel a booking",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Booking ID",
+                        "name": "booking_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Cancellation request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CancelBookingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.AdminOutputBooking"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/bookings/{booking_id}/check-in": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Mark a booking as checked in",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Booking ID",
+                        "name": "booking_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.AdminOutputBooking"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/bookings/{booking_id}/complete": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Mark a booking as completed",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Booking ID",
+                        "name": "booking_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.AdminOutputBooking"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/bookings/{booking_id}/confirm": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Confirm a pending booking",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Booking ID",
+                        "name": "booking_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.AdminOutputBooking"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
@@ -11927,6 +12202,250 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/units/{unit_id}/availability": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Get availability for a unit (manager)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Unit ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date (RFC3339)",
+                        "name": "from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (RFC3339)",
+                        "name": "to",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/transformations.AdminOutputUnitDateBlock"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/units/{unit_id}/date-blocks": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Create a manual date block for a unit",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Unit ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Date block request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateDateBlockRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.AdminOutputUnitDateBlock"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/units/{unit_id}/date-blocks/{block_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Delete a manual date block",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Unit ID",
+                        "name": "unit_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Block ID",
+                        "name": "block_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/clients/{client_id}/properties/{property_id}/units/{unit_id}/status:available": {
             "patch": {
                 "security": [
@@ -12135,108 +12654,6 @@ const docTemplate = `{
                         "description": "An unexpected error occurred",
                         "schema": {
                             "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/clients/{client_id}/units/{unit_id}/availability": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Booking"
-                ],
-                "summary": "Get availability for a unit (manager)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Unit ID",
-                        "name": "unit_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Start date (RFC3339)",
-                        "name": "from",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "End date (RFC3339)",
-                        "name": "to",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/clients/{client_id}/units/{unit_id}/date-blocks": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Booking"
-                ],
-                "summary": "Create a manual date block for a unit",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Unit ID",
-                        "name": "unit_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Date block request",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.CreateDateBlockRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object"
-                                }
-                            }
                         }
                     }
                 }
@@ -12983,6 +13400,70 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bookings/{tracking_code}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public"
+                ],
+                "summary": "Get booking status by tracking code (phone-verified)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tracking Code",
+                        "name": "tracking_code",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Guest phone number",
+                        "name": "phone",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.PublicOutputBooking"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "string"
                         }
@@ -14578,136 +15059,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/public/bookings/{tracking_code}": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Public"
-                ],
-                "summary": "Get booking status by tracking code (phone-verified)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Tracking Code",
-                        "name": "tracking_code",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Guest phone number",
-                        "name": "phone",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/public/units/{unit_slug}/availability": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Public"
-                ],
-                "summary": "Get availability for a unit (public)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Unit Slug",
-                        "name": "unit_slug",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Start date (RFC3339)",
-                        "name": "from",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "End date (RFC3339)",
-                        "name": "to",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/public/units/{unit_slug}/bookings": {
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Public"
-                ],
-                "summary": "Create a booking as a guest (public)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Unit Slug",
-                        "name": "unit_slug",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Booking request",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.PublicCreateBookingRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/signing/{token}/sign": {
             "post": {
                 "description": "Submit a signature for a document using a signing token",
@@ -15732,6 +16083,135 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/units/{unit_slug}/availability": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public"
+                ],
+                "summary": "Get availability for a unit (public)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Unit Slug",
+                        "name": "unit_slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date (RFC3339)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (RFC3339)",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/transformations.PublicOutputUnitDateBlock"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/units/{unit_slug}/bookings": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public"
+                ],
+                "summary": "Create a booking as a guest (public)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Unit Slug",
+                        "name": "unit_slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Booking request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.PublicCreateBookingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.PublicOutputBooking"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -16465,10 +16945,10 @@ const docTemplate = `{
             "required": [
                 "check_in_date",
                 "check_out_date",
-                "currency",
-                "guest_email",
                 "guest_first_name",
+                "guest_gender",
                 "guest_id_number",
+                "guest_id_type",
                 "guest_last_name",
                 "guest_phone",
                 "rate",
@@ -16481,16 +16961,23 @@ const docTemplate = `{
                 "check_out_date": {
                     "type": "string"
                 },
-                "currency": {
-                    "type": "string"
-                },
                 "guest_email": {
                     "type": "string"
                 },
                 "guest_first_name": {
                     "type": "string"
                 },
+                "guest_gender": {
+                    "type": "string",
+                    "enum": [
+                        "MALE",
+                        "FEMALE"
+                    ]
+                },
                 "guest_id_number": {
+                    "type": "string"
+                },
+                "guest_id_type": {
                     "type": "string"
                 },
                 "guest_last_name": {
@@ -17647,12 +18134,12 @@ const docTemplate = `{
                 "check_in_date",
                 "check_out_date",
                 "currency",
-                "email",
                 "first_name",
+                "gender",
                 "id_number",
+                "id_type",
                 "last_name",
-                "phone",
-                "rate"
+                "phone"
             ],
             "properties": {
                 "check_in_date": {
@@ -17670,7 +18157,17 @@ const docTemplate = `{
                 "first_name": {
                     "type": "string"
                 },
+                "gender": {
+                    "type": "string",
+                    "enum": [
+                        "MALE",
+                        "FEMALE"
+                    ]
+                },
                 "id_number": {
+                    "type": "string"
+                },
+                "id_type": {
                     "type": "string"
                 },
                 "last_name": {
@@ -17678,9 +18175,6 @@ const docTemplate = `{
                 },
                 "phone": {
                     "type": "string"
-                },
-                "rate": {
-                    "type": "integer"
                 }
             }
         },
@@ -18804,6 +19298,71 @@ const docTemplate = `{
                 }
             }
         },
+        "transformations.AdminOutputBooking": {
+            "type": "object",
+            "properties": {
+                "booking_source": {
+                    "type": "string"
+                },
+                "cancellation_reason": {
+                    "type": "string"
+                },
+                "check_in_code": {
+                    "type": "string"
+                },
+                "check_in_date": {
+                    "type": "string"
+                },
+                "check_out_date": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by_client_user_id": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "invoice": {},
+                "invoice_id": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "property_id": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "integer"
+                },
+                "requires_upfront_payment": {
+                    "type": "boolean"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tenant": {},
+                "tenant_id": {
+                    "type": "string"
+                },
+                "unit": {},
+                "unit_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "transformations.AdminOutputMaintenanceRequest": {
             "type": "object",
             "properties": {
@@ -19009,6 +19568,38 @@ const docTemplate = `{
                     "type": "string",
                     "format": "date-time",
                     "example": "2023-01-01T00:00:00Z"
+                }
+            }
+        },
+        "transformations.AdminOutputUnitDateBlock": {
+            "type": "object",
+            "properties": {
+                "block_type": {
+                    "type": "string"
+                },
+                "booking_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lease_id": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "unit_id": {
+                    "type": "string"
                 }
             }
         },
@@ -21765,6 +22356,61 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/transformations.OutputUser"
+                }
+            }
+        },
+        "transformations.PublicOutputBooking": {
+            "type": "object",
+            "properties": {
+                "check_in_code": {
+                    "type": "string"
+                },
+                "check_in_date": {
+                    "type": "string"
+                },
+                "check_out_date": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "property_name": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "unit_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "transformations.PublicOutputUnitDateBlock": {
+            "type": "object",
+            "properties": {
+                "block_type": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
                 }
             }
         }

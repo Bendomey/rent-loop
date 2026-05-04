@@ -11,12 +11,12 @@ type Tenant struct {
 	LastName        string `gorm:"not null;"`
 	Email           *string
 	Phone           string    `gorm:"not null;uniqueIndex;"`
-	Gender          string    `gorm:"not null;"` // Male, Female
+	Gender          string    `gorm:"not null;"` // MALE, FEMALE
 	DateOfBirth     time.Time `gorm:"not null;"`
 	Nationality     string    `gorm:"not null;"`
-	MaritalStatus   string    `gorm:"not null;"` // Single, Married, Divorced, Widowed
+	MaritalStatus   string    `gorm:"not null;"` // SINGLE, MARRIED, DIVORCED, WIDOWED
 	ProfilePhotoUrl *string
-	IDType          string `gorm:"not null;"` // NationalID, Passport, DriverLicense
+	IDType          string `gorm:"not null;"` // NATIONAL_ID, PASSPORT, DRIVER_LICENSE
 	IDNumber        string `gorm:"not null;"`
 	IDFrontUrl      *string
 	IDBackUrl       *string

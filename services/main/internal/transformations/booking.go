@@ -5,6 +5,31 @@ import (
 	"github.com/gofrs/uuid"
 )
 
+type AdminOutputBooking struct {
+	ID                     string  `json:"id"`
+	Code                   string  `json:"code"`
+	CheckInCode            string  `json:"check_in_code,omitempty"`
+	UnitID                 string  `json:"unit_id"`
+	Unit                   any     `json:"unit,omitempty"`
+	PropertyID             string  `json:"property_id"`
+	TenantID               string  `json:"tenant_id"`
+	Tenant                 any     `json:"tenant,omitempty"`
+	CheckInDate            string  `json:"check_in_date"`
+	CheckOutDate           string  `json:"check_out_date"`
+	Rate                   int64   `json:"rate"`
+	Currency               string  `json:"currency"`
+	Status                 string  `json:"status"`
+	CancellationReason     string  `json:"cancellation_reason,omitempty"`
+	Notes                  string  `json:"notes,omitempty"`
+	BookingSource          string  `json:"booking_source"`
+	RequiresUpfrontPayment bool    `json:"requires_upfront_payment"`
+	CreatedByClientUserID  *string `json:"created_by_client_user_id,omitempty"`
+	InvoiceID              *string `json:"invoice_id,omitempty"`
+	Invoice                any     `json:"invoice,omitempty"`
+	CreatedAt              string  `json:"created_at"`
+	UpdatedAt              string  `json:"updated_at"`
+}
+
 func DBBookingToRest(i *models.Booking) any {
 	if i == nil || i.ID == uuid.Nil {
 		return nil
@@ -41,6 +66,19 @@ func DBBookingToRest(i *models.Booking) any {
 		"updated_at":                i.UpdatedAt,
 	}
 	return data
+}
+
+type PublicOutputBooking struct {
+	Code         string `json:"code"`
+	CheckInCode  string `json:"check_in_code,omitempty"`
+	CheckInDate  string `json:"check_in_date"`
+	CheckOutDate string `json:"check_out_date"`
+	Rate         int64  `json:"rate"`
+	Currency     string `json:"currency"`
+	Status       string `json:"status"`
+	UnitName     string `json:"unit_name,omitempty"`
+	PropertyName string `json:"property_name,omitempty"`
+	CreatedAt    string `json:"created_at"`
 }
 
 // DBPublicBookingToRest is a reduced view for the public tracking page.

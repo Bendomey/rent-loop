@@ -146,6 +146,10 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 								r.Get("/availability", handlers.BookingHandler.GetAvailability)
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 									Post("/date-blocks", handlers.BookingHandler.CreateDateBlock)
+								r.Route("/date-blocks/{block_id}", func(r chi.Router) {
+									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+										Delete("/", handlers.BookingHandler.DeleteDateBlock)
+								})
 							})
 						})
 
@@ -165,12 +169,6 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 									Patch("/cancel", handlers.BookingHandler.CancelBooking)
 							})
-						})
-
-						// date block deletion (block_id only, no unit context needed)
-						r.Route("/date-blocks/{block_id}", func(r chi.Router) {
-							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-								Delete("/", handlers.BookingHandler.DeleteDateBlock)
 						})
 
 						// property-scoped expenses

@@ -194,3 +194,33 @@ type ChecklistAcknowledgedData struct {
 	ChecklistType string
 	Action        string
 }
+
+// ─── Booking ──────────────────────────────────────────────────────────────────
+
+type BookingCreatedData struct {
+	GuestName    string
+	UnitName     string
+	CheckInDate  string
+	CheckOutDate string
+	Rate         string
+	Currency     string
+	TrackingCode string
+}
+
+type BookingConfirmedData struct {
+	GuestName    string
+	UnitName     string
+	CheckInDate  string
+	CheckInCode  string
+	CheckOutDate string
+	TrackingCode string
+}
+
+type BookingCancelledData struct {
+	GuestName          string
+	UnitName           string
+	CheckInDate        string
+	CheckOutDate       string
+	TrackingCode       string
+	CancellationReason string
+}

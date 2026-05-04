@@ -26,8 +26,7 @@ func NewUnitDateBlockRepository(db *gorm.DB) UnitDateBlockRepository {
 }
 
 func (r *unitDateBlockRepository) Create(ctx context.Context, block *models.UnitDateBlock) error {
-	db := lib.ResolveDB(ctx, r.DB)
-	return db.WithContext(ctx).Create(block).Error
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Create(block).Error
 }
 
 func (r *unitDateBlockRepository) Delete(ctx context.Context, id string) error {
@@ -44,9 +43,10 @@ func (r *unitDateBlockRepository) DeleteByBookingID(ctx context.Context, booking
 
 func (r *unitDateBlockRepository) GetByID(ctx context.Context, id string) (*models.UnitDateBlock, error) {
 	var block models.UnitDateBlock
-	if err := r.DB.WithContext(ctx).Where("id = ?", id).First(&block).Error; err != nil {
+	if err := lib.ResolveDB(ctx, r.DB).WithContext(ctx).Where("id = ?", id).First(&block).Error; err != nil {
 		return nil, err
 	}
+
 	return &block, nil
 }
 
@@ -56,7 +56,7 @@ func (r *unitDateBlockRepository) ListByUnit(
 	from, to time.Time,
 ) (*[]models.UnitDateBlock, error) {
 	var blocks []models.UnitDateBlock
-	err := r.DB.WithContext(ctx).
+	err := lib.ResolveDB(ctx, r.DB).WithContext(ctx).
 		Where("unit_id = ? AND start_date < ? AND end_date > ?", unitID, to, from).
 		Find(&blocks).Error
 	return &blocks, err

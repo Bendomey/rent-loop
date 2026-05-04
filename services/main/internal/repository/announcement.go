@@ -40,7 +40,7 @@ type GetAnnouncementQuery struct {
 }
 
 func (r *announcementRepository) Create(ctx context.Context, a *models.Announcement) error {
-	return r.DB.WithContext(ctx).Create(a).Error
+	return lib.ResolveDB(ctx, r.DB).WithContext(ctx).Create(a).Error
 }
 
 func (r *announcementRepository) GetByIDWithPopulate(

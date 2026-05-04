@@ -18,9 +18,9 @@ func NewTenantAccountRouter(appCtx pkg.AppContext, handlers handlers.Handlers) f
 			r.Post("/v1/tenant-accounts/auth/codes/verify", handlers.AuthHandler.VerifyTenantCode)
 
 			// Public booking routes (no auth required)
-			r.Get("/v1/public/units/{unit_slug}/availability", handlers.BookingHandler.PublicGetAvailability)
-			r.Post("/v1/public/units/{unit_slug}/bookings", handlers.BookingHandler.PublicCreateBooking)
-			r.Get("/v1/public/bookings/{tracking_code}", handlers.BookingHandler.PublicGetBookingTracking)
+			r.Get("/v1/units/{unit_slug}/availability", handlers.BookingHandler.PublicGetAvailability)
+			r.Post("/v1/units/{unit_slug}/bookings", handlers.BookingHandler.PublicCreateBooking)
+			r.Get("/v1/bookings/{tracking_code}", handlers.BookingHandler.PublicGetBookingTracking)
 
 			// Public tracking routes (no auth required)
 			r.Get("/v1/tenant-applications/code/{code}", handlers.TenantApplicationHandler.GetTenantApplicationByCode)
