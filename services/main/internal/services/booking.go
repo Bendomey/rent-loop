@@ -77,8 +77,8 @@ type CreateBookingInput struct {
 	GuestLastName  string
 	GuestPhone     string
 	GuestEmail     *string
-	GuestIDType    string
-	GuestIDNumber  string
+	GuestIDType    *string
+	GuestIDNumber  *string
 	GuestGender    string
 }
 

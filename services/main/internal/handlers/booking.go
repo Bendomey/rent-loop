@@ -45,8 +45,8 @@ type CreateBookingRequest struct {
 	GuestPhone     string    `json:"guest_phone"      validate:"required"`
 	GuestEmail     *string   `json:"guest_email"      validate:"omitempty,email"`
 	GuestGender    string    `json:"guest_gender"     validate:"required,oneof=MALE FEMALE"`
-	GuestIDType    string    `json:"guest_id_type"    validate:"required"`
-	GuestIDNumber  string    `json:"guest_id_number"  validate:"required"`
+	GuestIDType    *string   `json:"guest_id_type"    validate:"omitempty"`
+	GuestIDNumber  *string   `json:"guest_id_number"  validate:"omitempty"`
 }
 
 type CancelBookingRequest struct {
@@ -69,8 +69,8 @@ type PublicCreateBookingRequest struct {
 	Phone        string    `json:"phone"          validate:"required"`
 	Email        *string   `json:"email"          validate:"omitempty,email"`
 	Gender       string    `json:"gender"         validate:"required,oneof=MALE FEMALE"`
-	IDType       string    `json:"id_type"        validate:"required"`
-	IDNumber     string    `json:"id_number"      validate:"required"`
+	IDType       *string   `json:"id_type"        validate:"omitempty"`
+	IDNumber     *string   `json:"id_number"      validate:"omitempty"`
 }
 
 // ---- Manager handlers ----

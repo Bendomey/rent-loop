@@ -10,24 +10,24 @@ type Tenant struct {
 	OtherNames      *string
 	LastName        string `gorm:"not null;"`
 	Email           *string
-	Phone           string    `gorm:"not null;uniqueIndex;"`
-	Gender          string    `gorm:"not null;"` // MALE, FEMALE
-	DateOfBirth     time.Time `gorm:"not null;"`
-	Nationality     string    `gorm:"not null;"`
-	MaritalStatus   string    `gorm:"not null;"` // SINGLE, MARRIED, DIVORCED, WIDOWED
+	Phone           string `gorm:"not null;uniqueIndex;"`
+	Gender          string `gorm:"not null;"` // MALE, FEMALE
+	DateOfBirth     *time.Time
+	Nationality     *string
+	MaritalStatus   *string // SINGLE, MARRIED, DIVORCED, WIDOWED
 	ProfilePhotoUrl *string
-	IDType          string `gorm:"not null;"` // NATIONAL_ID, PASSPORT, DRIVER_LICENSE
-	IDNumber        string `gorm:"not null;"`
+	IDType          *string // NATIONAL_ID, PASSPORT, DRIVER_LICENSE
+	IDNumber        *string
 	IDFrontUrl      *string
 	IDBackUrl       *string
 
-	EmergencyContactName           string `gorm:"not null;"`
-	EmergencyContactPhone          string `gorm:"not null;"`
-	RelationshipToEmergencyContact string `gorm:"not null;"`
+	EmergencyContactName           *string
+	EmergencyContactPhone          *string
+	RelationshipToEmergencyContact *string
 
-	Occupation        string  `gorm:"not null;"` // student
-	Employer          string  `gorm:"not null;"` // or school name
-	OccupationAddress string  `gorm:"not null;"` // or school address
+	Occupation        *string // student
+	Employer          *string // or school name
+	OccupationAddress *string // or school address
 	ProofOfIncomeUrl  *string // or admission letter url
 
 	CreatedById string `gorm:"not null;"`

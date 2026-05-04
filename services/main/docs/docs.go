@@ -16947,8 +16947,6 @@ const docTemplate = `{
                 "check_out_date",
                 "guest_first_name",
                 "guest_gender",
-                "guest_id_number",
-                "guest_id_type",
                 "guest_last_name",
                 "guest_phone",
                 "rate",
@@ -18136,8 +18134,6 @@ const docTemplate = `{
                 "currency",
                 "first_name",
                 "gender",
-                "id_number",
-                "id_type",
                 "last_name",
                 "phone"
             ],

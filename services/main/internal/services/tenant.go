@@ -38,20 +38,20 @@ type CreateTenantInput struct {
 	Email                          *string
 	Phone                          string
 	Gender                         string
-	DateOfBirth                    time.Time
-	Nationality                    string
-	MaritalStatus                  string
+	DateOfBirth                    *time.Time
+	Nationality                    *string
+	MaritalStatus                  *string
 	ProfilePhotoUrl                *string
-	IDType                         string
-	IDNumber                       string
+	IDType                         *string
+	IDNumber                       *string
 	IDFrontUrl                     *string
 	IDBackUrl                      *string
-	EmergencyContactName           string
-	EmergencyContactPhone          string
-	RelationshipToEmergencyContact string
-	Occupation                     string
-	Employer                       string
-	OccupationAddress              string
+	EmergencyContactName           *string
+	EmergencyContactPhone          *string
+	RelationshipToEmergencyContact *string
+	Occupation                     *string
+	Employer                       *string
+	OccupationAddress              *string
 	ProofOfIncomeUrl               *string
 	CreatedById                    string
 }
@@ -201,8 +201,8 @@ type FindOrCreateLightTenantInput struct {
 	LastName  string
 	Phone     string
 	Email     *string
-	IDType    string
-	IDNumber  string
+	IDType    *string
+	IDNumber  *string
 	Gender    string
 }
 

@@ -1018,23 +1018,6 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		})
 	}
 
-	// create tenant — all pointer fields are guarded above so derefs are safe
-	occupationVal := ""
-	if tenantApplication.Occupation != nil {
-		occupationVal = *tenantApplication.Occupation
-	}
-	employerVal := ""
-	if tenantApplication.Employer != nil {
-		employerVal = *tenantApplication.Employer
-	}
-	occupationAddressVal := ""
-	if tenantApplication.OccupationAddress != nil {
-		occupationAddressVal = *tenantApplication.OccupationAddress
-	}
-	relationshipVal := ""
-	if tenantApplication.RelationshipToEmergencyContact != nil {
-		relationshipVal = *tenantApplication.RelationshipToEmergencyContact
-	}
 	tenantInput := CreateTenantInput{
 		FirstName:                      *tenantApplication.FirstName,
 		OtherNames:                     tenantApplication.OtherNames,
@@ -1042,20 +1025,20 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		Email:                          tenantApplication.Email,
 		Phone:                          tenantApplication.Phone,
 		Gender:                         *tenantApplication.Gender,
-		DateOfBirth:                    *tenantApplication.DateOfBirth,
-		Nationality:                    *tenantApplication.Nationality,
-		MaritalStatus:                  *tenantApplication.MaritalStatus,
+		DateOfBirth:                    tenantApplication.DateOfBirth,
+		Nationality:                    tenantApplication.Nationality,
+		MaritalStatus:                  tenantApplication.MaritalStatus,
 		ProfilePhotoUrl:                tenantApplication.ProfilePhotoUrl,
-		IDType:                         lib.SafeString(tenantApplication.IDType),
-		IDNumber:                       *tenantApplication.IDNumber,
+		IDType:                         tenantApplication.IDType,
+		IDNumber:                       tenantApplication.IDNumber,
 		IDFrontUrl:                     tenantApplication.IDFrontUrl,
 		IDBackUrl:                      tenantApplication.IDBackUrl,
-		EmergencyContactName:           *tenantApplication.EmergencyContactName,
-		EmergencyContactPhone:          *tenantApplication.EmergencyContactPhone,
-		RelationshipToEmergencyContact: relationshipVal,
-		Occupation:                     occupationVal,
-		Employer:                       employerVal,
-		OccupationAddress:              occupationAddressVal,
+		EmergencyContactName:           tenantApplication.EmergencyContactName,
+		EmergencyContactPhone:          tenantApplication.EmergencyContactPhone,
+		RelationshipToEmergencyContact: tenantApplication.RelationshipToEmergencyContact,
+		Occupation:                     tenantApplication.Occupation,
+		Employer:                       tenantApplication.Employer,
+		OccupationAddress:              tenantApplication.OccupationAddress,
 		ProofOfIncomeUrl:               tenantApplication.ProofOfIncomeUrl,
 		CreatedById:                    input.ClientUserID,
 	}
