@@ -216,7 +216,7 @@ export function PropertyTenantApplicationsModule() {
 										</DropdownMenuItem>
 									</>
 								) : null}
-								{row.original.status ===
+								{/* {row.original.status ===
 								'TenantApplication.Status.Cancelled' ? (
 									<DropdownMenuItem
 										className="flex items-center gap-2 text-rose-600 hover:bg-red-50 hover:text-rose-600 focus:bg-rose-50 focus:text-rose-600"
@@ -228,7 +228,7 @@ export function PropertyTenantApplicationsModule() {
 										<Trash2 className="h-4 w-4" />
 										<span>Delete</span>
 									</DropdownMenuItem>
-								) : null}
+								) : null} */}
 							</DropdownMenuContent>
 						</DropdownMenu>
 					)

@@ -127,7 +127,8 @@ export function PropertyTenantApplicationContainer() {
 							</Button>
 						</div>
 					</PropertyPermissionGuard>
-				) : tenantApplication.status ===
+				) : null}
+				{/* tenantApplication.status ===
 				  'TenantApplication.Status.Cancelled' ? (
 					<PropertyPermissionGuard roles={['MANAGER']}>
 						<div
@@ -142,7 +143,7 @@ export function PropertyTenantApplicationContainer() {
 							</Button>
 						</div>
 					</PropertyPermissionGuard>
-				) : null}
+				) : null} */}
 				<div id="application-checklist">
 					<PropertyTenantApplicationChecklist
 						propertyId={safeString(clientUserProperty?.property_id)}
