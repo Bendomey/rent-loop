@@ -32,6 +32,8 @@ export const QUERY_KEYS = {
 	LEASE_CHECKLISTS: 'lease-checklists',
 	EXPENSES: 'expenses',
 	AGREEMENTS: 'agreements',
+	BOOKINGS: 'bookings',
+	DATE_BLOCKS: 'date-blocks',
 } as const
 
 export const PermissionState = {
