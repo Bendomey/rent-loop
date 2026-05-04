@@ -78,8 +78,13 @@ export function Step3() {
 							<h3 className="text-sm font-semibold">Property type & Status</h3>
 							<p className="mt-1 text-xs text-zinc-600">
 								{formData.type ? getPropertyTypeLabel(formData.type) : '—'} ·{' '}
-								{formData.status
-									? getPropertyStatusLabel(formData.status)
+								{formData.status ? getPropertyStatusLabel(formData.status) : '—'} ·{' '}
+								{formData.modes
+									? formData.modes.includes('LEASE') && formData.modes.includes('BOOKING')
+										? 'Long-term & Short-term'
+										: formData.modes.includes('BOOKING')
+											? 'Short-term (Bookings)'
+											: 'Long-term (Leases)'
 									: '—'}
 							</p>
 						</div>
