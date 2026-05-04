@@ -3,7 +3,6 @@ interface Property {
 	client_id: string
 	slug: string
 	name: string
-	slug: string
 	description: Nullable<string>
 	address: string
 	gps_address: string
@@ -19,6 +18,8 @@ interface Property {
 	zip_code: string
 	image: string[]
 	tags: string[]
+	modes: Array<'LEASE' | 'BOOKING'>
+	booking_requires_upfront_payment: boolean
 	created_at: Date
 	updated_at: Date
 }
