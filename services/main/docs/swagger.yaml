@@ -14263,6 +14263,47 @@ paths:
       summary: Create an offline payment
       tags:
       - Payments
+  /api/v1/properties/{property_slug}/units/{unit_slug}:
+    get:
+      consumes:
+      - application/json
+      description: Fetch unit subset by slug
+      parameters:
+      - description: Property Slug
+        in: path
+        name: property_slug
+        required: true
+        type: string
+      - description: Unit Slug
+        in: path
+        name: unit_slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputUnit'
+            type: object
+        "400":
+          description: Error occurred when fetching a unit
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Unit not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Fetch unit subset by slug
+      tags:
+      - Units
   /api/v1/signing/{token}/sign:
     post:
       consumes:

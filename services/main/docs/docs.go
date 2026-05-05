@@ -15059,6 +15059,68 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/properties/{property_slug}/units/{unit_slug}": {
+            "get": {
+                "description": "Fetch unit subset by slug",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Fetch unit subset by slug",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property Slug",
+                        "name": "property_slug",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Unit Slug",
+                        "name": "unit_slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputUnit"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when fetching a unit",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Unit not found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/signing/{token}/sign": {
             "post": {
                 "description": "Submit a signature for a document using a signing token",

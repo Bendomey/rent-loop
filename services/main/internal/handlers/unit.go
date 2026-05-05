@@ -461,3 +461,36 @@ func (h *UnitHandler) FetchClientUnit(w http.ResponseWriter, r *http.Request) {
 		"data": transformations.DBUnitToRest(unit),
 	})
 }
+
+// FetchClientUnitBySlug godoc
+//
+//	@Summary		Fetch unit subset by slug
+//	@Description	Fetch unit subset by slug
+//	@Tags			Units
+//	@Accept			json
+//	@Produce		json
+//	@Param			property_slug	path		string	true	"Property Slug"
+//	@Param			unit_slug		path		string	true	"Unit Slug"
+//	@Success		200				{object}	object{data=transformations.OutputUnit}
+//	@Failure		400				{object}	lib.HTTPError	"Error occurred when fetching a unit"
+//	@Failure		404				{object}	lib.HTTPError	"Unit not found"
+//	@Failure		500				{object}	string			"An unexpected error occurred"
+//	@Router			/api/v1/properties/{property_slug}/units/{unit_slug} [get]
+func (h *UnitHandler) FetchClientUnitBySlug(w http.ResponseWriter, r *http.Request) {
+	propertySlug := chi.URLParam(r, "property_slug")
+	unitSlug := chi.URLParam(r, "unit_slug")
+
+	unit, getUnitErr := h.service.GetUnitBySlugQuery(r.Context(), repository.GetUnitQuerySlug{
+		PropertySlug: propertySlug,
+		UnitSlug:     unitSlug,
+	})
+
+	if getUnitErr != nil {
+		HandleErrorResponse(w, getUnitErr)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBUnitToRest(unit),
+	})
+}

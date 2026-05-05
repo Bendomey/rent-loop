@@ -19,8 +19,6 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			r.Post("/v1/admin/users/login", handlers.UserHandler.Login)
 			r.Post("/v1/admin/users/forgot-password", handlers.UserHandler.ForgotPassword)
 
-			r.Get("/v1/units/{unit_id}", handlers.UnitHandler.FetchClientUnit)
-
 			// signing (token-based auth, no JWT required)
 			r.Get("/v1/signing/{token}/verify", handlers.SigningHandler.VerifyToken)
 			r.Post("/v1/signing/{token}/sign", handlers.SigningHandler.SignDocument)

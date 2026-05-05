@@ -19,6 +19,7 @@ type UnitService interface {
 	CountUnits(context context.Context, filterQuery repository.ListUnitsFilter) (int64, error)
 	CreateUnit(context context.Context, input CreateUnitInput) (*models.Unit, error)
 	GetUnit(context context.Context, query repository.GetUnitQuery) (*models.Unit, error)
+	GetUnitBySlugQuery(context context.Context, query repository.GetUnitQuerySlug) (*models.Unit, error)
 	GetUnitByID(context context.Context, id string) (*models.Unit, error)
 	GetUnitBySlug(ctx context.Context, slug string) (*models.Unit, error)
 	UpdateUnit(context context.Context, input UpdateUnitInput) (*models.Unit, error)
@@ -149,6 +150,26 @@ func (s *unitService) CreateUnit(ctx context.Context, input CreateUnitInput) (*m
 	}
 
 	return &unit, nil
+}
+
+func (s *unitService) GetUnitBySlugQuery(ctx context.Context, query repository.GetUnitQuerySlug) (*models.Unit, error) {
+	unit, getUnitErr := s.repo.GetOneWithQuerySlug(ctx, query)
+	if getUnitErr != nil {
+		if errors.Is(getUnitErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("UnitNotFound", &pkg.RentLoopErrorParams{
+				Err: getUnitErr,
+			})
+		}
+		return nil, pkg.InternalServerError(getUnitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getUnitErr,
+			Metadata: map[string]string{
+				"function": "GetUnitBySlugQuery",
+				"action":   "fetching unit by slug with query",
+			},
+		})
+	}
+
+	return unit, nil
 }
 
 func (s *unitService) GetUnit(ctx context.Context, query repository.GetUnitQuery) (*models.Unit, error) {

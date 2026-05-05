@@ -13,6 +13,7 @@ type UnitRepository interface {
 	Count(context context.Context, filterQuery ListUnitsFilter) (int64, error)
 	Create(context context.Context, unit *models.Unit) error
 	GetOneWithQuery(context context.Context, query GetUnitQuery) (*models.Unit, error)
+	GetOneWithQuerySlug(context context.Context, query GetUnitQuerySlug) (*models.Unit, error)
 	GetOne(context context.Context, query map[string]any) (*models.Unit, error)
 	Update(context context.Context, unit *models.Unit) error
 	Delete(context context.Context, input DeleteUnitInput) error
@@ -43,6 +44,34 @@ func (r *unitRepository) GetOneWithQuery(ctx context.Context, query GetUnitQuery
 
 	db := r.DB.WithContext(ctx).
 		Where("id = ? AND property_id = ?", query.UnitID, query.PropertyID)
+
+	if query.Populate != nil {
+		for _, field := range *query.Populate {
+			db = db.Preload(field)
+		}
+	}
+
+	result := db.First(&unit)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &unit, nil
+}
+
+type GetUnitQuerySlug struct {
+	PropertySlug string
+	UnitSlug     string
+	Populate     *[]string
+}
+
+func (r *unitRepository) GetOneWithQuerySlug(ctx context.Context, query GetUnitQuerySlug) (*models.Unit, error) {
+	var unit models.Unit
+
+	db := r.DB.WithContext(ctx).
+		Joins("JOIN properties ON properties.id = units.property_id").
+		Where("units.slug = ? AND properties.slug = ?", query.UnitSlug, query.PropertySlug)
 
 	if query.Populate != nil {
 		for _, field := range *query.Populate {
