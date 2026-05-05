@@ -311,6 +311,46 @@ type BulkCreateTenantApplicationsInput struct {
 	CreatedById string
 }
 
+func mergeEntryFromTenant(
+	entry BulkCreateTenantApplicationEntry,
+	tenant *models.Tenant,
+) BulkCreateTenantApplicationEntry {
+	if entry.FirstName == nil {
+		entry.FirstName = &tenant.FirstName
+	}
+	if entry.LastName == nil {
+		entry.LastName = &tenant.LastName
+	}
+	if entry.Email == nil {
+		entry.Email = tenant.Email
+	}
+	if entry.Gender == nil {
+		entry.Gender = &tenant.Gender
+	}
+	if entry.DateOfBirth == nil {
+		entry.DateOfBirth = tenant.DateOfBirth
+	}
+	if entry.Nationality == nil {
+		entry.Nationality = tenant.Nationality
+	}
+	if entry.MaritalStatus == nil {
+		entry.MaritalStatus = tenant.MaritalStatus
+	}
+	if entry.IDType == nil {
+		entry.IDType = tenant.IDType
+	}
+	if entry.IDNumber == nil {
+		entry.IDNumber = tenant.IDNumber
+	}
+	if entry.Occupation == nil {
+		entry.Occupation = tenant.Occupation
+	}
+	if entry.Employer == nil {
+		entry.Employer = tenant.Employer
+	}
+	return entry
+}
+
 func (s *tenantApplicationService) BulkCreateTenantApplications(
 	ctx context.Context,
 	input BulkCreateTenantApplicationsInput,
@@ -361,6 +401,10 @@ func (s *tenantApplicationService) BulkCreateTenantApplications(
 			rentFeeCurrency = &unit.RentFeeCurrency
 			stayDurationFrequency = &unit.PaymentFrequency
 			paymentFrequency = &unit.PaymentFrequency
+		}
+
+		if tenant, err := s.tenantService.GetTenantByPhone(transCtx, entry.Phone); err == nil {
+			entry = mergeEntryFromTenant(entry, tenant)
 		}
 
 		app := models.TenantApplication{
