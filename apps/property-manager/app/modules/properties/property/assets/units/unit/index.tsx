@@ -113,7 +113,7 @@ const selectableStatuses: Array<{
 	{
 		value: 'Unit.Status.Available',
 		label: 'Available',
-		description: 'Ready for lease applications',
+		description: 'Ready for lease applications and/or guest bookings',
 	},
 	{
 		value: 'Unit.Status.Maintenance',
@@ -201,23 +201,6 @@ export function PropertyAssetUnitModule() {
 							alt={unit.name}
 						/>
 					</div>
-
-					{unit.images && unit.images.length > 1 && (
-						<div className="flex gap-2 overflow-x-auto px-4 pt-3">
-							{unit.images.map((img, i) => (
-								<div
-									key={img}
-									className="h-14 w-14 shrink-0 overflow-hidden rounded-md border"
-								>
-									<Image
-										className="h-full w-full object-cover"
-										src={img}
-										alt={`${unit.name} image ${i + 1}`}
-									/>
-								</div>
-							))}
-						</div>
-					)}
 
 					<CardHeader className="flex items-start justify-between">
 						<CardTitle className="text-lg">{unit.name}</CardTitle>
@@ -370,9 +353,12 @@ export function PropertyAssetUnitModule() {
 						<Link to={baseUrl}>
 							<TabsTrigger value={baseUrl}>Details</TabsTrigger>
 						</Link>
-						<Link to={`${baseUrl}/leases`}>
-							<TabsTrigger value={`${baseUrl}/leases`}>Leases</TabsTrigger>
-						</Link>
+						{/* TODO: add booking tab */}
+						{clientUserProperty?.property?.modes?.includes('LEASE') && (
+							<Link to={`${baseUrl}/leases`}>
+								<TabsTrigger value={`${baseUrl}/leases`}>Leases</TabsTrigger>
+							</Link>
+						)}
 						<Link to={`${baseUrl}/maintenance-requests`}>
 							<TabsTrigger value={`${baseUrl}/maintenance-requests`}>
 								Maintenance Requests

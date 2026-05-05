@@ -11,7 +11,7 @@ import {
 	Plus,
 	Store,
 } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate, useRouteLoaderData } from 'react-router'
 import { toast } from 'sonner'
@@ -29,7 +29,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
-import { ImageUpload } from '~/components/ui/image-upload'
+import { ImageUploadBulk } from '~/components/ui/image-upload-bulk'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import {
@@ -46,13 +46,12 @@ import {
 	TypographyMuted,
 	TypographySmall,
 } from '~/components/ui/typography'
-import { useUploadObject } from '~/hooks/use-upload-object'
 import { QUERY_KEYS } from '~/lib/constants'
 import {
 	convertCedisToPesewas,
 	convertPesewasToCedis,
 } from '~/lib/format-amount'
-import { safeString } from '~/lib/strings'
+import { sanitizeFilename, safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
@@ -62,11 +61,7 @@ const ValidationSchema = z.object({
 	name: z
 		.string({ error: 'Name is required' })
 		.min(2, 'Please enter a valid name'),
-	image_url: z
-		.string()
-		.url('Please upload an image')
-		.optional()
-		.or(z.literal('')),
+	images: z.array(z.string()).optional(),
 	description: z
 		.string()
 		.max(500, 'Description must be less than 500 characters')
@@ -124,24 +119,34 @@ const unitTypes = [
 	},
 ]
 
-const paymentFrequencies: Array<{
-	label: string
-	value: FormSchema['payment_frequency']
-}> = [
-	{ label: 'Daily', value: 'DAILY' },
-	{ label: 'Weekly', value: 'WEEKLY' },
-	{ label: 'Monthly', value: 'MONTHLY' },
-	// { label: 'Quarterly', value: 'QUARTERLY' },
-	// { label: 'Biannually', value: 'BIANNUALLY' },
-	// { label: 'Annually', value: 'ANNUALLY' },
-]
-
 export function EditPropertyAssetUnitModule() {
 	const loaderData = useRouteLoaderData<Awaited<ReturnType<typeof loader>>>(
 		'routes/_auth.properties.$propertyId.assets.units.$unitId',
 	)
 	const unit = loaderData?.unit
 	const { clientUserProperty } = useProperty()
+
+	const modes = clientUserProperty?.property?.modes ?? []
+	const isLease = modes.includes('LEASE')
+
+	const paymentFrequencies: Array<{
+		label: string
+		value: FormSchema['payment_frequency']
+	}> = [
+		{ label: 'Daily', value: 'DAILY' },
+		...(isLease
+			? [
+					{ label: 'Weekly', value: 'WEEKLY' as const },
+					{ label: 'Monthly', value: 'MONTHLY' as const },
+				]
+			: []),
+	]
+
+	const rentFeeLabels: Record<FormSchema['payment_frequency'], string> = {
+		DAILY: 'Price per Day',
+		WEEKLY: 'Price per Week',
+		MONTHLY: 'Price per Month',
+	}
 	const { clientUser } = useClient()
 	const navigate = useNavigate()
 	const queryClient = useQueryClient()
@@ -158,7 +163,7 @@ export function EditPropertyAssetUnitModule() {
 		defaultValues: {
 			name: '',
 			description: '',
-			image_url: '',
+			images: [],
 			features: {},
 			type: 'APARTMENT',
 			max_occupants_allowed: 1,
@@ -168,11 +173,36 @@ export function EditPropertyAssetUnitModule() {
 		},
 	})
 
-	const {
-		upload,
-		objectUrl,
-		isLoading: isUploading,
-	} = useUploadObject('property/images')
+	const [uploadingIds, setUploadingIds] = useState<string[]>([])
+	const [imageUrlMap, setImageUrlMap] = useState<Record<string, string>>({})
+
+	const uploadImage = async (imageId: string, file: File) => {
+		setUploadingIds((prev) => [...prev, imageId])
+		try {
+			const fd = new FormData()
+			fd.append('file', file)
+			fd.append(
+				'objectKey',
+				`property/images/${new Date().toISOString()}-${sanitizeFilename(file.name)}`,
+			)
+			const res = await fetch('/api/r2/upload', { method: 'POST', body: fd })
+			const data = (await res.json()) as { url?: string; error?: string }
+			if (data.url) {
+				setImageUrlMap((prev) => ({ ...prev, [imageId]: data.url! }))
+				rhfMethods.setValue(
+					'images',
+					[...(rhfMethods.getValues('images') ?? []), data.url!],
+					{ shouldDirty: true },
+				)
+			} else {
+				toast.error('Failed to upload image')
+			}
+		} catch {
+			toast.error('Failed to upload image')
+		} finally {
+			setUploadingIds((prev) => prev.filter((id) => id !== imageId))
+		}
+	}
 
 	// Reset form when unit data loads
 	useEffect(() => {
@@ -180,7 +210,7 @@ export function EditPropertyAssetUnitModule() {
 			rhfMethods.reset({
 				name: safeString(unit.name),
 				description: safeString(unit.description),
-				image_url: unit.images?.[0] ? safeString(unit.images[0]) : '',
+				images: unit.images ?? [],
 				features: unit.features ?? {},
 				type: unit.type,
 				area: unit.area ?? undefined,
@@ -191,16 +221,6 @@ export function EditPropertyAssetUnitModule() {
 			})
 		}
 	}, [unit, rhfMethods])
-
-	// Update form when new image is uploaded
-	useEffect(() => {
-		if (objectUrl) {
-			rhfMethods.setValue('image_url', objectUrl, {
-				shouldDirty: true,
-				shouldValidate: true,
-			})
-		}
-	}, [objectUrl, rhfMethods])
 
 	const { watch, formState, setValue } = rhfMethods
 
@@ -217,10 +237,7 @@ export function EditPropertyAssetUnitModule() {
 					description: dirtyFields.description
 						? formData.description
 						: undefined,
-					images:
-						dirtyFields.image_url && formData.image_url
-							? [formData.image_url]
-							: undefined,
+					images: dirtyFields.images ? formData.images : undefined,
 					features: dirtyFields.features ? formData.features : undefined,
 					type: dirtyFields.type ? formData.type : undefined,
 					area: dirtyFields.area ? formData.area : undefined,
@@ -368,24 +385,31 @@ export function EditPropertyAssetUnitModule() {
 								)}
 							/>
 
-							<ImageUpload
-								hero
-								shape="square"
-								hint="Optional"
+							<ImageUploadBulk
+								key={unit?.id}
+								label="Unit Images"
+								hint="First image will be used as the main photo"
 								acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-								error={formState.errors?.image_url?.message}
-								fileCallback={upload}
-								isUploading={isUploading}
-								dismissCallback={() => {
-									setValue('image_url', '', {
-										shouldDirty: true,
-										shouldValidate: true,
-									})
-								}}
-								imageSrc={safeString(watch('image_url') ?? '')}
-								label="Unit Image"
-								name="image_url"
 								validation={{ maxByteSize: 5242880 }}
+								uploadingIds={uploadingIds}
+								imageSources={(unit?.images ?? []).map((url, i) => ({
+									id: `prefill-${i}`,
+									src: url,
+								}))}
+								onImageAdded={(image) => {
+									if (image.file) void uploadImage(image.id, image.file)
+								}}
+								onRemove={(image) => {
+									const url = imageUrlMap[image.id] ?? image.src
+									rhfMethods.setValue(
+										'images',
+										(rhfMethods.getValues('images') ?? []).filter(
+											(u) => u !== url,
+										),
+										{ shouldDirty: true },
+									)
+									setImageUrlMap(({ [image.id]: _, ...rest }) => rest)
+								}}
 							/>
 
 							<FormField
@@ -528,7 +552,9 @@ export function EditPropertyAssetUnitModule() {
 									control={rhfMethods.control}
 									render={({ field }) => (
 										<FormItem className="col-span-4">
-											<FormLabel>Rent Fee</FormLabel>
+											<FormLabel>
+												{rentFeeLabels[watch('payment_frequency')]}
+											</FormLabel>
 											<FormControl>
 												<Input
 													type="number"
@@ -548,7 +574,7 @@ export function EditPropertyAssetUnitModule() {
 							</div>
 
 							<div>
-								<Label>Payment Frequency</Label>
+								<Label>Billing Cycle</Label>
 								<div className="mt-3 flex flex-wrap gap-3">
 									{paymentFrequencies.map((item) => {
 										const isSelected = watch('payment_frequency') === item.value
@@ -573,7 +599,7 @@ export function EditPropertyAssetUnitModule() {
 									})}
 								</div>
 								<FormDescription className="mt-2">
-									How often rent is paid
+									How the unit is rented — the price above is charged per cycle
 								</FormDescription>
 								{formState.errors?.payment_frequency && (
 									<TypographySmall className="text-destructive mt-2">
@@ -601,7 +627,9 @@ export function EditPropertyAssetUnitModule() {
 					</Link>
 					{isEditable && (
 						<Button
-							disabled={isPending || !formState.isDirty}
+							disabled={
+								isPending || !formState.isDirty || uploadingIds.length > 0
+							}
 							size="lg"
 							variant="default"
 							className="bg-rose-600 hover:bg-rose-700"

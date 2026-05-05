@@ -10,7 +10,7 @@ import {
 	Plus,
 	Store,
 } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useFetcher, useLoaderData } from 'react-router'
 import { toast } from 'sonner'
@@ -30,7 +30,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
-import { ImageUpload } from '~/components/ui/image-upload'
+import { ImageUploadBulk } from '~/components/ui/image-upload-bulk'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import {
@@ -48,10 +48,9 @@ import {
 	TypographySmall,
 } from '~/components/ui/typography'
 import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
-import { useUploadObject } from '~/hooks/use-upload-object'
 import { ASSET_MANAGEMENT_GUIDE_URL } from '~/lib/constants'
 import { convertPesewasToCedis } from '~/lib/format-amount'
-import { safeString } from '~/lib/strings'
+import { sanitizeFilename, safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import type { loader } from '~/routes/_auth.properties.$propertyId.assets.units.new'
 
@@ -77,11 +76,7 @@ const ValidationSchema = z.object({
 	name: z
 		.string({ error: 'Name is required' })
 		.min(2, 'Please enter a valid name'),
-	image_url: z
-		.string()
-		.url('Please upload an image')
-		.optional()
-		.or(z.literal('')),
+	images: z.array(z.string()).optional(),
 	description: z
 		.string()
 		.max(500, 'Description must be less than 500 characters')
@@ -143,21 +138,32 @@ const statuses: Array<{ label: string; value: PropertyUnit['status'] }> = [
 	{ label: 'Maintenance', value: 'Unit.Status.Maintenance' },
 ]
 
-const paymentFrequencies: Array<{
-	label: string
-	value: FormSchema['payment_frequency']
-}> = [
-	{ label: 'Daily', value: 'DAILY' },
-	{ label: 'Weekly', value: 'WEEKLY' },
-	{ label: 'Monthly', value: 'MONTHLY' },
-	// { label: 'Quarterly', value: 'QUARTERLY' },
-	// { label: 'Biannually', value: 'BIANNUALLY' },
-	// { label: 'Annually', value: 'ANNUALLY' },
-]
-
 export function NewPropertyAssetUnitsModule() {
 	const { clientUserProperty, sourceUnit } = useLoaderData<typeof loader>()
 	const property_id = safeString(clientUserProperty?.property?.id)
+
+	const modes = clientUserProperty?.property?.modes ?? []
+	const isLease = modes.includes('LEASE')
+
+	const paymentFrequencies: Array<{
+		label: string
+		value: FormSchema['payment_frequency']
+	}> = [
+		{ label: 'Daily', value: 'DAILY' },
+		...(isLease
+			? [
+					{ label: 'Weekly', value: 'WEEKLY' as const },
+					{ label: 'Monthly', value: 'MONTHLY' as const },
+				]
+			: []),
+	]
+
+	const rentFeeLabels: Record<FormSchema['payment_frequency'], string> = {
+		DAILY: 'Price per Day',
+		WEEKLY: 'Price per Week',
+		MONTHLY: 'Price per Month',
+	}
+
 	const createFetcher = useFetcher<{ error: string }>()
 
 	const isSubmitting = createFetcher.state !== 'idle'
@@ -169,30 +175,46 @@ export function NewPropertyAssetUnitsModule() {
 			type: 'APARTMENT',
 			name: '',
 			description: '',
-			image_url: '',
+			images: [],
 			features: {},
 			tags: [],
 			max_occupants_allowed: 1,
 			rent_fee: 0,
 			rent_fee_currency: 'GHS',
-			payment_frequency: 'MONTHLY',
+			payment_frequency: isLease ? 'MONTHLY' : 'DAILY',
 		},
 	})
 
-	const {
-		upload,
-		objectUrl,
-		isLoading: isUploading,
-	} = useUploadObject('property/images')
+	const [uploadingIds, setUploadingIds] = useState<string[]>([])
+	const [imageUrlMap, setImageUrlMap] = useState<Record<string, string>>({})
 
-	useEffect(() => {
-		if (objectUrl) {
-			rhfMethods.setValue('image_url', objectUrl, {
-				shouldDirty: true,
-				shouldValidate: true,
-			})
+	const uploadImage = async (imageId: string, file: File) => {
+		setUploadingIds((prev) => [...prev, imageId])
+		try {
+			const fd = new FormData()
+			fd.append('file', file)
+			fd.append(
+				'objectKey',
+				`property/images/${new Date().toISOString()}-${sanitizeFilename(file.name)}`,
+			)
+			const res = await fetch('/api/r2/upload', { method: 'POST', body: fd })
+			const data = (await res.json()) as { url?: string; error?: string }
+			if (data.url) {
+				setImageUrlMap((prev) => ({ ...prev, [imageId]: data.url! }))
+				rhfMethods.setValue(
+					'images',
+					[...(rhfMethods.getValues('images') ?? []), data.url!],
+					{ shouldDirty: true },
+				)
+			} else {
+				toast.error('Failed to upload image')
+			}
+		} catch {
+			toast.error('Failed to upload image')
+		} finally {
+			setUploadingIds((prev) => prev.filter((id) => id !== imageId))
 		}
-	}, [objectUrl, rhfMethods])
+	}
 
 	useEffect(() => {
 		if (!sourceUnit) return
@@ -201,7 +223,7 @@ export function NewPropertyAssetUnitsModule() {
 			type: sourceUnit.type,
 			name: `${sourceUnit.name} (copy)`,
 			description: sourceUnit.description ?? '',
-			image_url: sourceUnit.images?.[0] ?? '',
+			images: sourceUnit.images ?? [],
 			features: sourceUnit.features ?? {},
 			tags: [],
 			area: sourceUnit.area ?? undefined,
@@ -234,7 +256,11 @@ export function NewPropertyAssetUnitsModule() {
 		submitData.set('name', formData.name)
 		if (formData.description)
 			submitData.set('description', formData.description)
-		if (formData.image_url) submitData.append('images', formData.image_url)
+		if (formData.images) {
+			for (const url of formData.images) {
+				submitData.append('images', url)
+			}
+		}
 		if (formData.tags) {
 			for (const tag of formData.tags) {
 				submitData.append('tags', tag)
@@ -421,24 +447,29 @@ export function NewPropertyAssetUnitsModule() {
 						)}
 					/>
 
-					<ImageUpload
-						hero
-						shape="square"
-						hint="Optional"
+					<ImageUploadBulk
+						key={sourceUnit?.id}
+						label="Unit Images"
+						hint="First image will be used as the main photo"
 						acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
-						error={formState.errors?.image_url?.message}
-						fileCallback={upload}
-						isUploading={isUploading}
-						dismissCallback={() => {
-							setValue('image_url', '', {
-								shouldDirty: true,
-								shouldValidate: true,
-							})
-						}}
-						imageSrc={safeString(watch('image_url') ?? '')}
-						label="Unit Image"
-						name="image_url"
 						validation={{ maxByteSize: 5242880 }}
+						uploadingIds={uploadingIds}
+						imageSources={(sourceUnit?.images ?? []).map((url, i) => ({
+							id: `prefill-${i}`,
+							src: url,
+						}))}
+						onImageAdded={(image) => {
+							if (image.file) void uploadImage(image.id, image.file)
+						}}
+						onRemove={(image) => {
+							const url = imageUrlMap[image.id] ?? image.src
+							rhfMethods.setValue(
+								'images',
+								(rhfMethods.getValues('images') ?? []).filter((u) => u !== url),
+								{ shouldDirty: true },
+							)
+							setImageUrlMap(({ [image.id]: _, ...rest }) => rest)
+						}}
 					/>
 
 					<FormField
@@ -579,7 +610,9 @@ export function NewPropertyAssetUnitsModule() {
 							control={rhfMethods.control}
 							render={({ field }) => (
 								<FormItem className="col-span-4">
-									<FormLabel>Rent Fee</FormLabel>
+									<FormLabel>
+										{rentFeeLabels[watch('payment_frequency')]}
+									</FormLabel>
 									<FormControl>
 										<Input
 											type="number"
@@ -597,7 +630,7 @@ export function NewPropertyAssetUnitsModule() {
 					</div>
 
 					<div>
-						<Label>Payment Frequency</Label>
+						<Label>Billing Cycle</Label>
 						<div className="mt-3 flex flex-wrap gap-3">
 							{paymentFrequencies.map((item) => {
 								const isSelected = watch('payment_frequency') === item.value
@@ -622,7 +655,7 @@ export function NewPropertyAssetUnitsModule() {
 							})}
 						</div>
 						<FormDescription className="mt-2">
-							How often rent is paid
+							How the unit is rented — the price above is charged per cycle
 						</FormDescription>
 						{formState.errors?.payment_frequency && (
 							<TypographySmall className="text-destructive mt-2">
@@ -647,7 +680,7 @@ export function NewPropertyAssetUnitsModule() {
 						</Button>
 					</Link>
 					<Button
-						disabled={isSubmitting}
+						disabled={isSubmitting || uploadingIds.length > 0}
 						size="lg"
 						variant="default"
 						className="bg-rose-600 hover:bg-rose-700"

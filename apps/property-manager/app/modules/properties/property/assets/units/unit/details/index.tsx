@@ -41,8 +41,35 @@ export function PropertyAssetUnitDetailsModule() {
 		})
 	}
 
+	const images = unit.images ?? []
+
 	return (
-		<div className="mt-3 space-y-4">
+		<div className="my-3 space-y-4">
+			{/* Additional Images */}
+			{images.length >= 2 ? (
+				<Card className="shadow-none">
+					<CardHeader>
+						<CardTitle>Photos</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+							{images.slice(1).map((src, i) => (
+								<div
+									key={i}
+									className="relative aspect-video overflow-hidden rounded-md border"
+								>
+									<img
+										src={src}
+										alt={`Unit photo ${i + 1}`}
+										className="h-full w-full object-cover"
+									/>
+								</div>
+							))}
+						</div>
+					</CardContent>
+				</Card>
+			) : null}
+
 			{/* Description */}
 			<Card className="shadow-none">
 				<CardHeader>
@@ -130,6 +157,39 @@ export function PropertyAssetUnitDetailsModule() {
 				</CardContent>
 			</Card>
 
+			{isBooking &&
+			bookingUrl &&
+			unit.status !== 'Unit.Status.Draft' &&
+			unit.status !== 'Unit.Status.Maintenance' ? (
+				<Card className="shadow-none">
+					<CardHeader>
+						<CardTitle className="flex items-center gap-2">
+							<Link className="size-4" />
+							Public Booking Link
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<TypographyMuted className="mb-3 text-sm">
+							Share this link so guests can book this unit directly from your
+							property page.
+						</TypographyMuted>
+						<div className="bg-muted flex items-center justify-between gap-2 rounded-md px-3 py-2">
+							<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
+								{bookingUrl}
+							</span>
+							<Button
+								size="icon"
+								variant="ghost"
+								className="shrink-0"
+								onClick={handleCopyLink}
+							>
+								<Copy className="size-4" />
+							</Button>
+						</div>
+					</CardContent>
+				</Card>
+			) : null}
+
 			{/* Timeline */}
 			<Card className="shadow-none">
 				<CardHeader>
@@ -160,32 +220,6 @@ export function PropertyAssetUnitDetailsModule() {
 					</div>
 				</CardContent>
 			</Card>
-
-			{isBooking && bookingUrl ? (
-				<Card className="shadow-none">
-					<CardHeader>
-						<CardTitle className="flex items-center gap-2">
-							<Link className="size-4" />
-							Public Booking Link
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="bg-muted flex items-center justify-between gap-2 rounded-md px-3 py-2">
-							<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
-								{bookingUrl}
-							</span>
-							<Button
-								size="icon"
-								variant="ghost"
-								className="shrink-0"
-								onClick={handleCopyLink}
-							>
-								<Copy className="size-4" />
-							</Button>
-						</div>
-					</CardContent>
-				</Card>
-			) : null}
 		</div>
 	)
 }
