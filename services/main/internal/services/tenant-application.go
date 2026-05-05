@@ -338,6 +338,10 @@ func (s *tenantApplicationService) BulkCreateTenantApplications(
 	transCtx := lib.WithTransaction(ctx, transaction)
 
 	for _, entry := range input.Entries {
+		var rentFee *int64 = nil
+		var rentFeeCurrency *string = nil
+		var stayDurationFrequency *string = nil
+		var paymentFrequency *string = nil
 		if entry.DesiredUnitId != nil {
 			unit, err := s.unitService.GetUnitByID(transCtx, *entry.DesiredUnitId)
 			if err != nil {
@@ -352,6 +356,11 @@ func (s *tenantApplicationService) BulkCreateTenantApplications(
 				transaction.Rollback()
 				return nil, pkg.BadRequestError("UnitNoLongerAvailable", nil)
 			}
+
+			rentFee = &unit.RentFee
+			rentFeeCurrency = &unit.RentFeeCurrency
+			stayDurationFrequency = &unit.PaymentFrequency
+			paymentFrequency = &unit.PaymentFrequency
 		}
 
 		app := models.TenantApplication{
@@ -369,6 +378,10 @@ func (s *tenantApplicationService) BulkCreateTenantApplications(
 			IDNumber:       entry.IDNumber,
 			CurrentAddress: entry.CurrentAddress,
 			DesiredUnitId:  entry.DesiredUnitId,
+			RentFee:             rentFee,
+			RentFeeCurrency:                rentFeeCurrency,
+			StayDurationFrequency:          stayDurationFrequency,
+			PaymentFrequency:               paymentFrequency,
 			Occupation:     entry.Occupation,
 			Employer:       entry.Employer,
 			CreatedById:    input.CreatedById,
