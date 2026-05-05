@@ -1,12 +1,11 @@
-import { useQueryClient } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useLoaderData, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import type { loader } from '~/routes/_auth.properties.$propertyId.bookings.$bookingId'
 import {
 	useCancelBooking,
 	useCheckInBooking,
@@ -46,6 +45,7 @@ import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
+import type { loader } from '~/routes/_auth.properties.$propertyId.bookings.$bookingId'
 
 type BookingStatusConfig = {
 	label: string
