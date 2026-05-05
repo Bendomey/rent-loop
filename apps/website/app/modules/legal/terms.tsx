@@ -257,10 +257,10 @@ export function TermsOfUse() {
 						<br />
 						Email:{' '}
 						<a
-							href="mailto:rentloopapp@gmail.com"
+							href="mailto:support@rentloopapp.com"
 							className="text-rose-700 hover:text-rose-600"
 						>
-							rentloopapp@gmail.com
+							support@rentloopapp.com
 						</a>
 					</p>
 				</section>

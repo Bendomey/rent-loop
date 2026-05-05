@@ -1,9 +1,13 @@
 import dayjs from 'dayjs'
-import { Calendar } from 'lucide-react'
+import { Calendar, Copy, Link } from 'lucide-react'
+import { toast } from 'sonner'
 import { useUnitContext } from '../context'
+import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { TypographyMuted, TypographyP } from '~/components/ui/typography'
+import { WEBSITE_URL } from '~/lib/constants'
 import { toFirstUpperCase } from '~/lib/strings'
+import { useProperty } from '~/providers/property-provider'
 
 const paymentFrequencyLabels: Record<
 	PropertyUnit['payment_frequency'],
@@ -19,6 +23,23 @@ const paymentFrequencyLabels: Record<
 
 export function PropertyAssetUnitDetailsModule() {
 	const { unit } = useUnitContext()
+	const { clientUserProperty } = useProperty()
+
+	const modes = clientUserProperty?.property?.modes ?? []
+	const isBooking = modes.includes('BOOKING')
+	const propertySlug = unit.property?.slug
+	const unitSlug = unit.slug
+	const bookingUrl =
+		propertySlug && unitSlug
+			? `${WEBSITE_URL}/book/${propertySlug}/${unitSlug}`
+			: null
+
+	const handleCopyLink = () => {
+		if (!bookingUrl) return
+		void navigator.clipboard.writeText(bookingUrl).then(() => {
+			toast.success('Booking link copied')
+		})
+	}
 
 	return (
 		<div className="mt-3 space-y-4">
@@ -139,6 +160,32 @@ export function PropertyAssetUnitDetailsModule() {
 					</div>
 				</CardContent>
 			</Card>
+
+			{isBooking && bookingUrl ? (
+				<Card className="shadow-none">
+					<CardHeader>
+						<CardTitle className="flex items-center gap-2">
+							<Link className="size-4" />
+							Public Booking Link
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className="bg-muted flex items-center justify-between gap-2 rounded-md px-3 py-2">
+							<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
+								{bookingUrl}
+							</span>
+							<Button
+								size="icon"
+								variant="ghost"
+								className="shrink-0"
+								onClick={handleCopyLink}
+							>
+								<Copy className="size-4" />
+							</Button>
+						</div>
+					</CardContent>
+				</Card>
+			) : null}
 		</div>
 	)
 }

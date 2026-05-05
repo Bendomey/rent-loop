@@ -80,6 +80,15 @@ export function Step3() {
 								{formData.type ? getPropertyTypeLabel(formData.type) : '—'} ·{' '}
 								{formData.status
 									? getPropertyStatusLabel(formData.status)
+									: '—'}{' '}
+								·{' '}
+								{formData.modes
+									? formData.modes.includes('LEASE') &&
+										formData.modes.includes('BOOKING')
+										? 'Long-term & Short-term'
+										: formData.modes.includes('BOOKING')
+											? 'Short-term (Bookings)'
+											: 'Long-term (Leases)'
 									: '—'}
 							</p>
 						</div>

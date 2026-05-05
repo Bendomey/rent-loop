@@ -7,6 +7,7 @@ import {
 	DollarSign,
 	Contact,
 	Headset,
+	CalendarDays,
 } from 'lucide-react'
 import * as React from 'react'
 
@@ -32,6 +33,10 @@ export function PropertySidebar({
 	const sidebarState = useSidebar()
 	const params = useParams()
 	const { clientUserProperty } = useProperty()
+
+	const modes = clientUserProperty?.property?.modes ?? []
+	const isLease = modes.includes('LEASE')
+	const isBooking = modes.includes('BOOKING')
 
 	const data = {
 		navMain: [
@@ -77,10 +82,28 @@ export function PropertySidebar({
 					{
 						title: 'Applications',
 						url: '/applications',
+						isHidden: !isLease,
 					},
 					{
 						title: 'Leases',
 						url: '/leases',
+						isHidden: !isLease,
+					},
+				],
+			},
+			{
+				title: 'Bookings',
+				url: '/bookings',
+				icon: CalendarDays,
+				isHidden: !isBooking,
+				items: [
+					{
+						title: 'All Bookings',
+						url: '',
+					},
+					{
+						title: 'Availability',
+						url: '/availability',
 					},
 				],
 			},

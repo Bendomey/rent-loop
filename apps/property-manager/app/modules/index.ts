@@ -95,3 +95,8 @@ export * from './properties/property/settings/members'
 export * from './properties/property/settings/general'
 export * from './properties/property/settings/billing'
 export * from './properties/property/settings/documents'
+
+export * from './properties/property/bookings'
+export * from './properties/property/bookings/new'
+export * from './properties/property/bookings/booking'
+export * from './properties/property/availability'

@@ -25,3 +25,11 @@ func GenerateCode(db *gorm.DB, model any) (*string, error) {
 
 	return &uniqueCode, nil
 }
+
+func GenerateCheckInCode() (string, error) {
+	code, err := gonanoid.Generate("0123456789", 5)
+	if err != nil {
+		return "", err
+	}
+	return code, nil
+}

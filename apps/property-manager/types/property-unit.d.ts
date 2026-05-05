@@ -23,6 +23,7 @@ interface PropertyUnit {
 		| 'Unit.Status.Occupied'
 		| 'Unit.Status.PartiallyOccupied'
 		| 'Unit.Status.Maintenance'
+	slug: Nullable<string>
 	created_at: Date
 	updated_at: Date
 }

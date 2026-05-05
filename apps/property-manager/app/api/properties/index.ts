@@ -135,6 +135,7 @@ export interface CreatePropertyInput {
 	images: Maybe<string[]>
 	latitude: number
 	longitude: number
+	modes: Array<'LEASE' | 'BOOKING'>
 	name: string
 	region: string
 	status: Property['status']

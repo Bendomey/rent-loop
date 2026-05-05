@@ -20,6 +20,7 @@ type UnitService interface {
 	CreateUnit(context context.Context, input CreateUnitInput) (*models.Unit, error)
 	GetUnit(context context.Context, query repository.GetUnitQuery) (*models.Unit, error)
 	GetUnitByID(context context.Context, id string) (*models.Unit, error)
+	GetUnitBySlug(ctx context.Context, slug string) (*models.Unit, error)
 	UpdateUnit(context context.Context, input UpdateUnitInput) (*models.Unit, error)
 	UpdateUnitStatus(ctx context.Context, input UpdateUnitStatusInput) error
 	SetSystemUnitStatus(ctx context.Context, input UpdateUnitStatusInput) error
@@ -187,6 +188,23 @@ func (s *unitService) GetUnitByID(ctx context.Context, id string) (*models.Unit,
 		})
 	}
 
+	return unit, nil
+}
+
+func (s *unitService) GetUnitBySlug(ctx context.Context, slug string) (*models.Unit, error) {
+	unit, err := s.repo.GetOne(ctx, map[string]any{"slug": slug})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("UnitNotFound", &pkg.RentLoopErrorParams{Err: err})
+		}
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "GetUnitBySlug",
+				"action":   "fetching unit",
+			},
+		})
+	}
 	return unit, nil
 }
 
