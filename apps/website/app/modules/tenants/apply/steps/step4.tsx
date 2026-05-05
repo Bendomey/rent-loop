@@ -47,10 +47,9 @@ const idTypes: Array<{
 	label: string
 	value: 'DRIVER_LICENSE' | 'PASSPORT' | 'NATIONAL_ID' | 'GHANA_CARD'
 }> = [
-	{ label: 'National ID', value: 'NATIONAL_ID' },
+	{ label: 'National ID / Ghana Card', value: 'NATIONAL_ID' },
 	{ label: 'Passport', value: 'PASSPORT' },
 	{ label: "Driver's License", value: 'DRIVER_LICENSE' },
-	{ label: 'Ghana Card', value: 'GHANA_CARD' },
 ]
 
 export type FormSchema = z.infer<typeof ValidationSchema>

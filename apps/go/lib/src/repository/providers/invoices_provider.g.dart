@@ -10,15 +10,16 @@ String _$invoicesHash() => r'4c1c4e2d0f305da6dc3074a9dd6740c22a566238';
 
 /// Fetches all invoices for the currently active lease.
 /// Includes both LEASE_RENT (via lease_id) and TENANT_APPLICATION
-/// (via the lease's linked tenant application) invoices.
+/// (via the lease's linked lease application) invoices.
 ///
 /// Copied from [invoices].
 @ProviderFor(invoices)
 final invoicesProvider = AutoDisposeFutureProvider<List<InvoiceModel>>.internal(
   invoices,
   name: r'invoicesProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$invoicesHash,
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$invoicesHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
@@ -37,14 +38,14 @@ String _$nextOutstandingInvoiceHash() =>
 @ProviderFor(nextOutstandingInvoice)
 final nextOutstandingInvoiceProvider =
     AutoDisposeFutureProvider<InvoiceModel?>.internal(
-  nextOutstandingInvoice,
-  name: r'nextOutstandingInvoiceProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$nextOutstandingInvoiceHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+      nextOutstandingInvoice,
+      name: r'nextOutstandingInvoiceProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$nextOutstandingInvoiceHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
@@ -59,8 +60,9 @@ String _$invoiceStatsHash() => r'5bf424d20b76e10234409476bb340529bfd8e2af';
 final invoiceStatsProvider = FutureProvider<Map<String, dynamic>>.internal(
   invoiceStats,
   name: r'invoiceStatsProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$invoiceStatsHash,
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$invoiceStatsHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
@@ -109,24 +111,15 @@ class InvoiceDetailFamily extends Family<AsyncValue<InvoiceModel>> {
   /// Fetches a single invoice with full line items and payments detail.
   ///
   /// Copied from [invoiceDetail].
-  InvoiceDetailProvider call(
-    String leaseId,
-    String invoiceId,
-  ) {
-    return InvoiceDetailProvider(
-      leaseId,
-      invoiceId,
-    );
+  InvoiceDetailProvider call(String leaseId, String invoiceId) {
+    return InvoiceDetailProvider(leaseId, invoiceId);
   }
 
   @override
   InvoiceDetailProvider getProviderOverride(
     covariant InvoiceDetailProvider provider,
   ) {
-    return call(
-      provider.leaseId,
-      provider.invoiceId,
-    );
+    return call(provider.leaseId, provider.invoiceId);
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -151,27 +144,20 @@ class InvoiceDetailProvider extends AutoDisposeFutureProvider<InvoiceModel> {
   /// Fetches a single invoice with full line items and payments detail.
   ///
   /// Copied from [invoiceDetail].
-  InvoiceDetailProvider(
-    String leaseId,
-    String invoiceId,
-  ) : this._internal(
-          (ref) => invoiceDetail(
-            ref as InvoiceDetailRef,
-            leaseId,
-            invoiceId,
-          ),
-          from: invoiceDetailProvider,
-          name: r'invoiceDetailProvider',
-          debugGetCreateSourceHash:
-              const bool.fromEnvironment('dart.vm.product')
-                  ? null
-                  : _$invoiceDetailHash,
-          dependencies: InvoiceDetailFamily._dependencies,
-          allTransitiveDependencies:
-              InvoiceDetailFamily._allTransitiveDependencies,
-          leaseId: leaseId,
-          invoiceId: invoiceId,
-        );
+  InvoiceDetailProvider(String leaseId, String invoiceId)
+    : this._internal(
+        (ref) => invoiceDetail(ref as InvoiceDetailRef, leaseId, invoiceId),
+        from: invoiceDetailProvider,
+        name: r'invoiceDetailProvider',
+        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+            ? null
+            : _$invoiceDetailHash,
+        dependencies: InvoiceDetailFamily._dependencies,
+        allTransitiveDependencies:
+            InvoiceDetailFamily._allTransitiveDependencies,
+        leaseId: leaseId,
+        invoiceId: invoiceId,
+      );
 
   InvoiceDetailProvider._internal(
     super._createNotifier, {
@@ -248,5 +234,6 @@ class _InvoiceDetailProviderElement
   @override
   String get invoiceId => (origin as InvoiceDetailProvider).invoiceId;
 }
+
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

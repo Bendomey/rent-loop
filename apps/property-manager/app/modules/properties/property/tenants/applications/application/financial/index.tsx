@@ -130,16 +130,19 @@ export function PropertyTenantApplicationFinancial() {
 				<CardHeader>
 					<CardTitle className="flex items-center justify-between">
 						Financial Setup
-						{!isEditing && !hasInvoice && (
-							<Button
-								variant="ghost"
-								size="sm"
-								onClick={() => setIsEditing(true)}
-							>
-								<Pencil className="size-4" />
-								Edit
-							</Button>
-						)}
+						{!isEditing &&
+							!hasInvoice &&
+							tenantApplication?.status ===
+								'TenantApplication.Status.InProgress' && (
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={() => setIsEditing(true)}
+								>
+									<Pencil className="size-4" />
+									Edit
+								</Button>
+							)}
 						{isEditing && (
 							<Button
 								variant="ghost"

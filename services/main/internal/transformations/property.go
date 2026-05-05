@@ -56,6 +56,7 @@ func DBPropertyToRest(i *models.Property) interface{} {
 		"client":        DBClientToRestClient(&i.Client),
 		"created_by_id": i.CreatedByID,
 		"created_by":    DBClientUserToRest(&i.CreatedBy),
+		"modes":         i.Modes,
 		"created_at":    i.CreatedAt,
 		"updated_at":    i.UpdatedAt,
 	}

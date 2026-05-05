@@ -443,11 +443,19 @@ export function LeaseDetailModule() {
 														/>
 														<DetailRow
 															label="Nationality"
-															value={toFirstUpperCase(tenant.nationality)}
+															value={
+																tenant.nationality
+																	? toFirstUpperCase(tenant.nationality)
+																	: '-'
+															}
 														/>
 														<DetailRow
 															label="Marital Status"
-															value={toFirstUpperCase(tenant.marital_status)}
+															value={
+																tenant.marital_status
+																	? toFirstUpperCase(tenant.marital_status)
+																	: '-'
+															}
 														/>
 														<DetailRow
 															label="Current Address"
@@ -556,15 +564,19 @@ export function LeaseDetailModule() {
 														/>
 														<DetailRow
 															label="Relationship"
-															value={toFirstUpperCase(
-																tenant.relationship_to_emergency_contact,
-															)}
+															value={
+																tenant.relationship_to_emergency_contact
+																	? toFirstUpperCase(
+																			tenant.relationship_to_emergency_contact,
+																		)
+																	: '-'
+															}
 														/>
 													</div>
 												</div>
 
 												{/* Previous Tenancy */}
-												{(tenant.previous_landlord_name ||
+												{/* {(tenant.previous_landlord_name ||
 													tenant.previous_landlord_phone ||
 													tenant.previous_tenancy_period) && (
 													<div className="space-y-3">
@@ -584,7 +596,7 @@ export function LeaseDetailModule() {
 															/>
 														</div>
 													</div>
-												)}
+												)} */}
 											</>
 										) : (
 											<p className="text-muted-foreground text-sm">

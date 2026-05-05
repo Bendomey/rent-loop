@@ -14,5 +14,5 @@ dependencies: []
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Integrate Gatekeeper (https://gatekeeperpro.cc/) for KYC identity verification in the tenant application flow.
+Integrate Gatekeeper (https://gatekeeperpro.cc/) for KYC identity verification in the lease application flow.
 <!-- SECTION:DESCRIPTION:END -->

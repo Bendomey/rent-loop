@@ -94,11 +94,11 @@ function CancelTenantApplicationModal({
 				},
 				{
 					onError: () => {
-						toast.error('Failed to cancel tenant application. Try again later.')
+						toast.error('Failed to cancel lease application. Try again later.')
 					},
 					onSuccess: () => {
 						toast.success(
-							'The tenant application has been successfully cancelled',
+							'The lease application has been successfully cancelled',
 						)
 
 						void revalidator.revalidate()
@@ -117,7 +117,7 @@ function CancelTenantApplicationModal({
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>
-						Cancel {data ? `${name}` : 'this'} Tenant Application
+						Cancel {data ? `${name}` : 'this'} Lease Application
 					</AlertDialogTitle>
 					<AlertDialogDescription>
 						<Form {...rhfMethods}>

@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Building, Home } from 'lucide-react'
+import { Building, ClipboardList, Home, Hotel } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link } from 'react-router'
@@ -32,10 +32,11 @@ const ValidationSchema = z.object({
 			'Property.Status.Maintenance',
 			'Property.Status.Inactive',
 		],
-		{
-			error: 'Please select a status',
-		},
+		{ error: 'Please select a status' },
 	),
+	modeSelection: z.enum(['LEASE', 'BOOKING', 'BOTH'], {
+		error: 'Please select a rental mode',
+	}),
 })
 
 type FormSchema = z.infer<typeof ValidationSchema>
@@ -56,10 +57,37 @@ const models = [
 	},
 ]
 
-const status: Array<{ label: string; value: Property['status'] }> = [
+const statusOptions: Array<{ label: string; value: Property['status'] }> = [
 	{ label: 'Active', value: 'Property.Status.Active' },
 	{ label: 'Inactive', value: 'Property.Status.Inactive' },
 	{ label: 'Maintenance', value: 'Property.Status.Maintenance' },
+]
+
+const modeOptions: Array<{
+	value: 'LEASE' | 'BOOKING' | 'BOTH'
+	name: string
+	description: string
+	icon: React.ElementType
+}> = [
+	{
+		value: 'LEASE',
+		name: 'Long-term (Leases)',
+		description: 'Monthly rent, lease applications, lease agreements.',
+		icon: ClipboardList,
+	},
+	{
+		value: 'BOOKING',
+		name: 'Short-term (Bookings)',
+		description:
+			'Nightly/daily stays, guest booking link, availability calendar.',
+		icon: Hotel,
+	},
+	{
+		value: 'BOTH',
+		name: 'Both',
+		description: 'Some units long-term, others available for short stays.',
+		icon: Building,
+	},
 ]
 
 export function Step0() {
@@ -85,25 +113,38 @@ export function Step0() {
 				shouldValidate: true,
 			})
 		}
+		if (formData.modes) {
+			const modeSelection =
+				formData.modes.includes('LEASE') && formData.modes.includes('BOOKING')
+					? 'BOTH'
+					: formData.modes.includes('BOOKING')
+						? 'BOOKING'
+						: 'LEASE'
+			setValue('modeSelection', modeSelection, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
+		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
-	const onSubmit = async (data: FormSchema) => {
-		updateFormData({
-			type: data.type,
-			status: data.status,
-		})
+	const onSubmit = (data: FormSchema) => {
+		const modes: Array<'LEASE' | 'BOOKING'> =
+			data.modeSelection === 'BOTH'
+				? ['LEASE', 'BOOKING']
+				: [data.modeSelection]
+		updateFormData({ type: data.type, status: data.status, modes })
 		goNext()
 	}
 
 	return (
 		<form
 			onSubmit={handleSubmit(onSubmit)}
-			className="mx-auto mb-5 space-y-10 md:max-w-2/3"
+			className="mx-auto mt-10 mb-5 space-y-10 md:max-w-2/3"
 		>
 			<div className="space-y-2">
-				<TypographyH2 className="">What type of Property is this?</TypographyH2>
-				<TypographyMuted className="">
+				<TypographyH2>What type of Property is this?</TypographyH2>
+				<TypographyMuted>
 					Choose the category that best matches your property's layout or use.
 				</TypographyMuted>
 				<p className="text-muted-foreground text-xs">
@@ -119,11 +160,11 @@ export function Step0() {
 				</p>
 			</div>
 
-			<div>
+			<div className="space-y-6">
+				{/* Type selection */}
 				<ItemGroup className="grid grid-cols-2 gap-4">
 					{models.map((model) => {
 						const isSelected = watch('type') === model.type
-
 						return (
 							<Item
 								key={model.name}
@@ -152,31 +193,32 @@ export function Step0() {
 						)
 					})}
 					{formState.errors?.type ? (
-						<TypographySmall className="text-destructive">
+						<TypographySmall className="text-destructive col-span-2">
 							{formState.errors.type.message}
 						</TypographySmall>
 					) : null}
 				</ItemGroup>
 
-				<div className="mt-5">
+				{/* Status */}
+				<div>
 					<TypographyMuted>Status</TypographyMuted>
 					<div className="mt-3 flex space-x-3">
-						{status.map((status) => {
-							const isSelected = watch('status') === status.value
+						{statusOptions.map((s) => {
+							const isSelected = watch('status') === s.value
 							return (
 								<Button
 									type="button"
 									onClick={() =>
-										setValue('status', status.value, {
+										setValue('status', s.value, {
 											shouldDirty: true,
 											shouldValidate: true,
 										})
 									}
-									key={status.value}
+									key={s.value}
 									variant={isSelected ? 'default' : 'outline'}
 									className={cn({ 'bg-rose-600 text-white': isSelected })}
 								>
-									{status.label}
+									{s.label}
 								</Button>
 							)
 						})}
@@ -184,6 +226,47 @@ export function Step0() {
 					{formState.errors?.status ? (
 						<TypographySmall className="text-destructive mt-3">
 							{formState.errors.status.message}
+						</TypographySmall>
+					) : null}
+				</div>
+
+				{/* Mode selection */}
+				<div className="space-y-2">
+					<TypographyMuted>
+						What type of rentals does this property handle?
+					</TypographyMuted>
+					<ItemGroup className="flex flex-col gap-3">
+						{modeOptions.map((mode) => {
+							const isSelected = watch('modeSelection') === mode.value
+							return (
+								<Item
+									key={mode.value}
+									variant="outline"
+									className={cn(
+										'cursor-pointer hover:bg-zinc-100',
+										isSelected ? 'border-1 border-rose-600' : '',
+									)}
+									onClick={() =>
+										setValue('modeSelection', mode.value, {
+											shouldDirty: true,
+											shouldValidate: true,
+										})
+									}
+								>
+									<mode.icon className="text-muted-foreground size-5 shrink-0" />
+									<ItemContent>
+										<ItemTitle className="text-sm">{mode.name}</ItemTitle>
+										<ItemDescription className="text-xs">
+											{mode.description}
+										</ItemDescription>
+									</ItemContent>
+								</Item>
+							)
+						})}
+					</ItemGroup>
+					{formState.errors?.modeSelection ? (
+						<TypographySmall className="text-destructive">
+							{formState.errors.modeSelection.message}
 						</TypographySmall>
 					) : null}
 				</div>

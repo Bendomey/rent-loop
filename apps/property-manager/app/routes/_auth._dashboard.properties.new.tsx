@@ -41,6 +41,10 @@ export async function action({ request }: Route.ActionArgs) {
 	const images = (formData.getAll('images') as string[])?.filter(Boolean) ?? []
 	const latitude = parseFloat(formData.get('latitude') as string)
 	const longitude = parseFloat(formData.get('longitude') as string)
+	const rawModes = formData.getAll('modes') as Array<'LEASE' | 'BOOKING'>
+	const modes: Array<'LEASE' | 'BOOKING'> = rawModes.length
+		? rawModes
+		: ['LEASE']
 
 	try {
 		const authData = {
@@ -63,6 +67,7 @@ export async function action({ request }: Route.ActionArgs) {
 				images,
 				latitude,
 				longitude,
+				modes,
 			}),
 			authData,
 		)

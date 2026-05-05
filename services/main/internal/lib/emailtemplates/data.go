@@ -59,7 +59,7 @@ type ClientUserPasswordUpdatedData struct {
 	Name string
 }
 
-// ─── Tenant Application ───────────────────────────────────────────────────────
+// ─── lease application ───────────────────────────────────────────────────────
 
 type TenantInvitedData struct {
 	UnitID     string
@@ -193,4 +193,34 @@ type ChecklistAcknowledgedData struct {
 	UnitName      string
 	ChecklistType string
 	Action        string
+}
+
+// ─── Booking ──────────────────────────────────────────────────────────────────
+
+type BookingCreatedData struct {
+	GuestName    string
+	UnitName     string
+	CheckInDate  string
+	CheckOutDate string
+	Rate         string
+	Currency     string
+	TrackingCode string
+}
+
+type BookingConfirmedData struct {
+	GuestName    string
+	UnitName     string
+	CheckInDate  string
+	CheckInCode  string
+	CheckOutDate string
+	TrackingCode string
+}
+
+type BookingCancelledData struct {
+	GuestName          string
+	UnitName           string
+	CheckInDate        string
+	CheckOutDate       string
+	TrackingCode       string
+	CancellationReason string
 }

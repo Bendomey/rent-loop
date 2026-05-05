@@ -375,7 +375,7 @@ type SignDocumentPMRequest struct {
 // SignDocumentPM godoc
 //
 //	@Summary		Submit a signature (Admin)
-//	@Description	Submit a signature for a document using tenant application or lease context (for PMs) (Admin)
+//	@Description	Submit a signature for a document using lease application or lease context (for PMs) (Admin)
 //	@Tags			Signing
 //	@Accept			json
 //	@Produce		json

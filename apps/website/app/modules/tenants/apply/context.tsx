@@ -45,7 +45,7 @@ export function CreateNewPropertyTenantApplicationProvider({
 	// where there is an error in the action data, show an error toast
 	useEffect(() => {
 		if (createFetcher?.data?.error) {
-			toast.error('Failed to submit tenant application. Please try again.')
+			toast.error('Failed to submit lease application. Please try again.')
 		}
 	}, [createFetcher?.data])
 

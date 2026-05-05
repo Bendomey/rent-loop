@@ -272,10 +272,10 @@ export function PrivacyPolicy() {
 						<br />
 						Email:{' '}
 						<a
-							href="mailto:rentloopapp@gmail.com"
+							href="mailto:support@rentloopapp.com"
 							className="text-rose-700 hover:text-rose-600"
 						>
-							rentloopapp@gmail.com
+							support@rentloopappapp.com
 						</a>
 						<br />
 						Country: Ghana

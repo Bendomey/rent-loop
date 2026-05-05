@@ -1,0 +1,40 @@
+import { fetchClient } from '~/lib/transport'
+
+export async function getUnitAvailabilityForClient(
+	unitSlug: string,
+	from: string,
+	to: string,
+): Promise<UnitDateBlock[]> {
+	const response = await fetchClient<ApiResponse<UnitDateBlock[]>>(
+		`/v1/units/${unitSlug}/availability?from=${from}&to=${to}`,
+		{ isUnAuthorizedRequest: true },
+	)
+	return response.parsedBody.data ?? []
+}
+
+export async function createPublicBooking(
+	unitSlug: string,
+	input: CreatePublicBookingInput,
+): Promise<PublicBooking> {
+	const response = await fetchClient<ApiResponse<PublicBooking>>(
+		`/v1/units/${unitSlug}/bookings`,
+		{
+			method: 'POST',
+			body: JSON.stringify(input),
+			isUnAuthorizedRequest: true,
+		},
+	)
+	return response.parsedBody.data
+}
+
+export async function trackBooking(
+	trackingCode: string,
+	phone: string,
+): Promise<PublicBooking> {
+	const encoded = encodeURIComponent(phone)
+	const response = await fetchClient<ApiResponse<PublicBooking>>(
+		`/v1/bookings/${trackingCode}?phone=${encoded}`,
+		{ isUnAuthorizedRequest: true },
+	)
+	return response.parsedBody.data
+}

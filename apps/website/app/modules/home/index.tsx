@@ -263,7 +263,7 @@ const faqs = [
 	{
 		question: 'How does Rentloop simplify the rental process?',
 		answer:
-			'Rentloop streamlines the rental process by providing a centralized platform for property listings, tenant applications, lease management, and rent payments, making it easier for both landlords and tenants to manage their rental needs.',
+			'Rentloop streamlines the rental process by providing a centralized platform for property listings, lease applications, lease management, and rent payments, making it easier for both landlords and tenants to manage their rental needs.',
 	},
 	{
 		question: 'Is Rentloop suitable for small property owners?',

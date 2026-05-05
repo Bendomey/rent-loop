@@ -31,7 +31,7 @@ ordinal: 3000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 ## Context
 
-The platform already generates invoices manually for tenant applications (deposits). The next step is to automatically generate recurring rent invoices for **Active** leases based on their `PaymentFrequency`. This requires a scheduled cron job that runs hourly, finds leases due for billing, generates an `ISSUED` invoice (with Fincore accounting entries), notifies the tenant via email/SMS/push, and advances the `NextBillingDate` on the lease.
+The platform already generates invoices manually for lease applications (deposits). The next step is to automatically generate recurring rent invoices for **Active** leases based on their `PaymentFrequency`. This requires a scheduled cron job that runs hourly, finds leases due for billing, generates an `ISSUED` invoice (with Fincore accounting entries), notifies the tenant via email/SMS/push, and advances the `NextBillingDate` on the lease.
 
 **Currently missing:**
 - No `NextBillingDate` tracking field on the `Lease` model

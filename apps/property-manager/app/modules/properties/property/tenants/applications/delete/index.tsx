@@ -72,7 +72,7 @@ export default function DeleteTenantApplicationModal({
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>
-						Delete {data ? `${name} ` : ' this'} Tenant Application
+						Delete {data ? `${name} ` : ' this'} Lease Application
 					</AlertDialogTitle>
 
 					<AlertDialogDescription>

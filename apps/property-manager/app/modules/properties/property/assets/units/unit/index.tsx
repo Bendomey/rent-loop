@@ -113,7 +113,7 @@ const selectableStatuses: Array<{
 	{
 		value: 'Unit.Status.Available',
 		label: 'Available',
-		description: 'Ready for tenant applications',
+		description: 'Ready for lease applications',
 	},
 	{
 		value: 'Unit.Status.Maintenance',

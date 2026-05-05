@@ -9,4 +9,8 @@ export * from './legal/privacy-policy'
 export * from './tenants/apply'
 export * from './tenants/apply/success'
 export * from './tenants/track'
+
+export * from './bookings/book'
+export * from './bookings/track'
+
 export * from './download'

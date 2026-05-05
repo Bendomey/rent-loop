@@ -22,10 +22,10 @@ const (
 )
 
 const (
-	TENANT_INVITED_SUBJECT               = "Complete your tenant application on Rentloop"
-	TENANT_CANCELLED_SUBJECT             = "Your tenant application has been cancelled"
-	TENANT_APPLICATION_SUBMITTED_SUBJECT = "Tenant Application Submitted Successfully"
-	TENANT_APPLICATION_APPROVED_SUBJECT  = "Your Tenant Application Has Been Approved"
+	TENANT_INVITED_SUBJECT               = "Complete your lease application on Rentloop"
+	TENANT_CANCELLED_SUBJECT             = "Your lease application has been cancelled"
+	TENANT_APPLICATION_SUBMITTED_SUBJECT = "Lease Application Submitted Successfully"
+	TENANT_APPLICATION_APPROVED_SUBJECT  = "Your Lease Application Has Been Approved"
 	TENANT_CSV_CREATED_SUBJECT           = "Complete Your Tenant Profile on Rentloop"
 )
 
@@ -86,7 +86,7 @@ const (
 
 const (
 	TENANT_INVITED_SMS_BODY               = `You've been invited to apply for a tenancy. Apply here: {{website_url}}/tenants/apply?unit={{unit_id}}&referred_by={{admin_id}}`
-	TENANT_APPLICATION_SUBMITTED_SMS_BODY = `Hi {{applicant_name}}, your application ({{application_code}}) for {{unit_name}} has been submitted. We'll be in touch.`
+	TENANT_APPLICATION_SUBMITTED_SMS_BODY = `Hi {{applicant_name}}, your application ({{application_code}}) for {{unit_name}} has been submitted. Track your application here: {{website_url}}/tenant-applications/{{application_code}}. We'll be in touch.`
 	TENANT_CANCELLED_SMS_BODY             = `Hi {{applicant_name}}, your application ({{application_code}}) has been cancelled. Reason: {{reason}}`
 	TENANT_APPLICATION_APPROVED_SMS_BODY  = `Hi {{applicant_name}}, your application for {{unit_name}} is approved! Log in to the Rentloop app with phone: {{phone_number}}`
 )
@@ -121,3 +121,16 @@ const (
 const ANNOUNCEMENT_SMS_BODY = `{{announcement_title}}: {{announcement_content}}`
 
 const TENANT_CSV_CREATED_SMS_BODY = `Your landlord started a tenancy application for you on Rentloop. Complete your profile: {{website_url}}/tenant-applications/{{application_code}}`
+
+const (
+	BOOKING_CREATED_SUBJECT            = "New Booking Created"
+	BOOKING_CREATED_SMS_BODY           = `Hi {{tenant_name}}, your booking for {{unit_name}} from {{check_in_date}} to {{check_out_date}} is created. Track your booking here: {{website_url}}/bookings/track/{{booking_code}}`
+	BOOKING_CONFIRMED_SUBJECT          = "Your Booking is Confirmed"
+	BOOKING_CONFIRMED_SMS_BODY         = `Hi {{tenant_name}}, your booking for {{unit_name}} is confirmed. Visit the tracking page to retrieve your check in code. \n\nTracking Page: {{website_url}}/bookings/track/{{booking_code}}`
+	BOOKING_CANCELLED_SUBJECT          = "Your Booking is Cancelled"
+	BOOKING_CANCELLED_SMS_BODY         = `Hi {{tenant_name}}, your booking for {{unit_name}} from {{check_in_date}} to {{check_out_date}} has been cancelled. Reason: {{cancellation_reason}}`
+	BOOKING_CHECKIN_REMINDER_SUBJECT   = "Reminder: Your Check-In is Tomorrow"
+	BOOKING_CHECKIN_REMINDER_SMS_BODY  = `Hi {{tenant_name}}, this is a reminder that your check-in for {{unit_name}} is tomorrow. Check-in time: {{check_in_time}}.`
+	BOOKING_CHECKOUT_REMINDER_SUBJECT  = "Reminder: Your Check-Out is Tomorrow"
+	BOOKING_CHECKOUT_REMINDER_SMS_BODY = `Hi {{tenant_name}}, this is a reminder that your check-out for {{unit_name}} is tomorrow. Check-out time: {{check_out_time}}.`
+)

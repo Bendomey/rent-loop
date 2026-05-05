@@ -18,7 +18,7 @@ const CreateTenantApplicationSchema = z.object({
 	first_name: z.string().min(1, 'First name is required'),
 	other_names: z.string().nullable().default(null),
 	last_name: z.string().min(1, 'Last name is required'),
-	email: z.email('Invalid email address'),
+	email: z.email('Invalid email address').optional(),
 	phone: z.string().min(1, 'Phone number is required'),
 	gender: z.enum(['MALE', 'FEMALE']),
 	marital_status: z.enum(['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED']),
@@ -64,7 +64,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export const handle = {
-	breadcrumb: 'New Tenant Application',
+	breadcrumb: 'New Lease Application',
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -73,9 +73,10 @@ export async function action({ request }: Route.ActionArgs) {
 	const clientId = safeString(authSession.get('selectedClientId'))
 
 	const formData = await request.formData()
-	const result = CreateTenantApplicationSchema.safeParse(
+	const cleanedData = replaceNullUndefinedWithUndefined(
 		Object.fromEntries(formData),
 	)
+	const result = CreateTenantApplicationSchema.safeParse(cleanedData)
 
 	if (!result.success) {
 		return {
@@ -86,10 +87,10 @@ export async function action({ request }: Route.ActionArgs) {
 
 	try {
 		const tenantApplication = await createTenantApplication(
-			replaceNullUndefinedWithUndefined({
+			{
 				...result.data,
 				client_id: clientId,
-			}),
+			},
 			{
 				baseUrl,
 				authToken: authSession.get('authToken'),
@@ -97,20 +98,20 @@ export async function action({ request }: Route.ActionArgs) {
 		)
 
 		if (!tenantApplication) {
-			throw new Error('Tenant application creation returned no data')
+			throw new Error('Lease application creation returned no data')
 		}
 
 		return redirect(
 			`/properties/${result.data.property_id}/tenants/applications/${tenantApplication.id}`,
 		)
 	} catch {
-		return { error: 'Failed to create tenant application' }
+		return { error: 'Failed to create lease application' }
 	}
 }
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `New Tenant Application | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
+		title: `New Lease Application | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,

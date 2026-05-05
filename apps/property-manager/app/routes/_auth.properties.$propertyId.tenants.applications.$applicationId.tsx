@@ -55,7 +55,7 @@ export const handle = {
 	breadcrumb: (data: Awaited<ReturnType<typeof loader>>) =>
 		'tenantApplication' in data
 			? data?.tenantApplication?.code
-			: 'Tenant Application',
+			: 'Lease Application',
 }
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {

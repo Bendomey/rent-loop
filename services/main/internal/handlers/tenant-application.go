@@ -60,15 +60,15 @@ type AdminCreateTenantApplicationRequest struct {
 
 // AdminCreateTenantApplication godoc
 //
-//	@Summary		Create a new tenant application (Admin)
-//	@Description	Create a new tenant application (Admin)
+//	@Summary		Create a new lease application (Admin)
+//	@Description	Create a new lease application (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Produce		json
 //	@Param			property_id	path		string														true	"Property ID"
-//	@Param			body		body		AdminCreateTenantApplicationRequest							true	"Create Tenant Application Request Body"
-//	@Success		201			{object}	object{data=transformations.OutputAdminTenantApplication}	"Tenant application created successfully"
-//	@Failure		400			{object}	lib.HTTPError												"Error occurred when creating a tenant application"
+//	@Param			body		body		AdminCreateTenantApplicationRequest							true	"Create lease application Request Body"
+//	@Success		201			{object}	object{data=transformations.OutputAdminTenantApplication}	"lease application created successfully"
+//	@Failure		400			{object}	lib.HTTPError												"Error occurred when creating a lease application"
 //	@Failure		422			{object}	lib.HTTPError												"Validation error"
 //	@Failure		500			{object}	string														"An unexpected error occurred"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications [post]
@@ -159,19 +159,19 @@ type CreateTenantApplicationRequest struct {
 	ProofOfIncomeUrl               *string   `json:"proof_of_income_url,omitempty"     validate:"omitempty,url"                                                 example:"https://example.com/proof_of_income.jpg" description:"Proof of income URL"`
 	OccupationAddress              string    `json:"occupation_address"                validate:"required"                                                      example:"456 Tech Ave, Accra"                     description:"Occupation address"`
 	ProfilePhotoUrl                *string   `json:"profile_photo_url,omitempty"       validate:"omitempty,url"                                                 example:"https://example.com/photo.jpg"           description:"Profile photo URL"`
-	CreatedById                    string    `json:"created_by_id"                     validate:"required,uuid"                                                 example:"72432ce6-5620-4ecf-a862-4bf2140556a1"    description:"ID of the user who created the tenant application"`
+	CreatedById                    string    `json:"created_by_id"                     validate:"required,uuid"                                                 example:"72432ce6-5620-4ecf-a862-4bf2140556a1"    description:"ID of the user who created the lease application"`
 }
 
 // CreateTenantApplication godoc
 //
-//	@Summary		Create a new tenant application
-//	@Description	Create a new tenant application
+//	@Summary		Create a new lease application
+//	@Description	Create a new lease application
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Produce		json
-//	@Param			body	body		CreateTenantApplicationRequest							true	"Create Tenant Application Request Body"
-//	@Success		201		{object}	object{data=transformations.OutputTenantApplication}	"Tenant application created successfully"
-//	@Failure		400		{object}	lib.HTTPError											"Error occurred when creating a tenant application"
+//	@Param			body	body		CreateTenantApplicationRequest							true	"Create lease application Request Body"
+//	@Success		201		{object}	object{data=transformations.OutputTenantApplication}	"lease application created successfully"
+//	@Failure		400		{object}	lib.HTTPError											"Error occurred when creating a lease application"
 //	@Failure		422		{object}	lib.HTTPError											"Validation error"
 //	@Failure		500		{object}	string													"An unexpected error occurred"
 //	@Router			/api/v1/tenant-applications [post]
@@ -313,14 +313,14 @@ type BulkCreateTenantApplicationsRequest struct {
 
 // BulkCreateTenantApplications godoc
 //
-//	@Summary		Bulk create tenant applications from CSV/Excel upload (Admin)
-//	@Description	Creates multiple tenant applications at once. Only phone is required per entry; all other fields are optional. Tenants are notified via SMS (and email if provided) with a link to complete their profile.
+//	@Summary		Bulk create lease applications from CSV/Excel upload (Admin)
+//	@Description	Creates multiple lease applications at once. Only phone is required per entry; all other fields are optional. Tenants are notified via SMS (and email if provided) with a link to complete their profile.
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Param			property_id	path		string														true	"Property ID"
-//	@Param			body		body		BulkCreateTenantApplicationsRequest							true	"Bulk Create Tenant Applications Request Body"
+//	@Param			body		body		BulkCreateTenantApplicationsRequest							true	"Bulk Create lease applications Request Body"
 //	@Success		201			{object}	object{data=[]transformations.OutputAdminTenantApplication}	"Applications created successfully"
 //	@Failure		400			{object}	lib.HTTPError												"Error occurred when creating applications"
 //	@Failure		401			{object}	string														"Invalid or absent authentication token"
@@ -409,24 +409,24 @@ type ListTenantApplicationsQuery struct {
 	SecurityDepositPaymentMethod *string   `json:"security_deposit_payment_method,omitempty" validate:"omitempty,oneof=ONLINE CASH EXTERNAL"`
 	Gender                       *string   `json:"gender,omitempty"                          validate:"omitempty,oneof=MALE FEMALE"`
 	MaritalStatus                *string   `json:"marital_status,omitempty"                  validate:"omitempty,oneof=SINGLE MARRIED DIVORCED WIDOWED"`
-	CreatedById                  *string   `json:"created_by_id,omitempty"                   validate:"omitempty,uuid"                                                                                                            example:"72432ce6-5620-4ecf-a862-4bf2140556a1"   description:"ID of the user who created the tenant application"`
-	DesiredUnitId                *string   `json:"desired_unit_id,omitempty"                 validate:"omitempty,uuid"                                                                                                            example:"72432ce6-5620-4ecf-a862-4bf2140556a1"   description:"ID of the unit that the tenant application is desired for"`
-	Email                        *[]string `json:"email,omitempty"                           validate:"omitempty,dive,email"                                                                                                      example:"john.doe@example.com,email@example.com" description:"Email address of the applicant"                            collectionFormat:"multi"`
-	Phone                        *[]string `json:"phone,omitempty"                           validate:"omitempty,dive,e164"                                                                                                       example:"+233281234569,+233281234569"            description:"Phone number of the applicant"                             collectionFormat:"multi"`
+	CreatedById                  *string   `json:"created_by_id,omitempty"                   validate:"omitempty,uuid"                                                                                                            example:"72432ce6-5620-4ecf-a862-4bf2140556a1"   description:"ID of the user who created the lease application"`
+	DesiredUnitId                *string   `json:"desired_unit_id,omitempty"                 validate:"omitempty,uuid"                                                                                                            example:"72432ce6-5620-4ecf-a862-4bf2140556a1"   description:"ID of the unit that the lease application is desired for"`
+	Email                        *[]string `json:"email,omitempty"                           validate:"omitempty,dive,email"                                                                                                      example:"john.doe@example.com,email@example.com" description:"Email address of the applicant"                           collectionFormat:"multi"`
+	Phone                        *[]string `json:"phone,omitempty"                           validate:"omitempty,dive,e164"                                                                                                       example:"+233281234569,+233281234569"            description:"Phone number of the applicant"                            collectionFormat:"multi"`
 }
 
 // ListTenantApplications godoc
 //
-//	@Summary		List all tenant applications (Admin)
-//	@Description	List all tenant applications (Admin)
+//	@Summary		List all lease applications (Admin)
+//	@Description	List all lease applications (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Param			property_id	path		string						true	"Property ID"
-//	@Param			q			query		ListTenantApplicationsQuery	true	"Tenant applications"
+//	@Param			q			query		ListTenantApplicationsQuery	true	"lease applications"
 //	@Success		200			{object}	object{data=object{rows=[]transformations.OutputAdminTenantApplication,meta=lib.HTTPReturnPaginatedMetaResponse}}
-//	@Failure		400			{object}	lib.HTTPError	"An error occurred while filtering tenant applications"
+//	@Failure		400			{object}	lib.HTTPError	"An error occurred while filtering lease applications"
 //	@Failure		401			{object}	string			"Absent or invalid authentication token"
 //	@Failure		500			{object}	string			"An unexpected error occurred"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications [get]
@@ -490,19 +490,19 @@ type GetTenantApplicationQuery struct {
 
 // AdminGetTenantApplication godoc
 //
-//	@Summary		Get tenant application (Admin)
-//	@Description	Get tenant application (Admin)
+//	@Summary		Get lease application (Admin)
+//	@Description	Get lease application (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Param			property_id				path		string														true	"Property ID"
-//	@Param			tenant_application_id	path		string														true	"Tenant application ID"
-//	@Param			q						query		GetTenantApplicationQuery									true	"Tenant application"
-//	@Success		200						{object}	object{data=transformations.OutputAdminTenantApplication}	"Tenant application retrieved successfully"
-//	@Failure		400						{object}	lib.HTTPError												"Error occurred when fetching a tenant application"
+//	@Param			tenant_application_id	path		string														true	"lease application ID"
+//	@Param			q						query		GetTenantApplicationQuery									true	"lease application"
+//	@Success		200						{object}	object{data=transformations.OutputAdminTenantApplication}	"lease application retrieved successfully"
+//	@Failure		400						{object}	lib.HTTPError												"Error occurred when fetching a lease application"
 //	@Failure		401						{object}	string														"Invalid or absent authentication token"
-//	@Failure		404						{object}	lib.HTTPError												"Tenant application not found"
+//	@Failure		404						{object}	lib.HTTPError												"lease application not found"
 //	@Failure		500						{object}	string														"An unexpected error occurred"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id} [get]
 func (h *TenantApplicationHandler) AdminGetTenantApplication(w http.ResponseWriter, r *http.Request) {
@@ -529,18 +529,18 @@ func (h *TenantApplicationHandler) AdminGetTenantApplication(w http.ResponseWrit
 
 // GetTenantApplication godoc
 //
-//	@Summary		Get tenant application
-//	@Description	Get tenant application
+//	@Summary		Get lease application
+//	@Description	Get lease application
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			tenant_application_id	path		string													true	"Tenant application ID"
-//	@Param			q						query		GetTenantApplicationQuery								true	"Tenant application"
-//	@Success		200						{object}	object{data=transformations.OutputTenantApplication}	"Tenant application retrieved successfully"
-//	@Failure		400						{object}	lib.HTTPError											"Error occurred when fetching a tenant application"
+//	@Param			tenant_application_id	path		string													true	"lease application ID"
+//	@Param			q						query		GetTenantApplicationQuery								true	"lease application"
+//	@Success		200						{object}	object{data=transformations.OutputTenantApplication}	"lease application retrieved successfully"
+//	@Failure		400						{object}	lib.HTTPError											"Error occurred when fetching a lease application"
 //	@Failure		401						{object}	string													"Invalid or absent authentication token"
-//	@Failure		404						{object}	lib.HTTPError											"Tenant application not found"
+//	@Failure		404						{object}	lib.HTTPError											"lease application not found"
 //	@Failure		500						{object}	string													"An unexpected error occurred"
 //	@Router			/api/v1/tenant-applications/{tenant_application_id} [get]
 func (h *TenantApplicationHandler) GetTenantApplication(w http.ResponseWriter, r *http.Request) {
@@ -609,19 +609,19 @@ type AdminUpdateTenantApplicationRequest struct {
 
 // AdminUpdateTenantApplication godoc
 //
-//	@Summary		Update a tenant application (Admin)
-//	@Description	Update a tenant application (Admin)
+//	@Summary		Update a lease application (Admin)
+//	@Description	Update a lease application (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Param			property_id				path		string														true	"Property ID"
-//	@Param			tenant_application_id	path		string														true	"Tenant application ID"
-//	@Param			body					body		AdminUpdateTenantApplicationRequest							true	"Update Tenant Application Request Body"
-//	@Success		200						{object}	object{data=transformations.OutputAdminTenantApplication}	"Tenant application updated successfully"
-//	@Failure		400						{object}	lib.HTTPError												"Error occurred when updating a tenant application"
+//	@Param			tenant_application_id	path		string														true	"lease application ID"
+//	@Param			body					body		AdminUpdateTenantApplicationRequest							true	"Update lease application Request Body"
+//	@Success		200						{object}	object{data=transformations.OutputAdminTenantApplication}	"lease application updated successfully"
+//	@Failure		400						{object}	lib.HTTPError												"Error occurred when updating a lease application"
 //	@Failure		401						{object}	string														"Invalid or absent authentication token"
-//	@Failure		404						{object}	lib.HTTPError												"Tenant application not found"
+//	@Failure		404						{object}	lib.HTTPError												"lease application not found"
 //	@Failure		422						{object}	lib.HTTPError												"Validation error"
 //	@Failure		500						{object}	string														"An unexpected error occurred"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id} [patch]
@@ -714,18 +714,18 @@ type UpdateTenantApplicationRequest struct {
 
 // UpdateTenantApplication godoc
 //
-//	@Summary		Update a tenant application
-//	@Description	Update a tenant application
+//	@Summary		Update a lease application
+//	@Description	Update a lease application
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			tenant_application_id	path		string													true	"Tenant application ID"
-//	@Param			body					body		UpdateTenantApplicationRequest							true	"Update Tenant Application Request Body"
-//	@Success		200						{object}	object{data=transformations.OutputTenantApplication}	"Tenant application updated successfully"
-//	@Failure		400						{object}	lib.HTTPError											"Error occurred when updating a tenant application"
+//	@Param			tenant_application_id	path		string													true	"lease application ID"
+//	@Param			body					body		UpdateTenantApplicationRequest							true	"Update lease application Request Body"
+//	@Success		200						{object}	object{data=transformations.OutputTenantApplication}	"lease application updated successfully"
+//	@Failure		400						{object}	lib.HTTPError											"Error occurred when updating a lease application"
 //	@Failure		401						{object}	string													"Invalid or absent authentication token"
-//	@Failure		404						{object}	lib.HTTPError											"Tenant application not found"
+//	@Failure		404						{object}	lib.HTTPError											"lease application not found"
 //	@Failure		422						{object}	lib.HTTPError											"Validation error"
 //	@Failure		500						{object}	string													"An unexpected error occurred"
 //	@Router			/api/v1/tenant-applications/{tenant_application_id} [patch]
@@ -762,18 +762,18 @@ func (h *TenantApplicationHandler) UpdateTenantApplication(w http.ResponseWriter
 
 // DeleteTenantApplication godoc
 //
-//	@Summary		Delete a tenant application (Admin)
-//	@Description	Delete a tenant application. Only applications with status 'TenantApplication.Status.Cancelled' can be deleted. (Admin)
+//	@Summary		Delete a lease application (Admin)
+//	@Description	Delete a lease application. Only applications with status 'TenantApplication.Status.Cancelled' can be deleted. (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Param			property_id				path	string	true	"Property ID"
-//	@Param			tenant_application_id	path	string	true	"Tenant application ID"
-//	@Success		204						"Tenant application deleted successfully"
-//	@Failure		400						{object}	lib.HTTPError	"Error occurred when deleting a tenant application or application is not cancelled"
+//	@Param			tenant_application_id	path	string	true	"lease application ID"
+//	@Success		204						"lease application deleted successfully"
+//	@Failure		400						{object}	lib.HTTPError	"Error occurred when deleting a lease application or application is not cancelled"
 //	@Failure		401						{object}	string			"Invalid or absent authentication token"
-//	@Failure		404						{object}	lib.HTTPError	"Tenant application not found"
+//	@Failure		404						{object}	lib.HTTPError	"lease application not found"
 //	@Failure		500						{object}	string			"An unexpected error occurred"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id} [delete]
 func (h *TenantApplicationHandler) DeleteTenantApplication(w http.ResponseWriter, r *http.Request) {
@@ -789,24 +789,24 @@ func (h *TenantApplicationHandler) DeleteTenantApplication(w http.ResponseWriter
 }
 
 type CancelTenantApplicationRequest struct {
-	Reason string `json:"reason" validate:"required,min=1" example:"Tenant application cancelled due to incomplete application"`
+	Reason string `json:"reason" validate:"required,min=1" example:"lease application cancelled due to incomplete application"`
 }
 
 // CancelTenantApplication godoc
 //
-//	@Summary		Cancel a tenant application (Admin)
-//	@Description	Cancel a tenant application (Admin)
+//	@Summary		Cancel a lease application (Admin)
+//	@Description	Cancel a lease application (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Param			property_id				path	string							true	"Property ID"
-//	@Param			tenant_application_id	path	string							true	"Tenant application ID"
-//	@Param			body					body	CancelTenantApplicationRequest	true	"Cancel Tenant Application Request Body"
-//	@Success		204						"Tenant application cancelled successfully"
-//	@Failure		400						{object}	lib.HTTPError	"Error occurred when cancelling a tenant application"
+//	@Param			tenant_application_id	path	string							true	"lease application ID"
+//	@Param			body					body	CancelTenantApplicationRequest	true	"Cancel lease application Request Body"
+//	@Success		204						"lease application cancelled successfully"
+//	@Failure		400						{object}	lib.HTTPError	"Error occurred when cancelling a lease application"
 //	@Failure		401						{object}	string			"Invalid or absent authentication token"
-//	@Failure		404						{object}	lib.HTTPError	"Tenant application not found"
+//	@Failure		404						{object}	lib.HTTPError	"lease application not found"
 //	@Failure		422						{object}	lib.HTTPError	"Validation error"
 //	@Failure		500						{object}	string			"An unexpected error occurred"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/cancel [patch]
@@ -846,20 +846,20 @@ func (h *TenantApplicationHandler) CancelTenantApplication(w http.ResponseWriter
 
 // ApproveTenantApplication godoc
 //
-//	@Summary		Approve a tenant application (Admin)
-//	@Description	Approve a tenant application (Admin)
+//	@Summary		Approve a lease application (Admin)
+//	@Description	Approve a lease application (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Param			property_id				path	string	true	"Property ID"
-//	@Param			tenant_application_id	path	string	true	"Tenant application ID"
-//	@Success		204						"Tenant application approved successfully"
-//	@Failure		400						{object}	lib.HTTPError	"Error occurred when approving a tenant application"
+//	@Param			tenant_application_id	path	string	true	"lease application ID"
+//	@Success		204						"lease application approved successfully"
+//	@Failure		400						{object}	lib.HTTPError	"Error occurred when approving a lease application"
 //	@Failure		401						{object}	string			"Invalid or absent authentication token"
-//	@Failure		403						{object}	lib.HTTPError	"Tenant application not approved"
-//	@Failure		404						{object}	lib.HTTPError	"Tenant application not found"
-//	@Failure		409						{object}	lib.HTTPError	"Tenant application already approved"
+//	@Failure		403						{object}	lib.HTTPError	"lease application not approved"
+//	@Failure		404						{object}	lib.HTTPError	"lease application not found"
+//	@Failure		409						{object}	lib.HTTPError	"lease application already approved"
 //	@Failure		422						{object}	lib.HTTPError	"Validation error"
 //	@Failure		500						{object}	string			"An unexpected error occurred"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/approve [patch]
@@ -893,19 +893,19 @@ type GenerateInvoiceRequest struct {
 
 // GenerateInvoice godoc
 //
-//	@Summary		Generate an invoice for a tenant application (Admin)
-//	@Description	Generate an invoice for a tenant application (security deposit and/or initial deposit) (Admin)
+//	@Summary		Generate an invoice for a lease application (Admin)
+//	@Description	Generate an invoice for a lease application (security deposit and/or initial deposit) (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Param			property_id				path		string										true	"Property ID"
-//	@Param			tenant_application_id	path		string										true	"Tenant application ID"
+//	@Param			tenant_application_id	path		string										true	"lease application ID"
 //	@Param			body					body		GenerateInvoiceRequest						false	"Generate Invoice Request Body"
 //	@Success		201						{object}	object{data=transformations.OutputInvoice}	"Invoice generated successfully"
 //	@Failure		400						{object}	lib.HTTPError								"Error occurred when generating invoice"
 //	@Failure		401						{object}	string										"Invalid or absent authentication token"
-//	@Failure		404						{object}	lib.HTTPError								"Tenant application not found"
+//	@Failure		404						{object}	lib.HTTPError								"lease application not found"
 //	@Failure		422						{object}	lib.HTTPError								"Validation error"
 //	@Failure		500						{object}	string										"An unexpected error occurred"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice:generate [post]
@@ -959,20 +959,20 @@ type PayInvoiceRequest struct {
 
 // PayInvoice godoc
 //
-//	@Summary		Pay an invoice for a tenant application (Admin)
-//	@Description	Pay an invoice for a tenant application (security deposit and/or initial deposit) (Admin)
+//	@Summary		Pay an invoice for a lease application (Admin)
+//	@Description	Pay an invoice for a lease application (security deposit and/or initial deposit) (Admin)
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
 //	@Param			property_id				path	string				true	"Property ID"
-//	@Param			tenant_application_id	path	string				true	"Tenant application ID"
+//	@Param			tenant_application_id	path	string				true	"lease application ID"
 //	@Param			invoice_id				path	string				true	"Invoice ID"
 //	@Param			body					body	PayInvoiceRequest	true	"Pay invoice request body"
 //	@Success		204						"Invoice paid successfully"
 //	@Failure		400						{object}	lib.HTTPError	"Error occurred when paying invoice"
 //	@Failure		401						{object}	string			"Invalid or absent authentication token"
-//	@Failure		404						{object}	lib.HTTPError	"Tenant application or invoice not found"
+//	@Failure		404						{object}	lib.HTTPError	"lease application or invoice not found"
 //	@Failure		422						{object}	lib.HTTPError	"Validation error"
 //	@Failure		500						{object}	string			"An unexpected error occurred"
 //	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay [post]
@@ -1045,12 +1045,12 @@ func (h *TenantApplicationHandler) PayInvoice(w http.ResponseWriter, r *http.Req
 
 // GetTenantApplicationByCode godoc
 //
-//	@Summary		Get tenant application by code (public)
-//	@Description	Look up a tenant application by its unique code. Returns application data including payment invoice.
+//	@Summary		Get lease application by code (public)
+//	@Description	Look up a lease application by its unique code. Returns application data including payment invoice.
 //	@Tags			TenantApplication
 //	@Produce		json
 //	@Param			code	path		string													true	"Application code"
-//	@Success		200		{object}	object{data=transformations.OutputTenantApplication}	"Tenant application retrieved"
+//	@Success		200		{object}	object{data=transformations.OutputTenantApplication}	"lease application retrieved"
 //	@Failure		404		{object}	lib.HTTPError											"Application not found"
 //	@Failure		500		{object}	string													"An unexpected error occurred"
 //	@Router			/api/v1/tenant-applications/code/{code} [get]
@@ -1099,14 +1099,14 @@ type UpdateTenantApplicationByCodeRequest struct {
 
 // UpdateTenantApplicationByCode godoc
 //
-//	@Summary		Update tenant application personal info by code (public)
+//	@Summary		Update lease application personal info by code (public)
 //	@Description	Allows a tenant to fill in or update their personal details on a CSV-created application using the application code.
 //	@Tags			TenantApplication
 //	@Accept			json
 //	@Produce		json
 //	@Param			code	path		string													true	"Application code"
-//	@Param			body	body		UpdateTenantApplicationByCodeRequest					true	"Update Tenant Application By Code Request Body"
-//	@Success		200		{object}	object{data=transformations.OutputTenantApplication}	"Tenant application updated"
+//	@Param			body	body		UpdateTenantApplicationByCodeRequest					true	"Update lease application By Code Request Body"
+//	@Success		200		{object}	object{data=transformations.OutputTenantApplication}	"lease application updated"
 //	@Failure		400		{object}	lib.HTTPError											"Error occurred when updating"
 //	@Failure		403		{object}	lib.HTTPError											"Not a CSV-imported application"
 //	@Failure		404		{object}	lib.HTTPError											"Application not found"
@@ -1185,7 +1185,7 @@ func (h *TenantApplicationHandler) UpdateTenantApplicationByCode(w http.Response
 
 // SendTrackingOtp godoc
 //
-//	@Summary		Send OTP to tenant application phone (public)
+//	@Summary		Send OTP to lease application phone (public)
 //	@Description	Sends a 6-digit OTP to the phone number associated with the given application code.
 //	@Tags			TenantApplication
 //	@Produce		json
@@ -1228,7 +1228,7 @@ type VerifyTrackingOtpRequest struct {
 
 // VerifyTrackingOtp godoc
 //
-//	@Summary		Verify OTP and retrieve tenant application (public)
+//	@Summary		Verify OTP and retrieve lease application (public)
 //	@Description	Verifies the OTP for the application's phone and returns full application data.
 //	@Tags			TenantApplication
 //	@Accept			json

@@ -454,6 +454,13 @@ definitions:
     required:
     - entries
     type: object
+  handlers.CancelBookingRequest:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
   handlers.CancelLeaseRequest:
     properties:
       cancellation_reason:
@@ -463,7 +470,7 @@ definitions:
   handlers.CancelTenantApplicationRequest:
     properties:
       reason:
-        example: Tenant application cancelled due to incomplete application
+        example: lease application cancelled due to incomplete application
         minLength: 1
         type: string
     required:
@@ -523,6 +530,45 @@ definitions:
     - priority
     - title
     - type
+    type: object
+  handlers.CreateBookingRequest:
+    properties:
+      check_in_date:
+        type: string
+      check_out_date:
+        type: string
+      guest_email:
+        type: string
+      guest_first_name:
+        type: string
+      guest_gender:
+        enum:
+        - MALE
+        - FEMALE
+        type: string
+      guest_id_number:
+        type: string
+      guest_id_type:
+        type: string
+      guest_last_name:
+        type: string
+      guest_phone:
+        type: string
+      notes:
+        type: string
+      rate:
+        type: integer
+      unit_id:
+        type: string
+    required:
+    - check_in_date
+    - check_out_date
+    - guest_first_name
+    - guest_gender
+    - guest_last_name
+    - guest_phone
+    - rate
+    - unit_id
     type: object
   handlers.CreateClientApplicationRequest:
     properties:
@@ -631,6 +677,25 @@ definitions:
         type: string
     required:
     - content
+    type: object
+  handlers.CreateDateBlockRequest:
+    properties:
+      block_type:
+        enum:
+        - MAINTENANCE
+        - PERSONAL
+        - OTHER
+        type: string
+      end_date:
+        type: string
+      reason:
+        type: string
+      start_date:
+        type: string
+    required:
+    - block_type
+    - end_date
+    - start_date
     type: object
   handlers.CreateDocumentRequest:
     properties:
@@ -878,6 +943,13 @@ definitions:
       longitude:
         example: -0.187
         type: number
+      modes:
+        example:
+        - LEASE
+        - BOOKING
+        items:
+          type: string
+        type: array
       name:
         example: Oceanview Apartment
         maxLength: 100
@@ -1342,6 +1414,40 @@ definitions:
     - amount
     - provider
     type: object
+  handlers.PublicCreateBookingRequest:
+    properties:
+      check_in_date:
+        type: string
+      check_out_date:
+        type: string
+      currency:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        enum:
+        - MALE
+        - FEMALE
+        type: string
+      id_number:
+        type: string
+      id_type:
+        type: string
+      last_name:
+        type: string
+      phone:
+        type: string
+    required:
+    - check_in_date
+    - check_out_date
+    - currency
+    - first_name
+    - gender
+    - last_name
+    - phone
+    type: object
   handlers.RegisterFcmTokenRequest:
     properties:
       platform:
@@ -1805,6 +1911,13 @@ definitions:
       longitude:
         example: -0.187
         type: number
+      modes:
+        example:
+        - LEASE
+        - BOOKING
+        items:
+          type: string
+        type: array
       name:
         example: Oceanview Apartment
         maxLength: 100
@@ -2141,6 +2254,50 @@ definitions:
         example: "2023-01-01T00:00:00Z"
         type: string
     type: object
+  transformations.AdminOutputBooking:
+    properties:
+      booking_source:
+        type: string
+      cancellation_reason:
+        type: string
+      check_in_code:
+        type: string
+      check_in_date:
+        type: string
+      check_out_date:
+        type: string
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by_client_user_id:
+        type: string
+      currency:
+        type: string
+      id:
+        type: string
+      invoice: {}
+      invoice_id:
+        type: string
+      notes:
+        type: string
+      property_id:
+        type: string
+      rate:
+        type: integer
+      requires_upfront_payment:
+        type: boolean
+      status:
+        type: string
+      tenant: {}
+      tenant_id:
+        type: string
+      unit: {}
+      unit_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
   transformations.AdminOutputMaintenanceRequest:
     properties:
       activity_logs:
@@ -2285,6 +2442,27 @@ definitions:
       updated_at:
         example: "2023-01-01T00:00:00Z"
         format: date-time
+        type: string
+    type: object
+  transformations.AdminOutputUnitDateBlock:
+    properties:
+      block_type:
+        type: string
+      booking_id:
+        type: string
+      created_at:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: string
+      lease_id:
+        type: string
+      reason:
+        type: string
+      start_date:
+        type: string
+      unit_id:
         type: string
     type: object
   transformations.InvoiceStatsResponse:
@@ -4293,6 +4471,42 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/transformations.OutputUser'
+    type: object
+  transformations.PublicOutputBooking:
+    properties:
+      check_in_code:
+        type: string
+      check_in_date:
+        type: string
+      check_out_date:
+        type: string
+      code:
+        type: string
+      created_at:
+        type: string
+      currency:
+        type: string
+      property_name:
+        type: string
+      rate:
+        type: integer
+      status:
+        type: string
+      unit_name:
+        type: string
+    type: object
+  transformations.PublicOutputUnitDateBlock:
+    properties:
+      block_type:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: string
+      reason:
+        type: string
+      start_date:
+        type: string
     type: object
 info:
   contact:
@@ -7227,6 +7441,403 @@ paths:
       summary: Create unit (Admin)
       tags:
       - Units
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/bookings:
+    get:
+      description: Get a list of bookings for a property, with optional filtering
+        by status. This endpoint is intended for manager use to view all bookings
+        for their properties.
+      parameters:
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - PENDING
+        - CONFIRMED
+        - CHECKED_IN
+        - CANCELLED
+        example: PENDING
+        in: query
+        name: status
+        type: string
+      - example: 550e8400-e29b-41d4-a716-446655440000
+        in: query
+        name: unit_id
+        type: string
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.AdminOutputBooking'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List bookings for a property
+      tags:
+      - Booking
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Create booking request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputBooking'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a booking (manager)
+      tags:
+      - Booking
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/bookings/{booking_id}:
+    get:
+      description: Get a booking by ID. This endpoint is intended for manager use
+        to view details of a specific booking for their properties. For tenants to
+        view their own bookings, use the tenant-facing endpoint instead.
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Booking ID
+        in: path
+        name: booking_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputBooking'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get a booking by ID
+      tags:
+      - Booking
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/bookings/{booking_id}/cancel:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Booking ID
+        in: path
+        name: booking_id
+        required: true
+        type: string
+      - description: Cancellation request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CancelBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputBooking'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Cancel a booking
+      tags:
+      - Booking
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/bookings/{booking_id}/check-in:
+    put:
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Booking ID
+        in: path
+        name: booking_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputBooking'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Mark a booking as checked in
+      tags:
+      - Booking
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/bookings/{booking_id}/complete:
+    put:
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Booking ID
+        in: path
+        name: booking_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputBooking'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Mark a booking as completed
+      tags:
+      - Booking
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/bookings/{booking_id}/confirm:
+    put:
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Booking ID
+        in: path
+        name: booking_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputBooking'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Confirm a pending booking
+      tags:
+      - Booking
   /api/v1/admin/clients/{client_id}/properties/{property_id}/client-users:link:
     post:
       consumes:
@@ -10333,7 +10944,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Submit a signature for a document using tenant application or lease
+      description: Submit a signature for a document using lease application or lease
         context (for PMs) (Admin)
       parameters:
       - description: Property ID
@@ -10376,7 +10987,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: List all tenant applications (Admin)
+      description: List all lease applications (Admin)
       parameters:
       - description: Property ID
         in: path
@@ -10527,7 +11138,7 @@ paths:
                 type: object
             type: object
         "400":
-          description: An error occurred while filtering tenant applications
+          description: An error occurred while filtering lease applications
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "401":
@@ -10540,20 +11151,20 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: List all tenant applications (Admin)
+      summary: List all lease applications (Admin)
       tags:
       - TenantApplication
     post:
       consumes:
       - application/json
-      description: Create a new tenant application (Admin)
+      description: Create a new lease application (Admin)
       parameters:
       - description: Property ID
         in: path
         name: property_id
         required: true
         type: string
-      - description: Create Tenant Application Request Body
+      - description: Create lease application Request Body
         in: body
         name: body
         required: true
@@ -10563,14 +11174,14 @@ paths:
       - application/json
       responses:
         "201":
-          description: Tenant application created successfully
+          description: lease application created successfully
           schema:
             properties:
               data:
                 $ref: '#/definitions/transformations.OutputAdminTenantApplication'
             type: object
         "400":
-          description: Error occurred when creating a tenant application
+          description: Error occurred when creating a lease application
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "422":
@@ -10581,14 +11192,14 @@ paths:
           description: An unexpected error occurred
           schema:
             type: string
-      summary: Create a new tenant application (Admin)
+      summary: Create a new lease application (Admin)
       tags:
       - TenantApplication
   /api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}:
     delete:
       consumes:
       - application/json
-      description: Delete a tenant application. Only applications with status 'TenantApplication.Status.Cancelled'
+      description: Delete a lease application. Only applications with status 'TenantApplication.Status.Cancelled'
         can be deleted. (Admin)
       parameters:
       - description: Property ID
@@ -10596,7 +11207,7 @@ paths:
         name: property_id
         required: true
         type: string
-      - description: Tenant application ID
+      - description: lease application ID
         in: path
         name: tenant_application_id
         required: true
@@ -10605,9 +11216,9 @@ paths:
       - application/json
       responses:
         "204":
-          description: Tenant application deleted successfully
+          description: lease application deleted successfully
         "400":
-          description: Error occurred when deleting a tenant application or application
+          description: Error occurred when deleting a lease application or application
             is not cancelled
           schema:
             $ref: '#/definitions/lib.HTTPError'
@@ -10616,7 +11227,7 @@ paths:
           schema:
             type: string
         "404":
-          description: Tenant application not found
+          description: lease application not found
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "500":
@@ -10625,20 +11236,20 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: Delete a tenant application (Admin)
+      summary: Delete a lease application (Admin)
       tags:
       - TenantApplication
     get:
       consumes:
       - application/json
-      description: Get tenant application (Admin)
+      description: Get lease application (Admin)
       parameters:
       - description: Property ID
         in: path
         name: property_id
         required: true
         type: string
-      - description: Tenant application ID
+      - description: lease application ID
         in: path
         name: tenant_application_id
         required: true
@@ -10653,14 +11264,14 @@ paths:
       - application/json
       responses:
         "200":
-          description: Tenant application retrieved successfully
+          description: lease application retrieved successfully
           schema:
             properties:
               data:
                 $ref: '#/definitions/transformations.OutputAdminTenantApplication'
             type: object
         "400":
-          description: Error occurred when fetching a tenant application
+          description: Error occurred when fetching a lease application
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "401":
@@ -10668,7 +11279,7 @@ paths:
           schema:
             type: string
         "404":
-          description: Tenant application not found
+          description: lease application not found
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "500":
@@ -10677,25 +11288,25 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: Get tenant application (Admin)
+      summary: Get lease application (Admin)
       tags:
       - TenantApplication
     patch:
       consumes:
       - application/json
-      description: Update a tenant application (Admin)
+      description: Update a lease application (Admin)
       parameters:
       - description: Property ID
         in: path
         name: property_id
         required: true
         type: string
-      - description: Tenant application ID
+      - description: lease application ID
         in: path
         name: tenant_application_id
         required: true
         type: string
-      - description: Update Tenant Application Request Body
+      - description: Update lease application Request Body
         in: body
         name: body
         required: true
@@ -10705,14 +11316,14 @@ paths:
       - application/json
       responses:
         "200":
-          description: Tenant application updated successfully
+          description: lease application updated successfully
           schema:
             properties:
               data:
                 $ref: '#/definitions/transformations.OutputAdminTenantApplication'
             type: object
         "400":
-          description: Error occurred when updating a tenant application
+          description: Error occurred when updating a lease application
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "401":
@@ -10720,7 +11331,7 @@ paths:
           schema:
             type: string
         "404":
-          description: Tenant application not found
+          description: lease application not found
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "422":
@@ -10733,21 +11344,21 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: Update a tenant application (Admin)
+      summary: Update a lease application (Admin)
       tags:
       - TenantApplication
   /api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/approve:
     patch:
       consumes:
       - application/json
-      description: Approve a tenant application (Admin)
+      description: Approve a lease application (Admin)
       parameters:
       - description: Property ID
         in: path
         name: property_id
         required: true
         type: string
-      - description: Tenant application ID
+      - description: lease application ID
         in: path
         name: tenant_application_id
         required: true
@@ -10756,9 +11367,9 @@ paths:
       - application/json
       responses:
         "204":
-          description: Tenant application approved successfully
+          description: lease application approved successfully
         "400":
-          description: Error occurred when approving a tenant application
+          description: Error occurred when approving a lease application
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "401":
@@ -10766,15 +11377,15 @@ paths:
           schema:
             type: string
         "403":
-          description: Tenant application not approved
+          description: lease application not approved
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "404":
-          description: Tenant application not found
+          description: lease application not found
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "409":
-          description: Tenant application already approved
+          description: lease application already approved
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "422":
@@ -10787,26 +11398,26 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: Approve a tenant application (Admin)
+      summary: Approve a lease application (Admin)
       tags:
       - TenantApplication
   /api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/cancel:
     patch:
       consumes:
       - application/json
-      description: Cancel a tenant application (Admin)
+      description: Cancel a lease application (Admin)
       parameters:
       - description: Property ID
         in: path
         name: property_id
         required: true
         type: string
-      - description: Tenant application ID
+      - description: lease application ID
         in: path
         name: tenant_application_id
         required: true
         type: string
-      - description: Cancel Tenant Application Request Body
+      - description: Cancel lease application Request Body
         in: body
         name: body
         required: true
@@ -10816,9 +11427,9 @@ paths:
       - application/json
       responses:
         "204":
-          description: Tenant application cancelled successfully
+          description: lease application cancelled successfully
         "400":
-          description: Error occurred when cancelling a tenant application
+          description: Error occurred when cancelling a lease application
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "401":
@@ -10826,7 +11437,7 @@ paths:
           schema:
             type: string
         "404":
-          description: Tenant application not found
+          description: lease application not found
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "422":
@@ -10839,14 +11450,14 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: Cancel a tenant application (Admin)
+      summary: Cancel a lease application (Admin)
       tags:
       - TenantApplication
   /api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay:
     post:
       consumes:
       - application/json
-      description: Pay an invoice for a tenant application (security deposit and/or
+      description: Pay an invoice for a lease application (security deposit and/or
         initial deposit) (Admin)
       parameters:
       - description: Property ID
@@ -10854,7 +11465,7 @@ paths:
         name: property_id
         required: true
         type: string
-      - description: Tenant application ID
+      - description: lease application ID
         in: path
         name: tenant_application_id
         required: true
@@ -10884,7 +11495,7 @@ paths:
           schema:
             type: string
         "404":
-          description: Tenant application or invoice not found
+          description: lease application or invoice not found
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "422":
@@ -10897,22 +11508,22 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: Pay an invoice for a tenant application (Admin)
+      summary: Pay an invoice for a lease application (Admin)
       tags:
       - TenantApplication
   /api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice:generate:
     post:
       consumes:
       - application/json
-      description: Generate an invoice for a tenant application (security deposit
-        and/or initial deposit) (Admin)
+      description: Generate an invoice for a lease application (security deposit and/or
+        initial deposit) (Admin)
       parameters:
       - description: Property ID
         in: path
         name: property_id
         required: true
         type: string
-      - description: Tenant application ID
+      - description: lease application ID
         in: path
         name: tenant_application_id
         required: true
@@ -10941,7 +11552,7 @@ paths:
           schema:
             type: string
         "404":
-          description: Tenant application not found
+          description: lease application not found
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "422":
@@ -10954,14 +11565,14 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: Generate an invoice for a tenant application (Admin)
+      summary: Generate an invoice for a lease application (Admin)
       tags:
       - TenantApplication
   /api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/bulk:
     post:
       consumes:
       - application/json
-      description: Creates multiple tenant applications at once. Only phone is required
+      description: Creates multiple lease applications at once. Only phone is required
         per entry; all other fields are optional. Tenants are notified via SMS (and
         email if provided) with a link to complete their profile.
       parameters:
@@ -10970,7 +11581,7 @@ paths:
         name: property_id
         required: true
         type: string
-      - description: Bulk Create Tenant Applications Request Body
+      - description: Bulk Create lease applications Request Body
         in: body
         name: body
         required: true
@@ -11006,7 +11617,7 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: Bulk create tenant applications from CSV/Excel upload (Admin)
+      summary: Bulk create lease applications from CSV/Excel upload (Admin)
       tags:
       - TenantApplication
   /api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/invite:
@@ -11645,6 +12256,165 @@ paths:
       summary: Update unit (Admin)
       tags:
       - Units
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/units/{unit_id}/availability:
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Unit ID
+        in: path
+        name: unit_id
+        required: true
+        type: string
+      - description: Start date (RFC3339)
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: End date (RFC3339)
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/transformations.AdminOutputUnitDateBlock'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get availability for a unit (manager)
+      tags:
+      - Booking
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/units/{unit_id}/date-blocks:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Unit ID
+        in: path
+        name: unit_id
+        required: true
+        type: string
+      - description: Date block request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateDateBlockRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputUnitDateBlock'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a manual date block for a unit
+      tags:
+      - Booking
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/units/{unit_id}/date-blocks/{block_id}:
+    delete:
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Unit ID
+        in: path
+        name: unit_id
+        required: true
+        type: string
+      - description: Block ID
+        in: path
+        name: block_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete a manual date block
+      tags:
+      - Booking
   /api/v1/admin/clients/{client_id}/properties/{property_id}/units/{unit_id}/status:available:
     patch:
       consumes:
@@ -12437,6 +13207,48 @@ paths:
       summary: Verify verification code
       tags:
       - Auth
+  /api/v1/bookings/{tracking_code}:
+    get:
+      parameters:
+      - description: Tracking Code
+        in: path
+        name: tracking_code
+        required: true
+        type: string
+      - description: Guest phone number
+        in: query
+        name: phone
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.PublicOutputBooking'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get booking status by tracking code (phone-verified)
+      tags:
+      - Public
   /api/v1/documents/{document_id}:
     patch:
       consumes:
@@ -13735,9 +14547,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new tenant application
+      description: Create a new lease application
       parameters:
-      - description: Create Tenant Application Request Body
+      - description: Create lease application Request Body
         in: body
         name: body
         required: true
@@ -13747,14 +14559,14 @@ paths:
       - application/json
       responses:
         "201":
-          description: Tenant application created successfully
+          description: lease application created successfully
           schema:
             properties:
               data:
                 $ref: '#/definitions/transformations.OutputTenantApplication'
             type: object
         "400":
-          description: Error occurred when creating a tenant application
+          description: Error occurred when creating a lease application
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "422":
@@ -13765,16 +14577,16 @@ paths:
           description: An unexpected error occurred
           schema:
             type: string
-      summary: Create a new tenant application
+      summary: Create a new lease application
       tags:
       - TenantApplication
   /api/v1/tenant-applications/{tenant_application_id}:
     get:
       consumes:
       - application/json
-      description: Get tenant application
+      description: Get lease application
       parameters:
-      - description: Tenant application ID
+      - description: lease application ID
         in: path
         name: tenant_application_id
         required: true
@@ -13789,14 +14601,14 @@ paths:
       - application/json
       responses:
         "200":
-          description: Tenant application retrieved successfully
+          description: lease application retrieved successfully
           schema:
             properties:
               data:
                 $ref: '#/definitions/transformations.OutputTenantApplication'
             type: object
         "400":
-          description: Error occurred when fetching a tenant application
+          description: Error occurred when fetching a lease application
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "401":
@@ -13804,7 +14616,7 @@ paths:
           schema:
             type: string
         "404":
-          description: Tenant application not found
+          description: lease application not found
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "500":
@@ -13813,20 +14625,20 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: Get tenant application
+      summary: Get lease application
       tags:
       - TenantApplication
     patch:
       consumes:
       - application/json
-      description: Update a tenant application
+      description: Update a lease application
       parameters:
-      - description: Tenant application ID
+      - description: lease application ID
         in: path
         name: tenant_application_id
         required: true
         type: string
-      - description: Update Tenant Application Request Body
+      - description: Update lease application Request Body
         in: body
         name: body
         required: true
@@ -13836,14 +14648,14 @@ paths:
       - application/json
       responses:
         "200":
-          description: Tenant application updated successfully
+          description: lease application updated successfully
           schema:
             properties:
               data:
                 $ref: '#/definitions/transformations.OutputTenantApplication'
             type: object
         "400":
-          description: Error occurred when updating a tenant application
+          description: Error occurred when updating a lease application
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "401":
@@ -13851,7 +14663,7 @@ paths:
           schema:
             type: string
         "404":
-          description: Tenant application not found
+          description: lease application not found
           schema:
             $ref: '#/definitions/lib.HTTPError'
         "422":
@@ -13864,12 +14676,12 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: Update a tenant application
+      summary: Update a lease application
       tags:
       - TenantApplication
   /api/v1/tenant-applications/code/{code}:
     get:
-      description: Look up a tenant application by its unique code. Returns application
+      description: Look up a lease application by its unique code. Returns application
         data including payment invoice.
       parameters:
       - description: Application code
@@ -13881,7 +14693,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Tenant application retrieved
+          description: lease application retrieved
           schema:
             properties:
               data:
@@ -13895,7 +14707,7 @@ paths:
           description: An unexpected error occurred
           schema:
             type: string
-      summary: Get tenant application by code (public)
+      summary: Get lease application by code (public)
       tags:
       - TenantApplication
     patch:
@@ -13909,7 +14721,7 @@ paths:
         name: code
         required: true
         type: string
-      - description: Update Tenant Application By Code Request Body
+      - description: Update lease application By Code Request Body
         in: body
         name: body
         required: true
@@ -13919,7 +14731,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Tenant application updated
+          description: lease application updated
           schema:
             properties:
               data:
@@ -13945,7 +14757,7 @@ paths:
           description: An unexpected error occurred
           schema:
             type: string
-      summary: Update tenant application personal info by code (public)
+      summary: Update lease application personal info by code (public)
       tags:
       - TenantApplication
   /api/v1/tenant-applications/code/{code}/invoice/{invoice_id}/pay:
@@ -14028,7 +14840,7 @@ paths:
           description: An unexpected error occurred
           schema:
             type: string
-      summary: Send OTP to tenant application phone (public)
+      summary: Send OTP to lease application phone (public)
       tags:
       - TenantApplication
   /api/v1/tenant-applications/code/{code}/otp:verify:
@@ -14075,7 +14887,7 @@ paths:
           description: An unexpected error occurred
           schema:
             type: string
-      summary: Verify OTP and retrieve tenant application (public)
+      summary: Verify OTP and retrieve lease application (public)
       tags:
       - TenantApplication
   /api/v1/tenants/phone/{phone}:
@@ -14154,6 +14966,90 @@ paths:
       summary: Fetch unit subset
       tags:
       - Units
+  /api/v1/units/{unit_slug}/availability:
+    get:
+      parameters:
+      - description: Unit Slug
+        in: path
+        name: unit_slug
+        required: true
+        type: string
+      - description: Start date (RFC3339)
+        in: query
+        name: from
+        type: string
+      - description: End date (RFC3339)
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/transformations.PublicOutputUnitDateBlock'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get availability for a unit (public)
+      tags:
+      - Public
+  /api/v1/units/{unit_slug}/bookings:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Unit Slug
+        in: path
+        name: unit_slug
+        required: true
+        type: string
+      - description: Booking request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.PublicCreateBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.PublicOutputBooking'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Create a booking as a guest (public)
+      tags:
+      - Public
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

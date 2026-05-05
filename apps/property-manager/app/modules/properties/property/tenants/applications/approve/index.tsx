@@ -94,7 +94,7 @@ function ApprovalModalContent({
 					<DialogTitle>Approve Application</DialogTitle>
 					<DialogDescription className="text-center">
 						This will generate the lease agreement PDF, securely store it, and
-						approve the tenant application. This action cannot be undone.
+						approve the lease application. This action cannot be undone.
 					</DialogDescription>
 				</DialogHeader>
 				<div className="flex justify-end gap-3 pt-2">

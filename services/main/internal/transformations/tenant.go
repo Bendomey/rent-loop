@@ -8,29 +8,29 @@ import (
 )
 
 type OutputTenant struct {
-	ID              string    `json:"id"                          example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	FirstName       string    `json:"first_name"                  example:"John"`
-	OtherNames      *string   `json:"other_names,omitempty"       example:"Michael"`
-	LastName        string    `json:"last_name"                   example:"Doe"`
-	Email           *string   `json:"email,omitempty"             example:"john.doe@example.com"`
-	Phone           string    `json:"phone"                       example:"+1234567890"`
-	Gender          string    `json:"gender"                      example:"male"`
-	DateOfBirth     time.Time `json:"date_of_birth"               example:"1990-01-01"`
-	Nationality     string    `json:"nationality"                 example:"Ghanaian"`
-	MaritalStatus   string    `json:"marital_status"              example:"single"`
-	ProfilePhotoUrl *string   `json:"profile_photo_url,omitempty" example:"https://example.com/photo.jpg"`
-	IDType          string    `json:"id_type"                     example:"GHANA_CARD"`
-	IDNumber        string    `json:"id_number"                   example:"ID123456"`
-	IDFrontUrl      *string   `json:"id_front_url,omitempty"      example:"https://example.com/id-front.jpg"`
-	IDBackUrl       *string   `json:"id_back_url,omitempty"       example:"https://example.com/id-back.jpg"`
+	ID              string     `json:"id"                          example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	FirstName       string     `json:"first_name"                  example:"John"`
+	OtherNames      *string    `json:"other_names,omitempty"       example:"Michael"`
+	LastName        string     `json:"last_name"                   example:"Doe"`
+	Email           *string    `json:"email,omitempty"             example:"john.doe@example.com"`
+	Phone           string     `json:"phone"                       example:"+1234567890"`
+	Gender          string     `json:"gender"                      example:"male"`
+	DateOfBirth     *time.Time `json:"date_of_birth,omitempty"     example:"1990-01-01"`
+	Nationality     *string    `json:"nationality,omitempty"       example:"Ghanaian"`
+	MaritalStatus   *string    `json:"marital_status,omitempty"    example:"single"`
+	ProfilePhotoUrl *string    `json:"profile_photo_url,omitempty" example:"https://example.com/photo.jpg"`
+	IDType          *string    `json:"id_type,omitempty"           example:"GHANA_CARD"`
+	IDNumber        *string    `json:"id_number,omitempty"         example:"ID123456"`
+	IDFrontUrl      *string    `json:"id_front_url,omitempty"      example:"https://example.com/id-front.jpg"`
+	IDBackUrl       *string    `json:"id_back_url,omitempty"       example:"https://example.com/id-back.jpg"`
 
-	EmergencyContactName           string `json:"emergency_contact_name"            example:"Mary Doe"`
-	EmergencyContactPhone          string `json:"emergency_contact_phone"           example:"+1122334455"`
-	RelationshipToEmergencyContact string `json:"relationship_to_emergency_contact" example:"sister"`
+	EmergencyContactName           *string `json:"emergency_contact_name,omitempty"            example:"Mary Doe"`
+	EmergencyContactPhone          *string `json:"emergency_contact_phone,omitempty"           example:"+1122334455"`
+	RelationshipToEmergencyContact *string `json:"relationship_to_emergency_contact,omitempty" example:"sister"`
 
-	Occupation        string  `json:"occupation"                    example:"Software Engineer"`
-	Employer          string  `json:"employer"                      example:"Tech Ltd."`
-	OccupationAddress string  `json:"occupation_address"            example:"456 Tech Ave, Accra"`
+	Occupation        *string `json:"occupation,omitempty"          example:"Software Engineer"`
+	Employer          *string `json:"employer,omitempty"            example:"Tech Ltd."`
+	OccupationAddress *string `json:"occupation_address,omitempty"  example:"456 Tech Ave, Accra"`
 	ProofOfIncomeUrl  *string `json:"proof_of_income_url,omitempty" example:"https://example.com/income.pdf"`
 }
 

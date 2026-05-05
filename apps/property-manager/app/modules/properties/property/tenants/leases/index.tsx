@@ -248,7 +248,7 @@ export function PropertyTenantLeasesModule() {
 						empty={{
 							message: 'No leases found',
 							description:
-								'Approved tenant applications will appear here as active leases.',
+								'Approved lease applications will appear here as active leases.',
 						}}
 					/>
 				</div>

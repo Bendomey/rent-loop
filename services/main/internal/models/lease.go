@@ -32,11 +32,11 @@ type Lease struct {
 	TenantApplication   TenantApplication
 
 	// financial setup
-	RentFee          int64   `gorm:"not null;"` // we can inherit from tenant application
+	RentFee          int64   `gorm:"not null;"` // we can inherit from lease application
 	RentFeeCurrency  string  `gorm:"not null;"`
 	PaymentFrequency *string // Hourly, Daily, Monthly, Quarterly, BiAnnually, Annually, OneTime
 
-	// to hold all payment related data from tenant application at the time of lease creation
+	// to hold all payment related data from lease application at the time of lease creation
 	Meta datatypes.JSON `gorm:"not null;type:jsonb;"` // additional metadata in json format
 
 	// move in details

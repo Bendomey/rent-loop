@@ -36,12 +36,12 @@ export function TenantModule() {
 				<Card key={tenant?.id} className="shadow-none">
 					<CardHeader className="flex items-start justify-between gap-3">
 						<CardTitle>
-							<Badge
+							{/* <Badge
 								variant={tenant?.status === 'ACTIVE' ? 'secondary' : 'default'}
 								className="px-2 py-1 text-xs"
 							>
 								{tenant?.status === 'ACTIVE' ? 'Active' : 'Expired'}
-							</Badge>
+							</Badge> */}
 						</CardTitle>
 					</CardHeader>
 

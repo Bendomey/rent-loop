@@ -65,7 +65,7 @@ Flutter:
 ### Flutter
 - **Models**: Updated `InvoiceModel` (context IDs, payments, allowed_payment_rails, helper getters `isOutstanding`, `dueDateParsed`, `daysUntilDue`); new `PaymentModel`; new `PaymentAccountModel` (with `displayLabel` helper)
 - **API**: `InvoiceApi` replaced with lease-scoped methods: `getLeaseInvoices`, `getInvoice`, `getLeasePaymentAccounts`
-- **Providers**: `invoicesProvider` now watches `currentLeaseNotifierProvider` and passes tenant application ID for OR filtering; new `invoiceDetailProvider(leaseId, invoiceId)`; new `leasePaymentAccountsProvider(leaseId)`
+- **Providers**: `invoicesProvider` now watches `currentLeaseNotifierProvider` and passes lease application ID for OR filtering; new `invoiceDetailProvider(leaseId, invoiceId)`; new `leasePaymentAccountsProvider(leaseId)`
 - **Notifier**: `CreateOfflinePaymentNotifier` — posts to `POST /api/v1/payments/offline:initiate`
 - **Home screen**: `UpcomingPaymentCard` rewritten — watches real invoices, shows oldest outstanding invoice with severity-colored due date banner, "All caught up" empty state, shimmer skeleton
 - **Payments tab**: `PaymentsScreen` overhauled — tappable invoice cards navigating to detail, due date banners (overdue/due-soon/due-this-week), context badges (tappable for lease/application), pull-to-refresh

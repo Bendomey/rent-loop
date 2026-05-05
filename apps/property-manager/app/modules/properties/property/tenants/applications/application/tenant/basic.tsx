@@ -168,7 +168,7 @@ export function PropertyTenantApplicationBasic({ property_id }: Props) {
 				<CardHeader>
 					<CardTitle className="flex items-center justify-between">
 						Basic Information
-						{application?.status !== 'TenantApplication.Status.Cancelled' && (
+						{application?.status === 'TenantApplication.Status.InProgress' && (
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<span>

@@ -29,7 +29,7 @@ const NAV_ITEMS = (propertyId: string) => {
 			to: `${baseUrl}/tenants/leases`,
 		},
 		{
-			label: 'Applications',
+			label: 'Lease Applications',
 			icon: ClipboardList,
 			to: `${baseUrl}/tenants/applications`,
 		},

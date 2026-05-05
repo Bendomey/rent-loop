@@ -21,7 +21,7 @@ When a unit has more than 1 occupants allowed, once there is at least one active
 **New status:** `Unit.Status.PartiallyOccupied`
 - Triggered when: `1 ≤ occupyingLeases < MaxOccupantsAllowed` (and `MaxOccupantsAllowed > 1`)
 - Blocks: unit editing, manual status changes
-- Allows: new tenant applications (still has open slots)
+- Allows: new lease applications (still has open slots)
 - Tenant-facing API: maps to `Available` (space still exists)
 
 No DB migration needed — status is a plain string column, not a PostgreSQL enum.
@@ -32,8 +32,8 @@ No DB migration needed — status is a plain string column, not a PostgreSQL enu
 - [ ] #1 Unit with MaxOccupantsAllowed=1 transitions directly Available → Occupied when first lease is approved (no change to existing behaviour)
 - [ ] #2 Unit with MaxOccupantsAllowed>1 transitions to PartiallyOccupied when first lease is approved (occupyingLeases >= 1 but < MaxOccupantsAllowed)
 - [ ] #3 Unit with MaxOccupantsAllowed>1 transitions to Occupied when all slots are filled (occupyingLeases >= MaxOccupantsAllowed)
-- [ ] #4 New tenant applications can be created for PartiallyOccupied units (same as Available)
-- [ ] #5 Approving a tenant application is allowed for PartiallyOccupied units (same as Available)
+- [ ] #4 New lease applications can be created for PartiallyOccupied units (same as Available)
+- [ ] #5 Approving a lease application is allowed for PartiallyOccupied units (same as Available)
 - [ ] #6 Manual unit field edits (PATCH /units/{id}) are blocked for PartiallyOccupied units (403)
 - [ ] #7 Manual status changes (draft/maintenance/available endpoints) are blocked for PartiallyOccupied units (403 UnitIsOccupied)
 - [ ] #8 Tenant-facing REST API returns status Available for PartiallyOccupied units

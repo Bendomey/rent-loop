@@ -42,7 +42,7 @@ export function PropertyTenantApplicationContainer() {
 	if (!tenantApplication) {
 		return (
 			<div className="m-5 flex items-center justify-center">
-				<p className="text-sm text-gray-500">Tenant application not found.</p>
+				<p className="text-sm text-gray-500">Lease application not found.</p>
 			</div>
 		)
 	}
@@ -127,7 +127,8 @@ export function PropertyTenantApplicationContainer() {
 							</Button>
 						</div>
 					</PropertyPermissionGuard>
-				) : tenantApplication.status ===
+				) : null}
+				{/* tenantApplication.status ===
 				  'TenantApplication.Status.Cancelled' ? (
 					<PropertyPermissionGuard roles={['MANAGER']}>
 						<div
@@ -142,7 +143,7 @@ export function PropertyTenantApplicationContainer() {
 							</Button>
 						</div>
 					</PropertyPermissionGuard>
-				) : null}
+				) : null} */}
 				<div id="application-checklist">
 					<PropertyTenantApplicationChecklist
 						propertyId={safeString(clientUserProperty?.property_id)}

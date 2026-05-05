@@ -529,7 +529,7 @@ function BulkOnboardTable() {
 					upload a CSV or Excel file with your tenants. Download the{' '}
 					<span className="font-medium">template</span> for the correct format.
 					Only phone number is required — tenants will receive an SMS to
-					complete their profile. For new tenant applications with full details,
+					complete their profile. For new lease applications with full details,
 					use the{' '}
 					<Link
 						to={`/properties/${propertyId}/tenants/applications`}

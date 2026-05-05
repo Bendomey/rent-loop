@@ -41,7 +41,7 @@ export const DASHBOARD_TOUR_STEPS: DriveStep[] = [
 		popover: {
 			title: 'My Properties',
 			description:
-				'Manage all your rental properties here. Inside each property you can add blocks and units, review tenant applications, manage leases, and track maintenance requests.',
+				'Manage all your rental properties here. Inside each property you can add blocks and units, review lease applications, manage leases, and track maintenance requests.',
 			side: 'right',
 			align: 'start',
 		},
@@ -103,7 +103,7 @@ export const PROPERTY_OVERVIEW_TOUR_STEPS: DriveStep[] = [
 	},
 ]
 
-// ─── Tenant Application ──────────────────────────────────────────────────────
+// ─── Lease Application ──────────────────────────────────────────────────────
 
 export const TENANT_APPLICATION_TOUR_STEPS: DriveStep[] = [
 	{

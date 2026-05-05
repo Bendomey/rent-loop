@@ -29,9 +29,9 @@ export function TenantApply({ isValidUrl }: { isValidUrl: boolean }) {
 						</div>
 						<h1 className="text-2xl font-bold text-zinc-900">Invalid URL</h1>
 						<p className="leading-relaxed text-zinc-600">
-							This tenant application link is missing required parameters.
-							Please ensure you have a valid invitation link with the correct
-							URL parameters.
+							This lease application link is missing required parameters. Please
+							ensure you have a valid invitation link with the correct URL
+							parameters.
 						</p>
 						<div className="pt-4">
 							<Link

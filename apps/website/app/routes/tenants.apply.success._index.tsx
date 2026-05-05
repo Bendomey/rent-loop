@@ -12,7 +12,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export function meta({ loaderData, location }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `Tenant Application is successful - ${APP_NAME}`,
+		title: `Lease Application is successful - ${APP_NAME}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,
