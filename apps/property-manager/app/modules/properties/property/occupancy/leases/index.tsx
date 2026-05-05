@@ -94,7 +94,7 @@ export function PropertyTenantLeasesModule() {
 					<div className="flex items-center space-x-2">
 						<ScrollText className="text-muted-foreground size-5" />
 						<Link
-							to={`/properties/${propertyId}/tenants/leases/${row.original.id}`}
+							to={`/properties/${propertyId}/occupancy/leases/${row.original.id}`}
 							aria-label={`View lease ${row.original.code}`}
 						>
 							<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-400">

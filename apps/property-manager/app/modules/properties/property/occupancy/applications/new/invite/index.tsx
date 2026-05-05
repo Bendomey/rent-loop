@@ -137,7 +137,7 @@ function InviteTenantModal({ opened, setOpened, data, admin_id }: Props) {
 							queryKey: [QUERY_KEYS.PROPERTY_TENANT_APPLICATIONS],
 						})
 						setTimeout(() => {
-							void navigate(`/properties/${property_id}/tenants/applications`)
+							void navigate(`/properties/${property_id}/occupancy/applications`)
 						}, 500)
 						setOpened(false)
 						rhfMethods.reset()

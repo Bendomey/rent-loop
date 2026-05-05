@@ -67,7 +67,7 @@ export function LeaseDocumentModule() {
 					toast.success('Document finalized')
 					void revalidator.revalidate()
 					void navigate(
-						`/properties/${tenantApplication.desired_unit.property_id}/tenants/applications/${tenantApplication.id}/docs`,
+						`/properties/${tenantApplication.desired_unit.property_id}/occupancy/applications${tenantApplication.id}/docs`,
 					)
 				},
 				onError: () => {
@@ -110,7 +110,7 @@ export function LeaseDocumentModule() {
 			action: (
 				<div className="space-x-2">
 					<Link
-						to={`/properties/${tenantApplication.desired_unit.property_id}/tenants/applications/${tenantApplication.id}/docs`}
+						to={`/properties/${tenantApplication.desired_unit.property_id}/occupancy/applications${tenantApplication.id}/docs`}
 					>
 						<Button variant="outline">Go Back</Button>
 					</Link>

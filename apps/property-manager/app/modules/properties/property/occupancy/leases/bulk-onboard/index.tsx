@@ -454,7 +454,7 @@ function BulkOnboardTable() {
 			toast.success(
 				`${entries.length} application${entries.length > 1 ? 's' : ''} created. Tenants will receive an SMS to complete their profile.`,
 			)
-			void navigate(`/properties/${propertyId}/tenants/applications`)
+			void navigate(`/properties/${propertyId}/occupancy/applications`)
 		} catch (err) {
 			toast.error(
 				err instanceof Error
@@ -532,7 +532,7 @@ function BulkOnboardTable() {
 					complete their profile. For new lease applications with full details,
 					use the{' '}
 					<Link
-						to={`/properties/${propertyId}/tenants/applications`}
+						to={`/properties/${propertyId}/occupancy/applications`}
 						className="font-medium underline underline-offset-2"
 					>
 						application process
