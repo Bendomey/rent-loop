@@ -122,6 +122,62 @@ func (s *tenantService) GetTenantByPhone(ctx context.Context, phone string) (*mo
 	return getTenant, nil
 }
 
+func tenantGapUpdates(tenant *models.Tenant, input CreateTenantInput) map[string]any {
+	updates := map[string]any{}
+	if tenant.OtherNames == nil && input.OtherNames != nil {
+		updates["other_names"] = input.OtherNames
+	}
+	if tenant.Email == nil && input.Email != nil {
+		updates["email"] = input.Email
+	}
+	if tenant.DateOfBirth == nil && input.DateOfBirth != nil {
+		updates["date_of_birth"] = input.DateOfBirth
+	}
+	if tenant.Nationality == nil && input.Nationality != nil {
+		updates["nationality"] = input.Nationality
+	}
+	if tenant.MaritalStatus == nil && input.MaritalStatus != nil {
+		updates["marital_status"] = input.MaritalStatus
+	}
+	if tenant.ProfilePhotoUrl == nil && input.ProfilePhotoUrl != nil {
+		updates["profile_photo_url"] = input.ProfilePhotoUrl
+	}
+	if tenant.IDType == nil && input.IDType != nil {
+		updates["id_type"] = input.IDType
+	}
+	if tenant.IDNumber == nil && input.IDNumber != nil {
+		updates["id_number"] = input.IDNumber
+	}
+	if tenant.IDFrontUrl == nil && input.IDFrontUrl != nil {
+		updates["id_front_url"] = input.IDFrontUrl
+	}
+	if tenant.IDBackUrl == nil && input.IDBackUrl != nil {
+		updates["id_back_url"] = input.IDBackUrl
+	}
+	if tenant.EmergencyContactName == nil && input.EmergencyContactName != nil {
+		updates["emergency_contact_name"] = input.EmergencyContactName
+	}
+	if tenant.EmergencyContactPhone == nil && input.EmergencyContactPhone != nil {
+		updates["emergency_contact_phone"] = input.EmergencyContactPhone
+	}
+	if tenant.RelationshipToEmergencyContact == nil && input.RelationshipToEmergencyContact != nil {
+		updates["relationship_to_emergency_contact"] = input.RelationshipToEmergencyContact
+	}
+	if tenant.Occupation == nil && input.Occupation != nil {
+		updates["occupation"] = input.Occupation
+	}
+	if tenant.Employer == nil && input.Employer != nil {
+		updates["employer"] = input.Employer
+	}
+	if tenant.OccupationAddress == nil && input.OccupationAddress != nil {
+		updates["occupation_address"] = input.OccupationAddress
+	}
+	if tenant.ProofOfIncomeUrl == nil && input.ProofOfIncomeUrl != nil {
+		updates["proof_of_income_url"] = input.ProofOfIncomeUrl
+	}
+	return updates
+}
+
 func (s *tenantService) GetOrCreateTenant(ctx context.Context, input CreateTenantInput) (*models.Tenant, error) {
 	getTenant, getTenantErr := s.repo.FindOne(ctx, map[string]any{"phone": input.Phone})
 	if getTenantErr != nil {
@@ -140,6 +196,19 @@ func (s *tenantService) GetOrCreateTenant(ctx context.Context, input CreateTenan
 			},
 		})
 	}
+
+	if updates := tenantGapUpdates(getTenant, input); len(updates) > 0 {
+		if err := s.repo.Update(ctx, getTenant, updates); err != nil {
+			return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+				Err: err,
+				Metadata: map[string]string{
+					"function": "GetOrCreateTenant",
+					"action":   "updating tenant",
+				},
+			})
+		}
+	}
+
 	return getTenant, nil
 }
 

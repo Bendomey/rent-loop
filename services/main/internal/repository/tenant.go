@@ -10,6 +10,7 @@ import (
 
 type TenantRepository interface {
 	Create(context context.Context, tenant *models.Tenant) error
+	Update(context context.Context, tenant *models.Tenant, updates map[string]any) error
 	FindOne(context context.Context, query map[string]any) (*models.Tenant, error)
 	GetOneWithPopulate(context context.Context, query GetTenantQuery) (*models.Tenant, error)
 	List(context context.Context, filterQuery ListTenantsFilter) (*[]models.Tenant, error)
@@ -28,6 +29,11 @@ func (r *tenantRepository) Create(ctx context.Context, tenant *models.Tenant) er
 	db := lib.ResolveDB(ctx, r.DB)
 
 	return db.WithContext(ctx).Create(tenant).Error
+}
+
+func (r *tenantRepository) Update(ctx context.Context, tenant *models.Tenant, updates map[string]any) error {
+	db := lib.ResolveDB(ctx, r.DB)
+	return db.WithContext(ctx).Model(tenant).Updates(updates).Error
 }
 
 func (r *tenantRepository) FindOne(ctx context.Context, query map[string]any) (*models.Tenant, error) {
