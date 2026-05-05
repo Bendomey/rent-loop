@@ -21,3 +21,4 @@ firebase_test_cases.yaml
 
 # Git worktrees
 .worktrees/
+.superpowers/
