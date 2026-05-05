@@ -6,6 +6,7 @@ import {
 	Card,
 	CardContent,
 	CardDescription,
+	CardFooter,
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
@@ -22,11 +23,13 @@ import { cn } from '~/lib/utils'
 interface Props {
 	application: TenantApplication
 	propertyId: string
+	footer?: React.ReactNode
 }
 
 export function PropertyTenantApplicationChecklist({
 	application,
 	propertyId,
+	footer,
 }: Props) {
 	const baseUrl = `/properties/${propertyId}/tenants/applications/${application.id}`
 
@@ -40,7 +43,7 @@ export function PropertyTenantApplicationChecklist({
 	} = useCalculateChecklist(application)
 
 	return (
-		<Card className="mt-10 rounded-md shadow-none">
+		<Card className="rounded-md shadow-none">
 			<CardHeader>
 				<CardTitle className="text-2xl font-bold">
 					Complete Application Info
@@ -82,6 +85,11 @@ export function PropertyTenantApplicationChecklist({
 					label="Add lease docs setup"
 				/>
 			</CardContent>
+			{footer && (
+				<CardFooter className="flex justify-end gap-2 border-t pt-4">
+					{footer}
+				</CardFooter>
+			)}
 		</Card>
 	)
 }
