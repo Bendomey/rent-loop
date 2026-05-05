@@ -150,7 +150,10 @@ export function PropertyBookingsModule() {
 					<TypographyMuted>All bookings for this property.</TypographyMuted>
 				</div>
 				<Link to={`/properties/${propertyId}/bookings/new`}>
-					<Button size="sm" className="bg-rose-600 text-white hover:bg-rose-700">
+					<Button
+						size="sm"
+						className="bg-rose-600 text-white hover:bg-rose-700"
+					>
 						New Booking
 					</Button>
 				</Link>

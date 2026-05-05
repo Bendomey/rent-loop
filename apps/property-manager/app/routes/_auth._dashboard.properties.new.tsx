@@ -42,7 +42,9 @@ export async function action({ request }: Route.ActionArgs) {
 	const latitude = parseFloat(formData.get('latitude') as string)
 	const longitude = parseFloat(formData.get('longitude') as string)
 	const rawModes = formData.getAll('modes') as Array<'LEASE' | 'BOOKING'>
-	const modes: Array<'LEASE' | 'BOOKING'> = rawModes.length ? rawModes : ['LEASE']
+	const modes: Array<'LEASE' | 'BOOKING'> = rawModes.length
+		? rawModes
+		: ['LEASE']
 
 	try {
 		const authData = {

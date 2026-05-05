@@ -78,7 +78,8 @@ const modeOptions: Array<{
 	{
 		value: 'BOOKING',
 		name: 'Short-term (Bookings)',
-		description: 'Nightly/daily stays, guest booking link, availability calendar.',
+		description:
+			'Nightly/daily stays, guest booking link, availability calendar.',
 		icon: Hotel,
 	},
 	{
@@ -101,10 +102,16 @@ export function Step0() {
 
 	useEffect(() => {
 		if (formData.type) {
-			setValue('type', formData.type, { shouldDirty: true, shouldValidate: true })
+			setValue('type', formData.type, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
 		}
 		if (formData.status) {
-			setValue('status', formData.status, { shouldDirty: true, shouldValidate: true })
+			setValue('status', formData.status, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
 		}
 		if (formData.modes) {
 			const modeSelection =
@@ -113,14 +120,19 @@ export function Step0() {
 					: formData.modes.includes('BOOKING')
 						? 'BOOKING'
 						: 'LEASE'
-			setValue('modeSelection', modeSelection, { shouldDirty: true, shouldValidate: true })
+			setValue('modeSelection', modeSelection, {
+				shouldDirty: true,
+				shouldValidate: true,
+			})
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
 	const onSubmit = (data: FormSchema) => {
 		const modes: Array<'LEASE' | 'BOOKING'> =
-			data.modeSelection === 'BOTH' ? ['LEASE', 'BOOKING'] : [data.modeSelection]
+			data.modeSelection === 'BOTH'
+				? ['LEASE', 'BOOKING']
+				: [data.modeSelection]
 		updateFormData({ type: data.type, status: data.status, modes })
 		goNext()
 	}
@@ -220,7 +232,9 @@ export function Step0() {
 
 				{/* Mode selection */}
 				<div className="space-y-2">
-					<TypographyMuted>What type of rentals does this property handle?</TypographyMuted>
+					<TypographyMuted>
+						What type of rentals does this property handle?
+					</TypographyMuted>
 					<ItemGroup className="grid grid-cols-1 gap-3 sm:grid-cols-3">
 						{modeOptions.map((mode) => {
 							const isSelected = watch('modeSelection') === mode.value
@@ -243,7 +257,9 @@ export function Step0() {
 										<mode.icon className="size-10" />
 									</ItemHeader>
 									<ItemContent className="flex items-center justify-center">
-										<ItemTitle className="text-center text-sm">{mode.name}</ItemTitle>
+										<ItemTitle className="text-center text-sm">
+											{mode.name}
+										</ItemTitle>
 										<ItemDescription className="text-center text-xs">
 											{mode.description}
 										</ItemDescription>

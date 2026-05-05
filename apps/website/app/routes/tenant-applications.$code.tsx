@@ -80,7 +80,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 			const msg =
 				err instanceof Response
 					? (await err.json().catch(() => ({ error: 'Failed to send OTP' })))
-						.error
+							.error
 					: 'Failed to send verification code'
 			return { maskedPhone: null, error: msg as string }
 		}
@@ -165,7 +165,6 @@ export async function action({ request, params }: Route.ActionArgs) {
 			if (err instanceof Response) {
 				try {
 					const body = await err.json()
-					console.log({ err: body })
 					msg = body?.errors?.message ?? msg
 				} catch {
 					// ignore

@@ -125,7 +125,9 @@ export function NewBookingModule() {
 				</Link>
 				<div>
 					<TypographyH4>New Booking</TypographyH4>
-					<TypographyMuted>Create a booking on behalf of a guest.</TypographyMuted>
+					<TypographyMuted>
+						Create a booking on behalf of a guest.
+					</TypographyMuted>
 				</div>
 			</div>
 
@@ -143,7 +145,10 @@ export function NewBookingModule() {
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>Unit</FormLabel>
-										<Select value={field.value} onValueChange={handleUnitChange}>
+										<Select
+											value={field.value}
+											onValueChange={handleUnitChange}
+										>
 											<FormControl>
 												<SelectTrigger>
 													<SelectValue placeholder="Select a unit" />
@@ -213,7 +218,9 @@ export function NewBookingModule() {
 													type="number"
 													step="0.01"
 													value={field.value ?? ''}
-													onChange={(e) => field.onChange(e.target.valueAsNumber)}
+													onChange={(e) =>
+														field.onChange(e.target.valueAsNumber)
+													}
 												/>
 											</FormControl>
 											<FormMessage />

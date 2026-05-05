@@ -245,8 +245,7 @@ const cancelBooking = async ({
 	}
 }
 
-export const useCancelBooking = () =>
-	useMutation({ mutationFn: cancelBooking })
+export const useCancelBooking = () => useMutation({ mutationFn: cancelBooking })
 
 export interface CreateDateBlockInput {
 	clientId: string
@@ -288,10 +287,9 @@ const deleteDateBlock = async ({
 	blockId: string
 }) => {
 	try {
-		await fetchClient(
-			`/v1/admin/clients/${clientId}/date-blocks/${blockId}`,
-			{ method: 'DELETE' },
-		)
+		await fetchClient(`/v1/admin/clients/${clientId}/date-blocks/${blockId}`, {
+			method: 'DELETE',
+		})
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()

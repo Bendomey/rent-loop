@@ -72,7 +72,12 @@ interface CancelDialogProps {
 	onConfirm: (reason: string) => void
 }
 
-function CancelDialog({ open, isPending, onOpenChange, onConfirm }: CancelDialogProps) {
+function CancelDialog({
+	open,
+	isPending,
+	onOpenChange,
+	onConfirm,
+}: CancelDialogProps) {
 	const form = useForm<CancelForm>({
 		resolver: zodResolver(cancelSchema),
 		defaultValues: { reason: '' },
@@ -100,7 +105,10 @@ function CancelDialog({ open, isPending, onOpenChange, onConfirm }: CancelDialog
 								<FormItem>
 									<FormLabel>Reason</FormLabel>
 									<FormControl>
-										<Textarea {...field} placeholder="e.g. Guest requested cancellation" />
+										<Textarea
+											{...field}
+											placeholder="e.g. Guest requested cancellation"
+										/>
 									</FormControl>
 									<FormMessage />
 								</FormItem>
@@ -146,11 +154,14 @@ export function BookingDetailModule() {
 	const [cancelOpen, setCancelOpen] = useState(false)
 
 	const invalidate = () =>
-		queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BOOKINGS, clientId, bookingId] })
+		queryClient.invalidateQueries({
+			queryKey: [QUERY_KEYS.BOOKINGS, clientId, bookingId],
+		})
 
 	const { mutateAsync: confirm, isPending: isConfirming } = useConfirmBooking()
 	const { mutateAsync: checkIn, isPending: isCheckingIn } = useCheckInBooking()
-	const { mutateAsync: complete, isPending: isCompleting } = useCompleteBooking()
+	const { mutateAsync: complete, isPending: isCompleting } =
+		useCompleteBooking()
 	const { mutateAsync: cancel, isPending: isCancelling } = useCancelBooking()
 
 	const handleConfirm = async () => {
@@ -159,7 +170,9 @@ export function BookingDetailModule() {
 			toast.success('Booking confirmed')
 			void invalidate()
 		} catch (err) {
-			toast.error(err instanceof Error ? err.message : 'Failed to confirm booking')
+			toast.error(
+				err instanceof Error ? err.message : 'Failed to confirm booking',
+			)
 		}
 	}
 
@@ -179,7 +192,9 @@ export function BookingDetailModule() {
 			toast.success('Booking completed')
 			void invalidate()
 		} catch (err) {
-			toast.error(err instanceof Error ? err.message : 'Failed to complete booking')
+			toast.error(
+				err instanceof Error ? err.message : 'Failed to complete booking',
+			)
 		}
 	}
 
@@ -190,7 +205,9 @@ export function BookingDetailModule() {
 			setCancelOpen(false)
 			void invalidate()
 		} catch (err) {
-			toast.error(err instanceof Error ? err.message : 'Failed to cancel booking')
+			toast.error(
+				err instanceof Error ? err.message : 'Failed to cancel booking',
+			)
 		}
 	}
 
@@ -229,14 +246,17 @@ export function BookingDetailModule() {
 								</Link>
 								<TypographyH4 className="text-sm">{booking.code}</TypographyH4>
 							</div>
-							<Badge variant="outline" className={`w-fit px-2 ${cfg.className}`}>
+							<Badge
+								variant="outline"
+								className={`w-fit px-2 ${cfg.className}`}
+							>
 								{cfg.label}
 							</Badge>
 						</CardHeader>
 						<CardContent className="space-y-4">
 							{booking.check_in_code ? (
 								<div>
-									<p className="text-muted-foreground mb-1 text-xs font-medium uppercase tracking-wide">
+									<p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
 										Check-in Code
 									</p>
 									<p className="font-mono text-2xl font-bold tracking-widest">
@@ -251,11 +271,15 @@ export function BookingDetailModule() {
 								<Row label="Unit" value={booking.unit?.name ?? '—'} />
 								<Row
 									label="Check-in"
-									value={localizedDayjs(booking.check_in_date).format('MMM D, YYYY')}
+									value={localizedDayjs(booking.check_in_date).format(
+										'MMM D, YYYY',
+									)}
 								/>
 								<Row
 									label="Check-out"
-									value={localizedDayjs(booking.check_out_date).format('MMM D, YYYY')}
+									value={localizedDayjs(booking.check_out_date).format(
+										'MMM D, YYYY',
+									)}
 								/>
 								<Row
 									label="Rate"
@@ -340,11 +364,15 @@ export function BookingDetailModule() {
 							<Row label="Property" value={booking.unit?.name ?? '—'} />
 							<Row
 								label="Check-in"
-								value={localizedDayjs(booking.check_in_date).format('MMM D, YYYY')}
+								value={localizedDayjs(booking.check_in_date).format(
+									'MMM D, YYYY',
+								)}
 							/>
 							<Row
 								label="Check-out"
-								value={localizedDayjs(booking.check_out_date).format('MMM D, YYYY')}
+								value={localizedDayjs(booking.check_out_date).format(
+									'MMM D, YYYY',
+								)}
 							/>
 							<Row
 								label="Nights"
@@ -359,10 +387,19 @@ export function BookingDetailModule() {
 								label="Rate"
 								value={`${booking.currency} ${formatAmount(convertPesewasToCedis(booking.rate))}`}
 							/>
-							<Row label="Source" value={booking.booking_source === 'GUEST_LINK' ? 'Guest Link' : 'Manager'} />
+							<Row
+								label="Source"
+								value={
+									booking.booking_source === 'GUEST_LINK'
+										? 'Guest Link'
+										: 'Manager'
+								}
+							/>
 							{booking.notes ? (
 								<div>
-									<p className="text-muted-foreground text-xs font-medium">Notes</p>
+									<p className="text-muted-foreground text-xs font-medium">
+										Notes
+									</p>
 									<p className="text-sm">{booking.notes}</p>
 								</div>
 							) : null}
@@ -370,9 +407,11 @@ export function BookingDetailModule() {
 					</Card>
 
 					{booking.cancellation_reason ? (
-						<Card className="shadow-none border-rose-200 dark:border-rose-900">
+						<Card className="border-rose-200 shadow-none dark:border-rose-900">
 							<CardHeader>
-								<CardTitle className="text-base text-rose-600">Cancellation</CardTitle>
+								<CardTitle className="text-base text-rose-600">
+									Cancellation
+								</CardTitle>
 							</CardHeader>
 							<CardContent>
 								<p className="text-sm">{booking.cancellation_reason}</p>

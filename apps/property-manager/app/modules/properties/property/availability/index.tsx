@@ -78,7 +78,9 @@ const BLOCK_TYPE_CONFIG: Record<string, BlockTypeConfig> = {
 	OTHER: { label: 'Other', color: '#6b7280', darkColor: '#4b5563' },
 }
 
-function blocksToModifiers(blocks: UnitDateBlock[] | undefined): Record<string, Date[]> {
+function blocksToModifiers(
+	blocks: UnitDateBlock[] | undefined,
+): Record<string, Date[]> {
 	if (!blocks) return {}
 	const map: Record<string, Date[]> = {}
 	for (const block of blocks) {
@@ -140,8 +142,10 @@ export function AvailabilityModule() {
 		defaultValues: { unit_id: selectedUnitId },
 	})
 
-	const { mutateAsync: createBlock, isPending: isCreating } = useCreateDateBlock()
-	const { mutateAsync: deleteBlock, isPending: isDeleting } = useDeleteDateBlock()
+	const { mutateAsync: createBlock, isPending: isCreating } =
+		useCreateDateBlock()
+	const { mutateAsync: deleteBlock, isPending: isDeleting } =
+		useDeleteDateBlock()
 
 	const invalidateBlocks = () => {
 		if (selectedUnitId) {
@@ -230,7 +234,9 @@ export function AvailabilityModule() {
 						</CardHeader>
 						<CardContent>
 							{!selectedUnitId ? (
-								<TypographyMuted>Select a unit to view its availability.</TypographyMuted>
+								<TypographyMuted>
+									Select a unit to view its availability.
+								</TypographyMuted>
 							) : isLoadingBlocks ? (
 								<div className="flex items-center justify-center py-10">
 									<Spinner />
@@ -246,7 +252,10 @@ export function AvailabilityModule() {
 											const start = localizedDayjs(b.start_date)
 											const end = localizedDayjs(b.end_date)
 											const d = localizedDayjs(day)
-											return (d.isSame(start) || d.isAfter(start)) && (d.isSame(end) || d.isBefore(end))
+											return (
+												(d.isSame(start) || d.isAfter(start)) &&
+												(d.isSame(end) || d.isBefore(end))
+											)
 										})
 										setSelectedBlock(block ?? null)
 									}}
@@ -264,19 +273,30 @@ export function AvailabilityModule() {
 								<CardTitle className="text-sm">Block Details</CardTitle>
 							</CardHeader>
 							<CardContent className="space-y-3">
-								<Row label="Type" value={BLOCK_TYPE_CONFIG[selectedBlock.block_type]?.label ?? selectedBlock.block_type} />
+								<Row
+									label="Type"
+									value={
+										BLOCK_TYPE_CONFIG[selectedBlock.block_type]?.label ??
+										selectedBlock.block_type
+									}
+								/>
 								<Row
 									label="Start"
-									value={localizedDayjs(selectedBlock.start_date).format('MMM D, YYYY')}
+									value={localizedDayjs(selectedBlock.start_date).format(
+										'MMM D, YYYY',
+									)}
 								/>
 								<Row
 									label="End"
-									value={localizedDayjs(selectedBlock.end_date).format('MMM D, YYYY')}
+									value={localizedDayjs(selectedBlock.end_date).format(
+										'MMM D, YYYY',
+									)}
 								/>
 								{selectedBlock.reason ? (
 									<Row label="Reason" value={selectedBlock.reason} />
 								) : null}
-								{selectedBlock.block_type !== 'BOOKING' && selectedBlock.block_type !== 'LEASE' ? (
+								{selectedBlock.block_type !== 'BOOKING' &&
+								selectedBlock.block_type !== 'LEASE' ? (
 									<PropertyPermissionGuard roles={['MANAGER']}>
 										<Button
 											size="sm"

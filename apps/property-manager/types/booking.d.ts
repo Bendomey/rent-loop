@@ -7,12 +7,7 @@ type BookingStatus =
 
 type BookingSource = 'MANAGER' | 'GUEST_LINK'
 
-type BlockType =
-	| 'BOOKING'
-	| 'LEASE'
-	| 'MAINTENANCE'
-	| 'PERSONAL'
-	| 'OTHER'
+type BlockType = 'BOOKING' | 'LEASE' | 'MAINTENANCE' | 'PERSONAL' | 'OTHER'
 
 interface Booking {
 	id: string

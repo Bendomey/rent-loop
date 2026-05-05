@@ -384,7 +384,9 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 											</SelectTrigger>
 										</FormControl>
 										<SelectContent>
-											<SelectItem value="NATIONAL_ID">National ID / Ghana Card</SelectItem>
+											<SelectItem value="NATIONAL_ID">
+												National ID / Ghana Card
+											</SelectItem>
 											<SelectItem value="PASSPORT">Passport</SelectItem>
 											<SelectItem value="DRIVER_LICENSE">
 												Driver's License
