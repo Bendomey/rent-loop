@@ -1,18 +1,7 @@
 import { differenceInDays, format } from 'date-fns'
 import { Link } from 'react-router'
 import { APP_NAME } from '~/lib/constants'
-
-function formatCurrency(amount: number, currency: string): string {
-	try {
-		return new Intl.NumberFormat('en-GH', {
-			style: 'currency',
-			currency,
-			minimumFractionDigits: 0,
-		}).format(amount / 100)
-	} catch {
-		return `${currency} ${(amount / 100).toLocaleString()}`
-	}
-}
+import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 
 interface Props {
 	unit: PublicBookingUnit
@@ -35,7 +24,9 @@ export function BookingSummary({
 	trackingCode,
 	onSubmit,
 }: Props) {
-	const nights = selectedRange ? differenceInDays(selectedRange.to, selectedRange.from) : 0
+	const nights = selectedRange
+		? differenceInDays(selectedRange.to, selectedRange.from)
+		: 0
 	const total = nights * unit.rent_fee
 
 	if (success && trackingCode) {
@@ -88,10 +79,12 @@ export function BookingSummary({
 					<div className="my-3 border-t" />
 					<div className="flex justify-between text-sm">
 						<span className="text-zinc-500">
-							{formatCurrency(unit.rent_fee, unit.rent_fee_currency)} × {nights} nights
+							{formatAmount(convertPesewasToCedis(unit.rent_fee))} × {nights}{' '}
+							nights
+							{/* {formatCurrency(unit.rent_fee, unit.rent_fee_currency)} × {nights} nights */}
 						</span>
 						<span className="font-semibold">
-							{formatCurrency(total, unit.rent_fee_currency)}
+							{formatAmount(convertPesewasToCedis(total))}
 						</span>
 					</div>
 				</div>

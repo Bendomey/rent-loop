@@ -5,9 +5,6 @@ export async function loader() {
 	const protocol = NODE_ENV === 'production' ? 'https' : 'http'
 	const baseUrl = `${protocol}://${APP_DOMAIN}`
 
-	// NOTE: /book/:propertySlug/:unitSlug is intentionally omitted — dynamic route
-	// requiring unit slugs from the backend. Add enumeration here if a public
-	// units list endpoint becomes available. /bookings/track/:code is also excluded.
 	const staticRoutes = [
 		{ url: '/', priority: '1.0', changefreq: 'weekly' },
 		{ url: '/pricing', priority: '0.8', changefreq: 'monthly' },

@@ -623,18 +623,6 @@ import { differenceInDays, format } from 'date-fns'
 import { Link } from 'react-router'
 import { APP_NAME } from '~/lib/constants'
 
-function formatCurrency(amount: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat('en-GH', {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: 0,
-    }).format(amount / 100)
-  } catch {
-    return `${currency} ${(amount / 100).toLocaleString()}`
-  }
-}
-
 interface Props {
   unit: PublicBookingUnit
   selectedRange: { from: Date; to: Date } | null
@@ -707,9 +695,9 @@ export function BookingSummary({
           <div className="my-3 border-t" />
           <div className="flex justify-between text-sm">
             <span className="text-zinc-500">
-              {formatCurrency(unit.rent_fee, unit.rent_fee_currency)} × {nights} nights
+              {formatAmount(convertPesewasToCedis(unit.rent_fee))} × {nights} nights
             </span>
-            <span className="font-semibold">{formatCurrency(total, unit.rent_fee_currency)}</span>
+            <span className="font-semibold">{formatAmount(convertPesewasToCedis(total))}</span>
           </div>
         </div>
       ) : (

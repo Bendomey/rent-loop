@@ -36,7 +36,9 @@ export function GuestInfoForm({ onValuesChange }: Props) {
 
 	return (
 		<div className="space-y-4">
-			<h3 className="text-base font-semibold text-zinc-900">Guest Information</h3>
+			<h3 className="text-base font-semibold text-zinc-900">
+				Guest Information
+			</h3>
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 				<div>
 					<label className="mb-1 block text-sm font-medium text-zinc-700">
@@ -47,7 +49,9 @@ export function GuestInfoForm({ onValuesChange }: Props) {
 						className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none"
 					/>
 					{errors.first_name && (
-						<p className="mt-1 text-xs text-red-500">{errors.first_name.message}</p>
+						<p className="mt-1 text-xs text-red-500">
+							{errors.first_name.message}
+						</p>
 					)}
 				</div>
 				<div>
@@ -59,11 +63,15 @@ export function GuestInfoForm({ onValuesChange }: Props) {
 						className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none"
 					/>
 					{errors.last_name && (
-						<p className="mt-1 text-xs text-red-500">{errors.last_name.message}</p>
+						<p className="mt-1 text-xs text-red-500">
+							{errors.last_name.message}
+						</p>
 					)}
 				</div>
 				<div>
-					<label className="mb-1 block text-sm font-medium text-zinc-700">Phone</label>
+					<label className="mb-1 block text-sm font-medium text-zinc-700">
+						Phone
+					</label>
 					<input
 						{...register('phone')}
 						type="tel"
@@ -74,7 +82,9 @@ export function GuestInfoForm({ onValuesChange }: Props) {
 					)}
 				</div>
 				<div>
-					<label className="mb-1 block text-sm font-medium text-zinc-700">Email</label>
+					<label className="mb-1 block text-sm font-medium text-zinc-700">
+						Email
+					</label>
 					<input
 						{...register('email')}
 						type="email"
@@ -93,7 +103,9 @@ export function GuestInfoForm({ onValuesChange }: Props) {
 						className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none"
 					/>
 					{errors.id_number && (
-						<p className="mt-1 text-xs text-red-500">{errors.id_number.message}</p>
+						<p className="mt-1 text-xs text-red-500">
+							{errors.id_number.message}
+						</p>
 					)}
 				</div>
 			</div>

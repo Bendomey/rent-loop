@@ -1,4 +1,4 @@
-import { fetchClient, fetchServer } from '~/lib/transport'
+import { fetchClient } from '~/lib/transport'
 
 export async function getUnitAvailabilityForClient(
 	unitSlug: string,
@@ -6,21 +6,10 @@ export async function getUnitAvailabilityForClient(
 	to: string,
 ): Promise<UnitDateBlock[]> {
 	const response = await fetchClient<ApiResponse<UnitDateBlock[]>>(
-		`/v1/public/units/${unitSlug}/availability?from=${from}&to=${to}`,
+		`/v1/units/${unitSlug}/availability?from=${from}&to=${to}`,
 		{ isUnAuthorizedRequest: true },
 	)
 	return response.parsedBody.data ?? []
-}
-
-export async function getUnitForBookingPageServer(
-	unitSlug: string,
-	apiConfig: ApiConfigForServerConfig,
-): Promise<PublicBookingUnit> {
-	const response = await fetchServer<ApiResponse<PublicBookingUnit>>(
-		`${apiConfig.baseUrl}/v1/units/${unitSlug}`,
-		{ isUnAuthorizedRequest: true },
-	)
-	return response.parsedBody.data
 }
 
 export async function createPublicBooking(

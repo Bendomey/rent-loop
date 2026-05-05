@@ -1,18 +1,24 @@
 import { format } from 'date-fns'
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { createPublicBooking } from '~/api/bookings/client'
-import { APP_NAME } from '~/lib/constants'
 import { AvailabilityCalendar } from './components/availability-calendar'
 import { BookingSummary } from './components/booking-summary'
-import { GuestInfoForm, type GuestFormValues } from './components/guest-info-form'
+import {
+	GuestInfoForm,
+	type GuestFormValues,
+} from './components/guest-info-form'
+import { createPublicBooking } from '~/api/bookings/client'
+import { APP_NAME } from '~/lib/constants'
 
 interface Props {
 	unit: PublicBookingUnit
 }
 
 export function BookModule({ unit }: Props) {
-	const [selectedRange, setSelectedRange] = useState<{ from: Date; to: Date } | null>(null)
+	const [selectedRange, setSelectedRange] = useState<{
+		from: Date
+		to: Date
+	} | null>(null)
 	const [guestValues, setGuestValues] = useState<GuestFormValues | null>(null)
 	const [submitting, setSubmitting] = useState(false)
 	const [error, setError] = useState<string | null>(null)
@@ -78,7 +84,9 @@ export function BookModule({ unit }: Props) {
 							) : null}
 							<h1 className="text-2xl font-bold text-zinc-900">{unit.name}</h1>
 							{unit.property?.name ? (
-								<p className="mt-1 text-sm text-zinc-500">{unit.property.name}</p>
+								<p className="mt-1 text-sm text-zinc-500">
+									{unit.property.name}
+								</p>
 							) : null}
 							{unit.description ? (
 								<p className="mt-3 text-sm leading-relaxed text-zinc-600">
@@ -91,7 +99,9 @@ export function BookModule({ unit }: Props) {
 									currency: unit.rent_fee_currency,
 									minimumFractionDigits: 0,
 								}).format(unit.rent_fee / 100)}{' '}
-								<span className="text-sm font-normal text-zinc-500">/ night</span>
+								<span className="text-sm font-normal text-zinc-500">
+									/ night
+								</span>
 							</p>
 						</div>
 

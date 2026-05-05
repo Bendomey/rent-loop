@@ -1,4 +1,9 @@
-type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'COMPLETED' | 'CANCELLED'
+type BookingStatus =
+	| 'PENDING'
+	| 'CONFIRMED'
+	| 'CHECKED_IN'
+	| 'COMPLETED'
+	| 'CANCELLED'
 type BlockType = 'BOOKING' | 'LEASE' | 'MAINTENANCE' | 'PERSONAL' | 'OTHER'
 
 interface PublicBookingProperty {

@@ -1,6 +1,7 @@
 import { differenceInDays, format } from 'date-fns'
 import { Link } from 'react-router'
 import { APP_NAME } from '~/lib/constants'
+import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 
 const STATUS_STEPS: Array<Exclude<BookingStatus, 'CANCELLED'>> = [
 	'PENDING',
@@ -17,18 +18,6 @@ const STATUS_LABELS: Record<BookingStatus, string> = {
 	CANCELLED: 'Cancelled',
 }
 
-function formatCurrency(amount: number, currency: string): string {
-	try {
-		return new Intl.NumberFormat('en-GH', {
-			style: 'currency',
-			currency,
-			minimumFractionDigits: 0,
-		}).format(amount / 100)
-	} catch {
-		return `${currency} ${(amount / 100).toLocaleString()}`
-	}
-}
-
 interface Props {
 	booking: PublicBooking
 }
@@ -43,7 +32,9 @@ export function BookingDetails({ booking }: Props) {
 		booking.status as Exclude<BookingStatus, 'CANCELLED'>,
 	)
 	const isCancelled = booking.status === 'CANCELLED'
-	const showCheckInCode = ['CONFIRMED', 'CHECKED_IN', 'COMPLETED'].includes(booking.status)
+	const showCheckInCode = ['CONFIRMED', 'CHECKED_IN', 'COMPLETED'].includes(
+		booking.status,
+	)
 
 	return (
 		<div className="min-h-dvh bg-zinc-50">
@@ -98,9 +89,9 @@ export function BookingDetails({ booking }: Props) {
 							Booking Status
 						</h3>
 						<div className="relative flex items-center justify-between">
-							<div className="absolute left-0 right-0 top-3 h-0.5 bg-zinc-200" />
+							<div className="absolute top-3 right-0 left-0 h-0.5 bg-zinc-200" />
 							<div
-								className="absolute left-0 top-3 h-0.5 bg-rose-500 transition-all"
+								className="absolute top-3 left-0 h-0.5 bg-rose-500 transition-all"
 								style={{
 									width: `${(Math.max(0, currentStepIndex) / (STATUS_STEPS.length - 1)) * 100}%`,
 								}}
@@ -108,7 +99,10 @@ export function BookingDetails({ booking }: Props) {
 							{STATUS_STEPS.map((step, i) => {
 								const done = i <= currentStepIndex
 								return (
-									<div key={step} className="relative flex flex-col items-center gap-1.5">
+									<div
+										key={step}
+										className="relative flex flex-col items-center gap-1.5"
+									>
 										<div
 											className={[
 												'flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs font-bold',
@@ -173,7 +167,7 @@ export function BookingDetails({ booking }: Props) {
 							<div className="flex justify-between">
 								<dt className="text-zinc-500">Total</dt>
 								<dd className="font-semibold">
-									{formatCurrency(total, booking.currency)}
+									{formatAmount(convertPesewasToCedis(total))}
 								</dd>
 							</div>
 						</div>
@@ -183,7 +177,9 @@ export function BookingDetails({ booking }: Props) {
 				{/* Property contact */}
 				{booking.unit.property?.contact_email ? (
 					<div className="rounded-xl border bg-white p-6">
-						<h3 className="mb-1 text-sm font-semibold text-zinc-900">Contact</h3>
+						<h3 className="mb-1 text-sm font-semibold text-zinc-900">
+							Contact
+						</h3>
 						<a
 							href={`mailto:${booking.unit.property.contact_email}`}
 							className="text-sm text-rose-600 underline"

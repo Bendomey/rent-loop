@@ -24,7 +24,11 @@ function blocksToDisabledDates(blocks: UnitDateBlock[]): Date[] {
 	return dates
 }
 
-export function AvailabilityCalendar({ unitSlug, selectedRange, onRangeSelect }: Props) {
+export function AvailabilityCalendar({
+	unitSlug,
+	selectedRange,
+	onRangeSelect,
+}: Props) {
 	const today = startOfToday()
 	const threeMonthsOut = addDays(today, 90)
 

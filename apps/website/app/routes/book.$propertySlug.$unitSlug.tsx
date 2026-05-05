@@ -1,5 +1,5 @@
 import type { Route } from './+types/book.$propertySlug.$unitSlug'
-import { getUnitForBookingPageServer } from '~/api/bookings/client'
+import { getUnitForBookingPageServer } from '~/api/bookings/server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
