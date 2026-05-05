@@ -113,14 +113,17 @@ export function PropertyTenantApplicationDocs() {
 						<p className="mt-1 text-xs text-zinc-500">
 							Upload or select a document to attach to this application.
 						</p>
-						<Button
-							variant="outline"
-							className="mt-4"
-							onClick={() => setOpen(true)}
-						>
-							<Plus className="size-4" />
-							Add Document
-						</Button>
+						{tenantApplication?.status ===
+							'TenantApplication.Status.InProgress' && (
+							<Button
+								variant="outline"
+								className="mt-4"
+								onClick={() => setOpen(true)}
+							>
+								<Plus className="size-4" />
+								Add Document
+							</Button>
+						)}
 					</div>
 				)}
 			</CardContent>

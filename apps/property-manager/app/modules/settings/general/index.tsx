@@ -1036,7 +1036,7 @@ export function GeneralSettingsModule() {
 	}
 
 	return (
-		<div className="mx-auto max-w-4xl space-y-8 px-0 pt-0 pb-10 lg:px-4 lg:pt-1">
+		<div className="mx-auto max-w-4xl space-y-8 px-4 pt-4 pb-10 lg:px-4 lg:pt-1">
 			{/* Page header */}
 			<div className="space-y-1">
 				<TypographyH3>General Settings</TypographyH3>

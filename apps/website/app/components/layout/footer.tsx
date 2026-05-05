@@ -8,6 +8,7 @@ const navigation = {
 		{ name: 'Pricing', href: '/pricing' },
 		{ name: 'Features', href: '/#features' },
 		// { name: 'Partners', href: '#' },
+		{ name: 'Download', href: '/download' },
 		{ name: 'Terms', href: '/terms' },
 		{ name: 'Privacy', href: '/privacy-policy' },
 	],

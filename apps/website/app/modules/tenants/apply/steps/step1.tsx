@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AlertCircleIcon, ArrowLeft, ArrowRight } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useTenantApplicationContext } from '../context'
@@ -32,8 +32,11 @@ export function Step1() {
 	const { goNext, goBack, formData, updateFormData } =
 		useTenantApplicationContext()
 
+	const [otpError, setOtpError] = useState(false)
+
 	const { sendOtp, isSendingOtp } = useSendOtp({
 		onSuccess: goNext,
+		onError: () => setOtpError(true),
 	})
 
 	const rhfMethods = useForm<FormSchema>({
@@ -53,6 +56,7 @@ export function Step1() {
 	}, [formData])
 
 	const onSubmit = async (data: FormSchema) => {
+		setOtpError(false)
 		updateFormData({ phone: data.phone })
 		sendOtp(data.phone)
 	}
@@ -80,6 +84,16 @@ export function Step1() {
 									New applicants will be guided through a fresh application.
 								</AlertDescription>
 							</Alert>
+
+							{otpError && (
+								<Alert variant="destructive">
+									<AlertCircleIcon />
+									<AlertTitle>Something went wrong</AlertTitle>
+									<AlertDescription>
+										We couldn’t send your OTP. Please try again.
+									</AlertDescription>
+								</Alert>
+							)}
 						</div>
 
 						<FormField

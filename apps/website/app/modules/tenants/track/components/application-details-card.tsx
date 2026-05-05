@@ -14,6 +14,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
+import { formatPhoneWithCountryCode } from '~/lib/misc'
 import { Input } from '~/components/ui/input'
 import {
 	Select,
@@ -194,7 +195,13 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 		const fd = new FormData()
 		fd.append('intent', 'updateApplication')
 		for (const [key, val] of Object.entries(data)) {
-			if (val != null && val !== '') fd.append(key, val)
+			if (val == null || val === '') continue
+			if (key === 'emergency_contact_phone') {
+				const formatted = formatPhoneWithCountryCode(val)
+				if (formatted) fd.append(key, formatted)
+			} else {
+				fd.append(key, val)
+			}
 		}
 		void fetcher.submit(fd, { method: 'post' })
 	}

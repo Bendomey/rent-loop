@@ -12,3 +12,5 @@ export * from './tenants/track'
 
 export * from './bookings/book'
 export * from './bookings/track'
+
+export * from './download'

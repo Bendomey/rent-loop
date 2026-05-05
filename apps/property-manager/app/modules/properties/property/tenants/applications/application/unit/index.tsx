@@ -74,6 +74,10 @@ export function PropertyTenantApplicationUnitSetup() {
 		)
 	}
 
+	const canChangeUnit =
+		!isSingleProperty &&
+		application?.status === 'TenantApplication.Status.InProgress'
+
 	return (
 		<>
 			<div>
@@ -107,12 +111,12 @@ export function PropertyTenantApplicationUnitSetup() {
 					</CardHeader>
 					<CardFooter className="w-full justify-between space-x-2">
 						<ExternalLink
-							className={isSingleProperty ? 'w-full' : 'w-2/4'}
+							className={!canChangeUnit ? 'w-full' : 'w-2/4'}
 							to={`/properties/${clientUserProperty?.property_id}/assets/units/${unit.id}`}
 						>
 							<Button className="w-full">View Unit</Button>
 						</ExternalLink>
-						{!isSingleProperty && (
+						{canChangeUnit && (
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<span className="w-2/4">

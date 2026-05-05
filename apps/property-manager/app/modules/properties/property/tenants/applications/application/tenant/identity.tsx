@@ -174,7 +174,7 @@ export function PropertyTenantApplicationIdentity({
 				<CardHeader>
 					<CardTitle className="flex items-center justify-between">
 						Identity Verification
-						{application?.status !== 'TenantApplication.Status.Cancelled' && (
+						{application?.status === 'TenantApplication.Status.InProgress' && (
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<span>

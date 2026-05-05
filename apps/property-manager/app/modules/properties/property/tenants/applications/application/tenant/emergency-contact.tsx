@@ -177,7 +177,7 @@ export function PropertyTenantApplicationEmergencyContact({
 				<CardHeader>
 					<CardTitle className="flex items-center justify-between">
 						Emergency Contact & Background
-						{application?.status !== 'TenantApplication.Status.Cancelled' && (
+						{application?.status === 'TenantApplication.Status.InProgress' && (
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<span>

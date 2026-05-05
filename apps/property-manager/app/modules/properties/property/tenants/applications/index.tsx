@@ -98,11 +98,14 @@ export function PropertyTenantApplicationsModule() {
 				accessorKey: 'name',
 				header: 'Name',
 				cell: ({ row }) => {
+					const hasName = row.original.first_name || row.original.last_name
 					return (
 						<div className="flex min-w-32 flex-col">
-							<span className="e truncate text-xs">
-								{`${row.original.first_name} ${row.original.other_names ? row.original.other_names + ' ' : ''}${row.original.last_name}`}
-							</span>
+							{hasName && (
+								<span className="e truncate text-xs">
+									{`${row.original.first_name ?? ''} ${row.original.other_names ? row.original.other_names + ' ' : ''}${row.original.last_name ?? ''}`.trim()}
+								</span>
+							)}
 							<Link
 								to={`/properties/${clientUserProperty?.property_id}/tenants/applications/${row.original.id}`}
 								aria-label={`View details for application`}
@@ -213,7 +216,7 @@ export function PropertyTenantApplicationsModule() {
 										</DropdownMenuItem>
 									</>
 								) : null}
-								{row.original.status ===
+								{/* {row.original.status ===
 								'TenantApplication.Status.Cancelled' ? (
 									<DropdownMenuItem
 										className="flex items-center gap-2 text-rose-600 hover:bg-red-50 hover:text-rose-600 focus:bg-rose-50 focus:text-rose-600"
@@ -225,7 +228,7 @@ export function PropertyTenantApplicationsModule() {
 										<Trash2 className="h-4 w-4" />
 										<span>Delete</span>
 									</DropdownMenuItem>
-								) : null}
+								) : null} */}
 							</DropdownMenuContent>
 						</DropdownMenu>
 					)

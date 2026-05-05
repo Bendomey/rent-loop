@@ -32,16 +32,16 @@ export function TenantModule() {
 	const baseUrl = `/properties/${clientUserProperty?.property?.id}/tenants/all/${tenantId}`
 	return (
 		<div className="m-5 grid grid-cols-12 gap-4">
-			<div className="col-span-4">
+			<div className="col-span-12 lg:col-span-4">
 				<Card key={tenant?.id} className="shadow-none">
 					<CardHeader className="flex items-start justify-between gap-3">
 						<CardTitle>
-							<Badge
+							{/* <Badge
 								variant={tenant?.status === 'ACTIVE' ? 'secondary' : 'default'}
 								className="px-2 py-1 text-xs"
 							>
 								{tenant?.status === 'ACTIVE' ? 'Active' : 'Expired'}
-							</Badge>
+							</Badge> */}
 						</CardTitle>
 					</CardHeader>
 
@@ -91,7 +91,7 @@ export function TenantModule() {
 					<CardFooter></CardFooter>
 				</Card>
 			</div>
-			<div className="col-span-8">
+			<div className="col-span-12 lg:col-span-8">
 				<Tabs value={pathname}>
 					<TabsList>
 						<Link to={baseUrl}>

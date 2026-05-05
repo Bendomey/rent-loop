@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet, useLoaderData } from 'react-router'
 import ApproveTenantApplicationModal from '../approve'
 import CancelTenantApplicationModal from '../cancel'
+import DeleteTenantApplicationModal from '../delete'
 import { PropertyTenantApplicationChecklist } from './components/checklist'
 import { useCalculateChecklist } from './components/use-calculate-checklist'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
@@ -23,6 +24,7 @@ export function PropertyTenantApplicationContainer() {
 		useLoaderData<typeof loader>()
 	const [openCancelModal, setOpenCancelModal] = useState(false)
 	const [openApproveModal, setOpenApproveModal] = useState(false)
+	const [openDeleteModal, setOpenDeleteModal] = useState(false)
 
 	const { startTour, hasCompletedTour } = useTour(
 		TOUR_KEYS.TENANT_APPLICATION,
@@ -50,7 +52,7 @@ export function PropertyTenantApplicationContainer() {
 
 	return (
 		<div className="m-5 grid grid-cols-12 gap-4">
-			<div className="col-span-8">
+			<div className="col-span-12 lg:col-span-8">
 				<div id="application-header" className="space-y-1">
 					<div className="flex items-center space-x-3">
 						<h1 className="text-3xl font-bold">
@@ -92,7 +94,7 @@ export function PropertyTenantApplicationContainer() {
 					<Outlet context={{ tenantApplication }} />
 				</div>
 			</div>
-			<div className="col-span-4">
+			<div className="col-span-12 lg:col-span-4">
 				{tenantApplication?.status === 'TenantApplication.Status.InProgress' ? (
 					<PropertyPermissionGuard roles={['MANAGER']}>
 						<div
@@ -125,7 +127,8 @@ export function PropertyTenantApplicationContainer() {
 							</Button>
 						</div>
 					</PropertyPermissionGuard>
-				) : tenantApplication.status ===
+				) : null}
+				{/* tenantApplication.status ===
 				  'TenantApplication.Status.Cancelled' ? (
 					<PropertyPermissionGuard roles={['MANAGER']}>
 						<div
@@ -134,13 +137,13 @@ export function PropertyTenantApplicationContainer() {
 						>
 							<Button
 								variant="destructive"
-								onClick={() => setOpenApproveModal(true)}
+								onClick={() => setOpenDeleteModal(true)}
 							>
 								Delete application
 							</Button>
 						</div>
 					</PropertyPermissionGuard>
-				) : null}
+				) : null} */}
 				<div id="application-checklist">
 					<PropertyTenantApplicationChecklist
 						propertyId={safeString(clientUserProperty?.property_id)}
@@ -157,6 +160,12 @@ export function PropertyTenantApplicationContainer() {
 			<ApproveTenantApplicationModal
 				opened={openApproveModal}
 				setOpened={setOpenApproveModal}
+				data={tenantApplication}
+				propertyId={safeString(clientUserProperty?.property_id)}
+			/>
+			<DeleteTenantApplicationModal
+				opened={openDeleteModal}
+				setOpened={setOpenDeleteModal}
 				data={tenantApplication}
 				propertyId={safeString(clientUserProperty?.property_id)}
 			/>

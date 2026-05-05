@@ -130,16 +130,19 @@ export function PropertyTenantApplicationFinancial() {
 				<CardHeader>
 					<CardTitle className="flex items-center justify-between">
 						Financial Setup
-						{!isEditing && !hasInvoice && (
-							<Button
-								variant="ghost"
-								size="sm"
-								onClick={() => setIsEditing(true)}
-							>
-								<Pencil className="size-4" />
-								Edit
-							</Button>
-						)}
+						{!isEditing &&
+							!hasInvoice &&
+							tenantApplication?.status ===
+								'TenantApplication.Status.InProgress' && (
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={() => setIsEditing(true)}
+								>
+									<Pencil className="size-4" />
+									Edit
+								</Button>
+							)}
 						{isEditing && (
 							<Button
 								variant="ghost"
@@ -155,7 +158,7 @@ export function PropertyTenantApplicationFinancial() {
 
 				{!isEditing ? (
 					<CardContent className="space-y-4">
-						<div className="grid grid-cols-2 gap-4">
+						<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 							<FieldDisplay
 								label="Agreed Rent Fee"
 								value={`${formatAmount(savedRentFee)}${savedPaymentFrequency ? ` / ${getPaymentFrequencyLabel(savedPaymentFrequency)}` : ''}`}

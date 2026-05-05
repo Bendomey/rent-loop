@@ -63,7 +63,7 @@ export function PropertyTenantsModule() {
 				<GridElement
 					boxHeight={58}
 					isLoading={isLoading}
-					gridColumns={{ sm: 2, md: 2, lg: 4, xl: 4 }}
+					gridColumns={{ sm: 1, md: 2, lg: 4, xl: 4 }}
 					gridElement={({ data: tenant }: { data: Tenant }) => {
 						const name = `${tenant.first_name} ${tenant.other_names ? tenant.other_names + ' ' : ''}${tenant.last_name}`
 

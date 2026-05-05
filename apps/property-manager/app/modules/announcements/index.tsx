@@ -135,7 +135,7 @@ export function AnnouncementsModule() {
 
 	return (
 		<div className="mx-auto my-6 flex max-w-4xl flex-col gap-4 sm:gap-6">
-			<div className="flex flex-row items-center justify-between">
+			<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 				<div>
 					<TypographyH2>Announcements</TypographyH2>
 					<p className="text-muted-foreground mt-1 text-sm">
