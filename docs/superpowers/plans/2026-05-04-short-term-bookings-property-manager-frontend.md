@@ -683,7 +683,7 @@ const modeOptions: Array<{
   {
     value: 'LEASE',
     name: 'Long-term (Leases)',
-    description: 'Monthly rent, tenant applications, lease agreements.',
+    description: 'Monthly rent, lease applications, lease agreements.',
     icon: ClipboardList,
   },
   {

@@ -46,7 +46,7 @@ export function PropertyTenantApplicationChecklist({
 					Complete Application Info
 				</CardTitle>
 				<CardDescription className="text-base">
-					As you fill out the tenant application, your progress will be shown
+					As you fill out the lease application, your progress will be shown
 					here.
 				</CardDescription>
 				<div className="mt-4 flex items-center gap-3 space-x-3">

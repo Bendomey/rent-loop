@@ -8,6 +8,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	return { origin: getDomainUrl(request), clientUserProperty }
 }
 
-export const handle = { breadcrumb: 'New Booking' }
+export const handle = { breadcrumb: 'New' }
 
 export default NewBookingModule

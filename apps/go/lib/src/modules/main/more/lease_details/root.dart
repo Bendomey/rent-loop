@@ -127,7 +127,7 @@ class LeaseDetailsScreen extends ConsumerWidget {
                   ],
                   const SizedBox(height: 12),
                   _ConditionReportsSection(lease: lease),
-                  // Tenant Application card
+                  // Lease Application card
                   if (lease.tenantApplication != null) ...[
                     const SizedBox(height: 12),
                     _ApplicationCard(application: lease.tenantApplication!),
@@ -618,7 +618,7 @@ class _ApplicationCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Tenant Application',
+                        'Lease Application',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade500,

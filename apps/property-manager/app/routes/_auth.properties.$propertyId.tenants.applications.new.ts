@@ -64,7 +64,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export const handle = {
-	breadcrumb: 'New Tenant Application',
+	breadcrumb: 'New Lease Application',
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -98,20 +98,20 @@ export async function action({ request }: Route.ActionArgs) {
 		)
 
 		if (!tenantApplication) {
-			throw new Error('Tenant application creation returned no data')
+			throw new Error('Lease application creation returned no data')
 		}
 
 		return redirect(
 			`/properties/${result.data.property_id}/tenants/applications/${tenantApplication.id}`,
 		)
 	} catch {
-		return { error: 'Failed to create tenant application' }
+		return { error: 'Failed to create lease application' }
 	}
 }
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	const meta = getSocialMetas({
-		title: `New Tenant Application | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
+		title: `New Lease Application | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
 		url: getDisplayUrl({
 			origin: loaderData.origin,
 			path: location.pathname,

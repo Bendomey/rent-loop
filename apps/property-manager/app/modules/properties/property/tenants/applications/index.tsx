@@ -4,7 +4,6 @@ import {
 	CircleCheck,
 	CircleX,
 	EllipsisVertical,
-	Trash2,
 	User,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
@@ -240,10 +239,10 @@ export function PropertyTenantApplicationsModule() {
 	return (
 		<div className="mx-6 my-6 flex flex-col gap-4 sm:gap-6">
 			<div>
-				<TypographyH4>Manage Tenant Applications</TypographyH4>
+				<TypographyH4>Manage Lease Applications</TypographyH4>
 				<TypographyMuted>
-					Manage all tenant applications in one place. You can quickly create
-					new entries or accept, deny, and delete existing ones.
+					Manage all lease applications in one place. You can quickly create new
+					entries or accept, deny, and delete existing ones.
 				</TypographyMuted>
 			</div>
 			<PropertyTenantApplicationsController
@@ -255,7 +254,7 @@ export function PropertyTenantApplicationsModule() {
 					columns={columns}
 					isLoading={isLoading}
 					refetch={refetch}
-					error={error ? 'Failed to load tenant applications.' : undefined}
+					error={error ? 'Failed to load lease applications.' : undefined}
 					dataResponse={{
 						rows: data?.rows ?? [],
 						total: data?.meta?.total ?? 0,
@@ -267,7 +266,7 @@ export function PropertyTenantApplicationsModule() {
 						has_next_page: data?.meta?.has_next_page ?? false,
 					}}
 					empty={{
-						message: 'No tenant applications found',
+						message: 'No lease applications found',
 						description:
 							"Try adjusting your search to find what you're looking for.",
 					}}

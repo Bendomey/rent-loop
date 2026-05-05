@@ -8,7 +8,7 @@
 
 ## Context
 
-Rent-Loop currently supports only long-term rental management via the Lease model. Property managers create tenant applications, sign agreements, and generate recurring invoices. This flow is too heavy for short-term stays (nightly/daily bookings).
+Rent-Loop currently supports only long-term rental management via the Lease model. Property managers create lease applications, sign agreements, and generate recurring invoices. This flow is too heavy for short-term stays (nightly/daily bookings).
 
 This feature introduces a parallel **Booking** mode alongside the existing Lease mode, letting property owners manage short-term stays (think: furnished apartments, serviced units, vacation rentals) without touching the existing lease infrastructure.
 

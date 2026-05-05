@@ -320,7 +320,7 @@ class _ContextSection extends StatelessWidget {
         final appId = invoice.contextTenantApplicationId;
         return (
           Icons.assignment_outlined,
-          'Tenant Application',
+          'Lease Application',
           appId != null
               ? () => context.push('/more/tenant-application/$appId')
               : null,

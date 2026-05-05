@@ -10214,7 +10214,7 @@ const docTemplate = `{
         },
         "/api/v1/admin/clients/{client_id}/properties/{property_id}/signing/direct": {
             "post": {
-                "description": "Submit a signature for a document using tenant application or lease context (for PMs) (Admin)",
+                "description": "Submit a signature for a document using lease application or lease context (for PMs) (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -10283,7 +10283,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "List all tenant applications (Admin)",
+                "description": "List all lease applications (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -10293,7 +10293,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "List all tenant applications (Admin)",
+                "summary": "List all lease applications (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -10511,7 +10511,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "An error occurred while filtering tenant applications",
+                        "description": "An error occurred while filtering lease applications",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -10531,7 +10531,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Create a new tenant application (Admin)",
+                "description": "Create a new lease application (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -10541,7 +10541,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Create a new tenant application (Admin)",
+                "summary": "Create a new lease application (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -10551,7 +10551,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Create Tenant Application Request Body",
+                        "description": "Create lease application Request Body",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -10562,7 +10562,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Tenant application created successfully",
+                        "description": "lease application created successfully",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -10573,7 +10573,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Error occurred when creating a tenant application",
+                        "description": "Error occurred when creating a lease application",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -10600,7 +10600,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Creates multiple tenant applications at once. Only phone is required per entry; all other fields are optional. Tenants are notified via SMS (and email if provided) with a link to complete their profile.",
+                "description": "Creates multiple lease applications at once. Only phone is required per entry; all other fields are optional. Tenants are notified via SMS (and email if provided) with a link to complete their profile.",
                 "consumes": [
                     "application/json"
                 ],
@@ -10610,7 +10610,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Bulk create tenant applications from CSV/Excel upload (Admin)",
+                "summary": "Bulk create lease applications from CSV/Excel upload (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -10620,7 +10620,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Bulk Create Tenant Applications Request Body",
+                        "description": "Bulk Create lease applications Request Body",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -10751,7 +10751,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get tenant application (Admin)",
+                "description": "Get lease application (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -10761,7 +10761,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Get tenant application (Admin)",
+                "summary": "Get lease application (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -10772,7 +10772,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Tenant application ID",
+                        "description": "lease application ID",
                         "name": "tenant_application_id",
                         "in": "path",
                         "required": true
@@ -10789,7 +10789,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Tenant application retrieved successfully",
+                        "description": "lease application retrieved successfully",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -10800,7 +10800,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Error occurred when fetching a tenant application",
+                        "description": "Error occurred when fetching a lease application",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -10812,7 +10812,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Tenant application not found",
+                        "description": "lease application not found",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -10831,7 +10831,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Delete a tenant application. Only applications with status 'TenantApplication.Status.Cancelled' can be deleted. (Admin)",
+                "description": "Delete a lease application. Only applications with status 'TenantApplication.Status.Cancelled' can be deleted. (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -10841,7 +10841,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Delete a tenant application (Admin)",
+                "summary": "Delete a lease application (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -10852,7 +10852,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Tenant application ID",
+                        "description": "lease application ID",
                         "name": "tenant_application_id",
                         "in": "path",
                         "required": true
@@ -10860,10 +10860,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "204": {
-                        "description": "Tenant application deleted successfully"
+                        "description": "lease application deleted successfully"
                     },
                     "400": {
-                        "description": "Error occurred when deleting a tenant application or application is not cancelled",
+                        "description": "Error occurred when deleting a lease application or application is not cancelled",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -10875,7 +10875,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Tenant application not found",
+                        "description": "lease application not found",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -10894,7 +10894,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update a tenant application (Admin)",
+                "description": "Update a lease application (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -10904,7 +10904,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Update a tenant application (Admin)",
+                "summary": "Update a lease application (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -10915,13 +10915,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Tenant application ID",
+                        "description": "lease application ID",
                         "name": "tenant_application_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Update Tenant Application Request Body",
+                        "description": "Update lease application Request Body",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -10932,7 +10932,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Tenant application updated successfully",
+                        "description": "lease application updated successfully",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -10943,7 +10943,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Error occurred when updating a tenant application",
+                        "description": "Error occurred when updating a lease application",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -10955,7 +10955,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Tenant application not found",
+                        "description": "lease application not found",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -10982,7 +10982,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Approve a tenant application (Admin)",
+                "description": "Approve a lease application (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -10992,7 +10992,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Approve a tenant application (Admin)",
+                "summary": "Approve a lease application (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -11003,7 +11003,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Tenant application ID",
+                        "description": "lease application ID",
                         "name": "tenant_application_id",
                         "in": "path",
                         "required": true
@@ -11011,10 +11011,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "204": {
-                        "description": "Tenant application approved successfully"
+                        "description": "lease application approved successfully"
                     },
                     "400": {
-                        "description": "Error occurred when approving a tenant application",
+                        "description": "Error occurred when approving a lease application",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -11026,19 +11026,19 @@ const docTemplate = `{
                         }
                     },
                     "403": {
-                        "description": "Tenant application not approved",
+                        "description": "lease application not approved",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "404": {
-                        "description": "Tenant application not found",
+                        "description": "lease application not found",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
                     },
                     "409": {
-                        "description": "Tenant application already approved",
+                        "description": "lease application already approved",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -11065,7 +11065,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Cancel a tenant application (Admin)",
+                "description": "Cancel a lease application (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -11075,7 +11075,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Cancel a tenant application (Admin)",
+                "summary": "Cancel a lease application (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -11086,13 +11086,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Tenant application ID",
+                        "description": "lease application ID",
                         "name": "tenant_application_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Cancel Tenant Application Request Body",
+                        "description": "Cancel lease application Request Body",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -11103,10 +11103,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "204": {
-                        "description": "Tenant application cancelled successfully"
+                        "description": "lease application cancelled successfully"
                     },
                     "400": {
-                        "description": "Error occurred when cancelling a tenant application",
+                        "description": "Error occurred when cancelling a lease application",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -11118,7 +11118,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Tenant application not found",
+                        "description": "lease application not found",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -11145,7 +11145,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Pay an invoice for a tenant application (security deposit and/or initial deposit) (Admin)",
+                "description": "Pay an invoice for a lease application (security deposit and/or initial deposit) (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -11155,7 +11155,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Pay an invoice for a tenant application (Admin)",
+                "summary": "Pay an invoice for a lease application (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -11166,7 +11166,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Tenant application ID",
+                        "description": "lease application ID",
                         "name": "tenant_application_id",
                         "in": "path",
                         "required": true
@@ -11205,7 +11205,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Tenant application or invoice not found",
+                        "description": "lease application or invoice not found",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -11232,7 +11232,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Generate an invoice for a tenant application (security deposit and/or initial deposit) (Admin)",
+                "description": "Generate an invoice for a lease application (security deposit and/or initial deposit) (Admin)",
                 "consumes": [
                     "application/json"
                 ],
@@ -11242,7 +11242,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Generate an invoice for a tenant application (Admin)",
+                "summary": "Generate an invoice for a lease application (Admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -11253,7 +11253,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Tenant application ID",
+                        "description": "lease application ID",
                         "name": "tenant_application_id",
                         "in": "path",
                         "required": true
@@ -11292,7 +11292,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Tenant application not found",
+                        "description": "lease application not found",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -15446,7 +15446,7 @@ const docTemplate = `{
         },
         "/api/v1/tenant-applications": {
             "post": {
-                "description": "Create a new tenant application",
+                "description": "Create a new lease application",
                 "consumes": [
                     "application/json"
                 ],
@@ -15456,10 +15456,10 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Create a new tenant application",
+                "summary": "Create a new lease application",
                 "parameters": [
                     {
-                        "description": "Create Tenant Application Request Body",
+                        "description": "Create lease application Request Body",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -15470,7 +15470,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Tenant application created successfully",
+                        "description": "lease application created successfully",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -15481,7 +15481,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Error occurred when creating a tenant application",
+                        "description": "Error occurred when creating a lease application",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -15503,14 +15503,14 @@ const docTemplate = `{
         },
         "/api/v1/tenant-applications/code/{code}": {
             "get": {
-                "description": "Look up a tenant application by its unique code. Returns application data including payment invoice.",
+                "description": "Look up a lease application by its unique code. Returns application data including payment invoice.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Get tenant application by code (public)",
+                "summary": "Get lease application by code (public)",
                 "parameters": [
                     {
                         "type": "string",
@@ -15522,7 +15522,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Tenant application retrieved",
+                        "description": "lease application retrieved",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -15557,7 +15557,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Update tenant application personal info by code (public)",
+                "summary": "Update lease application personal info by code (public)",
                 "parameters": [
                     {
                         "type": "string",
@@ -15567,7 +15567,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Update Tenant Application By Code Request Body",
+                        "description": "Update lease application By Code Request Body",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -15578,7 +15578,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Tenant application updated",
+                        "description": "lease application updated",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -15707,7 +15707,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Send OTP to tenant application phone (public)",
+                "summary": "Send OTP to lease application phone (public)",
                 "parameters": [
                     {
                         "type": "string",
@@ -15756,7 +15756,7 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Verify OTP and retrieve tenant application (public)",
+                "summary": "Verify OTP and retrieve lease application (public)",
                 "parameters": [
                     {
                         "type": "string",
@@ -15821,7 +15821,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get tenant application",
+                "description": "Get lease application",
                 "consumes": [
                     "application/json"
                 ],
@@ -15831,11 +15831,11 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Get tenant application",
+                "summary": "Get lease application",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Tenant application ID",
+                        "description": "lease application ID",
                         "name": "tenant_application_id",
                         "in": "path",
                         "required": true
@@ -15852,7 +15852,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Tenant application retrieved successfully",
+                        "description": "lease application retrieved successfully",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -15863,7 +15863,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Error occurred when fetching a tenant application",
+                        "description": "Error occurred when fetching a lease application",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -15875,7 +15875,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Tenant application not found",
+                        "description": "lease application not found",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -15894,7 +15894,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update a tenant application",
+                "description": "Update a lease application",
                 "consumes": [
                     "application/json"
                 ],
@@ -15904,17 +15904,17 @@ const docTemplate = `{
                 "tags": [
                     "TenantApplication"
                 ],
-                "summary": "Update a tenant application",
+                "summary": "Update a lease application",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Tenant application ID",
+                        "description": "lease application ID",
                         "name": "tenant_application_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Update Tenant Application Request Body",
+                        "description": "Update lease application Request Body",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -15925,7 +15925,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Tenant application updated successfully",
+                        "description": "lease application updated successfully",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -15936,7 +15936,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Error occurred when updating a tenant application",
+                        "description": "Error occurred when updating a lease application",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -15948,7 +15948,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "Tenant application not found",
+                        "description": "lease application not found",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -16861,7 +16861,7 @@ const docTemplate = `{
                 "reason": {
                     "type": "string",
                     "minLength": 1,
-                    "example": "Tenant application cancelled due to incomplete application"
+                    "example": "lease application cancelled due to incomplete application"
                 }
             }
         },
@@ -17512,6 +17512,16 @@ const docTemplate = `{
                 "longitude": {
                     "type": "number",
                     "example": -0.187
+                },
+                "modes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "LEASE",
+                        "BOOKING"
+                    ]
                 },
                 "name": {
                     "type": "string",
@@ -18825,6 +18835,16 @@ const docTemplate = `{
                 "longitude": {
                     "type": "number",
                     "example": -0.187
+                },
+                "modes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "LEASE",
+                        "BOOKING"
+                    ]
                 },
                 "name": {
                     "type": "string",

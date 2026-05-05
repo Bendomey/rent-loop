@@ -17,6 +17,4 @@ export function meta({ loaderData, location, params }: Route.MetaArgs) {
 	})
 }
 
-export const handle = { breadcrumb: 'Bookings' }
-
 export default PropertyBookingsModule

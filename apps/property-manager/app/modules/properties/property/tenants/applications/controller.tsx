@@ -122,7 +122,7 @@ export const PropertyTenantApplicationsController = ({
 			</div>
 			<div className="flex flex-wrap items-center justify-between gap-4">
 				<div className="flex items-center gap-2 text-sm">
-					<SearchInput placeholder="Search tenant applications..." />
+					<SearchInput placeholder="Search lease applications..." />
 				</div>
 				<div className="flex items-center justify-end gap-2">
 					<PropertyPermissionGuard roles={['MANAGER']}>
@@ -135,7 +135,7 @@ export const PropertyTenantApplicationsController = ({
 								className="bg-rose-600 text-white hover:bg-rose-700"
 							>
 								<Plus className="size-4" />
-								Add Tenant Application
+								Add an Application
 							</Button>
 						</Link>
 					</PropertyPermissionGuard>

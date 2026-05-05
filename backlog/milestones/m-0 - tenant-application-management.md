@@ -1,8 +1,8 @@
 ---
 id: m-0
-title: "Tenant Application Management"
+title: "lease application Management"
 ---
 
 ## Description
 
-Milestone: Tenant Application Management
+Milestone: lease application Management

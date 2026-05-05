@@ -59,7 +59,7 @@ type ClientUserPasswordUpdatedData struct {
 	Name string
 }
 
-// ─── Tenant Application ───────────────────────────────────────────────────────
+// ─── lease application ───────────────────────────────────────────────────────
 
 type TenantInvitedData struct {
 	UnitID     string

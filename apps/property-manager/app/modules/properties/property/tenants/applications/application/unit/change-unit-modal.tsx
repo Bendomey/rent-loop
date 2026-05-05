@@ -112,7 +112,7 @@ export function ChangeUnitModal({
 				<AlertDialogHeader>
 					<AlertDialogTitle>Change Unit</AlertDialogTitle>
 					<AlertDialogDescription>
-						Select a new unit for this tenant application.
+						Select a new unit for this lease application.
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 

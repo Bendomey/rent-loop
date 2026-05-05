@@ -1,7 +1,7 @@
 package models
 
 // DocumentSignature represents a signature on a document, such as a lease agreement, termination agreement.
-// It links to the document, the tenant application (if applicable), and the lease (if applicable).
+// It links to the document, the lease application (if applicable), and the lease (if applicable).
 // It also captures who signed it, their role, and the IP address from which they signed.
 type DocumentSignature struct {
 	BaseModelSoftDelete

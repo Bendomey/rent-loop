@@ -42,7 +42,7 @@ export function PropertyTenantApplicationContainer() {
 	if (!tenantApplication) {
 		return (
 			<div className="m-5 flex items-center justify-center">
-				<p className="text-sm text-gray-500">Tenant application not found.</p>
+				<p className="text-sm text-gray-500">Lease application not found.</p>
 			</div>
 		)
 	}

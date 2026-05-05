@@ -173,7 +173,7 @@ func (s *tenantApplicationService) CreateTenantApplication(
 			Err: createTenantApplicationErr,
 			Metadata: map[string]string{
 				"function": "CreateTenantApplication",
-				"action":   "create tenant application",
+				"action":   "create lease application",
 			},
 		})
 	}
@@ -381,7 +381,7 @@ func (s *tenantApplicationService) BulkCreateTenantApplications(
 				Err: err,
 				Metadata: map[string]string{
 					"function": "BulkCreateTenantApplications",
-					"action":   "creating tenant application",
+					"action":   "creating lease application",
 				},
 			})
 		}
@@ -455,7 +455,7 @@ func (s *tenantApplicationService) ListTenantApplications(
 			Err: err,
 			Metadata: map[string]string{
 				"function": "ListTenantApplications",
-				"action":   "listing tenant applications",
+				"action":   "listing lease applications",
 			},
 		})
 	}
@@ -473,7 +473,7 @@ func (s *tenantApplicationService) CountTenantApplications(
 			Err: err,
 			Metadata: map[string]string{
 				"function": "CountTenantApplications",
-				"action":   "counting tenant applications",
+				"action":   "counting lease applications",
 			},
 		})
 	}
@@ -496,7 +496,7 @@ func (s *tenantApplicationService) GetOneTenantApplication(
 			Err: err,
 			Metadata: map[string]string{
 				"function": "GetOneTenantApplication",
-				"action":   "fetching tenant application",
+				"action":   "fetching lease application",
 			},
 		})
 	}
@@ -567,7 +567,7 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 			Err: getTenantApplicationErr,
 			Metadata: map[string]string{
 				"function": "UpdateTenantApplication",
-				"action":   "fetching tenant application",
+				"action":   "fetching lease application",
 			},
 		})
 	}
@@ -741,7 +741,7 @@ func (s *tenantApplicationService) UpdateTenantApplication(
 			Err: updateTenantApplicationErr,
 			Metadata: map[string]string{
 				"function": "UpdateTenantApplication",
-				"action":   "updating tenant application",
+				"action":   "updating lease application",
 			},
 		})
 	}
@@ -767,7 +767,7 @@ func (s *tenantApplicationService) DeleteTenantApplication(
 			Err: getTenantApplicationErr,
 			Metadata: map[string]string{
 				"function": "DeleteTenantApplication",
-				"action":   "fetching tenant application",
+				"action":   "fetching lease application",
 			},
 		})
 	}
@@ -782,7 +782,7 @@ func (s *tenantApplicationService) DeleteTenantApplication(
 			Err: deleteErr,
 			Metadata: map[string]string{
 				"function": "DeleteTenantApplication",
-				"action":   "deleting tenant application",
+				"action":   "deleting lease application",
 			},
 		})
 	}
@@ -813,7 +813,7 @@ func (s *tenantApplicationService) CancelTenantApplication(
 			Err: getTenantApplicationErr,
 			Metadata: map[string]string{
 				"function": "CancelTenantApplication",
-				"action":   "fetching tenant application",
+				"action":   "fetching lease application",
 			},
 		})
 	}
@@ -837,7 +837,7 @@ func (s *tenantApplicationService) CancelTenantApplication(
 			Err: updateTenantApplicationErr,
 			Metadata: map[string]string{
 				"function": "CancelTenantApplication",
-				"action":   "updating tenant application",
+				"action":   "updating lease application",
 			},
 		})
 	}
@@ -895,7 +895,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 	ctx context.Context,
 	input ApproveTenantApplicationInput,
 ) error {
-	// fetch tenant application
+	// fetch lease application
 	tenantApplication, getTenantApplicationErr := s.repo.GetOneWithQuery(ctx, repository.GetTenantApplicationQuery{
 		TenantApplicationID: input.TenantApplicationID,
 	})
@@ -909,7 +909,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 			Err: getTenantApplicationErr,
 			Metadata: map[string]string{
 				"function": "ApproveTenantApplication",
-				"action":   "fetching tenant application",
+				"action":   "fetching lease application",
 			},
 		})
 	}
@@ -998,7 +998,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		}
 	}
 
-	// update tenant application status
+	// update lease application status
 	transaction := s.appCtx.DB.Begin()
 	transCtx := lib.WithTransaction(ctx, transaction)
 
@@ -1013,7 +1013,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 			Err: updateTenantApplicationErr,
 			Metadata: map[string]string{
 				"function": "ApproveTenantApplication",
-				"action":   "updating tenant application status",
+				"action":   "updating lease application status",
 			},
 		})
 	}
@@ -1202,7 +1202,7 @@ func (s *tenantApplicationService) GenerateInvoice(
 	ctx context.Context,
 	input GenerateInvoiceInput,
 ) (*models.Invoice, error) {
-	// Fetch tenant application with unit and property details
+	// Fetch lease application with unit and property details
 	populate := []string{"DesiredUnit", "DesiredUnit.Property"}
 	tenantApplication, getTenantApplicationErr := s.repo.GetOneWithQuery(ctx, repository.GetTenantApplicationQuery{
 		TenantApplicationID: input.TenantApplicationID,
@@ -1218,7 +1218,7 @@ func (s *tenantApplicationService) GenerateInvoice(
 			Err: getTenantApplicationErr,
 			Metadata: map[string]string{
 				"function": "GenerateInvoice",
-				"action":   "fetching tenant application",
+				"action":   "fetching lease application",
 			},
 		})
 	}

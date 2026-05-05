@@ -1,6 +1,6 @@
 ---
 id: RENTL-11
-title: Add Zod validation to tenant application creation form
+title: Add Zod validation to lease application creation form
 status: Done
 assignee: []
 created_date: '2026-03-04 18:57'
@@ -114,12 +114,12 @@ export async function action({ request }: Route.ActionArgs) {
     )
 
     if (!tenantApplication) {
-      throw new Error('Tenant application creation returned no data')
+      throw new Error('Lease application creation returned no data')
     }
 
     return redirect(`/properties/${result.data.property_id}/tenants/applications`)
   } catch {
-    return { error: 'Failed to create tenant application' }
+    return { error: 'Failed to create lease application' }
   }
 }
 ```

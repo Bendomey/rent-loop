@@ -6,7 +6,7 @@ part 'invoices_provider.g.dart';
 
 /// Fetches all invoices for the currently active lease.
 /// Includes both LEASE_RENT (via lease_id) and TENANT_APPLICATION
-/// (via the lease's linked tenant application) invoices.
+/// (via the lease's linked lease application) invoices.
 @riverpod
 Future<List<InvoiceModel>> invoices(InvoicesRef ref) async {
   final activeLease = ref.watch(currentLeaseNotifierProvider);

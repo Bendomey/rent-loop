@@ -1,4 +1,4 @@
-import type { Route } from './+types/_auth.properties.$propertyId.availability'
+import type { Route } from './+types/_auth.properties.$propertyId.bookings.availability'
 import { propertyContext } from '~/lib/actions/property.context.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'

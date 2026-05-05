@@ -14,5 +14,5 @@ dependencies: []
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-routes/sign.$token.ts:41 — TODO: add case for lease fetching too, in the case of termination or extension. Currently only handles tenant application signing.
+routes/sign.$token.ts:41 — TODO: add case for lease fetching too, in the case of termination or extension. Currently only handles lease application signing.
 <!-- SECTION:DESCRIPTION:END -->

@@ -298,7 +298,7 @@ Auth: `Authorization: Bearer <jwt>` header on all protected routes.
 | POST | `/api/v1/tenant-accounts/auth/codes` | Send OTP to phone |
 | POST | `/api/v1/tenant-accounts/auth/codes/verify` | Verify OTP, returns JWT |
 
-**Tenant Applications (tracking page — mixed auth)**
+**Lease Applications (tracking page — mixed auth)**
 | Method | Path | Description |
 |---|---|---|
 | GET | `/api/v1/tenant-applications/code/{code}` | Get application by tracking code |

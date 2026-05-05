@@ -80,7 +80,7 @@ export function PropertySidebar({
 						url: '/all?filters=status&status=ACTIVE',
 					},
 					{
-						title: 'Applications',
+						title: 'Lease Applications',
 						url: '/applications',
 						isHidden: !isLease,
 					},

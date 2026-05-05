@@ -28,6 +28,7 @@ type CreatePropertyRequest struct {
 	Description *string  `json:"description,omitempty"                                                                                                       example:"A luxurious apartment overlooking the Atlantic Ocean." description:"Brief description of the property."`
 	Images      []string `json:"images,omitempty"      validate:"omitempty,dive,url"                                                                         example:"https://example.com/images/1.jpg"                      description:"Array of image URLs associated with the property."`
 	Tags        []string `json:"tags,omitempty"        validate:"omitempty,dive,min=1,max=30"                                                                example:"beachfront,furnished"                                  description:"Tags for categorizing the property."`
+	Modes       []string `json:"modes,omitempty"       validate:"omitempty,dive,oneof=LEASE BOOKING"                                                         example:"LEASE,BOOKING"                                         description:"Rental modes for the property. Options: LEASE | BOOKING."`
 	Latitude    float64  `json:"latitude"              validate:"required,latitude"                                                                          example:"5.6037"                                                description:"Latitude coordinate of the property."`
 	Longitude   float64  `json:"longitude"             validate:"required,longitude"                                                                         example:"-0.1870"                                               description:"Longitude coordinate of the property."`
 	Address     string   `json:"address"               validate:"required,min=5,max=200"                                                                     example:"12 Labone Crescent"                                    description:"Physical address of the property."`
@@ -79,6 +80,7 @@ func (h *PropertyHandler) CreateProperty(w http.ResponseWriter, r *http.Request)
 		Description: body.Description,
 		Images:      body.Images,
 		Tags:        body.Tags,
+		Modes:       body.Modes,
 		Latitude:    body.Latitude,
 		Longitude:   body.Longitude,
 		Address:     body.Address,
@@ -274,6 +276,7 @@ type UpdatePropertyRequest struct {
 	Description lib.Optional[string]   `json:"description" validate:"omitempty"                                                                                   example:"A luxurious apartment overlooking the Atlantic Ocean." description:"Brief description of the property."                           swaggertype:"string"`
 	Images      lib.Optional[[]string] `json:"images"      validate:"omitempty,dive,url"                                                                          example:"https://example.com/images/1.jpg"                      description:"Array of image URLs associated with the property."            swaggertype:"array,string"`
 	Tags        lib.Optional[[]string] `json:"tags"        validate:"omitempty,dive,min=1,max=30"                                                                 example:"beachfront,furnished"                                  description:"Tags for categorizing the property."                          swaggertype:"array,string"`
+	Modes       lib.Optional[[]string] `json:"modes"       validate:"omitempty,dive,oneof=LEASE BOOKING"                                                          example:"LEASE,BOOKING"                                         description:"Rental modes for the property. Options: LEASE | BOOKING."     swaggertype:"array,string"`
 	Latitude    *float64               `json:"latitude"    validate:"omitempty,latitude"                                                                          example:"5.6037"                                                description:"Latitude coordinate of the property."`
 	Longitude   *float64               `json:"longitude"   validate:"omitempty,longitude"                                                                         example:"-0.1870"                                               description:"Longitude coordinate of the property."`
 	Address     *string                `json:"address"     validate:"omitempty,min=5,max=200"                                                                     example:"12 Labone Crescent"                                    description:"Physical address of the property."`
@@ -331,6 +334,7 @@ func (h *PropertyHandler) UpdateProperty(w http.ResponseWriter, r *http.Request)
 		Description: body.Description,
 		Images:      body.Images,
 		Tags:        body.Tags,
+		Modes:       body.Modes,
 		Latitude:    body.Latitude,
 		Longitude:   body.Longitude,
 		Address:     body.Address,

@@ -22,10 +22,10 @@ const (
 )
 
 const (
-	TENANT_INVITED_SUBJECT               = "Complete your tenant application on Rentloop"
-	TENANT_CANCELLED_SUBJECT             = "Your tenant application has been cancelled"
-	TENANT_APPLICATION_SUBMITTED_SUBJECT = "Tenant Application Submitted Successfully"
-	TENANT_APPLICATION_APPROVED_SUBJECT  = "Your Tenant Application Has Been Approved"
+	TENANT_INVITED_SUBJECT               = "Complete your lease application on Rentloop"
+	TENANT_CANCELLED_SUBJECT             = "Your lease application has been cancelled"
+	TENANT_APPLICATION_SUBMITTED_SUBJECT = "Lease Application Submitted Successfully"
+	TENANT_APPLICATION_APPROVED_SUBJECT  = "Your Lease Application Has Been Approved"
 	TENANT_CSV_CREATED_SUBJECT           = "Complete Your Tenant Profile on Rentloop"
 )
 

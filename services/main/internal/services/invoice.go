@@ -986,7 +986,7 @@ func (s *invoiceService) GetLineItems(ctx context.Context, invoiceID string) ([]
 // Invoice Accounting Utilities
 // ============================================================================
 
-// buildTenantApplicationJournalEntry builds journal entry lines for tenant application invoices.
+// buildTenantApplicationJournalEntry builds journal entry lines for lease application invoices.
 // Line items can include: SECURITY_DEPOSIT, INITIAL_DEPOSIT
 // Accounting:
 //   - Debit: Accounts Receivable (total amount)
@@ -1004,7 +1004,7 @@ func buildTenantApplicationJournalEntry(
 		Debit:     invoice.SubTotal,
 		Credit:    0,
 		Notes: lib.StringPointer(
-			fmt.Sprintf("Accounts receivable for tenant application invoice %s", invoice.Code),
+			fmt.Sprintf("Accounts receivable for lease application invoice %s", invoice.Code),
 		),
 	})
 

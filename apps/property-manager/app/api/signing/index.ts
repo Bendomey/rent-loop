@@ -232,7 +232,7 @@ export const useResendSigningToken = () =>
 	})
 
 /**
- * Fetch signing tokens filtered by document and tenant application.
+ * Fetch signing tokens filtered by document and lease application.
  */
 const fetchSigningTokens = async (
 	clientId: string,

@@ -122,7 +122,7 @@ export function Step0() {
 				{/* Header Section */}
 				<div className="mt-10 space-y-2 border-b pb-6">
 					<TypographyH2 className="text-2xl font-bold">
-						Add New Tenant
+						Add New Lease Application
 					</TypographyH2>
 					<TypographyMuted className="text-base">
 						Select an available unit and choose how the tenant should be
@@ -135,7 +135,7 @@ export function Step0() {
 					<div className="space-y-2">
 						<Label className="text-base font-semibold">Select Unit</Label>
 						<TypographyMuted>
-							Choose which unit this tenant application is for.
+							Choose which unit this lease application is for.
 						</TypographyMuted>
 					</div>
 

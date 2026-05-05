@@ -4,7 +4,7 @@ import { getQueryParams } from '~/lib/get-param'
 import { fetchClient, fetchServer } from '~/lib/transport'
 
 /**
- * GET all tenant applications based on a query.
+ * GET all lease applications based on a query.
  */
 
 const getPropertyTenantApplications = async (
@@ -224,7 +224,7 @@ interface cancelTenantApplicationProps {
 }
 
 /**
- * Cancel Tenant Application
+ * Cancel lease application
  */
 const cancelTenantApplication = async ({
 	client_id,
@@ -256,7 +256,7 @@ export const useCancelTenantApplication = () =>
 	useMutation({ mutationFn: cancelTenantApplication })
 
 /**
- * approve tenant application
+ * approve lease application
  */
 
 const approveTenantApplication = async ({
@@ -292,7 +292,7 @@ export const useApproveTenantApplication = () =>
 	useMutation({ mutationFn: approveTenantApplication })
 
 /**
- * Delete Tenant Application
+ * Delete lease application
  */
 const deleteTenantApplication = async (props: {
 	client_id: string
@@ -324,7 +324,7 @@ export const useDeleteTenantApplication = () =>
 	})
 
 /**
- * Update Admin Tenant Application
+ * Update Admin lease application
  */
 interface AdminUpdateTenantApplicationProps {
 	client_id: string
@@ -364,7 +364,7 @@ export const useAdminUpdateTenantApplication = () =>
 	useMutation({ mutationFn: adminUpdateTenantApplication })
 
 /**
- * Update Tenant Application
+ * Update lease application
  */
 interface UpdateTenantApplicationProps {
 	id: string
@@ -402,7 +402,7 @@ export const useUpdateTenantApplication = () =>
 /**
  * Generate application payment invoice
  * Backend derives rent_fee, payment_frequency, periods etc. from the saved
- * tenant application fields. Only an optional due_date can be provided.
+ * lease application fields. Only an optional due_date can be provided.
  */
 interface GenerateApplicationPaymentInvoiceInput {
 	client_id: string
@@ -495,7 +495,7 @@ export const usePayApplicationInvoice = () =>
 	useMutation({ mutationFn: payApplicationInvoice })
 
 /**
- * Bulk create tenant applications from CSV/Excel upload.
+ * Bulk create lease applications from CSV/Excel upload.
  */
 export interface BulkCreateTenantApplicationEntry {
 	phone: string

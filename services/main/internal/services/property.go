@@ -73,6 +73,7 @@ type CreatePropertyInput struct {
 	Description *string
 	Images      []string
 	Tags        []string
+	Modes       []string
 	Latitude    float64
 	Longitude   float64
 	Address     string
@@ -102,6 +103,13 @@ func (s *propertyService) CreateProperty(
 		tags = pq.StringArray{}
 	}
 
+	var modes pq.StringArray
+	if input.Modes != nil {
+		modes = pq.StringArray(input.Modes)
+	} else {
+		modes = pq.StringArray{}
+	}
+
 	property := models.Property{
 		Type:        input.Type,
 		Status:      input.Status,
@@ -109,6 +117,7 @@ func (s *propertyService) CreateProperty(
 		Description: input.Description,
 		Images:      images,
 		Tags:        tags,
+		Modes:       modes,
 		Latitude:    input.Latitude,
 		Longitude:   input.Longitude,
 		Address:     input.Address,
@@ -257,6 +266,7 @@ type UpdatePropertyInput struct {
 	Description lib.Optional[string]
 	Images      lib.Optional[[]string]
 	Tags        lib.Optional[[]string]
+	Modes       lib.Optional[[]string]
 	Latitude    *float64
 	Longitude   *float64
 	Address     *string
@@ -313,6 +323,14 @@ func (s *propertyService) UpdateProperty(
 			property.Tags = pq.StringArray(*input.Tags.Value)
 		} else {
 			property.Tags = pq.StringArray{}
+		}
+	}
+
+	if input.Modes.IsSet {
+		if input.Modes.Value != nil {
+			property.Modes = pq.StringArray(*input.Modes.Value)
+		} else {
+			property.Modes = pq.StringArray{}
 		}
 	}
 

@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
-import { Pencil } from 'lucide-react'
+import { Building, ClipboardList, Hotel, Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useRevalidator } from 'react-router'
@@ -38,6 +38,13 @@ import {
 	FormMessage,
 } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
+import {
+	Item,
+	ItemContent,
+	ItemDescription,
+	ItemGroup,
+	ItemTitle,
+} from '~/components/ui/item'
 import { Label } from '~/components/ui/label'
 import { Separator } from '~/components/ui/separator'
 import { Spinner } from '~/components/ui/spinner'
@@ -50,6 +57,7 @@ import {
 import { QUERY_KEYS } from '~/lib/constants'
 import { getErrorMessage } from '~/lib/error-messages'
 import { safeString } from '~/lib/strings'
+import { cn } from '~/lib/utils'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
 
@@ -328,6 +336,161 @@ function EditLocationDialog({
 }
 
 // ---------------------------------------------------------------------------
+// Edit Modes dialog
+// ---------------------------------------------------------------------------
+
+const modeOptions: Array<{
+	value: 'LEASE' | 'BOOKING' | 'BOTH'
+	name: string
+	description: string
+	icon: React.ElementType
+}> = [
+	{
+		value: 'LEASE',
+		name: 'Long-term (Leases)',
+		description: 'Monthly rent, lease applications, lease agreements.',
+		icon: ClipboardList,
+	},
+	{
+		value: 'BOOKING',
+		name: 'Short-term (Bookings)',
+		description:
+			'Nightly/daily stays, guest booking link, availability calendar.',
+		icon: Hotel,
+	},
+	{
+		value: 'BOTH',
+		name: 'Both',
+		description: 'Some units long-term, others available for short stays.',
+		icon: Building,
+	},
+]
+
+const editModesSchema = z.object({
+	modeSelection: z.enum(['LEASE', 'BOOKING', 'BOTH'], {
+		error: 'Please select a rental mode',
+	}),
+})
+
+type EditModesSchema = z.infer<typeof editModesSchema>
+
+function EditModesDialog({
+	clientId,
+	property,
+	open,
+	onOpenChange,
+	onSuccess,
+}: {
+	clientId: string
+	property: Property
+	open: boolean
+	onOpenChange: (v: boolean) => void
+	onSuccess: () => void
+}) {
+	const { submit, isPending } = usePropertyMutation(
+		clientId,
+		property.id,
+		'Rental modes updated',
+		onSuccess,
+	)
+
+	const currentSelection: EditModesSchema['modeSelection'] =
+		property.modes?.includes('LEASE') && property.modes?.includes('BOOKING')
+			? 'BOTH'
+			: property.modes?.includes('BOOKING')
+				? 'BOOKING'
+				: 'LEASE'
+
+	const { watch, setValue, formState, handleSubmit } = useForm<EditModesSchema>(
+		{
+			resolver: zodResolver(editModesSchema),
+			defaultValues: { modeSelection: currentSelection },
+		},
+	)
+
+	const onSubmit = (data: EditModesSchema) => {
+		const modes: Array<'LEASE' | 'BOOKING'> =
+			data.modeSelection === 'BOTH'
+				? ['LEASE', 'BOOKING']
+				: [data.modeSelection]
+		submit({ propertyId: property.id, data: { modes } })
+	}
+
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent className="max-w-sm rounded-xl">
+				<DialogHeader>
+					<DialogTitle>Rental Mode</DialogTitle>
+					<DialogDescription>
+						Choose what type of rentals this property handles.
+					</DialogDescription>
+				</DialogHeader>
+
+				<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+					<ItemGroup className="flex flex-col gap-2">
+						{modeOptions.map((mode) => {
+							const isSelected = watch('modeSelection') === mode.value
+							return (
+								<Item
+									key={mode.value}
+									variant="outline"
+									className={cn(
+										'cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800',
+										isSelected ? 'border-rose-600' : '',
+									)}
+									onClick={() =>
+										setValue('modeSelection', mode.value, {
+											shouldDirty: true,
+											shouldValidate: true,
+										})
+									}
+								>
+									<mode.icon className="text-muted-foreground size-5 shrink-0" />
+									<ItemContent>
+										<ItemTitle className="text-sm">{mode.name}</ItemTitle>
+										<ItemDescription className="text-xs">
+											{mode.description}
+										</ItemDescription>
+									</ItemContent>
+								</Item>
+							)
+						})}
+					</ItemGroup>
+
+					{formState.errors.modeSelection && (
+						<p className="text-destructive text-sm">
+							{formState.errors.modeSelection.message}
+						</p>
+					)}
+
+					<div className="flex justify-end gap-3 pt-1">
+						<Button
+							type="button"
+							variant="outline"
+							onClick={() => onOpenChange(false)}
+						>
+							Cancel
+						</Button>
+						<Button type="submit" disabled={isPending} className="min-w-[80px]">
+							{isPending ? <Spinner /> : null}
+							Save
+						</Button>
+					</div>
+				</form>
+			</DialogContent>
+		</Dialog>
+	)
+}
+
+function getModeLabel(modes: Array<'LEASE' | 'BOOKING'> | undefined) {
+	if (!modes?.length) return '—'
+	if (modes.includes('LEASE') && modes.includes('BOOKING'))
+		return 'Both (Long-term & Short-term)'
+	if (modes.includes('BOOKING')) return 'Short-term (Bookings)'
+	return 'Long-term (Leases)'
+}
+
+// ---------------------------------------------------------------------------
 // Main module
 // ---------------------------------------------------------------------------
 
@@ -340,6 +503,7 @@ export function PropertyGeneralSettingsModule() {
 	const [openDeletePropertyModal, setOpenDeletePropertyModal] = useState(false)
 	const [showEditBasic, setShowEditBasic] = useState(false)
 	const [showEditLocation, setShowEditLocation] = useState(false)
+	const [showEditModes, setShowEditModes] = useState(false)
 
 	const property = clientUserProperty?.property
 
@@ -417,6 +581,39 @@ export function PropertyGeneralSettingsModule() {
 							</PropertyPermissionGuard>
 						)}
 					</div>
+				</div>
+			</section>
+
+			{/* Rental Mode */}
+			<section className="bg-card relative grid gap-8 rounded-xl border p-4 shadow-sm sm:grid-cols-3 sm:items-start md:p-6">
+				<PropertyPermissionGuard roles={['MANAGER']}>
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						className="absolute top-3 right-3 gap-1.5 text-xs"
+						onClick={() => setShowEditModes(true)}
+					>
+						<Pencil className="size-3.5" />
+						Edit
+					</Button>
+				</PropertyPermissionGuard>
+
+				<div className="space-y-2">
+					<TypographyH4 className="text-lg font-semibold">
+						Rental Mode
+					</TypographyH4>
+					<TypographyMuted className="text-sm">
+						Controls whether this property accepts long-term leases, short-term
+						bookings, or both.
+					</TypographyMuted>
+				</div>
+
+				<div className="space-y-1 sm:col-span-2">
+					<Label className="text-sm font-medium">Current Mode</Label>
+					<p className="text-muted-foreground text-sm">
+						{getModeLabel(property?.modes)}
+					</p>
 				</div>
 			</section>
 
@@ -527,6 +724,19 @@ export function PropertyGeneralSettingsModule() {
 					onOpenChange={setShowEditBasic}
 					onSuccess={() => {
 						setShowEditBasic(false)
+						handleMutationSuccess()
+					}}
+				/>
+			)}
+
+			{property && (
+				<EditModesDialog
+					clientId={safeString(clientUser?.client_id)}
+					property={property}
+					open={showEditModes}
+					onOpenChange={setShowEditModes}
+					onSuccess={() => {
+						setShowEditModes(false)
 						handleMutationSuccess()
 					}}
 				/>

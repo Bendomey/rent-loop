@@ -72,7 +72,7 @@ const modeOptions: Array<{
 	{
 		value: 'LEASE',
 		name: 'Long-term (Leases)',
-		description: 'Monthly rent, tenant applications, lease agreements.',
+		description: 'Monthly rent, lease applications, lease agreements.',
 		icon: ClipboardList,
 	},
 	{
@@ -140,7 +140,7 @@ export function Step0() {
 	return (
 		<form
 			onSubmit={handleSubmit(onSubmit)}
-			className="mx-auto mb-5 space-y-10 md:max-w-2/3"
+			className="mx-auto mt-10 mb-5 space-y-10 md:max-w-2/3"
 		>
 			<div className="space-y-2">
 				<TypographyH2>What type of Property is this?</TypographyH2>
@@ -235,7 +235,7 @@ export function Step0() {
 					<TypographyMuted>
 						What type of rentals does this property handle?
 					</TypographyMuted>
-					<ItemGroup className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+					<ItemGroup className="flex flex-col gap-3">
 						{modeOptions.map((mode) => {
 							const isSelected = watch('modeSelection') === mode.value
 							return (
@@ -253,14 +253,10 @@ export function Step0() {
 										})
 									}
 								>
-									<ItemHeader className="flex items-center justify-center">
-										<mode.icon className="size-10" />
-									</ItemHeader>
-									<ItemContent className="flex items-center justify-center">
-										<ItemTitle className="text-center text-sm">
-											{mode.name}
-										</ItemTitle>
-										<ItemDescription className="text-center text-xs">
+									<mode.icon className="text-muted-foreground size-5 shrink-0" />
+									<ItemContent>
+										<ItemTitle className="text-sm">{mode.name}</ItemTitle>
+										<ItemDescription className="text-xs">
 											{mode.description}
 										</ItemDescription>
 									</ItemContent>
