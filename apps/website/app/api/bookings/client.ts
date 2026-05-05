@@ -17,7 +17,7 @@ export async function getUnitForBookingPageServer(
 	apiConfig: ApiConfigForServerConfig,
 ): Promise<PublicBookingUnit> {
 	const response = await fetchServer<ApiResponse<PublicBookingUnit>>(
-		`${apiConfig.baseUrl}/v1/public/units/${unitSlug}`,
+		`${apiConfig.baseUrl}/v1/units/${unitSlug}`,
 		{ isUnAuthorizedRequest: true },
 	)
 	return response.parsedBody.data
@@ -28,7 +28,7 @@ export async function createPublicBooking(
 	input: CreatePublicBookingInput,
 ): Promise<PublicBooking> {
 	const response = await fetchClient<ApiResponse<PublicBooking>>(
-		`/v1/public/units/${unitSlug}/bookings`,
+		`/v1/units/${unitSlug}/bookings`,
 		{
 			method: 'POST',
 			body: JSON.stringify(input),
@@ -44,7 +44,7 @@ export async function trackBooking(
 ): Promise<PublicBooking> {
 	const encoded = encodeURIComponent(phone)
 	const response = await fetchClient<ApiResponse<PublicBooking>>(
-		`/v1/public/bookings/track/${trackingCode}?phone=${encoded}`,
+		`/v1/bookings/${trackingCode}?phone=${encoded}`,
 		{ isUnAuthorizedRequest: true },
 	)
 	return response.parsedBody.data
