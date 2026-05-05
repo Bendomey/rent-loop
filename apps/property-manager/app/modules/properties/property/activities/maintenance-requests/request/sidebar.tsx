@@ -519,7 +519,7 @@ export function MaintenanceRequestSidebar({ mr, propertyId }: SidebarProps) {
 						{mr.lease_id && (
 							<SidebarRow label="Lease">
 								<Link
-									to={`/properties/${propertyId}/tenants/leases/${mr.lease_id}`}
+									to={`/properties/${propertyId}/occupancy/leases/${mr.lease_id}`}
 									className="text-xs text-blue-600 hover:underline dark:text-blue-400"
 								>
 									View lease

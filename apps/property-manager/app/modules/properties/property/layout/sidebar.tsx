@@ -7,7 +7,6 @@ import {
 	DollarSign,
 	Contact,
 	Headset,
-	CalendarDays,
 } from 'lucide-react'
 import * as React from 'react'
 
@@ -71,13 +70,13 @@ export function PropertySidebar({
 				],
 			},
 			{
-				title: 'Tenants',
-				url: '/tenants',
+				title: 'Occupancy',
+				url: '/occupancy',
 				icon: Contact,
 				items: [
 					{
 						title: 'All Tenants',
-						url: '/all?filters=status&status=ACTIVE',
+						url: '/tenants?filters=status&status=ACTIVE',
 					},
 					{
 						title: 'Lease Applications',
@@ -89,21 +88,15 @@ export function PropertySidebar({
 						url: '/leases',
 						isHidden: !isLease,
 					},
-				],
-			},
-			{
-				title: 'Bookings',
-				url: '/bookings',
-				icon: CalendarDays,
-				isHidden: !isBooking,
-				items: [
 					{
-						title: 'All Bookings',
-						url: '',
+						title: 'Bookings',
+						url: '/bookings',
+						isHidden: !isBooking,
 					},
 					{
-						title: 'Availability',
+						title: 'Units Availability',
 						url: '/availability',
+						isHidden: !isBooking,
 					},
 				],
 			},

@@ -201,8 +201,11 @@ export function AvailabilityModule() {
 		<div className="mx-6 my-6 flex flex-col gap-6">
 			<div className="flex items-center justify-between">
 				<div className="space-y-1">
-					<TypographyH4>Availability</TypographyH4>
-					<TypographyMuted>View and manage unit availability.</TypographyMuted>
+					<TypographyH4>Units Availability</TypographyH4>
+					<TypographyMuted>
+						View and manage the availability of your units by blocking out
+						dates.
+					</TypographyMuted>
 				</div>
 				<PropertyPermissionGuard roles={['MANAGER']}>
 					<Button

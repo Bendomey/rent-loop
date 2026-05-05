@@ -53,7 +53,7 @@ export function PropertyAssetUnitLeasesModule() {
 					<div className="flex items-center space-x-2">
 						<ScrollText className="text-muted-foreground size-5" />
 						<Link
-							to={`/properties/${propertyId}/tenants/leases/${row.original.id}`}
+							to={`/properties/${propertyId}/occupancy/leases/${row.original.id}`}
 							aria-label={`View lease ${row.original.code}`}
 						>
 							<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-500">
@@ -71,7 +71,7 @@ export function PropertyAssetUnitLeasesModule() {
 					return (
 						<div className="flex min-w-32 flex-col items-start gap-1">
 							<Link
-								to={`/properties/${propertyId}/tenants/all/${tenant?.id}`}
+								to={`/properties/${propertyId}/occupancy/tenants/${tenant?.id}`}
 								aria-label={`View tenant ${tenant?.first_name}`}
 							>
 								<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-500">

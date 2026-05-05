@@ -54,7 +54,7 @@ export function PropertyFinancialsPaymentModule() {
 
 							{data?.context_type === 'TENANT_APPLICATION' ? (
 								<Link
-									to={`/properties/${clientUserProperty?.property_id}/tenants/applications/${data?.context_tenant_application_id}`}
+									to={`/properties/${clientUserProperty?.property_id}/occupancy/applications/${data?.context_tenant_application_id}`}
 									className="text-sm text-blue-600 capitalize hover:underline dark:text-blue-500"
 								>
 									{data?.context_type?.replace('_', ' ').toLowerCase()}

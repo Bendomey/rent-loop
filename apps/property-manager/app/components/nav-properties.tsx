@@ -19,7 +19,7 @@ export function NavProperties() {
 	const { data } = useGetClientUserProperties(
 		safeString(clientUser?.client_id),
 		{
-			pagination: { page: 1, per: 5 },
+			pagination: { page: 1, per: 10 },
 			sorter: {},
 			search: {},
 			populate: ['Property'],

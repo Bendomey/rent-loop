@@ -1,4 +1,11 @@
-import { Users, Building2, FileText, ClipboardList } from 'lucide-react'
+import {
+	Users,
+	Building2,
+	FileText,
+	ClipboardList,
+	CalendarDays,
+	LayoutGrid,
+} from 'lucide-react'
 import { useEffect } from 'react'
 import { Link } from 'react-router'
 import { PropertySectionCards } from './components/cards'
@@ -10,35 +17,60 @@ import { useTour } from '~/hooks/use-tour'
 import { PROPERTY_OVERVIEW_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
 import { useProperty } from '~/providers/property-provider'
 
-const NAV_ITEMS = (propertyId: string) => {
+const NAV_ITEMS = (
+	propertyId: string,
+	isLease: boolean,
+	isBooking: boolean,
+) => {
 	const baseUrl = `/properties/${propertyId}`
 	return [
 		{
 			label: 'Manage Tenants',
 			icon: Users,
-			to: `${baseUrl}/tenants/all`,
+			to: `${baseUrl}/occupancy/tenants`,
 		},
 		{
 			label: 'Manage Units',
 			icon: Building2,
 			to: `${baseUrl}/assets/units`,
 		},
-		{
-			label: 'View Leases',
-			icon: FileText,
-			to: `${baseUrl}/tenants/leases`,
-		},
-		{
-			label: 'Lease Applications',
-			icon: ClipboardList,
-			to: `${baseUrl}/tenants/applications`,
-		},
+		...(isLease
+			? [
+					{
+						label: 'View Leases',
+						icon: FileText,
+						to: `${baseUrl}/occupancy/leases`,
+					},
+					{
+						label: 'Lease Applications',
+						icon: ClipboardList,
+						to: `${baseUrl}/occupancy/applications`,
+					},
+				]
+			: []),
+		...(isBooking
+			? [
+					{
+						label: 'Bookings',
+						icon: CalendarDays,
+						to: `${baseUrl}/occupancy/bookings`,
+					},
+					{
+						label: 'Unit Availability',
+						icon: LayoutGrid,
+						to: `${baseUrl}/occupancy/availability`,
+					},
+				]
+			: []),
 	]
 }
 
 export function PropertyModule() {
 	const { clientUserProperty } = useProperty()
 	const propertyId = clientUserProperty?.property_id ?? ''
+	const modes = clientUserProperty?.property?.modes ?? []
+	const isLease = modes.includes('LEASE')
+	const isBooking = modes.includes('BOOKING')
 	const { startTour, hasCompletedTour } = useTour(
 		TOUR_KEYS.PROPERTY_OVERVIEW,
 		PROPERTY_OVERVIEW_TOUR_STEPS,
@@ -63,16 +95,18 @@ export function PropertyModule() {
 					maintenance trends.
 				</TypographyP>
 				<div className="flex gap-2 overflow-x-auto pb-1">
-					{NAV_ITEMS(propertyId).map(({ label, icon: Icon, to }) => (
-						<Link
-							key={label}
-							to={to}
-							className="bg-background hover:bg-muted text-foreground flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors"
-						>
-							<Icon className="text-muted-foreground size-4" />
-							{label}
-						</Link>
-					))}
+					{NAV_ITEMS(propertyId, isLease, isBooking).map(
+						({ label, icon: Icon, to }) => (
+							<Link
+								key={label}
+								to={to}
+								className="bg-background hover:bg-muted text-foreground flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors"
+							>
+								<Icon className="text-muted-foreground size-4" />
+								{label}
+							</Link>
+						),
+					)}
 				</div>
 			</div>
 

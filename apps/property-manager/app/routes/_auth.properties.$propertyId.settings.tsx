@@ -1,6 +1,5 @@
 import {
 	FileText,
-	Globe,
 	UserCircle,
 	Users,
 	Wrench,
@@ -39,7 +38,7 @@ export default function SettingsDashboard({ params }: Route.ComponentProps) {
 		if (hasPermissions === 'AUTHORIZED') {
 			menus.push(
 				{ title: 'Members', url: '/members', icon: Users },
-				{ title: 'Billing', url: '/billing', icon: Globe },
+				// { title: 'Billing', url: '/billing', icon: Globe },
 			)
 		}
 		menus.push({ title: 'Documents', url: '/documents', icon: FileText })

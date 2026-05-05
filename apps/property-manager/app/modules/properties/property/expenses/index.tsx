@@ -78,7 +78,7 @@ export function PropertyExpensesModule() {
 						row.original.context_lease_id
 					return isLease ? (
 						<Link
-							to={`/properties/${propertyId}/tenants/leases/${row.original.context_lease_id}`}
+							to={`/properties/${propertyId}/occupancy/leases/${row.original.context_lease_id}`}
 							className="text-xs text-blue-600 hover:underline dark:text-blue-500"
 						>
 							Lease
