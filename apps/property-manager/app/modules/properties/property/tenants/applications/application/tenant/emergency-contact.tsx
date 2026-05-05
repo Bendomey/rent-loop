@@ -294,7 +294,7 @@ export function PropertyTenantApplicationEmergencyContact({
 			<CardContent className="space-y-3">
 				<Form {...rhfMethods}>
 					<form id="emergency-contact-form" onSubmit={handleSubmit(onSubmit)}>
-						<div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+						<div className="grid grid-cols-2 gap-5 md:grid-cols-2">
 							<div className="col-span-2 mt-2">
 								<Label>Emergency Contact</Label>
 							</div>
@@ -414,7 +414,7 @@ export function PropertyTenantApplicationEmergencyContact({
 									/>
 								)}
 							</div>
-							<div>
+							<div className="col-span-2 md:col-span-1">
 								<FormField
 									name="employer"
 									control={rhfMethods.control}
@@ -437,7 +437,11 @@ export function PropertyTenantApplicationEmergencyContact({
 								/>
 							</div>
 
-							<div className={isStudent ? 'col-span-1' : 'col-span-2'}>
+							<div
+								className={
+									isStudent ? 'col-span-2 md:col-span-1' : 'col-span-2'
+								}
+							>
 								<FormField
 									name="occupation_address"
 									control={rhfMethods.control}

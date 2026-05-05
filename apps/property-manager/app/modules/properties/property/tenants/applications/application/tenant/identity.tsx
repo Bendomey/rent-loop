@@ -277,7 +277,7 @@ export function PropertyTenantApplicationIdentity({
 			<CardContent className="space-y-3">
 				<Form {...rhfMethods}>
 					<form id="identity-form" onSubmit={handleSubmit(onSubmit)}>
-						<div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+						<div className="grid grid-cols-2 gap-5 md:grid-cols-2">
 							<div>
 								<FormField
 									name="nationality"
@@ -368,7 +368,7 @@ export function PropertyTenantApplicationIdentity({
 							<div className="col-span-2 mt-2">
 								<Label>ID Document Images</Label>
 							</div>
-							<div className="col-span-1">
+							<div>
 								<ImageUpload
 									hero
 									shape="square"
@@ -389,7 +389,7 @@ export function PropertyTenantApplicationIdentity({
 									}}
 								/>
 							</div>
-							<div className="col-span-1">
+							<div>
 								<ImageUpload
 									hero
 									shape="square"

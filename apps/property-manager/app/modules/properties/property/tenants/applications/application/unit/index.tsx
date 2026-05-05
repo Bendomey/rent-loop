@@ -81,7 +81,7 @@ export function PropertyTenantApplicationUnitSetup() {
 	return (
 		<>
 			<div>
-				<Card className="relative mx-auto mt-20 w-full max-w-sm pt-0 shadow-none">
+				<Card className="relative mx-auto mt-8 w-full max-w-sm pt-0 shadow-none md:mt-20">
 					{coverImage ? (
 						<img
 							src={coverImage}

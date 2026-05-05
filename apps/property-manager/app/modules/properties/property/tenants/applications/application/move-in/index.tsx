@@ -240,7 +240,7 @@ export function PropertyTenantApplicationMoveIn() {
 									)}
 								/>
 							</div>
-							<div>
+							<div className="col-span-2 md:col-span-1">
 								<FormField
 									name="stay_duration_frequency"
 									control={rhfMethods.control}

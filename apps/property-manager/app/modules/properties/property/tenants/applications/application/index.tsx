@@ -47,59 +47,63 @@ export function PropertyTenantApplicationContainer() {
 		)
 	}
 
+	const applicationHeaderInfo = (
+		<div id="application-header" className="space-y-1">
+			<div className="flex items-center space-x-3">
+				<h1 className="text-3xl font-bold">
+					Application Info #{tenantApplication?.code}
+				</h1>
+
+				{tenantApplication?.status === 'TenantApplication.Status.InProgress' ? (
+					<Badge
+						variant="secondary"
+						className="bg-amber-400 px-2 py-1 text-xs text-amber-50"
+					>
+						In Progress
+					</Badge>
+				) : tenantApplication?.status ===
+				  'TenantApplication.Status.Cancelled' ? (
+					<Badge variant="destructive">Cancelled</Badge>
+				) : tenantApplication?.status ===
+				  'TenantApplication.Status.Completed' ? (
+					<Badge
+						variant="default"
+						className="bg-green-600 px-2 py-1 text-xs text-green-50"
+					>
+						Completed
+					</Badge>
+				) : null}
+			</div>
+			<span className="text-sm text-gray-500">
+				Submitted on{' '}
+				<strong>
+					{localizedDayjs(tenantApplication?.created_at).format('LLLL')}
+				</strong>{' '}
+				{tenantApplication?.created_by
+					? `by ${tenantApplication.created_by.user?.name}`
+					: null}
+			</span>
+		</div>
+	)
+
 	// eslint-disable-next-line react-hooks/rules-of-hooks
 	const { progress } = useCalculateChecklist(tenantApplication)
 
 	return (
 		<div className="m-5 grid grid-cols-12 gap-4">
-			<div className="col-span-12 lg:col-span-8">
-				<div id="application-header" className="space-y-1">
-					<div className="flex items-center space-x-3">
-						<h1 className="text-3xl font-bold">
-							Application Info #{tenantApplication?.code}
-						</h1>
-
-						{tenantApplication?.status ===
-						'TenantApplication.Status.InProgress' ? (
-							<Badge
-								variant="secondary"
-								className="bg-amber-400 px-2 py-1 text-xs text-amber-50"
-							>
-								In Progress
-							</Badge>
-						) : tenantApplication?.status ===
-						  'TenantApplication.Status.Cancelled' ? (
-							<Badge variant="destructive">Cancelled</Badge>
-						) : tenantApplication?.status ===
-						  'TenantApplication.Status.Completed' ? (
-							<Badge
-								variant="default"
-								className="bg-green-600 px-2 py-1 text-xs text-green-50"
-							>
-								Completed
-							</Badge>
-						) : null}
-					</div>
-					<span className="text-sm text-gray-500">
-						Submitted on{' '}
-						<strong>
-							{localizedDayjs(tenantApplication?.created_at).format('LLLL')}
-						</strong>{' '}
-						{tenantApplication?.created_by
-							? `by ${tenantApplication.created_by.user?.name}`
-							: null}
-					</span>
-				</div>
+			<div className="order-2 col-span-12 lg:order-1 lg:col-span-8">
+				<div className="max-lg:hidden">{applicationHeaderInfo}</div>
 				<div className="mt-5">
 					<Outlet context={{ tenantApplication }} />
 				</div>
 			</div>
-			<div className="col-span-12 lg:col-span-4">
+			<div className="order-1 col-span-12 flex flex-col gap-3 lg:order-2 lg:col-span-4 lg:mt-2 lg:gap-6">
+				<div className="lg:hidden">{applicationHeaderInfo}</div>
 				{tenantApplication?.status === 'TenantApplication.Status.InProgress' ? (
 					<PropertyPermissionGuard roles={['MANAGER']}>
 						<div
 							id="application-actions"
-							className="mb-3 flex w-full flex-row items-center justify-end space-x-2"
+							className="mb-2 flex w-full flex-row items-center justify-end space-x-2 lg:mb-3"
 						>
 							<Tooltip>
 								<TooltipTrigger asChild>
