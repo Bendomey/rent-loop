@@ -16,10 +16,15 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const clientId = safeString(authSession.get('selectedClientId'))
 
 	try {
-		const booking = await getBookingForServer(clientId, params.bookingId, {
-			authToken,
-			baseUrl,
-		})
+		const booking = await getBookingForServer(
+			clientId,
+			safeString(clientUserProperty?.property_id),
+			params.bookingId,
+			{
+				authToken,
+				baseUrl,
+			},
+		)
 		return { origin: getDomainUrl(request), clientUserProperty, booking }
 	} catch {
 		throw new Response(null, { status: 404, statusText: 'Not Found' })

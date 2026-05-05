@@ -218,7 +218,7 @@ Shown only when `clientUserProperty.property.modes.includes('BOOKING')`.
 ```ts
 // Queries
 useGetPropertyBookings(clientId, propertyId, query)   // list with filters
-useGetBooking(clientId, bookingId, initialData?)       // detail
+useGetBooking(clientId, propertyId, bookingId, initialData?)       // detail
 
 // Availability
 useGetUnitAvailability(clientId, unitId, from, to)    // blocks for date range

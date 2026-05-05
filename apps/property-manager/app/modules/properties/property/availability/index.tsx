@@ -123,6 +123,7 @@ export function AvailabilityModule() {
 
 	const { data: blocks, isPending: isLoadingBlocks } = useGetUnitAvailability(
 		clientId,
+		propertyId,
 		selectedUnitId,
 		rangeFrom,
 		rangeTo,
@@ -150,7 +151,12 @@ export function AvailabilityModule() {
 	const invalidateBlocks = () => {
 		if (selectedUnitId) {
 			void queryClient.invalidateQueries({
-				queryKey: [QUERY_KEYS.DATE_BLOCKS, clientId, selectedUnitId],
+				queryKey: [
+					QUERY_KEYS.DATE_BLOCKS,
+					clientId,
+					propertyId,
+					selectedUnitId,
+				],
 			})
 		}
 	}
@@ -159,6 +165,7 @@ export function AvailabilityModule() {
 		try {
 			await createBlock({
 				clientId,
+				propertyId,
 				unitId: values.unit_id,
 				block_type: values.block_type,
 				start_date: values.start_date.toISOString(),
@@ -176,7 +183,7 @@ export function AvailabilityModule() {
 
 	const handleDeleteBlock = async (blockId: string) => {
 		try {
-			await deleteBlock({ clientId, blockId })
+			await deleteBlock({ clientId, propertyId, blockId })
 			toast.success('Block removed')
 			setSelectedBlock(null)
 			invalidateBlocks()

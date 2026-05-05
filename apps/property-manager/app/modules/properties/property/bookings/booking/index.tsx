@@ -141,12 +141,13 @@ export function BookingDetailModule() {
 	const { clientUser } = useClient()
 	const queryClient = useQueryClient()
 
-	const propertyId = clientUserProperty?.property_id ?? ''
+	const propertyId = safeString(clientUserProperty?.property_id)
 	const clientId = safeString(clientUser?.client_id)
 	const bookingId = safeString(params.bookingId)
 
 	const { data: booking, isPending: isLoading } = useGetBooking(
 		clientId,
+		propertyId,
 		bookingId,
 		loaderData.booking ?? undefined,
 	)
@@ -155,7 +156,7 @@ export function BookingDetailModule() {
 
 	const invalidate = () =>
 		queryClient.invalidateQueries({
-			queryKey: [QUERY_KEYS.BOOKINGS, clientId, bookingId],
+			queryKey: [QUERY_KEYS.BOOKINGS, clientId, propertyId, bookingId],
 		})
 
 	const { mutateAsync: confirm, isPending: isConfirming } = useConfirmBooking()
@@ -166,7 +167,7 @@ export function BookingDetailModule() {
 
 	const handleConfirm = async () => {
 		try {
-			await confirm({ clientId, bookingId })
+			await confirm({ clientId, propertyId, bookingId })
 			toast.success('Booking confirmed')
 			void invalidate()
 		} catch (err) {
@@ -178,7 +179,7 @@ export function BookingDetailModule() {
 
 	const handleCheckIn = async () => {
 		try {
-			await checkIn({ clientId, bookingId })
+			await checkIn({ clientId, propertyId, bookingId })
 			toast.success('Guest checked in')
 			void invalidate()
 		} catch (err) {
@@ -188,7 +189,7 @@ export function BookingDetailModule() {
 
 	const handleComplete = async () => {
 		try {
-			await complete({ clientId, bookingId })
+			await complete({ clientId, propertyId, bookingId })
 			toast.success('Booking completed')
 			void invalidate()
 		} catch (err) {
@@ -200,7 +201,7 @@ export function BookingDetailModule() {
 
 	const handleCancel = async (reason: string) => {
 		try {
-			await cancel({ clientId, bookingId, reason })
+			await cancel({ clientId, propertyId, bookingId, reason })
 			toast.success('Booking cancelled')
 			setCancelOpen(false)
 			void invalidate()

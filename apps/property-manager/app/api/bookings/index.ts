@@ -38,10 +38,14 @@ export const useGetPropertyBookings = (
 		enabled: !!clientId && !!propertyId,
 	})
 
-const getBooking = async (clientId: string, bookingId: string) => {
+const getBooking = async (
+	clientId: string,
+	propertyId: string,
+	bookingId: string,
+) => {
 	try {
 		const response = await fetchClient<ApiResponse<Booking>>(
-			`/v1/admin/clients/${clientId}/bookings/${bookingId}?populate=Tenant,Unit,Property,Invoice`,
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/bookings/${bookingId}?populate=Tenant,Unit,Property,Invoice`,
 		)
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -55,18 +59,20 @@ const getBooking = async (clientId: string, bookingId: string) => {
 
 export const useGetBooking = (
 	clientId: string,
+	propertyId: string,
 	bookingId: string,
 	initialData?: Booking,
 ) =>
 	useQuery({
-		queryKey: [QUERY_KEYS.BOOKINGS, clientId, bookingId],
-		queryFn: () => getBooking(clientId, bookingId),
-		enabled: !!clientId && !!bookingId,
+		queryKey: [QUERY_KEYS.BOOKINGS, clientId, propertyId, bookingId],
+		queryFn: () => getBooking(clientId, propertyId, bookingId),
+		enabled: !!clientId && !!propertyId && !!bookingId,
 		initialData,
 	})
 
 const getUnitAvailability = async (
 	clientId: string,
+	propertyId: string,
 	unitId: string,
 	from: Date,
 	to: Date,
@@ -77,7 +83,7 @@ const getUnitAvailability = async (
 			to: to.toISOString(),
 		})
 		const response = await fetchClient<ApiResponse<UnitDateBlock[]>>(
-			`/v1/admin/clients/${clientId}/units/${unitId}/availability?${params.toString()}`,
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/units/${unitId}/availability?${params.toString()}`,
 		)
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -91,6 +97,7 @@ const getUnitAvailability = async (
 
 export const useGetUnitAvailability = (
 	clientId: string,
+	propertyId: string,
 	unitId: string,
 	from: Date,
 	to: Date,
@@ -99,12 +106,13 @@ export const useGetUnitAvailability = (
 		queryKey: [
 			QUERY_KEYS.DATE_BLOCKS,
 			clientId,
+			propertyId,
 			unitId,
 			from.toISOString(),
 			to.toISOString(),
 		],
-		queryFn: () => getUnitAvailability(clientId, unitId, from, to),
-		enabled: !!clientId && !!unitId,
+		queryFn: () => getUnitAvailability(clientId, propertyId, unitId, from, to),
+		enabled: !!clientId && !!propertyId && !!unitId,
 	})
 
 // ---- Mutations ----
@@ -149,14 +157,16 @@ export const useCreateBooking = () => useMutation({ mutationFn: createBooking })
 
 const confirmBooking = async ({
 	clientId,
+	propertyId,
 	bookingId,
 }: {
 	clientId: string
+	propertyId: string
 	bookingId: string
 }) => {
 	try {
 		const response = await fetchClient<ApiResponse<Booking>>(
-			`/v1/admin/clients/${clientId}/bookings/${bookingId}/confirm`,
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/bookings/${bookingId}/confirm`,
 			{ method: 'PUT' },
 		)
 		return response.parsedBody.data
@@ -174,14 +184,16 @@ export const useConfirmBooking = () =>
 
 const checkInBooking = async ({
 	clientId,
+	propertyId,
 	bookingId,
 }: {
 	clientId: string
+	propertyId: string
 	bookingId: string
 }) => {
 	try {
 		await fetchClient(
-			`/v1/admin/clients/${clientId}/bookings/${bookingId}/check-in`,
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/bookings/${bookingId}/check-in`,
 			{ method: 'PUT' },
 		)
 	} catch (error: unknown) {
@@ -198,14 +210,16 @@ export const useCheckInBooking = () =>
 
 const completeBooking = async ({
 	clientId,
+	propertyId,
 	bookingId,
 }: {
 	clientId: string
+	propertyId: string
 	bookingId: string
 }) => {
 	try {
 		await fetchClient(
-			`/v1/admin/clients/${clientId}/bookings/${bookingId}/complete`,
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/bookings/${bookingId}/complete`,
 			{ method: 'PUT' },
 		)
 	} catch (error: unknown) {
@@ -222,18 +236,20 @@ export const useCompleteBooking = () =>
 
 export interface CancelBookingInput {
 	clientId: string
+	propertyId: string
 	bookingId: string
 	reason: string
 }
 
 const cancelBooking = async ({
 	clientId,
+	propertyId,
 	bookingId,
 	reason,
 }: CancelBookingInput) => {
 	try {
 		await fetchClient(
-			`/v1/admin/clients/${clientId}/bookings/${bookingId}/cancel`,
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/bookings/${bookingId}/cancel`,
 			{ method: 'PUT', body: JSON.stringify({ reason }) },
 		)
 	} catch (error: unknown) {
@@ -249,6 +265,7 @@ export const useCancelBooking = () => useMutation({ mutationFn: cancelBooking })
 
 export interface CreateDateBlockInput {
 	clientId: string
+	propertyId: string
 	unitId: string
 	start_date: string
 	end_date: string
@@ -258,12 +275,13 @@ export interface CreateDateBlockInput {
 
 const createDateBlock = async ({
 	clientId,
+	propertyId,
 	unitId,
 	...body
 }: CreateDateBlockInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<UnitDateBlock>>(
-			`/v1/admin/clients/${clientId}/units/${unitId}/date-blocks`,
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/units/${unitId}/date-blocks`,
 			{ method: 'POST', body: JSON.stringify(body) },
 		)
 		return response.parsedBody.data
@@ -281,15 +299,20 @@ export const useCreateDateBlock = () =>
 
 const deleteDateBlock = async ({
 	clientId,
+	propertyId,
 	blockId,
 }: {
 	clientId: string
+	propertyId: string
 	blockId: string
 }) => {
 	try {
-		await fetchClient(`/v1/admin/clients/${clientId}/date-blocks/${blockId}`, {
-			method: 'DELETE',
-		})
+		await fetchClient(
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/date-blocks/${blockId}`,
+			{
+				method: 'DELETE',
+			},
+		)
 	} catch (error: unknown) {
 		if (error instanceof Response) {
 			const response = await error.json()

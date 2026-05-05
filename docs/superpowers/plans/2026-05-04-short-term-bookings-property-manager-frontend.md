@@ -1807,7 +1807,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   const clientId = safeString(authSession.get('selectedClientId'))
 
   try {
-    const booking = await getBookingForServer(clientId, params.bookingId, {
+    const booking = await getBookingForServer(clientId, safeString(clientUserProperty?.property_id), safeString(params.bookingId), {
       authToken,
       baseUrl,
     })
@@ -1908,6 +1908,7 @@ export function BookingDetailModule() {
 
   const { data: booking } = useGetBooking(
     clientId,
+    propertyId,
     params.bookingId ?? '',
     initialBooking ?? undefined,
   )
@@ -2384,6 +2385,7 @@ export function PropertyAvailabilityModule() {
 
   const { data: blocks = [], isFetching } = useGetUnitAvailability(
     clientId,
+    propertyId,
     unitId,
     from,
     to,
@@ -2394,7 +2396,7 @@ export function PropertyAvailabilityModule() {
 
   const invalidate = () =>
     queryClient.invalidateQueries({
-      queryKey: [QUERY_KEYS.DATE_BLOCKS, clientId, unitId],
+      queryKey: [QUERY_KEYS.DATE_BLOCKS, clientId, propertyId, unitId],
     })
 
   const blockForm = useForm<BlockFormValues>({
@@ -2405,6 +2407,7 @@ export function PropertyAvailabilityModule() {
     try {
       await createBlock({
         clientId,
+        propertyId,
         unitId,
         start_date: values.start_date.toISOString(),
         end_date: values.end_date.toISOString(),
@@ -2422,7 +2425,7 @@ export function PropertyAvailabilityModule() {
 
   const onDeleteBlock = async (blockId: string) => {
     try {
-      await deleteBlock({ clientId, blockId })
+      await deleteBlock({ clientId, propertyId, blockId })
       toast.success('Block removed')
       setSelectedBlock(null)
       await invalidate()
