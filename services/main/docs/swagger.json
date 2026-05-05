@@ -16320,24 +16320,11 @@
         "handlers.AdminCreateTenantApplicationRequest": {
             "type": "object",
             "required": [
-                "current_address",
-                "date_of_birth",
                 "desired_unit_id",
-                "emergency_contact_name",
-                "emergency_contact_phone",
-                "employer",
-                "employer_type",
                 "first_name",
                 "gender",
-                "id_number",
-                "id_type",
                 "last_name",
-                "marital_status",
-                "nationality",
-                "occupation",
-                "occupation_address",
-                "phone",
-                "relationship_to_emergency_contact"
+                "phone"
             ],
             "properties": {
                 "current_address": {
@@ -17593,24 +17580,11 @@
             "type": "object",
             "required": [
                 "created_by_id",
-                "current_address",
-                "date_of_birth",
                 "desired_unit_id",
-                "emergency_contact_name",
-                "emergency_contact_phone",
-                "employer",
-                "employer_type",
                 "first_name",
                 "gender",
-                "id_number",
-                "id_type",
                 "last_name",
-                "marital_status",
-                "nationality",
-                "occupation",
-                "occupation_address",
-                "phone",
-                "relationship_to_emergency_contact"
+                "phone"
             ],
             "properties": {
                 "created_by_id": {

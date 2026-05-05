@@ -93,22 +93,22 @@ type CreateTenantApplicationInput struct {
 	Email                          *string
 	Phone                          string
 	Gender                         string
-	DateOfBirth                    time.Time
-	Nationality                    string
-	MaritalStatus                  string
-	IDType                         string
-	IDNumber                       string
+	DateOfBirth                    *time.Time
+	Nationality                    *string
+	MaritalStatus                  *string
+	IDType                         *string
+	IDNumber                       *string
 	IDFrontUrl                     *string
 	IDBackUrl                      *string
-	CurrentAddress                 string
-	EmergencyContactName           string
-	EmergencyContactPhone          string
-	RelationshipToEmergencyContact string
-	Occupation                     string
-	Employer                       string
-	EmployerType                   string
+	CurrentAddress                 *string
+	EmergencyContactName           *string
+	EmergencyContactPhone          *string
+	RelationshipToEmergencyContact *string
+	Occupation                     *string
+	Employer                       *string
+	EmployerType                   *string
 	ProofOfIncomeUrl               *string
-	OccupationAddress              string
+	OccupationAddress              *string
 	ProfilePhotoUrl                *string
 	CreatedById                    string
 }
@@ -146,22 +146,22 @@ func (s *tenantApplicationService) CreateTenantApplication(
 		Email:                          input.Email,
 		Phone:                          input.Phone,
 		Gender:                         &input.Gender,
-		DateOfBirth:                    &input.DateOfBirth,
-		Nationality:                    &input.Nationality,
-		MaritalStatus:                  &input.MaritalStatus,
-		IDType:                         &input.IDType,
-		IDNumber:                       &input.IDNumber,
+		DateOfBirth:                    input.DateOfBirth,
+		Nationality:                    input.Nationality,
+		MaritalStatus:                  input.MaritalStatus,
+		IDType:                         input.IDType,
+		IDNumber:                       input.IDNumber,
 		IDFrontUrl:                     input.IDFrontUrl,
 		IDBackUrl:                      input.IDBackUrl,
-		CurrentAddress:                 &input.CurrentAddress,
-		EmergencyContactName:           &input.EmergencyContactName,
-		EmergencyContactPhone:          &input.EmergencyContactPhone,
-		RelationshipToEmergencyContact: &input.RelationshipToEmergencyContact,
-		Occupation:                     &input.Occupation,
-		Employer:                       &input.Employer,
-		EmployerType:                   &input.EmployerType,
+		CurrentAddress:                 input.CurrentAddress,
+		EmergencyContactName:           input.EmergencyContactName,
+		EmergencyContactPhone:          input.EmergencyContactPhone,
+		RelationshipToEmergencyContact: input.RelationshipToEmergencyContact,
+		Occupation:                     input.Occupation,
+		Employer:                       input.Employer,
+		EmployerType:                   input.EmployerType,
 		ProofOfIncomeUrl:               input.ProofOfIncomeUrl,
-		OccupationAddress:              &input.OccupationAddress,
+		OccupationAddress:              input.OccupationAddress,
 		ProfilePhotoUrl:                input.ProfilePhotoUrl,
 		CreatedById:                    input.CreatedById,
 		Status:                         "TenantApplication.Status.InProgress",
