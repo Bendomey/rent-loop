@@ -147,7 +147,10 @@ export function PropertyTenantApplicationEmergencyContact({
 				client_id: safeString(clientUser?.client_id),
 				id: application.id,
 				property_id,
-				data,
+				data: {
+					...data,
+					emergency_contact_phone: `+233${data.emergency_contact_phone.slice(-9)}`,
+				},
 			},
 			{
 				onError: () => {
