@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { trackBooking } from '~/api/bookings/client'
 import { BookingDetails } from './components/booking-details'
 import { PhoneGate } from './components/phone-gate'
+import { trackBooking } from '~/api/bookings/client'
 
 interface Props {
 	trackingCode: string

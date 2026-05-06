@@ -8,31 +8,31 @@ export interface CreatePropertyTenantApplicationInput {
 	first_name: string
 	other_names: Maybe<string>
 	last_name: string
-	email: string
+	email: Maybe<string>
 	phone: string
-	gender: TenantApplication['gender']
+	gender: Maybe<TenantApplication['gender']>
 	marital_status: TenantApplication['marital_status']
 	profile_photo_url: Maybe<string>
-	date_of_birth: string
-	current_address: string
+	date_of_birth: Maybe<string>
+	current_address: Maybe<string>
 
 	// Identity
-	nationality: string
+	nationality: Maybe<string>
 	id_type: Maybe<TenantApplication['id_type']>
 	id_number: string
 	id_front_url: Nullable<string>
 	id_back_url: Nullable<string>
 
 	// Emergency_Contact
-	emergency_contact_name: string
-	emergency_contact_phone: string
-	relationship_to_emergency_contact: string
+	emergency_contact_name: Maybe<string>
+	emergency_contact_phone: Maybe<string>
+	relationship_to_emergency_contact: Maybe<string>
 
 	// Occupation_Details
-	employer_type: TenantApplication['employer_type']
-	occupation: string
-	employer: string
-	occupation_address: string
+	employer_type: Maybe<TenantApplication['employer_type']>
+	occupation: Maybe<string>
+	employer: Maybe<string>
+	occupation_address: Maybe<string>
 	proof_of_income_url: Nullable<string>
 
 	created_by_id: ClientUser['id']

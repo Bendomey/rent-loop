@@ -631,7 +631,7 @@ func (h *BookingHandler) PublicCreateBooking(w http.ResponseWriter, r *http.Requ
 		CheckInDate:    body.CheckInDate,
 		CheckOutDate:   body.CheckOutDate,
 		Rate:           rate,
-		Currency:       unit.PaymentFrequency,
+		Currency:       unit.RentFeeCurrency,
 		BookingSource:  "GUEST_LINK",
 		GuestFirstName: body.FirstName,
 		GuestLastName:  body.LastName,

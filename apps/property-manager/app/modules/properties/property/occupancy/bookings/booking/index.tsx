@@ -240,7 +240,7 @@ export function BookingDetailModule() {
 					<Card className="shadow-none">
 						<CardHeader className="pb-3">
 							<div className="mb-1 flex items-center gap-3">
-								<Link to={`/properties/${propertyId}/bookings`}>
+								<Link to={`/properties/${propertyId}/occupancy/bookings`}>
 									<Button size="sm" variant="ghost" className="-ml-2">
 										<ArrowLeft className="size-4" />
 									</Button>

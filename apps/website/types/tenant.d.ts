@@ -4,11 +4,11 @@ interface Tenant {
 	first_name: string
 	other_names: Nullable<string>
 	last_name: string
-	email: string
+	email: Nullable<string>
 	phone: string
-	gender: 'MALE' | 'FEMALE'
-	date_of_birth: string
-	nationality: string
+	gender: Nullable<'MALE' | 'FEMALE'>
+	date_of_birth: Nullable<string>
+	nationality: Nullable<string>
 	marital_status: 'SINGLE' | 'MARRIED' | 'DIVORCED' | 'WIDOWED'
 	profile_photo_url: Nullable<string>
 	id_type: Nullable<
@@ -18,14 +18,14 @@ interface Tenant {
 	id_front_url: Nullable<string>
 	id_back_url: Nullable<string>
 	status: 'Tenant.Status.Active' | 'Tenant.Status.Suspended'
-	current_address: string
-	emergency_contact_name: string
-	emergency_contact_phone: string
-	relationship_to_emergency_contact: string
-	employer_type: 'WORKER' | 'STUDENT'
-	occupation: string
-	employer: string
-	occupation_address: string
+	current_address: Nullable<string>
+	emergency_contact_name: Nullable<string>
+	emergency_contact_phone: Nullable<string>
+	relationship_to_emergency_contact: Nullable<string>
+	employer_type: Nullable<'WORKER' | 'STUDENT'>
+	occupation: Nullable<string>
+	employer: Nullable<string>
+	occupation_address: Nullable<string>
 	proof_of_income_url: Nullable<string>
 
 	created_by: Nullable<ClientUser>

@@ -63,3 +63,48 @@ func DBPropertyToRest(i *models.Property) interface{} {
 
 	return data
 }
+
+// for public
+type PublicOutputProperty struct {
+	ID          string             `json:"id"          example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b" format:"uuid" description:"Unique identifier for the property"`
+	Slug        string             `json:"slug"        example:"my-property-abcde1876drkjy"                         description:"Slug for the property"`
+	Type        string             `json:"type"        example:"SINGLE"                                             description:"Type of the property (e.g., SINGLE, MULTI)"`
+	Status      string             `json:"status"      example:"Property.Status.Active"                             description:"Current status of the property"`
+	Name        string             `json:"name"        example:"My Property"                                        description:"Name of the property"`
+	Description *string            `json:"description" example:"Very elegant place"                                 description:"Optional description of the property"`
+	Images      []string           `json:"images"      example:"http://www.images/hih.jpg"                          description:"List of image URLs for the property"`
+	Tags        []string           `json:"tags"        example:"apartment,downtown"                                 description:"Tags associated with the property"`
+	Latitude    float64            `json:"latitude"    example:"5.6037"                                             description:"Latitude coordinate of the property"`
+	Longitude   float64            `json:"longitude"   example:"-0.1870"                                            description:"Longitude coordinate of the property"`
+	Address     string             `json:"address"     example:"123 Main St"                                        description:"Street address of the property"`
+	Country     string             `json:"country"     example:"Ghana"                                              description:"Country where the property is located"`
+	Region      string             `json:"region"      example:"Greater Accra"                                      description:"Region or state of the property"`
+	City        string             `json:"city"        example:"Accra"                                              description:"City where the property is located"`
+	Client      PublicOutputClient `json:"client"`
+}
+
+func DBPublicPropertyToRest(i *models.Property) interface{} {
+	if i == nil || i.ID == uuid.Nil {
+		return nil
+	}
+
+	data := map[string]interface{}{
+		"id":          i.ID.String(),
+		"slug":        i.Slug,
+		"type":        i.Type,
+		"status":      i.Status,
+		"name":        i.Name,
+		"description": i.Description,
+		"images":      i.Images,
+		"tags":        i.Tags,
+		"latitude":    i.Latitude,
+		"longitude":   i.Longitude,
+		"address":     i.Address,
+		"country":     i.Country,
+		"region":      i.Region,
+		"city":        i.City,
+		"client":      DBClientToRestPublicClient(&i.Client),
+	}
+
+	return data
+}

@@ -4445,11 +4445,19 @@ definitions:
     type: object
   transformations.PublicOutputBooking:
     properties:
+      canceled_at:
+        type: string
+      cancellation_reason:
+        type: string
       check_in_code:
         type: string
       check_in_date:
         type: string
       check_out_date:
+        type: string
+      checked_in_at:
+        type: string
+      checked_out_at:
         type: string
       code:
         type: string
@@ -4457,13 +4465,120 @@ definitions:
         type: string
       currency:
         type: string
-      property_name:
+      id:
+        type: string
+      invoice: {}
+      invoice_id:
+        type: string
+      meta: {}
+      notes:
+        type: string
+      property:
+        $ref: '#/definitions/transformations.PublicOutputProperty'
+      property_id:
         type: string
       rate:
         type: integer
       status:
         type: string
-      unit_name:
+      tenant:
+        $ref: '#/definitions/transformations.OutputTenant'
+      tenant_id:
+        type: string
+      unit:
+        $ref: '#/definitions/transformations.OutputUnit'
+      unit_id:
+        type: string
+    type: object
+  transformations.PublicOutputClient:
+    properties:
+      address:
+        example: 123 Main St, Suite 100
+        type: string
+      city:
+        example: San Francisco
+        type: string
+      country:
+        example: US
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      latitude:
+        example: 37.7749
+        type: number
+      longitude:
+        example: -122.4194
+        type: number
+      name:
+        example: Acme Corp
+        type: string
+      region:
+        example: California
+        type: string
+      support_email:
+        example: support@somewebiste.com
+        type: string
+      support_phone:
+        example: "+233551235555"
+        type: string
+      website_url:
+        example: https://www.somewebiste.com
+        type: string
+    type: object
+  transformations.PublicOutputProperty:
+    properties:
+      address:
+        example: 123 Main St
+        type: string
+      city:
+        example: Accra
+        type: string
+      client:
+        $ref: '#/definitions/transformations.PublicOutputClient'
+      country:
+        example: Ghana
+        type: string
+      description:
+        example: Very elegant place
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        format: uuid
+        type: string
+      images:
+        example:
+        - http://www.images/hih.jpg
+        items:
+          type: string
+        type: array
+      latitude:
+        example: 5.6037
+        type: number
+      longitude:
+        example: -0.187
+        type: number
+      name:
+        example: My Property
+        type: string
+      region:
+        example: Greater Accra
+        type: string
+      slug:
+        example: my-property-abcde1876drkjy
+        type: string
+      status:
+        example: Property.Status.Active
+        type: string
+      tags:
+        example:
+        - apartment
+        - downtown
+        items:
+          type: string
+        type: array
+      type:
+        example: SINGLE
         type: string
     type: object
   transformations.PublicOutputUnitDateBlock:

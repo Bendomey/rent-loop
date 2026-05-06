@@ -1,4 +1,3 @@
-import { format } from 'date-fns'
 import {
 	AirVent,
 	Bath,
@@ -91,19 +90,16 @@ export function BookModule({ unit }: Props) {
 		setError(null)
 		try {
 			const booking = await createBooking(unit.slug, {
-				check_in_date: format(selectedRange.from, 'yyyy-MM-dd'),
-				check_out_date: format(selectedRange.to, 'yyyy-MM-dd'),
+				check_in_date: selectedRange.from.toISOString(),
+				check_out_date: selectedRange.to.toISOString(),
 				...guestValues,
+				phone: '+233' + guestValues.phone.slice(-9),
 			})
-			setTrackingCode(booking.tracking_code)
+			setTrackingCode(booking.code)
 			setSuccess(true)
 		} catch (err: unknown) {
 			if (err instanceof Response) {
-				const body = await err.json().catch(() => ({}))
-				setError(
-					(body as { errors?: { message?: string } })?.errors?.message ??
-						'Booking request failed. Please try again.',
-				)
+				setError('Booking request failed. Please try again.')
 			} else {
 				setError('Booking request failed. Please try again.')
 			}

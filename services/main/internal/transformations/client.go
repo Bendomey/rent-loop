@@ -59,3 +59,39 @@ func DBClientToRestClient(i *models.Client) interface{} {
 	}
 	return data
 }
+
+// public client
+type PublicOutputClient struct {
+	ID           string  `json:"id"            example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	Name         string  `json:"name"          example:"Acme Corp"`
+	Address      string  `json:"address"       example:"123 Main St, Suite 100"`
+	Country      string  `json:"country"       example:"US"`
+	Region       string  `json:"region"        example:"California"`
+	City         string  `json:"city"          example:"San Francisco"`
+	Latitude     float64 `json:"latitude"      example:"37.7749"`
+	Longitude    float64 `json:"longitude"     example:"-122.4194"`
+	WebsiteUrl   *string `json:"website_url"   example:"https://www.somewebiste.com"`
+	SupportPhone *string `json:"support_phone" example:"+233551235555"`
+	SupportEmail *string `json:"support_email" example:"support@somewebiste.com"`
+}
+
+func DBClientToRestPublicClient(i *models.Client) interface{} {
+	if i == nil || i.ID == uuid.Nil {
+		return nil
+	}
+
+	data := map[string]interface{}{
+		"id":            i.ID.String(),
+		"name":          i.Name,
+		"address":       i.Address,
+		"country":       i.Country,
+		"region":        i.Region,
+		"city":          i.City,
+		"latitude":      i.Latitude,
+		"longitude":     i.Longitude,
+		"website_url":   i.WebsiteUrl,
+		"support_phone": i.SupportPhone,
+		"support_email": i.SupportEmail,
+	}
+	return data
+}

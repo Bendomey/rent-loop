@@ -68,6 +68,7 @@ export function AvailabilityCalendar({
 		return () => {
 			cancelled = true
 		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [unitSlug])
 
 	const disabledDates = blocksToDisabledDates(blocks)

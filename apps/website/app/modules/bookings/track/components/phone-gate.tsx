@@ -21,10 +21,10 @@ export function PhoneGate({ onVerify, error, loading }: Props) {
 		<div className="flex min-h-dvh items-center justify-center bg-zinc-50 px-4">
 			<div className="w-full max-w-sm">
 				<div className="mb-6 text-center">
-					<span className="text-2xl font-extrabold text-rose-700">
+					<span className="text-3xl font-extrabold text-rose-700">
 						{APP_NAME.slice(0, 4)}
 					</span>
-					<span className="text-2xl font-extrabold">{APP_NAME.slice(4)}</span>
+					<span className="text-3xl font-extrabold">{APP_NAME.slice(4)}</span>
 					<p className="mt-2 text-sm text-zinc-500">Booking Tracker</p>
 				</div>
 

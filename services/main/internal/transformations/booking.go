@@ -69,49 +69,54 @@ func DBBookingToRest(i *models.Booking) any {
 }
 
 type PublicOutputBooking struct {
-	Code         string `json:"code"`
-	CheckInCode  string `json:"check_in_code,omitempty"`
-	CheckInDate  string `json:"check_in_date"`
-	CheckOutDate string `json:"check_out_date"`
-	Rate         int64  `json:"rate"`
-	Currency     string `json:"currency"`
-	Status       string `json:"status"`
-	UnitName     string `json:"unit_name,omitempty"`
-	PropertyName string `json:"property_name,omitempty"`
-	CreatedAt    string `json:"created_at"`
+	ID                 string               `json:"id"`
+	Code               string               `json:"code"`
+	CheckInCode        *string              `json:"check_in_code,omitempty"`
+	CheckInDate        string               `json:"check_in_date"`
+	CheckOutDate       string               `json:"check_out_date"`
+	CheckedInAt        *string              `json:"checked_in_at,omitempty"`
+	CheckedOutAt       *string              `json:"checked_out_at,omitempty"`
+	Rate               int64                `json:"rate"`
+	Currency           string               `json:"currency"`
+	Status             string               `json:"status"`
+	UnitID             string               `json:"unit_id"`
+	Unit               OutputUnit           `json:"unit,omitempty"`
+	PropertyID         string               `json:"property_id"`
+	TenantID           string               `json:"tenant_id"`
+	Tenant             OutputTenant         `json:"tenant,omitempty"`
+	Property           PublicOutputProperty `json:"property,omitempty"`
+	CanceledAt         *string              `json:"canceled_at,omitempty"`
+	CancellationReason *string              `json:"cancellation_reason,omitempty"`
+	Notes              *string              `json:"notes,omitempty"`
+	InvoiceID          *string              `json:"invoice_id,omitempty"`
+	Invoice            any                  `json:"invoice,omitempty"`
+	Meta               any                  `json:"meta,omitempty"`
+	CreatedAt          string               `json:"created_at"`
 }
 
 // DBPublicBookingToRest is a reduced view for the public tracking page.
-// It omits internal IDs and only exposes the check-in code when confirmed.
 func DBPublicBookingToRest(i *models.Booking) any {
 	if i == nil || i.ID == uuid.Nil {
 		return nil
 	}
 
-	checkInCode := ""
-	if i.Status == "CONFIRMED" || i.Status == "CHECKED_IN" || i.Status == "COMPLETED" {
-		checkInCode = i.CheckInCode
-	}
-
-	unitName := ""
-	if i.Unit.ID != uuid.Nil {
-		unitName = i.Unit.Name
-	}
-	propertyName := ""
-	if i.Property.ID != uuid.Nil {
-		propertyName = i.Property.Name
-	}
-
 	data := map[string]any{
+		"id":             i.ID.String(),
 		"code":           i.Code,
-		"check_in_code":  checkInCode,
+		"check_in_code":  i.CheckInCode,
 		"check_in_date":  i.CheckInDate,
 		"check_out_date": i.CheckOutDate,
 		"rate":           i.Rate,
 		"currency":       i.Currency,
 		"status":         i.Status,
-		"unit_name":      unitName,
-		"property_name":  propertyName,
+		"unit_id":        i.UnitID,
+		"unit":           DBUnitToRest(&i.Unit),
+		"property_id":    i.PropertyID,
+		"property":       DBPublicPropertyToRest(&i.Property),
+		"tenant_id":      i.TenantID,
+		"tenant":         DBTenantToRest(&i.Tenant),
+		"checked_in_at":  i.CheckedInAt,
+		"checked_out_at": i.CheckedOutAt,
 		"created_at":     i.CreatedAt,
 	}
 	return data

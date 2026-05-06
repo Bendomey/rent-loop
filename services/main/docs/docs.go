@@ -22410,6 +22410,12 @@ const docTemplate = `{
         "transformations.PublicOutputBooking": {
             "type": "object",
             "properties": {
+                "canceled_at": {
+                    "type": "string"
+                },
+                "cancellation_reason": {
+                    "type": "string"
+                },
                 "check_in_code": {
                     "type": "string"
                 },
@@ -22417,6 +22423,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "check_out_date": {
+                    "type": "string"
+                },
+                "checked_in_at": {
+                    "type": "string"
+                },
+                "checked_out_at": {
                     "type": "string"
                 },
                 "code": {
@@ -22428,7 +22440,21 @@ const docTemplate = `{
                 "currency": {
                     "type": "string"
                 },
-                "property_name": {
+                "id": {
+                    "type": "string"
+                },
+                "invoice": {},
+                "invoice_id": {
+                    "type": "string"
+                },
+                "meta": {},
+                "notes": {
+                    "type": "string"
+                },
+                "property": {
+                    "$ref": "#/definitions/transformations.PublicOutputProperty"
+                },
+                "property_id": {
                     "type": "string"
                 },
                 "rate": {
@@ -22437,8 +22463,142 @@ const docTemplate = `{
                 "status": {
                     "type": "string"
                 },
-                "unit_name": {
+                "tenant": {
+                    "$ref": "#/definitions/transformations.OutputTenant"
+                },
+                "tenant_id": {
                     "type": "string"
+                },
+                "unit": {
+                    "$ref": "#/definitions/transformations.OutputUnit"
+                },
+                "unit_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "transformations.PublicOutputClient": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "123 Main St, Suite 100"
+                },
+                "city": {
+                    "type": "string",
+                    "example": "San Francisco"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "US"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "latitude": {
+                    "type": "number",
+                    "example": 37.7749
+                },
+                "longitude": {
+                    "type": "number",
+                    "example": -122.4194
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Acme Corp"
+                },
+                "region": {
+                    "type": "string",
+                    "example": "California"
+                },
+                "support_email": {
+                    "type": "string",
+                    "example": "support@somewebiste.com"
+                },
+                "support_phone": {
+                    "type": "string",
+                    "example": "+233551235555"
+                },
+                "website_url": {
+                    "type": "string",
+                    "example": "https://www.somewebiste.com"
+                }
+            }
+        },
+        "transformations.PublicOutputProperty": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "123 Main St"
+                },
+                "city": {
+                    "type": "string",
+                    "example": "Accra"
+                },
+                "client": {
+                    "$ref": "#/definitions/transformations.PublicOutputClient"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "Ghana"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Very elegant place"
+                },
+                "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "http://www.images/hih.jpg"
+                    ]
+                },
+                "latitude": {
+                    "type": "number",
+                    "example": 5.6037
+                },
+                "longitude": {
+                    "type": "number",
+                    "example": -0.187
+                },
+                "name": {
+                    "type": "string",
+                    "example": "My Property"
+                },
+                "region": {
+                    "type": "string",
+                    "example": "Greater Accra"
+                },
+                "slug": {
+                    "type": "string",
+                    "example": "my-property-abcde1876drkjy"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "Property.Status.Active"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "apartment",
+                        "downtown"
+                    ]
+                },
+                "type": {
+                    "type": "string",
+                    "example": "SINGLE"
                 }
             }
         },

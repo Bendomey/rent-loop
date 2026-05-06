@@ -75,8 +75,8 @@ export function BookingDetails({ booking }: Props) {
 					</div>
 
 					<div className="mt-4 space-y-1.5 text-sm text-zinc-500">
-						<p>{booking.unit.name}</p>
-						{booking.unit.property?.name ? (
+						{booking.unit?.name ? <p>{booking.unit.name}</p> : null}
+						{booking.unit?.property?.name ? (
 							<p>{booking.unit.property.name}</p>
 						) : null}
 					</div>
@@ -175,7 +175,7 @@ export function BookingDetails({ booking }: Props) {
 				</div>
 
 				{/* Property contact */}
-				{booking.unit.property?.contact_email ? (
+				{booking.unit?.property?.contact_email ? (
 					<div className="rounded-xl border bg-white p-6">
 						<h3 className="mb-1 text-sm font-semibold text-zinc-900">
 							Contact
