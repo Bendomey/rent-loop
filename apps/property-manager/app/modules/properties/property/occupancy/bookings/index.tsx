@@ -2,13 +2,12 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { CalendarDays } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
+import { PropertyBookingsController } from './controller'
 import { useGetPropertyBookings } from '~/api/bookings'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
-import { Button } from '~/components/ui/button'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
-import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
@@ -27,17 +26,8 @@ const STATUS_CONFIG: Record<BookingStatus, BookingStatusConfig> = {
 	CANCELLED: { label: 'Cancelled', className: 'bg-rose-500 text-white' },
 }
 
-const STATUS_TABS: Array<{ label: string; value: BookingStatus | '' }> = [
-	{ label: 'All', value: '' },
-	{ label: 'Pending', value: 'PENDING' },
-	{ label: 'Confirmed', value: 'CONFIRMED' },
-	{ label: 'Checked In', value: 'CHECKED_IN' },
-	{ label: 'Completed', value: 'COMPLETED' },
-	{ label: 'Cancelled', value: 'CANCELLED' },
-]
-
 export function PropertyBookingsModule() {
-	const [searchParams, setSearchParams] = useSearchParams()
+	const [searchParams] = useSearchParams()
 	const { clientUserProperty } = useProperty()
 	const { clientUser } = useClient()
 
@@ -51,10 +41,11 @@ export function PropertyBookingsModule() {
 		? Number(searchParams.get('pageSize'))
 		: PAGINATION_DEFAULTS.PER_PAGE
 	const status = (searchParams.get('status') as BookingStatus) ?? undefined
+	const unit_id = searchParams.get('unit_id') ?? undefined
 
 	const { data, isPending, isRefetching, error, refetch } =
 		useGetPropertyBookings(clientId, propertyId, {
-			filters: { status },
+			filters: { status, unit_id },
 			pagination: { page, per },
 			populate: ['Tenant', 'Unit'],
 			sorter: { sort: 'desc', sort_by: 'created_at' },
@@ -71,7 +62,7 @@ export function PropertyBookingsModule() {
 					<div className="flex items-center gap-2">
 						<CalendarDays className="text-muted-foreground size-4" />
 						<Link
-							to={`/properties/${propertyId}/bookings/${row.original.id}`}
+							to={`/properties/${propertyId}/occupancy/bookings/${row.original.id}`}
 							className="text-xs text-blue-600 hover:underline dark:text-blue-400"
 						>
 							{row.original.code}
@@ -126,52 +117,12 @@ export function PropertyBookingsModule() {
 
 	return (
 		<div className="mx-6 my-6 flex flex-col gap-4 sm:gap-6">
-			<div className="flex items-center justify-between">
-				<div className="space-y-1">
-					<TypographyH4>Bookings</TypographyH4>
-					<TypographyMuted>All bookings for this property.</TypographyMuted>
-				</div>
-				<Link to={`/properties/${propertyId}/occupancy/bookings/new`}>
-					<Button
-						size="sm"
-						className="bg-rose-600 text-white hover:bg-rose-700"
-					>
-						New Booking
-					</Button>
-				</Link>
+			<div className="space-y-1">
+				<TypographyH4>Bookings</TypographyH4>
+				<TypographyMuted>All bookings for this property.</TypographyMuted>
 			</div>
 
-			{/* Status filter tabs */}
-			<div className="flex flex-wrap gap-2">
-				{STATUS_TABS.map((tab) => (
-					<Button
-						key={tab.value}
-						size="sm"
-						variant={
-							status === tab.value || (!status && tab.value === '')
-								? 'default'
-								: 'outline'
-						}
-						className={
-							status === tab.value || (!status && tab.value === '')
-								? 'bg-rose-600 text-white hover:bg-rose-700'
-								: ''
-						}
-						onClick={() => {
-							const next = new URLSearchParams(searchParams)
-							if (tab.value) {
-								next.set('status', tab.value)
-							} else {
-								next.delete('status')
-							}
-							next.set('page', '1')
-							setSearchParams(next)
-						}}
-					>
-						{tab.label}
-					</Button>
-				))}
-			</div>
+			<PropertyBookingsController isLoading={isLoading} refetch={refetch} />
 
 			<div className="bg-background space-y-4 rounded-lg border p-3 sm:p-5">
 				<DataTable

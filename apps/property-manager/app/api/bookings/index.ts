@@ -167,7 +167,7 @@ const confirmBooking = async ({
 	try {
 		const response = await fetchClient<ApiResponse<Booking>>(
 			`/v1/admin/clients/${clientId}/properties/${propertyId}/bookings/${bookingId}/confirm`,
-			{ method: 'PUT' },
+			{ method: 'PATCH' },
 		)
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -194,7 +194,7 @@ const checkInBooking = async ({
 	try {
 		await fetchClient(
 			`/v1/admin/clients/${clientId}/properties/${propertyId}/bookings/${bookingId}/check-in`,
-			{ method: 'PUT' },
+			{ method: 'PATCH' },
 		)
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -220,7 +220,7 @@ const completeBooking = async ({
 	try {
 		await fetchClient(
 			`/v1/admin/clients/${clientId}/properties/${propertyId}/bookings/${bookingId}/complete`,
-			{ method: 'PUT' },
+			{ method: 'PATCH' },
 		)
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -250,7 +250,7 @@ const cancelBooking = async ({
 	try {
 		await fetchClient(
 			`/v1/admin/clients/${clientId}/properties/${propertyId}/bookings/${bookingId}/cancel`,
-			{ method: 'PUT', body: JSON.stringify({ reason }) },
+			{ method: 'PATCH', body: JSON.stringify({ reason }) },
 		)
 	} catch (error: unknown) {
 		if (error instanceof Response) {
@@ -262,6 +262,34 @@ const cancelBooking = async ({
 }
 
 export const useCancelBooking = () => useMutation({ mutationFn: cancelBooking })
+
+const updateBooking = async ({
+	clientId,
+	propertyId,
+	bookingId,
+	data,
+}: {
+	clientId: string
+	propertyId: string
+	bookingId: string
+	data: Partial<CreateBookingInput>
+}) => {
+	try {
+		const response = await fetchClient<ApiResponse<Booking>>(
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/bookings/${bookingId}`,
+			{ method: 'PATCH', body: JSON.stringify(data) },
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+
+export const useUpdateBooking = () => useMutation({ mutationFn: updateBooking })
 
 export interface CreateDateBlockInput {
 	clientId: string

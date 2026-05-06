@@ -8,7 +8,7 @@ export const getBookingForServer = async (
 ) => {
 	try {
 		const response = await fetchServer<ApiResponse<Booking>>(
-			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/properties/${propertyId}/bookings/${bookingId}?populate=Tenant,Unit,Property,Invoice`,
+			`${apiConfig.baseUrl}/v1/admin/clients/${clientId}/properties/${propertyId}/bookings/${bookingId}?populate=Tenant,Unit,Property,Invoice,ConfirmedBy,ConfirmedBy.User,CheckedInBy,CheckedInBy.User,CheckedOutBy,CheckedOutBy.User,CanceledBy,CanceledBy.User`,
 			{ ...apiConfig },
 		)
 		return response.parsedBody.data

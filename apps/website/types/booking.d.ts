@@ -56,7 +56,6 @@ interface Booking {
 	property: Nullable<Property>
 	canceled_at: Nullable<string>
 	cancellation_reason: Nullable<string>
-	notes: Nullable<string>
 	invoice_id: Nullable<string>
 	invoice: unknown
 	meta: unknown
