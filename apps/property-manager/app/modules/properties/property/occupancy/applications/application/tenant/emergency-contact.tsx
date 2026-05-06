@@ -370,12 +370,17 @@ export function PropertyTenantApplicationEmergencyContact({
 										return (
 											<Button
 												type="button"
-												onClick={() =>
+												onClick={() => {
 													setValue('employer_type', employer_type.value, {
 														shouldDirty: true,
 														shouldValidate: true,
 													})
-												}
+													if (employer_type.value === 'STUDENT') {
+														setValue('occupation', 'STUDENT', { shouldDirty: true })
+													} else {
+														setValue('occupation', '', { shouldDirty: true })
+													}
+												}}
 												key={employer_type.value}
 												variant={isSelected ? 'default' : 'outline'}
 												className={cn('w-1/2', {
