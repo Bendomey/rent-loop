@@ -1,7 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
-import { useState } from 'react'
+import { CalendarDaysIcon } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -38,6 +39,7 @@ import {
 	SheetHeader,
 	SheetTitle,
 } from '~/components/ui/sheet'
+import { Skeleton } from '~/components/ui/skeleton'
 import { Spinner } from '~/components/ui/spinner'
 import { Textarea } from '~/components/ui/textarea'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
@@ -117,6 +119,13 @@ export function AvailabilityModule() {
 		filters: {},
 	})
 	const units = unitsData?.rows ?? []
+
+	useEffect(() => {
+		const rows = unitsData?.rows
+		if (!selectedUnitId && rows && rows.length > 0) {
+			setSelectedUnitId(rows[0]?.id ?? '')
+		}
+	}, [unitsData, selectedUnitId])
 
 	const rangeFrom = dayjs(currentMonth).startOf('month').toDate()
 	const rangeTo = dayjs(currentMonth).endOf('month').toDate()
@@ -221,7 +230,7 @@ export function AvailabilityModule() {
 			<div className="grid grid-cols-12 gap-6">
 				{/* Calendar */}
 				<div className="col-span-12 lg:col-span-8">
-					<Card className="shadow-none">
+					<Card className="mb-3 shadow-none">
 						<CardHeader className="pb-3">
 							<div className="flex items-center justify-between">
 								<CardTitle className="text-base">Calendar</CardTitle>
@@ -244,13 +253,19 @@ export function AvailabilityModule() {
 						</CardHeader>
 						<CardContent>
 							{!selectedUnitId ? (
-								<TypographyMuted>
-									Select a unit to view its availability.
-								</TypographyMuted>
-							) : isLoadingBlocks ? (
-								<div className="flex items-center justify-center py-10">
-									<Spinner />
+								<div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+									<div className="bg-muted flex h-12 w-12 items-center justify-center rounded-full">
+										<CalendarDaysIcon className="text-muted-foreground h-5 w-5" />
+									</div>
+									<div className="space-y-1">
+										<p className="text-sm font-medium">No unit selected</p>
+										<p className="text-muted-foreground text-xs">
+											Choose a unit above to view its availability.
+										</p>
+									</div>
 								</div>
+							) : isLoadingBlocks ? (
+								<CalendarSkeleton />
 							) : (
 								<Calendar
 									className="mx-auto [--cell-size:--spacing(9)] sm:[--cell-size:--spacing(14)]"
@@ -468,6 +483,32 @@ export function AvailabilityModule() {
 					</Form>
 				</SheetContent>
 			</Sheet>
+		</div>
+	)
+}
+
+function CalendarSkeleton() {
+	return (
+		<div className="mx-auto p-3">
+			<div className="mb-4 flex items-center justify-between">
+				<Skeleton className="h-8 w-8 rounded-md" />
+				<Skeleton className="h-4 w-28" />
+				<Skeleton className="h-8 w-8 rounded-md" />
+			</div>
+			<div className="mb-2 grid grid-cols-7 gap-1">
+				{Array.from({ length: 7 }).map((_, i) => (
+					<Skeleton key={i} className="mx-auto h-3 w-6" />
+				))}
+			</div>
+			<div className="space-y-1">
+				{Array.from({ length: 5 }).map((_, row) => (
+					<div key={row} className="grid grid-cols-7 gap-1">
+						{Array.from({ length: 7 }).map((_, col) => (
+							<Skeleton key={col} className="mx-auto h-9 w-9 rounded-md" />
+						))}
+					</div>
+				))}
+			</div>
 		</div>
 	)
 }

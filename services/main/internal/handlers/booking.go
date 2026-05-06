@@ -63,7 +63,6 @@ type CreateDateBlockRequest struct {
 type PublicCreateBookingRequest struct {
 	CheckInDate  time.Time `json:"check_in_date"  validate:"required"`
 	CheckOutDate time.Time `json:"check_out_date" validate:"required"`
-	Currency     string    `json:"currency"       validate:"required"`
 	FirstName    string    `json:"first_name"     validate:"required"`
 	LastName     string    `json:"last_name"      validate:"required"`
 	Phone        string    `json:"phone"          validate:"required"`
@@ -632,7 +631,7 @@ func (h *BookingHandler) PublicCreateBooking(w http.ResponseWriter, r *http.Requ
 		CheckInDate:    body.CheckInDate,
 		CheckOutDate:   body.CheckOutDate,
 		Rate:           rate,
-		Currency:       body.Currency,
+		Currency:       unit.PaymentFrequency,
 		BookingSource:  "GUEST_LINK",
 		GuestFirstName: body.FirstName,
 		GuestLastName:  body.LastName,

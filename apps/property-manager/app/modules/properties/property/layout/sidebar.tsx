@@ -75,7 +75,12 @@ export function PropertySidebar({
 				icon: Contact,
 				items: [
 					{
-						title: isLease && isBooking ? 'All Tenants/Guests' : isLease ? 'All Tenants' : 'All Guests',
+						title:
+							isLease && isBooking
+								? 'All Tenants/Guests'
+								: isLease
+									? 'All Tenants'
+									: 'All Guests',
 						url: '/tenants',
 					},
 					{

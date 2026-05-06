@@ -18177,7 +18177,6 @@ const docTemplate = `{
             "required": [
                 "check_in_date",
                 "check_out_date",
-                "currency",
                 "first_name",
                 "gender",
                 "last_name",
@@ -18188,9 +18187,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "check_out_date": {
-                    "type": "string"
-                },
-                "currency": {
                     "type": "string"
                 },
                 "email": {
