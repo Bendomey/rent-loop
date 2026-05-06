@@ -410,7 +410,7 @@ func (s *bookingService) CancelBooking(ctx context.Context, input CancelBookingI
 func (s *bookingService) GetBooking(ctx context.Context, query repository.GetBookingQuery) (*models.Booking, error) {
 	booking, err := s.repo.GetByIDWithPopulate(ctx, repository.GetBookingQuery{
 		ID:       query.ID,
-		Populate: &[]string{"Tenant"},
+		Populate: query.Populate,
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
