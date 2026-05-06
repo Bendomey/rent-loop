@@ -2,7 +2,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { useState } from 'react'
-import { DayPicker } from 'react-day-picker'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -15,6 +14,7 @@ import { useGetPropertyUnits } from '~/api/units'
 import { DatePickerInput } from '~/components/date-picker-input'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { Button } from '~/components/ui/button'
+import { Calendar } from '~/components/ui/calendar'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import {
 	Form,
@@ -252,12 +252,13 @@ export function AvailabilityModule() {
 									<Spinner />
 								</div>
 							) : (
-								<DayPicker
+								<Calendar
+									className="mx-auto [--cell-size:--spacing(9)] sm:[--cell-size:--spacing(14)]"
 									month={currentMonth}
 									onMonthChange={setCurrentMonth}
 									modifiers={modifiers}
 									modifiersStyles={modifiersStyles}
-									onDayClick={(day) => {
+									onDayClick={(day: Date) => {
 										const block = blocks?.find((b) => {
 											const start = localizedDayjs(b.start_date)
 											const end = localizedDayjs(b.end_date)
@@ -345,7 +346,7 @@ export function AvailabilityModule() {
 
 			{/* Block dates sheet */}
 			<Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-				<SheetContent>
+				<SheetContent className="p-6">
 					<SheetHeader>
 						<SheetTitle>Block Dates</SheetTitle>
 						<SheetDescription>
@@ -364,7 +365,7 @@ export function AvailabilityModule() {
 									<FormItem>
 										<FormLabel>Unit</FormLabel>
 										<Select value={field.value} onValueChange={field.onChange}>
-											<FormControl>
+											<FormControl className="w-full">
 												<SelectTrigger>
 													<SelectValue placeholder="Select unit" />
 												</SelectTrigger>
@@ -389,7 +390,7 @@ export function AvailabilityModule() {
 									<FormItem>
 										<FormLabel>Block Type</FormLabel>
 										<Select value={field.value} onValueChange={field.onChange}>
-											<FormControl>
+											<FormControl className="w-full">
 												<SelectTrigger>
 													<SelectValue placeholder="Select type" />
 												</SelectTrigger>

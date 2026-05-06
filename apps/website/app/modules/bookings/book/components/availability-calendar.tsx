@@ -1,7 +1,7 @@
 import { addDays, format, startOfToday } from 'date-fns'
 import { useEffect, useState } from 'react'
-import { Calendar } from '~/components/ui/calendar'
 import { getUnitAvailabilityForClient } from '~/api/bookings/client'
+import { Calendar } from '~/components/ui/calendar'
 
 function useIsDesktop() {
 	const [isDesktop, setIsDesktop] = useState(() =>
