@@ -88,7 +88,6 @@ export async function action({ request }: Route.ActionArgs) {
 
 export default function SelectClientPage() {
 	const { clientUsers } = useLoaderData<typeof loader>()
-	console.log('clientUsers', clientUsers)
 
 	return (
 		<div className="bg-background flex min-h-screen flex-col">
