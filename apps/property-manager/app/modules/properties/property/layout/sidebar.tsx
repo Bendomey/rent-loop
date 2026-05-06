@@ -75,8 +75,8 @@ export function PropertySidebar({
 				icon: Contact,
 				items: [
 					{
-						title: 'All Tenants',
-						url: '/tenants?filters=status&status=ACTIVE',
+						title: isLease && isBooking ? 'All Tenants/Guests' : isLease ? 'All Tenants' : 'All Guests',
+						url: '/tenants',
 					},
 					{
 						title: 'Lease Applications',
