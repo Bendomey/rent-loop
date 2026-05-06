@@ -46,7 +46,7 @@ export function GuestInfoForm({ onValuesChange }: Props) {
 					</label>
 					<input
 						{...register('first_name')}
-						className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none"
+						className="w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500"
 					/>
 					{errors.first_name && (
 						<p className="mt-1 text-xs text-red-500">
@@ -60,7 +60,7 @@ export function GuestInfoForm({ onValuesChange }: Props) {
 					</label>
 					<input
 						{...register('last_name')}
-						className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none"
+						className="w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500"
 					/>
 					{errors.last_name && (
 						<p className="mt-1 text-xs text-red-500">
@@ -75,7 +75,7 @@ export function GuestInfoForm({ onValuesChange }: Props) {
 					<input
 						{...register('phone')}
 						type="tel"
-						className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none"
+						className="w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500"
 					/>
 					{errors.phone && (
 						<p className="mt-1 text-xs text-red-500">{errors.phone.message}</p>
@@ -88,7 +88,7 @@ export function GuestInfoForm({ onValuesChange }: Props) {
 					<input
 						{...register('email')}
 						type="email"
-						className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none"
+						className="w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500"
 					/>
 					{errors.email && (
 						<p className="mt-1 text-xs text-red-500">{errors.email.message}</p>
@@ -100,7 +100,7 @@ export function GuestInfoForm({ onValuesChange }: Props) {
 					</label>
 					<input
 						{...register('id_number')}
-						className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none"
+						className="w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-rose-500"
 					/>
 					{errors.id_number && (
 						<p className="mt-1 text-xs text-red-500">
