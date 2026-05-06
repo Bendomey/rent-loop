@@ -1,16 +1,13 @@
 import { differenceInDays, format } from 'date-fns'
-import { Link } from 'react-router'
 import { APP_NAME } from '~/lib/constants'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 
 interface Props {
-	unit: PublicBookingUnit
+	unit: PropertyUnit
 	selectedRange: { from: Date; to: Date } | null
 	canSubmit: boolean
 	submitting: boolean
 	error: string | null
-	success: boolean
-	trackingCode: string | null
 	onSubmit: () => void
 }
 
@@ -20,8 +17,6 @@ export function BookingSummary({
 	canSubmit,
 	submitting,
 	error,
-	success,
-	trackingCode,
 	onSubmit,
 }: Props) {
 	const nights = selectedRange
@@ -29,61 +24,37 @@ export function BookingSummary({
 		: 0
 	const total = nights * unit.rent_fee
 
-	if (success && trackingCode) {
-		return (
-			<div className="rounded-xl border border-green-200 bg-green-50 p-6 text-center">
-				<div className="mb-3 text-3xl">✓</div>
-				<h3 className="text-base font-semibold text-green-800">
-					Booking request submitted!
-				</h3>
-				<p className="mt-2 text-sm text-green-700">
-					The property manager will review your request and confirm shortly.
-				</p>
-				<p className="mt-4 text-sm text-zinc-600">
-					Track your booking status:{' '}
-					<Link
-						to={`/bookings/track/${trackingCode}`}
-						className="font-medium text-rose-600 underline"
-					>
-						View booking
-					</Link>
-				</p>
-			</div>
-		)
-	}
-
 	return (
-		<div className="rounded-xl border bg-white p-6 shadow-sm">
+		<div className="rounded-2xl border border-zinc-100 bg-white p-6 shadow-sm">
 			<h2 className="text-base font-semibold text-zinc-900">Booking Summary</h2>
 
 			{selectedRange ? (
 				<div className="mt-4 space-y-3 text-sm">
 					<div className="flex justify-between">
-						<span className="text-zinc-500">Check-in</span>
-						<span className="font-medium">
+						<span className="text-zinc-400">Check-in</span>
+						<span className="font-medium text-zinc-900">
 							{format(selectedRange.from, 'MMM d, yyyy')}
 						</span>
 					</div>
 					<div className="flex justify-between">
-						<span className="text-zinc-500">Check-out</span>
-						<span className="font-medium">
+						<span className="text-zinc-400">Check-out</span>
+						<span className="font-medium text-zinc-900">
 							{format(selectedRange.to, 'MMM d, yyyy')}
 						</span>
 					</div>
 					<div className="flex justify-between">
-						<span className="text-zinc-500">Duration</span>
-						<span className="font-medium">
+						<span className="text-zinc-400">Duration</span>
+						<span className="font-medium text-zinc-900">
 							{nights} night{nights !== 1 ? 's' : ''}
 						</span>
 					</div>
-					<div className="my-3 border-t" />
+					<div className="my-3 border-t border-zinc-100" />
 					<div className="flex justify-between text-sm">
-						<span className="text-zinc-500">
+						<span className="text-zinc-400">
 							{formatAmount(convertPesewasToCedis(unit.rent_fee))} × {nights}{' '}
 							nights
-							{/* {formatCurrency(unit.rent_fee, unit.rent_fee_currency)} × {nights} nights */}
 						</span>
-						<span className="font-semibold">
+						<span className="font-semibold text-zinc-900">
 							{formatAmount(convertPesewasToCedis(total))}
 						</span>
 					</div>
@@ -95,17 +66,44 @@ export function BookingSummary({
 			)}
 
 			{error ? (
-				<p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
-					{error}
-				</p>
+				<div className="mt-4 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2.5 text-sm text-red-600">
+					<span className="mt-0.5 shrink-0">⚠</span>
+					<span>{error}</span>
+				</div>
 			) : null}
 
 			<button
 				onClick={onSubmit}
 				disabled={!canSubmit || submitting}
-				className="mt-6 w-full rounded-lg bg-rose-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+				className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
 			>
-				{submitting ? 'Submitting...' : 'Request Booking'}
+				{submitting ? (
+					<>
+						<svg
+							className="h-4 w-4 animate-spin"
+							viewBox="0 0 24 24"
+							fill="none"
+							aria-hidden="true"
+						>
+							<circle
+								className="opacity-25"
+								cx="12"
+								cy="12"
+								r="10"
+								stroke="currentColor"
+								strokeWidth="4"
+							/>
+							<path
+								className="opacity-75"
+								fill="currentColor"
+								d="M4 12a8 8 0 018-8v8H4z"
+							/>
+						</svg>
+						Requesting...
+					</>
+				) : (
+					'Request Booking'
+				)}
 			</button>
 
 			<p className="mt-3 text-center text-xs text-zinc-400">
