@@ -376,7 +376,9 @@ export function PropertyTenantApplicationEmergencyContact({
 														shouldValidate: true,
 													})
 													if (employer_type.value === 'STUDENT') {
-														setValue('occupation', 'STUDENT', { shouldDirty: true })
+														setValue('occupation', 'STUDENT', {
+															shouldDirty: true,
+														})
 													} else {
 														setValue('occupation', '', { shouldDirty: true })
 													}
