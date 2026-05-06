@@ -23,5 +23,5 @@ export const convertPesewasToCedis = (amount: number): number => {
 }
 
 export const convertCedisToPesewas = (amount: number): number => {
-	return amount * 100
+	return Math.round(amount * 100)
 }
