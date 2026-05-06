@@ -60,7 +60,7 @@ export function Step2() {
 			void verifyAndLookUpTenant()
 		}
 		setOtpError('')
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [isOtpComplete])
 
 	const { mutate, isPending } = useVerifyOtpCode()

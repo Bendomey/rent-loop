@@ -27,6 +27,10 @@ type Booking struct {
 	CheckInDate  time.Time `gorm:"not null;"`
 	CheckOutDate time.Time `gorm:"not null;"`
 
+	ConfirmedAt   *time.Time
+	ConfirmedByID *string
+	ConfirmedBy   *ClientUser
+
 	CheckedInAt   *time.Time // when they actually checked in.
 	CheckedInByID *string    // ClientUser ID who performed the check-in
 	CheckedInBy   *ClientUser
