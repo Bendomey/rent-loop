@@ -187,7 +187,7 @@ export function AttachedDocumentView({
 					</p>
 					<Button size="sm" className="mt-3 ml-7" asChild>
 						<Link
-							to={`/properties/${propertyId}/occupancy/applications${applicationId}/editor/${tenantApplication.lease_agreement_document_id}`}
+							to={`/properties/${propertyId}/occupancy/applications/${applicationId}/editor/${tenantApplication.lease_agreement_document_id}`}
 						>
 							<PenLine className="size-4" />
 							Edit Document
@@ -202,7 +202,7 @@ export function AttachedDocumentView({
 							<p className="text-xs text-amber-700">
 								Need to make changes?{' '}
 								<Link
-									to={`/properties/${propertyId}/occupancy/applications${applicationId}/editor/${tenantApplication.lease_agreement_document_id}`}
+									to={`/properties/${propertyId}/occupancy/applications/${applicationId}/editor/${tenantApplication.lease_agreement_document_id}`}
 									className="font-medium underline underline-offset-2"
 								>
 									Open the editor
@@ -218,7 +218,7 @@ export function AttachedDocumentView({
 						<div className="rounded-lg border border-green-200 bg-green-50 p-3">
 							<p className="text-xs text-green-700">
 								<Link
-									to={`/properties/${propertyId}/occupancy/applications${applicationId}/signing/${tenantApplication.lease_agreement_document_id}`}
+									to={`/properties/${propertyId}/occupancy/applications/${applicationId}/signing/${tenantApplication.lease_agreement_document_id}`}
 									className="font-medium underline underline-offset-2"
 								>
 									View the document
@@ -255,7 +255,7 @@ export function AttachedDocumentView({
 							{!adminSigned && (
 								<Button size="sm" asChild>
 									<Link
-										to={`/properties/${propertyId}/occupancy/applications${applicationId}/signing/${tenantApplication.lease_agreement_document_id}`}
+										to={`/properties/${propertyId}/occupancy/applications/${applicationId}/signing/${tenantApplication.lease_agreement_document_id}`}
 									>
 										<Pen className="size-4" />
 										Sign Document

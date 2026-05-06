@@ -31,7 +31,7 @@ export function PropertyTenantApplicationChecklist({
 	propertyId,
 	footer,
 }: Props) {
-	const baseUrl = `/properties/${propertyId}/occupancy/applications${application.id}`
+	const baseUrl = `/properties/${propertyId}/occupancy/applications/${application.id}`
 
 	const {
 		progress,

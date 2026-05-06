@@ -73,7 +73,7 @@ export function CreateNewPropertyTenantApplicationProvider({
 
 		await createFetcher.submit(updatedData, {
 			method: 'POST',
-			action: `/properties/${formData.property_id}/occupancy/applicationsnew`,
+			action: `/properties/${formData.property_id}/occupancy/applications/new`,
 		})
 	}
 

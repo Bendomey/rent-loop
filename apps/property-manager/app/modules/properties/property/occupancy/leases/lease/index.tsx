@@ -215,7 +215,7 @@ export function LeaseDetailModule() {
 									<>
 										<Separator />
 										<Link
-											to={`/properties/${propertyId}/occupancy/applications${application.id}`}
+											to={`/properties/${propertyId}/occupancy/applications/${application.id}`}
 											className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
 										>
 											<ExternalLink className="size-3.5" />

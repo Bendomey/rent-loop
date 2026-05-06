@@ -106,7 +106,7 @@ export function PropertyTenantApplicationsModule() {
 								</span>
 							)}
 							<Link
-								to={`/properties/${clientUserProperty?.property_id}/occupancy/applications${row.original.id}`}
+								to={`/properties/${clientUserProperty?.property_id}/occupancy/applications/${row.original.id}`}
 								aria-label={`View details for application`}
 							>
 								<span className="truncate text-xs text-blue-600 hover:underline dark:text-blue-500">
@@ -195,7 +195,7 @@ export function PropertyTenantApplicationsModule() {
 
 							<DropdownMenuContent align="end" className="32">
 								<Link
-									to={`/properties/${clientUserProperty?.property?.id}/occupancy/applications${row.original.id}`}
+									to={`/properties/${clientUserProperty?.property?.id}/occupancy/applications/${row.original.id}`}
 								>
 									<DropdownMenuItem>View</DropdownMenuItem>
 								</Link>
