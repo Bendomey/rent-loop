@@ -3,15 +3,23 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { AvailabilityCalendar } from './components/availability-calendar'
 import { BookingSummary } from './components/booking-summary'
-import {
-	GuestInfoForm,
-	type GuestFormValues,
-} from './components/guest-info-form'
-import { createPublicBooking } from '~/api/bookings/client'
+import { GuestInfoForm, type GuestFormValues } from './components/guest-info-form'
+import { ImageGallery } from './components/image-gallery'
+import { SuccessModal } from './components/success-modal'
+import { createBooking } from '~/api/bookings/client'
 import { APP_NAME } from '~/lib/constants'
 
+const FREQUENCY_LABELS: Record<PropertyUnit['payment_frequency'], string> = {
+	DAILY: 'night',
+	WEEKLY: 'week',
+	MONTHLY: 'month',
+	QUARTERLY: 'quarter',
+	BIANNUALLY: '6 months',
+	ANNUALLY: 'year',
+}
+
 interface Props {
-	unit: PublicBookingUnit
+	unit: PropertyUnit
 }
 
 export function BookModule({ unit }: Props) {
@@ -32,7 +40,7 @@ export function BookModule({ unit }: Props) {
 		setSubmitting(true)
 		setError(null)
 		try {
-			const booking = await createPublicBooking(unit.slug, {
+			const booking = await createBooking(unit.slug, {
 				check_in_date: format(selectedRange.from, 'yyyy-MM-dd'),
 				check_out_date: format(selectedRange.to, 'yyyy-MM-dd'),
 				...guestValues,
@@ -54,8 +62,17 @@ export function BookModule({ unit }: Props) {
 		}
 	}
 
+	const frequencyLabel = FREQUENCY_LABELS[unit.payment_frequency] ?? 'period'
+
 	return (
 		<div className="min-h-dvh bg-zinc-50">
+			{success && trackingCode && (
+				<SuccessModal
+					trackingCode={trackingCode}
+					onClose={() => setSuccess(false)}
+				/>
+			)}
+
 			<header className="border-b bg-white">
 				<div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
 					<Link to="/" className="flex items-end">
@@ -70,21 +87,16 @@ export function BookModule({ unit }: Props) {
 
 			<main className="mx-auto max-w-6xl px-4 py-8">
 				<div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-					{/* Left column: unit info + calendar + guest form */}
+					{/* Left column: gallery + unit info + calendar + guest form */}
 					<div className="space-y-8 lg:col-span-2">
+						<ImageGallery images={unit.images} altPrefix={unit.name} />
+
 						<div>
-							{unit.images.length > 0 ? (
-								<div className="mb-4 overflow-hidden rounded-xl">
-									<img
-										src={unit.images[0]}
-										alt={unit.name}
-										className="h-64 w-full object-cover"
-									/>
-								</div>
-							) : null}
-							<h1 className="text-2xl font-bold text-zinc-900">{unit.name}</h1>
+							<h1 className="text-2xl font-bold tracking-tight text-zinc-900">
+								{unit.name}
+							</h1>
 							{unit.property?.name ? (
-								<p className="mt-1 text-sm text-zinc-500">
+								<p className="mt-0.5 text-sm text-zinc-500">
 									{unit.property.name}
 								</p>
 							) : null}
@@ -93,14 +105,14 @@ export function BookModule({ unit }: Props) {
 									{unit.description}
 								</p>
 							) : null}
-							<p className="mt-3 text-lg font-semibold text-zinc-900">
+							<p className="mt-4 text-xl font-semibold text-zinc-900">
 								{new Intl.NumberFormat('en-GH', {
 									style: 'currency',
 									currency: unit.rent_fee_currency,
 									minimumFractionDigits: 0,
 								}).format(unit.rent_fee / 100)}{' '}
-								<span className="text-sm font-normal text-zinc-500">
-									/ night
+								<span className="text-sm font-normal text-zinc-400">
+									/ {frequencyLabel}
 								</span>
 							</p>
 						</div>
@@ -116,9 +128,7 @@ export function BookModule({ unit }: Props) {
 							/>
 						</div>
 
-						{selectedRange && !success ? (
-							<GuestInfoForm onValuesChange={setGuestValues} />
-						) : null}
+						<GuestInfoForm onValuesChange={setGuestValues} />
 					</div>
 
 					{/* Right column: sticky summary */}
@@ -130,8 +140,6 @@ export function BookModule({ unit }: Props) {
 								canSubmit={canSubmit}
 								submitting={submitting}
 								error={error}
-								success={success}
-								trackingCode={trackingCode}
 								onSubmit={handleSubmit}
 							/>
 						</div>
