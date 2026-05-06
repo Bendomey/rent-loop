@@ -68,22 +68,27 @@ export function AvailabilityCalendar({
 	}
 
 	if (loading) {
-		return (
-			<div className="flex h-64 items-center justify-center text-sm text-zinc-400">
-				Loading availability...
-			</div>
-		)
+		return <div className="h-64 w-full animate-pulse rounded-xl bg-zinc-100" />
 	}
 
 	return (
-		<DayPicker
-			mode="range"
-			selected={selectedRange ?? undefined}
-			onSelect={handleSelect}
-			disabled={[{ before: today }, ...disabledDates]}
-			fromDate={today}
-			toDate={threeMonthsOut}
-			numberOfMonths={1}
-		/>
+		<div
+			style={
+				{
+					'--rdp-accent-color': '#e11d48',
+					'--rdp-accent-background-color': '#fff1f2',
+				} as React.CSSProperties
+			}
+		>
+			<DayPicker
+				mode="range"
+				selected={selectedRange ?? undefined}
+				onSelect={handleSelect}
+				disabled={[{ before: today }, ...disabledDates]}
+				fromDate={today}
+				toDate={threeMonthsOut}
+				numberOfMonths={1}
+			/>
+		</div>
 	)
 }
