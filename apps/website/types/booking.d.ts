@@ -6,22 +6,11 @@ type BookingStatus =
 	| 'CANCELLED'
 type BlockType = 'BOOKING' | 'LEASE' | 'MAINTENANCE' | 'PERSONAL' | 'OTHER'
 
-interface PublicBookingProperty {
+interface Property {
 	id: string
 	name: string
 	slug: string
 	contact_email: Nullable<string>
-}
-
-interface PublicBookingUnit {
-	id: string
-	name: string
-	description: Nullable<string>
-	images: Array<string>
-	rent_fee: number
-	rent_fee_currency: string
-	slug: string
-	property: PublicBookingProperty
 }
 
 interface UnitDateBlock {
@@ -36,7 +25,7 @@ interface UnitDateBlock {
 	created_at: string
 }
 
-interface PublicBooking {
+interface Booking {
 	id: string
 	code: string
 	tracking_code: string
@@ -47,15 +36,5 @@ interface PublicBooking {
 	currency: string
 	status: BookingStatus
 	cancellation_reason: Nullable<string>
-	unit: PublicBookingUnit
-}
-
-interface CreatePublicBookingInput {
-	check_in_date: string
-	check_out_date: string
-	first_name: string
-	last_name: string
-	phone: string
-	email: string
-	id_number: string
+	unit: PropertyUnit
 }

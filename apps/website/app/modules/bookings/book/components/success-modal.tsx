@@ -36,7 +36,7 @@ export function SuccessModal({ trackingCode, onClose }: Props) {
 					{CONFETTI.map((c, i) => (
 						<span
 							key={i}
-							className="absolute left-1/2 top-1/2 h-2 w-2 rounded-full animate-[confetti-burst_600ms_ease-out_forwards]"
+							className="absolute top-1/2 left-1/2 h-2 w-2 animate-[confetti-burst_600ms_ease-out_forwards] rounded-full"
 							style={
 								{
 									backgroundColor: c.color,
@@ -60,7 +60,7 @@ export function SuccessModal({ trackingCode, onClose }: Props) {
 					</p>
 
 					<div className="mt-6 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-left">
-						<p className="text-xs uppercase tracking-wider text-zinc-400">
+						<p className="text-xs tracking-wider text-zinc-400 uppercase">
 							Tracking code
 						</p>
 						<p className="mt-0.5 font-mono text-lg font-bold text-zinc-900">

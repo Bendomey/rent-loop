@@ -12,11 +12,21 @@ export async function getUnitAvailabilityForClient(
 	return response.parsedBody.data ?? []
 }
 
-export async function createPublicBooking(
+export interface CreateBookingInput {
+	check_in_date: string
+	check_out_date: string
+	first_name: string
+	last_name: string
+	phone: string
+	email?: string
+	id_number: string
+}
+
+export async function createBooking(
 	unitSlug: string,
-	input: CreatePublicBookingInput,
-): Promise<PublicBooking> {
-	const response = await fetchClient<ApiResponse<PublicBooking>>(
+	input: CreateBookingInput,
+): Promise<Booking> {
+	const response = await fetchClient<ApiResponse<Booking>>(
 		`/v1/units/${unitSlug}/bookings`,
 		{
 			method: 'POST',
@@ -30,9 +40,9 @@ export async function createPublicBooking(
 export async function trackBooking(
 	trackingCode: string,
 	phone: string,
-): Promise<PublicBooking> {
+): Promise<Booking> {
 	const encoded = encodeURIComponent(phone)
-	const response = await fetchClient<ApiResponse<PublicBooking>>(
+	const response = await fetchClient<ApiResponse<Booking>>(
 		`/v1/bookings/${trackingCode}?phone=${encoded}`,
 		{ isUnAuthorizedRequest: true },
 	)

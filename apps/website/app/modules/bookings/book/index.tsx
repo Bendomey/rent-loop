@@ -1,13 +1,62 @@
 import { format } from 'date-fns'
+import {
+	AirVent,
+	Bath,
+	Car,
+	Dumbbell,
+	Flame,
+	type LucideIcon,
+	Shield,
+	Sofa,
+	TreePine,
+	Tv,
+	Utensils,
+	Waves,
+	Wifi,
+} from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
+import { AboutHost } from './components/about-host'
 import { AvailabilityCalendar } from './components/availability-calendar'
 import { BookingSummary } from './components/booking-summary'
-import { GuestInfoForm, type GuestFormValues } from './components/guest-info-form'
+import {
+	GuestInfoForm,
+	type GuestFormValues,
+} from './components/guest-info-form'
 import { ImageGallery } from './components/image-gallery'
+import { PropertyMap } from './components/property-map'
+import { ReviewsSection } from './components/reviews-section'
+import { SimilarUnits } from './components/similar-units'
 import { SuccessModal } from './components/success-modal'
 import { createBooking } from '~/api/bookings/client'
 import { APP_NAME } from '~/lib/constants'
+
+const FEATURE_ICONS: Record<string, LucideIcon> = {
+	wifi: Wifi,
+	internet: Wifi,
+	parking: Car,
+	garage: Car,
+	pool: Waves,
+	swimming: Waves,
+	gym: Dumbbell,
+	fitness: Dumbbell,
+	kitchen: Utensils,
+	cooking: Utensils,
+	tv: Tv,
+	television: Tv,
+	air_conditioning: AirVent,
+	ac: AirVent,
+	heating: Flame,
+	heater: Flame,
+	garden: TreePine,
+	outdoor: TreePine,
+	security: Shield,
+	cctv: Shield,
+	living_room: Sofa,
+	lounge: Sofa,
+	bathroom: Bath,
+	bath: Bath,
+}
 
 const FREQUENCY_LABELS: Record<PropertyUnit['payment_frequency'], string> = {
 	DAILY: 'night',
@@ -32,6 +81,7 @@ export function BookModule({ unit }: Props) {
 	const [error, setError] = useState<string | null>(null)
 	const [success, setSuccess] = useState(false)
 	const [trackingCode, setTrackingCode] = useState<string | null>(null)
+	const [showAllFeatures, setShowAllFeatures] = useState(false)
 
 	const canSubmit = !!selectedRange && !!guestValues && !success
 
@@ -88,10 +138,10 @@ export function BookModule({ unit }: Props) {
 			<main className="mx-auto max-w-6xl px-4 py-8">
 				<div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
 					{/* Left column: gallery + unit info + calendar + guest form */}
-					<div className="space-y-8 lg:col-span-2">
+					<div className="lg:col-span-2">
 						<ImageGallery images={unit.images} altPrefix={unit.name} />
 
-						<div>
+						<div className="py-8">
 							<h1 className="text-2xl font-bold tracking-tight text-zinc-900">
 								{unit.name}
 							</h1>
@@ -117,10 +167,75 @@ export function BookModule({ unit }: Props) {
 							</p>
 						</div>
 
-						<div>
-							<h2 className="mb-3 text-base font-semibold text-zinc-900">
-								Select dates
+						<hr className="my-5 border-zinc-200" />
+
+						{unit.features && Object.keys(unit.features).length > 0 && (
+							<div className="py-8">
+								<h2 className="mb-4 text-xl font-semibold text-zinc-900">
+									What this place offers
+								</h2>
+								{(() => {
+									const allFeatures = Object.entries(unit.features!)
+									const visible = showAllFeatures
+										? allFeatures
+										: allFeatures.slice(0, 6)
+									const hasMore = allFeatures.length > 6
+									return (
+										<>
+											<div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+												{visible.map(([key, value]) => {
+													const Icon =
+														FEATURE_ICONS[key.toLowerCase()] ??
+														FEATURE_ICONS[key.toLowerCase().split('_')[0] ?? '']
+													return (
+														<div
+															key={key}
+															className="flex items-center gap-3 rounded-xl border border-zinc-100 bg-white px-4 py-3"
+														>
+															{Icon ? (
+																<Icon className="h-5 w-5 shrink-0 text-zinc-500" />
+															) : (
+																<div className="h-2 w-2 shrink-0 rounded-full bg-rose-500" />
+															)}
+															<div className="min-w-0">
+																<p className="truncate text-sm font-medium text-zinc-900 capitalize">
+																	{key.replace(/_/g, ' ')}
+																</p>
+																{value && value !== 'true' && (
+																	<p className="truncate text-xs text-zinc-500">
+																		{value}
+																	</p>
+																)}
+															</div>
+														</div>
+													)
+												})}
+											</div>
+											{hasMore && (
+												<button
+													onClick={() => setShowAllFeatures((v) => !v)}
+													className="mt-4 text-sm font-medium text-zinc-900 underline underline-offset-2"
+												>
+													{showAllFeatures
+														? 'Show less'
+														: `Show all ${allFeatures.length} amenities`}
+												</button>
+											)}
+										</>
+									)
+								})()}
+							</div>
+						)}
+
+						<hr className="my-5 border-zinc-200" />
+
+						<div className="py-8">
+							<h2 className="mb-1 text-xl font-semibold text-zinc-900">
+								Select checkout date
 							</h2>
+							<p className="mb-2 text-sm text-zinc-500">
+								Use the calendar below to select your desired check-in and
+							</p>
 							<AvailabilityCalendar
 								unitSlug={unit.slug}
 								selectedRange={selectedRange}
@@ -128,7 +243,13 @@ export function BookModule({ unit }: Props) {
 							/>
 						</div>
 
-						<GuestInfoForm onValuesChange={setGuestValues} />
+						<hr className="my-5 border-zinc-200" />
+
+						<div className="py-8">
+							<div className="rounded-2xl border border-zinc-200 bg-zinc-100 p-6">
+								<GuestInfoForm onValuesChange={setGuestValues} />
+							</div>
+						</div>
 					</div>
 
 					{/* Right column: sticky summary */}
@@ -144,6 +265,41 @@ export function BookModule({ unit }: Props) {
 							/>
 						</div>
 					</div>
+				</div>
+
+				{/* Below-the-fold sections — appear after reserve block on mobile */}
+				<hr className="my-5 border-zinc-200" />
+
+				<div className="py-8">
+					<h2 className="mb-6 text-xl font-semibold text-zinc-900">Reviews</h2>
+					<ReviewsSection />
+				</div>
+
+				<hr className="my-5 border-zinc-200" />
+
+				<div className="py-8">
+					<h2 className="mb-4 text-xl font-semibold text-zinc-900">
+						Where you'll be
+					</h2>
+					<PropertyMap propertyName={unit.property?.name ?? unit.name} />
+				</div>
+
+				<hr className="my-5 border-zinc-200" />
+
+				<div className="py-8">
+					<h2 className="mb-6 text-xl font-semibold text-zinc-900">
+						About your host
+					</h2>
+					<AboutHost property={unit.property} />
+				</div>
+
+				<hr className="my-5 border-zinc-200" />
+
+				<div className="py-8">
+					<h2 className="mb-4 text-xl font-semibold text-zinc-900">
+						More units nearby
+					</h2>
+					<SimilarUnits />
 				</div>
 			</main>
 		</div>

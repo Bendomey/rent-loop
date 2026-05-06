@@ -1,5 +1,6 @@
 interface PropertyUnit {
 	id: string
+	slug: string
 	property_id: string
 	property: Nullable<Property>
 	property_block_id: string

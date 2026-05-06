@@ -13,7 +13,11 @@ export function ImageGallery({ images, altPrefix }: Props) {
 	if (thumbnails.length === 0) {
 		return (
 			<div className="h-72 overflow-hidden rounded-xl lg:h-80">
-				<img src={hero} alt={altPrefix} className="h-full w-full object-cover" />
+				<img
+					src={hero}
+					alt={altPrefix}
+					className="h-full w-full object-cover"
+				/>
 			</div>
 		)
 	}

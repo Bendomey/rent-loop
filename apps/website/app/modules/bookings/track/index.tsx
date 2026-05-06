@@ -8,7 +8,7 @@ interface Props {
 }
 
 export function BookTrackModule({ trackingCode }: Props) {
-	const [booking, setBooking] = useState<PublicBooking | null>(null)
+	const [booking, setBooking] = useState<Booking | null>(null)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 

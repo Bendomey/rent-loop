@@ -1,8 +1,20 @@
 import { addDays, format, startOfToday } from 'date-fns'
 import { useEffect, useState } from 'react'
-import { DayPicker } from 'react-day-picker'
-import 'react-day-picker/style.css'
+import { Calendar } from '~/components/ui/calendar'
 import { getUnitAvailabilityForClient } from '~/api/bookings/client'
+
+function useIsDesktop() {
+	const [isDesktop, setIsDesktop] = useState(() =>
+		typeof window !== 'undefined' ? window.innerWidth >= 1024 : true,
+	)
+	useEffect(() => {
+		const mq = window.matchMedia('(min-width: 1024px)')
+		const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches)
+		mq.addEventListener('change', handler)
+		return () => mq.removeEventListener('change', handler)
+	}, [])
+	return isDesktop
+}
 
 interface Props {
 	unitSlug: string
@@ -29,6 +41,7 @@ export function AvailabilityCalendar({
 	selectedRange,
 	onRangeSelect,
 }: Props) {
+	const isDesktop = useIsDesktop()
 	const today = startOfToday()
 	const threeMonthsOut = addDays(today, 90)
 
@@ -72,23 +85,15 @@ export function AvailabilityCalendar({
 	}
 
 	return (
-		<div
-			style={
-				{
-					'--rdp-accent-color': '#e11d48',
-					'--rdp-accent-background-color': '#fff1f2',
-				} as React.CSSProperties
-			}
-		>
-			<DayPicker
-				mode="range"
-				selected={selectedRange ?? undefined}
-				onSelect={handleSelect}
-				disabled={[{ before: today }, ...disabledDates]}
-				fromDate={today}
-				toDate={threeMonthsOut}
-				numberOfMonths={1}
-			/>
-		</div>
+		<Calendar
+			mode="range"
+			selected={selectedRange ?? undefined}
+			onSelect={handleSelect}
+			disabled={[{ before: today }, ...disabledDates]}
+			fromDate={today}
+			toDate={threeMonthsOut}
+			numberOfMonths={isDesktop ? 2 : 1}
+			className="w-full bg-transparent [--cell-size:--spacing(11)]"
+		/>
 	)
 }

@@ -102,7 +102,7 @@ export function BookingSummary({
 						Requesting...
 					</>
 				) : (
-					'Request Booking'
+					'Reserve Now'
 				)}
 			</button>
 

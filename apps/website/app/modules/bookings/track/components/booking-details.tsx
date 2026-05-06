@@ -19,7 +19,7 @@ const STATUS_LABELS: Record<BookingStatus, string> = {
 }
 
 interface Props {
-	booking: PublicBooking
+	booking: Booking
 }
 
 export function BookingDetails({ booking }: Props) {
