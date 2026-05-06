@@ -19352,6 +19352,13 @@ const docTemplate = `{
                 "booking_source": {
                     "type": "string"
                 },
+                "canceled_at": {
+                    "type": "string"
+                },
+                "canceled_by": {},
+                "canceled_by_id": {
+                    "type": "string"
+                },
                 "cancellation_reason": {
                     "type": "string"
                 },
@@ -19364,12 +19371,34 @@ const docTemplate = `{
                 "check_out_date": {
                     "type": "string"
                 },
+                "checked_in_at": {
+                    "type": "string"
+                },
+                "checked_in_by": {},
+                "checked_in_by_id": {
+                    "type": "string"
+                },
+                "checked_out_at": {
+                    "type": "string"
+                },
+                "checked_out_by": {},
+                "checked_out_by_id": {
+                    "type": "string"
+                },
                 "code": {
+                    "type": "string"
+                },
+                "confirmed_at": {
+                    "type": "string"
+                },
+                "confirmed_by": {},
+                "confirmed_by_id": {
                     "type": "string"
                 },
                 "created_at": {
                     "type": "string"
                 },
+                "created_by_client_user": {},
                 "created_by_client_user_id": {
                     "type": "string"
                 },
@@ -19383,9 +19412,11 @@ const docTemplate = `{
                 "invoice_id": {
                     "type": "string"
                 },
+                "meta": {},
                 "notes": {
                     "type": "string"
                 },
+                "property": {},
                 "property_id": {
                     "type": "string"
                 },
@@ -22434,6 +22465,9 @@ const docTemplate = `{
                 "code": {
                     "type": "string"
                 },
+                "confirmed_at": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -22448,9 +22482,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "meta": {},
-                "notes": {
-                    "type": "string"
-                },
                 "property": {
                     "$ref": "#/definitions/transformations.PublicOutputProperty"
                 },

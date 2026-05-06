@@ -228,8 +228,11 @@ func (s *bookingService) ConfirmBooking(ctx context.Context, input ConfirmBookin
 	}
 	transCtx := lib.WithTransaction(ctx, tx)
 
+	now := time.Now()
 	booking.Status = "CONFIRMED"
 	booking.CheckInCode = checkInCode
+	booking.ConfirmedAt = &now
+	booking.ConfirmedByID = &input.ClientUserID
 	if err := s.repo.Update(transCtx, booking); err != nil {
 		tx.Rollback()
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
