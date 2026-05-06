@@ -1,3 +1,4 @@
+import dayjs from 'dayjs'
 import { useState } from 'react'
 import type { DraftApplicationEntry } from '../context'
 import { useBulkOnboard } from '../context'
@@ -57,7 +58,7 @@ export function BulkOnboardWizard({ editingEntry }: BulkOnboardWizardProps) {
 			email: values.email || undefined,
 			gender: values.gender || undefined,
 			date_of_birth: values.date_of_birth
-				? values.date_of_birth.toISOString()
+				? dayjs(values.date_of_birth).format('YYYY-MM-DD')
 				: undefined,
 			nationality: values.nationality || undefined,
 			marital_status: values.marital_status || undefined,
