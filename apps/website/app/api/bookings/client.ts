@@ -19,7 +19,8 @@ export interface CreateBookingInput {
 	last_name: string
 	phone: string
 	email?: string
-	id_number: string
+	id_type?: string
+	id_number?: string
 }
 
 export async function createBooking(

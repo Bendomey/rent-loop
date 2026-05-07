@@ -22,8 +22,8 @@ const guestSchema = z.object({
 		.refine((v) => !v || z.string().email().safeParse(v).success, {
 			message: 'Enter a valid email',
 		}),
-	id_type: z.string().min(1, 'Required'),
-	id_number: z.string().min(1, 'Required'),
+	id_type: z.string().optional(),
+	id_number: z.string().optional(),
 })
 
 export type GuestFormValues = z.infer<typeof guestSchema>
@@ -143,7 +143,7 @@ export function GuestInfoForm({ onValuesChange }: Props) {
 				</p>
 				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 					<div>
-						<Label>ID type</Label>
+						<Label optional>ID type</Label>
 						<select {...register('id_type')} className={inputClass}>
 							<option value="">Select ID type</option>
 							{ID_TYPES.map((t) => (
@@ -152,20 +152,10 @@ export function GuestInfoForm({ onValuesChange }: Props) {
 								</option>
 							))}
 						</select>
-						{errors.id_type && (
-							<p className="mt-1 text-xs text-red-500">
-								{errors.id_type.message}
-							</p>
-						)}
 					</div>
 					<div>
-						<Label>ID number</Label>
+						<Label optional>ID number</Label>
 						<input {...register('id_number')} className={inputClass} />
-						{errors.id_number && (
-							<p className="mt-1 text-xs text-red-500">
-								{errors.id_number.message}
-							</p>
-						)}
 					</div>
 				</div>
 			</div>
