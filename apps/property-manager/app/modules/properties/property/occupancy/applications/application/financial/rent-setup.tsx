@@ -27,6 +27,7 @@ const PAYMENT_FREQUENCIES = [
 
 interface RentSetupProps {
 	rentAmount: number
+	currency?: string
 	paymentFrequency: string
 	defaultRentAmount: number
 	defaultPaymentFrequency: string
@@ -37,6 +38,7 @@ interface RentSetupProps {
 
 export function RentSetup({
 	rentAmount,
+	currency,
 	paymentFrequency,
 	defaultRentAmount,
 	defaultPaymentFrequency,
@@ -54,7 +56,7 @@ export function RentSetup({
 				<div>
 					<h3 className="text-sm font-medium">Rent</h3>
 					<p className="text-xs text-zinc-500">
-						Unit default: {formatAmount(defaultRentAmount)}
+						Unit default: {formatAmount(defaultRentAmount, currency)}
 						{defaultPaymentFrequency
 							? ` / ${defaultPaymentFrequency.toLowerCase()}`
 							: ''}

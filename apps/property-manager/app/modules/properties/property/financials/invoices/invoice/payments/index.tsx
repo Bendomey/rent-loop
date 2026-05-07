@@ -50,7 +50,10 @@ export function PropertyFinancialsPaymentItemsModule({
 				header: 'Amount',
 				cell: ({ row }) => (
 					<span className="truncate text-xs font-semibold text-zinc-600 dark:text-white">
-						{formatAmount(convertPesewasToCedis(row.original.amount))}
+						{formatAmount(
+							convertPesewasToCedis(row.original.amount),
+							row.original.currency,
+						)}
 					</span>
 				),
 			},

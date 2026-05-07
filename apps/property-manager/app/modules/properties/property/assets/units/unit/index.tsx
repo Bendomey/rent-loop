@@ -270,7 +270,10 @@ export function PropertyAssetUnitModule() {
 						<div className="space-y-1">
 							<TypographyMuted className="text-xs">Rent Fee</TypographyMuted>
 							<p className="text-2xl font-semibold">
-								{formatAmount(convertPesewasToCedis(unit.rent_fee))}
+								{formatAmount(
+									convertPesewasToCedis(unit.rent_fee),
+									unit.rent_fee_currency,
+								)}
 							</p>
 							<TypographyMuted className="text-xs">
 								{paymentFrequencyLabels[unit.payment_frequency]}

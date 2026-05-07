@@ -101,9 +101,12 @@ export function PropertyAssetUnitLeasesModule() {
 			{
 				accessorKey: 'rent_fee',
 				header: 'Rent',
-				cell: ({ getValue }) => (
+				cell: ({ getValue, row }) => (
 					<span className="truncate text-xs font-semibold">
-						{formatAmount(convertPesewasToCedis(getValue<number>()))}
+						{formatAmount(
+							convertPesewasToCedis(getValue<number>()),
+							row.original.rent_fee_currency,
+						)}
 					</span>
 				),
 			},

@@ -307,7 +307,10 @@ export function InvoiceDetails({
 								>
 									<span className="text-zinc-500">{item.label}</span>
 									<span>
-										{formatAmount(convertPesewasToCedis(item.total_amount))}
+										{formatAmount(
+											convertPesewasToCedis(item.total_amount),
+											item.currency,
+										)}
 									</span>
 								</div>
 							))}
@@ -317,7 +320,10 @@ export function InvoiceDetails({
 							<div className="flex items-center justify-between text-sm font-semibold">
 								<span>Total</span>
 								<span>
-									{formatAmount(convertPesewasToCedis(invoice.total_amount))}
+									{formatAmount(
+										convertPesewasToCedis(invoice.total_amount),
+										invoice.currency,
+									)}
 								</span>
 							</div>
 						</div>
@@ -384,7 +390,10 @@ export function InvoiceDetails({
 						<DialogDescription>
 							Record an offline payment of{' '}
 							<strong>
-								{formatAmount(convertPesewasToCedis(invoice.total_amount))}
+								{formatAmount(
+									convertPesewasToCedis(invoice.total_amount),
+									invoice.currency,
+								)}
 							</strong>{' '}
 							for this invoice.
 						</DialogDescription>

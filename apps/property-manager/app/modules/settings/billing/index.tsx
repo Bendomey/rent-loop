@@ -82,9 +82,12 @@ export function BillingModule() {
 			{
 				accessorKey: 'amount',
 				header: 'Amount',
-				cell: ({ getValue }) => (
+				cell: ({ getValue, row }) => (
 					<span className="truncate text-xs text-zinc-600 dark:text-white">
-						{formatAmount(convertPesewasToCedis(getValue<number>()))}
+						{formatAmount(
+							convertPesewasToCedis(getValue<number>()),
+							row.original.currency,
+						)}
 					</span>
 				),
 			},

@@ -706,7 +706,7 @@ export function LeaseExpensesTab({
 										</div>
 										<div className="flex shrink-0 items-center gap-3">
 											<p className="text-sm font-semibold">
-												{formatAmount(expense.amount / 100)}
+												{formatAmount(expense.amount / 100, expense.currency)}
 											</p>
 											<PropertyPermissionGuard roles={['MANAGER']}>
 												<div className="flex items-center gap-1">

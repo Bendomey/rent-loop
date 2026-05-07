@@ -92,10 +92,16 @@ export function buildTemplateFieldMap(
 		set('RentFrequency', app.payment_frequency.toLowerCase())
 	}
 	if (app.security_deposit_fee) {
-		set('SecurityDeposit', formatAmount(app.security_deposit_fee))
+		set(
+			'SecurityDeposit',
+			formatAmount(app.security_deposit_fee, app.rent_fee_currency),
+		)
 	}
 	if (app.initial_deposit_fee) {
-		set('InitialDeposit', formatAmount(app.initial_deposit_fee))
+		set(
+			'InitialDeposit',
+			formatAmount(app.initial_deposit_fee, app.rent_fee_currency),
+		)
 	}
 
 	// Signing timestamps (from document signatures)

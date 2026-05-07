@@ -161,13 +161,16 @@ export function PropertyTenantApplicationFinancial() {
 						<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 							<FieldDisplay
 								label="Agreed Rent Fee"
-								value={`${formatAmount(savedRentFee)}${savedPaymentFrequency ? ` / ${getPaymentFrequencyLabel(savedPaymentFrequency)}` : ''}`}
+								value={`${formatAmount(savedRentFee, tenantApplication.rent_fee_currency)}${savedPaymentFrequency ? ` / ${getPaymentFrequencyLabel(savedPaymentFrequency)}` : ''}`}
 							/>
 							<FieldDisplay
 								label="Security Deposit"
 								value={
 									savedSecurityDepositEnabled
-										? formatAmount(savedSecurityDepositFee)
+										? formatAmount(
+												savedSecurityDepositFee,
+												tenantApplication.rent_fee_currency,
+											)
 										: '-'
 								}
 							/>
@@ -184,6 +187,7 @@ export function PropertyTenantApplicationFinancial() {
 								onRentAmountChange={setRentAmount}
 								onPaymentFrequencyChange={setPaymentFrequency}
 								onReset={handleReset}
+								currency={tenantApplication.rent_fee_currency}
 							/>
 
 							<SecurityDeposit

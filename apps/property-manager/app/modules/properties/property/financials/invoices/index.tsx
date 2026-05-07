@@ -113,8 +113,10 @@ export function PropertyFinancialsPaymentsModule() {
 				header: 'Amount',
 				cell: ({ row }) => (
 					<span className="truncate text-xs font-semibold text-zinc-800 dark:text-white">
-						{formatAmount(convertPesewasToCedis(row.original.total_amount)) ??
-							'N/A'}
+						{formatAmount(
+							convertPesewasToCedis(row.original.total_amount),
+							row.original.currency,
+						) ?? 'N/A'}
 					</span>
 				),
 			},

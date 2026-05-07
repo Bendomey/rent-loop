@@ -105,9 +105,12 @@ export function PropertyBookingsModule() {
 			{
 				accessorKey: 'rate',
 				header: 'Rate',
-				cell: ({ getValue }) => (
+				cell: ({ getValue, row }) => (
 					<span className="text-xs font-semibold">
-						{formatAmount(convertPesewasToCedis(getValue<number>()))}
+						{formatAmount(
+							convertPesewasToCedis(getValue<number>()),
+							row.original.unit?.rent_fee_currency,
+						)}
 					</span>
 				),
 			},

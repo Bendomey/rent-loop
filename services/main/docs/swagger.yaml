@@ -1597,6 +1597,8 @@ definitions:
         example: COMMUNITY
         type: string
     type: object
+  handlers.UpdateBookingRequest:
+    type: object
   handlers.UpdateClientRequest:
     properties:
       address:
@@ -7761,6 +7763,62 @@ paths:
       security:
       - BearerAuth: []
       summary: Get a booking by ID
+      tags:
+      - Booking
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Booking ID
+        in: path
+        name: booking_id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.AdminOutputBooking'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update a pending booking
       tags:
       - Booking
   /api/v1/admin/clients/{client_id}/properties/{property_id}/bookings/{booking_id}/cancel:

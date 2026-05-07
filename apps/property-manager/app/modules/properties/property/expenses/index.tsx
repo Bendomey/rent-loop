@@ -96,9 +96,9 @@ export function PropertyExpensesModule() {
 			{
 				accessorKey: 'amount',
 				header: 'Amount',
-				cell: ({ getValue }) => (
+				cell: ({ getValue, row }) => (
 					<span className="truncate text-xs font-semibold text-zinc-800 dark:text-white">
-						{formatAmount(getValue<number>() / 100)}
+						{formatAmount(getValue<number>() / 100, row.original.currency)}
 					</span>
 				),
 			},

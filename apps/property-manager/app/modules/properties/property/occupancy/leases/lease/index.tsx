@@ -175,7 +175,10 @@ export function LeaseDetailModule() {
 										Rent Fee
 									</TypographyMuted>
 									<p className="text-2xl font-semibold">
-										{formatAmount(convertPesewasToCedis(lease.rent_fee))}
+										{formatAmount(
+											convertPesewasToCedis(lease.rent_fee),
+											lease.rent_fee_currency,
+										)}
 									</p>
 									<TypographyMuted className="text-xs">
 										{getPaymentFrequencyLabel(lease.payment_frequency ?? '')}
@@ -351,6 +354,7 @@ export function LeaseDetailModule() {
 														label="Rent Fee"
 														value={formatAmount(
 															convertPesewasToCedis(application.rent_fee),
+															application.rent_fee_currency,
 														)}
 													/>
 													{application.initial_deposit_fee != null && (
@@ -360,6 +364,7 @@ export function LeaseDetailModule() {
 																convertPesewasToCedis(
 																	application.initial_deposit_fee,
 																),
+																application.rent_fee_currency,
 															)}
 														/>
 													)}
@@ -379,6 +384,7 @@ export function LeaseDetailModule() {
 																		convertPesewasToCedis(
 																			application.security_deposit_fee,
 																		),
+																		application.rent_fee_currency,
 																	)
 																: '-'
 														}

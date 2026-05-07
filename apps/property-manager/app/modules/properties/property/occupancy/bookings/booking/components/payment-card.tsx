@@ -64,7 +64,7 @@ export function PaymentCard({ booking }: { booking: Booking }) {
 
 	return (
 		<Card className="shadow-none">
-			<CardHeader className="pb-3">
+			<CardHeader>
 				<div className="flex items-center justify-between">
 					<CardTitle className="text-[10px] font-semibold tracking-widest text-rose-600 uppercase">
 						Payment
@@ -79,9 +79,11 @@ export function PaymentCard({ booking }: { booking: Booking }) {
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<div>
-					<p className="text-muted-foreground text-xs">Booking total</p>
+					<p className="text-muted-foreground text-xs font-light">
+						Booking total
+					</p>
 					<p className="text-2xl font-bold">
-						{booking.currency} {formatAmount(invoiceTotal)}
+						{formatAmount(invoiceTotal, booking.currency)}
 					</p>
 				</div>
 
@@ -90,19 +92,19 @@ export function PaymentCard({ booking }: { booking: Booking }) {
 				<div className="space-y-2">
 					<LineItem
 						label={`${rateLabel} × ${count} ${periodLabel}`}
-						value={`${booking.currency} ${formatAmount(periodRate * count)}`}
+						value={formatAmount(periodRate * count, booking.currency)}
 					/>
 					{invoiceTaxes > 0 ? (
 						<LineItem
 							label="Taxes"
-							value={`${booking.currency} ${formatAmount(invoiceTaxes)}`}
+							value={formatAmount(invoiceTaxes, booking.currency)}
 						/>
 					) : null}
 					<Separator />
 					<div className="flex items-center justify-between gap-4">
 						<span className="text-xs font-semibold">Total due</span>
 						<span className="text-xs font-bold">
-							{booking.currency} {formatAmount(invoiceTotal)}
+							{formatAmount(invoiceTotal, booking.currency)}
 						</span>
 					</div>
 				</div>

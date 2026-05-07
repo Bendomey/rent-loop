@@ -7,6 +7,8 @@ import (
 	"slices"
 	"time"
 
+	"gorm.io/datatypes"
+
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
@@ -48,6 +50,17 @@ type CreateBookingRequest struct {
 	GuestGender    string    `json:"guest_gender"     validate:"required,oneof=MALE FEMALE"`
 	GuestIDType    *string   `json:"guest_id_type"    validate:"omitempty"`
 	GuestIDNumber  *string   `json:"guest_id_number"  validate:"omitempty"`
+}
+
+type UpdateBookingRequest struct {
+	Notes                  lib.Optional[string]         `json:"notes"                    validate:"omitempty"`
+	Rate                   lib.Optional[int64]          `json:"rate"                     validate:"omitempty,gt=0"`
+	Currency               lib.Optional[string]         `json:"currency"                 validate:"omitempty"`
+	RequiresUpfrontPayment lib.Optional[bool]           `json:"requires_upfront_payment" validate:"omitempty"`
+	CheckInDate            lib.Optional[time.Time]      `json:"check_in_date"            validate:"omitempty"`
+	CheckOutDate           lib.Optional[time.Time]      `json:"check_out_date"           validate:"omitempty"`
+	Meta                   lib.Optional[datatypes.JSON] `json:"meta"                     validate:"omitempty"`
+	InvoiceID              lib.Optional[string]         `json:"invoice_id"                                         swaggertype:"string"`
 }
 
 type CancelBookingRequest struct {
@@ -253,6 +266,54 @@ func (h *BookingHandler) GetBooking(w http.ResponseWriter, r *http.Request) {
 			Populate: populateFields,
 		},
 	)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{"data": transformations.DBBookingToRest(booking)})
+}
+
+// UpdateBooking godoc
+//
+//	@Summary	Update a pending booking
+//	@Tags		Booking
+//	@Accept		json
+//	@Security	BearerAuth
+//	@Produce	json
+//	@Param		client_id	path		string					true	"Client ID"
+//	@Param		property_id	path		string					true	"Property ID"
+//	@Param		booking_id	path		string					true	"Booking ID"
+//	@Param		body		body		UpdateBookingRequest	true	"Fields to update"
+//	@Success	200			{object}	object{data=transformations.AdminOutputBooking}
+//	@Failure	400			{object}	lib.HTTPError
+//	@Failure	401			{object}	string
+//	@Failure	404			{object}	lib.HTTPError
+//	@Failure	500			{object}	string
+//	@Router		/api/v1/admin/clients/{client_id}/properties/{property_id}/bookings/{booking_id} [patch]
+func (h *BookingHandler) UpdateBooking(w http.ResponseWriter, r *http.Request) {
+	bookingID := chi.URLParam(r, "booking_id")
+
+	var body UpdateBookingRequest
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
+		return
+	}
+
+	booking, err := h.bookingService.UpdateBooking(r.Context(), services.UpdateBookingInput{
+		BookingID:              bookingID,
+		Notes:                  body.Notes,
+		Rate:                   body.Rate,
+		Currency:               body.Currency,
+		RequiresUpfrontPayment: body.RequiresUpfrontPayment,
+		CheckInDate:            body.CheckInDate,
+		CheckOutDate:           body.CheckOutDate,
+		Meta:                   body.Meta,
+		InvoiceID:              body.InvoiceID,
+	})
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return

@@ -104,8 +104,13 @@ export function PropertyTenantApplicationUnitSetup() {
 							{unit.type && <p className="lowercase">{unit.type}</p>}
 							<p>
 								Market Rent:{' '}
-								<b>{formatAmount(convertPesewasToCedis(unit.rent_fee))}</b>/
-								{unit.payment_frequency?.toLowerCase()}
+								<b>
+									{formatAmount(
+										convertPesewasToCedis(unit.rent_fee),
+										unit.rent_fee_currency,
+									)}
+								</b>
+								/{unit.payment_frequency?.toLowerCase()}
 							</p>
 						</CardDescription>
 					</CardHeader>

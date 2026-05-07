@@ -177,8 +177,11 @@ export function ChangeUnitModal({
 											)}
 										</div>
 										<p className="text-muted-foreground text-sm">
-											{formatAmount(convertPesewasToCedis(unit.rent_fee))}/
-											{unit.payment_frequency?.toLowerCase()}
+											{formatAmount(
+												convertPesewasToCedis(unit.rent_fee),
+												unit.rent_fee_currency,
+											)}
+											/{unit.payment_frequency?.toLowerCase()}
 										</p>
 									</div>
 									{isSelected && (

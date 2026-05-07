@@ -159,6 +159,8 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 							r.Route("/{booking_id}", func(r chi.Router) {
 								r.Get("/", handlers.BookingHandler.GetBooking)
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Patch("/", handlers.BookingHandler.UpdateBooking)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 									Patch("/confirm", handlers.BookingHandler.ConfirmBooking)
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 									Patch("/check-in", handlers.BookingHandler.CheckInBooking)

@@ -87,13 +87,19 @@ export function PropertyFinancialsPaymentModule() {
 								<div className="text-muted-foreground flex justify-between">
 									<span>Tax</span>
 									<span>
-										{formatAmount(convertPesewasToCedis(data?.taxes || 0))}
+										{formatAmount(
+											convertPesewasToCedis(data?.taxes || 0),
+											data?.currency,
+										)}
 									</span>
 								</div>
 								<div className="text-muted-foreground flex justify-between">
 									<span>Sub total</span>
 									<span>
-										{formatAmount(convertPesewasToCedis(data?.sub_total || 0))}
+										{formatAmount(
+											convertPesewasToCedis(data?.sub_total || 0),
+											data?.currency,
+										)}
 									</span>
 								</div>
 								<div className="flex justify-between">
@@ -101,6 +107,7 @@ export function PropertyFinancialsPaymentModule() {
 									<span className="font-semibold">
 										{formatAmount(
 											convertPesewasToCedis(data?.total_amount || 0),
+											data?.currency,
 										)}
 									</span>
 								</div>

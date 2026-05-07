@@ -14,11 +14,13 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
 type BookingService interface {
 	CreateBooking(ctx context.Context, input CreateBookingInput) (*models.Booking, error)
+	UpdateBooking(ctx context.Context, input UpdateBookingInput) (*models.Booking, error)
 	GetBooking(ctx context.Context, query repository.GetBookingQuery) (*models.Booking, error)
 	ListBookings(
 		ctx context.Context,
@@ -94,6 +96,19 @@ type CancelBookingInput struct {
 	CancellationReason string
 }
 
+type UpdateBookingInput struct {
+	BookingID string
+
+	Notes                  lib.Optional[string]
+	Rate                   lib.Optional[int64]
+	Currency               lib.Optional[string]
+	RequiresUpfrontPayment lib.Optional[bool]
+	CheckInDate            lib.Optional[time.Time]
+	CheckOutDate           lib.Optional[time.Time]
+	Meta                   lib.Optional[datatypes.JSON]
+	InvoiceID              lib.Optional[string]
+}
+
 func (s *bookingService) CreateBooking(ctx context.Context, input CreateBookingInput) (*models.Booking, error) {
 	if !input.CheckOutDate.After(input.CheckInDate) {
 		return nil, errors.New("check_out_date must be after check_in_date")
@@ -153,6 +168,81 @@ func (s *bookingService) CreateBooking(ctx context.Context, input CreateBookingI
 	}
 
 	go s.sendBookingCreatedNotification(*bookingReloaded)
+
+	return booking, nil
+}
+
+func (s *bookingService) UpdateBooking(ctx context.Context, input UpdateBookingInput) (*models.Booking, error) {
+	booking, err := s.repo.GetByIDWithPopulate(ctx, repository.GetBookingQuery{ID: input.BookingID})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("BookingNotFound", &pkg.RentLoopErrorParams{Err: err})
+		}
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "UpdateBooking", "action": "fetching booking"},
+		})
+	}
+
+	if booking.Status == "COMPLETED" || booking.Status == "CANCELLED" {
+		return nil, pkg.BadRequestError("cannot update a completed or cancelled booking", &pkg.RentLoopErrorParams{
+			Err:      errors.New("booking is in a terminal status"),
+			Metadata: map[string]string{"function": "UpdateBooking"},
+		})
+	}
+
+	// These fields are locked once the booking is confirmed.
+	preConfirmOnly := input.Rate.IsSet || input.Currency.IsSet ||
+		input.CheckInDate.IsSet || input.CheckOutDate.IsSet || input.InvoiceID.IsSet
+	if preConfirmOnly && booking.Status != "PENDING" {
+		return nil, pkg.BadRequestError(
+			"rate, currency, dates, and invoice can only be changed before the booking is confirmed",
+			&pkg.RentLoopErrorParams{
+				Err:      errors.New("booking already confirmed"),
+				Metadata: map[string]string{"function": "UpdateBooking"},
+			},
+		)
+	}
+
+	if input.Notes.IsSet {
+		booking.Notes = *input.Notes.Value
+	}
+	if input.RequiresUpfrontPayment.IsSet {
+		booking.RequiresUpfrontPayment = *input.RequiresUpfrontPayment.Value
+	}
+	if input.Meta.IsSet {
+		booking.Meta = *input.Meta.Value
+	}
+	if input.Rate.IsSet {
+		booking.Rate = *input.Rate.Value
+	}
+	if input.Currency.IsSet {
+		booking.Currency = *input.Currency.Value
+	}
+	if input.CheckInDate.IsSet {
+		booking.CheckInDate = *input.CheckInDate.Value
+	}
+	if input.CheckOutDate.IsSet {
+		booking.CheckOutDate = *input.CheckOutDate.Value
+	}
+	if input.CheckInDate.IsSet || input.CheckOutDate.IsSet {
+		if !booking.CheckOutDate.After(booking.CheckInDate) {
+			return nil, pkg.BadRequestError("check_out_date must be after check_in_date", &pkg.RentLoopErrorParams{
+				Err:      errors.New("invalid date range"),
+				Metadata: map[string]string{"function": "UpdateBooking"},
+			})
+		}
+	}
+	if input.InvoiceID.IsSet {
+		booking.InvoiceID = input.InvoiceID.Ptr()
+	}
+
+	if err := s.repo.Update(ctx, booking); err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "UpdateBooking", "action": "saving booking"},
+		})
+	}
 
 	return booking, nil
 }
