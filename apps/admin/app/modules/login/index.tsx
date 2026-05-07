@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import {
 	AlertCircleIcon,
 	CheckCircle2Icon,
-	GalleryVerticalEnd,
+	ShieldCheck,
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Link, useFetcher, useLoaderData } from 'react-router'
@@ -21,7 +21,7 @@ import {
 } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
-import { TypographyH1 } from '~/components/ui/typography'
+import { TypographyH1, TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import { APP_NAME } from '~/lib/constants'
 import { cn } from '~/lib/utils'
 
@@ -57,25 +57,23 @@ export function LoginModule() {
 					<Form {...rhfMethods}>
 						<form onSubmit={onSubmit}>
 							<FieldGroup>
-								<div className="flex flex-col gap-2">
-									<div className="flex flex-col gap-2 font-medium">
-										<div className="flex size-8 items-center justify-center rounded-md">
-											<GalleryVerticalEnd className="size-10" />
-										</div>
-										<span className="sr-only">{APP_NAME}.</span>
+									<div className="flex flex-col gap-4">
+									<div className="flex size-10 items-center justify-center rounded-md bg-rose-600 text-white">
+										<ShieldCheck className="size-6" />
 									</div>
-
-									<TypographyH1 className="mt-4">
+									<div>
+											<TypographyH1 className="mt-4">
 										Welcome to{' '}
 										<span className="text-rose-700">
 											{APP_NAME.slice(0, 4)}
 										</span>{' '}
-										<span className="font-extrabold">{APP_NAME.slice(4)}</span>
+										<span className="font-extrabold">{APP_NAME.slice(4)}</span>{' '}
+										<span className="font-extrabold text-rose-700">Admin</span>
 									</TypographyH1>
-									<FieldDescription>
-										Don&apos;t have an account?{' '}
-										<Link to="/apply">Apply as landlord/real estate</Link>
-									</FieldDescription>
+										<TypographyMuted className="mt-1">
+											Sign in to your account to continue.
+										</TypographyMuted>
+									</div>
 								</div>
 
 								{success ? (
@@ -148,10 +146,6 @@ export function LoginModule() {
 							</FieldGroup>
 						</form>
 					</Form>
-					<FieldDescription className="px-6 text-center">
-						By clicking continue, you agree to our{' '}
-						<a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
-					</FieldDescription>
 				</div>
 			</div>
 		</div>
