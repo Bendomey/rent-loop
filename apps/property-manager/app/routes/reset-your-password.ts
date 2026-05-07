@@ -61,7 +61,10 @@ export async function action({ request }: Route.ActionArgs) {
 	}
 
 	try {
-		await resetPassword({ new_password: newPassword }, { baseUrl, authToken: token })
+		await resetPassword(
+			{ new_password: newPassword },
+			{ baseUrl, authToken: token },
+		)
 
 		session.flash('success', 'Password has been reset successfully.')
 		return redirect('/login', {

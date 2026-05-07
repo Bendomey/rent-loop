@@ -225,15 +225,15 @@ export function PropertyTenantLeasesModule() {
 				/>
 			) : null}
 			<div className="space-y-1">
-				<TypographyH4>Leases</TypographyH4>
+				<TypographyH4>Rental Agreements</TypographyH4>
 				<TypographyMuted>
-					All active and historical leases for this property.
+					All active and historical rental agreements for this property.
 				</TypographyMuted>
 			</div>
 
 			<PropertyTenantLeasesController isLoading={isLoading} refetch={refetch} />
 
-			{/* Big banner — only when there are no leases yet */}
+			{/* Big banner — only when there are no rental agreements yet */}
 			{!isPending && data?.rows?.length === 0 && (
 				<Card className="border-dashed shadow-none">
 					<CardContent className="flex items-center justify-between py-5">
@@ -242,7 +242,8 @@ export function PropertyTenantLeasesModule() {
 							<div>
 								<p className="text-sm font-semibold">Have existing tenants?</p>
 								<p className="text-muted-foreground text-sm">
-									Quickly onboard your current tenants and their leases.
+									Quickly onboard your current tenants and their rental
+									agreements.
 								</p>
 							</div>
 						</div>

@@ -2,7 +2,7 @@ import type { Route } from './+types/_auth.properties.$propertyId.occupancy.appl
 import { propertyContext } from '~/lib/actions/property.context.server'
 
 export const handle = {
-	breadcrumb: 'Lease Applications',
+	breadcrumb: 'Rental Applications',
 }
 
 export async function loader({ context }: Route.LoaderArgs) {

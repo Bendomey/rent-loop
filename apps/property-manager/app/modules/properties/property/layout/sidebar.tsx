@@ -19,7 +19,12 @@ import {
 	Sidebar,
 	SidebarContent,
 	SidebarFooter,
+	SidebarGroup,
+	SidebarGroupContent,
 	SidebarHeader,
+	SidebarMenu,
+	SidebarMenuButton,
+	SidebarMenuItem,
 	SidebarRail,
 	useSidebar,
 } from '~/components/ui/sidebar'
@@ -84,17 +89,17 @@ export function PropertySidebar({
 						url: '/tenants',
 					},
 					{
-						title: 'Lease Applications',
+						title: 'Rental Applications',
 						url: '/applications',
 						isHidden: !isLease,
 					},
 					{
-						title: 'Leases',
+						title: 'Rental Agreements',
 						url: '/leases',
 						isHidden: !isLease,
 					},
 					{
-						title: 'Bookings',
+						title: 'Guest Bookings',
 						url: '/bookings',
 						isHidden: !isBooking,
 					},
@@ -171,7 +176,7 @@ export function PropertySidebar({
 	}
 
 	return (
-		<Sidebar collapsible="icon" {...props}>
+		<Sidebar collapsible="icon" className="hidden flex-1 md:flex" {...props}>
 			<SidebarHeader>
 				<Link to="/" className="-m-1.5 ml-1 p-1.5">
 					{sidebarState.open ? (
@@ -208,4 +213,87 @@ export function PropertySidebar({
 			<SidebarRail />
 		</Sidebar>
 	)
+
+	// return (
+	// 	<Sidebar
+	// 		collapsible="icon"
+	// 		className="overflow-hidden *:data-[sidebar=sidebar]:flex-row"
+	// 	>
+	// 		<Sidebar
+	// 			collapsible="none"
+	// 			className="w-[calc(var(--sidebar-width-icon)+1px)]! border-r"
+	// 		>
+	// 			<SidebarContent>
+	// 				<SidebarGroup>
+	// 					<SidebarGroupContent className="px-1.5 md:px-0">
+	// 						<SidebarMenu>
+	// 							{data.navMain.map((item) => (
+	// 								<SidebarMenuItem key={item.title}>
+	// 									<SidebarMenuButton
+	// 										tooltip={{
+	// 											children: item.title,
+	// 											hidden: false,
+	// 										}}
+	// 										onClick={() => {
+	// 											// setActiveItem(item)
+	// 											// const mail = data.mails.sort(() => Math.random() - 0.5)
+	// 											// setMails(
+	// 											// 	mail.slice(
+	// 											// 		0,
+	// 											// 		Math.max(5, Math.floor(Math.random() * 10) + 1)
+	// 											// 	)
+	// 											// )
+	// 											// setOpen(true)
+	// 										}}
+	// 										// isActive={activeItem?.title === item.title}
+	// 										className="px-2.5 md:px-2"
+	// 									>
+	// 										<item.icon />
+	// 										<span>{item.title}</span>
+	// 									</SidebarMenuButton>
+	// 								</SidebarMenuItem>
+	// 							))}
+	// 						</SidebarMenu>
+	// 					</SidebarGroupContent>
+	// 				</SidebarGroup>
+	// 			</SidebarContent>
+	// 		</Sidebar>
+	// 		<Sidebar collapsible="icon" className="hidden flex-1 md:flex" {...props}>
+	// 			<SidebarHeader>
+	// 				<Link to="/" className="-m-1.5 ml-1 p-1.5">
+	// 					{sidebarState.open ? (
+	// 						<>
+	// 							<div className="flex flex-row items-end">
+	// 								<span className="text-4xl font-extrabold text-rose-700">
+	// 									{APP_NAME.slice(0, 4)}
+	// 								</span>
+	// 								<span className="text-4xl font-extrabold">
+	// 									{APP_NAME.slice(4)}
+	// 								</span>
+	// 							</div>
+	// 							<span className="text-xs">Property Manager Portal</span>
+	// 						</>
+	// 					) : null}
+	// 				</Link>
+	// 				<PropertySwitcher />
+	// 			</SidebarHeader>
+	// 			<SidebarContent>
+	// 				<NavMain
+	// 					title="Property Navigation"
+	// 					items={data.navMain}
+	// 					baseRoute={`/properties/${params?.propertyId}`}
+	// 				/>
+	// 			</SidebarContent>
+	// 			<SidebarFooter>
+	// 				<NavSecondary
+	// 					items={data.navSecondary}
+	// 					onProperty
+	// 					className="mt-auto"
+	// 				/>
+	// 				<NavUser />
+	// 			</SidebarFooter>
+	// 			<SidebarRail />
+	// 		</Sidebar>
+	// 	</Sidebar>
+	// )
 }
