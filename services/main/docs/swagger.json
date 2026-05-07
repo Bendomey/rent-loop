@@ -19421,6 +19421,9 @@
                 "status": {
                     "type": "string"
                 },
+                "stay_frequency": {
+                    "type": "string"
+                },
                 "tenant": {},
                 "tenant_id": {
                     "type": "string"
@@ -22484,6 +22487,9 @@
                     "type": "integer"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "stay_frequency": {
                     "type": "string"
                 },
                 "tenant": {

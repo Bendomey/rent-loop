@@ -2,6 +2,43 @@ import { differenceInDays, format } from 'date-fns'
 import { APP_NAME } from '~/lib/constants'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 
+const UNIT_SINGULAR: Record<PropertyUnit['payment_frequency'], string> = {
+	DAILY: 'night',
+	WEEKLY: 'week',
+	MONTHLY: 'month',
+	QUARTERLY: 'quarter',
+	BIANNUALLY: 'period',
+	ANNUALLY: 'year',
+}
+
+const UNIT_PLURAL: Record<PropertyUnit['payment_frequency'], string> = {
+	DAILY: 'nights',
+	WEEKLY: 'weeks',
+	MONTHLY: 'months',
+	QUARTERLY: 'quarters',
+	BIANNUALLY: 'periods',
+	ANNUALLY: 'years',
+}
+
+function calcUnits(
+	frequency: PropertyUnit['payment_frequency'],
+	from: Date,
+	to: Date,
+): number {
+	const days = differenceInDays(to, from)
+	const months =
+		(to.getFullYear() - from.getFullYear()) * 12 +
+		to.getMonth() - from.getMonth() + 1
+	switch (frequency) {
+		case 'DAILY': return Math.max(1, days)
+		case 'WEEKLY': return Math.max(1, Math.round(days / 7))
+		case 'MONTHLY': return Math.max(1, months)
+		case 'QUARTERLY': return Math.max(1, Math.round(months / 3))
+		case 'BIANNUALLY': return Math.max(1, Math.round(months / 6))
+		case 'ANNUALLY': return Math.max(1, Math.round(months / 12))
+	}
+}
+
 interface Props {
 	unit: PropertyUnit
 	selectedRange: { from: Date; to: Date } | null
@@ -19,10 +56,13 @@ export function BookingSummary({
 	error,
 	onSubmit,
 }: Props) {
-	const nights = selectedRange
-		? differenceInDays(selectedRange.to, selectedRange.from)
+	const units = selectedRange
+		? calcUnits(unit.payment_frequency, selectedRange.from, selectedRange.to)
 		: 0
-	const total = nights * unit.rent_fee
+	const total = units * unit.rent_fee
+	const unitLabel = units === 1
+		? UNIT_SINGULAR[unit.payment_frequency]
+		: UNIT_PLURAL[unit.payment_frequency]
 
 	return (
 		<div className="rounded-2xl border border-zinc-100 bg-white p-6 shadow-sm">
@@ -45,14 +85,14 @@ export function BookingSummary({
 					<div className="flex justify-between">
 						<span className="text-zinc-400">Duration</span>
 						<span className="font-medium text-zinc-900">
-							{nights} night{nights !== 1 ? 's' : ''}
+							{units} {unitLabel}
 						</span>
 					</div>
 					<div className="my-3 border-t border-zinc-100" />
 					<div className="flex justify-between text-sm">
 						<span className="text-zinc-400">
-							{formatAmount(convertPesewasToCedis(unit.rent_fee))} × {nights}{' '}
-							nights
+							{formatAmount(convertPesewasToCedis(unit.rent_fee))} × {units}{' '}
+							{unitLabel}
 						</span>
 						<span className="font-semibold text-zinc-900">
 							{formatAmount(convertPesewasToCedis(total))}

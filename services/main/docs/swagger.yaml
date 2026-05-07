@@ -2283,6 +2283,8 @@ definitions:
         type: boolean
       status:
         type: string
+      stay_frequency:
+        type: string
       tenant: {}
       tenant_id:
         type: string
@@ -4503,6 +4505,8 @@ definitions:
       rate:
         type: integer
       status:
+        type: string
+      stay_frequency:
         type: string
       tenant:
         $ref: '#/definitions/transformations.OutputTenant'

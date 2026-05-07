@@ -69,6 +69,7 @@ type CreateBookingInput struct {
 	CheckOutDate          time.Time
 	Rate                  int64
 	Currency              string
+	StayFrequency         string
 	BookingSource         string // MANAGER | GUEST_LINK
 	CreatedByClientUserID *string
 	Notes                 string
@@ -119,6 +120,7 @@ func (s *bookingService) CreateBooking(ctx context.Context, input CreateBookingI
 		CheckOutDate:          input.CheckOutDate,
 		Rate:                  input.Rate,
 		Currency:              input.Currency,
+		StayFrequency:         input.StayFrequency,
 		Status:                "PENDING",
 		BookingSource:         input.BookingSource,
 		CreatedByClientUserID: input.CreatedByClientUserID,

@@ -234,6 +234,7 @@ export function BookModule({ unit }: Props) {
 							</p>
 							<AvailabilityCalendar
 								unitSlug={unit.slug}
+								paymentFrequency={unit.payment_frequency}
 								selectedRange={selectedRange}
 								onRangeSelect={setSelectedRange}
 							/>

@@ -19429,6 +19429,9 @@ const docTemplate = `{
                 "status": {
                     "type": "string"
                 },
+                "stay_frequency": {
+                    "type": "string"
+                },
                 "tenant": {},
                 "tenant_id": {
                     "type": "string"
@@ -22492,6 +22495,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "stay_frequency": {
                     "type": "string"
                 },
                 "tenant": {

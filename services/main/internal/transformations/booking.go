@@ -28,6 +28,7 @@ type AdminOutputBooking struct {
 	CheckedOutBy           any     `json:"checked_out_by,omitempty"`
 	Rate                   int64   `json:"rate"`
 	Currency               string  `json:"currency"`
+	StayFrequency          string  `json:"stay_frequency"`
 	Status                 string  `json:"status"`
 	CanceledAt             *string `json:"canceled_at,omitempty"`
 	CanceledByID           *string `json:"canceled_by_id,omitempty"`
@@ -73,6 +74,7 @@ func DBBookingToRest(i *models.Booking) any {
 		"checked_out_by":            DBClientUserToRest(i.CheckedOutBy),
 		"rate":                      i.Rate,
 		"currency":                  i.Currency,
+		"stay_frequency":            i.StayFrequency,
 		"status":                    i.Status,
 		"canceled_at":               i.CanceledAt,
 		"canceled_by_id":            i.CanceledByID,
@@ -103,6 +105,7 @@ type PublicOutputBooking struct {
 	CheckedOutAt       *string              `json:"checked_out_at,omitempty"`
 	Rate               int64                `json:"rate"`
 	Currency           string               `json:"currency"`
+	StayFrequency      string               `json:"stay_frequency"`
 	Status             string               `json:"status"`
 	UnitID             string               `json:"unit_id"`
 	Unit               OutputUnit           `json:"unit,omitempty"`
@@ -135,6 +138,7 @@ func DBPublicBookingToRest(i *models.Booking) any {
 		"checked_out_at":      i.CheckedOutAt,
 		"rate":                i.Rate,
 		"currency":            i.Currency,
+		"stay_frequency":      i.StayFrequency,
 		"status":              i.Status,
 		"unit_id":             i.UnitID,
 		"unit":                DBUnitToRest(&i.Unit),
