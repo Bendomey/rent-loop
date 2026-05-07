@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/Bendomey/goutilities/pkg/signjwt"
 	"github.com/Bendomey/goutilities/pkg/validatehash"
@@ -73,7 +74,8 @@ func (s *adminService) AuthenticateAdmin(
 	}
 
 	token, signTokenErrr := signjwt.SignJWT(jwt.MapClaims{
-		"id": admin.ID,
+		"id":  admin.ID,
+		"exp": time.Now().Add(24 * time.Hour).Unix(),
 	}, s.appCtx.Config.TokenSecrets.AdminSecret)
 
 	if signTokenErrr != nil {

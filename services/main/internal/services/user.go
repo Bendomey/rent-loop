@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/Bendomey/goutilities/pkg/hashpassword"
 	"github.com/Bendomey/goutilities/pkg/signjwt"
@@ -107,7 +108,8 @@ func (s *userService) LoginUser(ctx context.Context, input LoginUserInput) (*Log
 	}
 
 	token, err := signjwt.SignJWT(jwt.MapClaims{
-		"id": user.ID,
+		"id":  user.ID,
+		"exp": time.Now().Add(24 * time.Hour).Unix(),
 	}, s.appCtx.Config.TokenSecrets.ClientUserSecret)
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
@@ -259,7 +261,8 @@ func (s *userService) SendForgotPasswordResetLink(ctx context.Context, email str
 	}
 
 	token, err := signjwt.SignJWT(jwt.MapClaims{
-		"id": user.ID,
+		"id":  user.ID,
+		"exp": time.Now().Add(time.Hour).Unix(),
 	}, s.appCtx.Config.TokenSecrets.ClientUserSecret)
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
