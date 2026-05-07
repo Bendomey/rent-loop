@@ -36,7 +36,8 @@ const statCards = [
 		value: '—',
 		note: 'All registered accounts on the platform',
 		icon: Users,
-		cardClass: 'border-t-2 border-t-primary bg-gradient-to-b from-primary/8 to-card',
+		cardClass:
+			'border-t-2 border-t-primary bg-gradient-to-b from-primary/8 to-card',
 		iconWrap: 'bg-primary/10',
 		iconColor: 'text-primary',
 		badge: 'Platform total',
@@ -47,29 +48,34 @@ const statCards = [
 		value: '—',
 		note: 'Submitted registrations awaiting review',
 		icon: ClipboardCheck,
-		cardClass: 'border-t-2 border-t-amber-500 bg-gradient-to-b from-amber-50/60 to-card dark:from-amber-950/20',
+		cardClass:
+			'border-t-2 border-t-amber-500 bg-gradient-to-b from-amber-50/60 to-card dark:from-amber-950/20',
 		iconWrap: 'bg-amber-100 dark:bg-amber-950',
 		iconColor: 'text-amber-600 dark:text-amber-400',
 		badge: 'Needs action',
-		badgeClass: 'border-amber-500/40 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50',
+		badgeClass:
+			'border-amber-500/40 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50',
 	},
 	{
 		label: 'Approved This Month',
 		value: '—',
 		note: 'Property managers successfully onboarded',
 		icon: UserCheck,
-		cardClass: 'border-t-2 border-t-green-500 bg-gradient-to-b from-green-50/60 to-card dark:from-green-950/20',
+		cardClass:
+			'border-t-2 border-t-green-500 bg-gradient-to-b from-green-50/60 to-card dark:from-green-950/20',
 		iconWrap: 'bg-green-100 dark:bg-green-950',
 		iconColor: 'text-green-600 dark:text-green-400',
 		badge: 'This month',
-		badgeClass: 'border-green-500/40 text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/50',
+		badgeClass:
+			'border-green-500/40 text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/50',
 	},
 	{
 		label: 'Declined This Month',
 		value: '—',
 		note: 'Applications rejected this month',
 		icon: UserX,
-		cardClass: 'border-t-2 border-t-destructive bg-gradient-to-b from-destructive/5 to-card',
+		cardClass:
+			'border-t-2 border-t-destructive bg-gradient-to-b from-destructive/5 to-card',
 		iconWrap: 'bg-destructive/10',
 		iconColor: 'text-destructive',
 		badge: 'This month',
@@ -87,7 +93,8 @@ const quickActions = [
 		description: 'Action pending property manager registrations',
 		icon: ClipboardCheck,
 		href: '/approvals',
-		iconClass: 'text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-950',
+		iconClass:
+			'text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-950',
 	},
 	{
 		label: 'Manage Admins',
@@ -108,7 +115,8 @@ const quickActions = [
 		description: 'Configure platform-level options',
 		icon: Settings2,
 		href: '/settings',
-		iconClass: 'text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-950',
+		iconClass:
+			'text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-950',
 	},
 ]
 
@@ -117,11 +125,41 @@ const quickActions = [
 // ---------------------------------------------------------------------------
 
 const recentActivity = [
-	{ name: 'Kwame Asante', action: 'Approved', time: '2 hours ago', icon: CheckCircle2, iconClass: 'text-green-500' },
-	{ name: 'Abena Mensah', action: 'Pending', time: '4 hours ago', icon: Clock, iconClass: 'text-yellow-500' },
-	{ name: 'Kofi Boateng', action: 'Declined', time: '1 day ago', icon: XCircle, iconClass: 'text-destructive' },
-	{ name: 'Ama Owusu', action: 'Approved', time: '2 days ago', icon: CheckCircle2, iconClass: 'text-green-500' },
-	{ name: 'Yaw Darko', action: 'Pending', time: '3 days ago', icon: Clock, iconClass: 'text-yellow-500' },
+	{
+		name: 'Kwame Asante',
+		action: 'Approved',
+		time: '2 hours ago',
+		icon: CheckCircle2,
+		iconClass: 'text-green-500',
+	},
+	{
+		name: 'Abena Mensah',
+		action: 'Pending',
+		time: '4 hours ago',
+		icon: Clock,
+		iconClass: 'text-yellow-500',
+	},
+	{
+		name: 'Kofi Boateng',
+		action: 'Declined',
+		time: '1 day ago',
+		icon: XCircle,
+		iconClass: 'text-destructive',
+	},
+	{
+		name: 'Ama Owusu',
+		action: 'Approved',
+		time: '2 days ago',
+		icon: CheckCircle2,
+		iconClass: 'text-green-500',
+	},
+	{
+		name: 'Yaw Darko',
+		action: 'Pending',
+		time: '3 days ago',
+		icon: Clock,
+		iconClass: 'text-yellow-500',
+	},
 ]
 
 // ---------------------------------------------------------------------------
@@ -154,16 +192,12 @@ export function DashboardModule() {
 									{card.value}
 								</CardTitle>
 								<CardAction>
-									<Badge
-										className={card.badgeClass}
-									>
-										{card.badge}
-									</Badge>
+									<Badge className={card.badgeClass}>{card.badge}</Badge>
 								</CardAction>
 							</CardHeader>
 							<CardFooter className="flex-col items-start gap-1.5 text-sm">
 								<div className="flex items-center gap-2 font-medium">
-									<card.icon className="size-4 text-muted-foreground" />
+									<card.icon className="text-muted-foreground size-4" />
 								</div>
 								<div className="text-muted-foreground">{card.note}</div>
 							</CardFooter>
@@ -182,15 +216,17 @@ export function DashboardModule() {
 						<CardContent className="flex flex-col gap-2 pt-0">
 							{quickActions.map((action) => (
 								<Link key={action.href} to={action.href}>
-									<div className="flex items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-accent">
-										<div className={`flex size-9 shrink-0 items-center justify-center rounded-md ${action.iconClass}`}>
+									<div className="border-border hover:bg-accent flex items-center gap-3 rounded-lg border p-3 transition-colors">
+										<div
+											className={`flex size-9 shrink-0 items-center justify-center rounded-md ${action.iconClass}`}
+										>
 											<action.icon className="size-4" />
 										</div>
 										<div className="min-w-0">
-											<p className="text-sm font-medium leading-none">
+											<p className="text-sm leading-none font-medium">
 												{action.label}
 											</p>
-											<p className="mt-1 truncate text-xs text-muted-foreground">
+											<p className="text-muted-foreground mt-1 truncate text-xs">
 												{action.description}
 											</p>
 										</div>
@@ -219,7 +255,9 @@ export function DashboardModule() {
 									<div key={item.name}>
 										<div className="flex items-center justify-between py-3">
 											<div className="flex items-center gap-3">
-												<item.icon className={`size-4 shrink-0 ${item.iconClass}`} />
+												<item.icon
+													className={`size-4 shrink-0 ${item.iconClass}`}
+												/>
 												<span className="text-sm font-medium">{item.name}</span>
 											</div>
 											<div className="flex items-center gap-3">
@@ -235,14 +273,12 @@ export function DashboardModule() {
 												>
 													{item.action}
 												</Badge>
-												<span className="text-xs text-muted-foreground">
+												<span className="text-muted-foreground text-xs">
 													{item.time}
 												</span>
 											</div>
 										</div>
-										{i < recentActivity.length - 1 && (
-											<Separator />
-										)}
+										{i < recentActivity.length - 1 && <Separator />}
 									</div>
 								))}
 							</div>

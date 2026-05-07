@@ -1,3 +1,12 @@
+interface Filter {
+	id: number
+	type: 'selector' | 'input'
+	selectType?: 'single' | 'multi'
+	label: string
+	value: SelectorFilter
+	Icon?: React.ComponentType<any>
+}
+
 interface SelectorFilter {
 	options?: IMultiSelectOption[]
 	urlParam: string
