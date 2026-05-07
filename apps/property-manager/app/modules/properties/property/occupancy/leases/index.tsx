@@ -1,8 +1,9 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { ArrowRight, History, ScrollText } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { PropertyTenantLeasesController } from './controller'
+import { StartLeaseDialog } from './lease/components/start-lease-dialog'
 import { useGetPropertyLeases } from '~/api/leases'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
@@ -10,7 +11,6 @@ import { Button } from '~/components/ui/button'
 import { Card, CardContent } from '~/components/ui/card'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
-import { localizedDayjs } from '~/lib/date'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { getPaymentFrequencyPeriodLabel } from '~/lib/properties.utils'
 import { safeString } from '~/lib/strings'
@@ -39,7 +39,7 @@ function getLeaseStatusClass(status: Lease['status']) {
 		case 'Lease.Status.Pending':
 			return 'bg-yellow-500 text-white'
 		case 'Lease.Status.Active':
-			return 'bg-teal-500 text-white'
+			return 'bg-teal-500 dark:bg-teal-700 text-white'
 		case 'Lease.Status.Completed':
 			return 'bg-blue-500 text-white'
 		case 'Lease.Status.Cancelled':
@@ -55,6 +55,7 @@ export function PropertyTenantLeasesModule() {
 	const [searchParams] = useSearchParams()
 	const { clientUserProperty } = useProperty()
 	const { clientUser } = useClient()
+	const [startLeaseTarget, setStartLeaseTarget] = useState<Lease | null>(null)
 
 	const propertyId = clientUserProperty?.property_id ?? ''
 
@@ -184,22 +185,45 @@ export function PropertyTenantLeasesModule() {
 				),
 			},
 			{
-				accessorKey: 'created_at',
-				header: 'Created On',
-				cell: ({ getValue }) => (
-					<div className="min-w-32">
-						<span className="truncate text-xs text-zinc-600 dark:text-zinc-400">
-							{localizedDayjs(getValue<Date>()).format('DD/MM/YYYY hh:mm a')}
-						</span>
+				id: 'actions',
+				header: () => null,
+				cell: ({ row }) => (
+					<div className="flex items-center justify-end gap-2">
+						{row.original.status === 'Lease.Status.Pending' ? (
+							<Button
+								size="sm"
+								className="h-7 bg-teal-600 text-xs text-white hover:bg-teal-700 dark:bg-teal-700 hover:dark:bg-teal-800"
+								onClick={() => setStartLeaseTarget(row.original)}
+							>
+								Start lease
+							</Button>
+						) : null}
+						<Link
+							to={`/properties/${propertyId}/occupancy/leases/${row.original.id}`}
+						>
+							<Button size="sm" variant="outline" className="h-7 text-xs">
+								View
+							</Button>
+						</Link>
 					</div>
 				),
 			},
 		],
-		[propertyId],
+		[propertyId, setStartLeaseTarget],
 	)
 
 	return (
 		<div className="mx-6 my-6 flex flex-col gap-4 sm:gap-6">
+			{startLeaseTarget ? (
+				<StartLeaseDialog
+					lease={startLeaseTarget}
+					propertyId={propertyId}
+					opened={!!startLeaseTarget}
+					setOpened={(open) => {
+						if (!open) setStartLeaseTarget(null)
+					}}
+				/>
+			) : null}
 			<div className="space-y-1">
 				<TypographyH4>Leases</TypographyH4>
 				<TypographyMuted>
