@@ -57,8 +57,18 @@ const MONTH_CHUNKS: Record<PropertyUnit['payment_frequency'], number> = {
 }
 
 const MONTHS = [
-	'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-	'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+	'Jan',
+	'Feb',
+	'Mar',
+	'Apr',
+	'May',
+	'Jun',
+	'Jul',
+	'Aug',
+	'Sep',
+	'Oct',
+	'Nov',
+	'Dec',
 ]
 
 interface MonthPickerProps {
@@ -67,7 +77,11 @@ interface MonthPickerProps {
 	onRangeSelect: (range: { from: Date; to: Date } | null) => void
 }
 
-function MonthRangePicker({ chunkMonths, selectedRange, onRangeSelect }: MonthPickerProps) {
+function MonthRangePicker({
+	chunkMonths,
+	selectedRange,
+	onRangeSelect,
+}: MonthPickerProps) {
 	const today = startOfToday()
 	const [viewYear, setViewYear] = useState(today.getFullYear())
 	const [pendingFrom, setPendingFrom] = useState<Date | null>(null)
@@ -87,9 +101,14 @@ function MonthRangePicker({ chunkMonths, selectedRange, onRangeSelect }: MonthPi
 			}
 			const monthDiff =
 				(end.getFullYear() - start.getFullYear()) * 12 +
-				end.getMonth() - start.getMonth() + 1
+				end.getMonth() -
+				start.getMonth() +
+				1
 			const chunks = Math.max(1, Math.ceil(monthDiff / chunkMonths))
-			onRangeSelect({ from: start, to: endOfMonth(addMonths(start, chunks * chunkMonths - 1)) })
+			onRangeSelect({
+				from: start,
+				to: endOfMonth(addMonths(start, chunks * chunkMonths - 1)),
+			})
 			setPendingFrom(null)
 		}
 	}
@@ -97,7 +116,10 @@ function MonthRangePicker({ chunkMonths, selectedRange, onRangeSelect }: MonthPi
 	function isInRange(month: number) {
 		if (!selectedRange) return false
 		const d = new Date(viewYear, month, 1)
-		return d >= startOfMonth(selectedRange.from) && d <= startOfMonth(selectedRange.to)
+		return (
+			d >= startOfMonth(selectedRange.from) &&
+			d <= startOfMonth(selectedRange.to)
+		)
 	}
 
 	function isStart(month: number) {
@@ -157,7 +179,7 @@ function MonthRangePicker({ chunkMonths, selectedRange, onRangeSelect }: MonthPi
 										? 'bg-rose-500 text-white'
 										: inRange
 											? 'bg-rose-50 text-rose-700'
-											: 'bg-white text-zinc-700 hover:bg-zinc-50 border border-zinc-200',
+											: 'border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50',
 							].join(' ')}
 						>
 							{name}
@@ -166,7 +188,7 @@ function MonthRangePicker({ chunkMonths, selectedRange, onRangeSelect }: MonthPi
 				})}
 			</div>
 			{pendingFrom && (
-				<p className="mt-3 text-xs text-zinc-400 text-center">
+				<p className="mt-3 text-center text-xs text-zinc-400">
 					Now pick an end month
 				</p>
 			)}
@@ -240,7 +262,10 @@ export function AvailabilityCalendar({
 		if (isWeekly) {
 			const days = differenceInDays(range.to, range.from) + 1
 			const weeks = Math.max(1, Math.ceil(days / 7))
-			onRangeSelect({ from: range.from, to: addDays(range.from, weeks * 7 - 1) })
+			onRangeSelect({
+				from: range.from,
+				to: addDays(range.from, weeks * 7 - 1),
+			})
 		} else {
 			onRangeSelect({ from: range.from, to: range.to })
 		}

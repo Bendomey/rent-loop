@@ -1,5 +1,6 @@
-import { differenceInDays, format } from 'date-fns'
+import { format } from 'date-fns'
 import { Link } from 'react-router'
+import { calcUnits, UNIT_PLURAL, UNIT_SINGULAR } from '~/lib/booking-duration'
 import { APP_NAME } from '~/lib/constants'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 
@@ -25,8 +26,11 @@ interface Props {
 export function BookingDetails({ booking }: Props) {
 	const checkIn = new Date(booking.check_in_date)
 	const checkOut = new Date(booking.check_out_date)
-	const nights = differenceInDays(checkOut, checkIn)
-	const total = nights * booking.rate
+	const frequency = booking.stay_frequency ?? 'DAILY'
+	const units = calcUnits(frequency, checkIn, checkOut)
+	const unitLabel =
+		units === 1 ? UNIT_SINGULAR[frequency] : UNIT_PLURAL[frequency]
+	const total = units * booking.rate
 
 	const currentStepIndex = STATUS_STEPS.indexOf(
 		booking.status as Exclude<BookingStatus, 'CANCELLED'>,
@@ -160,7 +164,7 @@ export function BookingDetails({ booking }: Props) {
 						<div className="flex justify-between">
 							<dt className="text-zinc-500">Duration</dt>
 							<dd className="font-medium">
-								{nights} night{nights !== 1 ? 's' : ''}
+								{units} {unitLabel}
 							</dd>
 						</div>
 						<div className="border-t pt-2">
