@@ -1,11 +1,12 @@
 import dayjs from 'dayjs'
 import { ArrowLeft, Check, Copy } from 'lucide-react'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { Link } from 'react-router'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent } from '~/components/ui/card'
 import { Separator } from '~/components/ui/separator'
+import { getBookingDuration } from '~/lib/booking.utils'
 import { localizedDayjs } from '~/lib/date'
 import { cn } from '~/lib/utils'
 
@@ -114,14 +115,20 @@ export function BookingHeader({
 	onCancel: () => void
 }) {
 	const cfg = STATUS_CONFIG[booking.status]
-	const nights = localizedDayjs(booking.check_out_date).diff(
-		localizedDayjs(booking.check_in_date),
-		'day',
+	const { count, label } = getBookingDuration(
+		booking.check_in_date,
+		booking.check_out_date,
+		booking.stay_frequency,
 	)
 
 	const checkIn = dayjs(booking.check_in_date)
 	const checkOut = dayjs(booking.check_out_date)
-	const datePills = [
+
+	const nights = localizedDayjs(booking.check_out_date).diff(
+		localizedDayjs(booking.check_in_date),
+		'day',
+	)
+	const allDailyPills = [
 		checkIn.subtract(1, 'day').toDate(),
 		checkIn.toDate(),
 		...(nights > 1
@@ -132,6 +139,15 @@ export function BookingHeader({
 		checkOut.toDate(),
 		checkOut.add(1, 'day').toDate(),
 	]
+	const truncated = allDailyPills.length > 5
+	const datePills = truncated
+		? [
+				checkIn.subtract(1, 'day').toDate(),
+				checkIn.toDate(),
+				checkOut.toDate(),
+				checkOut.add(1, 'day').toDate(),
+			]
+		: allDailyPills
 
 	return (
 		<Card className="shadow-none">
@@ -173,8 +189,8 @@ export function BookingHeader({
 							Stay Summary
 						</p>
 						<h2 className="text-2xl leading-tight font-bold sm:text-3xl">
-							<span className="text-rose-600">{nights}</span>{' '}
-							{nights === 1 ? 'night' : 'nights'} at {booking.unit?.name ?? '—'}
+							<span className="text-rose-600">{count}</span> {label} at{' '}
+							{booking.unit?.name ?? '—'}
 						</h2>
 						<div className="text-muted-foreground flex flex-wrap items-center gap-3 text-xs">
 							{booking.unit?.property?.name ? (
@@ -195,18 +211,24 @@ export function BookingHeader({
 							const isCheckIn = dayjs(d).isSame(checkIn, 'day')
 							const isCheckOut = dayjs(d).isSame(checkOut, 'day')
 							return (
-								<DatePill
-									key={i}
-									date={d}
-									label={
-										isCheckIn
-											? 'Check-in'
-											: isCheckOut
-												? 'Check-out'
-												: undefined
-									}
-									highlighted={isCheckIn || isCheckOut}
-								/>
+								<Fragment key={i}>
+									{truncated && isCheckOut ? (
+										<span className="text-muted-foreground px-0.5 text-xs">
+											···
+										</span>
+									) : null}
+									<DatePill
+										date={d}
+										label={
+											isCheckIn
+												? 'Check-in'
+												: isCheckOut
+													? 'Check-out'
+													: undefined
+										}
+										highlighted={isCheckIn || isCheckOut}
+									/>
+								</Fragment>
 							)
 						})}
 					</div>

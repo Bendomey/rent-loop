@@ -1,10 +1,13 @@
 import { Card, CardContent } from '~/components/ui/card'
+import { getBookingDuration } from '~/lib/booking.utils'
 import { localizedDayjs } from '~/lib/date'
+import { getPaymentFrequencyLabel } from '~/lib/properties.utils'
 
 export function BookingStatsStrip({ booking }: { booking: Booking }) {
-	const nights = localizedDayjs(booking.check_out_date).diff(
-		localizedDayjs(booking.check_in_date),
-		'day',
+	const { count, label } = getBookingDuration(
+		booking.check_in_date,
+		booking.check_out_date,
+		booking.stay_frequency,
 	)
 
 	const stats = [
@@ -20,11 +23,8 @@ export function BookingStatsStrip({ booking }: { booking: Booking }) {
 		},
 		{
 			label: 'Duration',
-			value: `${nights} ${nights === 1 ? 'night' : 'nights'}`,
-			sub:
-				nights >= 7
-					? `${Math.floor(nights / 7)} week${Math.floor(nights / 7) > 1 ? 's' : ''}`
-					: null,
+			value: `${count} ${label}`,
+			sub: getPaymentFrequencyLabel(booking.stay_frequency),
 		},
 		{
 			label: 'Source',

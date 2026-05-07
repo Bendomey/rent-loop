@@ -32,6 +32,7 @@ interface Booking {
 	checked_out_by: Nullable<ClientUser>
 	rate: number
 	currency: string
+	stay_frequency: PropertyUnit['payment_frequency']
 	status: BookingStatus
 	canceled_at: Nullable<Date>
 	canceled_by_id: Nullable<string>

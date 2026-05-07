@@ -11,9 +11,10 @@ type Step = {
 	timestamp?: Date
 }
 
+const actorName = (actor: Nullable<ClientUser>) => actor?.user?.name ?? null
+
 function buildSteps(booking: Booking): Step[] {
 	const s = booking.status
-	const isDone = (statuses: BookingStatus[]) => statuses.includes(s)
 
 	const steps: Step[] = [
 		{
@@ -21,9 +22,12 @@ function buildSteps(booking: Booking): Step[] {
 				booking.booking_source === 'GUEST_LINK'
 					? 'Submitted via Guest Link'
 					: 'Created by manager',
-			sublabel: booking.tenant
-				? `${booking.tenant.first_name} ${booking.tenant.last_name}`
-				: 'System',
+			sublabel:
+				booking.booking_source === 'GUEST_LINK'
+					? booking.tenant
+						? `${booking.tenant.first_name} ${booking.tenant.last_name}`
+						: 'Guest'
+					: (actorName(booking.created_by_client_user) ?? 'System'),
 			done: true,
 			active: s === 'PENDING',
 			colour: 'bg-rose-500',
@@ -31,9 +35,9 @@ function buildSteps(booking: Booking): Step[] {
 		},
 		{
 			label: 'Confirmed',
-			sublabel: booking.confirmed_by
-				? `${booking.confirmed_by.user?.name}`
-				: 'System',
+			sublabel: booking.confirmed_at
+				? (actorName(booking.confirmed_by) ?? 'System')
+				: 'Pending',
 			done: !!booking.confirmed_at,
 			active: s === 'CONFIRMED',
 			colour: 'bg-teal-500',
@@ -41,20 +45,20 @@ function buildSteps(booking: Booking): Step[] {
 		},
 		{
 			label: 'Checked in',
-			sublabel: booking.checked_in_by
-				? `${booking.checked_in_by.user?.name}`
+			sublabel: booking.checked_in_at
+				? (actorName(booking.checked_in_by) ?? 'System')
 				: 'Scheduled',
-			done: isDone(['CHECKED_IN', 'COMPLETED']),
+			done: !!booking.checked_in_at,
 			active: s === 'CHECKED_IN',
 			colour: 'bg-blue-500',
 			timestamp: booking.checked_in_at ?? booking.check_in_date,
 		},
 		{
 			label: 'Completed',
-			sublabel: booking.checked_out_by
-				? `${booking.checked_out_by.user?.name}`
+			sublabel: booking.checked_out_at
+				? (actorName(booking.checked_out_by) ?? 'System')
 				: 'Scheduled',
-			done: isDone(['COMPLETED']),
+			done: !!booking.checked_out_at,
 			active: s === 'COMPLETED',
 			colour: 'bg-zinc-400',
 			timestamp: booking.checked_out_at ?? booking.check_out_date,
@@ -64,13 +68,11 @@ function buildSteps(booking: Booking): Step[] {
 	if (s === 'CANCELLED') {
 		steps.push({
 			label: 'Cancelled',
-			sublabel: booking.canceled_by
-				? `${booking.canceled_by.user?.name}`
-				: 'System',
+			sublabel: actorName(booking.canceled_by) ?? 'System',
 			done: true,
 			active: true,
 			colour: 'bg-rose-500',
-			timestamp: booking.updated_at,
+			timestamp: booking.canceled_at ?? booking.updated_at,
 		})
 	}
 

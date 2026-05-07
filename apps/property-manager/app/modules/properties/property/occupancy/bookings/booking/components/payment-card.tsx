@@ -1,7 +1,7 @@
 import { Badge } from '~/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Separator } from '~/components/ui/separator'
-import { localizedDayjs } from '~/lib/date'
+import { getBookingDuration, getBookingRateLabel } from '~/lib/booking.utils'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 
 const INVOICE_STATUS_CONFIG: Record<
@@ -43,12 +43,14 @@ function LineItem({ label, value }: { label: string; value: string }) {
 }
 
 export function PaymentCard({ booking }: { booking: Booking }) {
-	const nights = localizedDayjs(booking.check_out_date).diff(
-		localizedDayjs(booking.check_in_date),
-		'day',
+	const { count, label: periodLabel } = getBookingDuration(
+		booking.check_in_date,
+		booking.check_out_date,
+		booking.stay_frequency,
 	)
+	const rateLabel = getBookingRateLabel(booking.stay_frequency)
 	const totalCedis = convertPesewasToCedis(booking.rate)
-	const nightlyRate = nights > 0 ? totalCedis / nights : totalCedis
+	const periodRate = count > 0 ? totalCedis / count : totalCedis
 
 	const invoice = booking.invoice
 	const statusCfg = invoice
@@ -87,8 +89,8 @@ export function PaymentCard({ booking }: { booking: Booking }) {
 
 				<div className="space-y-2">
 					<LineItem
-						label={`Nightly rate × ${nights}`}
-						value={`${booking.currency} ${formatAmount(nightlyRate * nights)}`}
+						label={`${rateLabel} × ${count} ${periodLabel}`}
+						value={`${booking.currency} ${formatAmount(periodRate * count)}`}
 					/>
 					{invoiceTaxes > 0 ? (
 						<LineItem

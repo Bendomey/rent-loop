@@ -2,7 +2,7 @@ import { differenceInDays } from 'date-fns'
 
 export const UNIT_SINGULAR: Record<PropertyUnit['payment_frequency'], string> =
 	{
-		DAILY: 'night',
+		DAILY: 'day',
 		WEEKLY: 'week',
 		MONTHLY: 'month',
 		QUARTERLY: 'quarter',
@@ -11,7 +11,7 @@ export const UNIT_SINGULAR: Record<PropertyUnit['payment_frequency'], string> =
 	}
 
 export const UNIT_PLURAL: Record<PropertyUnit['payment_frequency'], string> = {
-	DAILY: 'nights',
+	DAILY: 'days',
 	WEEKLY: 'weeks',
 	MONTHLY: 'months',
 	QUARTERLY: 'quarters',

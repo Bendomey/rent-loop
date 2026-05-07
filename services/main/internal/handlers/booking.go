@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"math"
 	"net/http"
 	"slices"
 	"time"
@@ -614,16 +615,17 @@ func (h *BookingHandler) PublicCreateBooking(w http.ResponseWriter, r *http.Requ
 	}
 
 	// calculate the rate based on the unit's rent fee and the length of stay based on frequency: WEEKLY | DAILY | MONTHLY | HOURLY
+	hours := body.CheckOutDate.Sub(body.CheckInDate).Hours()
 	rate := int64(0)
 	switch unit.PaymentFrequency {
 	case "HOURLY":
-		rate = int64(body.CheckOutDate.Sub(body.CheckInDate).Hours()) * unit.RentFee
+		rate = int64(math.Ceil(hours)) * unit.RentFee
 	case "DAILY":
-		rate = int64(body.CheckOutDate.Sub(body.CheckInDate).Hours()/24) * unit.RentFee
+		rate = int64(math.Ceil(hours/24)) * unit.RentFee
 	case "WEEKLY":
-		rate = int64(body.CheckOutDate.Sub(body.CheckInDate).Hours()/(24*7)) * unit.RentFee
+		rate = int64(math.Ceil(hours/(24*7))) * unit.RentFee
 	case "MONTHLY":
-		rate = int64(body.CheckOutDate.Sub(body.CheckInDate).Hours()/(24*30)) * unit.RentFee
+		rate = int64(math.Ceil(hours/(24*30))) * unit.RentFee
 	}
 
 	booking, err := h.bookingService.CreateBooking(r.Context(), services.CreateBookingInput{
