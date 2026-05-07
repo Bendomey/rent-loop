@@ -12,6 +12,8 @@ export * from './approvals'
 
 export * from './admins'
 
+export * from './admins/new'
+
 export * from './activity'
 
 export * from './settings'

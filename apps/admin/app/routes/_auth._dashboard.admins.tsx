@@ -14,11 +14,18 @@ export const handle = {
 }
 
 export function meta({ loaderData, location }: Route.MetaArgs) {
-	return getSocialMetas({
-		url: getDisplayUrl({ origin: loaderData.origin, path: location.pathname }),
-		origin: loaderData.origin,
+		const meta = getSocialMetas({
 		title: 'Admins',
+		url: getDisplayUrl({
+			origin: loaderData.origin,
+			path: location.pathname,
+		}),
+		origin: loaderData.origin,
 	})
+
+	return meta
 }
 
-export default AdminsModule
+export default function AdminsPage({ loaderData }: Route.ComponentProps) {
+	return <AdminsModule />
+}

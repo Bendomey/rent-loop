@@ -13,27 +13,7 @@ export const COMING_SOON_ROUTE = '/coming-soon'
 
 export const QUERY_KEYS = {
 	CURRENT_USER: 'current-user',
-	CLIENT_USER: 'client-user',
-	DOCUMENTS: 'documents',
-	PROPERTIES: 'properties',
-	PROPERTY_BLOCKS: 'property-blocks',
-	PROPERTY_UNITS: 'property-units',
-	PROPERTY_TENANT_APPLICATIONS: 'property-tenant-applications',
-	PROPERTY_TENANTS: 'property-tenants',
-	CLIENT_USERS: 'client-users',
-	CLIENT_USER_PROPERTIES: 'client-user-properties',
-	PAYMENT_ACCOUNTS: 'payment-accounts',
-	INVOICES: 'invoices',
-	SIGNING_TOKENS: 'signing-tokens',
-	LEASES: 'leases',
-	ANALYTICS_TOKEN: 'analytics-token',
-	MAINTENANCE_REQUESTS: 'maintenance-requests',
-	ANNOUNCEMENTS: 'announcements',
-	LEASE_CHECKLISTS: 'lease-checklists',
-	EXPENSES: 'expenses',
-	AGREEMENTS: 'agreements',
-	BOOKINGS: 'bookings',
-	DATE_BLOCKS: 'date-blocks',
+	ADMINS: 'admins',
 } as const
 
 export const PermissionState = {

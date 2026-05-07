@@ -48,7 +48,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 								</span>
 								<span className="text-3xl font-extrabold">Loop</span>
 							</div>
-							<span className="text-xs text-muted-foreground">Admin Panel</span>
+							<span className="text-muted-foreground text-xs">Admin Panel</span>
 						</>
 					) : (
 						<GalleryVerticalEnd className="mt-1 -ml-1 size-6 text-rose-600" />
