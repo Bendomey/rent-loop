@@ -91,7 +91,7 @@ export const sendForgotPasswordLink = async (
 }
 
 export interface ResetPasswordInput {
-	newPassword: string
+	new_password: string
 }
 
 export const resetPassword = async (
