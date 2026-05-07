@@ -42,9 +42,9 @@ jobs:
           working-directory: apps/admin
 
         - name: 🔬 Lint
-          run: yarn lint
+          run: yarn lint:ci
           working-directory: apps/admin
 
         - name: 🔎 Type check
-          run: yarn typecheck
+          run: yarn types:check
           working-directory: apps/admin
