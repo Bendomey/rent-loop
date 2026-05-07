@@ -1,10 +1,10 @@
 import { redirect } from 'react-router'
-import type { Route } from './+types/_auth._dashboard.admins.new'
+import type { Route } from './+types/_auth._dashboard.admins_.new'
 import { createAdminForServer } from '~/api/admins/server'
-import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
-import { getSocialMetas } from '~/lib/seo'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
+import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
+import { getSocialMetas } from '~/lib/seo'
 import { NewAdminModule } from '~/modules'
 
 export async function loader({ request }: Route.LoaderArgs) {

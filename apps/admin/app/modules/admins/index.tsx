@@ -2,6 +2,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { EllipsisVertical, Shield } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
+import { AdminsController } from './controller'
 import { useGetAdmins } from '~/api/admins'
 import { DataTable } from '~/components/datatable'
 import { Avatar, AvatarFallback } from '~/components/ui/avatar'
@@ -18,7 +19,6 @@ import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
 import { getNameInitials } from '~/lib/misc'
 import { useAuth } from '~/providers/auth-provider'
-import { AdminsController } from './controller'
 
 export function AdminsModule() {
 	const [searchParams] = useSearchParams()
@@ -52,7 +52,7 @@ export function AdminsModule() {
 					const admin = row.original
 					const isCurrentUser = currentUser?.id === admin.id
 					return (
-						<div className="flex items-center gap-3 min-w-32">
+						<div className="flex min-w-32 items-center gap-3">
 							<Avatar className="size-8">
 								<AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
 									{getNameInitials(admin.name)}
@@ -74,7 +74,7 @@ export function AdminsModule() {
 				accessorKey: 'email',
 				header: 'Email',
 				cell: ({ getValue }) => (
-					<span className="text-sm text-muted-foreground">
+					<span className="text-muted-foreground text-sm">
 						{getValue<string>()}
 					</span>
 				),
@@ -83,7 +83,7 @@ export function AdminsModule() {
 				accessorKey: 'created_at',
 				header: 'Joined',
 				cell: ({ getValue }) => (
-					<span className="text-sm text-muted-foreground">
+					<span className="text-muted-foreground text-sm">
 						{localizedDayjs(getValue<Date>()).format('MMM D, YYYY')}
 					</span>
 				),
@@ -116,36 +116,35 @@ export function AdminsModule() {
 
 	return (
 		<main className="flex flex-col gap-6 px-4 py-8 md:px-8">
-				<div>
-					<TypographyH2>Admins</TypographyH2>
-					<TypographyMuted>Manage Rentloop admin accounts.</TypographyMuted>
-				</div>
-				<AdminsController isLoading={isLoading} refetch={refetch} />
+			<div>
+				<TypographyH2>Admins</TypographyH2>
+				<TypographyMuted>Manage Rentloop admin accounts.</TypographyMuted>
+			</div>
+			<AdminsController isLoading={isLoading} refetch={refetch} />
 			<div className="h-full w-full">
-
-			<DataTable
-				columns={columns}
-				isLoading={isLoading}
-				refetch={refetch}
-				error={error ? 'Failed to load admins.' : undefined}
-				dataResponse={{
-					rows: data?.rows ?? [],
-					total: data?.meta?.total ?? 0,
-					page,
-					page_size: per,
-					order: data?.meta?.order ?? 'desc',
-					order_by: data?.meta?.order_by ?? 'created_at',
-					has_prev_page: data?.meta?.has_prev_page ?? false,
-					has_next_page: data?.meta?.has_next_page ?? false,
-				}}
-				empty={{
-					message: 'No admins found',
-					description: query
-						? `No admins match "${query}".`
-						: 'No admins have been created yet.',
-					icon: <Shield className="size-8" />,
-				}}
-			/>
+				<DataTable
+					columns={columns}
+					isLoading={isLoading}
+					refetch={refetch}
+					error={error ? 'Failed to load admins.' : undefined}
+					dataResponse={{
+						rows: data?.rows ?? [],
+						total: data?.meta?.total ?? 0,
+						page,
+						page_size: per,
+						order: data?.meta?.order ?? 'desc',
+						order_by: data?.meta?.order_by ?? 'created_at',
+						has_prev_page: data?.meta?.has_prev_page ?? false,
+						has_next_page: data?.meta?.has_next_page ?? false,
+					}}
+					empty={{
+						message: 'No admins found',
+						description: query
+							? `No admins match "${query}".`
+							: 'No admins have been created yet.',
+						icon: <Shield className="size-8" />,
+					}}
+				/>
 			</div>
 		</main>
 	)

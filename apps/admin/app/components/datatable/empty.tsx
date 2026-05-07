@@ -35,7 +35,7 @@ export function EmptyOutline({
 			</span>
 			<p className="text-sm font-medium">{message}</p>
 			{description && (
-				<p className="text-sm text-muted-foreground">{description}</p>
+				<p className="text-muted-foreground text-sm">{description}</p>
 			)}
 			{learnMoreUrl ? (
 				<a

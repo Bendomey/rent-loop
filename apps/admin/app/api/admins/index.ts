@@ -1,17 +1,18 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '~/lib/constants'
 import { getQueryParams } from '~/lib/get-param'
-import { fetchClient, fetchServer } from '~/lib/transport'
-
+import { fetchClient } from '~/lib/transport'
 
 /**
  * GET all Admin Users based on a query.
  */
 
-const getAdmins = async (props: FetchMultipleDataInputParams<FetchAdminFilter>) => {
+const getAdmins = async (
+	props: FetchMultipleDataInputParams<FetchAdminFilter>,
+) => {
 	try {
 		const params = getQueryParams<FetchAdminFilter>(props)
-const response = await fetchClient<
+		const response = await fetchClient<
 			ApiResponse<FetchMultipleDataResponse<Admin>>
 		>(`/v1/admin/admins?${params.toString()}`)
 
@@ -35,4 +36,3 @@ export const useGetAdmins = (
 		queryKey: [QUERY_KEYS.ADMINS, query],
 		queryFn: () => getAdmins(query),
 	})
-

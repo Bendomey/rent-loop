@@ -1,4 +1,3 @@
-import { getQueryParams } from '~/lib/get-param'
 import { fetchServer } from '~/lib/transport'
 
 export interface CreateAdminInput {

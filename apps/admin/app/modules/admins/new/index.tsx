@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { HelpCircle, Mail } from 'lucide-react'
+import { HelpCircle, Mail, ShieldCheck } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Link, useFetcher } from 'react-router'
 import { z } from 'zod'
@@ -76,126 +76,135 @@ export function NewAdminModule() {
 	}
 
 	return (
-		<Form {...rhfMethods}>
-			<form
-				onSubmit={handleSubmit(onSubmit)}
-				className="mx-2 max-w-lg md:mx-auto"
-			>
-				<div className="space-y-1">
-					<TypographyH2>Create New Admin</TypographyH2>
-					<TypographyMuted>
-						We&apos;ll send the admin an invitation to join via email/phone
-						number
-					</TypographyMuted>
-				</div>
-
-				<FieldGroup className="mt-10">
-					<FieldGroup>
-						<FormField
-							name="role"
-							control={control}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Role</FormLabel>
-									<Select
-										onValueChange={field.onChange}
-										defaultValue={field.value}
-									>
-										<FormControl>
-											<SelectTrigger>
-												<SelectValue placeholder="Select a role" />
-											</SelectTrigger>
-										</FormControl>
-										<SelectContent>
-											<SelectGroup>
-												<SelectLabel>Roles</SelectLabel>
-												<SelectItem value="ADMIN">Admin</SelectItem>
-												<SelectItem value="STAFF">Staff</SelectItem>
-											</SelectGroup>
-										</SelectContent>
-									</Select>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						<FormField
-							name="name"
-							control={control}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Full Name</FormLabel>
-									<FormControl>
-										<Input placeholder="John Doe" type="text" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						<FormField
-							name="email"
-							control={control}
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel htmlFor="email">Email</FormLabel>
-									<FormControl>
-										<InputGroup>
-											<InputGroupInput
-												placeholder="m@example.com"
-												id="email"
-												{...field}
-											/>
-											<InputGroupAddon>
-												<Mail />
-												<Separator
-													orientation="vertical"
-													className="data-[orientation=vertical]:h-4"
-												/>
-											</InputGroupAddon>
-											<InputGroupAddon align="inline-end">
-												<Tooltip>
-													<TooltipTrigger asChild>
-														<InputGroupButton
-															variant="ghost"
-															aria-label="Help"
-															size="icon-xs"
-														>
-															<HelpCircle />
-														</InputGroupButton>
-													</TooltipTrigger>
-													<TooltipContent>
-														<p>We&apos;ll use this to send you notifications</p>
-													</TooltipContent>
-												</Tooltip>
-											</InputGroupAddon>
-										</InputGroup>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-					</FieldGroup>
-				</FieldGroup>
-
-				<div className="mt-10 flex justify-end border-t pt-5">
-					<div className="flex items-center gap-x-2">
-						<Link to="/settings/members">
-							<Button type="button" variant="outline">
-								Cancel
-							</Button>
-						</Link>
-						<Button
-							disabled={createFetcher.state !== 'idle'}
-							type="submit"
-							className="bg-rose-600 hover:bg-rose-700"
-						>
-							{createFetcher.state !== 'idle' ? <Spinner /> : null} Create
-							Admin
-						</Button>
+		<div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
+			<Form {...rhfMethods}>
+				<form
+					onSubmit={handleSubmit(onSubmit)}
+					className="mx-2 max-w-lg md:mx-auto"
+				>
+					<div className="mb-8 flex flex-col items-center gap-3 text-center">
+						<div className="flex size-12 items-center justify-center rounded-full bg-rose-50 dark:bg-rose-950">
+							<ShieldCheck className="size-6 text-rose-600" />
+						</div>
+						<div className="space-y-1">
+							<TypographyH2>Create New Admin</TypographyH2>
+							<TypographyMuted>
+								We&apos;ll send the admin an invitation to join via email/phone
+								number
+							</TypographyMuted>
+						</div>
 					</div>
-				</div>
-			</form>
-		</Form>
+
+					<FieldGroup className="mt-10">
+						<FieldGroup>
+							<FormField
+								name="role"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Role</FormLabel>
+										<Select
+											onValueChange={field.onChange}
+											defaultValue={field.value}
+										>
+											<FormControl>
+												<SelectTrigger>
+													<SelectValue placeholder="Select a role" />
+												</SelectTrigger>
+											</FormControl>
+											<SelectContent>
+												<SelectGroup>
+													<SelectLabel>Available roles</SelectLabel>
+													<SelectItem value="ADMIN">Admin</SelectItem>
+													<SelectItem value="STAFF">Staff</SelectItem>
+												</SelectGroup>
+											</SelectContent>
+										</Select>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								name="name"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Full Name</FormLabel>
+										<FormControl>
+											<Input placeholder="John Doe" type="text" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								name="email"
+								control={control}
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel htmlFor="email">Email</FormLabel>
+										<FormControl>
+											<InputGroup>
+												<InputGroupInput
+													placeholder="m@example.com"
+													id="email"
+													{...field}
+												/>
+												<InputGroupAddon>
+													<Mail />
+													<Separator
+														orientation="vertical"
+														className="data-[orientation=vertical]:h-4"
+													/>
+												</InputGroupAddon>
+												<InputGroupAddon align="inline-end">
+													<Tooltip>
+														<TooltipTrigger asChild>
+															<InputGroupButton
+																variant="ghost"
+																aria-label="Help"
+																size="icon-xs"
+															>
+																<HelpCircle />
+															</InputGroupButton>
+														</TooltipTrigger>
+														<TooltipContent>
+															<p>
+																We&apos;ll use this to send you notifications
+															</p>
+														</TooltipContent>
+													</Tooltip>
+												</InputGroupAddon>
+											</InputGroup>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</FieldGroup>
+					</FieldGroup>
+
+					<div className="mt-10 flex justify-end border-t pt-5">
+						<div className="flex items-center gap-x-2">
+							<Link to="/settings/members">
+								<Button type="button" variant="outline">
+									Cancel
+								</Button>
+							</Link>
+							<Button
+								disabled={createFetcher.state !== 'idle'}
+								type="submit"
+								className="bg-rose-600 hover:bg-rose-700"
+							>
+								{createFetcher.state !== 'idle' ? <Spinner /> : null} Create
+								Admin
+							</Button>
+						</div>
+					</div>
+				</form>
+			</Form>
+		</div>
 	)
 }
