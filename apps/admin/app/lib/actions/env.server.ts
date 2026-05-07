@@ -10,7 +10,10 @@ const environmentSchema = z.object({
 		.default('development'),
 	API_ADDRESS: z.string().min(1).default('http://localhost:5000/api'),
 	RENTLOOP_WEBSITE_URL: z.string().min(1).default('http://localhost:3000'),
-	RENTLOOP_PROPERTY_MANAGER_URL: z.string().min(1).default('http://localhost:3001'),
+	RENTLOOP_PROPERTY_MANAGER_URL: z
+		.string()
+		.min(1)
+		.default('http://localhost:3001'),
 	SENTRY_DSN: z.string().min(1).default('fake_dsn_for_dev'),
 	GOOGLE_MAPS_API_KEY: z.string().min(1).default('fake-api-key'),
 	CF_ACCOUNT_ID: z.string().min(1),

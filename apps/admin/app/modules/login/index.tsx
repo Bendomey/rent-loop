@@ -1,9 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import {
-	AlertCircleIcon,
-	CheckCircle2Icon,
-	ShieldCheck,
-} from 'lucide-react'
+import { AlertCircleIcon, CheckCircle2Icon, ShieldCheck } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Link, useFetcher, useLoaderData } from 'react-router'
 import { z } from 'zod'
@@ -66,8 +62,12 @@ export function LoginModule() {
 											<span className="text-rose-700">
 												{APP_NAME.slice(0, 4)}
 											</span>
-											<span className="font-extrabold">{APP_NAME.slice(4)}</span>{' '}
-											<span className="font-extrabold text-rose-700">Admin</span>
+											<span className="font-extrabold">
+												{APP_NAME.slice(4)}
+											</span>{' '}
+											<span className="font-extrabold text-rose-700">
+												Admin
+											</span>
 										</TypographyH1>
 										<TypographyMuted className="mt-1">
 											Sign in to your account to continue.

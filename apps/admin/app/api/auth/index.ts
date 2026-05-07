@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { fetchClient, fetchServer } from '~/lib/transport'
 
 export const CURRENT_USER_QUERY_KEY = ['current-user']
@@ -55,9 +55,12 @@ export const getCurrentUser = async (apiConfig?: ApiConfigForServerConfig) => {
 }
 
 const getCurrentUserClient = async () => {
-	const response = await fetchClient<ApiResponse<Admin>>(`/v1/admin/admins/me`, {
-		method: 'GET',
-	})
+	const response = await fetchClient<ApiResponse<Admin>>(
+		`/v1/admin/admins/me`,
+		{
+			method: 'GET',
+		},
+	)
 	return response.parsedBody.data
 }
 

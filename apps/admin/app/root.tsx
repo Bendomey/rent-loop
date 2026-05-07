@@ -1,22 +1,20 @@
 import {
-  isRouteErrorResponse,
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-  useLoaderData,
-} from "react-router";
+	isRouteErrorResponse,
+	Links,
+	Meta,
+	Outlet,
+	Scripts,
+	ScrollRestoration,
+	useLoaderData,
+} from 'react-router'
 
-import type { Route } from "./+types/root";
-import "./app.css";
-import { NotFoundModule } from "./modules";
-import { Providers } from "./providers";
-import { getAuthSession } from "./lib/actions/auth.session.server";
-import { environmentVariables } from "./lib/actions/env.server";
-import { TopbarLoader } from "./components/top-bar-loader";
-
-
+import type { Route } from './+types/root'
+import './app.css'
+import { TopbarLoader } from './components/top-bar-loader'
+import { getAuthSession } from './lib/actions/auth.session.server'
+import { environmentVariables } from './lib/actions/env.server'
+import { NotFoundModule } from './modules'
+import { Providers } from './providers'
 
 export const links: Route.LinksFunction = () => [
 	{ rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -47,49 +45,48 @@ export async function loader({ request }: Route.LoaderArgs) {
 	}
 }
 
-
 export function Layout({ children }: { children: React.ReactNode }) {
-  return (
-   		<html lang="en" className="scroll-smooth">
+	return (
+		<html lang="en" className="scroll-smooth">
 			<head>
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<meta name="theme-color" content="#f43f5e" />
 				<meta name="apple-mobile-web-app-capable" content="yes" />
 				<meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        <TopbarLoader />
-        {children}
-        <ScrollRestoration />
-        <Scripts />
-      </body>
-    </html>
-  );
+				<Meta />
+				<Links />
+			</head>
+			<body>
+				<TopbarLoader />
+				{children}
+				<ScrollRestoration />
+				<Scripts />
+			</body>
+		</html>
+	)
 }
 
 export default function App() {
-  	const { ENV } = useLoaderData<typeof loader>()
+	const { ENV } = useLoaderData<typeof loader>()
 
 	if (typeof window !== 'undefined') {
 		window.ENV = ENV
 	}
-  
-  return (
-    <Providers>
-      <Outlet />
-      		</Providers>
-)
+
+	return (
+		<Providers>
+			<Outlet />
+		</Providers>
+	)
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
-  let status = 500
+	let message = 'Oops!'
+	let details = 'An unexpected error occurred.'
+	let status = 500
 
-if (isRouteErrorResponse(error)) {
+	if (isRouteErrorResponse(error)) {
 		status = error.status
 		if (error.status === 403) {
 			message = 'Forbidden'
@@ -106,6 +103,5 @@ if (isRouteErrorResponse(error)) {
 		details = error.stack || details
 	}
 
-
-  return <NotFoundModule status={status} title={message} message={details} />
+	return <NotFoundModule status={status} title={message} message={details} />
 }
