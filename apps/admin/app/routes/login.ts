@@ -72,7 +72,6 @@ export async function action({ request }: Route.ActionArgs) {
 				'Set-Cookie': await saveAuthSession(session),
 			},
 		})
-		
 	} catch {
 		session.flash(
 			'error',

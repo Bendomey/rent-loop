@@ -7,7 +7,7 @@ export function AuthMiddlewareModule() {
 
 	return (
 		<AuthProvider data={loaderData?.currentUser ?? undefined}>
-				<Outlet />
+			<Outlet />
 		</AuthProvider>
 	)
 }

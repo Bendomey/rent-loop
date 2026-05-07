@@ -1,8 +1,6 @@
 import { type PropsWithChildren } from 'react'
 import { ReactQueryProvider } from './react-query/index.tsx'
 
-interface Props {}
-
-export const Providers = ({ children }: PropsWithChildren<Props>) => {
+export const Providers = ({ children }: PropsWithChildren) => {
 	return <ReactQueryProvider>{children}</ReactQueryProvider>
 }

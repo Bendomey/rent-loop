@@ -1,17 +1,9 @@
 import { Outlet } from 'react-router'
-import type { Route } from './+types/_auth._dashboard'
 
-
-export default function AuthDashboard({
-	matches,
-	loaderData,
-}: Route.ComponentProps) {
-
-
+export default function AuthDashboard() {
 	return (
-		
-				<div className="h-full w-full">
-					<Outlet />
-				</div>
+		<div className="h-full w-full">
+			<Outlet />
+		</div>
 	)
 }

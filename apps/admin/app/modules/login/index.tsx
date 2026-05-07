@@ -21,9 +21,8 @@ import {
 } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
-import { TypographyH1, TypographyH2, TypographyMuted } from '~/components/ui/typography'
+import { TypographyH1, TypographyMuted } from '~/components/ui/typography'
 import { APP_NAME } from '~/lib/constants'
-import { cn } from '~/lib/utils'
 
 const ValidationSchema = z.object({
 	email: z.email('Invalid email address'),
@@ -53,23 +52,23 @@ export function LoginModule() {
 	return (
 		<div className="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
 			<div className="w-full max-w-sm">
-				<div className={cn('flex flex-col gap-6')}>
+				<div className="flex flex-col gap-6">
 					<Form {...rhfMethods}>
 						<form onSubmit={onSubmit}>
 							<FieldGroup>
-									<div className="flex flex-col gap-4">
+								<div className="flex flex-col gap-4">
 									<div className="flex size-10 items-center justify-center rounded-md bg-rose-600 text-white">
 										<ShieldCheck className="size-6" />
 									</div>
 									<div>
-											<TypographyH1 className="mt-4">
-										Welcome to{' '}
-										<span className="text-rose-700">
-											{APP_NAME.slice(0, 4)}
-										</span>{' '}
-										<span className="font-extrabold">{APP_NAME.slice(4)}</span>{' '}
-										<span className="font-extrabold text-rose-700">Admin</span>
-									</TypographyH1>
+										<TypographyH1>
+											Welcome to{' '}
+											<span className="text-rose-700">
+												{APP_NAME.slice(0, 4)}
+											</span>
+											<span className="font-extrabold">{APP_NAME.slice(4)}</span>{' '}
+											<span className="font-extrabold text-rose-700">Admin</span>
+										</TypographyH1>
 										<TypographyMuted className="mt-1">
 											Sign in to your account to continue.
 										</TypographyMuted>
