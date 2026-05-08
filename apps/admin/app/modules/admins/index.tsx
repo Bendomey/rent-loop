@@ -52,7 +52,7 @@ export function AdminsModule() {
 					const admin = row.original
 					const isCurrentUser = currentUser?.id === admin.id
 					return (
-						<div className="flex min-w-32 items-center gap-3">
+						<div className="flex lg:min-w-62 items-center gap-3">
 							<Avatar className="size-8">
 								<AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
 									{getNameInitials(admin.name)}

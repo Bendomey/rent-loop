@@ -10,7 +10,7 @@ export * from './property-managers'
 
 export * from './property-managers/new'
 
-export * from './approvals'
+export * from './applications'
 
 export * from './admins'
 

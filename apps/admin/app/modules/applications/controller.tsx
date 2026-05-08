@@ -25,7 +25,7 @@ const filters: Array<Filter> = [
 	},
 ]
 
-export const ApprovalsController = ({
+export const ApplicationsController = ({
 	isLoading,
 	refetch,
 }: {

@@ -1,10 +1,10 @@
-import type { Route } from './+types/_auth._dashboard.approvals'
+import type { Route } from './+types/_auth._dashboard.applications'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
 import { getSocialMetas } from '~/lib/seo'
-import { ApprovalsModule } from '~/modules'
+import { ApplicationsModule } from '~/modules'
 
 export const handle = {
-	breadcrumb: 'Approvals',
+	breadcrumb: 'PM Applications',
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -17,8 +17,8 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 	return getSocialMetas({
 		url: getDisplayUrl({ origin: loaderData.origin, path: location.pathname }),
 		origin: loaderData.origin,
-		title: 'Approvals',
+		title: 'Property Manager Applications',
 	})
 }
 
-export default ApprovalsModule
+export default ApplicationsModule
