@@ -240,7 +240,9 @@ export function DashboardModule() {
 					<Card className="lg:col-span-2">
 						<CardHeader className="flex flex-row items-center justify-between">
 							<div>
-								<CardTitle className="text-base">Recent Property Manager Applications</CardTitle>
+								<CardTitle className="text-base">
+									Recent Property Manager Applications
+								</CardTitle>
 								<CardDescription>
 									Latest property manager registration activity
 								</CardDescription>
