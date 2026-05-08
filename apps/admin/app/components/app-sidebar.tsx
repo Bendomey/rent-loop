@@ -24,7 +24,7 @@ import {
 const navMain = [
 	{ title: 'Insights', url: '/', icon: LayoutDashboard, isHome: true },
 	{ title: 'Property Managers', url: '/property-managers', icon: Users },
-	{ title: 'Approvals', url: '/approvals', icon: ClipboardCheck },
+	{ title: 'PM Applications', url: '/applications', icon: ClipboardCheck },
 	{ title: 'Admins', url: '/admins', icon: Shield },
 ]
 

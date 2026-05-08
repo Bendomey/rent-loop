@@ -39,9 +39,6 @@ import {
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 
 const ValidationSchema = z.object({
-	role: z.enum(['ADMIN', 'STAFF'], {
-		error: 'Please select a role',
-	}),
 	name: z
 		.string({ error: 'Name is required' })
 		.min(2, 'Please enter a valid name'),
@@ -65,13 +62,8 @@ export function NewAdminModule() {
 
 	const onSubmit = async (data: FormSchema) => {
 		await createFetcher.submit(
-			{
-				data,
-			},
-			{
-				method: 'POST',
-				action: 'admin/new',
-			},
+			{ name: data.name, email: data.email },
+			{ method: 'POST', action: '/admins/new' },
 		)
 	}
 
@@ -97,34 +89,6 @@ export function NewAdminModule() {
 
 					<FieldGroup className="mt-10">
 						<FieldGroup>
-							<FormField
-								name="role"
-								control={control}
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Role</FormLabel>
-										<Select
-											onValueChange={field.onChange}
-											defaultValue={field.value}
-										>
-											<FormControl>
-												<SelectTrigger>
-													<SelectValue placeholder="Select a role" />
-												</SelectTrigger>
-											</FormControl>
-											<SelectContent>
-												<SelectGroup>
-													<SelectLabel>Available roles</SelectLabel>
-													<SelectItem value="ADMIN">Admin</SelectItem>
-													<SelectItem value="STAFF">Staff</SelectItem>
-												</SelectGroup>
-											</SelectContent>
-										</Select>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-
 							<FormField
 								name="name"
 								control={control}

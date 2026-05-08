@@ -92,7 +92,7 @@ const quickActions = [
 		label: 'Review Approvals',
 		description: 'Action pending property manager registrations',
 		icon: ClipboardCheck,
-		href: '/approvals',
+		href: '/applications',
 		iconClass:
 			'text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-950',
 	},
@@ -240,13 +240,13 @@ export function DashboardModule() {
 					<Card className="lg:col-span-2">
 						<CardHeader className="flex flex-row items-center justify-between">
 							<div>
-								<CardTitle className="text-base">Recent Approvals</CardTitle>
+								<CardTitle className="text-base">Recent Property Manager Applications</CardTitle>
 								<CardDescription>
 									Latest property manager registration activity
 								</CardDescription>
 							</div>
 							<Button variant="outline" size="sm" asChild>
-								<Link to="/approvals">View all</Link>
+								<Link to="/applications">View all</Link>
 							</Button>
 						</CardHeader>
 						<CardContent className="pt-0">

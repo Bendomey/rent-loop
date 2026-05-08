@@ -2,7 +2,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { ClipboardCheck } from 'lucide-react'
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router'
-import { ApprovalsController } from './controller'
+import { ApplicationsController } from './controller'
 import { ApplicationStatus } from './status'
 import { useGetClientApplications } from '~/api/client-applications'
 import { DataTable } from '~/components/datatable'
@@ -38,7 +38,7 @@ function StatusBadge({ status }: { status: string }) {
 	)
 }
 
-export function ApprovalsModule() {
+export function ApplicationsModule() {
 	const [searchParams] = useSearchParams()
 
 	const page = searchParams.get('page')
@@ -145,13 +145,13 @@ export function ApprovalsModule() {
 	return (
 		<main className="flex flex-col gap-6 px-4 py-8 md:px-8">
 			<div>
-				<TypographyH2>Approvals</TypographyH2>
+				<TypographyH2>Property Manager Applications</TypographyH2>
 				<TypographyMuted>
-					Review and action property manager applications.
+					Review and action property manager registration requests.
 				</TypographyMuted>
 			</div>
 
-			<ApprovalsController isLoading={isLoading} refetch={refetch} />
+			<ApplicationsController isLoading={isLoading} refetch={refetch} />
 
 			<div className="h-full w-full">
 				<DataTable
