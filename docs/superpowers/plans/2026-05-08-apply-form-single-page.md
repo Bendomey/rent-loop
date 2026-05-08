@@ -1,3 +1,40 @@
+# Apply Form — Single Page Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Collapse the 4-step apply wizard into a single scrollable page with labeled sections, following the unit create form pattern.
+
+**Architecture:** One component in `index.tsx` holds all sections. One merged Zod schema (base `z.object` merged with `AddressSchema` via `.merge()`, then `.superRefine()` for conditional validation). One `useForm` instance. One submit button at the bottom. The old step files and context are deleted entirely.
+
+**Tech Stack:** React Hook Form, Zod v4, React Router v7 `useFetcher`, TanStack, Tailwind CSS, Shadcn UI
+
+---
+
+## File Map
+
+| Action | File |
+|--------|------|
+| **Rewrite** | `apps/property-manager/app/modules/apply/index.tsx` |
+| **Delete** | `apps/property-manager/app/modules/apply/context.tsx` |
+| **Delete** | `apps/property-manager/app/modules/apply/step0.tsx` |
+| **Delete** | `apps/property-manager/app/modules/apply/step1.tsx` |
+| **Delete** | `apps/property-manager/app/modules/apply/step2.tsx` |
+| **Delete** | `apps/property-manager/app/modules/apply/step3.tsx` |
+| **Unchanged** | `apps/property-manager/app/modules/apply/success/` (entire folder untouched) |
+| **Unchanged** | `apps/property-manager/app/routes/apply._index.tsx` |
+
+---
+
+### Task 1: Rewrite `index.tsx`
+
+**Files:**
+- Modify: `apps/property-manager/app/modules/apply/index.tsx`
+
+- [ ] **Step 1: Replace the file with the new single-page component**
+
+Replace the entire contents of `apps/property-manager/app/modules/apply/index.tsx` with:
+
+```tsx
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
 	CircleUserRound,
@@ -7,18 +44,12 @@ import {
 	Mail,
 	Phone,
 } from 'lucide-react'
-import { lazy, Suspense, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useFetcher, useLoaderData } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import { AddressSchema } from '~/components/address-input'
-
-const AddressInput = lazy(() =>
-	import('~/components/address-input').then((m) => ({
-		default: m.AddressInput,
-	})),
-)
+import { AddressInput, AddressSchema } from '~/components/address-input'
 import { BlockNavigationDialog } from '~/components/block-navigation-dialog'
 import { DatePickerInput } from '~/components/date-picker-input'
 import { Button } from '~/components/ui/button'
@@ -37,7 +68,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
-// import { ImageUpload } from '~/components/ui/image-upload'
+import { ImageUpload } from '~/components/ui/image-upload'
 import { Input } from '~/components/ui/input'
 import {
 	InputGroup,
@@ -55,7 +86,6 @@ import {
 } from '~/components/ui/item'
 import { Separator } from '~/components/ui/separator'
 import { Spinner } from '~/components/ui/spinner'
-import { Textarea } from '~/components/ui/textarea'
 import {
 	Tooltip,
 	TooltipContent,
@@ -67,11 +97,12 @@ import {
 	TypographyMuted,
 	TypographySmall,
 } from '~/components/ui/typography'
+import { Textarea } from '~/components/ui/textarea'
 import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
-// import { useUploadObject } from '~/hooks/use-upload-object'
+import { useUploadObject } from '~/hooks/use-upload-object'
 import { APP_NAME } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
-// import { safeString } from '~/lib/strings'
+import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import type { loader } from '~/routes/apply._index'
 
@@ -170,28 +201,25 @@ export function ApplyModule() {
 
 	const rhfMethods = useForm<FormSchema>({
 		resolver: zodResolver(ValidationSchema),
-		defaultValues: {
-			type: 'INDIVIDUAL',
-		},
 	})
 
 	const { watch, setValue, formState, handleSubmit, control } = rhfMethods
 	const isIndividual = watch('type') === 'INDIVIDUAL'
 
-	// const {
-	// 	upload,
-	// 	objectUrl,
-	// 	isLoading: isUploading,
-	// } = useUploadObject('property-owners/logos')
+	const {
+		upload,
+		objectUrl,
+		isLoading: isUploading,
+	} = useUploadObject('property-owners/logos')
 
 	const blocker = useNavigationBlocker(isSubmitting ? false : formState.isDirty)
 
-	// useEffect(() => {
-	// 	if (objectUrl) {
-	// 		setValue('logo_url', objectUrl, { shouldDirty: true, shouldValidate: true })
-	// 	}
-	// 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	// }, [objectUrl])
+	useEffect(() => {
+		if (objectUrl) {
+			setValue('logo_url', objectUrl, { shouldDirty: true, shouldValidate: true })
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [objectUrl])
 
 	useEffect(() => {
 		if (applyFetcher?.data?.error) {
@@ -200,34 +228,21 @@ export function ApplyModule() {
 	}, [applyFetcher?.data])
 
 	const onSubmit = async (data: FormSchema) => {
-		const sub_type = data.type === 'INDIVIDUAL' ? 'LANDLORD' : data.sub_type
-		const contact_name =
-			data.type === 'INDIVIDUAL' ? data.name : data.contact_name
-		const contact_phone_number = `+233${data.contact_phone_number.slice(-9)}`
-
-		const fd = new FormData()
-		fd.set('type', data.type)
-		if (sub_type) fd.set('sub_type', sub_type)
-		fd.set('name', data.name)
-		if (data.description) fd.set('description', data.description)
-		if (data.logo_url) fd.set('logo_url', data.logo_url)
-		if (contact_name) fd.set('contact_name', contact_name)
-		if (data.date_of_birth) {
-			fd.set(
-				'date_of_birth',
-				localizedDayjs(data.date_of_birth).format('YYYY-MM-DD'),
-			)
+		const submitData = {
+			...data,
+			sub_type: data.type === 'INDIVIDUAL' ? 'LANDLORD' : data.sub_type,
+			contact_name: data.type === 'INDIVIDUAL' ? data.name : data.contact_name,
+			contact_phone_number: `+233${data.contact_phone_number.slice(-9)}`,
+			...(data.date_of_birth
+				? {
+						date_of_birth: localizedDayjs(data.date_of_birth).format(
+							'YYYY-MM-DD',
+						),
+					}
+				: {}),
 		}
-		fd.set('contact_email', data.contact_email)
-		fd.set('contact_phone_number', contact_phone_number)
-		fd.set('address', data.address)
-		fd.set('city', data.city)
-		fd.set('region', data.region)
-		fd.set('country', data.country)
-		fd.set('latitude', String(data.latitude))
-		fd.set('longitude', String(data.longitude))
 
-		await applyFetcher.submit(fd, {
+		await applyFetcher.submit(submitData, {
 			method: 'POST',
 			action: '/apply',
 		})
@@ -257,10 +272,15 @@ export function ApplyModule() {
 
 			<div className="mx-4 mt-10 max-w-3xl md:mx-auto md:mt-14">
 				<Form {...rhfMethods}>
-					<form onSubmit={handleSubmit(onSubmit)} className="mb-5 space-y-10">
+					<form
+						onSubmit={handleSubmit(onSubmit)}
+						className="mb-5 space-y-10"
+					>
 						{/* Account Type */}
 						<div className="space-y-2">
-							<TypographyH2>What type of Property Owner are you?</TypographyH2>
+							<TypographyH2>
+								What type of Property Owner are you?
+							</TypographyH2>
 							<TypographyMuted>
 								This will help us setup your account to handle your properties
 								more effectively.
@@ -417,7 +437,7 @@ export function ApplyModule() {
 										)}
 									/>
 
-									{/* <ImageUpload
+									<ImageUpload
 										shape="circle"
 										hint="Optional"
 										acceptedFileTypes={['image/jpeg', 'image/jpg', 'image/png']}
@@ -436,7 +456,7 @@ export function ApplyModule() {
 										validation={{
 											maxByteSize: 2048000,
 										}}
-									/> */}
+									/>
 								</>
 							)}
 						</FieldGroup>
@@ -456,9 +476,7 @@ export function ApplyModule() {
 						<FieldGroup>
 							<Field data-invalid={isAddressInvalid}>
 								<FieldLabel htmlFor="address">Address</FieldLabel>
-								<Suspense>
-									<AddressInput />
-								</Suspense>
+								<AddressInput />
 								{isAddressInvalid ? (
 									<FieldError
 										errors={[
@@ -473,7 +491,7 @@ export function ApplyModule() {
 
 						{/* Contact Details */}
 						<div className="space-y-2">
-							<TypographyH2>Contact Person Information</TypographyH2>
+							<TypographyH2>Complete your Application</TypographyH2>
 							<TypographyMuted>
 								Almost done!{' '}
 								{isIndividual
@@ -535,9 +553,7 @@ export function ApplyModule() {
 															</InputGroupButton>
 														</TooltipTrigger>
 														<TooltipContent>
-															<p>
-																We&apos;ll use this to send you notifications
-															</p>
+															<p>We&apos;ll use this to send you notifications</p>
 														</TooltipContent>
 													</Tooltip>
 												</InputGroupAddon>
@@ -581,9 +597,7 @@ export function ApplyModule() {
 															</InputGroupButton>
 														</TooltipTrigger>
 														<TooltipContent>
-															<p>
-																We&apos;ll use this to send you notifications
-															</p>
+															<p>We&apos;ll use this to send you notifications</p>
 														</TooltipContent>
 													</Tooltip>
 												</InputGroupAddon>
@@ -637,3 +651,75 @@ export function ApplyModule() {
 		</main>
 	)
 }
+```
+
+---
+
+### Task 2: Delete old files
+
+**Files:**
+- Delete: `apps/property-manager/app/modules/apply/context.tsx`
+- Delete: `apps/property-manager/app/modules/apply/step0.tsx`
+- Delete: `apps/property-manager/app/modules/apply/step1.tsx`
+- Delete: `apps/property-manager/app/modules/apply/step2.tsx`
+- Delete: `apps/property-manager/app/modules/apply/step3.tsx`
+
+- [ ] **Step 1: Delete the step files and context**
+
+```bash
+cd apps/property-manager
+rm app/modules/apply/context.tsx app/modules/apply/step0.tsx app/modules/apply/step1.tsx app/modules/apply/step2.tsx app/modules/apply/step3.tsx
+```
+
+---
+
+### Task 3: Verify types and lint
+
+**Files:** (none written — read-only verification)
+
+- [ ] **Step 1: Run type check**
+
+```bash
+cd apps/property-manager && yarn types:check
+```
+
+Expected: no errors. If TypeScript reports an error about `.merge()` or `.superRefine()` chaining, replace the `ValidationSchema` definition with this alternative that splits the merge and superRefine:
+
+```typescript
+const _BaseSchema = z.object({
+  // ... same fields as above
+})
+
+// Merge AddressSchema fields into a single ZodObject first, then apply superRefine
+const ValidationSchema = _BaseSchema.merge(AddressSchema).superRefine(
+  (data, ctx) => { /* same superRefine body */ }
+)
+```
+
+If that still fails (type-check error on `.merge()`), confirm that `AddressSchema` is exported as `z.object({...})` from `~/components/address-input` (it is — it's a plain `ZodObject`), then check the installed Zod version: `cat node_modules/zod/package.json | grep '"version"'`. If it's v3, replace `.merge(AddressSchema)` with `.and(AddressSchema)` and move the `superRefine` before the `.and()` call.
+
+- [ ] **Step 2: Run lint**
+
+```bash
+cd apps/property-manager && yarn lint
+```
+
+Expected: no errors. Common lint issues to watch for:
+- Unused imports — remove any that TypeScript didn't catch (e.g., `ArrowLeft` which was in the old step files but not in the new component)
+- Unhandled promises — the `onSubmit` `await` is inside an `async` function passed to `handleSubmit`, which is fine
+
+---
+
+### Task 4: Commit
+
+- [ ] **Step 1: Stage and commit**
+
+```bash
+git add apps/property-manager/app/modules/apply/
+git commit -m "$(cat <<'EOF'
+refactor: convert apply form from 4-step wizard to single scrollable page
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+EOF
+)"
+```
