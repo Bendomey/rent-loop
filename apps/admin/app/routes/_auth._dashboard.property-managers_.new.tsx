@@ -1,6 +1,9 @@
 import { redirect } from 'react-router'
 import type { Route } from './+types/_auth._dashboard.property-managers_.new'
-import { createClientApplicationForServer } from '~/api/client-applications/server'
+import {
+	createClientApplicationForServer,
+	type CreateClientApplicationInput,
+} from '~/api/client-applications/server'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
