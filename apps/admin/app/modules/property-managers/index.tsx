@@ -1,9 +1,16 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { Users } from 'lucide-react'
+import { EllipsisVertical, Users } from 'lucide-react'
 import { useMemo } from 'react'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { PropertyManagersController } from './controller'
 import { useGetClientApplications } from '~/api/client-applications'
+import { Button } from '~/components/ui/button'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
@@ -131,6 +138,28 @@ export function PropertyManagersModule() {
 					<span className="text-muted-foreground text-sm">
 						{localizedDayjs(getValue<Date>()).format('MMM D, YYYY')}
 					</span>
+				),
+			},
+			{
+				id: 'actions',
+				cell: ({ row }) => (
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="ghost"
+								className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+								size="icon"
+							>
+								<EllipsisVertical />
+								<span className="sr-only">Open menu</span>
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end">
+							<DropdownMenuItem asChild>
+								<Link to={`/property-managers/${row.original.id}`}>View</Link>
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				),
 			},
 		],

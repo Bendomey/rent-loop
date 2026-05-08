@@ -10,6 +10,8 @@ export * from './property-managers'
 
 export * from './property-managers/new'
 
+export * from './property-managers/view'
+
 export * from './applications'
 
 export * from './admins'
