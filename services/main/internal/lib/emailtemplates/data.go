@@ -1,5 +1,13 @@
 package emailtemplates
 
+// ─── Admin ────────────────────────────────────────────────────────────────────
+
+type AdminCreatedData struct {
+	Name     string
+	Email    string
+	Password string
+}
+
 // ─── Client Application ───────────────────────────────────────────────────────
 
 type ClientApplicationAdminNotificationData struct {

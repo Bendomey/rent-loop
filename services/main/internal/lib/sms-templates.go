@@ -6,6 +6,10 @@ const SUPPORT_DETAILS_TEMPLATE = `If you have any questions, feel free to contac
 // ─── Email Subjects ───────────────────────────────────────────────────────────
 
 const (
+	ADMIN_CREATED_SUBJECT = "Your Rentloop Admin Account"
+)
+
+const (
 	CLIENT_APPLICATION_ADMIN_NOTIFICATION_SUBJECT = "New Property Manager Application Received"
 	CLIENT_APPLICATION_SUBMITTED_SUBJECT          = "Your Rentloop Application Received"
 	CLIENT_APPLICATION_REJECTED_SUBJECT           = "Your Rentloop Application Rejected"

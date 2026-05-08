@@ -8,11 +8,13 @@ import (
 	"github.com/Bendomey/goutilities/pkg/signjwt"
 	"github.com/Bendomey/goutilities/pkg/validatehash"
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib/emailtemplates"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
 	"github.com/dgrijalva/jwt-go"
 	gonanoid "github.com/matoous/go-nanoid"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -167,6 +169,24 @@ func (s *adminService) CreateAdmin(ctx context.Context, input CreateAdminInput) 
 				"function": "CreateAdmin",
 				"action":   "creating new admin",
 			},
+		})
+	}
+
+	if htmlBody, textBody, renderErr := s.appCtx.EmailEngine.Render(
+		"admin/created",
+		emailtemplates.AdminCreatedData{
+			Name:     input.Name,
+			Email:    input.Email,
+			Password: password,
+		},
+	); renderErr != nil {
+		logrus.WithError(renderErr).Error("failed to render admin/created email template")
+	} else {
+		go pkg.SendEmail(s.appCtx.Config, pkg.SendEmailInput{
+			Recipient: input.Email,
+			Subject:   lib.ADMIN_CREATED_SUBJECT,
+			HtmlBody:  htmlBody,
+			TextBody:  textBody,
 		})
 	}
 
