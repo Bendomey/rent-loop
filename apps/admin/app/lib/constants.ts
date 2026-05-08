@@ -14,6 +14,7 @@ export const COMING_SOON_ROUTE = '/coming-soon'
 export const QUERY_KEYS = {
 	CURRENT_USER: 'current-user',
 	ADMINS: 'admins',
+	CLIENT_APPLICATIONS: 'client-applications',
 } as const
 
 export const PermissionState = {

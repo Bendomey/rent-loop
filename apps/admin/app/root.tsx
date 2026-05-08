@@ -11,6 +11,7 @@ import {
 import type { Route } from './+types/root'
 import './app.css'
 import { TopbarLoader } from './components/top-bar-loader'
+import { Toaster } from './components/ui/sonner'
 import { getAuthSession } from './lib/actions/auth.session.server'
 import { environmentVariables } from './lib/actions/env.server'
 import { NotFoundModule } from './modules'
@@ -77,6 +78,7 @@ export default function App() {
 	return (
 		<Providers>
 			<Outlet />
+			<Toaster richColors closeButton />
 		</Providers>
 	)
 }

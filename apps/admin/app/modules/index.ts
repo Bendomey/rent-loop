@@ -8,6 +8,8 @@ export * from './auth-middleware'
 
 export * from './property-managers'
 
+export * from './property-managers/new'
+
 export * from './approvals'
 
 export * from './admins'
