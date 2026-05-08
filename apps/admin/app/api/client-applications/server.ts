@@ -1,5 +1,24 @@
 import { fetchServer } from '~/lib/transport'
 
+export const getClientApplicationByIdForServer = async (
+	id: string,
+	apiConfig: ApiConfigForServerConfig,
+) => {
+	try {
+		const response = await fetchServer<ApiResponse<ClientApplication>>(
+			`${apiConfig.baseUrl}/v1/admin/client-applications/${id}`,
+			{ ...apiConfig },
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+
 export interface CreateClientApplicationInput {
 	name: string
 	type: ClientApplication['type']
