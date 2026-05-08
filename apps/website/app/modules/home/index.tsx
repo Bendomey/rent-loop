@@ -23,22 +23,22 @@ export function Home() {
 								<div className="flex -space-x-2 overflow-hidden">
 									<img
 										alt=""
-										src="https://images.unsplash.com/photo-1491528323818-fdd1faba62cc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+										src="https://images.unsplash.com/photo-1645736594095-b9a4cabc1a7c?q=80&w=256&h=256&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
 										className="inline-block size-8 rounded-full ring-2 ring-white outline -outline-offset-1 outline-black/5"
 									/>
 									<img
 										alt=""
-										src="https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+										src="https://images.unsplash.com/photo-1647316897340-6b6de5597c0f?q=80&w=256&h=256&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
 										className="inline-block size-8 rounded-full ring-2 ring-white outline -outline-offset-1 outline-black/5"
 									/>
 									<img
 										alt=""
-										src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2.25&w=256&h=256&q=80"
+										src="https://images.unsplash.com/photo-1606914707407-00c94eefd288?q=80&w=256&h=256&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
 										className="inline-block size-8 rounded-full ring-2 ring-white outline -outline-offset-1 outline-black/5"
 									/>
 									<img
 										alt=""
-										src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+										src="https://plus.unsplash.com/premium_photo-1763046779838-897cff3a46e3?q=80&w=256&h=256&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
 										className="inline-block size-8 rounded-full ring-2 ring-white outline -outline-offset-1 outline-black/5"
 									/>
 								</div>
