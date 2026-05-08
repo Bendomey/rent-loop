@@ -16,6 +16,8 @@ export * from './admins'
 
 export * from './admins/new'
 
+export * from './admins/view'
+
 export * from './activity'
 
 export * from './settings'
