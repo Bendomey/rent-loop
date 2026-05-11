@@ -1,7 +1,7 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { ClipboardCheck } from 'lucide-react'
 import { useMemo } from 'react'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { ApplicationsController } from './controller'
 import { ApplicationStatus } from './status'
 import { useGetClientApplications } from '~/api/client-applications'
@@ -69,12 +69,15 @@ export function ApplicationsModule() {
 				cell: ({ row }) => {
 					const app = row.original
 					return (
-						<div className="min-w-36">
+						<Link
+							to={`/applications/${app.id}`}
+							className="text-xs text-blue-600 hover:underline dark:text-blue-500"
+						>
 							<p className="text-sm font-medium">{app.name}</p>
 							<p className="text-muted-foreground text-xs">
 								{app.contact_email}
 							</p>
-						</div>
+						</Link>
 					)
 				},
 			},
