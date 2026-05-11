@@ -4,6 +4,8 @@ import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { PropertyManagersController } from './controller'
 import { useGetClientApplications } from '~/api/client-applications'
+import { DataTable } from '~/components/datatable'
+import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
 	DropdownMenu,
@@ -11,8 +13,6 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
-import { DataTable } from '~/components/datatable'
-import { Badge } from '~/components/ui/badge'
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
