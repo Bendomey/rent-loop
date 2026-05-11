@@ -47,7 +47,7 @@ export function PropertyTenantsModule() {
 	const isLoading = isPending || isRefetching
 
 	return (
-		<div className="mx-6 my-6 flex flex-col gap-4 sm:gap-6">
+		<div className="mx-6 my-6 mx-auto max-w-4xl flex flex-col gap-4 sm:gap-6">
 			<div>
 				<TypographyH4 className="mb-1">
 					Manage {clientUserProperty?.property?.name ?? 'Property'}'s Tenants

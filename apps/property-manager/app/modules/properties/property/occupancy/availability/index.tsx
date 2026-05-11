@@ -207,7 +207,7 @@ export function AvailabilityModule() {
 	}
 
 	return (
-		<div className="mx-6 my-6 flex flex-col gap-6">
+		<div className="mx-6 my-6 mx-auto max-w-4xl flex flex-col gap-6">
 			<div className="flex items-center justify-between">
 				<div className="space-y-1">
 					<TypographyH4>Units Availability</TypographyH4>
@@ -362,8 +362,8 @@ export function AvailabilityModule() {
 			{/* Block dates sheet */}
 			<Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
 				<SheetContent className="p-6">
-					<SheetHeader>
-						<SheetTitle>Block Dates</SheetTitle>
+					<SheetHeader className='p-0'>
+						<SheetTitle className='font-serif'>Block Dates</SheetTitle>
 						<SheetDescription>
 							Mark dates as unavailable for a unit.
 						</SheetDescription>

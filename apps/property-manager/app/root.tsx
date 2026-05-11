@@ -40,7 +40,8 @@ export const links: Route.LinksFunction = () => [
 	},
 	{
 		rel: 'stylesheet',
-		href: 'https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Shantell+Sans:ital,wght@0,300..800;1,300..800&display=swap',
+		href: 'https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=DM+Serif+Display:ital@0;1&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap',
+		// href: 'https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Shantell+Sans:ital,wght@0,300..800;1,300..800&family=Instrument+Serif:ital@0;1&display=swap',
 	},
 	{ rel: 'manifest', href: '/manifest.webmanifest' },
 	{ rel: 'apple-touch-icon', href: '/icons/apple-icon-180.png' },
