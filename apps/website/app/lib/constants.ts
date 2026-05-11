@@ -11,7 +11,7 @@ export const PROPERTY_MANAGER_APP_URL =
 export const COMING_SOON_ROUTE = '/coming-soon'
 
 export const APP_STORE_URL = '#'
-export const PLAY_STORE_URL = '#'
+export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.rentloop.go'
 
 export const USER_CIPHER = 'rentloop-website'
 
