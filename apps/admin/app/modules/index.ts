@@ -14,6 +14,8 @@ export * from './property-managers/view'
 
 export * from './applications'
 
+export * from './applications/view'
+
 export * from './admins'
 
 export * from './admins/new'
