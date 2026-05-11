@@ -32,6 +32,7 @@ func ApplyGlobalVariableTemplate(cfg config.Config, template string) string {
 		cfg.Portals.PropertyManagerPortalURL,
 	)
 	result = strings.ReplaceAll(result, "{{tenant_portal_url}}", cfg.Portals.TenantPortalURL)
+	result = strings.ReplaceAll(result, "{{download_apps_url}}", DOWNLOAD_APPS_URL)
 
 	return result
 }

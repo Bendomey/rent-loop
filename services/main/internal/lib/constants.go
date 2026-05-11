@@ -129,3 +129,10 @@ type HTTPReturnPaginatedMetaResponse struct {
 	HasNextPage     bool   `json:"has_next_page"     example:"true"`
 	HasPreviousPage bool   `json:"has_previous_page" example:"false"`
 }
+
+// stores url
+const (
+	PLAYSTORE_URL     = "https://play.google.com/store/apps/details?id=com.rentloop.app"
+	APPSTORE_URL      = "https://apps.apple.com/app/rentloop/6760318488"
+	DOWNLOAD_APPS_URL = "https://www.rentloopapp.com/download"
+)

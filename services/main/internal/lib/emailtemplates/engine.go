@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/config"
+	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 )
 
 //go:embed templates
@@ -24,6 +25,7 @@ type BaseEmailData struct {
 	AdminPortalURL           string
 	PropertyManagerPortalURL string
 	TenantPortalURL          string
+	DownloadAppsURL          string
 }
 
 // templateContext is the root object passed to html/template.Execute.
@@ -51,6 +53,7 @@ func New(cfg config.Config) (*Engine, error) {
 			AdminPortalURL:           cfg.Portals.AdminPortalURL,
 			PropertyManagerPortalURL: cfg.Portals.PropertyManagerPortalURL,
 			TenantPortalURL:          cfg.Portals.TenantPortalURL,
+			DownloadAppsURL:          lib.DOWNLOAD_APPS_URL,
 		},
 	}
 
