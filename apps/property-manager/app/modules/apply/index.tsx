@@ -13,6 +13,12 @@ import { Link, useFetcher, useLoaderData } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { AddressSchema } from '~/components/address-input'
+import {
+	isValidInternationalPhoneNumber,
+	normalizeInternationalPhoneNumber,
+} from '~/lib/phone'
+import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input'
+import 'react-phone-number-input/style.css'
 
 const AddressInput = lazy(() =>
 	import('~/components/address-input').then((m) => ({
@@ -74,6 +80,7 @@ import { localizedDayjs } from '~/lib/date'
 // import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import type { loader } from '~/routes/apply._index'
+import { InternationalPhoneInput } from '~/components/international-phone'
 
 const maxBirthDate = localizedDayjs().subtract(18, 'year').toDate()
 
@@ -130,7 +137,15 @@ const ValidationSchema = z
 		contact_email: z.email('Please enter a valid email address'),
 		contact_phone_number: z
 			.string({ error: 'Contact phone number is required' })
-			.min(9, 'Please enter a valid phone number'),
+			.refine(isValidPhoneNumber, {
+				message: 'Enter a valid phone number',
+			}),
+		// .refine(
+		// 	(isbn) => isValidInternationalPhoneNumber(isbn),
+		// 	{
+		// 		message: 'Please enter a valid phone number',
+		// 	},
+		// ),
 	})
 	.merge(AddressSchema)
 	.superRefine((data, ctx) => {
@@ -203,7 +218,9 @@ export function ApplyModule() {
 		const sub_type = data.type === 'INDIVIDUAL' ? 'LANDLORD' : data.sub_type
 		const contact_name =
 			data.type === 'INDIVIDUAL' ? data.name : data.contact_name
-		const contact_phone_number = `+233${data.contact_phone_number.slice(-9)}`
+		const contact_phone_number = normalizeInternationalPhoneNumber(
+			data.contact_phone_number,
+		)
 
 		const fd = new FormData()
 		fd.set('type', data.type)
@@ -219,7 +236,9 @@ export function ApplyModule() {
 			)
 		}
 		fd.set('contact_email', data.contact_email)
-		fd.set('contact_phone_number', contact_phone_number)
+		if (contact_phone_number) {
+			fd.set('contact_phone_number', contact_phone_number)
+		}
 		fd.set('address', data.address)
 		fd.set('city', data.city)
 		fd.set('region', data.region)
@@ -549,49 +568,28 @@ export function ApplyModule() {
 							/>
 
 							<FormField
-								name="contact_phone_number"
 								control={control}
-								render={({ field }) => (
+								name="contact_phone_number"
+								render={({ field, fieldState }) => (
 									<FormItem>
 										<FormLabel>Phone Number</FormLabel>
+
 										<FormControl>
-											<InputGroup>
-												<InputGroupInput
-													{...field}
-													type="tel"
-													placeholder="201234567"
-												/>
-												<InputGroupAddon>
-													<Phone />
-													+233
-													<Separator
-														orientation="vertical"
-														className="data-[orientation=vertical]:h-4"
-													/>
-												</InputGroupAddon>
-												<InputGroupAddon align="inline-end">
-													<Tooltip>
-														<TooltipTrigger asChild>
-															<InputGroupButton
-																variant="ghost"
-																aria-label="Help"
-																size="icon-xs"
-															>
-																<HelpCircle />
-															</InputGroupButton>
-														</TooltipTrigger>
-														<TooltipContent>
-															<p>
-																We&apos;ll use this to send you notifications
-															</p>
-														</TooltipContent>
-													</Tooltip>
-												</InputGroupAddon>
-											</InputGroup>
+											<InternationalPhoneInput
+												value={field.value}
+												onChange={field.onChange}
+												error={!!fieldState.error}
+												description="We'll use this to send notifications"
+											/>
 										</FormControl>
+
 										<FormMessage />
+
 										<FormDescription>
-											By clicking submit, you agree to our{' '}
+											Enter your phone number in international format, for
+											example{' '}
+											<span className="font-medium">+233 201 234 567</span>. By
+											clicking submit, you agree to our{' '}
 											<a
 												className="underline hover:text-rose-700"
 												href={`${rentLoopWebsiteUrl}/terms`}

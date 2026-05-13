@@ -5387,6 +5387,11 @@ class-variance-authority@0.7.1:
   dependencies:
     clsx "^2.1.1"
 
+classnames@^2.5.1:
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/classnames/-/classnames-2.5.1.tgz#ba774c614be0f016da105c858e7159eae8e7687b"
+  integrity sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==
+
 clsx@2.1.1, clsx@^2.0.0, clsx@^2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/clsx/-/clsx-2.1.1.tgz#eed397c9fd8bd882bfb18deab7102049a2f32999"
@@ -5512,6 +5517,11 @@ core-util-is@~1.0.0:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/core-util-is/-/core-util-is-1.0.3.tgz#a6042d3634c2b27e9328f837b965fac83808db85"
   integrity sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==
+
+country-flag-icons@^1.6.14:
+  version "1.6.17"
+  resolved "https://registry.yarnpkg.com/country-flag-icons/-/country-flag-icons-1.6.17.tgz#875cf35eb2a0d7fcb0f07166fed9fc65863e03f8"
+  integrity sha512-Nmik0289ZVZSI3c7mJR/amg6DyY7Z59b0sTFSKayeX72mHfPzCPJygwJs2pYgQULzuAyWeCUgwAJ+Dq8OR+JFw==
 
 crc-32@~1.2.0, crc-32@~1.2.1:
   version "1.2.2"
@@ -6984,6 +6994,13 @@ inline-style-parser@0.2.7:
   resolved "https://registry.yarnpkg.com/inline-style-parser/-/inline-style-parser-0.2.7.tgz#b1fc68bfc0313b8685745e4464e37f9376b9c909"
   integrity sha512-Nb2ctOyNR8DqQoR0OwRG95uNWIC0C1lCgf5Naz5H6Ji72KZ8OcFZLz2P5sNgwlyoJ8Yif11oMuYs5pBQa86csA==
 
+input-format@^0.3.14:
+  version "0.3.14"
+  resolved "https://registry.yarnpkg.com/input-format/-/input-format-0.3.14.tgz#7aea985e2a5b258d2cdd853ac7cc10bac1b2a8b8"
+  integrity sha512-gHMrgrbCgmT4uK5Um5eVDUohuV9lcs95ZUUN9Px2Y0VIfjTzT2wF8Q3Z4fwLFm7c5Z2OXCm53FHoovj6SlOKdg==
+  dependencies:
+    prop-types "^15.8.1"
+
 input-otp@1.4.2:
   version "1.4.2"
   resolved "https://registry.yarnpkg.com/input-otp/-/input-otp-1.4.2.tgz#f4d3d587d0f641729e55029b3b8c4870847f4f07"
@@ -7504,6 +7521,11 @@ lexical@0.37.0:
   version "0.37.0"
   resolved "https://registry.yarnpkg.com/lexical/-/lexical-0.37.0.tgz#9f849c6edb7a04d1568d05e18b8f509606dc7a70"
   integrity sha512-r5VJR2TioQPAsZATfktnJFrGIiy6gjQN8b/+0a2u1d7/QTH7lhbB7byhGSvcq1iaa1TV/xcf/pFV55a5V5hTDQ==
+
+libphonenumber-js@1.13.1, libphonenumber-js@^1.12.37:
+  version "1.13.1"
+  resolved "https://registry.yarnpkg.com/libphonenumber-js/-/libphonenumber-js-1.13.1.tgz#607baae726e1ab5c6df1425bb886601cef44f500"
+  integrity sha512-GEw0GLL7YUUA6nv21IsCvVjtI5Ejn84sjbdfQ9KxdbqEVOk1PZh7xejn01EEiniKw+dBeCfim+8MGeuvVuE2BA==
 
 lie@~3.3.0:
   version "3.3.0"
@@ -8782,6 +8804,17 @@ react-markdown@10.1.0:
     unified "^11.0.0"
     unist-util-visit "^5.0.0"
     vfile "^6.0.0"
+
+react-phone-number-input@3.4.16:
+  version "3.4.16"
+  resolved "https://registry.yarnpkg.com/react-phone-number-input/-/react-phone-number-input-3.4.16.tgz#e442cdb790ce3138c14e1a705b4e254528855aff"
+  integrity sha512-ix1+SIyGuLxnlAeW+XQNhwOmmDd4Zmr6Ng1eQl0E2XS8xIuue3gdZeBG4LGTMjTIFneOTO9pUPL+AEDhV6+r+A==
+  dependencies:
+    classnames "^2.5.1"
+    country-flag-icons "^1.6.14"
+    input-format "^0.3.14"
+    libphonenumber-js "^1.12.37"
+    prop-types "^15.8.1"
 
 react-refresh@^0.14.0:
   version "0.14.2"
