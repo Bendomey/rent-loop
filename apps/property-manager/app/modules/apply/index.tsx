@@ -76,6 +76,7 @@ import {
 import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
 // import { useUploadObject } from '~/hooks/use-upload-object'
 import { APP_NAME } from '~/lib/constants'
+import { isDisposableEmail, isDisposableEmailRemote } from '~/lib/email'
 import { localizedDayjs } from '~/lib/date'
 // import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
@@ -134,18 +135,21 @@ const ValidationSchema = z
 				return age >= 18
 			}, 'You must be at least 18 years old')
 			.optional(),
-		contact_email: z.email('Please enter a valid email address'),
+		contact_email: z
+			.email('Please enter a valid email address')
+			.refine(
+				(email) => !isDisposableEmail(email),
+				'This email address is not valid. Please use a real email address.',
+			)
+			.refine(
+				async (email) => !(await isDisposableEmailRemote(email)),
+				'This email address is not valid. Please use a real email address.',
+			),
 		contact_phone_number: z
 			.string({ error: 'Contact phone number is required' })
 			.refine(isValidPhoneNumber, {
 				message: 'Enter a valid phone number',
 			}),
-		// .refine(
-		// 	(isbn) => isValidInternationalPhoneNumber(isbn),
-		// 	{
-		// 		message: 'Please enter a valid phone number',
-		// 	},
-		// ),
 	})
 	.merge(AddressSchema)
 	.superRefine((data, ctx) => {
