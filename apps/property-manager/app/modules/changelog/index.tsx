@@ -47,7 +47,7 @@ export function ChangelogModule() {
 					}}
 				>
 					<div className="absolute top-0 h-full w-full bg-linear-to-b from-transparent via-transparent to-white py-16">
-						<h1 className="text-foreground mb-10 text-center text-3xl font-bold tracking-tighter sm:text-6xl">
+						<h1 className="text-foreground mb-10 text-center text-3xl font-semibold tracking-tighter sm:text-6xl">
 							Changelog
 						</h1>
 						<p className="text-muted-foreground mx-auto mb-16 max-w-2xl px-2 text-center text-lg">
@@ -65,7 +65,7 @@ export function ChangelogModule() {
 					{timelineData.map((entry, index) => (
 						<div key={index} className="relative mb-10 pl-8">
 							<div className="bg-foreground absolute top-3.5 left-0 flex size-4 items-center justify-center rounded-full" />
-							<h4 className="rounded-xl py-2 text-xl font-bold tracking-tight">
+							<h4 className="rounded-xl py-2 text-xl font-semibold tracking-tight">
 								{entry.title} <Badge>v{entry.version}</Badge>
 							</h4>
 

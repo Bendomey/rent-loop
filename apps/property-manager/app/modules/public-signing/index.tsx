@@ -28,10 +28,10 @@ function DocumentExpired() {
 		<div className="flex min-h-screen items-center justify-center bg-zinc-100">
 			<div className="w-full max-w-md rounded-lg bg-white p-8 text-center shadow-sm">
 				<div className="mb-4 flex justify-center">
-					<div className="flex h-14 w-14 items-center justify-center rounded-full bg-zinc-100">
+					<div className="flex size-14 items-center justify-center rounded-full bg-zinc-100">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
-							className="h-7 w-7 text-zinc-400"
+							className="size-7 text-zinc-400"
 							fill="none"
 							viewBox="0 0 24 24"
 							stroke="currentColor"

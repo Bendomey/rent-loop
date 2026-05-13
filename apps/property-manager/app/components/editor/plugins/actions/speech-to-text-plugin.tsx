@@ -47,7 +47,7 @@ export const SUPPORT_SPEECH_RECOGNITION: boolean =
 
 function SpeechToTextPluginImpl() {
 	const [editor] = useLexicalComposerContext()
-	const [isEnabled, setIsEnabled] = useState<boolean>(false)
+	const isEnabled = useRef<boolean>(false)
 	const [isSpeechToText, setIsSpeechToText] = useState<boolean>(false)
 	const SpeechRecognition =
 		// @ts-expect-error missing type
@@ -56,45 +56,49 @@ function SpeechToTextPluginImpl() {
 	const report = useReport()
 
 	useEffect(() => {
-		if (isEnabled && recognition.current === null) {
+		if (isEnabled.current && recognition.current === null) {
 			recognition.current = new SpeechRecognition()
 			recognition.current.continuous = true
 			recognition.current.interimResults = true
-			recognition.current.addEventListener(
-				'result',
-				(event: typeof SpeechRecognition) => {
-					const resultItem = event.results.item(event.resultIndex)
-					const { transcript } = resultItem.item(0)
-					report(transcript)
+			const resultHandler = (event: typeof SpeechRecognition) => {
+				const resultItem = event.results.item(event.resultIndex)
+				const { transcript } = resultItem.item(0)
+				report(transcript)
 
-					if (!resultItem.isFinal) {
-						return
-					}
+				if (!resultItem.isFinal) {
+					return
+				}
 
-					editor.update(() => {
-						const selection = $getSelection()
+				editor.update(() => {
+					const selection = $getSelection()
 
-						if ($isRangeSelection(selection)) {
-							const command = VOICE_COMMANDS[transcript.toLowerCase().trim()]
+					if ($isRangeSelection(selection)) {
+						const command = VOICE_COMMANDS[transcript.toLowerCase().trim()]
 
-							if (command) {
-								command({
-									editor,
-									selection,
-								})
-							} else if (transcript.match(/\s*\n\s*/)) {
-								selection.insertParagraph()
-							} else {
-								selection.insertText(transcript)
-							}
+						if (command) {
+							command({
+								editor,
+								selection,
+							})
+						} else if (transcript.match(/\s*\n\s*/)) {
+							selection.insertParagraph()
+						} else {
+							selection.insertText(transcript)
 						}
-					})
-				},
-			)
+					}
+				})
+			}
+			recognition.current.addEventListener('result', resultHandler)
+			const currentRecognition = recognition.current
+			return () => {
+				currentRecognition.removeEventListener('result', resultHandler)
+				currentRecognition.stop()
+				recognition.current = null
+			}
 		}
 
 		if (recognition.current) {
-			if (isEnabled) {
+			if (isEnabled.current) {
 				recognition.current.start()
 			} else {
 				recognition.current.stop()
@@ -106,12 +110,12 @@ function SpeechToTextPluginImpl() {
 				recognition.current.stop()
 			}
 		}
-	}, [SpeechRecognition, editor, isEnabled, report])
+	}, [SpeechRecognition, editor, report])
 	useEffect(() => {
 		return editor.registerCommand(
 			SPEECH_TO_TEXT_COMMAND,
 			(_isEnabled: boolean) => {
-				setIsEnabled(_isEnabled)
+				isEnabled.current = _isEnabled
 				return true
 			},
 			COMMAND_PRIORITY_EDITOR,

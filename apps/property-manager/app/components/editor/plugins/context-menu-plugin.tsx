@@ -37,7 +37,7 @@ export function ContextMenuPlugin(): JSX.Element {
 				},
 				$showOn: (node: LexicalNode) => $isLinkNode(node.getParent()),
 				disabled: false,
-				icon: <Link2Off className="h-4 w-4" />,
+				icon: <Link2Off className="size-4" />,
 			}),
 			new NodeContextMenuSeparator({
 				$showOn: (node: LexicalNode) => $isLinkNode(node.getParent()),
@@ -47,14 +47,14 @@ export function ContextMenuPlugin(): JSX.Element {
 					editor.dispatchCommand(CUT_COMMAND, null)
 				},
 				disabled: false,
-				icon: <Scissors className="h-4 w-4" />,
+				icon: <Scissors className="size-4" />,
 			}),
 			new NodeContextMenuOption(`Copy`, {
 				$onSelect: () => {
 					editor.dispatchCommand(COPY_COMMAND, null)
 				},
 				disabled: false,
-				icon: <Copy className="h-4 w-4" />,
+				icon: <Copy className="size-4" />,
 			}),
 			new NodeContextMenuOption(`Paste`, {
 				$onSelect: () => {
@@ -91,7 +91,7 @@ export function ContextMenuPlugin(): JSX.Element {
 						.catch(() => {})
 				},
 				disabled: false,
-				icon: <Clipboard className="h-4 w-4" />,
+				icon: <Clipboard className="size-4" />,
 			}),
 			new NodeContextMenuOption(`Paste as Plain Text`, {
 				$onSelect: () => {
@@ -120,7 +120,7 @@ export function ContextMenuPlugin(): JSX.Element {
 						.catch(() => {})
 				},
 				disabled: false,
-				icon: <ClipboardType className="h-4 w-4" />,
+				icon: <ClipboardType className="size-4" />,
 			}),
 			new NodeContextMenuSeparator(),
 			new NodeContextMenuOption(`Delete Block`, {
@@ -141,7 +141,7 @@ export function ContextMenuPlugin(): JSX.Element {
 					}
 				},
 				disabled: false,
-				icon: <Trash2 className="h-4 w-4" />,
+				icon: <Trash2 className="size-4" />,
 			}),
 		]
 	}, [editor])

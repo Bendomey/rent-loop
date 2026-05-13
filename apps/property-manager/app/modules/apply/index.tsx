@@ -308,7 +308,7 @@ export function ApplyModule() {
 							{watch('type') === 'COMPANY' ? (
 								<div className="mt-5">
 									<TypographyMuted>Sub Type</TypographyMuted>
-									<div className="mt-3 flex space-x-3">
+									<div className="mt-3 flex gap-x-3">
 										{subTypes.map((subType) => {
 											const isSelected = watch('sub_type') === subType.value
 											return (
@@ -612,7 +612,7 @@ export function ApplyModule() {
 							/>
 						</FieldGroup>
 
-						<div className="flex items-center justify-end space-x-5">
+						<div className="flex items-center justify-end gap-x-5">
 							<Link to="/login">
 								<Button type="button" size="sm" variant="ghost">
 									<Home />

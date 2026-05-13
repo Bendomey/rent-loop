@@ -39,9 +39,10 @@ export async function loader({ request }: Route.LoaderArgs) {
 export async function action({ request }: Route.ActionArgs) {
 	const baseUrl = environmentVariables().API_ADDRESS
 
-	const session = await getAuthSession(request.headers.get('Cookie'))
-
-	const form = await request.formData()
+	const [session, form] = await Promise.all([
+		getAuthSession(request.headers.get('Cookie')),
+		request.formData(),
+	])
 	const email = form.get('email')
 	const password = form.get('password')
 

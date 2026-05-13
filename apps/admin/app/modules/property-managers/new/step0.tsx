@@ -115,10 +115,11 @@ export function Step0() {
 						const isSelected = watch('type') === model.type
 
 						return (
-							<div
+							<button
+								type="button"
 								key={model.type}
 								className={cn(
-									'cursor-pointer rounded-lg border p-6 transition-colors',
+									'cursor-pointer rounded-lg border p-6 text-left transition-colors',
 									isSelected
 										? 'border-rose-600 bg-rose-50 dark:bg-rose-950/20'
 										: 'hover:bg-zinc-50 dark:hover:bg-zinc-900',
@@ -135,7 +136,7 @@ export function Step0() {
 								<p className="text-muted-foreground text-sm">
 									{model.description}
 								</p>
-							</div>
+							</button>
 						)
 					})}
 				</div>
@@ -148,7 +149,7 @@ export function Step0() {
 				{watch('type') === 'COMPANY' ? (
 					<div className="mt-5">
 						<TypographyMuted>Sub Type</TypographyMuted>
-						<div className="mt-3 flex space-x-3">
+						<div className="mt-3 flex gap-x-3">
 							{subTypes.map((subType) => {
 								const isSelected = watch('sub_type') === subType.value
 
@@ -183,7 +184,7 @@ export function Step0() {
 				) : null}
 			</div>
 
-			<div className="mt-10 flex items-center justify-end space-x-5">
+			<div className="mt-10 flex items-center justify-end gap-x-5">
 				<Link to="/property-managers">
 					<Button type="button" size="sm" variant="ghost">
 						Cancel

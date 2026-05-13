@@ -111,7 +111,7 @@ export function AnnouncementsModule() {
 											)
 										}
 									>
-										<Copy className="h-4 w-4" />
+										<Copy className="size-4" />
 									</Button>
 								</TooltipTrigger>
 								<TooltipContent>Duplicate</TooltipContent>
@@ -123,7 +123,7 @@ export function AnnouncementsModule() {
 									void navigate(`/activities/announcements/${announcement.id}`)
 								}
 							>
-								<ChevronRight className="h-4 w-4" />
+								<ChevronRight className="size-4" />
 							</Button>
 						</div>
 					)

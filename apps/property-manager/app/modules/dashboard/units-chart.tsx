@@ -91,7 +91,7 @@ export function UnitsChart() {
 			<CardContent>
 				{unitsQuery.isPending ? (
 					<div className="flex items-center justify-center">
-						<Skeleton className="h-[200px] w-[200px] rounded-full" />
+						<Skeleton className="size-[200px] rounded-full" />
 					</div>
 				) : !hasData ? (
 					<div className="text-muted-foreground flex h-[200px] items-center justify-center text-sm">

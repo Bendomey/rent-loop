@@ -1,4 +1,4 @@
-import { createContext, useContext, type PropsWithChildren } from 'react'
+import { createContext, use, type PropsWithChildren } from 'react'
 
 interface Props {
 	data?: Admin
@@ -19,7 +19,7 @@ export function AuthProvider({ data, children }: PropsWithChildren<Props>) {
 }
 
 export function useAuth() {
-	const context = useContext(AuthContext)
+	const context = use(AuthContext)
 
 	if (!context) {
 		throw new Error('useAuth must be used within an AuthProvider')
