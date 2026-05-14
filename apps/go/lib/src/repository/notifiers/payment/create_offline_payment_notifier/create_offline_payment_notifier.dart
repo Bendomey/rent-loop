@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:rentloop_go/src/api/root.dart';
 import 'package:rentloop_go/src/architecture/architecture.dart';
 import 'package:rentloop_go/src/constants.dart';
+import 'package:rentloop_go/src/lib/analytics_service.dart';
 import 'package:rentloop_go/src/lib/api_error_messages.dart';
 import 'package:rentloop_go/src/repository/api_state.dart';
 
@@ -52,6 +53,15 @@ class CreateOfflinePaymentNotifier extends _$CreateOfflinePaymentNotifier {
       }
 
       state = CreateOfflinePaymentState(status: ApiStatus.success);
+      await AnalyticsService.logEvent(
+        'payment_initiated',
+        parameters: {
+          'invoice_id': invoiceId,
+          'provider': provider,
+          'af_revenue': amount,
+          'af_currency': 'GHS',
+        },
+      );
       return true;
     } on ApiException catch (e) {
       state = CreateOfflinePaymentState(

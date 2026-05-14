@@ -2,6 +2,7 @@
 
 .envrc
 .env
+.env.json
 
 yarn.lock
 !apps/property-manager/yarn.lock

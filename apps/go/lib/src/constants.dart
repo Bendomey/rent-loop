@@ -12,8 +12,11 @@ const WEBSITE = isStaging
     ? 'https://rentloopapp.com'
     : 'https://rentloopapp.com';
 
-const SENTRY_DSN = '';
-//TODO: paste rentloop_go sentry dsn
+const SENTRY_DSN = String.fromEnvironment('SENTRY_DSN');
+
+const APPSFLYER_DEV_KEY = String.fromEnvironment('APPSFLYER_DEV_KEY');
+const APPSFLYER_APP_ID_IOS = String.fromEnvironment('APPSFLYER_APP_ID_IOS');
+const APPSFLYER_IS_DEBUG = isStaging;
 
 const R2_UPLOAD_URL = isStaging
     ? 'https://pm.rentloopapp.com/api/r2/upload'

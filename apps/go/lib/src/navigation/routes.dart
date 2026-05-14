@@ -15,7 +15,7 @@ GoRouter buildRoutes(WidgetRef ref, Listenable refreshListenable) {
   navigatorKey = GlobalKey();
 
   final router = GoRouter(
-    observers: [AnalyticsService.observer],
+    observers: [AnalyticsService.observer, AnalyticsService.appsflyerObserver],
     navigatorKey: navigatorKey,
     restorationScopeId: 'rentloop-router',
     initialLocation: '/splash',
