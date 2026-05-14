@@ -32,6 +32,7 @@ interface Props {
 }
 
 export function Selector(props: Props) {
+	const popoverId = React.useId()
 	const { isOpened, setIsOpened } = useDisclosure()
 	const [options, setOptions] = React.useState<IMultiSelectOption[]>(
 		() => props.options ?? [],
@@ -111,6 +112,8 @@ export function Selector(props: Props) {
 					disabled={props.disabled}
 					variant={'outline'}
 					role="combobox"
+					aria-controls={popoverId}
+					aria-expanded={isOpened}
 					size={props.size || 'sm'}
 					className={cn(
 						'flex items-center justify-between gap-2 px-2 text-xs',
@@ -232,7 +235,7 @@ export function Selector(props: Props) {
 				</Button>
 			</PopoverTrigger>
 
-			<PopoverContent className="w-auto max-w-96 p-0" align="start">
+			<PopoverContent id={popoverId} className="w-auto max-w-96 p-0" align="start">
 				<Command>
 					<CommandInput
 						className="text-xs focus:ring-0"
@@ -277,14 +280,14 @@ export function Selector(props: Props) {
 							Available Options
 						</div>
 						{isSearching ? (
-							<div className="flex w-full items-center space-x-2 p-2 px-2 text-xs">
-								<Spinner className="size-4 text-gray-400" />
-								<span className="text-xs text-gray-400">Loading...</span>
+							<div className="flex w-full items-center gap-x-2 p-2 px-2 text-xs">
+								<Spinner className="size-4 text-zinc-400" />
+								<span className="text-xs text-zinc-400">Loading…</span>
 							</div>
 						) : availableOptions.length === 0 ? (
 							<div className="flex w-full items-center p-2 px-2 text-xs">
-								<AlertCircle className="mr-1 size-3 text-gray-400" />
-								<span className="text-xs text-gray-400">
+								<AlertCircle className="mr-1 size-3 text-zinc-400" />
+								<span className="text-xs text-zinc-400">
 									No options available
 								</span>
 							</div>

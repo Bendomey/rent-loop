@@ -60,37 +60,41 @@ function SpeechToTextPluginImpl() {
 			recognition.current = new SpeechRecognition()
 			recognition.current.continuous = true
 			recognition.current.interimResults = true
-			recognition.current.addEventListener(
-				'result',
-				(event: typeof SpeechRecognition) => {
-					const resultItem = event.results.item(event.resultIndex)
-					const { transcript } = resultItem.item(0)
-					report(transcript)
+			const resultHandler = (event: typeof SpeechRecognition) => {
+				const resultItem = event.results.item(event.resultIndex)
+				const { transcript } = resultItem.item(0)
+				report(transcript)
 
-					if (!resultItem.isFinal) {
-						return
-					}
+				if (!resultItem.isFinal) {
+					return
+				}
 
-					editor.update(() => {
-						const selection = $getSelection()
+				editor.update(() => {
+					const selection = $getSelection()
 
-						if ($isRangeSelection(selection)) {
-							const command = VOICE_COMMANDS[transcript.toLowerCase().trim()]
+					if ($isRangeSelection(selection)) {
+						const command = VOICE_COMMANDS[transcript.toLowerCase().trim()]
 
-							if (command) {
-								command({
-									editor,
-									selection,
-								})
-							} else if (transcript.match(/\s*\n\s*/)) {
-								selection.insertParagraph()
-							} else {
-								selection.insertText(transcript)
-							}
+						if (command) {
+							command({
+								editor,
+								selection,
+							})
+						} else if (transcript.match(/\s*\n\s*/)) {
+							selection.insertParagraph()
+						} else {
+							selection.insertText(transcript)
 						}
-					})
-				},
-			)
+					}
+				})
+			}
+			recognition.current.addEventListener('result', resultHandler)
+			const currentRecognition = recognition.current
+			return () => {
+				currentRecognition.removeEventListener('result', resultHandler)
+				currentRecognition.stop()
+				recognition.current = null
+			}
 		}
 
 		if (recognition.current) {

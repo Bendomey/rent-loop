@@ -209,7 +209,7 @@ export function ChartBarDefault() {
 			<CardFooter className="flex-col items-start gap-2 text-sm">
 				<div className="flex gap-2 leading-none font-medium">
 					{formatAmount(totalRevenue)} collected{' '}
-					<TrendingUp className="h-4 w-4" />
+					<TrendingUp className="size-4" />
 				</div>
 				<div className="text-muted-foreground leading-none">
 					Paid invoices only · does not include outstanding balances

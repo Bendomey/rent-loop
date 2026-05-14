@@ -23,8 +23,7 @@ function CodeActionMenuContainer({
 
 	const [lang, setLang] = useState('')
 	const [isShown, setShown] = useState<boolean>(false)
-	const [shouldListenMouseMove, setShouldListenMouseMove] =
-		useState<boolean>(false)
+	const [shouldListenMouseMove, setShouldListenMouseMove] = useState(false)
 	const [position, setPosition] = useState<Position>({
 		right: '0',
 		top: '0',
@@ -90,7 +89,7 @@ function CodeActionMenuContainer({
 			debouncedOnMouseMove.cancel()
 			document.removeEventListener('mousemove', debouncedOnMouseMove)
 		}
-	}, [shouldListenMouseMove, debouncedOnMouseMove])
+	}, [debouncedOnMouseMove, shouldListenMouseMove])
 
 	useEffect(() => {
 		return editor.registerMutationListener(

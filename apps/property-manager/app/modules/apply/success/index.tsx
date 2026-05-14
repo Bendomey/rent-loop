@@ -9,7 +9,7 @@ export function ApplySuccessModule() {
 			<div className="flex h-lvh flex-col items-center justify-center">
 				<div className="mx-5 md:w-5/12">
 					<div className="mb-10 text-6xl">🚀</div>
-					<h1 className="mb-2 text-2xl font-extrabold">
+					<h1 className="mb-2 text-2xl font-semibold">
 						Your Application has been submitted!
 					</h1>
 					<p className="mt-5">

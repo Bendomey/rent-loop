@@ -18,16 +18,15 @@ import {
 } from '~/components/ui/sidebar'
 
 export default function AuthDashboard({ matches }: Route.ComponentProps) {
-	const breadcrumbs = matches
-		.filter((m) => m?.handle)
-		.map((m) => {
-			const breadcrumb = (
-				m?.handle as { breadcrumb: ((data: unknown) => string) | string }
-			).breadcrumb
-			const name =
-				typeof breadcrumb === 'string' ? breadcrumb : breadcrumb(m?.loaderData)
-			return { name, pathname: m?.pathname, id: m?.id }
-		})
+	const breadcrumbs = matches.flatMap((m) => {
+		if (!m?.handle) return []
+		const breadcrumb = (
+			m.handle as { breadcrumb: ((data: unknown) => string) | string }
+		).breadcrumb
+		const name =
+			typeof breadcrumb === 'string' ? breadcrumb : breadcrumb(m?.loaderData)
+		return [{ name, pathname: m?.pathname, id: m?.id }]
+	})
 
 	return (
 		<SidebarProvider>

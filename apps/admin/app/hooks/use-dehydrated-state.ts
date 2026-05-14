@@ -6,9 +6,10 @@ import { useMatches } from 'react-router'
 const useDehydratedState = (): DehydratedState => {
 	const matches = useMatches()
 
-	const dehydratedState = matches
-		.map((match) => (match.loaderData as any)?.dehydratedState)
-		.filter(Boolean)
+	const dehydratedState = matches.flatMap((match) => {
+		const v = (match.loaderData as any)?.dehydratedState
+		return v ? [v] : []
+	})
 
 	return dehydratedState.length
 		? dehydratedState.reduce(

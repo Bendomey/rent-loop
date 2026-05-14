@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, use, useEffect, useState } from 'react'
 import { useFetcher } from 'react-router'
 import { toast } from 'sonner'
 import type { CreateClientApplicationInput } from '~/api/client-applications/server'
@@ -40,9 +40,9 @@ export function NewPMProvider({ children }: { children: React.ReactNode }) {
 	const onSubmit = (data: PMFormData) => {
 		const merged = { ...formData, ...data }
 		const payload = Object.fromEntries(
-			Object.entries(merged)
-				.filter(([, v]) => v !== undefined && v !== null && v !== '')
-				.map(([k, v]) => [k, String(v)]),
+			Object.entries(merged).flatMap(([k, v]) =>
+				v !== undefined && v !== null && v !== '' ? [[k, String(v)]] : [],
+			),
 		)
 		void fetcher.submit(
 			{
@@ -72,7 +72,7 @@ export function NewPMProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useNewPMContext() {
-	const ctx = useContext(NewPMContext)
+	const ctx = use(NewPMContext)
 	if (!ctx) throw new Error('useNewPMContext must be used within NewPMProvider')
 	return ctx
 }

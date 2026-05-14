@@ -159,7 +159,7 @@ export function DataTable<T extends { id: string }>({
 							<EmptyMedia variant="icon">
 								<Spinner />
 							</EmptyMedia>
-							<EmptyTitle>Loading...</EmptyTitle>
+							<EmptyTitle>Loading…</EmptyTitle>
 							<EmptyDescription>
 								Please wait while we load your request. Do not refresh the page.
 							</EmptyDescription>
@@ -313,7 +313,7 @@ export function DataTable<T extends { id: string }>({
 										<div className="ml-auto flex items-center gap-2 lg:ml-0">
 											<Button
 												variant="outline"
-												className="hidden h-8 w-8 p-0 lg:flex"
+												className="hidden size-8 p-0 lg:flex"
 												onClick={() => table.setPageIndex(0)}
 												disabled={!table.getCanPreviousPage()}
 											>

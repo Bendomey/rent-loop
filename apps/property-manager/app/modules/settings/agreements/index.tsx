@@ -57,7 +57,7 @@ function AgreementCard({ agreement }: { agreement: Agreement }) {
 				<div
 					ref={scrollRef}
 					onScroll={handleScroll}
-					className="prose prose-sm dark:prose-invert bg-muted/50 max-h-96 max-w-none overflow-y-auto rounded-md border p-5 dark:bg-black"
+					className="prose prose-sm dark:prose-invert bg-muted/50 max-h-96 max-w-none overflow-y-auto rounded-md border p-5 dark:bg-zinc-950"
 				>
 					<ReactMarkdown>{agreement.content}</ReactMarkdown>
 				</div>
