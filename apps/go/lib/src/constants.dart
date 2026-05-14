@@ -12,11 +12,10 @@ const WEBSITE = isStaging
     ? 'https://rentloopapp.com'
     : 'https://rentloopapp.com';
 
-const SENTRY_DSN =
-    'https://a6014082c6d3ed50a49560a464511c64@o949044.ingest.us.sentry.io/4511387637317632';
+const SENTRY_DSN = String.fromEnvironment('SENTRY_DSN');
 
-const APPSFLYER_DEV_KEY = 'YsRgxuvyndybkdDmTioVYJ';
-const APPSFLYER_APP_ID_IOS = '6760318488';
+const APPSFLYER_DEV_KEY = String.fromEnvironment('APPSFLYER_DEV_KEY');
+const APPSFLYER_APP_ID_IOS = String.fromEnvironment('APPSFLYER_APP_ID_IOS');
 const APPSFLYER_IS_DEBUG = isStaging;
 
 const R2_UPLOAD_URL = isStaging
