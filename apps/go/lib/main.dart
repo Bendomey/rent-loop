@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:rentloop_go/src/lib/analytics_service.dart';
 import 'package:rentloop_go/src/lib/sentry_config.dart';
 
 import 'src/app.dart';
@@ -84,5 +85,6 @@ void main() async {
   );
 
   await SentryConfig.init();
+  await AnalyticsService.init();
   runApp(const ProviderScope(child: MyApp()));
 }

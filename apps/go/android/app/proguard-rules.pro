@@ -31,3 +31,8 @@
 -keepattributes SourceFile,LineNumberTable
 -keepattributes Signature
 -keepattributes Exceptions
+
+# AppsFlyer
+-keep class com.appsflyer.** { *; }
+-keep public class com.android.installreferrer.** { *; }
+-dontwarn com.appsflyer.**
