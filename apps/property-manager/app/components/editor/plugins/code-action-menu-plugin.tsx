@@ -23,7 +23,7 @@ function CodeActionMenuContainer({
 
 	const [lang, setLang] = useState('')
 	const [isShown, setShown] = useState<boolean>(false)
-	const shouldListenMouseMove = useRef<boolean>(false)
+	const [shouldListenMouseMove, setShouldListenMouseMove] = useState(false)
 	const [position, setPosition] = useState<Position>({
 		right: '0',
 		top: '0',
@@ -78,7 +78,7 @@ function CodeActionMenuContainer({
 	)
 
 	useEffect(() => {
-		if (!shouldListenMouseMove.current) {
+		if (!shouldListenMouseMove) {
 			return
 		}
 
@@ -89,7 +89,7 @@ function CodeActionMenuContainer({
 			debouncedOnMouseMove.cancel()
 			document.removeEventListener('mousemove', debouncedOnMouseMove)
 		}
-	}, [debouncedOnMouseMove])
+	}, [debouncedOnMouseMove, shouldListenMouseMove])
 
 	useEffect(() => {
 		return editor.registerMutationListener(
@@ -111,7 +111,7 @@ function CodeActionMenuContainer({
 						}
 					}
 				})
-				shouldListenMouseMove.current = codeSetRef.current.size > 0
+				setShouldListenMouseMove(codeSetRef.current.size > 0)
 			},
 			{ skipInitialization: false },
 		)

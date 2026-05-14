@@ -47,7 +47,7 @@ export const SUPPORT_SPEECH_RECOGNITION: boolean =
 
 function SpeechToTextPluginImpl() {
 	const [editor] = useLexicalComposerContext()
-	const isEnabled = useRef<boolean>(false)
+	const [isEnabled, setIsEnabled] = useState<boolean>(false)
 	const [isSpeechToText, setIsSpeechToText] = useState<boolean>(false)
 	const SpeechRecognition =
 		// @ts-expect-error missing type
@@ -56,7 +56,7 @@ function SpeechToTextPluginImpl() {
 	const report = useReport()
 
 	useEffect(() => {
-		if (isEnabled.current && recognition.current === null) {
+		if (isEnabled && recognition.current === null) {
 			recognition.current = new SpeechRecognition()
 			recognition.current.continuous = true
 			recognition.current.interimResults = true
@@ -98,7 +98,7 @@ function SpeechToTextPluginImpl() {
 		}
 
 		if (recognition.current) {
-			if (isEnabled.current) {
+			if (isEnabled) {
 				recognition.current.start()
 			} else {
 				recognition.current.stop()
@@ -110,12 +110,12 @@ function SpeechToTextPluginImpl() {
 				recognition.current.stop()
 			}
 		}
-	}, [SpeechRecognition, editor, report])
+	}, [SpeechRecognition, editor, isEnabled, report])
 	useEffect(() => {
 		return editor.registerCommand(
 			SPEECH_TO_TEXT_COMMAND,
 			(_isEnabled: boolean) => {
-				isEnabled.current = _isEnabled
+				setIsEnabled(_isEnabled)
 				return true
 			},
 			COMMAND_PRIORITY_EDITOR,

@@ -32,6 +32,7 @@ interface Props {
 }
 
 export function Selector(props: Props) {
+	const popoverId = React.useId()
 	const { isOpened, setIsOpened } = useDisclosure()
 	const [options, setOptions] = React.useState<IMultiSelectOption[]>(
 		() => props.options ?? [],
@@ -111,7 +112,7 @@ export function Selector(props: Props) {
 					disabled={props.disabled}
 					variant={'outline'}
 					role="combobox"
-					aria-controls="selector-popover"
+					aria-controls={popoverId}
 					aria-expanded={isOpened}
 					size={props.size || 'sm'}
 					className={cn(
@@ -234,7 +235,7 @@ export function Selector(props: Props) {
 				</Button>
 			</PopoverTrigger>
 
-			<PopoverContent className="w-auto max-w-96 p-0" align="start">
+			<PopoverContent id={popoverId} className="w-auto max-w-96 p-0" align="start">
 				<Command>
 					<CommandInput
 						className="text-xs focus:ring-0"
