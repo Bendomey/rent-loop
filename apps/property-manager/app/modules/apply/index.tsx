@@ -76,7 +76,7 @@ import {
 import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
 // import { useUploadObject } from '~/hooks/use-upload-object'
 import { APP_NAME } from '~/lib/constants'
-import { isDisposableEmail, isDisposableEmailRemote } from '~/lib/email'
+import { isDisposableEmailRemote } from '~/lib/email'
 import { localizedDayjs } from '~/lib/date'
 // import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
@@ -137,10 +137,6 @@ const ValidationSchema = z
 			.optional(),
 		contact_email: z
 			.email('Please enter a valid email address')
-			.refine(
-				(email) => !isDisposableEmail(email),
-				'This email address is not valid. Please use a real email address.',
-			)
 			.refine(
 				async (email) => !(await isDisposableEmailRemote(email)),
 				'This email address is not valid. Please use a real email address.',
