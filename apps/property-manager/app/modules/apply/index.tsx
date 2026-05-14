@@ -295,7 +295,7 @@ export function ApplyModule() {
 											key={model.name}
 											variant="outline"
 											className={cn(
-												'cursor-pointer hover:bg-zinc-100',
+												'cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800',
 												isSelected ? 'border-1 border-rose-600' : '',
 											)}
 											onClick={() =>
@@ -343,7 +343,7 @@ export function ApplyModule() {
 													variant={isSelected ? 'default' : 'outline'}
 													className={cn(
 														isSelected
-															? 'bg-zinc-900 text-white hover:bg-zinc-800'
+															? 'bg-rose-600 text-white hover:bg-rose-700'
 															: '',
 													)}
 												>
