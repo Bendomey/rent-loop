@@ -25,6 +25,8 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
+import { isValidPhoneNumber } from 'react-phone-number-input'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { Spinner } from '~/components/ui/spinner'
@@ -34,6 +36,7 @@ import {
 	TooltipTrigger,
 } from '~/components/ui/tooltip'
 import { useUploadObject } from '~/hooks/use-upload-object'
+import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 import { safeString } from '~/lib/strings'
 import { toFirstUpperCase } from '~/lib/strings'
 import { cn } from '~/lib/utils'
@@ -56,7 +59,7 @@ const ValidationSchema = z.object({
 		.min(2, 'Please enter a valid relationship'),
 	emergency_contact_phone: z
 		.string({ error: 'Phone Number is required' })
-		.min(9, 'Please enter a valid phone number'),
+		.refine(isValidPhoneNumber, { message: 'Enter a valid phone number' }),
 	employer_type: z.enum(['STUDENT', 'WORKER'], {
 		error: 'Please select an employment type',
 	}),
@@ -149,7 +152,7 @@ export function PropertyTenantApplicationEmergencyContact({
 				property_id,
 				data: {
 					...data,
-					emergency_contact_phone: `+233${data.emergency_contact_phone.slice(-9)}`,
+					emergency_contact_phone: normalizeInternationalPhoneNumber(data.emergency_contact_phone) ?? data.emergency_contact_phone,
 				},
 			},
 			{
@@ -339,16 +342,16 @@ export function PropertyTenantApplicationEmergencyContact({
 								<FormField
 									name="emergency_contact_phone"
 									control={rhfMethods.control}
-									render={({ field }) => (
+									render={({ field, fieldState }) => (
 										<FormItem>
 											<FormLabel>
 												Phone Number <span className="text-red-500">*</span>
 											</FormLabel>
 											<FormControl>
-												<Input
-													type="tel"
-													placeholder="e.g., +233 54-123-4567"
-													{...field}
+												<InternationalPhoneInput
+													value={field.value}
+													onChange={field.onChange}
+													error={!!fieldState.error}
 												/>
 											</FormControl>
 											<FormMessage />

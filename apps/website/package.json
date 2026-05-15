@@ -45,6 +45,7 @@
     "react-day-picker": "9.13.1",
     "react-dom": "19.2.4",
     "react-hook-form": "7.71.1",
+    "react-phone-number-input": "^3.4.16",
     "react-router": "7.12.0",
     "rehype-slug": "6.0.0",
     "remark-frontmatter": "5.0.0",

@@ -15,6 +15,8 @@ import {
 	FormMessage,
 } from '~/components/ui/form'
 import { ImageUpload } from '~/components/ui/image-upload'
+import { isValidPhoneNumber } from 'react-phone-number-input'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { Input } from '~/components/ui/input'
 import {
 	TypographyH2,
@@ -35,7 +37,7 @@ const ValidationSchema = z.object({
 		.min(2, 'Please enter a valid relationship'),
 	emergency_contact_phone: z
 		.string({ error: 'Phone Number is required' })
-		.min(9, 'Please enter a valid phone number'),
+		.refine(isValidPhoneNumber, { message: 'Enter a valid phone number' }),
 	employer_type: z.enum(['STUDENT', 'WORKER'], {
 		error: 'Please select an employer type',
 	}),
@@ -225,16 +227,16 @@ export function Step5() {
 						<FormField
 							name="emergency_contact_phone"
 							control={control}
-							render={({ field }) => (
+							render={({ field, fieldState }) => (
 								<FormItem>
 									<FormLabel>
 										Phone Number <span className="text-red-500">*</span>
 									</FormLabel>
 									<FormControl>
-										<Input
-											type="tel"
-											placeholder="e.g., +233 54-123-4567"
-											{...field}
+										<InternationalPhoneInput
+											value={field.value}
+											onChange={field.onChange}
+											error={!!fieldState.error}
 										/>
 									</FormControl>
 									<FormMessage />

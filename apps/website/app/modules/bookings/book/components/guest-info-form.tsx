@@ -1,7 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import * as z from 'zod'
+import { isValidPhoneNumber } from 'react-phone-number-input'
+import { InternationalPhoneInput } from '~/components/international-phone'
 
 const ID_TYPES = [
 	'National ID/Ghana Card',
@@ -15,7 +17,7 @@ const guestSchema = z.object({
 	first_name: z.string().min(1, 'Required'),
 	last_name: z.string().min(1, 'Required'),
 	gender: z.string().min(1, 'Required'),
-	phone: z.string().min(7, 'Enter a valid phone number'),
+	phone: z.string().refine(isValidPhoneNumber, { message: 'Enter a valid phone number' }),
 	email: z
 		.string()
 		.optional()
@@ -55,6 +57,7 @@ function Label({
 export function GuestInfoForm({ onValuesChange }: Props) {
 	const {
 		register,
+		control,
 		watch,
 		formState: { errors, isValid },
 	} = useForm<GuestFormValues>({
@@ -117,7 +120,17 @@ export function GuestInfoForm({ onValuesChange }: Props) {
 					</div>
 					<div>
 						<Label>Phone</Label>
-						<input {...register('phone')} type="tel" className={inputClass} />
+						<Controller
+							name="phone"
+							control={control}
+							render={({ field, fieldState }) => (
+								<InternationalPhoneInput
+									value={field.value}
+									onChange={field.onChange}
+									error={!!fieldState.error}
+								/>
+							)}
+						/>
 						{errors.phone && (
 							<p className="mt-1 text-xs text-red-500">
 								{errors.phone.message}

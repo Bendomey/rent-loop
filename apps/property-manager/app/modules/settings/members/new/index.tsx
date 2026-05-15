@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Check, HelpCircle, Mail, Phone } from 'lucide-react'
+import { Check, HelpCircle, Mail } from 'lucide-react'
 import { useEffect } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { Link, useFetcher } from 'react-router'
@@ -45,6 +45,9 @@ import {
 	TypographyH4,
 	TypographyMuted,
 } from '~/components/ui/typography'
+import { isValidPhoneNumber } from 'react-phone-number-input'
+import { InternationalPhoneInput } from '~/components/international-phone'
+import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 
@@ -57,7 +60,7 @@ const ValidationSchema = z.object({
 		.min(2, 'Please enter a valid name'),
 	phone: z
 		.string({ error: 'Contact phone number is required' })
-		.min(9, 'Please enter a valid support phone number'),
+		.refine(isValidPhoneNumber, { message: 'Enter a valid phone number' }),
 	email: z.email('Please enter a valid support email address'),
 	property_assignments: z
 		.array(
@@ -130,8 +133,8 @@ export function NewMemberModule() {
 
 	const onSubmit = async (data: FormSchema) => {
 		const updatedData = { ...data }
-		if (getValues('phone')) {
-			updatedData.phone = `+233${getValues('phone').slice(-9)}`
+		if (data.phone) {
+			updatedData.phone = normalizeInternationalPhoneNumber(data.phone) ?? data.phone
 		}
 		await createFetcher.submit(
 			{
@@ -228,42 +231,15 @@ export function NewMemberModule() {
 						<FormField
 							name="phone"
 							control={control}
-							render={({ field }) => (
+							render={({ field, fieldState }) => (
 								<FormItem>
 									<FormLabel>Phone Number</FormLabel>
 									<FormControl>
-										<InputGroup>
-											<InputGroupInput
-												placeholder="201234567"
-												id="phone"
-												type="tel"
-												{...field}
-											/>
-											<InputGroupAddon>
-												<Phone />
-												+233
-												<Separator
-													orientation="vertical"
-													className="data-[orientation=vertical]:h-4"
-												/>
-											</InputGroupAddon>
-											<InputGroupAddon align="inline-end">
-												<Tooltip>
-													<TooltipTrigger asChild>
-														<InputGroupButton
-															variant="ghost"
-															aria-label="Help"
-															size="icon-xs"
-														>
-															<HelpCircle />
-														</InputGroupButton>
-													</TooltipTrigger>
-													<TooltipContent>
-														<p>We&apos;ll use this to send you notifications</p>
-													</TooltipContent>
-												</Tooltip>
-											</InputGroupAddon>
-										</InputGroup>
+										<InternationalPhoneInput
+											value={field.value}
+											onChange={field.onChange}
+											error={!!fieldState.error}
+										/>
 									</FormControl>
 									<FormMessage />
 								</FormItem>
