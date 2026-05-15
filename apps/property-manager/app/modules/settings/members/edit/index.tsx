@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
-import { Check, HelpCircle, Phone } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { useRef } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { Link, useLoaderData, useNavigate, useParams } from 'react-router'
@@ -24,12 +24,6 @@ import {
 } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
 import {
-	InputGroup,
-	InputGroupAddon,
-	InputGroupButton,
-	InputGroupInput,
-} from '~/components/ui/input-group'
-import {
 	Select,
 	SelectContent,
 	SelectItem,
@@ -39,16 +33,14 @@ import {
 import { Separator } from '~/components/ui/separator'
 import { Spinner } from '~/components/ui/spinner'
 import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from '~/components/ui/tooltip'
-import {
 	TypographyH2,
 	TypographyH4,
 	TypographyMuted,
 } from '~/components/ui/typography'
+import { isValidPhoneNumber } from 'react-phone-number-input'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { QUERY_KEYS } from '~/lib/constants'
+import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth._dashboard.settings.members.$memberId._index'
@@ -59,7 +51,7 @@ const ValidationSchema = z.object({
 		.min(2, 'Please enter a valid name'),
 	phone: z
 		.string({ error: 'Phone number is required' })
-		.min(9, 'Please enter a valid phone number'),
+		.refine(isValidPhoneNumber, { message: 'Enter a valid phone number' }),
 	property_assignments: z
 		.array(
 			z.object({
@@ -101,7 +93,7 @@ export function EditMemberModule() {
 	const rhfMethods = useForm<FormSchema>({
 		defaultValues: {
 			name: member.user?.name,
-			phone: safeString(member.user?.phone_number).slice(-9),
+			phone: safeString(member.user?.phone_number),
 			property_assignments: memberProperties.map((mp) => ({
 				property_id: mp.property_id,
 				name: safeString(mp.property?.name),
@@ -144,7 +136,7 @@ export function EditMemberModule() {
 				clientId: safeString(clientUser?.client_id),
 				id: safeString(memberId),
 				name: data.name,
-				phoneNumber: `+233${getValues('phone').slice(-9)}`,
+				phoneNumber: normalizeInternationalPhoneNumber(data.phone) ?? data.phone,
 			})
 
 			// Diff property assignments
@@ -248,42 +240,15 @@ export function EditMemberModule() {
 						<FormField
 							name="phone"
 							control={control}
-							render={({ field }) => (
+							render={({ field, fieldState }) => (
 								<FormItem>
 									<FormLabel>Phone Number</FormLabel>
 									<FormControl>
-										<InputGroup>
-											<InputGroupInput
-												placeholder="201234567"
-												id="phone"
-												type="tel"
-												{...field}
-											/>
-											<InputGroupAddon>
-												<Phone />
-												+233
-												<Separator
-													orientation="vertical"
-													className="data-[orientation=vertical]:h-4"
-												/>
-											</InputGroupAddon>
-											<InputGroupAddon align="inline-end">
-												<Tooltip>
-													<TooltipTrigger asChild>
-														<InputGroupButton
-															variant="ghost"
-															aria-label="Help"
-															size="icon-xs"
-														>
-															<HelpCircle />
-														</InputGroupButton>
-													</TooltipTrigger>
-													<TooltipContent>
-														<p>Ghana phone number</p>
-													</TooltipContent>
-												</Tooltip>
-											</InputGroupAddon>
-										</InputGroup>
+										<InternationalPhoneInput
+											value={field.value}
+											onChange={field.onChange}
+											error={!!fieldState.error}
+										/>
 									</FormControl>
 									<FormMessage />
 								</FormItem>

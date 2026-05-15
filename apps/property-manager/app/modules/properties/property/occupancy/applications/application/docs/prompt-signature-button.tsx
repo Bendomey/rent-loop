@@ -26,9 +26,12 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 import { QUERY_KEYS } from '~/lib/constants'
+import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 
@@ -40,7 +43,9 @@ const SigningRequestSchema = z.object({
 		.string()
 		.email({ message: 'Invalid email' })
 		.or(z.literal('')),
-	signer_phone: z.string(),
+	signer_phone: z
+		.string()
+		.refine((v) => !v || isValidPhoneNumber(v), { message: 'Enter a valid phone number' }),
 })
 
 type SigningRequestFormValues = z.infer<typeof SigningRequestSchema>
@@ -127,7 +132,7 @@ export function PromptSignatureButton({
 	const onSubmit = useCallback(
 		async (values: SigningRequestFormValues) => {
 			const normalizedPhone = values.signer_phone
-				? `233${values.signer_phone.replace(/\D/g, '').slice(-9)}`
+				? (normalizeInternationalPhoneNumber(values.signer_phone) ?? values.signer_phone)
 				: undefined
 
 			try {
@@ -296,11 +301,15 @@ export function PromptSignatureButton({
 								<FormField
 									name="signer_phone"
 									control={rhfMethods.control}
-									render={({ field }) => (
+									render={({ field, fieldState }) => (
 										<FormItem>
 											<FormLabel>Phone (optional)</FormLabel>
 											<FormControl>
-												<Input type="tel" {...field} />
+												<InternationalPhoneInput
+													value={field.value}
+													onChange={field.onChange}
+													error={!!fieldState.error}
+												/>
 											</FormControl>
 											<FormMessage />
 										</FormItem>

@@ -15,6 +15,8 @@ import {
 	FormMessage,
 } from '~/components/ui/form'
 import { formatPhoneWithCountryCode } from '~/lib/misc'
+import { isValidPhoneNumber } from 'react-phone-number-input'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { Input } from '~/components/ui/input'
 import {
 	Select,
@@ -61,7 +63,7 @@ const editSchema = z
 			.min(2, 'Please enter a valid name'),
 		emergency_contact_phone: z
 			.string({ error: 'Contact phone is required' })
-			.min(9, 'Please enter a valid phone number'),
+			.refine(isValidPhoneNumber, { message: 'Enter a valid phone number' }),
 		relationship_to_emergency_contact: z.string().optional(),
 		employer_type: z.enum(['WORKER', 'STUDENT'], {
 			error: 'Please select an employment type',
@@ -446,13 +448,17 @@ function EditForm({ application, onClose, onSaved }: EditFormProps) {
 						<FormField
 							control={rhf.control}
 							name="emergency_contact_phone"
-							render={({ field }) => (
+							render={({ field, fieldState }) => (
 								<FormItem>
 									<FormLabel>
 										Phone <Req />
 									</FormLabel>
 									<FormControl>
-										<Input type="tel" placeholder="Phone number" {...field} />
+										<InternationalPhoneInput
+											value={field.value}
+											onChange={field.onChange}
+											error={!!fieldState.error}
+										/>
 									</FormControl>
 									<FormMessage />
 								</FormItem>

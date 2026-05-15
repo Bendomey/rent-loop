@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { APP_NAME } from '~/lib/constants'
 
 interface Props {
@@ -41,12 +42,9 @@ export function PhoneGate({ onVerify, error, loading }: Props) {
 							<label className="mb-1 block text-sm font-medium text-zinc-700">
 								Phone number
 							</label>
-							<input
-								type="tel"
+							<InternationalPhoneInput
 								value={phone}
-								onChange={(e) => setPhone(e.target.value)}
-								placeholder="+233 XX XXX XXXX"
-								className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none"
+								onChange={setPhone}
 							/>
 						</div>
 
