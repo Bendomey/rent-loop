@@ -6,7 +6,7 @@ import {
 	EllipsisVertical,
 	User,
 } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { MembersController } from './controller'
 import { ClientUserStatus } from './status'
@@ -27,13 +27,16 @@ import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
 import { useAuth } from '~/providers/auth-provider'
 import { useClient } from '~/providers/client-provider'
+import EditMemberRoleModule from './edit-role'
 
 export function MembersModule() {
 	const [searchParams] = useSearchParams()
 	const { currentUser } = useAuth()
 	const { clientUser } = useClient()
+		const [selectedMember, setSelectedMember] = useState<ClientUser>()
+		const [openEditMemberRoleModal, setOpenEditMemberRoleModal] = useState(false)
 
-	const page = searchParams.get('page')
+		const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
 		: PAGINATION_DEFAULTS.PAGE
 	const per = searchParams.get('pageSize')
@@ -155,9 +158,17 @@ export function MembersModule() {
 										clientUser?.role === 'OWNER' ? (
 											<>
 												<DropdownMenuItem asChild>
-													<Link to={`/settings/members/${row.original.id}`}>
-														Edit
-													</Link>
+													<Button
+													className='w-full bg-'
+																				// variant="default"
+																				size="sm"
+																				onClick={() => {
+																					setSelectedMember(row.original ?? undefined)
+																					setOpenEditMemberRoleModal(true)
+																				}}
+																			>
+														Edit Role
+																			</Button>
 												</DropdownMenuItem>
 												<DropdownMenuSeparator />
 												<ClientUserStatus
@@ -216,6 +227,11 @@ export function MembersModule() {
 					}}
 				/>
 			</div>
+			<EditMemberRoleModule
+			data={selectedMember}
+							opened={openEditMemberRoleModal}
+							setOpened={setOpenEditMemberRoleModal}
+							/>
 		</main>
 	)
 }
