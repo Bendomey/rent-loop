@@ -53,7 +53,11 @@ const ValidationSchema = z.object({
 
 type FormSchema = z.infer<typeof ValidationSchema>
 
-export default function EditPropertyMemberRoleModule({ data, opened, setOpened }: Props) {
+export default function EditPropertyMemberRoleModule({
+	data,
+	opened,
+	setOpened,
+}: Props) {
 	const queryClient = useQueryClient()
 
 	const rhfMethods = useForm<FormSchema>({
@@ -108,8 +112,8 @@ export default function EditPropertyMemberRoleModule({ data, opened, setOpened }
 					</AlertDialogTitle>
 
 					<AlertDialogDescription className="text-muted-foreground pt-1">
-						Update the role for{' '}
-						{data?.client_user?.user?.name ?? 'this member'}.
+						Update the role for {data?.client_user?.user?.name ?? 'this member'}
+						.
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 

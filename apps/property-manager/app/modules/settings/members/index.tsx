@@ -33,10 +33,10 @@ export function MembersModule() {
 	const [searchParams] = useSearchParams()
 	const { currentUser } = useAuth()
 	const { clientUser } = useClient()
-		const [selectedMember, setSelectedMember] = useState<ClientUser>()
-		const [openEditMemberRoleModal, setOpenEditMemberRoleModal] = useState(false)
+	const [selectedMember, setSelectedMember] = useState<ClientUser>()
+	const [openEditMemberRoleModal, setOpenEditMemberRoleModal] = useState(false)
 
-		const page = searchParams.get('page')
+	const page = searchParams.get('page')
 		? Number(searchParams.get('page'))
 		: PAGINATION_DEFAULTS.PAGE
 	const per = searchParams.get('pageSize')
@@ -159,16 +159,16 @@ export function MembersModule() {
 											<>
 												<DropdownMenuItem asChild>
 													<Button
-													className='w-full bg-'
-																				// variant="default"
-																				size="sm"
-																				onClick={() => {
-																					setSelectedMember(row.original ?? undefined)
-																					setOpenEditMemberRoleModal(true)
-																				}}
-																			>
+														className="bg- w-full"
+														// variant="default"
+														size="sm"
+														onClick={() => {
+															setSelectedMember(row.original ?? undefined)
+															setOpenEditMemberRoleModal(true)
+														}}
+													>
 														Edit Role
-																			</Button>
+													</Button>
 												</DropdownMenuItem>
 												<DropdownMenuSeparator />
 												<ClientUserStatus
@@ -228,10 +228,10 @@ export function MembersModule() {
 				/>
 			</div>
 			<EditMemberRoleModule
-			data={selectedMember}
-							opened={openEditMemberRoleModal}
-							setOpened={setOpenEditMemberRoleModal}
-							/>
+				data={selectedMember}
+				opened={openEditMemberRoleModal}
+				setOpened={setOpenEditMemberRoleModal}
+			/>
 		</main>
 	)
 }

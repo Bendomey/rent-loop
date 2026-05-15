@@ -17,7 +17,7 @@ import { QUERY_KEYS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
 
 interface Props {
-	data?: ClientUserProperty
+	data?: ClientUser
 	property?: Property
 	opened: boolean
 	setOpened: Dispatch<SetStateAction<boolean>>
@@ -33,16 +33,14 @@ export default function RemoveMemberModule({
 
 	const { mutate, isPending } = useUnlinkClientUserProperty()
 
-	const clientUser = data?.client_user
-
 	const handleSubmit = () => {
 		if (data) {
-
+			const clientUserId = data?.id
 			mutate(
 				{
-					clientId: safeString(clientUser?.client_id),
-					property_id: safeString(data?.property_id),
-					client_user_ids: clientUser?.id ? [clientUser?.id] : [],
+					clientId: safeString(property?.client_id),
+					property_id: safeString(property?.id),
+					client_user_ids: clientUserId ? [clientUserId] : [],
 				},
 				{
 					onError: () => {
@@ -66,12 +64,12 @@ export default function RemoveMemberModule({
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>
-						{data ? `Remove ${data.client_user?.user?.name}` : 'Remove this Member'} From{' '}
+						{data ? `Remove ${data?.user?.name}` : 'Remove this Member'} From{' '}
 						{property ? property?.name : 'This Property'}
 					</AlertDialogTitle>
 
 					<AlertDialogDescription>
-						Are you sure you want to remove {clientUser?.user?.name ?? 'this member'}?
+						Are you sure you want to remove {data?.user?.name ?? 'this member'}?
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 

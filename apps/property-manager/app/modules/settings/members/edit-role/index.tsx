@@ -53,7 +53,11 @@ const ValidationSchema = z.object({
 
 type FormSchema = z.infer<typeof ValidationSchema>
 
-export default function EditMemberRoleModule({ data, opened, setOpened }: Props) {
+export default function EditMemberRoleModule({
+	data,
+	opened,
+	setOpened,
+}: Props) {
 	const queryClient = useQueryClient()
 	const user = data?.user
 
@@ -108,8 +112,7 @@ export default function EditMemberRoleModule({ data, opened, setOpened }: Props)
 					</AlertDialogTitle>
 
 					<AlertDialogDescription className="text-muted-foreground pt-1">
-						Update the role for{' '}
-						{user?.name ?? 'this member'}.
+						Update the role for {user?.name ?? 'this member'}.
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 

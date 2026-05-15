@@ -22,7 +22,8 @@ export function PropertyMembersModule() {
 	const { clientUserProperty } = useProperty()
 
 	const [selectedMember, setSelectedMember] = useState<ClientUserProperty>()
-	const [openEditPropertyMemberRoleModal, setOpenEditPropertyMemberRoleModal] = useState(false)
+	const [openEditPropertyMemberRoleModal, setOpenEditPropertyMemberRoleModal] =
+		useState(false)
 	const [openRemoveMemberModal, setOpenRemoveMemberModal] = useState(false)
 
 	const page = searchParams.get('page')
@@ -152,7 +153,12 @@ export function PropertyMembersModule() {
 				},
 			},
 		]
-	}, [clientUserProperty?.client_user_id, setSelectedMember, setOpenEditPropertyMemberRoleModal, setOpenRemoveMemberModal])
+	}, [
+		clientUserProperty?.client_user_id,
+		setSelectedMember,
+		setOpenEditPropertyMemberRoleModal,
+		setOpenRemoveMemberModal,
+	])
 
 	return (
 		<main className="flex flex-col gap-2 sm:gap-4">
@@ -191,15 +197,15 @@ export function PropertyMembersModule() {
 				<RemoveMemberModule
 					opened={openRemoveMemberModal}
 					setOpened={setOpenRemoveMemberModal}
-					data={selectedMember ?? undefined}
+					data={selectedMember?.client_user ?? undefined}
 					property={clientUserProperty?.property}
 				/>
 			) : null}
 			<EditPropertyMemberRoleModule
-			data={selectedMember}
-							opened={openEditPropertyMemberRoleModal}
-							setOpened={setOpenEditPropertyMemberRoleModal}
-						/>
+				data={selectedMember}
+				opened={openEditPropertyMemberRoleModal}
+				setOpened={setOpenEditPropertyMemberRoleModal}
+			/>
 		</main>
 	)
 }

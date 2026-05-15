@@ -134,7 +134,8 @@ export function NewMemberModule() {
 	const onSubmit = async (data: FormSchema) => {
 		const updatedData = { ...data }
 		if (data.phone) {
-			updatedData.phone = normalizeInternationalPhoneNumber(data.phone) ?? data.phone
+			updatedData.phone =
+				normalizeInternationalPhoneNumber(data.phone) ?? data.phone
 		}
 		await createFetcher.submit(
 			{
