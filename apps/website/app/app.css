@@ -16,23 +16,23 @@
 	--font-rl-sans: 'DM Sans', system-ui, sans-serif;
 	--font-rl-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-	--color-rl-cream: #F5F4F1;
-	--color-rl-cream-deep: #EBE8E1;
-	--color-rl-cream-warm: #F0EDE5;
+	--color-rl-cream: #f5f4f1;
+	--color-rl-cream-deep: #ebe8e1;
+	--color-rl-cream-warm: #f0ede5;
 	--color-rl-ink: #111110;
-	--color-rl-ink-soft: #3A3935;
-	--color-rl-muted: rgba(17,17,16,0.55);
-	--color-rl-muted-soft: rgba(17,17,16,0.42);
-	--color-rl-muted-micro: rgba(17,17,16,0.28);
-	--color-rl-hairline: rgba(17,17,16,0.10);
-	--color-rl-hairline-soft: rgba(17,17,16,0.06);
-	--color-rl-crimson: #C8003A;
-	--color-rl-crimson-deep: #A30030;
-	--color-rl-crimson-tint: rgba(200,0,58,0.07);
-	--color-rl-crimson-tint2: rgba(200,0,58,0.13);
-	--color-rl-crimson-light: #FF6F8E;
-	--color-rl-black: #0A0A0A;
-	--color-rl-green: #1B9E5C;
+	--color-rl-ink-soft: #3a3935;
+	--color-rl-muted: rgba(17, 17, 16, 0.55);
+	--color-rl-muted-soft: rgba(17, 17, 16, 0.42);
+	--color-rl-muted-micro: rgba(17, 17, 16, 0.28);
+	--color-rl-hairline: rgba(17, 17, 16, 0.1);
+	--color-rl-hairline-soft: rgba(17, 17, 16, 0.06);
+	--color-rl-crimson: #c8003a;
+	--color-rl-crimson-deep: #a30030;
+	--color-rl-crimson-tint: rgba(200, 0, 58, 0.07);
+	--color-rl-crimson-tint2: rgba(200, 0, 58, 0.13);
+	--color-rl-crimson-light: #ff6f8e;
+	--color-rl-black: #0a0a0a;
+	--color-rl-green: #1b9e5c;
 }
 
 html,

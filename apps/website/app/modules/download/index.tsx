@@ -11,17 +11,17 @@ import {
 	DocumentTextIcon,
 } from '@heroicons/react/24/outline'
 import { MinusSmallIcon, PlusSmallIcon } from '@heroicons/react/24/outline'
-import { Footer } from '~/components/layout/footer'
-import { Header } from '~/components/layout/header'
+import { MarketingFooter, MarketingNav, TopBar } from '~/components/marketing'
 import { APP_STORE_URL, PLAY_STORE_URL } from '~/lib/constants'
 
 export function DownloadModule() {
 	return (
 		<div>
-			<Header />
+			<TopBar />
+			<MarketingNav />
 
 			{/* Hero */}
-			<div className="pt-24 pb-16">
+			<div className="pt-12 pb-16">
 				<div className="mx-auto max-w-7xl px-6 lg:px-8">
 					<div className="mx-auto max-w-2xl text-center">
 						<p className="text-base/7 font-semibold text-rose-600">
@@ -151,7 +151,7 @@ export function DownloadModule() {
 				</div>
 			</div>
 
-			<Footer />
+			<MarketingFooter />
 		</div>
 	)
 }
@@ -176,9 +176,9 @@ const features = [
 		icon: DocumentTextIcon,
 	},
 	{
-		title: 'View your lease',
+		title: 'View your rental',
 		description:
-			'Access your lease agreement, key dates, and unit details at any time — no need to dig through emails or paperwork.',
+			'Access your rental agreement, key dates, and unit details at any time — no need to dig through emails or paperwork.',
 		icon: DocumentTextIcon,
 	},
 	{
@@ -199,7 +199,7 @@ const faqs = [
 	{
 		question: 'Who is the Rentloop mobile app for?',
 		answer:
-			'The Rentloop mobile app is designed for tenants. It lets you pay rent, track your rental application, submit maintenance requests, view your lease, and communicate with your property manager — all from your phone.',
+			'The Rentloop mobile app is designed for tenants. It lets you pay rent, track your rental application, submit maintenance requests, view your rental, and communicate with your property manager — all from your phone.',
 	},
 	{
 		question: 'Is the app free to download?',

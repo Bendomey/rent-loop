@@ -8,12 +8,17 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export function meta({ loaderData, location }: Route.MetaArgs) {
-	const url = getDisplayUrl({ origin: loaderData.origin, path: location.pathname })
+	const url = getDisplayUrl({
+		origin: loaderData.origin,
+		path: location.pathname,
+	})
 	return getSocialMetas({
 		url,
 		origin: loaderData.origin,
-		title: 'Rentloop for Property Managers — Run your rentals like you mean it.',
-		description: 'Leases, rent, maintenance, applications — all in one place. The dashboard that does the chasing so you don\'t have to.',
+		title:
+			'Rentloop for Property Managers — Run your rentals like you mean it.',
+		description:
+			"Rentals, rent, maintenance, applications — all in one place. The dashboard that does the chasing so you don't have to.",
 	})
 }
 

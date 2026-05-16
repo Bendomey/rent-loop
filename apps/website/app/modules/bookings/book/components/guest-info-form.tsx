@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { Controller, useForm } from 'react-hook-form'
-import * as z from 'zod'
 import { isValidPhoneNumber } from 'react-phone-number-input'
+import * as z from 'zod'
 import { InternationalPhoneInput } from '~/components/international-phone'
 
 const ID_TYPES = [
@@ -17,7 +17,9 @@ const guestSchema = z.object({
 	first_name: z.string().min(1, 'Required'),
 	last_name: z.string().min(1, 'Required'),
 	gender: z.string().min(1, 'Required'),
-	phone: z.string().refine(isValidPhoneNumber, { message: 'Enter a valid phone number' }),
+	phone: z
+		.string()
+		.refine(isValidPhoneNumber, { message: 'Enter a valid phone number' }),
 	email: z
 		.string()
 		.optional()
