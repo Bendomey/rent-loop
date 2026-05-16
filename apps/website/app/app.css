@@ -10,12 +10,46 @@
 	--font-sans:
 		'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
 		'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+	/* ── Rentloop marketing design tokens ── */
+	--font-rl-serif: 'DM Serif Display', Georgia, serif;
+	--font-rl-sans: 'DM Sans', system-ui, sans-serif;
+	--font-rl-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+	--color-rl-cream: #F5F4F1;
+	--color-rl-cream-deep: #EBE8E1;
+	--color-rl-cream-warm: #F0EDE5;
+	--color-rl-ink: #111110;
+	--color-rl-ink-soft: #3A3935;
+	--color-rl-muted: rgba(17,17,16,0.55);
+	--color-rl-muted-soft: rgba(17,17,16,0.42);
+	--color-rl-muted-micro: rgba(17,17,16,0.28);
+	--color-rl-hairline: rgba(17,17,16,0.10);
+	--color-rl-hairline-soft: rgba(17,17,16,0.06);
+	--color-rl-crimson: #C8003A;
+	--color-rl-crimson-deep: #A30030;
+	--color-rl-crimson-tint: rgba(200,0,58,0.07);
+	--color-rl-crimson-tint2: rgba(200,0,58,0.13);
+	--color-rl-crimson-light: #FF6F8E;
+	--color-rl-black: #0A0A0A;
+	--color-rl-green: #1B9E5C;
 }
 
 html,
 body {
 	@apply bg-rose-50/20;
 	color-scheme: light;
+}
+
+/* Anchor nav hover — used by sticky marketing navs */
+.rl-anchor-link:hover {
+	background: #fff;
+}
+
+/* Marketing CTA hover */
+.rl-cta-primary:hover {
+	opacity: 0.92;
+	transform: translateY(-1px);
 }
 
 @theme inline {
