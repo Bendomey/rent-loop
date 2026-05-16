@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
-import { APP_NAME } from '~/lib/constants'
 import { calcUnits, UNIT_PLURAL, UNIT_SINGULAR } from '~/lib/booking-duration'
+import { APP_NAME } from '~/lib/constants'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 
 interface Props {

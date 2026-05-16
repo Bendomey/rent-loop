@@ -7,6 +7,8 @@ export async function loader() {
 
 	const staticRoutes = [
 		{ url: '/', priority: '1.0', changefreq: 'weekly' },
+		{ url: '/managers', priority: '0.8', changefreq: 'monthly' },
+		{ url: '/tenants', priority: '0.8', changefreq: 'monthly' },
 		{ url: '/pricing', priority: '0.8', changefreq: 'monthly' },
 		{ url: '/download', priority: '0.8', changefreq: 'monthly' },
 		{ url: '/blog', priority: '0.8', changefreq: 'weekly' },

@@ -1,7 +1,6 @@
 import { Suspense, lazy, useEffect } from 'react'
 import { useParams } from 'react-router'
-import { Footer } from '~/components/layout/footer'
-import { Header } from '~/components/layout/header'
+import { MarketingFooter, MarketingNav, TopBar } from '~/components/marketing'
 import { getBlogPostBySlug } from '~/content/blog'
 
 function ScrollToHash() {
@@ -24,9 +23,10 @@ export function BlogPostModule() {
 
 	return (
 		<div>
-			<Header />
+			<TopBar />
+			<MarketingNav current="blog" />
 
-			<div className="pt-24 pb-24">
+			<div className="pt-12 pb-24">
 				<div className="mx-auto max-w-3xl px-6 lg:px-8">
 					{/* Post header */}
 					<div className="mb-10">
@@ -69,7 +69,7 @@ export function BlogPostModule() {
 				</div>
 			</div>
 
-			<Footer />
+			<MarketingFooter />
 		</div>
 	)
 }

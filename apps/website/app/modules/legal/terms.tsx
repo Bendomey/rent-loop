@@ -1,12 +1,12 @@
-import { Footer } from '~/components/layout/footer'
-import { Header } from '~/components/layout/header'
+import { MarketingFooter, MarketingNav, TopBar } from '~/components/marketing'
 
 export function TermsOfUse() {
 	return (
 		<div>
-			<Header />
+			<TopBar />
+			<MarketingNav />
 
-			<main className="mx-auto max-w-4xl px-6 py-24 pt-32 lg:px-8">
+			<main className="mx-auto max-w-4xl px-6 py-12 lg:px-8">
 				<h1 className="text-4xl font-semibold tracking-tight text-gray-900">
 					Terms of Use
 				</h1>
@@ -266,7 +266,7 @@ export function TermsOfUse() {
 				</section>
 			</main>
 
-			<Footer />
+			<MarketingFooter />
 		</div>
 	)
 }

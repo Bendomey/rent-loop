@@ -10,17 +10,20 @@ import {
 	PlusSmallIcon,
 } from '@heroicons/react/24/outline'
 import { ExternalLink } from '~/components/layout/ExternalLink'
-import { Footer } from '~/components/layout/footer'
-import { Header } from '~/components/layout/header'
-import { PROPERTY_MANAGER_APP_URL } from '~/lib/constants'
+import { MarketingFooter, MarketingNav, TopBar } from '~/components/marketing'
+import {
+	ENTERPRISE_ACCOUNT_REQUEST_URL,
+	PROPERTY_MANAGER_APP_URL,
+} from '~/lib/constants'
 
 export function PricingModule() {
 	return (
 		<div>
-			<Header />
+			<TopBar />
+			<MarketingNav current="pricing" />
 
 			{/* Hero */}
-			<div className="pt-24 pb-16">
+			<div className="pt-12 pb-16">
 				<div className="mx-auto max-w-7xl px-6 lg:px-8">
 					<div className="mx-auto max-w-2xl text-center">
 						<p className="text-base/7 font-semibold text-rose-600">Pricing</p>
@@ -137,7 +140,7 @@ export function PricingModule() {
 						</div>
 						<div className="mt-6 lg:mt-0 lg:shrink-0">
 							<ExternalLink
-								href="https://bisaform-main-bw7x.vercel.app/f/b1ae7cbbk45q"
+								href={ENTERPRISE_ACCOUNT_REQUEST_URL}
 								className="inline-block rounded-md bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-gray-700"
 							>
 								Contact us
@@ -186,22 +189,22 @@ export function PricingModule() {
 				</div>
 			</div>
 
-			<Footer />
+			<MarketingFooter />
 		</div>
 	)
 }
 
 const freePlanFeatures = [
-	'Up to 3 units',
+	'1 – 3 units free',
 	'Tenant management',
-	'Lease tracking',
+	'Rental tracking',
 	'Maintenance requests',
 	'Rent collection & payment tracking',
 ]
 
 const paidPlanFeatures = [
 	'Tenant management',
-	'Lease tracking',
+	'Rental tracking',
 	'Maintenance requests',
 	'Rent collection & payment tracking',
 	'Analytics & reporting',
@@ -251,7 +254,7 @@ const faqs = [
 	{
 		question: 'How does billing work?',
 		answer:
-			'You pay a flat monthly fee based on your total unit count. Your first 3 units are completely free. From 4 to 50 units you move to the Starter plan (GHS 99–399/month), and from 51 to 150 units you move to the Growth plan (GHS 400–899/month). Your plan updates automatically as you add or remove units.',
+			'You pay a flat monthly fee based on your total unit count. Units 1 – 3 are free. From 4 to 50 units you move to the Starter plan (GHS 99–399/month), and from 51 to 150 units you move to the Growth plan (GHS 400–899/month). Your plan updates automatically as you add or remove units.',
 	},
 	{
 		question: 'What counts as a unit?',
