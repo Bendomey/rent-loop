@@ -204,14 +204,14 @@ export const useGetClientUser = (
 /**
  * PATCH update client user by ID
  */
-const updateClientUser = async ({
+const updateClientUserRole = async ({
 	clientId,
 	id,
-	name,
-	phoneNumber,
+	role,
 }: {
 	clientId: string
 	id: string
+	role?: ClientUser['role']
 	name?: string
 	phoneNumber?: string
 }) => {
@@ -220,7 +220,7 @@ const updateClientUser = async ({
 			`/v1/admin/clients/${clientId}/client-users/${id}`,
 			{
 				method: 'PATCH',
-				body: JSON.stringify({ name, phoneNumber }),
+				body: JSON.stringify({ role }),
 			},
 		)
 		return response.parsedBody.data
@@ -233,5 +233,5 @@ const updateClientUser = async ({
 	}
 }
 
-export const useUpdateClientUser = () =>
-	useMutation({ mutationFn: updateClientUser })
+export const useUpdateClientUserRole = () =>
+	useMutation({ mutationFn: updateClientUserRole })

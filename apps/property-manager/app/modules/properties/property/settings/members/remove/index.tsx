@@ -36,7 +36,6 @@ export default function RemoveMemberModule({
 	const handleSubmit = () => {
 		if (data) {
 			const clientUserId = data?.id
-
 			mutate(
 				{
 					clientId: safeString(property?.client_id),
@@ -65,7 +64,7 @@ export default function RemoveMemberModule({
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>
-						{data ? `Remove ${data.user?.name}` : 'Remove this Member'} From{' '}
+						{data ? `Remove ${data?.user?.name}` : 'Remove this Member'} From{' '}
 						{property ? property?.name : 'This Property'}
 					</AlertDialogTitle>
 

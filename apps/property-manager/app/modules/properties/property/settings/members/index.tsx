@@ -1,5 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { CircleCheck, CircleX, Trash, User } from 'lucide-react'
+import { CircleCheck, CircleX, Pencil, Trash, User } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { MembersController } from './controller'
@@ -14,13 +14,16 @@ import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 import { useProperty } from '~/providers/property-provider'
+import EditPropertyMemberRoleModule from './edit-role'
 
 export function PropertyMembersModule() {
 	const [searchParams] = useSearchParams()
 	const { clientUser } = useClient()
 	const { clientUserProperty } = useProperty()
 
-	const [selectedMember, setSelectedMember] = useState<ClientUser>()
+	const [selectedMember, setSelectedMember] = useState<ClientUserProperty>()
+	const [openEditPropertyMemberRoleModal, setOpenEditPropertyMemberRoleModal] =
+		useState(false)
 	const [openRemoveMemberModal, setOpenRemoveMemberModal] = useState(false)
 
 	const page = searchParams.get('page')
@@ -119,24 +122,43 @@ export function PropertyMembersModule() {
 
 					return (
 						<PropertyPermissionGuard roles={['MANAGER']}>
-							<Button
-								variant="ghost"
-								className="flex size-8 text-red-600 hover:bg-red-100 hover:text-red-600"
-								size="icon"
-								onClick={() => {
-									setSelectedMember(row.original?.client_user ?? undefined)
-									setOpenRemoveMemberModal(true)
-								}}
-							>
-								<Trash />
-								<span className="sr-only">Remove Member</span>
-							</Button>
+							<div className="flex items-center gap-1">
+								<Button
+									variant="ghost"
+									className="flex size-8"
+									size="icon"
+									onClick={() => {
+										setSelectedMember(row.original)
+										setOpenEditPropertyMemberRoleModal(true)
+									}}
+								>
+									<Pencil />
+									<span className="sr-only">Edit Role</span>
+								</Button>
+								<Button
+									variant="ghost"
+									className="flex size-8 text-red-600 hover:bg-red-100 hover:text-red-600"
+									size="icon"
+									onClick={() => {
+										setSelectedMember(row.original)
+										setOpenRemoveMemberModal(true)
+									}}
+								>
+									<Trash />
+									<span className="sr-only">Remove Member</span>
+								</Button>
+							</div>
 						</PropertyPermissionGuard>
 					)
 				},
 			},
 		]
-	}, [clientUserProperty?.client_user_id])
+	}, [
+		clientUserProperty?.client_user_id,
+		setSelectedMember,
+		setOpenEditPropertyMemberRoleModal,
+		setOpenRemoveMemberModal,
+	])
 
 	return (
 		<main className="flex flex-col gap-2 sm:gap-4">
@@ -175,10 +197,15 @@ export function PropertyMembersModule() {
 				<RemoveMemberModule
 					opened={openRemoveMemberModal}
 					setOpened={setOpenRemoveMemberModal}
-					data={selectedMember}
+					data={selectedMember?.client_user ?? undefined}
 					property={clientUserProperty?.property}
 				/>
 			) : null}
+			<EditPropertyMemberRoleModule
+				data={selectedMember}
+				opened={openEditPropertyMemberRoleModal}
+				setOpened={setOpenEditPropertyMemberRoleModal}
+			/>
 		</main>
 	)
 }
