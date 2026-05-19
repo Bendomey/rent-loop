@@ -1,6 +1,7 @@
 import { Badge } from '~/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Separator } from '~/components/ui/separator'
+import { TypographyH1 } from '~/components/ui/typography'
 import { getBookingDuration, getBookingRateLabel } from '~/lib/booking.utils'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 
@@ -82,9 +83,9 @@ export function PaymentCard({ booking }: { booking: Booking }) {
 					<p className="text-muted-foreground text-xs font-light">
 						Booking total
 					</p>
-					<p className="text-2xl font-bold">
+					<TypographyH1 className="text-2xl font-light">
 						{formatAmount(invoiceTotal, booking.currency)}
-					</p>
+					</TypographyH1>
 				</div>
 
 				<Separator />

@@ -253,7 +253,7 @@ export function BookingDetailModule() {
 	}
 
 	return (
-		<div className="mx-auto max-w-6xl space-y-4 p-5">
+		<div className="mx-auto max-w-4xl space-y-4 p-5">
 			<PropertyPermissionGuard roles={['MANAGER']}>
 				<BookingHeader
 					booking={booking}
