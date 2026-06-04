@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { useCreatePropertyTenantApplicationContext } from '../context'
 import InviteTenantModal from '../invite'
 import { UnitSelect } from '~/components/SingleSelect/unit-select'
+import { Alert, AlertDescription } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
 import {
 	Item,
@@ -131,7 +132,7 @@ export function Step0() {
 				</div>
 
 				{/* Unit Selection Section */}
-				<div className="space-y-4 rounded-lg border bg-zinc-50 p-6">
+				<div className="space-y-4 rounded-lg border bg-zinc-50 p-6 dark:bg-zinc-900">
 					<div className="space-y-2">
 						<Label className="text-base font-semibold">Select Unit</Label>
 						<TypographyMuted>
@@ -151,6 +152,13 @@ export function Step0() {
 							setValue('desired_unit', name)
 						}}
 					/>
+					<Alert className="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
+						<AlertDescription className="!block text-sm">
+							Only units with an <strong>Available</strong> status can be
+							selected. Units that are <strong>Occupied</strong> or in{' '}
+							<strong>Draft</strong> are not eligible for a new application.
+						</AlertDescription>
+					</Alert>
 					{formState.errors?.desired_unit_id ? (
 						<TypographySmall className="text-destructive">
 							{formState.errors.desired_unit_id.message}
@@ -180,8 +188,8 @@ export function Step0() {
 									className={cn(
 										'relative cursor-pointer transition-all duration-200 hover:shadow-md',
 										isSelected
-											? 'border-2 border-rose-600 bg-rose-50'
-											: 'hover:bg-zinc-50',
+											? 'border-2 border-rose-600 bg-rose-50 dark:bg-rose-950/40'
+											: 'hover:bg-zinc-50 dark:hover:bg-zinc-800',
 									)}
 									onClick={() =>
 										setValue(
@@ -199,13 +207,13 @@ export function Step0() {
 											<div
 												className={cn(
 													'rounded-lg p-2',
-													isSelected ? 'bg-rose-100' : 'bg-zinc-100',
+													isSelected ? 'bg-rose-100 dark:bg-rose-900/50' : 'bg-zinc-100 dark:bg-zinc-800',
 												)}
 											>
 												<option.icon
 													className={cn(
 														'size-6',
-														isSelected ? 'text-rose-600' : 'text-zinc-600',
+														isSelected ? 'text-rose-600' : 'text-zinc-600 dark:text-zinc-400',
 													)}
 												/>
 											</div>
