@@ -432,7 +432,11 @@ export function NewBookingModule() {
 		filters: {},
 	})
 
-	const units = unitsData?.rows ?? []
+	const units = (unitsData?.rows ?? []).filter(
+		(u) =>
+			u.status === 'Unit.Status.Available' ||
+			u.status === 'Unit.Status.PartiallyOccupied',
+	)
 
 	const form = useForm<FormValues>({
 		resolver: zodResolver(schema),
@@ -555,7 +559,7 @@ export function NewBookingModule() {
 													onValueChange={handleUnitChange}
 												>
 													<FormControl>
-														<SelectTrigger>
+														<SelectTrigger className="w-full">
 															<SelectValue placeholder="Select a unit" />
 														</SelectTrigger>
 													</FormControl>
@@ -571,6 +575,24 @@ export function NewBookingModule() {
 											</FormItem>
 										)}
 									/>
+
+									{
+										!form.watch('unit_id') ? (
+											<div className="flex gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 dark:border-rose-900/40 dark:bg-rose-950/20">
+												<Info className="mt-0.5 size-4 shrink-0 text-yellow-600" />
+												<p className="text-xs text-yellow-700 dark:text-yellow-400">
+													Only available units are listed. If a unit is missing, make sure
+													it's not in draft or occupied state.{' '}
+													<a
+														href={`/properties/${propertyId}/assets/units`}
+														className="underline underline-offset-2"
+													>
+														Manage units
+													</a>
+												</p>
+											</div>
+										) : null
+									}
 
 									{selectedUnitId ? (
 										<div className="space-y-3">
@@ -777,7 +799,7 @@ export function NewBookingModule() {
 												</FormItem>
 											)}
 										/>
-										
+
 									</div>
 								</CardContent>
 							</Card>
