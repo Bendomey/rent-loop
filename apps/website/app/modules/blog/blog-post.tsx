@@ -61,7 +61,7 @@ export function BlogPostModule() {
 							</div>
 						}
 					>
-						<div className="prose prose-gray prose-headings:font-semibold prose-a:text-rose-600 prose-a:no-underline hover:prose-a:underline max-w-none">
+						<div className="prose prose-gray prose-headings:font-semibold prose-a:text-rl-crimson prose-a:no-underline hover:prose-a:underline max-w-none">
 							<PostContent />
 							<ScrollToHash />
 						</div>

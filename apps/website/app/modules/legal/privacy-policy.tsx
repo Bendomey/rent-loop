@@ -273,7 +273,7 @@ export function PrivacyPolicy() {
 						Email:{' '}
 						<a
 							href="mailto:support@rentloopapp.com"
-							className="text-rose-700 hover:text-rose-600"
+							className="text-rl-crimson"
 						>
 							support@rentloopappapp.com
 						</a>

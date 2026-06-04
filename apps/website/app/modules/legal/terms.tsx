@@ -250,7 +250,7 @@ export function TermsOfUse() {
 						Phone Number:{' '}
 						<a
 							href="tel:+233201080802"
-							className="text-rose-700 hover:text-rose-600"
+							className="text-rl-crimson"
 						>
 							+233 201 080 802
 						</a>
@@ -258,7 +258,7 @@ export function TermsOfUse() {
 						Email:{' '}
 						<a
 							href="mailto:support@rentloopapp.com"
-							className="text-rose-700 hover:text-rose-600"
+							className="text-rl-crimson"
 						>
 							support@rentloopapp.com
 						</a>
