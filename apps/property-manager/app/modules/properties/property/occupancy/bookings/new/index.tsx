@@ -3,12 +3,14 @@ import dayjs from 'dayjs'
 import { ArrowLeft, Info, MapPin, Search } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useCreateBooking, useGetUnitAvailability } from '~/api/bookings'
 import { useGetTenantByPhone } from '~/api/tenants'
 import { useGetPropertyUnits } from '~/api/units'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { Button } from '~/components/ui/button'
 import { Calendar } from '~/components/ui/calendar'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
@@ -54,7 +56,9 @@ const schema = z
 		notes: z.string().optional(),
 		guest_first_name: z.string().min(1, 'Required'),
 		guest_last_name: z.string().min(1, 'Required'),
-		guest_phone: z.string().min(1, 'Required'),
+		guest_phone: z
+			.string({ error: 'Required' })
+			.refine(isValidPhoneNumber, { message: 'Enter a valid phone number' }),
 		guest_email: z.string().email({ message: 'Invalid email' }),
 		guest_id_number: z.string().min(1, 'Required'),
 		guest_gender: z.enum(['MALE', 'FEMALE'], { error: 'Required' }),
@@ -257,19 +261,16 @@ function GuestSearchModal({
 				</DialogHeader>
 				<div className="space-y-4">
 					<div className="flex gap-2">
-						<Input
-							placeholder="+233 20 000 0000"
+						<InternationalPhoneInput
 							value={phone}
-							onChange={(e) => setPhone(e.target.value)}
-							onKeyDown={(e) => {
-								if (e.key === 'Enter') void handleSearch()
-							}}
+							onChange={setPhone}
+							className="flex-1"
 						/>
 						<Button
 							type="button"
 							variant="outline"
 							onClick={() => void handleSearch()}
-							disabled={isPending || !phone.trim()}
+							disabled={isPending || !isValidPhoneNumber(phone ?? '')}
 						>
 							{isPending ? <Spinner /> : <Search className="size-4" />}
 						</Button>
@@ -703,11 +704,15 @@ export function NewBookingModule() {
 										<FormField
 											control={form.control}
 											name="guest_phone"
-											render={({ field }) => (
+											render={({ field, fieldState }) => (
 												<FormItem>
 													<FormLabel>Phone</FormLabel>
 													<FormControl>
-														<Input {...field} placeholder="+233..." />
+														<InternationalPhoneInput
+															value={field.value}
+															onChange={field.onChange}
+															error={!!fieldState.error}
+														/>
 													</FormControl>
 													<FormMessage />
 												</FormItem>
