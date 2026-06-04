@@ -88,12 +88,16 @@ export function BookModule({ unit }: Props) {
 		if (!selectedRange || !guestValues) return
 		setSubmitting(true)
 		setError(null)
+
 		try {
+			const cleanedGuest = Object.fromEntries(
+				Object.entries(guestValues).map(([k, v]) => [k, v === '' ? undefined : v]),
+			) as GuestFormValues
 			const booking = await createBooking(unit.slug, {
 				check_in_date: selectedRange.from.toISOString(),
 				check_out_date: selectedRange.to.toISOString(),
-				...guestValues,
-				phone: '+233' + guestValues.phone.slice(-9),
+				...cleanedGuest,
+				phone: guestValues.phone.slice(-9),
 			})
 			setTrackingCode(booking.code)
 			setSuccess(true)
