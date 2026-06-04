@@ -123,7 +123,7 @@ export function Step0() {
 				{/* Header Section */}
 				<div className="mt-10 space-y-2 border-b pb-6">
 					<TypographyH2 className="text-2xl font-bold">
-						Add New Lease Application
+						Add New Rental Application
 					</TypographyH2>
 					<TypographyMuted className="text-base">
 						Select an available unit and choose how the tenant should be
@@ -156,7 +156,13 @@ export function Step0() {
 						<AlertDescription className="!block text-sm">
 							Only units with an <strong>Available</strong> status can be
 							selected. Units that are <strong>Occupied</strong> or in{' '}
-							<strong>Draft</strong> are not eligible for a new application.
+							<strong>Draft</strong> are not eligible for a new application.{' '}
+							<Link
+								to={`/properties/${property_id}/assets/units`}
+								className="underline underline-offset-2"
+							>
+								Manage units
+							</Link>
 						</AlertDescription>
 					</Alert>
 					{formState.errors?.desired_unit_id ? (
