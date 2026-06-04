@@ -57,6 +57,7 @@ const schema = z
 		guest_phone: z.string().min(1, 'Required'),
 		guest_email: z.string().email({ message: 'Invalid email' }),
 		guest_id_number: z.string().min(1, 'Required'),
+		guest_gender: z.enum(['MALE', 'FEMALE'], { error: 'Required' }),
 	})
 	.refine((d) => d.check_out_date > d.check_in_date, {
 		message: 'Check-out must be after check-in',
@@ -484,6 +485,7 @@ export function NewBookingModule() {
 		form.setValue('guest_phone', tenant.phone)
 		form.setValue('guest_email', tenant.email)
 		if (tenant.id_number) form.setValue('guest_id_number', tenant.id_number)
+		if (tenant.gender) form.setValue('guest_gender', tenant.gender)
 	}
 
 	const onSubmit = async (values: FormValues) => {
@@ -502,9 +504,10 @@ export function NewBookingModule() {
 				guest_phone: values.guest_phone,
 				guest_email: values.guest_email,
 				guest_id_number: values.guest_id_number,
+				guest_gender: values.guest_gender,
 			})
 			toast.success('Booking created')
-			void navigate(`/properties/${propertyId}/bookings/${booking?.id}`)
+			void navigate(`/properties/${propertyId}/occupancy/bookings/${booking?.id}`)
 		} catch (err) {
 			toast.error(
 				err instanceof Error ? err.message : 'Failed to create booking',
@@ -724,24 +727,48 @@ export function NewBookingModule() {
 											)}
 										/>
 									</div>
-									<FormField
-										control={form.control}
-										name="guest_id_number"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>
-													ID number{' '}
-													<span className="text-muted-foreground font-normal text-xs">
-														Ghana Card or passport
-													</span>
-												</FormLabel>
-												<FormControl>
-													<Input {...field} placeholder="GHA-XXXXXXXX-X" />
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
+									<div className="grid grid-cols-2 gap-4">
+										<FormField
+											control={form.control}
+											name="guest_gender"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Gender</FormLabel>
+													<Select value={field.value} onValueChange={field.onChange}>
+														<FormControl className="w-full">
+															<SelectTrigger>
+																<SelectValue placeholder="Select gender" />
+															</SelectTrigger>
+														</FormControl>
+														<SelectContent>
+															<SelectItem value="MALE">Male</SelectItem>
+															<SelectItem value="FEMALE">Female</SelectItem>
+														</SelectContent>
+													</Select>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+										<FormField
+											control={form.control}
+											name="guest_id_number"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>
+														ID number{' '}
+														<span className="text-muted-foreground font-normal text-xs">
+															Ghana Card or passport
+														</span>
+													</FormLabel>
+													<FormControl>
+														<Input {...field} placeholder="GHA-XXXXXXXX-X" />
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+										
+									</div>
 								</CardContent>
 							</Card>
 						</div>
