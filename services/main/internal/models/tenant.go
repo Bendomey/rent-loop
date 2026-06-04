@@ -30,8 +30,8 @@ type Tenant struct {
 	OccupationAddress *string // or school address
 	ProofOfIncomeUrl  *string // or admission letter url
 
-	CreatedById string `gorm:"not null;"`
-	CreatedBy   ClientUser
+	CreatedById *string
+	CreatedBy   *ClientUser
 
 	TenantAccount *TenantAccount `gorm:"foreignKey:TenantId"`
 }

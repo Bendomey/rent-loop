@@ -115,13 +115,14 @@ func (s *bookingService) CreateBooking(ctx context.Context, input CreateBookingI
 	}
 
 	tenant, err := s.tenantService.FindOrCreateLightTenant(ctx, FindOrCreateLightTenantInput{
-		FirstName: input.GuestFirstName,
-		LastName:  input.GuestLastName,
-		Phone:     input.GuestPhone,
-		Email:     input.GuestEmail,
-		IDType:    input.GuestIDType,
-		IDNumber:  input.GuestIDNumber,
-		Gender:    input.GuestGender,
+		FirstName:   input.GuestFirstName,
+		LastName:    input.GuestLastName,
+		Phone:       input.GuestPhone,
+		Email:       input.GuestEmail,
+		IDType:      input.GuestIDType,
+		IDNumber:    input.GuestIDNumber,
+		Gender:      input.GuestGender,
+		CreatedById: input.CreatedByClientUserID,
 	})
 	if err != nil {
 		return nil, err

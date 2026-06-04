@@ -509,9 +509,9 @@ export function NewBookingModule() {
 			})
 			toast.success('Booking created')
 			void navigate(`/properties/${propertyId}/occupancy/bookings/${booking?.id}`)
-		} catch (err) {
+		} catch {
 			toast.error(
-				err instanceof Error ? err.message : 'Failed to create booking',
+				'Failed to create booking',
 			)
 		}
 	}

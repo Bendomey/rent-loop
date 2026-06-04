@@ -1097,7 +1097,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		Employer:                       tenantApplication.Employer,
 		OccupationAddress:              tenantApplication.OccupationAddress,
 		ProofOfIncomeUrl:               tenantApplication.ProofOfIncomeUrl,
-		CreatedById:                    input.ClientUserID,
+		CreatedById:                    &input.ClientUserID,
 	}
 
 	tenant, createTenantErr := s.tenantService.GetOrCreateTenant(transCtx, tenantInput)

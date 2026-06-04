@@ -73,7 +73,7 @@ func DBAdminTenantToRest(i *models.Tenant) any {
 		"occupation_address":                i.OccupationAddress,
 		"proof_of_income_url":               i.ProofOfIncomeUrl,
 		"created_by_id":                     i.CreatedById,
-		"created_by":                        DBClientUserToRest(&i.CreatedBy),
+		"created_by":                        DBClientUserToRest(i.CreatedBy),
 		"created_at":                        i.CreatedAt,
 		"updated_at":                        i.UpdatedAt,
 	}

@@ -53,7 +53,7 @@ type CreateTenantInput struct {
 	Employer                       *string
 	OccupationAddress              *string
 	ProofOfIncomeUrl               *string
-	CreatedById                    string
+	CreatedById                    *string
 }
 
 func (s *tenantService) CreateTenant(ctx context.Context, input CreateTenantInput) (*models.Tenant, error) {
@@ -266,13 +266,14 @@ func (s *tenantService) CountTenantsByProperty(
 }
 
 type FindOrCreateLightTenantInput struct {
-	FirstName string
-	LastName  string
-	Phone     string
-	Email     *string
-	IDType    *string
-	IDNumber  *string
-	Gender    string
+	FirstName   string
+	LastName    string
+	Phone       string
+	Email       *string
+	IDType      *string
+	IDNumber    *string
+	Gender      string
+	CreatedById *string
 }
 
 func (s *tenantService) FindOrCreateLightTenant(
@@ -291,13 +292,14 @@ func (s *tenantService) FindOrCreateLightTenant(
 
 	// Create new light tenant (only booking-relevant fields)
 	tenant := &models.Tenant{
-		FirstName: input.FirstName,
-		LastName:  input.LastName,
-		Phone:     input.Phone,
-		Email:     input.Email,
-		IDType:    input.IDType,
-		IDNumber:  input.IDNumber,
-		Gender:    input.Gender,
+		FirstName:   input.FirstName,
+		LastName:    input.LastName,
+		Phone:       input.Phone,
+		Email:       input.Email,
+		IDType:      input.IDType,
+		IDNumber:    input.IDNumber,
+		Gender:      input.Gender,
+		CreatedById: input.CreatedById,
 	}
 	if createErr := s.repo.Create(ctx, tenant); createErr != nil {
 		return nil, createErr
