@@ -131,6 +131,7 @@ export interface CreateBookingInput {
 	guest_phone: string
 	guest_email: string
 	guest_id_number: string
+	guest_gender: 'MALE' | 'FEMALE'
 }
 
 const createBooking = async ({

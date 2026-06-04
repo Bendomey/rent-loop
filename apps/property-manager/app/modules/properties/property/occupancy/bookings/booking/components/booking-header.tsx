@@ -6,6 +6,7 @@ import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent } from '~/components/ui/card'
 import { Separator } from '~/components/ui/separator'
+import { TypographyH2 } from '~/components/ui/typography'
 import { getBookingDuration } from '~/lib/booking.utils'
 import { localizedDayjs } from '~/lib/date'
 import { cn } from '~/lib/utils'
@@ -188,10 +189,10 @@ export function BookingHeader({
 						<p className="text-muted-foreground text-[10px] font-semibold tracking-widest uppercase">
 							Stay Summary
 						</p>
-						<h2 className="text-2xl leading-tight font-bold sm:text-3xl">
+						<TypographyH2 >
 							<span className="text-rose-600">{count}</span> {label} at{' '}
 							{booking.unit?.name ?? '—'}
-						</h2>
+						</TypographyH2>
 						<div className="text-muted-foreground flex flex-wrap items-center gap-3 text-xs">
 							{booking.unit?.property?.name ? (
 								<span>{booking.unit.property.name}</span>
