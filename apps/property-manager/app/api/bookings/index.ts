@@ -129,8 +129,8 @@ export interface CreateBookingInput {
 	guest_first_name: string
 	guest_last_name: string
 	guest_phone: string
-	guest_email: string
-	guest_id_number: string
+	guest_email?: string
+	guest_id_number?: string
 	guest_gender: 'MALE' | 'FEMALE'
 }
 

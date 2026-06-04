@@ -48,19 +48,19 @@ import { useProperty } from '~/providers/property-provider'
 
 const schema = z
 	.object({
-		unit_id: z.string().min(1, 'Select a unit'),
+		unit_id: z.string({ error: 'Select a unit' }).min(1, 'Select a unit'),
 		check_in_date: z.date({ error: 'Check-in date required' }),
 		check_out_date: z.date({ error: 'Check-out date required' }),
-		rate: z.number().min(1, 'Rate must be greater than 0'),
-		currency: z.string().min(1),
+		rate: z.number({ error: 'Required' }).min(1, 'Rate must be greater than 0'),
+		currency: z.string({ error: 'Required' }).min(1),
 		notes: z.string().optional(),
-		guest_first_name: z.string().min(1, 'Required'),
-		guest_last_name: z.string().min(1, 'Required'),
+		guest_first_name: z.string({ error: 'Required' }).min(1, 'Required'),
+		guest_last_name: z.string({ error: 'Required' }).min(1, 'Required'),
 		guest_phone: z
 			.string({ error: 'Required' })
 			.refine(isValidPhoneNumber, { message: 'Enter a valid phone number' }),
-		guest_email: z.string().email({ message: 'Invalid email' }),
-		guest_id_number: z.string().min(1, 'Required'),
+		guest_email: z.string().email({ message: 'Invalid email' }).optional().or(z.literal('')),
+		guest_id_number: z.string().optional(),
 		guest_gender: z.enum(['MALE', 'FEMALE'], { error: 'Required' }),
 	})
 	.refine((d) => d.check_out_date > d.check_in_date, {
@@ -723,7 +723,12 @@ export function NewBookingModule() {
 											name="guest_email"
 											render={({ field }) => (
 												<FormItem>
-													<FormLabel>Email</FormLabel>
+													<FormLabel>
+														Email{' '}
+														<span className="text-muted-foreground font-normal text-xs">
+															optional
+														</span>
+													</FormLabel>
 													<FormControl>
 														<Input type="email" {...field} />
 													</FormControl>
@@ -762,7 +767,7 @@ export function NewBookingModule() {
 													<FormLabel>
 														ID number{' '}
 														<span className="text-muted-foreground font-normal text-xs">
-															Ghana Card or passport
+															optional
 														</span>
 													</FormLabel>
 													<FormControl>
