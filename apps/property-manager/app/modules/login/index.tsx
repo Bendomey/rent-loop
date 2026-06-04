@@ -2,7 +2,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import {
 	AlertCircleIcon,
 	CheckCircle2Icon,
-	GalleryVerticalEnd,
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Link, useFetcher, useLoaderData } from 'react-router'
@@ -21,8 +20,7 @@ import {
 } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
-import { TypographyH1 } from '~/components/ui/typography'
-import { APP_NAME } from '~/lib/constants'
+import { TypographyH1, TypographyH3 } from '~/components/ui/typography'
 import { cn } from '~/lib/utils'
 
 const ValidationSchema = z.object({
@@ -59,19 +57,12 @@ export function LoginModule() {
 							<FieldGroup>
 								<div className="flex flex-col gap-2">
 									<div className="flex flex-col gap-2 font-medium">
-										<div className="flex size-8 items-center justify-center rounded-md">
-											<GalleryVerticalEnd className="size-10" />
-										</div>
-										<span className="sr-only">{APP_NAME}.</span>
+										<TypographyH1 className="mt-4 text-rose-600 font-black text-7xl md:text-7xl">rl<span className='text-black'>.</span></TypographyH1>
 									</div>
 
-									<TypographyH1 className="mt-4">
-										Welcome to{' '}
-										<span className="text-rose-700">
-											{APP_NAME.slice(0, 4)}
-										</span>{' '}
-										<span className="font-extrabold">{APP_NAME.slice(4)}</span>
-									</TypographyH1>
+									<TypographyH3 className="mt-4">
+										Welcome back!
+									</TypographyH3>
 									<FieldDescription>
 										Don&apos;t have an account?{' '}
 										<Link to="/apply">Apply as landlord/real estate</Link>
