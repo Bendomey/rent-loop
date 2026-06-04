@@ -62,15 +62,13 @@ const ValidationSchema = z.object({
 		.string({ error: 'Contact phone number is required' })
 		.refine(isValidPhoneNumber, { message: 'Enter a valid phone number' }),
 	email: z.email('Please enter a valid support email address'),
-	property_assignments: z
-		.array(
-			z.object({
-				property_id: z.string(),
-				name: z.string(),
-				role: z.enum(['MANAGER', 'STAFF']),
-			}),
-		)
-		.min(1, 'Please assign at least one property'),
+	property_assignments: z.array(
+		z.object({
+			property_id: z.string(),
+			name: z.string(),
+			role: z.enum(['MANAGER', 'STAFF']),
+		}),
+	),
 })
 
 export type FormSchema = z.infer<typeof ValidationSchema>
@@ -289,9 +287,15 @@ export function NewMemberModule() {
 					control={control}
 					render={() => (
 						<FormItem>
-							<TypographyH4>Assign Properties to Member</TypographyH4>
+							<TypographyH4>
+								Assign Properties to Member{' '}
+								<span className="text-muted-foreground text-sm font-normal">
+									(Optional)
+								</span>
+							</TypographyH4>
 							<TypographyMuted>
-								Member will have access to all properties you select here.
+								Member will have access to all properties you select here. You
+								can assign properties later.
 							</TypographyMuted>
 
 							{properties.length > 0 && (
