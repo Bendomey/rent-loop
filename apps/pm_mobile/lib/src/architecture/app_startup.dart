@@ -20,9 +20,14 @@ class AppStartupNotifier extends Notifier<AppStartupState> {
     state = const AppStartupState(status: AppStartupStatus.unauthenticated);
   }
 
-  Future<void> login() async {
-    // TODO: real auth call
-    await Future.delayed(const Duration(milliseconds: 400));
+  Future<void> login({required String email, required String password}) async {
+    // Loading is tracked locally in the screen — don't touch state here so the
+    // router doesn't redirect to /splash mid-attempt.
+    // TODO: replace with real API call — POST /api/v1/client-user/auth/login
+    await Future.delayed(const Duration(milliseconds: 900));
+    if (email != 'akosua@owusuestates.com' || password != 'rentloop2026') {
+      throw Exception('Incorrect email or password.');
+    }
     state = const AppStartupState(status: AppStartupStatus.ready);
   }
 

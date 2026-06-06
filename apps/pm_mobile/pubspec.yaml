@@ -22,6 +22,7 @@ dependencies:
   modal_bottom_sheet: ^3.0.0
   intl: ^0.20.2
   validatorless: ^1.2.5
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:

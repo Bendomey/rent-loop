@@ -2,6 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rentloop_manager/src/architecture/app_startup.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
+import 'package:rentloop_manager/src/shared/widgets.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+// UTM-tagged deep links from the login screen.
+// utm_source=manager_app   — PM mobile app
+// utm_medium=mobile        — channel
+// utm_campaign=login       — screen
+// utm_content=<cta>        — which specific link was tapped
+Uri _applyUrl() => Uri.https('pm.rentloopapp.com', '/apply', {
+  'utm_source': 'manager_app',
+  'utm_medium': 'mobile',
+  'utm_campaign': 'login',
+  'utm_content': 'apply_cta',
+});
+
+Uri _forgotPasswordUrl() => Uri.https(
+  'pm.rentloopapp.com',
+  '/forgot-your-password',
+  {
+    'utm_source': 'manager_app',
+    'utm_medium': 'mobile',
+    'utm_campaign': 'login',
+    'utm_content': 'forgot_password',
+  },
+);
+
+Future<void> _launch(Uri url) async {
+  if (await canLaunchUrl(url)) {
+    await launchUrl(url, mode: LaunchMode.externalApplication);
+  }
+}
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -12,9 +44,10 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailCtrl = TextEditingController(text: 'akosua@owusuestates.com');
-  final _passCtrl = TextEditingController(text: 'rentloop2026');
-  bool _showPass = false;
-  bool _loading = false;
+  final _passCtrl  = TextEditingController(text: 'rentloop2026');
+  bool _showPass   = false;
+  bool _loading    = false;
+  String? _error;
 
   @override
   void dispose() {
@@ -24,9 +57,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _signIn() async {
-    setState(() => _loading = true);
-    await ref.read(appStartupProvider.notifier).login();
-    if (mounted) setState(() => _loading = false);
+    final email    = _emailCtrl.text.trim();
+    final password = _passCtrl.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      await Haptics.vibrate(HapticsType.error);
+      setState(() => _error = 'Please enter your email and password.');
+      return;
+    }
+
+    await Haptics.vibrate(HapticsType.medium);
+    setState(() { _loading = true; _error = null; });
+
+    try {
+      await ref.read(appStartupProvider.notifier).login(
+        email: email,
+        password: password,
+      );
+      await Haptics.vibrate(HapticsType.success);
+    } catch (e) {
+      await Haptics.vibrate(HapticsType.error);
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = e is Exception
+              ? e.toString().replaceFirst('Exception: ', '')
+              : 'Something went wrong. Check your connection and try again.';
+        });
+      }
+    }
   }
 
   @override
@@ -39,14 +98,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Logo
+              // ── Logo ──────────────────────────────────────────
               Row(
                 children: [
-                  _LogoMark(size: 30),
+                  const _LogoMark(size: 30),
                   const SizedBox(width: 10),
                   RichText(
                     text: TextSpan(
-                      style: TextStyle(fontFamily: RLTokens.fontSans, 
+                      style: TextStyle(
+                        fontFamily: RLTokens.fontSans,
                         fontSize: 20,
                         fontWeight: RLTokens.bold,
                         letterSpacing: -0.4,
@@ -62,10 +122,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 46),
 
-              // Title
+              // ── Heading ───────────────────────────────────────
               Text(
                 'Sign in',
-                style: TextStyle(fontFamily: RLTokens.fontSerif, 
+                style: TextStyle(
+                  fontFamily: RLTokens.fontSerif,
                   fontSize: 32,
                   letterSpacing: -0.6,
                   color: RLTokens.ink,
@@ -75,7 +136,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 8),
               Text(
                 'Manage your portfolio from anywhere.',
-                style: TextStyle(fontFamily: RLTokens.fontSans, 
+                style: TextStyle(
+                  fontFamily: RLTokens.fontSans,
                   fontSize: 14.5,
                   color: RLTokens.muted,
                   height: 1.5,
@@ -83,27 +145,46 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 30),
 
-              // Email field
+              // ── Error banner ──────────────────────────────────
+              if (_error != null) ...[
+                RLInlineBanner(
+                  tone: RLBannerTone.danger,
+                  title: 'Sign-in failed',
+                  body: _error,
+                  onDismiss: () => setState(() => _error = null),
+                ),
+                const SizedBox(height: 18),
+              ],
+
+              // ── Fields ────────────────────────────────────────
               _FieldLabel('EMAIL'),
               const SizedBox(height: 7),
               _InputField(
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.email],
               ),
               const SizedBox(height: 14),
 
-              // Password field
               _FieldLabel('PASSWORD'),
               const SizedBox(height: 7),
               _InputField(
                 controller: _passCtrl,
                 obscureText: !_showPass,
                 mono: true,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.password],
+                onSubmitted: (_) => _signIn(),
                 trailing: GestureDetector(
-                  onTap: () => setState(() => _showPass = !_showPass),
+                  onTap: () async {
+                    await Haptics.vibrate(HapticsType.selection);
+                    setState(() => _showPass = !_showPass);
+                  },
                   child: Text(
                     _showPass ? 'Hide' : 'Show',
-                    style: TextStyle(fontFamily: RLTokens.fontSans, 
+                    style: TextStyle(
+                      fontFamily: RLTokens.fontSans,
                       fontSize: 12.5,
                       fontWeight: RLTokens.semibold,
                       color: RLTokens.crimson,
@@ -115,12 +196,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: GestureDetector(
-                  onTap: () {},
+                  onTap: () async {
+                    await Haptics.vibrate(HapticsType.selection);
+                    await _launch(_forgotPasswordUrl());
+                  },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6),
                     child: Text(
                       'Forgot password?',
-                      style: TextStyle(fontFamily: RLTokens.fontSans, 
+                      style: TextStyle(
+                        fontFamily: RLTokens.fontSans,
                         fontSize: 13,
                         fontWeight: RLTokens.semibold,
                         color: RLTokens.crimson,
@@ -131,14 +216,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Sign in button
+              // ── Submit ────────────────────────────────────────
               GestureDetector(
                 onTap: _loading ? null : _signIn,
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   decoration: BoxDecoration(
-                    color: _loading ? RLTokens.crimson.withAlpha(180) : RLTokens.crimson,
+                    color: _loading
+                        ? RLTokens.crimson.withAlpha(180)
+                        : RLTokens.crimson,
                     borderRadius: BorderRadius.circular(RLTokens.rMd),
                   ),
                   child: Center(
@@ -146,11 +234,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : Text(
                             'Sign in',
-                            style: TextStyle(fontFamily: RLTokens.fontSans, 
+                            style: TextStyle(
+                              fontFamily: RLTokens.fontSans,
                               fontSize: 15.5,
                               fontWeight: RLTokens.semibold,
                               color: Colors.white,
@@ -168,14 +260,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     Text(
                       'New here?',
-                      style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13, color: RLTokens.muted),
+                      style: TextStyle(
+                        fontFamily: RLTokens.fontSans,
+                        fontSize: 13,
+                        color: RLTokens.muted,
+                      ),
                     ),
                     const SizedBox(width: 4),
                     GestureDetector(
-                      onTap: () {},
+                      onTap: () async {
+                        await Haptics.vibrate(HapticsType.selection);
+                        await _launch(_applyUrl());
+                      },
                       child: Text(
-                        'Create a workspace',
-                        style: TextStyle(fontFamily: RLTokens.fontSans, 
+                        'Apply as landlord/real estate',
+                        style: TextStyle(
+                          fontFamily: RLTokens.fontSans,
                           fontSize: 13,
                           fontWeight: RLTokens.semibold,
                           color: RLTokens.ink,
@@ -193,6 +293,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
+// ── Private widgets ───────────────────────────────────────────────────────────
+
 class _FieldLabel extends StatelessWidget {
   const _FieldLabel(this.text);
   final String text;
@@ -201,7 +303,8 @@ class _FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: TextStyle(fontFamily: RLTokens.fontSans, 
+      style: TextStyle(
+        fontFamily: RLTokens.fontSans,
         fontSize: 11,
         fontWeight: RLTokens.semibold,
         letterSpacing: 0.6,
@@ -218,6 +321,9 @@ class _InputField extends StatelessWidget {
     this.mono = false,
     this.trailing,
     this.keyboardType,
+    this.textInputAction,
+    this.autofillHints,
+    this.onSubmitted,
   });
 
   final TextEditingController controller;
@@ -225,11 +331,13 @@ class _InputField extends StatelessWidget {
   final bool mono;
   final Widget? trailing;
   final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+  final Iterable<String>? autofillHints;
+  final ValueChanged<String>? onSubmitted;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
       decoration: BoxDecoration(
         color: RLTokens.surface,
         borderRadius: BorderRadius.circular(RLTokens.rMd),
@@ -238,20 +346,48 @@ class _InputField extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              obscureText ? '••••••••••••' : controller.text,
+            child: TextField(
+              controller: controller,
+              obscureText: obscureText,
+              keyboardType: keyboardType,
+              textInputAction: textInputAction,
+              autofillHints: autofillHints,
+              onSubmitted: onSubmitted,
               style: mono
-                  ? TextStyle(fontFamily: RLTokens.fontMono, fontSize: 15, color: RLTokens.ink, letterSpacing: 1)
-                  : TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, color: RLTokens.ink),
-              overflow: TextOverflow.ellipsis,
+                  ? TextStyle(
+                      fontFamily: RLTokens.fontMono,
+                      fontSize: 15,
+                      color: RLTokens.ink,
+                      letterSpacing: 1,
+                    )
+                  : TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 15,
+                      color: RLTokens.ink,
+                    ),
+              decoration: InputDecoration(
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 15,
+                  vertical: 15,
+                ),
+                border: InputBorder.none,
+              ),
             ),
           ),
-          if (trailing != null) trailing!,
+          if (trailing != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 15),
+              child: trailing,
+            ),
         ],
       ),
     );
   }
 }
+
+// ── Logo mark ─────────────────────────────────────────────────────────────────
+// Crimson square with white house outline — matches MgMark in the design spec.
 
 class _LogoMark extends StatelessWidget {
   const _LogoMark({required this.size});
@@ -264,9 +400,12 @@ class _LogoMark extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         color: RLTokens.crimson,
-        borderRadius: BorderRadius.circular(size * 0.3),
+        borderRadius: BorderRadius.circular(size * 0.308),
       ),
-      child: CustomPaint(size: Size(size, size), painter: _HouseMarkPainter()),
+      child: CustomPaint(
+        size: Size(size, size),
+        painter: _HouseMarkPainter(),
+      ),
     );
   }
 }
@@ -274,22 +413,26 @@ class _LogoMark extends StatelessWidget {
 class _HouseMarkPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final p = Paint()
+    final s = size.width / 26;
+    final stroke = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
-      ..strokeWidth = size.width * 0.07
+      ..strokeWidth = size.width * 0.069
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
-    final s = size.width / 26;
 
-    final roof = Path()
-      ..moveTo(5 * s, 21 * s)
-      ..lineTo(5 * s, 9 * s)
-      ..lineTo(13 * s, 5 * s)
-      ..lineTo(21 * s, 9 * s)
-      ..lineTo(21 * s, 21 * s);
-    canvas.drawPath(roof, p);
+    // House outline: left wall → peak → right wall
+    canvas.drawPath(
+      Path()
+        ..moveTo(5 * s, 21 * s)
+        ..lineTo(5 * s, 9 * s)
+        ..lineTo(13 * s, 5 * s)
+        ..lineTo(21 * s, 9 * s)
+        ..lineTo(21 * s, 21 * s),
+      stroke,
+    );
 
+    // Door
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(10 * s, 14 * s, 6 * s, 7 * s),
