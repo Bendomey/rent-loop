@@ -18,25 +18,95 @@ class _MaintData {
     required this.age,
     this.assigned,
   });
-  final String  id;
-  final String  title;
-  final String  unit;
-  final String  cat;
-  final String  priority;
-  final String  status;
-  final String  tenant;
-  final String  age;
+  final String id;
+  final String title;
+  final String unit;
+  final String cat;
+  final String priority;
+  final String status;
+  final String tenant;
+  final String age;
   final String? assigned;
 }
 
 const _kMaint = [
-  _MaintData(id: 'm1', title: 'Leaking kitchen tap',  unit: 'Unit 4B · Cantonments Court', cat: 'Plumbing',   priority: 'High',   status: 'New',         tenant: 'Kwame Mensah', age: '2h ago',  assigned: null),
-  _MaintData(id: 'm2', title: 'AC not cooling',        unit: 'Unit 5A · Cantonments Court', cat: 'HVAC',       priority: 'Medium', status: 'In Progress', tenant: 'Ama Boateng',  age: '1d ago',  assigned: 'Ben (Tech)'),
-  _MaintData(id: 'm3', title: 'Broken window latch',   unit: 'Unit 7 · Spintex Heights',    cat: 'General',    priority: 'Low',    status: 'In Progress', tenant: 'Efua Sarpong', age: '2d ago',  assigned: 'Ben (Tech)'),
-  _MaintData(id: 'm4', title: 'Hallway lights out',    unit: 'Block A · Spintex Heights',   cat: 'Electrical', priority: 'High',   status: 'In Review',   tenant: 'Front desk',   age: '3d ago',  assigned: 'Mensah Electric'),
-  _MaintData(id: 'm5', title: 'Repaint guest bath',    unit: 'Suite 3 · Labadi Beach',      cat: 'General',    priority: 'Low',    status: 'Resolved',    tenant: 'Housekeeping', age: '5d ago',  assigned: 'Ben (Tech)'),
-  _MaintData(id: 'm6', title: 'Gate motor jammed',     unit: 'Cantonments Court',           cat: 'General',    priority: 'High',   status: 'New',         tenant: 'Security',     age: '4h ago',  assigned: null),
-  _MaintData(id: 'm7', title: 'Water heater fault',    unit: 'Unit 3B · Cantonments Court', cat: 'Plumbing',   priority: 'Medium', status: 'New',         tenant: 'Yaw Asante',   age: '6h ago',  assigned: null),
+  _MaintData(
+    id: 'm1',
+    title: 'Leaking kitchen tap',
+    unit: 'Unit 4B · Cantonments Court',
+    cat: 'Plumbing',
+    priority: 'High',
+    status: 'New',
+    tenant: 'Kwame Mensah',
+    age: '2h ago',
+    assigned: null,
+  ),
+  _MaintData(
+    id: 'm2',
+    title: 'AC not cooling',
+    unit: 'Unit 5A · Cantonments Court',
+    cat: 'HVAC',
+    priority: 'Medium',
+    status: 'In Progress',
+    tenant: 'Ama Boateng',
+    age: '1d ago',
+    assigned: 'Ben (Tech)',
+  ),
+  _MaintData(
+    id: 'm3',
+    title: 'Broken window latch',
+    unit: 'Unit 7 · Spintex Heights',
+    cat: 'General',
+    priority: 'Low',
+    status: 'In Progress',
+    tenant: 'Efua Sarpong',
+    age: '2d ago',
+    assigned: 'Ben (Tech)',
+  ),
+  _MaintData(
+    id: 'm4',
+    title: 'Hallway lights out',
+    unit: 'Block A · Spintex Heights',
+    cat: 'Electrical',
+    priority: 'High',
+    status: 'In Review',
+    tenant: 'Front desk',
+    age: '3d ago',
+    assigned: 'Mensah Electric',
+  ),
+  _MaintData(
+    id: 'm5',
+    title: 'Repaint guest bath',
+    unit: 'Suite 3 · Labadi Beach',
+    cat: 'General',
+    priority: 'Low',
+    status: 'Resolved',
+    tenant: 'Housekeeping',
+    age: '5d ago',
+    assigned: 'Ben (Tech)',
+  ),
+  _MaintData(
+    id: 'm6',
+    title: 'Gate motor jammed',
+    unit: 'Cantonments Court',
+    cat: 'General',
+    priority: 'High',
+    status: 'New',
+    tenant: 'Security',
+    age: '4h ago',
+    assigned: null,
+  ),
+  _MaintData(
+    id: 'm7',
+    title: 'Water heater fault',
+    unit: 'Unit 3B · Cantonments Court',
+    cat: 'Plumbing',
+    priority: 'Medium',
+    status: 'New',
+    tenant: 'Yaw Asante',
+    age: '6h ago',
+    assigned: null,
+  ),
 ];
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -60,9 +130,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
           await Haptics.vibrate(HapticsType.medium);
           if (!context.mounted) return;
           if (_tab == 'apps') {
-            context.push('/activity/add-application');
+            context.push('/activity/applications/add');
           } else if (_tab == 'bookings') {
-            context.push('/activity/add-booking');
+            context.push('/activity/bookings/add');
           }
         },
         backgroundColor: RLTokens.crimson,
@@ -74,8 +144,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
           _tab == 'apps'
               ? 'Application'
               : _tab == 'bookings'
-                  ? 'Booking'
-                  : 'Request',
+              ? 'Booking'
+              : 'Request',
           style: const TextStyle(
             fontFamily: RLTokens.fontSans,
             fontWeight: RLTokens.semibold,
@@ -95,19 +165,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
           Expanded(
             child: IndexedStack(
               index: ['maint', 'apps', 'bookings'].indexOf(_tab),
-              children: const [
-                _MaintList(),
-                _AppsList(),
-                _BookingsList(),
-              ],
+              children: const [_MaintList(), _AppsList(), _BookingsList()],
             ),
           ),
         ],
       ),
     );
   }
-
-
 }
 
 // ── Header ────────────────────────────────────────────────────────────────────
@@ -157,7 +221,12 @@ class _Header extends StatelessWidget {
         ),
         // Segmented strip
         Container(
-          padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 4, RLTokens.gutter, 12),
+          padding: const EdgeInsets.fromLTRB(
+            RLTokens.gutter,
+            4,
+            RLTokens.gutter,
+            12,
+          ),
           decoration: const BoxDecoration(
             color: RLTokens.surface,
             border: Border(bottom: BorderSide(color: RLTokens.hairlineSoft)),
@@ -166,8 +235,8 @@ class _Header extends StatelessWidget {
             value: selectedTab,
             onChanged: onTabChanged,
             items: const [
-              RLSegmentItem(key: 'maint',    label: 'Maintenance', count: 7),
-              RLSegmentItem(key: 'apps',     label: 'Applications', count: 4),
+              RLSegmentItem(key: 'maint', label: 'Maintenance', count: 7),
+              RLSegmentItem(key: 'apps', label: 'Applications', count: 4),
               RLSegmentItem(key: 'bookings', label: 'Bookings', count: 4),
             ],
           ),
@@ -222,15 +291,22 @@ class _MaintList extends StatelessWidget {
         ),
       );
       for (final m in items) {
-        groups.add(Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: _MaintCard(m: m),
-        ));
+        groups.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _MaintCard(m: m),
+          ),
+        );
       }
     }
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 0, RLTokens.gutter, 120),
+      padding: const EdgeInsets.fromLTRB(
+        RLTokens.gutter,
+        0,
+        RLTokens.gutter,
+        120,
+      ),
       children: groups,
     );
   }
@@ -246,7 +322,7 @@ class _MaintCard extends StatelessWidget {
     return GestureDetector(
       onTap: () async {
         await Haptics.vibrate(HapticsType.selection);
-        if (context.mounted) context.push('/activity/maintenance/${m.id}');
+        if (context.mounted) context.push('/activity/maintenances/${m.id}');
       },
       child: Container(
         padding: const EdgeInsets.all(14),
@@ -318,7 +394,10 @@ class _MaintCard extends StatelessWidget {
                     fontFamily: RLTokens.fontSans,
                     fontSize: 12,
                     fontWeight: RLTokens.medium,
-                    color: m.assigned != null ? RLTokens.inkSoft : RLTokens.crimson,
+                    color:
+                        m.assigned != null
+                            ? RLTokens.inkSoft
+                            : RLTokens.crimson,
                   ),
                 ),
               ],
@@ -348,16 +427,52 @@ class _AppData {
   final String unit;
   final String status;
   final String age;
-  final int    rent;
-  final int    stage;
+  final int rent;
+  final int stage;
   final String phone;
 }
 
 const _kApps = [
-  _AppData(id: 'a1', name: 'Adjoa Frimpong', unit: 'Unit 1C · Cantonments Court', status: 'New',         age: 'Today',  rent: 3000, stage: 1, phone: '+233 26 118 5540'),
-  _AppData(id: 'a2', name: 'Daniel Ofori',   unit: 'Unit 12 · Spintex Heights',   status: 'In Progress', age: '2d ago', rent: 3500, stage: 3, phone: '+233 24 330 7781'),
-  _AppData(id: 'a3', name: 'Naa Adjeley',    unit: 'Shop 5 · Osu Retail Block',   status: 'In Progress', age: '3d ago', rent: 6000, stage: 2, phone: '+233 20 555 9921'),
-  _AppData(id: 'a4', name: 'Selorm Kudjo',   unit: 'Unit 9 · Spintex Heights',    status: 'New',         age: '4d ago', rent: 3500, stage: 1, phone: '+233 55 712 0034'),
+  _AppData(
+    id: 'a1',
+    name: 'Adjoa Frimpong',
+    unit: 'Unit 1C · Cantonments Court',
+    status: 'New',
+    age: 'Today',
+    rent: 3000,
+    stage: 1,
+    phone: '+233 26 118 5540',
+  ),
+  _AppData(
+    id: 'a2',
+    name: 'Daniel Ofori',
+    unit: 'Unit 12 · Spintex Heights',
+    status: 'In Progress',
+    age: '2d ago',
+    rent: 3500,
+    stage: 3,
+    phone: '+233 24 330 7781',
+  ),
+  _AppData(
+    id: 'a3',
+    name: 'Naa Adjeley',
+    unit: 'Shop 5 · Osu Retail Block',
+    status: 'In Progress',
+    age: '3d ago',
+    rent: 6000,
+    stage: 2,
+    phone: '+233 20 555 9921',
+  ),
+  _AppData(
+    id: 'a4',
+    name: 'Selorm Kudjo',
+    unit: 'Unit 9 · Spintex Heights',
+    status: 'New',
+    age: '4d ago',
+    rent: 3500,
+    stage: 1,
+    phone: '+233 55 712 0034',
+  ),
 ];
 
 // ── Applications list ─────────────────────────────────────────────────────────
@@ -368,12 +483,18 @@ class _AppsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 6, RLTokens.gutter, 120),
-      itemCount: _kApps.length,
-      itemBuilder: (_, i) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: _AppCard(a: _kApps[i]),
+      padding: const EdgeInsets.fromLTRB(
+        RLTokens.gutter,
+        6,
+        RLTokens.gutter,
+        120,
       ),
+      itemCount: _kApps.length,
+      itemBuilder:
+          (_, i) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _AppCard(a: _kApps[i]),
+          ),
     );
   }
 }
@@ -388,7 +509,7 @@ class _AppCard extends StatelessWidget {
     return GestureDetector(
       onTap: () async {
         await Haptics.vibrate(HapticsType.selection);
-        if (context.mounted) context.push('/activity/application/${a.id}');
+        if (context.mounted) context.push('/activity/applications/${a.id}');
       },
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -493,15 +614,51 @@ class _BookingData {
   final String status;
   final String inDate;
   final String outDate;
-  final int    nights;
-  final int    amount;
+  final int nights;
+  final int amount;
 }
 
 const _kBookings = [
-  _BookingData(id: 'b1', guest: 'Michael Tetteh',  unit: 'Suite 1 · Labadi Beach', status: 'Checked In', inDate: 'Jun 3',  outDate: 'Jun 7',  nights: 4, amount: 3200),
-  _BookingData(id: 'b2', guest: 'Sarah Addai',      unit: 'Suite 4 · Labadi Beach', status: 'Confirmed',  inDate: 'Jun 8',  outDate: 'Jun 11', nights: 3, amount: 2400),
-  _BookingData(id: 'b3', guest: 'Corporate · MTN',  unit: 'Suite 2 · Labadi Beach', status: 'Pending',    inDate: 'Jun 12', outDate: 'Jun 19', nights: 7, amount: 5600),
-  _BookingData(id: 'b4', guest: 'Linda Quaye',      unit: 'Suite 6 · Labadi Beach', status: 'Confirmed',  inDate: 'Jun 14', outDate: 'Jun 16', nights: 2, amount: 1600),
+  _BookingData(
+    id: 'b1',
+    guest: 'Michael Tetteh',
+    unit: 'Suite 1 · Labadi Beach',
+    status: 'Checked In',
+    inDate: 'Jun 3',
+    outDate: 'Jun 7',
+    nights: 4,
+    amount: 3200,
+  ),
+  _BookingData(
+    id: 'b2',
+    guest: 'Sarah Addai',
+    unit: 'Suite 4 · Labadi Beach',
+    status: 'Confirmed',
+    inDate: 'Jun 8',
+    outDate: 'Jun 11',
+    nights: 3,
+    amount: 2400,
+  ),
+  _BookingData(
+    id: 'b3',
+    guest: 'Corporate · MTN',
+    unit: 'Suite 2 · Labadi Beach',
+    status: 'Pending',
+    inDate: 'Jun 12',
+    outDate: 'Jun 19',
+    nights: 7,
+    amount: 5600,
+  ),
+  _BookingData(
+    id: 'b4',
+    guest: 'Linda Quaye',
+    unit: 'Suite 6 · Labadi Beach',
+    status: 'Confirmed',
+    inDate: 'Jun 14',
+    outDate: 'Jun 16',
+    nights: 2,
+    amount: 1600,
+  ),
 ];
 
 // ── Bookings list ─────────────────────────────────────────────────────────────
@@ -512,7 +669,12 @@ class _BookingsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 6, RLTokens.gutter, 120),
+      padding: const EdgeInsets.fromLTRB(
+        RLTokens.gutter,
+        6,
+        RLTokens.gutter,
+        120,
+      ),
       children: [
         const _WeekStrip(),
         RLLabel('Upcoming · Labadi Beach Suites'),
@@ -531,10 +693,10 @@ class _BookingsList extends StatelessWidget {
 class _WeekStrip extends StatelessWidget {
   const _WeekStrip();
 
-  static const _days  = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  static const _days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   static const _dates = [2, 3, 4, 5, 6, 7, 8];
-  static const _busyIdx  = {0, 1, 2}; // days with bookings
-  static const _todayIdx = 1;         // Tuesday
+  static const _busyIdx = {0, 1, 2}; // days with bookings
+  static const _todayIdx = 1; // Tuesday
 
   @override
   Widget build(BuildContext context) {
@@ -565,14 +727,22 @@ class _WeekStrip extends StatelessWidget {
                     onTap: () async => Haptics.vibrate(HapticsType.selection),
                     child: const Padding(
                       padding: EdgeInsets.all(6),
-                      child: Icon(Icons.chevron_left, size: 20, color: RLTokens.inkSoft),
+                      child: Icon(
+                        Icons.chevron_left,
+                        size: 20,
+                        color: RLTokens.inkSoft,
+                      ),
                     ),
                   ),
                   GestureDetector(
                     onTap: () async => Haptics.vibrate(HapticsType.selection),
                     child: const Padding(
                       padding: EdgeInsets.all(6),
-                      child: Icon(Icons.chevron_right, size: 20, color: RLTokens.inkSoft),
+                      child: Icon(
+                        Icons.chevron_right,
+                        size: 20,
+                        color: RLTokens.inkSoft,
+                      ),
                     ),
                   ),
                 ],
@@ -583,10 +753,20 @@ class _WeekStrip extends StatelessWidget {
           // Day columns
           Row(
             children: List.generate(7, (i) {
-              final busy  = _busyIdx.contains(i);
+              final busy = _busyIdx.contains(i);
               final today = i == _todayIdx;
-              final circleBg  = today ? RLTokens.crimson : busy ? RLTokens.crimsonTint : RLTokens.fill;
-              final textColor = today ? Colors.white    : busy ? RLTokens.crimson      : RLTokens.muted;
+              final circleBg =
+                  today
+                      ? RLTokens.crimson
+                      : busy
+                      ? RLTokens.crimsonTint
+                      : RLTokens.fill;
+              final textColor =
+                  today
+                      ? Colors.white
+                      : busy
+                      ? RLTokens.crimson
+                      : RLTokens.muted;
               return Expanded(
                 child: Column(
                   children: [
@@ -649,7 +829,7 @@ class _BookingCard extends StatelessWidget {
     return GestureDetector(
       onTap: () async {
         await Haptics.vibrate(HapticsType.selection);
-        if (context.mounted) context.push('/activity/booking/${b.id}');
+        if (context.mounted) context.push('/activity/bookings/${b.id}');
       },
       child: Container(
         padding: const EdgeInsets.all(14),

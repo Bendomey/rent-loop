@@ -8,17 +8,17 @@ import 'package:rentloop_manager/src/shared/widgets.dart';
 // Static design data — matches the handoff spec exactly.
 // Will be replaced by live API calls when the data layer is wired up.
 const _kWorkspaceName = 'Owusu Estates';
-const _kManagerName   = 'Akosua Owusu';
-const _kRevenue       = 184500;
-const _kRevenueDelta  = '+12%';
-const _kCollected     = 92.0;   // %
-const _kOutstanding   = 14200;
-const _kOccupancy     = 88.0;   // %
-const _kActiveLeases  = 51;
-const _kOpenMaint     = 7;
-const _kPendingApps   = 4;
-const _kUnreadCount   = 3;
-const _kTrend         = [78.0, 84.0, 81.0, 90.0, 86.0, 92.0];
+const _kManagerName = 'Akosua Owusu';
+const _kRevenue = 184500;
+const _kRevenueDelta = '+12%';
+const _kCollected = 92.0; // %
+const _kOutstanding = 14200;
+const _kOccupancy = 88.0; // %
+const _kActiveLeases = 51;
+const _kOpenMaint = 7;
+const _kPendingApps = 4;
+const _kUnreadCount = 3;
+const _kTrend = [78.0, 84.0, 81.0, 90.0, 86.0, 92.0];
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 
@@ -88,7 +88,11 @@ class _TopHeader extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
-            const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: RLTokens.crimson),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 14,
+              color: RLTokens.crimson,
+            ),
           ],
         ),
       ),
@@ -239,17 +243,46 @@ class _StatGrid extends StatelessWidget {
       children: [
         Row(
           children: [
-            Expanded(child: _StatCard(child: RLMetric(value: '${_kOccupancy.toInt()}%', label: 'Occupancy', delta: '▲ 3%'))),
+            Expanded(
+              child: _StatCard(
+                child: RLMetric(
+                  value: '${_kOccupancy.toInt()}%',
+                  label: 'Occupancy',
+                  delta: '▲ 3%',
+                ),
+              ),
+            ),
             const SizedBox(width: 10),
-            Expanded(child: _StatCard(child: const RLMetric(value: '$_kActiveLeases', label: 'Active leases'))),
+            Expanded(
+              child: _StatCard(
+                child: const RLMetric(
+                  value: '$_kActiveLeases',
+                  label: 'Active leases',
+                ),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(child: _StatCard(child: const RLMetric(value: '$_kOpenMaint', label: 'Open requests'))),
+            Expanded(
+              child: _StatCard(
+                child: const RLMetric(
+                  value: '$_kOpenMaint',
+                  label: 'Open requests',
+                ),
+              ),
+            ),
             const SizedBox(width: 10),
-            Expanded(child: _StatCard(child: const RLMetric(value: '$_kPendingApps', label: 'Pending apps'))),
+            Expanded(
+              child: _StatCard(
+                child: const RLMetric(
+                  value: '$_kPendingApps',
+                  label: 'Pending apps',
+                ),
+              ),
+            ),
           ],
         ),
       ],
@@ -286,7 +319,11 @@ class _NeedsAttentionSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        RLLabel('Needs your attention', action: 'Activity', onAction: () async => Haptics.vibrate(HapticsType.selection)),
+        RLLabel(
+          'Needs your attention',
+          action: 'Activity',
+          onAction: () async => Haptics.vibrate(HapticsType.selection),
+        ),
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
@@ -297,24 +334,41 @@ class _NeedsAttentionSection extends StatelessWidget {
           child: Column(
             children: [
               RLRow(
-                leading: _TileIcon(bg: RLTokens.crimsonTint, iconColor: RLTokens.crimson, icon: Icons.build_rounded),
+                leading: _TileIcon(
+                  bg: RLTokens.crimsonTint,
+                  iconColor: RLTokens.crimson,
+                  icon: Icons.build_rounded,
+                ),
                 title: 'Leaking kitchen tap',
                 subtitle: 'Unit 4B · High priority',
                 trailing: const RLPill('New'),
                 onTap: () async => Haptics.vibrate(HapticsType.selection),
               ),
               RLRow(
-                leading: const _TileIcon(bg: Color.fromRGBO(233, 123, 42, 0.16), iconColor: Color(0xFFBD5E16), icon: Icons.receipt_long_rounded),
+                leading: const _TileIcon(
+                  bg: Color.fromRGBO(233, 123, 42, 0.16),
+                  iconColor: Color(0xFFBD5E16),
+                  icon: Icons.receipt_long_rounded,
+                ),
                 title: 'Invoice overdue',
                 subtitle: 'INV-2041 · Ama Boateng',
                 trailing: const Text(
                   '₵4,200',
-                  style: TextStyle(fontFamily: RLTokens.fontSans, fontWeight: RLTokens.bold, fontSize: 13.5, color: RLTokens.ink),
+                  style: TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontWeight: RLTokens.bold,
+                    fontSize: 13.5,
+                    color: RLTokens.ink,
+                  ),
                 ),
                 onTap: () async => Haptics.vibrate(HapticsType.selection),
               ),
               RLRow(
-                leading: const _TileIcon(bg: Color.fromRGBO(46, 108, 246, 0.12), iconColor: Color(0xFF2456C4), icon: Icons.description_rounded),
+                leading: const _TileIcon(
+                  bg: Color.fromRGBO(46, 108, 246, 0.12),
+                  iconColor: Color(0xFF2456C4),
+                  icon: Icons.description_rounded,
+                ),
                 title: 'New application',
                 subtitle: 'Adjoa Frimpong · Unit 1C',
                 trailing: const RLPill('Review'),
@@ -330,7 +384,11 @@ class _NeedsAttentionSection extends StatelessWidget {
 }
 
 class _TileIcon extends StatelessWidget {
-  const _TileIcon({required this.bg, required this.iconColor, required this.icon});
+  const _TileIcon({
+    required this.bg,
+    required this.iconColor,
+    required this.icon,
+  });
   final Color bg;
   final Color iconColor;
   final IconData icon;
@@ -402,21 +460,23 @@ class _CollectionTrendSection extends StatelessWidget {
               Expanded(
                 child: Column(
                   children: [
-                    RLMiniBars(
-                      data: _kTrend,
-                      height: 44,
-                    ),
+                    RLMiniBars(data: _kTrend, height: 44),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: _months.map((m) => Text(
-                        m,
-                        style: TextStyle(
-                          fontFamily: RLTokens.fontMono,
-                          fontSize: 9.5,
-                          color: RLTokens.micro,
-                        ),
-                      )).toList(),
+                      children:
+                          _months
+                              .map(
+                                (m) => Text(
+                                  m,
+                                  style: TextStyle(
+                                    fontFamily: RLTokens.fontMono,
+                                    fontSize: 9.5,
+                                    color: RLTokens.micro,
+                                  ),
+                                ),
+                              )
+                              .toList(),
                     ),
                   ],
                 ),
@@ -433,11 +493,31 @@ class _CollectionTrendSection extends StatelessWidget {
 
 class _QuickActionsSection extends StatelessWidget {
   static const _actions = [
-    _QuickAction(icon: Icons.description_outlined,   label: 'New application', route: '/activity/add-application'),
-    _QuickAction(icon: Icons.calendar_today_outlined, label: 'New booking',    route: '/activity/add-booking'),
-    _QuickAction(icon: Icons.credit_card_outlined,   label: 'Record payment',  route: '/money/record-payment'),
-    _QuickAction(icon: Icons.campaign_outlined,      label: 'Announcement',    route: '/more/announcements/add'),
-    _QuickAction(icon: Icons.apartment_outlined,     label: 'Add property',    route: '/properties/add'),
+    _QuickAction(
+      icon: Icons.description_outlined,
+      label: 'New application',
+      route: '/activity/applications/add',
+    ),
+    _QuickAction(
+      icon: Icons.calendar_today_outlined,
+      label: 'New booking',
+      route: '/activity/bookings/add',
+    ),
+    _QuickAction(
+      icon: Icons.credit_card_outlined,
+      label: 'Record payment',
+      route: '/money/record-payment',
+    ),
+    _QuickAction(
+      icon: Icons.campaign_outlined,
+      label: 'Announcement',
+      route: '/more/announcements/add',
+    ),
+    _QuickAction(
+      icon: Icons.apartment_outlined,
+      label: 'Add property',
+      route: '/properties/add',
+    ),
   ];
 
   @override
@@ -450,10 +530,19 @@ class _QuickActionsSection extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
           child: Row(
-            children: _actions.asMap().entries.map((e) => Padding(
-              padding: EdgeInsets.only(right: e.key < _actions.length - 1 ? 10 : 0),
-              child: _QuickChip(action: e.value),
-            )).toList(),
+            children:
+                _actions
+                    .asMap()
+                    .entries
+                    .map(
+                      (e) => Padding(
+                        padding: EdgeInsets.only(
+                          right: e.key < _actions.length - 1 ? 10 : 0,
+                        ),
+                        child: _QuickChip(action: e.value),
+                      ),
+                    )
+                    .toList(),
           ),
         ),
       ],
@@ -462,10 +551,14 @@ class _QuickActionsSection extends StatelessWidget {
 }
 
 class _QuickAction {
-  const _QuickAction({required this.icon, required this.label, required this.route});
+  const _QuickAction({
+    required this.icon,
+    required this.label,
+    required this.route,
+  });
   final IconData icon;
-  final String   label;
-  final String   route;
+  final String label;
+  final String route;
 }
 
 class _QuickChip extends StatelessWidget {

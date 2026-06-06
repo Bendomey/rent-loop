@@ -17,6 +17,11 @@ import 'package:rentloop_manager/src/modules/main/money/add_payment.dart';
 import 'package:rentloop_manager/src/modules/main/money/invoice_detail.dart';
 import 'package:rentloop_manager/src/modules/main/money/root.dart';
 import 'package:rentloop_manager/src/modules/main/properties/add.dart';
+import 'package:rentloop_manager/src/modules/main/properties/settings/hub.dart';
+import 'package:rentloop_manager/src/modules/main/properties/settings/general.dart';
+import 'package:rentloop_manager/src/modules/main/properties/settings/members.dart';
+import 'package:rentloop_manager/src/modules/main/properties/settings/add_member.dart';
+import 'package:rentloop_manager/src/modules/main/properties/settings/documents.dart';
 import 'package:rentloop_manager/src/modules/main/announcements/add.dart';
 import 'package:rentloop_manager/src/modules/main/announcements/root.dart';
 import 'package:rentloop_manager/src/modules/main/more/agreement.dart';
@@ -79,22 +84,16 @@ GoRouter buildRoutes(WidgetRef ref) {
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
       GoRoute(path: '/auth/welcome', builder: (_, __) => const WelcomeScreen()),
       GoRoute(path: '/auth/login', builder: (_, __) => const LoginScreen()),
-      GoRoute(path: '/auth/workspace-select', builder: (_, __) => const WorkspaceSelectScreen()),
+      GoRoute(
+        path: '/auth/workspace-select',
+        builder: (_, __) => const WorkspaceSelectScreen(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (_, __, shell) => MainShell(shell),
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(
-                path: '/',
-                builder: (_, __) => const HomeScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'notifications',
-                    builder: (_, __) => const NotificationsScreen(),
-                  ),
-                ],
-              ),
+              GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
             ],
           ),
           StatefulShellBranch(
@@ -102,15 +101,6 @@ GoRouter buildRoutes(WidgetRef ref) {
               GoRoute(
                 path: '/properties',
                 builder: (_, __) => const PropertiesScreen(),
-                routes: [
-                  GoRoute(path: 'add', builder: (_, __) => const AddPropertyScreen()),
-                  GoRoute(
-                    path: ':id',
-                    builder: (_, state) => PropertyDetailScreen(
-                      id: state.pathParameters['id']!,
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
@@ -119,82 +109,154 @@ GoRouter buildRoutes(WidgetRef ref) {
               GoRoute(
                 path: '/activity',
                 builder: (_, __) => const ActivityScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'maintenance/:id',
-                    builder: (_, state) => MaintenanceDetailScreen(
-                      id: state.pathParameters['id']!,
-                    ),
-                  ),
-                  GoRoute(
-                    path: 'booking/:id',
-                    builder: (_, state) => BookingDetailScreen(
-                      id: state.pathParameters['id']!,
-                    ),
-                  ),
-                  GoRoute(
-                    path: 'application/:id',
-                    builder: (_, state) => ApplicationDetailScreen(
-                      id: state.pathParameters['id']!,
-                    ),
-                  ),
-                  GoRoute(path: 'add-booking',     builder: (_, __) => const AddBookingScreen()),
-                  GoRoute(path: 'add-application', builder: (_, __) => const AddApplicationScreen()),
-                ],
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(
-                path: '/money',
-                builder: (_, __) => const MoneyScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'invoice/:id',
-                    builder: (_, state) => InvoiceDetailScreen(
-                      id: state.pathParameters['id']!,
-                    ),
-                  ),
-                  GoRoute(path: 'record-payment', builder: (_, __) => const RecordPaymentScreen()),
-                ],
-              ),
+              GoRoute(path: '/money', builder: (_, __) => const MoneyScreen()),
             ],
           ),
           StatefulShellBranch(
             routes: [
+              GoRoute(path: '/more', builder: (_, __) => const MoreScreen()),
+            ],
+          ),
+        ],
+      ),
+
+      // home routes
+      GoRoute(
+        path: '/notifications',
+        builder: (_, __) => const NotificationsScreen(),
+      ),
+
+      //property routes
+      GoRoute(
+        path: '/properties/add',
+        builder: (_, __) => const AddPropertyScreen(),
+      ),
+      GoRoute(
+        path: '/properties/:id',
+        builder:
+            (_, state) => PropertyDetailScreen(id: state.pathParameters['id']!),
+        routes: [
+          GoRoute(
+            path: 'settings',
+            builder:
+                (_, state) =>
+                    PropertySettingsHubScreen(id: state.pathParameters['id']!),
+            routes: [
               GoRoute(
-                path: '/more',
-                builder: (_, __) => const MoreScreen(),
+                path: 'general',
+                builder:
+                    (_, state) => PropertyGeneralSettingsScreen(
+                      id: state.pathParameters['id']!,
+                    ),
+              ),
+              GoRoute(
+                path: 'members',
+                builder:
+                    (_, state) =>
+                        PropertyMembersScreen(id: state.pathParameters['id']!),
                 routes: [
                   GoRoute(
-                    path: 'announcements',
-                    builder: (_, __) => const AnnouncementsScreen(),
-                    routes: [
-                      GoRoute(path: 'add', builder: (_, __) => const AddAnnouncementScreen()),
-                    ],
-                  ),
-                  GoRoute(path: 'documents',         builder: (_, __) => const DocumentsScreen()),
-                  GoRoute(path: 'members',           builder: (_, __) => const MembersScreen()),
-                  GoRoute(path: 'payment-accounts',  builder: (_, __) => const PaymentAccountsScreen()),
-                  GoRoute(path: 'agreement',         builder: (_, __) => const AgreementScreen()),
-                  GoRoute(path: 'billing',           builder: (_, __) => const BillingScreen()),
-                  GoRoute(path: 'settings',          builder: (_, __) => const SettingsScreen()),
-                  GoRoute(
-                    path: 'tenants',
-                    builder: (_, __) => const TenantsScreen(),
-                    routes: [
-                      GoRoute(
-                        path: ':id',
-                        builder: (_, state) => TenantDetailScreen(
+                    path: 'add',
+                    builder:
+                        (_, state) => AddPropertyMemberScreen(
                           id: state.pathParameters['id']!,
                         ),
-                      ),
-                    ],
                   ),
                 ],
               ),
+              GoRoute(
+                path: 'documents',
+                builder:
+                    (_, state) => PropertyDocumentsScreen(
+                      id: state.pathParameters['id']!,
+                    ),
+              ),
             ],
+          ),
+        ],
+      ),
+
+      // activity routes
+      GoRoute(
+        path: '/activity/maintenances/:id',
+        builder:
+            (_, state) =>
+                MaintenanceDetailScreen(id: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/activity/bookings/:id',
+        builder:
+            (_, state) => BookingDetailScreen(id: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/activity/applications/:id',
+        builder:
+            (_, state) =>
+                ApplicationDetailScreen(id: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/activity/bookings/add',
+        builder: (_, __) => const AddBookingScreen(),
+      ),
+      GoRoute(
+        path: '/activity/applications/add',
+        builder: (_, __) => const AddApplicationScreen(),
+      ),
+
+      // money routes
+      GoRoute(
+        path: '/money/invoices/:id',
+        builder:
+            (_, state) => InvoiceDetailScreen(id: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/money/record-payment',
+        builder: (_, __) => const RecordPaymentScreen(),
+      ),
+
+      // more routes
+      GoRoute(
+        path: '/more/announcements',
+        builder: (_, __) => const AnnouncementsScreen(),
+        routes: [
+          GoRoute(
+            path: 'add',
+            builder: (_, __) => const AddAnnouncementScreen(),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/more/documents',
+        builder: (_, __) => const DocumentsScreen(),
+      ),
+      GoRoute(path: '/more/members', builder: (_, __) => const MembersScreen()),
+      GoRoute(
+        path: '/more/payment-accounts',
+        builder: (_, __) => const PaymentAccountsScreen(),
+      ),
+      GoRoute(
+        path: '/more/agreement',
+        builder: (_, __) => const AgreementScreen(),
+      ),
+      GoRoute(path: '/more/billing', builder: (_, __) => const BillingScreen()),
+      GoRoute(
+        path: '/more/settings',
+        builder: (_, __) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/more/tenants',
+        builder: (_, __) => const TenantsScreen(),
+        routes: [
+          GoRoute(
+            path: ':id',
+            builder:
+                (_, state) =>
+                    TenantDetailScreen(id: state.pathParameters['id']!),
           ),
         ],
       ),
