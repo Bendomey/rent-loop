@@ -333,6 +333,7 @@ class _AppData {
     required this.age,
     required this.rent,
     required this.stage,
+    required this.phone,
   });
   final String id;
   final String name;
@@ -341,13 +342,14 @@ class _AppData {
   final String age;
   final int    rent;
   final int    stage;
+  final String phone;
 }
 
 const _kApps = [
-  _AppData(id: 'a1', name: 'Adjoa Frimpong', unit: 'Unit 1C · Cantonments Court', status: 'New',         age: 'Today',  rent: 3000, stage: 1),
-  _AppData(id: 'a2', name: 'Daniel Ofori',   unit: 'Unit 12 · Spintex Heights',   status: 'In Progress', age: '2d ago', rent: 3500, stage: 3),
-  _AppData(id: 'a3', name: 'Naa Adjeley',    unit: 'Shop 5 · Osu Retail Block',   status: 'In Progress', age: '3d ago', rent: 6000, stage: 2),
-  _AppData(id: 'a4', name: 'Selorm Kudjo',   unit: 'Unit 9 · Spintex Heights',    status: 'New',         age: '4d ago', rent: 3500, stage: 1),
+  _AppData(id: 'a1', name: 'Adjoa Frimpong', unit: 'Unit 1C · Cantonments Court', status: 'New',         age: 'Today',  rent: 3000, stage: 1, phone: '+233 26 118 5540'),
+  _AppData(id: 'a2', name: 'Daniel Ofori',   unit: 'Unit 12 · Spintex Heights',   status: 'In Progress', age: '2d ago', rent: 3500, stage: 3, phone: '+233 24 330 7781'),
+  _AppData(id: 'a3', name: 'Naa Adjeley',    unit: 'Shop 5 · Osu Retail Block',   status: 'In Progress', age: '3d ago', rent: 6000, stage: 2, phone: '+233 20 555 9921'),
+  _AppData(id: 'a4', name: 'Selorm Kudjo',   unit: 'Unit 9 · Spintex Heights',    status: 'New',         age: '4d ago', rent: 3500, stage: 1, phone: '+233 55 712 0034'),
 ];
 
 // ── Applications list ─────────────────────────────────────────────────────────
@@ -376,7 +378,10 @@ class _AppCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final pct = a.stage / 5 * 100;
     return GestureDetector(
-      onTap: () async => Haptics.vibrate(HapticsType.selection),
+      onTap: () async {
+        await Haptics.vibrate(HapticsType.selection);
+        if (context.mounted) context.push('/activity/application/${a.id}');
+      },
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
