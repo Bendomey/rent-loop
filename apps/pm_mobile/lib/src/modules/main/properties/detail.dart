@@ -109,7 +109,15 @@ class PropertyDetailScreen extends StatelessWidget {
                           children: [
                             RLPill(p.status, tone: isActive ? RLTone.success : RLTone.neutral),
                             const SizedBox(width: 8),
-                            RLPill('${p.mode} mode', tone: RLTone.neutral),
+                            if (p.mode == 'Both') ...[
+                              RLPill('Long stay', tone: RLTone.neutral),
+                              const SizedBox(width: 6),
+                              RLPill('Short stay', tone: RLTone.neutral),
+                            ] else
+                              RLPill(
+                                p.mode == 'Lease' ? 'Long stay' : 'Short stay',
+                                tone: RLTone.neutral,
+                              ),
                           ],
                         ),
                         const SizedBox(height: 14),
@@ -133,12 +141,10 @@ class PropertyDetailScreen extends StatelessWidget {
 
                         // Occupancy + revenue card
                         _OccupancyCard(p: p, occPct: occPct),
-                        const SizedBox(height: 4),
 
                         // Manage grid
                         RLLabel('Manage'),
                         _ManageGrid(p: p),
-                        const SizedBox(height: 4),
 
                         // Units preview
                         RLLabel('Units', action: 'See all', onAction: () async => Haptics.vibrate(HapticsType.selection)),

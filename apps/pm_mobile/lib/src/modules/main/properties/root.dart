@@ -41,7 +41,7 @@ const _kProps = [
   _PropData(id: 'p5', name: 'Osu Retail Block',     area: 'Oxford St, Osu',      type: 'Commercial', mode: 'Lease',   units:  9, occupied:  7, available: 2, maint: 0, revenue:  4000, status: 'Draft'),
 ];
 
-const _kFilters = ['All', 'Lease', 'Booking', 'Both', 'Draft'];
+const _kFilters = ['All', 'Long stay', 'Short stay', 'Both', 'Draft'];
 
 final _totalUnits = _kProps.fold(0, (s, p) => s + p.units);
 
@@ -60,8 +60,11 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
   List<_PropData> get _visible => _filter == 'All'
       ? _kProps
       : _kProps.where((p) {
-          if (_filter == 'Draft') return p.status == 'Draft';
-          return p.mode == _filter;
+          if (_filter == 'Draft')      return p.status == 'Draft';
+          if (_filter == 'Long stay')  return p.mode == 'Lease' || p.mode == 'Both';
+          if (_filter == 'Short stay') return p.mode == 'Booking' || p.mode == 'Both';
+          if (_filter == 'Both')       return p.mode == 'Both';
+          return false;
         }).toList();
 
   @override
@@ -267,10 +270,18 @@ class _PropCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 9),
-                      // Mode pill + revenue
+                      // Mode pill(s) + revenue
                       Row(
                         children: [
-                          RLPill(p.mode, tone: RLTone.neutral),
+                          if (p.mode == 'Both') ...[
+                            RLPill('Long stay', tone: RLTone.neutral),
+                            const SizedBox(width: 5),
+                            RLPill('Short stay', tone: RLTone.neutral),
+                          ] else
+                            RLPill(
+                              p.mode == 'Lease' ? 'Long stay' : 'Short stay',
+                              tone: RLTone.neutral,
+                            ),
                           const Spacer(),
                           RichText(
                             text: TextSpan(
