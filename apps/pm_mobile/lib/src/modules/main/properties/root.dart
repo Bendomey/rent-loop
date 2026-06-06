@@ -190,11 +190,14 @@ class _PropCard extends StatelessWidget {
           boxShadow: RLTokens.elev1,
         ),
         clipBehavior: Clip.antiAlias,
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _PropThumb(type: p.type, width: 104),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 104,
+              height: 116,
+              child: _PropThumb(type: p.type),
+            ),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(13),
@@ -298,7 +301,6 @@ class _PropCard extends StatelessWidget {
               ),
             ],
           ),
-        ),
       ),
     );
   }
@@ -307,9 +309,8 @@ class _PropCard extends StatelessWidget {
 // ── Property thumbnail placeholder ────────────────────────────────────────────
 
 class _PropThumb extends StatelessWidget {
-  const _PropThumb({required this.type, required this.width});
+  const _PropThumb({required this.type});
   final String type;
-  final double width;
 
   static Color _color(String type) => switch (type) {
     'Apartments' => const Color(0xFF2A4099),
@@ -331,7 +332,6 @@ class _PropThumb extends StatelessWidget {
   Widget build(BuildContext context) {
     final bg = _color(type);
     return Container(
-      width: width,
       color: bg,
       child: Stack(
         children: [
