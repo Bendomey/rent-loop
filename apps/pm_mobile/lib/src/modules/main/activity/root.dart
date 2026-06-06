@@ -56,7 +56,15 @@ class _ActivityScreenState extends State<ActivityScreen> {
     return Scaffold(
       backgroundColor: RLTokens.surface,
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async => Haptics.vibrate(HapticsType.medium),
+        onPressed: () async {
+          await Haptics.vibrate(HapticsType.medium);
+          if (!context.mounted) return;
+          if (_tab == 'apps') {
+            context.push('/activity/add-application');
+          } else if (_tab == 'bookings') {
+            context.push('/activity/add-booking');
+          }
+        },
         backgroundColor: RLTokens.crimson,
         foregroundColor: Colors.white,
         elevation: 6,

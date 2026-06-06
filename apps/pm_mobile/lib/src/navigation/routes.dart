@@ -5,6 +5,8 @@ import 'package:rentloop_manager/src/architecture/app_startup.dart';
 import 'package:rentloop_manager/src/modules/auth/login/root.dart';
 import 'package:rentloop_manager/src/modules/auth/welcome/root.dart';
 import 'package:rentloop_manager/src/modules/auth/workspace_select/root.dart';
+import 'package:rentloop_manager/src/modules/main/activity/add_application.dart';
+import 'package:rentloop_manager/src/modules/main/activity/add_booking.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_detail.dart';
 import 'package:rentloop_manager/src/modules/main/activity/booking_detail.dart';
 import 'package:rentloop_manager/src/modules/main/activity/maintenance_detail.dart';
@@ -13,8 +15,16 @@ import 'package:rentloop_manager/src/modules/main/home/root.dart';
 import 'package:rentloop_manager/src/modules/main/notifications/root.dart';
 import 'package:rentloop_manager/src/modules/main/money/invoice_detail.dart';
 import 'package:rentloop_manager/src/modules/main/money/root.dart';
+import 'package:rentloop_manager/src/modules/main/properties/add.dart';
+import 'package:rentloop_manager/src/modules/main/announcements/add.dart';
 import 'package:rentloop_manager/src/modules/main/announcements/root.dart';
+import 'package:rentloop_manager/src/modules/main/more/agreement.dart';
+import 'package:rentloop_manager/src/modules/main/more/billing.dart';
+import 'package:rentloop_manager/src/modules/main/more/documents.dart';
+import 'package:rentloop_manager/src/modules/main/more/members.dart';
+import 'package:rentloop_manager/src/modules/main/more/payment_accounts.dart';
 import 'package:rentloop_manager/src/modules/main/more/root.dart';
+import 'package:rentloop_manager/src/modules/main/more/settings.dart';
 import 'package:rentloop_manager/src/modules/main/tenants/detail.dart';
 import 'package:rentloop_manager/src/modules/main/tenants/root.dart';
 import 'package:rentloop_manager/src/modules/main/properties/detail.dart';
@@ -92,6 +102,7 @@ GoRouter buildRoutes(WidgetRef ref) {
                 path: '/properties',
                 builder: (_, __) => const PropertiesScreen(),
                 routes: [
+                  GoRoute(path: 'add', builder: (_, __) => const AddPropertyScreen()),
                   GoRoute(
                     path: ':id',
                     builder: (_, state) => PropertyDetailScreen(
@@ -126,6 +137,8 @@ GoRouter buildRoutes(WidgetRef ref) {
                       id: state.pathParameters['id']!,
                     ),
                   ),
+                  GoRoute(path: 'add-booking',     builder: (_, __) => const AddBookingScreen()),
+                  GoRoute(path: 'add-application', builder: (_, __) => const AddApplicationScreen()),
                 ],
               ),
             ],
@@ -155,7 +168,16 @@ GoRouter buildRoutes(WidgetRef ref) {
                   GoRoute(
                     path: 'announcements',
                     builder: (_, __) => const AnnouncementsScreen(),
+                    routes: [
+                      GoRoute(path: 'add', builder: (_, __) => const AddAnnouncementScreen()),
+                    ],
                   ),
+                  GoRoute(path: 'documents',         builder: (_, __) => const DocumentsScreen()),
+                  GoRoute(path: 'members',           builder: (_, __) => const MembersScreen()),
+                  GoRoute(path: 'payment-accounts',  builder: (_, __) => const PaymentAccountsScreen()),
+                  GoRoute(path: 'agreement',         builder: (_, __) => const AgreementScreen()),
+                  GoRoute(path: 'billing',           builder: (_, __) => const BillingScreen()),
+                  GoRoute(path: 'settings',          builder: (_, __) => const SettingsScreen()),
                   GoRoute(
                     path: 'tenants',
                     builder: (_, __) => const TenantsScreen(),

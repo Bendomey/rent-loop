@@ -73,7 +73,10 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     return Scaffold(
       backgroundColor: RLTokens.surface,
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async => Haptics.vibrate(HapticsType.medium),
+        onPressed: () async {
+          await Haptics.vibrate(HapticsType.medium);
+          if (context.mounted) context.push('/properties/add');
+        },
         backgroundColor: RLTokens.crimson,
         foregroundColor: Colors.white,
         elevation: 3,
@@ -161,7 +164,10 @@ class _Header extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          RLIconBtn(icon: Icons.add, onTap: () async => Haptics.vibrate(HapticsType.medium)),
+          RLIconBtn(icon: Icons.add, onTap: () async {
+            await Haptics.vibrate(HapticsType.medium);
+            if (context.mounted) context.push('/properties/add');
+          }),
         ],
       ),
     );

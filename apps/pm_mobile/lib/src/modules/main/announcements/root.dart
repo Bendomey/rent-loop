@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
@@ -39,7 +40,10 @@ class AnnouncementsScreen extends StatelessWidget {
               if (context.mounted) Navigator.of(context).pop();
             },
             trailing: GestureDetector(
-              onTap: () async => Haptics.vibrate(HapticsType.selection),
+              onTap: () async {
+                await Haptics.vibrate(HapticsType.selection);
+                if (context.mounted) context.push('/more/announcements/add');
+              },
               child: const Padding(
                 padding: EdgeInsets.all(10),
                 child: Icon(Icons.add_rounded, size: 22, color: RLTokens.ink),
@@ -78,7 +82,10 @@ class _ComposeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () async => Haptics.vibrate(HapticsType.medium),
+      onTap: () async {
+        await Haptics.vibrate(HapticsType.medium);
+        if (context.mounted) context.push('/more/announcements/add');
+      },
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/architecture/app_startup.dart';
+import 'package:rentloop_manager/src/modules/main/workspace_sheet.dart';
 import 'package:rentloop_manager/src/shared/dialogs.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // ── Seed data ─────────────────────────────────────────────────────────────────
 
@@ -19,13 +22,14 @@ const _kWsUnits     = 64;
 // ── Row item model ────────────────────────────────────────────────────────────
 
 class _RowItem {
-  const _RowItem({required this.label, required this.sub, required this.icon, required this.bg, required this.fg, this.route});
-  final String   label;
-  final String   sub;
-  final IconData icon;
-  final Color    bg;
-  final Color    fg;
-  final String?  route;
+  const _RowItem({required this.label, required this.sub, required this.icon, required this.bg, required this.fg, this.route, this.action});
+  final String        label;
+  final String        sub;
+  final IconData      icon;
+  final Color         bg;
+  final Color         fg;
+  final String?       route;
+  final Future<void> Function(BuildContext)? action;
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -36,22 +40,42 @@ class MoreScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final manageRows = [
-      const _RowItem(label: 'Tenants',             sub: 'Directory & profiles',   icon: Icons.people_outline_rounded,   bg: RLTokens.infoBg,     fg: RLTokens.info,    route: '/more/tenants'),
-      const _RowItem(label: 'Announcements',       sub: 'Notices & polls',         icon: Icons.campaign_outlined,        bg: RLTokens.crimsonTint, fg: RLTokens.crimson, route: '/more/announcements'),
-      const _RowItem(label: 'Documents & e-sign',  sub: 'Agreements, audit trail', icon: Icons.description_outlined,     bg: RLTokens.warningBg,  fg: RLTokens.warning),
-      const _RowItem(label: 'Reports',             sub: 'Workspace analytics',     icon: Icons.bar_chart_rounded,        bg: RLTokens.successBg,  fg: RLTokens.success),
+      const _RowItem(label: 'Tenants',            sub: 'Directory & profiles',    icon: Icons.people_outline_rounded,  bg: RLTokens.infoBg,      fg: RLTokens.info,    route: '/more/tenants'),
+      const _RowItem(label: 'Announcements',      sub: 'Notices & polls',          icon: Icons.campaign_outlined,       bg: RLTokens.crimsonTint, fg: RLTokens.crimson, route: '/more/announcements'),
+      const _RowItem(label: 'Documents & e-sign', sub: 'Agreements, audit trail',  icon: Icons.description_outlined,    bg: RLTokens.warningBg,   fg: RLTokens.warning, route: '/more/documents'),
+      const _RowItem(label: 'Reports',            sub: 'Workspace analytics',      icon: Icons.bar_chart_rounded,       bg: RLTokens.successBg,   fg: RLTokens.success),
     ];
 
     final orgRows = [
-      const _RowItem(label: 'Members & roles',     sub: '5 members',              icon: Icons.person_outline_rounded,   bg: RLTokens.neutralBg,  fg: RLTokens.neutral),
-      const _RowItem(label: 'Payment accounts',    sub: 'MoMo · Bank transfer',   icon: Icons.credit_card_outlined,     bg: RLTokens.successBg,  fg: RLTokens.success),
-      const _RowItem(label: 'Agreement templates', sub: '3 templates',             icon: Icons.folder_outlined,          bg: RLTokens.infoBg,     fg: RLTokens.info),
-      const _RowItem(label: 'Billing',             sub: 'Growth plan',             icon: Icons.receipt_long_outlined,   bg: RLTokens.warningBg,  fg: RLTokens.warning),
+      const _RowItem(label: 'Members & roles',                    sub: '5 members',         icon: Icons.person_outline_rounded,  bg: RLTokens.neutralBg,   fg: RLTokens.neutral, route: '/more/members'),
+      const _RowItem(label: 'Payment accounts',                   sub: 'MoMo · Bank transfer', icon: Icons.credit_card_outlined, bg: RLTokens.successBg,   fg: RLTokens.success, route: '/more/payment-accounts'),
+      const _RowItem(label: 'Rentloop x $_kWsName\'s Agreement',  sub: '3 templates',       icon: Icons.folder_outlined,         bg: RLTokens.infoBg,      fg: RLTokens.info,    route: '/more/agreement'),
+      const _RowItem(label: 'Billing',                            sub: 'Growth plan',        icon: Icons.receipt_long_outlined,  bg: RLTokens.warningBg,   fg: RLTokens.warning, route: '/more/billing'),
     ];
 
     final accountRows = [
-      const _RowItem(label: 'Settings',            sub: 'Notifications, language', icon: Icons.settings_outlined,        bg: RLTokens.neutralBg,  fg: RLTokens.neutral),
-      const _RowItem(label: 'Help & support',      sub: 'WhatsApp us',             icon: Icons.help_outline_rounded,     bg: RLTokens.neutralBg,  fg: RLTokens.neutral),
+      const _RowItem(label: 'Settings',      sub: 'Notifications, language', icon: Icons.settings_outlined,   bg: RLTokens.neutralBg, fg: RLTokens.neutral, route: '/more/settings'),
+      _RowItem(
+        label: 'Help & support',
+        sub: 'WhatsApp us',
+        icon: Icons.help_outline_rounded,
+        bg: RLTokens.neutralBg,
+        fg: RLTokens.neutral,
+        action: (_) async {
+          final uri = Uri.parse('https://wa.me/233201080802');
+          if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+        },
+      ),
+      _RowItem(
+        label: 'Share Rentloop',
+        sub: 'Invite other managers',
+        icon: Icons.ios_share_rounded,
+        bg: RLTokens.neutralBg,
+        fg: RLTokens.neutral,
+        action: (_) async {
+          await Share.share('https://rentloopapp.com/managers');
+        },
+      ),
     ];
 
     return Scaffold(
@@ -186,7 +210,10 @@ class _WorkspaceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () async => Haptics.vibrate(HapticsType.selection),
+      onTap: () async {
+        await Haptics.vibrate(HapticsType.selection);
+        if (context.mounted) await showWorkspaceSheet(context, activeId: 'ws1');
+      },
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -287,7 +314,12 @@ class _RowGroup extends StatelessWidget {
           return GestureDetector(
             onTap: () async {
               await Haptics.vibrate(HapticsType.selection);
-              if (r.route != null && context.mounted) context.push(r.route!);
+              if (!context.mounted) return;
+              if (r.action != null) {
+                await r.action!(context);
+              } else if (r.route != null) {
+                context.push(r.route!);
+              }
             },
             behavior: HitTestBehavior.opaque,
             child: Container(
