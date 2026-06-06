@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/architecture/app_startup.dart';
+import 'package:rentloop_manager/src/constants.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // Static design data — will be replaced by real API workspace list.
 const _kWorkspaces = [
@@ -97,7 +99,11 @@ class WorkspaceSelectScreen extends ConsumerWidget {
 
               // "Create a new workspace" dashed button
               GestureDetector(
-                onTap: () async => Haptics.vibrate(HapticsType.selection),
+                onTap: () async {
+                  await Haptics.vibrate(HapticsType.selection);
+                  final url = applyUrl(campaign: 'workspace_select', content: 'create_workspace');
+                  if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.externalApplication);
+                },
                 child: CustomPaint(
                   painter: _DashedRectPainter(
                     radius: 14,

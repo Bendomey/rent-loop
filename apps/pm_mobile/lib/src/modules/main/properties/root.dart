@@ -8,7 +8,7 @@ class PropertiesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: RLTokens.paper,
+      backgroundColor: RLTokens.surface,
       body: RefreshIndicator(
         color: RLTokens.crimson,
         onRefresh: () async {},

@@ -15,8 +15,10 @@ ThemeData buildTheme() {
       onPrimary: RLTokens.surface,
       surface: RLTokens.surface,
       onSurface: RLTokens.ink,
+      // Suppress the Material 3 surface-tint overlay so white stays white.
+      surfaceTint: Colors.transparent,
     ),
-    scaffoldBackgroundColor: RLTokens.paper,
+    scaffoldBackgroundColor: RLTokens.surface,
     splashFactory: NoSplash.splashFactory,
     highlightColor: Colors.transparent,
   );

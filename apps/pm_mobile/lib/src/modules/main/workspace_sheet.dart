@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/constants.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // Static data — mirrors the design spec.
 const _kWorkspaces = [
@@ -190,7 +192,11 @@ class _WorkspaceSheetState extends State<_WorkspaceSheet> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
               child: GestureDetector(
-                onTap: () async => Haptics.vibrate(HapticsType.selection),
+                onTap: () async {
+                  await Haptics.vibrate(HapticsType.selection);
+                  final url = applyUrl(campaign: 'workspace_sheet', content: 'create_workspace');
+                  if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.externalApplication);
+                },
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),

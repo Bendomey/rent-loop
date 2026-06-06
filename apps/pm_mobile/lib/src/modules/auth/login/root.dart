@@ -5,29 +5,10 @@ import 'package:rentloop_manager/src/architecture/app_startup.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:rentloop_manager/src/constants.dart';
 
-// UTM-tagged deep links from the login screen.
-// utm_source=manager_app   — PM mobile app
-// utm_medium=mobile        — channel
-// utm_campaign=login       — screen
-// utm_content=<cta>        — which specific link was tapped
-Uri _applyUrl() => Uri.https('pm.rentloopapp.com', '/apply', {
-  'utm_source': 'manager_app',
-  'utm_medium': 'mobile',
-  'utm_campaign': 'login',
-  'utm_content': 'apply_cta',
-});
-
-Uri _forgotPasswordUrl() => Uri.https(
-  'pm.rentloopapp.com',
-  '/forgot-your-password',
-  {
-    'utm_source': 'manager_app',
-    'utm_medium': 'mobile',
-    'utm_campaign': 'login',
-    'utm_content': 'forgot_password',
-  },
-);
+final _applyUrl        = applyUrl(campaign: 'login', content: 'apply_cta');
+final _forgotPasswordUrl = forgotPasswordUrl(campaign: 'login', content: 'forgot_password');
 
 Future<void> _launch(Uri url) async {
   if (await canLaunchUrl(url)) {
@@ -209,7 +190,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: GestureDetector(
                         onTap: () async {
                           await Haptics.vibrate(HapticsType.selection);
-                          await _launch(_forgotPasswordUrl());
+                          await _launch(_forgotPasswordUrl);
                         },
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 6),
@@ -286,7 +267,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   GestureDetector(
                     onTap: () async {
                       await Haptics.vibrate(HapticsType.selection);
-                      await _launch(_applyUrl());
+                      await _launch(_applyUrl);
                     },
                     child: Text(
                       'Apply as landlord/real estate',

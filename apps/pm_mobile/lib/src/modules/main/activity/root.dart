@@ -15,7 +15,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: RLTokens.paper,
+      backgroundColor: RLTokens.surface,
       body: Column(
         children: [
           _Header(selectedTab: _tab, onTabChanged: (v) => setState(() => _tab = v)),

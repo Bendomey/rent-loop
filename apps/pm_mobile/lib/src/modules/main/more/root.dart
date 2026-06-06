@@ -10,7 +10,7 @@ class MoreScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: RLTokens.paper,
+      backgroundColor: RLTokens.surface,
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: _Header()),
