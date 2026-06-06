@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/architecture/app_startup.dart';
 import 'package:rentloop_manager/src/shared/dialogs.dart';
@@ -18,12 +19,13 @@ const _kWsUnits     = 64;
 // ── Row item model ────────────────────────────────────────────────────────────
 
 class _RowItem {
-  const _RowItem({required this.label, required this.sub, required this.icon, required this.bg, required this.fg});
+  const _RowItem({required this.label, required this.sub, required this.icon, required this.bg, required this.fg, this.route});
   final String   label;
   final String   sub;
   final IconData icon;
   final Color    bg;
   final Color    fg;
+  final String?  route;
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -35,7 +37,7 @@ class MoreScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final manageRows = [
       const _RowItem(label: 'Tenants',             sub: 'Directory & profiles',   icon: Icons.people_outline_rounded,   bg: RLTokens.infoBg,     fg: RLTokens.info),
-      const _RowItem(label: 'Announcements',       sub: 'Notices & polls',         icon: Icons.campaign_outlined,        bg: RLTokens.crimsonTint, fg: RLTokens.crimson),
+      const _RowItem(label: 'Announcements',       sub: 'Notices & polls',         icon: Icons.campaign_outlined,        bg: RLTokens.crimsonTint, fg: RLTokens.crimson, route: '/more/announcements'),
       const _RowItem(label: 'Documents & e-sign',  sub: 'Agreements, audit trail', icon: Icons.description_outlined,     bg: RLTokens.warningBg,  fg: RLTokens.warning),
       const _RowItem(label: 'Reports',             sub: 'Workspace analytics',     icon: Icons.bar_chart_rounded,        bg: RLTokens.successBg,  fg: RLTokens.success),
     ];
@@ -283,7 +285,10 @@ class _RowGroup extends StatelessWidget {
           final r      = rows[i];
           final isLast = i == rows.length - 1;
           return GestureDetector(
-            onTap: () async => Haptics.vibrate(HapticsType.selection),
+            onTap: () async {
+              await Haptics.vibrate(HapticsType.selection);
+              if (r.route != null && context.mounted) context.push(r.route!);
+            },
             behavior: HitTestBehavior.opaque,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 13),

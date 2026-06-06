@@ -13,6 +13,7 @@ import 'package:rentloop_manager/src/modules/main/home/root.dart';
 import 'package:rentloop_manager/src/modules/main/notifications/root.dart';
 import 'package:rentloop_manager/src/modules/main/money/invoice_detail.dart';
 import 'package:rentloop_manager/src/modules/main/money/root.dart';
+import 'package:rentloop_manager/src/modules/main/announcements/root.dart';
 import 'package:rentloop_manager/src/modules/main/more/root.dart';
 import 'package:rentloop_manager/src/modules/main/properties/detail.dart';
 import 'package:rentloop_manager/src/modules/main/properties/root.dart';
@@ -145,7 +146,16 @@ GoRouter buildRoutes(WidgetRef ref) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/more', builder: (_, __) => const MoreScreen()),
+              GoRoute(
+                path: '/more',
+                builder: (_, __) => const MoreScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'announcements',
+                    builder: (_, __) => const AnnouncementsScreen(),
+                  ),
+                ],
+              ),
             ],
           ),
         ],
