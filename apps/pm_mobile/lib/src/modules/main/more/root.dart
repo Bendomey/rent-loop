@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/architecture/app_startup.dart';
+import 'package:rentloop_manager/src/shared/dialogs.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -40,7 +42,14 @@ class MoreScreen extends ConsumerWidget {
                   _SettingItem(
                     icon: Icons.logout,
                     label: 'Sign out',
-                    onTap: () => ref.read(appStartupProvider.notifier).logout(),
+                    onTap: () async {
+                      await Haptics.vibrate(HapticsType.selection);
+                      if (!context.mounted) return;
+                      final confirmed = await showSignOutDialog(context);
+                      if (confirmed && context.mounted) {
+                        ref.read(appStartupProvider.notifier).logout();
+                      }
+                    },
                     danger: true,
                   ),
                 ],

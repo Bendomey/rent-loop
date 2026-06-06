@@ -800,10 +800,9 @@ class RLBackHeader extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                SizedBox(
-                  width: 38 + 12,
-                  child: trailing != null ? Align(alignment: Alignment.centerRight, child: trailing) : null,
-                ),
+                trailing != null
+                    ? trailing!
+                    : const SizedBox(width: 38 + 12),
               ],
             ),
           ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/architecture/app_startup.dart';
 import 'package:rentloop_manager/src/constants.dart';
+import 'package:rentloop_manager/src/shared/dialogs.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -39,7 +40,7 @@ class WorkspaceSelectScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Logo
+              // Logo row with logout button at right
               Row(
                 children: [
                   const _LogoMark(size: 28),
@@ -57,6 +58,26 @@ class WorkspaceSelectScreen extends ConsumerWidget {
                         TextSpan(text: 'rent', style: TextStyle(color: RLTokens.crimson)),
                         TextSpan(text: 'loop'),
                       ],
+                    ),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () async {
+                      await Haptics.vibrate(HapticsType.selection);
+                      if (!context.mounted) return;
+                      final confirmed = await showSignOutDialog(context);
+                      if (confirmed && context.mounted) {
+                        ref.read(appStartupProvider.notifier).logout();
+                      }
+                    },
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: RLTokens.fill,
+                        borderRadius: BorderRadius.circular(RLTokens.rSm),
+                      ),
+                      child: const Icon(Icons.logout, size: 17, color: RLTokens.inkSoft),
                     ),
                   ),
                 ],
