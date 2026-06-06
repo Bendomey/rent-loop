@@ -1,4 +1,4 @@
-package com.example.rentloop_manager
+package com.rentloop.pm
 
 import io.flutter.embedding.android.FlutterActivity
 
