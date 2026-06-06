@@ -36,7 +36,7 @@ class MoreScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final manageRows = [
-      const _RowItem(label: 'Tenants',             sub: 'Directory & profiles',   icon: Icons.people_outline_rounded,   bg: RLTokens.infoBg,     fg: RLTokens.info),
+      const _RowItem(label: 'Tenants',             sub: 'Directory & profiles',   icon: Icons.people_outline_rounded,   bg: RLTokens.infoBg,     fg: RLTokens.info,    route: '/more/tenants'),
       const _RowItem(label: 'Announcements',       sub: 'Notices & polls',         icon: Icons.campaign_outlined,        bg: RLTokens.crimsonTint, fg: RLTokens.crimson, route: '/more/announcements'),
       const _RowItem(label: 'Documents & e-sign',  sub: 'Agreements, audit trail', icon: Icons.description_outlined,     bg: RLTokens.warningBg,  fg: RLTokens.warning),
       const _RowItem(label: 'Reports',             sub: 'Workspace analytics',     icon: Icons.bar_chart_rounded,        bg: RLTokens.successBg,  fg: RLTokens.success),

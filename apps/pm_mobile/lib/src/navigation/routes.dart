@@ -15,6 +15,8 @@ import 'package:rentloop_manager/src/modules/main/money/invoice_detail.dart';
 import 'package:rentloop_manager/src/modules/main/money/root.dart';
 import 'package:rentloop_manager/src/modules/main/announcements/root.dart';
 import 'package:rentloop_manager/src/modules/main/more/root.dart';
+import 'package:rentloop_manager/src/modules/main/tenants/detail.dart';
+import 'package:rentloop_manager/src/modules/main/tenants/root.dart';
 import 'package:rentloop_manager/src/modules/main/properties/detail.dart';
 import 'package:rentloop_manager/src/modules/main/properties/root.dart';
 import 'package:rentloop_manager/src/modules/main/shell.dart';
@@ -153,6 +155,18 @@ GoRouter buildRoutes(WidgetRef ref) {
                   GoRoute(
                     path: 'announcements',
                     builder: (_, __) => const AnnouncementsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'tenants',
+                    builder: (_, __) => const TenantsScreen(),
+                    routes: [
+                      GoRoute(
+                        path: ':id',
+                        builder: (_, state) => TenantDetailScreen(
+                          id: state.pathParameters['id']!,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
