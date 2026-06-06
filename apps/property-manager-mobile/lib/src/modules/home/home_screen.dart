@@ -2,14 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/theme.dart';
+import '../../shared/workspace_model.dart';
+import '../workspace/switch_workspace_sheet.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  // Placeholder for the active workspace — replaced when API lands.
-  static const _activeWorkspace = _ActiveWorkspace(
-    name: 'Owusu Estates',
-  );
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +16,7 @@ class HomeScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
           children: [
-            _Header(workspaceName: _activeWorkspace.name),
+            const _Header(),
             const SizedBox(height: 20),
             const _RevenueCard(),
             const SizedBox(height: 16),
@@ -33,14 +30,8 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _ActiveWorkspace {
-  const _ActiveWorkspace({required this.name});
-  final String name;
-}
-
 class _Header extends StatelessWidget {
-  const _Header({required this.workspaceName});
-  final String workspaceName;
+  const _Header();
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +42,7 @@ class _Header extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _WorkspacePill(name: workspaceName),
+              const _WorkspacePill(),
               const SizedBox(height: 4),
               Text(
                 'Good morning',
@@ -67,39 +58,45 @@ class _Header extends StatelessWidget {
 }
 
 class _WorkspacePill extends StatelessWidget {
-  const _WorkspacePill({required this.name});
-  final String name;
+  const _WorkspacePill();
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        // The switch-workspace bottom sheet lands in the next commit.
+    return ValueListenableBuilder<String>(
+      valueListenable: ActiveWorkspace.activeId,
+      builder: (context, activeId, _) {
+        final active = ActiveWorkspace.all.firstWhere(
+          (w) => w.id == activeId,
+          orElse: () => ActiveWorkspace.all.first,
+        );
+        return InkWell(
+          onTap: () => showSwitchWorkspaceSheet(context),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  active.name.toUpperCase(),
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 11,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                const Icon(
+                  Icons.expand_more_rounded,
+                  color: AppColors.primary,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        );
       },
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              name.toUpperCase(),
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w800,
-                fontSize: 11,
-                letterSpacing: 0.6,
-              ),
-            ),
-            const SizedBox(width: 2),
-            const Icon(
-              Icons.expand_more_rounded,
-              color: AppColors.primary,
-              size: 16,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
