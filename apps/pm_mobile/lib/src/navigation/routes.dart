@@ -10,6 +10,7 @@ import 'package:rentloop_manager/src/modules/main/home/root.dart';
 import 'package:rentloop_manager/src/modules/main/notifications/root.dart';
 import 'package:rentloop_manager/src/modules/main/money/root.dart';
 import 'package:rentloop_manager/src/modules/main/more/root.dart';
+import 'package:rentloop_manager/src/modules/main/properties/detail.dart';
 import 'package:rentloop_manager/src/modules/main/properties/root.dart';
 import 'package:rentloop_manager/src/modules/main/shell.dart';
 import 'splash.dart';
@@ -83,6 +84,14 @@ GoRouter buildRoutes(WidgetRef ref) {
               GoRoute(
                 path: '/properties',
                 builder: (_, __) => const PropertiesScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, state) => PropertyDetailScreen(
+                      id: state.pathParameters['id']!,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
