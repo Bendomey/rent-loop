@@ -6,65 +6,119 @@ import 'package:rentloop_manager/src/shared/dialogs.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
+// ── Seed data ─────────────────────────────────────────────────────────────────
+
+const _kManagerName = 'Akosua Owusu';
+const _kWsName      = 'Owusu Estates';
+const _kWsInitial   = 'OE';
+const _kWsRole      = 'Manager';
+const _kWsProps     = 5;
+const _kWsUnits     = 64;
+
+// ── Row item model ────────────────────────────────────────────────────────────
+
+class _RowItem {
+  const _RowItem({required this.label, required this.sub, required this.icon, required this.bg, required this.fg});
+  final String   label;
+  final String   sub;
+  final IconData icon;
+  final Color    bg;
+  final Color    fg;
+}
+
+// ── Screen ────────────────────────────────────────────────────────────────────
+
 class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final manageRows = [
+      const _RowItem(label: 'Tenants',             sub: 'Directory & profiles',   icon: Icons.people_outline_rounded,   bg: RLTokens.infoBg,     fg: RLTokens.info),
+      const _RowItem(label: 'Announcements',       sub: 'Notices & polls',         icon: Icons.campaign_outlined,        bg: RLTokens.crimsonTint, fg: RLTokens.crimson),
+      const _RowItem(label: 'Documents & e-sign',  sub: 'Agreements, audit trail', icon: Icons.description_outlined,     bg: RLTokens.warningBg,  fg: RLTokens.warning),
+      const _RowItem(label: 'Reports',             sub: 'Workspace analytics',     icon: Icons.bar_chart_rounded,        bg: RLTokens.successBg,  fg: RLTokens.success),
+    ];
+
+    final orgRows = [
+      const _RowItem(label: 'Members & roles',     sub: '5 members',              icon: Icons.person_outline_rounded,   bg: RLTokens.neutralBg,  fg: RLTokens.neutral),
+      const _RowItem(label: 'Payment accounts',    sub: 'MoMo · Bank transfer',   icon: Icons.credit_card_outlined,     bg: RLTokens.successBg,  fg: RLTokens.success),
+      const _RowItem(label: 'Agreement templates', sub: '3 templates',             icon: Icons.folder_outlined,          bg: RLTokens.infoBg,     fg: RLTokens.info),
+      const _RowItem(label: 'Billing',             sub: 'Growth plan',             icon: Icons.receipt_long_outlined,   bg: RLTokens.warningBg,  fg: RLTokens.warning),
+    ];
+
+    final accountRows = [
+      const _RowItem(label: 'Settings',            sub: 'Notifications, language', icon: Icons.settings_outlined,        bg: RLTokens.neutralBg,  fg: RLTokens.neutral),
+      const _RowItem(label: 'Help & support',      sub: 'WhatsApp us',             icon: Icons.help_outline_rounded,     bg: RLTokens.neutralBg,  fg: RLTokens.neutral),
+    ];
+
     return Scaffold(
       backgroundColor: RLTokens.surface,
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(child: _Header()),
-          SliverToBoxAdapter(child: _ProfileCard()),
-          SliverToBoxAdapter(child: _SettingsGroup(
-            title: 'Account',
-            items: [
-              _SettingItem(icon: Icons.person_outline, label: 'Profile', onTap: () {}),
-              _SettingItem(icon: Icons.business_outlined, label: 'Workspace', onTap: () {}),
-              _SettingItem(icon: Icons.notifications_outlined, label: 'Notifications', onTap: () {}),
-            ],
-          )),
-          SliverToBoxAdapter(child: _SettingsGroup(
-            title: 'Support',
-            items: [
-              _SettingItem(icon: Icons.help_outline, label: 'Help center', onTap: () {}),
-              _SettingItem(icon: Icons.feedback_outlined, label: 'Send feedback', onTap: () {}),
-              _SettingItem(icon: Icons.privacy_tip_outlined, label: 'Privacy policy', onTap: () {}),
-            ],
-          )),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 8, RLTokens.gutter, 0),
-              child: _SettingsGroup(
-                title: '',
-                items: [
-                  _SettingItem(
-                    icon: Icons.logout,
-                    label: 'Sign out',
-                    onTap: () async {
-                      await Haptics.vibrate(HapticsType.selection);
-                      if (!context.mounted) return;
-                      final confirmed = await showSignOutDialog(context);
-                      if (confirmed && context.mounted) {
-                        ref.read(appStartupProvider.notifier).logout();
-                      }
-                    },
-                    danger: true,
+      body: Column(
+        children: [
+          const RLTopHeader(title: 'More'),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 0, RLTokens.gutter, 40),
+              children: [
+                const SizedBox(height: 10),
+                _ProfileCard(),
+                RLLabel('Workspace'),
+                _WorkspaceCard(),
+                RLLabel('Manage'),
+                _RowGroup(rows: manageRows),
+                RLLabel('Organisation settings'),
+                _RowGroup(rows: orgRows),
+                RLLabel('Account'),
+                _RowGroup(rows: accountRows),
+                const SizedBox(height: 6),
+                // Log out button
+                GestureDetector(
+                  onTap: () async {
+                    await Haptics.vibrate(HapticsType.selection);
+                    if (!context.mounted) return;
+                    final confirmed = await showSignOutDialog(context);
+                    if (confirmed && context.mounted) {
+                      ref.read(appStartupProvider.notifier).logout();
+                    }
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: RLTokens.hairline),
+                      borderRadius: BorderRadius.circular(RLTokens.rLg),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.logout_rounded, size: 18, color: RLTokens.crimson),
+                        SizedBox(width: 8),
+                        Text(
+                          'Log out',
+                          style: TextStyle(
+                            fontFamily: RLTokens.fontSans,
+                            fontSize: 14.5,
+                            fontWeight: RLTokens.semibold,
+                            color: RLTokens.crimson,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 24, bottom: 40),
-                child: Text(
-                  'RentLoop Manager · v0.1.0',
-                  style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 11, color: RLTokens.micro),
                 ),
-              ),
+                const SizedBox(height: 18),
+                const Center(
+                  child: Text(
+                    'Rentloop · Manager v2.4 · Accra',
+                    style: TextStyle(
+                      fontFamily: RLTokens.fontMono,
+                      fontSize: 10.5,
+                      color: RLTokens.micro,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -73,169 +127,214 @@ class MoreScreen extends ConsumerWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: RLTokens.surface,
-      padding: const EdgeInsets.fromLTRB(
-        RLTokens.gutter,
-        RLTokens.statusTop,
-        RLTokens.gutter,
-        16,
-      ),
-      child: Text(
-        'More',
-        style: TextStyle(fontFamily: RLTokens.fontSerif, 
-          fontSize: RLTokens.textTitle,
-          color: RLTokens.ink,
-          letterSpacing: -0.4,
-          height: 1.1,
-        ),
-      ),
-    );
-  }
-}
+// ── Profile card ──────────────────────────────────────────────────────────────
 
 class _ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(RLTokens.gutter, 16, RLTokens.gutter, 0),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: RLTokens.surface,
-        borderRadius: BorderRadius.circular(RLTokens.rLg),
-        boxShadow: RLTokens.elev1,
-      ),
-      child: Row(
-        children: [
-          RLAvatar('Akosua Owusu', size: 50),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Akosua Owusu',
-                  style: TextStyle(fontFamily: RLTokens.fontSans, 
-                    fontSize: RLTokens.textBarTitle,
-                    fontWeight: RLTokens.semibold,
-                    color: RLTokens.ink,
+    return GestureDetector(
+      onTap: () async => Haptics.vibrate(HapticsType.selection),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: RLTokens.surface,
+          borderRadius: BorderRadius.circular(RLTokens.rLg),
+          border: Border.all(color: RLTokens.hairline),
+        ),
+        child: const Row(
+          children: [
+            RLAvatar(_kManagerName, size: 54, crimsonTone: true),
+            SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _kManagerName,
+                    style: TextStyle(
+                      fontFamily: RLTokens.fontSerif,
+                      fontSize: 20,
+                      color: RLTokens.ink,
+                      height: 1.1,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'akosua@owusuestates.com',
-                  style: TextStyle(fontFamily: RLTokens.fontSans, 
-                    fontSize: 12.5,
-                    color: RLTokens.muted,
+                  SizedBox(height: 3),
+                  Text(
+                    'Personal account',
+                    style: TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 12.5,
+                      color: RLTokens.muted,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                RLPill('Owner', tone: RLTone.info),
-              ],
-            ),
-          ),
-          RLIconBtn(icon: Icons.edit_outlined, onTap: () {}),
-        ],
-      ),
-    );
-  }
-}
-
-class _SettingsGroup extends StatelessWidget {
-  const _SettingsGroup({required this.title, required this.items});
-  final String title;
-  final List<_SettingItem> items;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 20, RLTokens.gutter, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (title.isNotEmpty) ...[
-            Text(
-              title.toUpperCase(),
-              style: TextStyle(fontFamily: RLTokens.fontSans, 
-                fontSize: 10.5,
-                fontWeight: RLTokens.semibold,
-                letterSpacing: 0.7,
-                color: RLTokens.mutedSoft,
+                ],
               ),
             ),
-            const SizedBox(height: 8),
+            Icon(Icons.chevron_right_rounded, size: 18, color: RLTokens.micro),
           ],
-          Container(
-            decoration: BoxDecoration(
-              color: RLTokens.surface,
-              borderRadius: BorderRadius.circular(RLTokens.rLg),
-              boxShadow: RLTokens.elev1,
-            ),
-            child: Column(
-              children: [
-                for (var i = 0; i < items.length; i++) ...[
-                  if (i > 0)
-                    Divider(height: 1, thickness: 1, color: RLTokens.hairlineSoft, indent: 50),
-                  items[i],
-                ],
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _SettingItem extends StatelessWidget {
-  const _SettingItem({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.danger = false,
-  });
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool danger;
+// ── Workspace card ────────────────────────────────────────────────────────────
 
+class _WorkspaceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final color = danger ? RLTokens.danger : RLTokens.inkSoft;
     return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      onTap: () async => Haptics.vibrate(HapticsType.selection),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: RLTokens.surface,
+          borderRadius: BorderRadius.circular(RLTokens.rLg),
+          border: Border.all(color: RLTokens.hairline),
+        ),
         child: Row(
           children: [
             Container(
-              width: 34,
-              height: 34,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: danger ? RLTokens.dangerBg : RLTokens.fill,
-                borderRadius: BorderRadius.circular(RLTokens.rSm),
+                color: RLTokens.ink,
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: color, size: 18),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(fontFamily: RLTokens.fontSans, 
-                  fontSize: RLTokens.textRowTitle,
-                  fontWeight: RLTokens.medium,
-                  color: color,
+              child: const Center(
+                child: Text(
+                  _kWsInitial,
+                  style: TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: 14,
+                    fontWeight: RLTokens.bold,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
             ),
-            if (!danger)
-              const Icon(Icons.chevron_right, color: RLTokens.micro, size: 18),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _kWsName,
+                    style: TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 15.5,
+                      fontWeight: RLTokens.semibold,
+                      color: RLTokens.ink,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    '$_kWsRole · $_kWsProps properties · $_kWsUnits units',
+                    style: TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 12.5,
+                      color: RLTokens.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Row(
+              children: [
+                Text(
+                  'Switch',
+                  style: TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: 13,
+                    fontWeight: RLTokens.semibold,
+                    color: RLTokens.crimson,
+                  ),
+                ),
+                SizedBox(width: 3),
+                Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: RLTokens.crimson),
+              ],
+            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Row group ─────────────────────────────────────────────────────────────────
+
+class _RowGroup extends StatelessWidget {
+  const _RowGroup({required this.rows});
+  final List<_RowItem> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      decoration: BoxDecoration(
+        color: RLTokens.surface,
+        borderRadius: BorderRadius.circular(RLTokens.rLg),
+        border: Border.all(color: RLTokens.hairline),
+      ),
+      child: Column(
+        children: List.generate(rows.length, (i) {
+          final r      = rows[i];
+          final isLast = i == rows.length - 1;
+          return GestureDetector(
+            onTap: () async => Haptics.vibrate(HapticsType.selection),
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 13),
+              decoration: BoxDecoration(
+                border: isLast
+                    ? null
+                    : const Border(bottom: BorderSide(color: RLTokens.hairlineSoft)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: r.bg,
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    child: Icon(r.icon, size: 18, color: r.fg),
+                  ),
+                  const SizedBox(width: 13),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          r.label,
+                          style: const TextStyle(
+                            fontFamily: RLTokens.fontSans,
+                            fontSize: 14.5,
+                            fontWeight: RLTokens.semibold,
+                            color: RLTokens.ink,
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          r.sub,
+                          style: const TextStyle(
+                            fontFamily: RLTokens.fontSans,
+                            fontSize: 12,
+                            color: RLTokens.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded, size: 17, color: RLTokens.micro),
+                ],
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
