@@ -4,23 +4,28 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
-class _Member {
-  const _Member({required this.id, required this.name, required this.email, required this.role, required this.initials, this.isYou = false});
-  final String id, name, email, role, initials;
-  final bool isYou;
-}
-
 const _kMembers = [
-  _Member(id: 'm1', name: 'Akosua Owusu',   email: 'akosua@owusuest.com',  role: 'Owner',   initials: 'AO', isYou: true),
-  _Member(id: 'm2', name: 'Kofi Asante',    email: 'kofi@owusuest.com',    role: 'Manager', initials: 'KA'),
-  _Member(id: 'm3', name: 'Ama Boah',       email: 'ama@owusuest.com',     role: 'Staff',   initials: 'AB'),
+  _Member(name: 'Akosua Owusu',     role: 'Owner',   email: 'akosua@owusuestates.com',   phone: '+233 24 558 1190', status: 'Active'),
+  _Member(name: 'Jane Mensah',      role: 'Manager', email: 'jane.mensah@gmail.com',      phone: '+233 50 165 2108', status: 'Active'),
+  _Member(name: 'Emmanuel Baidoo',  role: 'Staff',   email: 'ebaidoo79@gmail.com',        phone: '+233 50 633 9153', status: 'Active'),
+  _Member(name: 'Gideon Bempong',   role: 'Staff',   email: 'gideonbempong533@gmail.com', phone: '+233 27 709 9220', status: 'Invited'),
+  _Member(name: 'Edward Adjei',     role: 'Manager', email: 'edd.net49@gmail.com',        phone: '+233 55 860 1966', status: 'Active'),
 ];
 
-RLTone _roleTone(String role) => switch (role) {
-  'Owner'   => RLTone.danger,
-  'Manager' => RLTone.info,
-  'Staff'   => RLTone.neutral,
-  _         => RLTone.neutral,
+class _Member {
+  const _Member({required this.name, required this.role, required this.email, required this.phone, required this.status});
+  final String name, role, email, phone, status;
+}
+
+Color _statusColor(String s) => switch (s) {
+  'Active'  => RLTokens.success,
+  'Invited' => RLTokens.warning,
+  _         => RLTokens.danger,
+};
+Color _statusBg(String s) => switch (s) {
+  'Active'  => RLTokens.successBg,
+  'Invited' => RLTokens.warningBg,
+  _         => RLTokens.dangerBg,
 };
 
 class PropertyMembersScreen extends StatelessWidget {
@@ -31,13 +36,21 @@ class PropertyMembersScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: RLTokens.surface,
+      floatingActionButton: RLFAB(
+        label: 'Add member',
+        icon: Icons.add_rounded,
+        onPressed: () async {
+          await Haptics.vibrate(HapticsType.medium);
+          if (context.mounted) context.push('/properties/$id/settings/members/add');
+        },
+      ),
       body: Column(
         children: [
           RLBackHeader(
             title: 'Members',
-            trailing: RLIconBtn(
-              icon: Icons.person_add_outlined,
-              onTap: () async {
+            trailing: IconButton(
+              icon: const Icon(Icons.add_rounded, size: 22, color: RLTokens.ink),
+              onPressed: () async {
                 await Haptics.vibrate(HapticsType.selection);
                 if (context.mounted) context.push('/properties/$id/settings/members/add');
               },
@@ -45,118 +58,127 @@ class PropertyMembersScreen extends StatelessWidget {
           ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 12, RLTokens.gutter, 40),
+              padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 6, RLTokens.gutter, 120),
               children: [
-                // Info banner
+                const Text(
+                  'Manage members',
+                  style: TextStyle(fontFamily: RLTokens.fontSerif, fontSize: 24, color: RLTokens.ink, letterSpacing: -0.4),
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  'These people have access to this property.',
+                  style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13, color: RLTokens.muted),
+                ),
+                const SizedBox(height: 14),
+
+                // Search bar
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                   decoration: BoxDecoration(
-                    color: RLTokens.infoBg,
-                    borderRadius: BorderRadius.circular(RLTokens.rMd),
+                    color: RLTokens.fill,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: RLTokens.hairline),
                   ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.search_rounded, size: 18, color: RLTokens.mutedSoft),
+                      SizedBox(width: 10),
+                      Text('Search members', style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14, color: RLTokens.mutedSoft)),
+                    ],
+                  ),
+                ),
+
+                // Section label
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 18, 0, 10),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline_rounded, size: 16, color: RLTokens.info),
-                      const SizedBox(width: 10),
-                      Expanded(
+                      const Expanded(
                         child: Text(
-                          'Members have access to this property only. Manage workspace-wide roles in Organisation settings.',
-                          style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12.5, color: RLTokens.info, height: 1.4),
+                          'Team',
+                          style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12.5, fontWeight: RLTokens.semibold, color: RLTokens.muted),
                         ),
+                      ),
+                      Text(
+                        '${_kMembers.length} members',
+                        style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12.5, fontWeight: RLTokens.semibold, color: RLTokens.crimson),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
 
-                // Members list
-                Container(
-                  decoration: BoxDecoration(
-                    color: RLTokens.surface,
-                    borderRadius: BorderRadius.circular(RLTokens.rLg),
-                    border: Border.all(color: RLTokens.hairline),
-                  ),
-                  child: Column(
-                    children: List.generate(_kMembers.length, (i) {
-                      final m      = _kMembers[i];
-                      final isLast = i == _kMembers.length - 1;
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                          border: isLast ? null : const Border(bottom: BorderSide(color: RLTokens.hairlineSoft)),
-                        ),
-                        child: Row(
-                          children: [
-                            _InitialAvatar(initials: m.initials, isOwner: m.role == 'Owner'),
-                            const SizedBox(width: 13),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text(
-                                        m.name,
-                                        style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14.5, fontWeight: RLTokens.semibold, color: RLTokens.ink),
-                                      ),
-                                      if (m.isYou) ...[
-                                        const SizedBox(width: 6),
-                                        Text('you', style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 11, color: RLTokens.mutedSoft)),
-                                      ],
-                                    ],
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(m.email, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12.5, color: RLTokens.muted)),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
+                ...List.generate(_kMembers.length, (i) {
+                  final m = _kMembers[i];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: RLTokens.surface,
+                        borderRadius: BorderRadius.circular(RLTokens.rLg),
+                        border: Border.all(color: RLTokens.hairline),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _Avatar(name: m.name, size: 42),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                RLPill(m.role, tone: _roleTone(m.role)),
-                                if (!m.isYou && m.role != 'Owner') ...[
-                                  const SizedBox(height: 8),
-                                  GestureDetector(
-                                    onTap: () async {
-                                      await Haptics.vibrate(HapticsType.selection);
-                                      if (context.mounted) _showMemberMenu(context, m);
-                                    },
-                                    child: const Icon(Icons.more_horiz_rounded, size: 18, color: RLTokens.micro),
-                                  ),
-                                ],
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(m.name, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, fontWeight: RLTokens.semibold, color: RLTokens.ink)),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: RLTokens.fill,
+                                        borderRadius: BorderRadius.circular(5),
+                                      ),
+                                      child: Text(
+                                        m.role.toUpperCase(),
+                                        style: const TextStyle(fontFamily: RLTokens.fontMono, fontSize: 9.5, fontWeight: RLTokens.bold, letterSpacing: 0.6, color: RLTokens.muted),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(m.email, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12.5, color: RLTokens.muted), overflow: TextOverflow.ellipsis),
+                                const SizedBox(height: 2),
+                                Text(m.phone, style: const TextStyle(fontFamily: RLTokens.fontMono, fontSize: 11.5, color: RLTokens.mutedSoft)),
                               ],
                             ),
-                          ],
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Invite button
-                GestureDetector(
-                  onTap: () async {
-                    await Haptics.vibrate(HapticsType.selection);
-                    if (context.mounted) context.push('/properties/$id/settings/members/add');
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(RLTokens.rMd),
-                      border: Border.all(color: RLTokens.hairline),
+                          ),
+                          const SizedBox(width: 10),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: _statusBg(m.status),
+                                  borderRadius: BorderRadius.circular(RLTokens.rPill),
+                                ),
+                                child: Text(
+                                  m.status,
+                                  style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12, fontWeight: RLTokens.semibold, color: _statusColor(m.status)),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              GestureDetector(
+                                onTap: () => Haptics.vibrate(HapticsType.selection),
+                                child: const Icon(Icons.delete_outline_rounded, size: 18, color: RLTokens.micro),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.person_add_outlined, size: 18, color: RLTokens.crimson),
-                        SizedBox(width: 8),
-                        Text('Invite member', style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, fontWeight: RLTokens.semibold, color: RLTokens.crimson)),
-                      ],
-                    ),
-                  ),
-                ),
+                  );
+                }),
               ],
             ),
           ),
@@ -164,90 +186,39 @@ class PropertyMembersScreen extends StatelessWidget {
       ),
     );
   }
-
-  void _showMemberMenu(BuildContext context, _Member m) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: RLTokens.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(RLTokens.rXl)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(m.name, style: const TextStyle(fontFamily: RLTokens.fontSerif, fontSize: 20, color: RLTokens.ink)),
-              const SizedBox(height: 4),
-              Text(m.role, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13, color: RLTokens.muted)),
-              const SizedBox(height: 20),
-              _SheetAction(icon: Icons.swap_horiz_rounded, label: 'Change role', onTap: () => Navigator.of(ctx).pop()),
-              const SizedBox(height: 4),
-              _SheetAction(icon: Icons.person_remove_outlined, label: 'Remove from property', danger: true, onTap: () => Navigator.of(ctx).pop()),
-              const SizedBox(height: 8),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
-class _InitialAvatar extends StatelessWidget {
-  const _InitialAvatar({required this.initials, required this.isOwner});
-  final String initials;
-  final bool   isOwner;
+// ── Avatar ────────────────────────────────────────────────────────────────────
+
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.name, required this.size});
+  final String name;
+  final double size;
+
+  String get _initials {
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    return parts[0][0].toUpperCase();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 42,
-      height: 42,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
-        color: isOwner ? RLTokens.crimsonTint : RLTokens.fill,
-        shape: BoxShape.circle,
+        color: RLTokens.crimsonTint,
+        borderRadius: BorderRadius.circular(size / 3),
       ),
       child: Center(
         child: Text(
-          initials,
+          _initials,
           style: TextStyle(
             fontFamily: RLTokens.fontSans,
-            fontSize: 14,
-            fontWeight: RLTokens.semibold,
-            color: isOwner ? RLTokens.crimson : RLTokens.inkSoft,
+            fontSize: size * 0.35,
+            fontWeight: RLTokens.bold,
+            color: RLTokens.crimson,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SheetAction extends StatelessWidget {
-  const _SheetAction({required this.icon, required this.label, required this.onTap, this.danger = false});
-  final IconData icon;
-  final String   label;
-  final bool     danger;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = danger ? RLTokens.danger : RLTokens.ink;
-    return GestureDetector(
-      onTap: () async {
-        await Haptics.vibrate(HapticsType.selection);
-        onTap();
-      },
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: color),
-            const SizedBox(width: 14),
-            Text(label, style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, fontWeight: RLTokens.medium, color: color)),
-          ],
         ),
       ),
     );

@@ -2,268 +2,268 @@ import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 
-// ── Public API ────────────────────────────────────────────────────────────────
+// ── Public API ─────────────────────────────────────────────────────────────────
 
-Future<void> showBasicDetailsSheet(
-  BuildContext context, {
-  required String name,
-  String description = '',
-}) {
-  return showModalBottomSheet<void>(
+void showBasicDetailsSheet(BuildContext context, {String name = '', String description = ''}) {
+  _openSheet(context, (ctx, close) => _BasicDetailsSheet(initialName: name, initialDesc: description, onClose: close));
+}
+
+void showRentalModeSheet(BuildContext context, {String current = 'lease'}) {
+  _openSheet(context, (ctx, close) => _RentalModeSheet(current: current, onClose: close));
+}
+
+void showLocationSheet(BuildContext context, {String address = ''}) {
+  _openSheet(context, (ctx, close) => _LocationSheet(initialAddress: address, onClose: close));
+}
+
+void showSwitchTypeSheet(BuildContext context, {String current = 'multi', int unitCount = 24}) {
+  _openSheet(context, (ctx, close) => _SwitchTypeSheet(current: current, unitCount: unitCount, onClose: close));
+}
+
+// ── Internal sheet launcher ────────────────────────────────────────────────────
+
+void _openSheet(BuildContext context, Widget Function(BuildContext, VoidCallback) builder) {
+  showModalBottomSheet<void>(
     context: context,
-    backgroundColor: Colors.transparent,
-    barrierColor: const Color.fromRGBO(17, 17, 16, 0.35),
     isScrollControlled: true,
-    builder: (_) => _BasicDetailsSheet(name: name, description: description),
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => builder(ctx, () => Navigator.of(ctx).pop()),
   );
 }
 
-Future<void> showRentalModeSheet(
-  BuildContext context, {
-  required String current,
-}) {
-  return showModalBottomSheet<void>(
-    context: context,
-    backgroundColor: Colors.transparent,
-    barrierColor: const Color.fromRGBO(17, 17, 16, 0.35),
-    isScrollControlled: true,
-    builder: (_) => _RentalModeSheet(current: current),
-  );
-}
+// ── PSSheet chrome ─────────────────────────────────────────────────────────────
 
-Future<void> showLocationSheet(
-  BuildContext context, {
-  required String address,
-  required String city,
-  required String region,
-}) {
-  return showModalBottomSheet<void>(
-    context: context,
-    backgroundColor: Colors.transparent,
-    barrierColor: const Color.fromRGBO(17, 17, 16, 0.35),
-    isScrollControlled: true,
-    builder: (_) => _LocationSheet(address: address, city: city, region: region),
-  );
-}
-
-Future<void> showSwitchTypeSheet(
-  BuildContext context, {
-  required String current,
-}) {
-  return showModalBottomSheet<void>(
-    context: context,
-    backgroundColor: Colors.transparent,
-    barrierColor: const Color.fromRGBO(17, 17, 16, 0.35),
-    isScrollControlled: true,
-    builder: (_) => _SwitchTypeSheet(current: current),
-  );
-}
-
-// ── Shared sheet chrome ───────────────────────────────────────────────────────
-
-class _SheetChrome extends StatelessWidget {
-  const _SheetChrome({required this.title, required this.child});
+class _PSSheet extends StatelessWidget {
+  const _PSSheet({
+    required this.title,
+    this.desc,
+    required this.onClose,
+    required this.child,
+    required this.footer,
+  });
   final String title;
+  final String? desc;
+  final VoidCallback onClose;
   final Widget child;
+  final Widget footer;
 
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom;
+    final bottom = MediaQuery.of(context).padding.bottom;
     return AnimatedPadding(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOut,
-      padding: EdgeInsets.only(bottom: bottom),
+      duration: const Duration(milliseconds: 150),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.9),
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: RLTokens.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(RLTokens.rXl)),
           boxShadow: RLTokens.elevSheet,
         ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 10),
-              // Drag handle
-              Container(
-                width: 38,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: RLTokens.hairline,
-                  borderRadius: BorderRadius.circular(5),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag handle
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Center(
+                child: Container(
+                  width: 38,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: RLTokens.hairline,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
                 ),
               ),
-              // Header
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
-                child: Row(
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontFamily: RLTokens.fontSerif,
-                        fontSize: 21,
-                        letterSpacing: -0.3,
-                        color: RLTokens.ink,
-                        height: 1.1,
-                      ),
-                    ),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () async {
-                        await Haptics.vibrate(HapticsType.selection);
-                        if (context.mounted) Navigator.of(context).pop();
-                      },
-                      child: Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: RLTokens.fill,
-                          borderRadius: BorderRadius.circular(RLTokens.rSm),
+            ),
+            // Title row
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 12, 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontFamily: RLTokens.fontSerif,
+                            fontSize: 21,
+                            color: RLTokens.ink,
+                            letterSpacing: -0.3,
+                          ),
                         ),
-                        child: const Icon(Icons.close, size: 17, color: RLTokens.inkSoft),
-                      ),
+                        if (desc != null) ...[
+                          const SizedBox(height: 5),
+                          Text(
+                            desc!,
+                            style: const TextStyle(
+                              fontFamily: RLTokens.fontSans,
+                              fontSize: 13,
+                              color: RLTokens.muted,
+                              height: 1.45,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: () async {
+                      await Haptics.vibrate(HapticsType.selection);
+                      onClose();
+                    },
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: RLTokens.fill,
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: const Icon(Icons.close_rounded, size: 18, color: RLTokens.inkSoft),
+                    ),
+                  ),
+                ],
               ),
-              child,
-            ],
-          ),
+            ),
+            // Content
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                child: child,
+              ),
+            ),
+            // Footer
+            Padding(
+              padding: EdgeInsets.fromLTRB(20, 14, 20, 30 + bottom),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [footer],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-// ── Save CTA ──────────────────────────────────────────────────────────────────
+// ── Save + Cancel buttons ──────────────────────────────────────────────────────
 
-class _SaveBtn extends StatelessWidget {
-  const _SaveBtn({required this.saving, required this.label, required this.onSave});
-  final bool saving;
-  final String label;
-  final VoidCallback onSave;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-      child: GestureDetector(
-        onTap: saving ? null : onSave,
+Widget _saveCancel(VoidCallback onClose) {
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      GestureDetector(
+        onTap: () async {
+          await Haptics.vibrate(HapticsType.selection);
+          onClose();
+        },
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          decoration: BoxDecoration(
+            color: RLTokens.fill,
+            borderRadius: BorderRadius.circular(RLTokens.rMd),
+            border: Border.all(color: RLTokens.hairline),
+          ),
+          child: const Text(
+            'Cancel',
+            style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14.5, fontWeight: RLTokens.semibold, color: RLTokens.ink),
+          ),
+        ),
+      ),
+      const SizedBox(width: 10),
+      GestureDetector(
+        onTap: () async {
+          await Haptics.vibrate(HapticsType.medium);
+          onClose();
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           decoration: BoxDecoration(
             color: RLTokens.crimson,
             borderRadius: BorderRadius.circular(RLTokens.rMd),
           ),
-          child: Center(
-            child: saving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
-                : Text(
-                    label,
-                    style: const TextStyle(
-                      fontFamily: RLTokens.fontSans,
-                      fontSize: 15.5,
-                      fontWeight: RLTokens.semibold,
-                      color: Colors.white,
-                    ),
-                  ),
+          child: const Row(
+            children: [
+              Icon(Icons.check_rounded, size: 16, color: Colors.white),
+              SizedBox(width: 6),
+              Text(
+                'Save',
+                style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14.5, fontWeight: RLTokens.semibold, color: Colors.white),
+              ),
+            ],
           ),
         ),
+      ),
+    ],
+  );
+}
+
+// ── Shared input field ─────────────────────────────────────────────────────────
+
+class _SheetInput extends StatelessWidget {
+  const _SheetInput({required this.controller, required this.placeholder, this.prefixIcon, this.textCapitalization = TextCapitalization.none});
+  final TextEditingController controller;
+  final String placeholder;
+  final IconData? prefixIcon;
+  final TextCapitalization textCapitalization;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      textCapitalization: textCapitalization,
+      style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, color: RLTokens.ink),
+      decoration: InputDecoration(
+        hintText: placeholder,
+        hintStyle: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, color: RLTokens.mutedSoft),
+        prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 18, color: RLTokens.mutedSoft) : null,
+        filled: true,
+        fillColor: RLTokens.surface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        border:        OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.hairline, width: 1.5)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.hairline, width: 1.5)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.crimson,   width: 1.5)),
       ),
     );
   }
 }
 
-// ── Input field ───────────────────────────────────────────────────────────────
-
-class _SheetField extends StatelessWidget {
-  const _SheetField({
-    required this.controller,
-    required this.label,
-    required this.hint,
-    this.maxLines = 1,
-    this.keyboardType,
-    this.textCapitalization = TextCapitalization.none,
-    this.validator,
-  });
-
-  final TextEditingController controller;
-  final String label;
-  final String hint;
-  final int maxLines;
-  final TextInputType? keyboardType;
-  final TextCapitalization textCapitalization;
-  final String? Function(String?)? validator;
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.text);
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontFamily: RLTokens.fontSans,
-            fontSize: 13,
-            fontWeight: RLTokens.semibold,
-            color: RLTokens.ink,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          maxLines: maxLines,
-          keyboardType: keyboardType,
-          textCapitalization: textCapitalization,
-          validator: validator,
-          style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, color: RLTokens.ink),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, color: RLTokens.mutedSoft),
-            filled: true,
-            fillColor: RLTokens.fill,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-            border:             OutlineInputBorder(borderRadius: BorderRadius.circular(RLTokens.rMd), borderSide: const BorderSide(color: RLTokens.hairline)),
-            enabledBorder:      OutlineInputBorder(borderRadius: BorderRadius.circular(RLTokens.rMd), borderSide: const BorderSide(color: RLTokens.hairline)),
-            focusedBorder:      OutlineInputBorder(borderRadius: BorderRadius.circular(RLTokens.rMd), borderSide: const BorderSide(color: RLTokens.crimson, width: 1.5)),
-            errorBorder:        OutlineInputBorder(borderRadius: BorderRadius.circular(RLTokens.rMd), borderSide: const BorderSide(color: RLTokens.danger)),
-            focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(RLTokens.rMd), borderSide: const BorderSide(color: RLTokens.danger, width: 1.5)),
-          ),
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        text,
+        style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13.5, fontWeight: RLTokens.semibold, color: RLTokens.ink),
+      ),
     );
   }
 }
 
-// ── Sheet 1: Basic details ────────────────────────────────────────────────────
+// ── 1. Basic details ───────────────────────────────────────────────────────────
 
 class _BasicDetailsSheet extends StatefulWidget {
-  const _BasicDetailsSheet({required this.name, required this.description});
-  final String name;
-  final String description;
+  const _BasicDetailsSheet({required this.initialName, required this.initialDesc, required this.onClose});
+  final String initialName, initialDesc;
+  final VoidCallback onClose;
 
   @override
   State<_BasicDetailsSheet> createState() => _BasicDetailsSheetState();
 }
 
 class _BasicDetailsSheetState extends State<_BasicDetailsSheet> {
-  late final TextEditingController _nameCtrl;
-  late final TextEditingController _descCtrl;
-  bool _saving = false;
-  final _formKey = GlobalKey<FormState>();
-
-  @override
-  void initState() {
-    super.initState();
-    _nameCtrl = TextEditingController(text: widget.name);
-    _descCtrl = TextEditingController(text: widget.description);
-  }
+  late final _nameCtrl = TextEditingController(text: widget.initialName);
+  late final _descCtrl = TextEditingController(text: widget.initialDesc);
 
   @override
   void dispose() {
@@ -272,437 +272,292 @@ class _BasicDetailsSheetState extends State<_BasicDetailsSheet> {
     super.dispose();
   }
 
-  Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _saving = true);
-    await Haptics.vibrate(HapticsType.medium);
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-    setState(() => _saving = false);
-    await Haptics.vibrate(HapticsType.success);
-    if (mounted) Navigator.of(context).pop();
-  }
-
   @override
   Widget build(BuildContext context) {
-    return _SheetChrome(
-      title: 'Basic details',
-      child: Form(
-        key: _formKey,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SheetField(
-                controller: _nameCtrl,
-                label: 'Property name',
-                hint: 'e.g. Cantonments Court',
-                textCapitalization: TextCapitalization.words,
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              _SheetField(
-                controller: _descCtrl,
-                label: 'Description (optional)',
-                hint: 'A short description of the property…',
-                maxLines: 3,
-                keyboardType: TextInputType.multiline,
-              ),
-              _SaveBtn(saving: _saving, label: 'Save details', onSave: _save),
-            ],
+    return _PSSheet(
+      title: 'Edit basic details',
+      desc: 'Update the property name and description.',
+      onClose: widget.onClose,
+      footer: _saveCancel(widget.onClose),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _FieldLabel('Property name'),
+          _SheetInput(controller: _nameCtrl, placeholder: 'e.g. Cantonments Court', textCapitalization: TextCapitalization.words),
+          const SizedBox(height: 16),
+          const _FieldLabel('Description'),
+          TextField(
+            controller: _descCtrl,
+            maxLines: 4,
+            style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14.5, color: RLTokens.ink, height: 1.5),
+            decoration: InputDecoration(
+              hintText: 'Briefly describe your property…',
+              hintStyle: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14.5, color: RLTokens.mutedSoft),
+              filled: true,
+              fillColor: RLTokens.surface,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+              border:        OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.hairline, width: 1.5)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.hairline, width: 1.5)),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.crimson,   width: 1.5)),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
-// ── Sheet 2: Rental mode ──────────────────────────────────────────────────────
-
-class _RentalMode {
-  const _RentalMode({required this.id, required this.label, required this.sub, required this.icon});
-  final String   id, label, sub;
-  final IconData icon;
-}
-
-const _kModes = [
-  _RentalMode(id: 'lease',   label: 'Long stay',  sub: 'Monthly tenants with lease agreements',         icon: Icons.key_outlined),
-  _RentalMode(id: 'booking', label: 'Short stay', sub: 'Nightly / weekly guests — serviced model',      icon: Icons.hotel_outlined),
-  _RentalMode(id: 'both',    label: 'Both',       sub: 'Accept long-stay tenants and short-stay guests', icon: Icons.swap_horiz_rounded),
-];
+// ── 2. Rental mode ─────────────────────────────────────────────────────────────
 
 class _RentalModeSheet extends StatefulWidget {
-  const _RentalModeSheet({required this.current});
+  const _RentalModeSheet({required this.current, required this.onClose});
   final String current;
+  final VoidCallback onClose;
 
   @override
   State<_RentalModeSheet> createState() => _RentalModeSheetState();
 }
 
 class _RentalModeSheetState extends State<_RentalModeSheet> {
-  late String _selected;
-
-  @override
-  void initState() {
-    super.initState();
-    _selected = widget.current;
-  }
-
-  Future<void> _pick(String id) async {
-    await Haptics.vibrate(HapticsType.selection);
-    setState(() => _selected = id);
-    await Future.delayed(const Duration(milliseconds: 200));
-    if (mounted) Navigator.of(context).pop();
-  }
+  late String _value = widget.current;
 
   @override
   Widget build(BuildContext context) {
-    return _SheetChrome(
+    return _PSSheet(
       title: 'Rental mode',
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-        child: Column(
-          children: _kModes.map((m) {
-            final active = m.id == _selected;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: GestureDetector(
-                onTap: () => _pick(m.id),
-                behavior: HitTestBehavior.opaque,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: active ? RLTokens.crimsonTint : RLTokens.surface,
-                    borderRadius: BorderRadius.circular(RLTokens.rLg),
-                    border: Border.all(
-                      color: active ? RLTokens.crimson : RLTokens.hairline,
-                      width: active ? 1.5 : 1,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: active ? RLTokens.crimsonTint2 : RLTokens.fill,
-                          borderRadius: BorderRadius.circular(RLTokens.rSm),
-                        ),
-                        child: Icon(m.icon, size: 20, color: active ? RLTokens.crimson : RLTokens.inkSoft),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              m.label,
-                              style: TextStyle(
-                                fontFamily: RLTokens.fontSans,
-                                fontSize: 15,
-                                fontWeight: RLTokens.semibold,
-                                color: active ? RLTokens.crimson : RLTokens.ink,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              m.sub,
-                              style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12.5, color: RLTokens.muted),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      active
-                          ? Container(
-                              width: 22,
-                              height: 22,
-                              decoration: const BoxDecoration(color: RLTokens.crimson, shape: BoxShape.circle),
-                              child: const Icon(Icons.check, size: 14, color: Colors.white),
-                            )
-                          : Container(
-                              width: 22,
-                              height: 22,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(color: RLTokens.hairline, width: 1.5),
-                              ),
-                            ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
+      desc: 'Choose what type of rentals this property handles.',
+      onClose: widget.onClose,
+      footer: _saveCancel(widget.onClose),
+      child: Column(
+        children: [
+          _RentalRow(icon: Icons.description_outlined, title: 'Long-term (Leases)', desc: 'Monthly rent, applications, lease agreements.', selected: _value == 'lease', onTap: () { Haptics.vibrate(HapticsType.selection); setState(() => _value = 'lease'); }),
+          const SizedBox(height: 10),
+          _RentalRow(icon: Icons.calendar_month_outlined, title: 'Short-term (Bookings)', desc: 'Nightly stays, booking link, availability calendar.', selected: _value == 'booking', onTap: () { Haptics.vibrate(HapticsType.selection); setState(() => _value = 'booking'); }),
+          const SizedBox(height: 10),
+          _RentalRow(icon: Icons.grid_view_rounded, title: 'Both', desc: 'Some units long-term, others for short stays.', selected: _value == 'both', onTap: () { Haptics.vibrate(HapticsType.selection); setState(() => _value = 'both'); }),
+        ],
       ),
     );
   }
 }
 
-// ── Sheet 3: Location ─────────────────────────────────────────────────────────
-
-const _kRegions = [
-  'Greater Accra', 'Ashanti', 'Eastern', 'Western', 'Central', 'Volta',
-  'Northern', 'Upper East', 'Upper West', 'Oti', 'Savannah',
-  'Bono', 'Bono East', 'Ahafo', 'North East', 'Western North',
-];
+// ── 3. Location ────────────────────────────────────────────────────────────────
 
 class _LocationSheet extends StatefulWidget {
-  const _LocationSheet({required this.address, required this.city, required this.region});
-  final String address, city, region;
+  const _LocationSheet({required this.initialAddress, required this.onClose});
+  final String initialAddress;
+  final VoidCallback onClose;
 
   @override
   State<_LocationSheet> createState() => _LocationSheetState();
 }
 
 class _LocationSheetState extends State<_LocationSheet> {
-  late final TextEditingController _addressCtrl;
-  late final TextEditingController _cityCtrl;
-  late String _region;
-  bool _saving = false;
-  final _formKey = GlobalKey<FormState>();
-
-  @override
-  void initState() {
-    super.initState();
-    _addressCtrl = TextEditingController(text: widget.address);
-    _cityCtrl    = TextEditingController(text: widget.city);
-    _region      = widget.region.isNotEmpty ? widget.region : _kRegions.first;
-  }
+  late final _addrCtrl = TextEditingController(text: widget.initialAddress);
 
   @override
   void dispose() {
-    _addressCtrl.dispose();
-    _cityCtrl.dispose();
+    _addrCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _saving = true);
-    await Haptics.vibrate(HapticsType.medium);
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-    setState(() => _saving = false);
-    await Haptics.vibrate(HapticsType.success);
-    if (mounted) Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    return _SheetChrome(
-      title: 'Location',
-      child: Form(
-        key: _formKey,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SheetField(
-                controller: _addressCtrl,
-                label: 'Street address',
-                hint: 'e.g. 14 Independence Avenue',
-                textCapitalization: TextCapitalization.words,
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              _SheetField(
-                controller: _cityCtrl,
-                label: 'City / area',
-                hint: 'e.g. Cantonments, Accra',
-                textCapitalization: TextCapitalization.words,
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Region',
-                style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13, fontWeight: RLTokens.semibold, color: RLTokens.ink),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
+    return _PSSheet(
+      title: 'Edit location',
+      desc: 'Search and select an address to update location details.',
+      onClose: widget.onClose,
+      footer: _saveCancel(widget.onClose),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _FieldLabel('Address'),
+          _SheetInput(controller: _addrCtrl, placeholder: 'Search address', prefixIcon: Icons.search_rounded, textCapitalization: TextCapitalization.words),
+          const SizedBox(height: 8),
+          const Text(
+            'Country, region and city update automatically.',
+            style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12, color: RLTokens.mutedSoft),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── 4. Switch type ─────────────────────────────────────────────────────────────
+
+class _SwitchTypeSheet extends StatelessWidget {
+  const _SwitchTypeSheet({required this.current, required this.unitCount, required this.onClose});
+  final String current;
+  final int unitCount;
+  final VoidCallback onClose;
+
+  bool get _toSingle => current == 'multi';
+  bool get _blocked  => _toSingle && unitCount > 1;
+
+  @override
+  Widget build(BuildContext context) {
+    return _PSSheet(
+      title: 'Switch to ${_toSingle ? "Single" : "Multi"} type?',
+      onClose: onClose,
+      footer: _blocked
+          ? GestureDetector(
+              onTap: () async {
+                await Haptics.vibrate(HapticsType.selection);
+                onClose();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                 decoration: BoxDecoration(
                   color: RLTokens.fill,
                   borderRadius: BorderRadius.circular(RLTokens.rMd),
                   border: Border.all(color: RLTokens.hairline),
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _region,
-                    isExpanded: true,
-                    icon: const Icon(Icons.keyboard_arrow_down_rounded, color: RLTokens.muted),
-                    style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, color: RLTokens.ink),
-                    items: _kRegions.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
-                    onChanged: (v) async {
-                      await Haptics.vibrate(HapticsType.selection);
-                      if (v != null) setState(() => _region = v);
-                    },
-                  ),
+                child: const Text(
+                  'Got it',
+                  style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14.5, fontWeight: RLTokens.semibold, color: RLTokens.ink),
                 ),
               ),
-              _SaveBtn(saving: _saving, label: 'Save location', onSave: _save),
+            )
+          : _saveCancel(onClose),
+      child: _blocked ? _blockedContent() : _confirmContent(),
+    );
+  }
+
+  Widget _blockedContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: RLTokens.warningBg,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.warning_amber_rounded, size: 18, color: RLTokens.warning),
+              SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Reduce to 1 block & 1 unit first', style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13.5, fontWeight: RLTokens.semibold, color: RLTokens.warning)),
+                    SizedBox(height: 4),
+                    Text('A single-unit property can only have one block and one unit. Remove the extras, then switch.', style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12.5, color: RLTokens.warning, height: 1.4)),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
-      ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          decoration: BoxDecoration(
+            border: Border.all(color: RLTokens.hairline),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.apartment_outlined, size: 18, color: RLTokens.muted),
+              const SizedBox(width: 9),
+              const Expanded(child: Text('Units', style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14.5, fontWeight: RLTokens.semibold, color: RLTokens.ink))),
+              const Text('current', style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12, color: RLTokens.muted)),
+              const SizedBox(width: 8),
+              _chip('$unitCount', RLTokens.crimsonTint, RLTokens.crimson),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Icon(Icons.arrow_forward_rounded, size: 14, color: RLTokens.micro),
+              ),
+              const Text('max', style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12, color: RLTokens.muted)),
+              const SizedBox(width: 8),
+              _chip('1', RLTokens.successBg, RLTokens.success),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _confirmContent() {
+    return Text(
+      _toSingle
+          ? 'A Single property has one unit only.'
+          : 'A Multi property supports multiple blocks and units. You can add more after switching.',
+      style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14, color: RLTokens.muted, height: 1.5),
+    );
+  }
+
+  Widget _chip(String label, Color bg, Color fg) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
+      child: Text(label, style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12.5, fontWeight: RLTokens.bold, color: fg)),
     );
   }
 }
 
-// ── Sheet 4: Switch property type ─────────────────────────────────────────────
+// ── Rental row (shared) ────────────────────────────────────────────────────────
 
-class _PropTypeOpt {
-  const _PropTypeOpt({required this.id, required this.label, required this.sub, required this.icon});
-  final String   id, label, sub;
+class _RentalRow extends StatelessWidget {
+  const _RentalRow({required this.icon, required this.title, required this.desc, required this.selected, required this.onTap});
   final IconData icon;
-}
-
-const _kTypes = [
-  _PropTypeOpt(id: 'residential', label: 'Residential',  sub: 'Apartments & houses',      icon: Icons.apartment_rounded),
-  _PropTypeOpt(id: 'commercial',  label: 'Commercial',   sub: 'Offices & retail spaces',   icon: Icons.business_rounded),
-  _PropTypeOpt(id: 'short_stay',  label: 'Short-stay',   sub: 'Serviced / Airbnb-style',   icon: Icons.hotel_rounded),
-  _PropTypeOpt(id: 'mixed',       label: 'Mixed use',    sub: 'Residential + commercial',  icon: Icons.layers_rounded),
-];
-
-class _SwitchTypeSheet extends StatefulWidget {
-  const _SwitchTypeSheet({required this.current});
-  final String current;
-
-  @override
-  State<_SwitchTypeSheet> createState() => _SwitchTypeSheetState();
-}
-
-class _SwitchTypeSheetState extends State<_SwitchTypeSheet> {
-  late String _selected;
-
-  @override
-  void initState() {
-    super.initState();
-    _selected = widget.current;
-  }
-
-  Future<void> _pick(String id) async {
-    await Haptics.vibrate(HapticsType.selection);
-    setState(() => _selected = id);
-  }
-
-  Future<void> _save() async {
-    await Haptics.vibrate(HapticsType.medium);
-    await Future.delayed(const Duration(milliseconds: 600));
-    if (mounted) Navigator.of(context).pop();
-  }
+  final String title, desc;
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return _SheetChrome(
-      title: 'Property type',
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-        child: Column(
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: selected ? RLTokens.crimsonTint : RLTokens.surface,
+          border: Border.all(color: selected ? RLTokens.crimson : RLTokens.hairline, width: 1.5),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
           children: [
-            ..._kTypes.map((t) {
-              final active = t.id == _selected;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: GestureDetector(
-                  onTap: () => _pick(t.id),
-                  behavior: HitTestBehavior.opaque,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: active ? RLTokens.crimsonTint : RLTokens.surface,
-                      borderRadius: BorderRadius.circular(RLTokens.rLg),
-                      border: Border.all(
-                        color: active ? RLTokens.crimson : RLTokens.hairline,
-                        width: active ? 1.5 : 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: active ? RLTokens.crimsonTint2 : RLTokens.fill,
-                            borderRadius: BorderRadius.circular(RLTokens.rSm),
-                          ),
-                          child: Icon(t.icon, size: 20, color: active ? RLTokens.crimson : RLTokens.inkSoft),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                t.label,
-                                style: TextStyle(
-                                  fontFamily: RLTokens.fontSans,
-                                  fontSize: 15,
-                                  fontWeight: RLTokens.semibold,
-                                  color: active ? RLTokens.crimson : RLTokens.ink,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(t.sub, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12.5, color: RLTokens.muted)),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        active
-                            ? Container(
-                                width: 22,
-                                height: 22,
-                                decoration: const BoxDecoration(color: RLTokens.crimson, shape: BoxShape.circle),
-                                child: const Icon(Icons.check, size: 14, color: Colors.white),
-                              )
-                            : Container(
-                                width: 22,
-                                height: 22,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: RLTokens.hairline, width: 1.5),
-                                ),
-                              ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }),
-            // Confirm button (type change is significant — require explicit save)
-            _ConfirmTypeBtn(onSave: _save),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: selected ? RLTokens.surface : RLTokens.fill,
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: Icon(icon, size: 20, color: selected ? RLTokens.crimson : RLTokens.inkSoft),
+            ),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14.5, fontWeight: RLTokens.semibold, color: RLTokens.ink)),
+                  const SizedBox(height: 2),
+                  Text(desc, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12, color: RLTokens.muted, height: 1.4)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: selected ? RLTokens.crimson : RLTokens.hairline, width: 1.5),
+                color: selected ? RLTokens.crimson : RLTokens.surface,
+              ),
+              child: selected ? const Center(child: CircleAvatar(radius: 4, backgroundColor: Colors.white)) : null,
+            ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _ConfirmTypeBtn extends StatefulWidget {
-  const _ConfirmTypeBtn({required this.onSave});
-  final VoidCallback onSave;
-
-  @override
-  State<_ConfirmTypeBtn> createState() => _ConfirmTypeBtnState();
-}
-
-class _ConfirmTypeBtnState extends State<_ConfirmTypeBtn> {
-  bool _saving = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return _SaveBtn(
-      saving: _saving,
-      label: 'Apply type',
-      onSave: () {
-        setState(() => _saving = true);
-        widget.onSave();
-      },
     );
   }
 }

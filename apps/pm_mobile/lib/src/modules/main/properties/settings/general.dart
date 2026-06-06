@@ -1,61 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/modules/main/properties/edit_sheets.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
-const _kTypes   = ['Residential', 'Commercial', 'Short-stay', 'Mixed use'];
-const _kRegions = [
-  'Greater Accra', 'Ashanti', 'Eastern', 'Western', 'Central', 'Volta',
-  'Northern', 'Upper East', 'Upper West', 'Oti', 'Savannah',
-  'Bono', 'Bono East', 'Ahafo', 'North East', 'Western North',
-];
-
-class PropertyGeneralSettingsScreen extends StatefulWidget {
+class PropertyGeneralSettingsScreen extends StatelessWidget {
   const PropertyGeneralSettingsScreen({super.key, required this.id});
   final String id;
-
-  @override
-  State<PropertyGeneralSettingsScreen> createState() => _State();
-}
-
-class _State extends State<PropertyGeneralSettingsScreen> {
-  final _nameCtrl    = TextEditingController(text: 'Cantonments Court');
-  final _addressCtrl = TextEditingController(text: '14 Independence Avenue');
-  final _cityCtrl    = TextEditingController(text: 'Cantonments, Accra');
-  String _type       = 'Residential';
-  String _region     = 'Greater Accra';
-  bool   _active     = true;
-  bool   _saving     = false;
-  final  _formKey    = GlobalKey<FormState>();
-
-  @override
-  void dispose() {
-    _nameCtrl.dispose();
-    _addressCtrl.dispose();
-    _cityCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _saving = true);
-    await Haptics.vibrate(HapticsType.medium);
-    await Future.delayed(const Duration(milliseconds: 900));
-    if (!mounted) return;
-    setState(() => _saving = false);
-    await Haptics.vibrate(HapticsType.success);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Settings saved', style: TextStyle(fontFamily: RLTokens.fontSans)),
-          backgroundColor: RLTokens.ink,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(RLTokens.rMd)),
-          margin: const EdgeInsets.all(16),
-        ),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,218 +14,207 @@ class _State extends State<PropertyGeneralSettingsScreen> {
       backgroundColor: RLTokens.surface,
       body: Column(
         children: [
-          const RLBackHeader(title: 'General settings'),
+          const RLBackHeader(title: 'General'),
           Expanded(
-            child: Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 16, RLTokens.gutter, 24),
-                children: [
-                  _Section('Property name'),
-                  _Field(
-                    controller: _nameCtrl,
-                    hint: 'Property name',
-                    textCapitalization: TextCapitalization.words,
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 6, RLTokens.gutter, 24),
+              children: [
+                const Text(
+                  'General settings',
+                  style: TextStyle(
+                    fontFamily: RLTokens.fontSerif,
+                    fontSize: 24,
+                    color: RLTokens.ink,
+                    letterSpacing: -0.4,
                   ),
-                  const SizedBox(height: 20),
-                  _Section('Property type'),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: RLTokens.fill,
-                      borderRadius: BorderRadius.circular(RLTokens.rMd),
-                      border: Border.all(color: RLTokens.hairline),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _type,
-                        isExpanded: true,
-                        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: RLTokens.muted),
-                        style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, color: RLTokens.ink),
-                        items: _kTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-                        onChanged: (v) async {
-                          await Haptics.vibrate(HapticsType.selection);
-                          if (v != null) setState(() => _type = v);
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  'Update and manage your essential information.',
+                  style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13, color: RLTokens.muted),
+                ),
+                const SizedBox(height: 16),
+
+                // Basic details card
+                _SetCard(
+                  title: 'Basic details',
+                  onEdit: () => showBasicDetailsSheet(context, name: 'Cantonments Court', description: 'Gated apartment block — borehole water and standby generator.'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _KV(k: 'Property name', v: 'Cantonments Court'),
+                      const SizedBox(height: 14),
+                      const _KV(k: 'Description', v: 'Gated apartment block — borehole water and standby generator.'),
+                      const SizedBox(height: 14),
+                      const _KV(k: 'Type', v: 'Multi-Unit'),
+                      const SizedBox(height: 10),
+                      GestureDetector(
+                        onTap: () {
+                          Haptics.vibrate(HapticsType.selection);
+                          showSwitchTypeSheet(context, current: 'multi');
                         },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  _Section('Street address'),
-                  _Field(
-                    controller: _addressCtrl,
-                    hint: 'e.g. 14 Independence Avenue',
-                    textCapitalization: TextCapitalization.words,
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
-                  ),
-                  const SizedBox(height: 20),
-                  _Section('City / area'),
-                  _Field(
-                    controller: _cityCtrl,
-                    hint: 'e.g. Cantonments, Accra',
-                    textCapitalization: TextCapitalization.words,
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
-                  ),
-                  const SizedBox(height: 20),
-                  _Section('Region'),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: RLTokens.fill,
-                      borderRadius: BorderRadius.circular(RLTokens.rMd),
-                      border: Border.all(color: RLTokens.hairline),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _region,
-                        isExpanded: true,
-                        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: RLTokens.muted),
-                        style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, color: RLTokens.ink),
-                        items: _kRegions.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
-                        onChanged: (v) async {
-                          await Haptics.vibrate(HapticsType.selection);
-                          if (v != null) setState(() => _region = v);
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  // Status toggle
-                  GestureDetector(
-                    onTap: () async {
-                      await Haptics.vibrate(HapticsType.selection);
-                      setState(() => _active = !_active);
-                    },
-                    behavior: HitTestBehavior.opaque,
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: RLTokens.surface,
-                        borderRadius: BorderRadius.circular(RLTokens.rLg),
-                        border: Border.all(color: RLTokens.hairline),
-                      ),
-                      child: Row(
-                        children: [
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Property active', style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, fontWeight: RLTokens.semibold, color: RLTokens.ink)),
-                                SizedBox(height: 3),
-                                Text('Active properties appear in listings and accept bookings.', style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12.5, color: RLTokens.muted, height: 1.4)),
-                              ],
-                            ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: RLTokens.surface,
+                            border: Border.all(color: RLTokens.hairline),
+                            borderRadius: BorderRadius.circular(RLTokens.rMd),
                           ),
-                          const SizedBox(width: 12),
-                          Switch(
-                            value: _active,
-                            thumbColor: WidgetStateProperty.resolveWith((s) =>
-                                s.contains(WidgetState.selected) ? RLTokens.crimson : null),
-                            onChanged: (_) async {
-                              await Haptics.vibrate(HapticsType.selection);
-                              setState(() => _active = !_active);
-                            },
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.swap_horiz_rounded, size: 16, color: RLTokens.ink),
+                              SizedBox(width: 6),
+                              Text(
+                                'Switch to Single',
+                                style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13.5, fontWeight: RLTokens.semibold, color: RLTokens.ink),
+                              ),
+                            ],
                           ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Rental mode card
+                _SetCard(
+                  title: 'Rental mode',
+                  desc: 'Controls whether this property accepts long-term leases, short-term bookings, or both.',
+                  onEdit: () => showRentalModeSheet(context, current: 'lease'),
+                  child: const _KV(k: 'Current mode', v: 'Long-term (Leases)'),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Location card
+                _SetCard(
+                  title: 'Location',
+                  desc: 'Changing the address updates country, region and city automatically.',
+                  onEdit: () => showLocationSheet(context, address: 'Cantonments, Accra — Liberty Road'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _KV(k: 'Address', v: 'Cantonments, Accra — Liberty Road'),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: const [
+                          Expanded(child: _KV(k: 'Country', v: 'Ghana')),
+                          SizedBox(width: 12),
+                          Expanded(child: _KV(k: 'Region', v: 'Greater Accra')),
+                          SizedBox(width: 12),
+                          Expanded(child: _KV(k: 'City', v: 'Accra')),
                         ],
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          _SaveBar(saving: _saving, onSave: _save),
         ],
       ),
     );
   }
 }
 
-// ── Save bar ──────────────────────────────────────────────────────────────────
+// ── SetCard ───────────────────────────────────────────────────────────────────
 
-class _SaveBar extends StatelessWidget {
-  const _SaveBar({required this.saving, required this.onSave});
-  final bool saving;
-  final VoidCallback onSave;
+class _SetCard extends StatelessWidget {
+  const _SetCard({required this.title, this.desc, required this.onEdit, required this.child});
+  final String title;
+  final String? desc;
+  final VoidCallback onEdit;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.of(context).padding.bottom;
     return Container(
-      padding: EdgeInsets.fromLTRB(RLTokens.gutter, 12, RLTokens.gutter, 12 + bottom),
-      decoration: const BoxDecoration(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
         color: RLTokens.surface,
-        border: Border(top: BorderSide(color: RLTokens.hairline)),
+        borderRadius: BorderRadius.circular(RLTokens.rLg),
+        border: Border.all(color: RLTokens.hairline),
       ),
-      child: GestureDetector(
-        onTap: saving ? null : onSave,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: RLTokens.crimson,
-            borderRadius: BorderRadius.circular(RLTokens.rMd),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: RLTokens.fontSerif,
+                    fontSize: 18,
+                    color: RLTokens.ink,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: () async {
+                  await Haptics.vibrate(HapticsType.selection);
+                  onEdit();
+                },
+                child: const Row(
+                  children: [
+                    Icon(Icons.settings_outlined, size: 14, color: RLTokens.crimson),
+                    SizedBox(width: 5),
+                    Text(
+                      'Edit',
+                      style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13, fontWeight: RLTokens.semibold, color: RLTokens.crimson),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          child: Center(
-            child: saving
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Text('Save changes', style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15.5, fontWeight: RLTokens.semibold, color: Colors.white)),
+          if (desc != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              desc!,
+              style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12.5, color: RLTokens.muted, height: 1.45),
+            ),
+          ],
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+// ── KV pair ───────────────────────────────────────────────────────────────────
+
+class _KV extends StatelessWidget {
+  const _KV({required this.k, required this.v});
+  final String k, v;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          k.toUpperCase(),
+          style: const TextStyle(
+            fontFamily: RLTokens.fontMono,
+            fontSize: 10,
+            letterSpacing: 0.6,
+            color: RLTokens.mutedSoft,
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-class _Section extends StatelessWidget {
-  const _Section(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(text, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13.5, fontWeight: RLTokens.semibold, color: RLTokens.ink)),
-    );
-  }
-}
-
-class _Field extends StatelessWidget {
-  const _Field({
-    required this.controller,
-    required this.hint,
-    this.textCapitalization = TextCapitalization.none,
-    this.validator,
-  });
-
-  final TextEditingController controller;
-  final String hint;
-  final TextCapitalization textCapitalization;
-  final String? Function(String?)? validator;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      textCapitalization: textCapitalization,
-      validator: validator,
-      style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, color: RLTokens.ink),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, color: RLTokens.mutedSoft),
-        filled: true,
-        fillColor: RLTokens.fill,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border:             OutlineInputBorder(borderRadius: BorderRadius.circular(RLTokens.rMd), borderSide: const BorderSide(color: RLTokens.hairline)),
-        enabledBorder:      OutlineInputBorder(borderRadius: BorderRadius.circular(RLTokens.rMd), borderSide: const BorderSide(color: RLTokens.hairline)),
-        focusedBorder:      OutlineInputBorder(borderRadius: BorderRadius.circular(RLTokens.rMd), borderSide: const BorderSide(color: RLTokens.crimson, width: 1.5)),
-        errorBorder:        OutlineInputBorder(borderRadius: BorderRadius.circular(RLTokens.rMd), borderSide: const BorderSide(color: RLTokens.danger)),
-        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(RLTokens.rMd), borderSide: const BorderSide(color: RLTokens.danger, width: 1.5)),
-      ),
+        const SizedBox(height: 4),
+        Text(
+          v,
+          style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14, color: RLTokens.ink, height: 1.4),
+        ),
+      ],
     );
   }
 }

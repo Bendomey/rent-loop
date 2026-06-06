@@ -122,7 +122,7 @@ class PropertyDetailScreen extends StatelessWidget {
                               onTap: () async {
                                 await Haptics.vibrate(HapticsType.selection);
                                 if (context.mounted) {
-                                  await showRentalModeSheet(
+                                  showRentalModeSheet(
                                     context,
                                     current: p.mode == 'Both' ? 'both' : p.mode == 'Lease' ? 'lease' : 'booking',
                                   );
@@ -154,11 +154,9 @@ class PropertyDetailScreen extends StatelessWidget {
                           onTap: () async {
                             await Haptics.vibrate(HapticsType.selection);
                             if (context.mounted) {
-                              await showLocationSheet(
+                              showLocationSheet(
                                 context,
-                                address: '14 Independence Avenue',
-                                city: p.area,
-                                region: 'Greater Accra',
+                                address: '14 Independence Avenue, ${p.area}',
                               );
                             }
                           },
@@ -280,7 +278,7 @@ class _HeroImage extends StatelessWidget {
                 onTap: () async {
                   await Haptics.vibrate(HapticsType.selection);
                   if (ctx.mounted) {
-                    await showBasicDetailsSheet(ctx, name: name);
+                    showBasicDetailsSheet(ctx, name: name);
                   }
                 },
                 child: Container(
@@ -318,7 +316,7 @@ class _HeroImage extends StatelessWidget {
                 onTap: () async {
                   await Haptics.vibrate(HapticsType.selection);
                   if (ctx.mounted) {
-                    await showSwitchTypeSheet(ctx, current: type.toLowerCase().replaceAll(' ', '_'));
+                    showSwitchTypeSheet(ctx, current: type.toLowerCase().replaceAll(' ', '_'));
                   }
                 },
                 child: Container(
