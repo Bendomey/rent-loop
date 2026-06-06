@@ -433,11 +433,11 @@ class _CollectionTrendSection extends StatelessWidget {
 
 class _QuickActionsSection extends StatelessWidget {
   static const _actions = [
-    _QuickAction(icon: Icons.description_outlined, label: 'New application'),
-    _QuickAction(icon: Icons.calendar_today_outlined, label: 'New booking'),
-    _QuickAction(icon: Icons.credit_card_outlined, label: 'Record payment'),
-    _QuickAction(icon: Icons.campaign_outlined, label: 'Announcement'),
-    _QuickAction(icon: Icons.apartment_outlined, label: 'Add property'),
+    _QuickAction(icon: Icons.description_outlined,   label: 'New application', route: '/activity/add-application'),
+    _QuickAction(icon: Icons.calendar_today_outlined, label: 'New booking',    route: '/activity/add-booking'),
+    _QuickAction(icon: Icons.credit_card_outlined,   label: 'Record payment',  route: '/money/record-payment'),
+    _QuickAction(icon: Icons.campaign_outlined,      label: 'Announcement',    route: '/more/announcements/add'),
+    _QuickAction(icon: Icons.apartment_outlined,     label: 'Add property',    route: '/properties/add'),
   ];
 
   @override
@@ -462,9 +462,10 @@ class _QuickActionsSection extends StatelessWidget {
 }
 
 class _QuickAction {
-  const _QuickAction({required this.icon, required this.label});
+  const _QuickAction({required this.icon, required this.label, required this.route});
   final IconData icon;
-  final String label;
+  final String   label;
+  final String   route;
 }
 
 class _QuickChip extends StatelessWidget {
@@ -474,7 +475,10 @@ class _QuickChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () async => Haptics.vibrate(HapticsType.selection),
+      onTap: () async {
+        await Haptics.vibrate(HapticsType.selection);
+        if (context.mounted) context.push(action.route);
+      },
       child: SizedBox(
         width: 66,
         child: Column(

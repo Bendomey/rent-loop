@@ -13,6 +13,7 @@ import 'package:rentloop_manager/src/modules/main/activity/maintenance_detail.da
 import 'package:rentloop_manager/src/modules/main/activity/root.dart';
 import 'package:rentloop_manager/src/modules/main/home/root.dart';
 import 'package:rentloop_manager/src/modules/main/notifications/root.dart';
+import 'package:rentloop_manager/src/modules/main/money/add_payment.dart';
 import 'package:rentloop_manager/src/modules/main/money/invoice_detail.dart';
 import 'package:rentloop_manager/src/modules/main/money/root.dart';
 import 'package:rentloop_manager/src/modules/main/properties/add.dart';
@@ -155,6 +156,7 @@ GoRouter buildRoutes(WidgetRef ref) {
                       id: state.pathParameters['id']!,
                     ),
                   ),
+                  GoRoute(path: 'record-payment', builder: (_, __) => const RecordPaymentScreen()),
                 ],
               ),
             ],
