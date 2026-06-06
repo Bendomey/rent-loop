@@ -85,16 +85,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
             },
           ),
           Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 140),
-              child: KeyedSubtree(
-                key: ValueKey(_tab),
-                child: RefreshIndicator(
-                  color: RLTokens.crimson,
-                  onRefresh: () async => Haptics.vibrate(HapticsType.light),
-                  child: _tabContent,
-                ),
-              ),
+            child: IndexedStack(
+              index: ['maint', 'apps', 'bookings'].indexOf(_tab),
+              children: const [
+                _MaintList(),
+                _AppsListStub(),
+                _BookingsListStub(),
+              ],
             ),
           ),
         ],
@@ -102,11 +99,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
     );
   }
 
-  Widget get _tabContent => switch (_tab) {
-        'maint'    => const _MaintList(),
-        'apps'     => const _AppsListStub(),
-        _          => const _BookingsListStub(),
-      };
+
 }
 
 // ── Header ────────────────────────────────────────────────────────────────────
