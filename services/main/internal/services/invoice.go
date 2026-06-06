@@ -93,6 +93,7 @@ type CreateInvoiceInput struct {
 	ContextType                 string
 	ContextTenantApplicationID  *string
 	ContextLeaseID              *string
+	ContextBookingID            *string
 	ContextMaintenanceRequestID *string
 	ContextExpenseID            *string
 	TotalAmount                 int64
@@ -171,6 +172,7 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 		ContextType:                 input.ContextType,
 		ContextTenantApplicationID:  input.ContextTenantApplicationID,
 		ContextLeaseID:              input.ContextLeaseID,
+		ContextBookingID:            input.ContextBookingID,
 		ContextMaintenanceRequestID: input.ContextMaintenanceRequestID,
 		ContextExpenseID:            input.ContextExpenseID,
 		TotalAmount:                 input.TotalAmount,
@@ -215,43 +217,21 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 	}
 
 	if input.Status == "ISSUED" {
-		// Build journal entry lines based on invoice context type
-		journalLines := buildJournalEntryForInvoice(&invoice, s.appCtx.Config.ChartOfAccounts)
-
-		if len(journalLines) > 0 {
-			transactionDate := invoice.CreatedAt.Format(time.RFC3339)
-
-			_, journalErr := s.accountingService.RecordInvoiceCreated(transCtx, accounting.CreateJournalEntryRequest{
-				Status:          string(accounting.JournalEntryStatusPosted),
-				Reference:       invoice.Code,
-				TransactionDate: &transactionDate,
-				Metadata: map[string]any{
-					"invoice_id":   invoice.ID.String(),
-					"invoice_code": invoice.Code,
-					"context_type": invoice.ContextType,
-					"payer_type":   invoice.PayerType,
-					"payee_type":   invoice.PayeeType,
-					"client_id":    lib.SafeString(invoice.ClientID),
-					"property_id":  lib.SafeString(invoice.PropertyID),
-				},
-				Lines: journalLines,
-			})
-			if journalErr != nil {
-				if !hasOuterTx {
-					transaction.Rollback()
-				}
-				return nil, pkg.InternalServerError(
-					"Failed to create journal entry for invoice",
-					&pkg.RentLoopErrorParams{
-						Err: journalErr,
-						Metadata: map[string]string{
-							"function":    "CreateInvoice",
-							"action":      "creating journal entry",
-							"invoiceCode": invoice.Code,
-						},
-					},
-				)
+		if journalErr := s.recordIssuanceEntry(transCtx, &invoice); journalErr != nil {
+			if !hasOuterTx {
+				transaction.Rollback()
 			}
+			return nil, pkg.InternalServerError(
+				"Failed to create journal entry for invoice",
+				&pkg.RentLoopErrorParams{
+					Err: journalErr,
+					Metadata: map[string]string{
+						"function":    "CreateInvoice",
+						"action":      "creating journal entry",
+						"invoiceCode": invoice.Code,
+					},
+				},
+			)
 		}
 	}
 
@@ -343,6 +323,7 @@ type UpdateInvoiceInput struct {
 	InvoiceID           string
 	Status              *string
 	TotalAmount         *int64
+	Currency            *string
 	Taxes               *int64
 	SubTotal            *int64
 	DueDate             *time.Time
@@ -373,8 +354,25 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, input UpdateInvoiceI
 		})
 	}
 
+	// if the invoice is already issued, we can't continue
+	if invoice.Status == "ISSUED" {
+		return nil, pkg.BadRequestError("Cannot update an invoice that has already been issued", &pkg.RentLoopErrorParams{
+			Metadata: map[string]string{
+				"function": "UpdateInvoice",
+				"action":   "checking invoice status",
+				"status":   invoice.Status,
+			},
+		})
+	}
+
+	issuingNow := input.Status != nil && *input.Status == "ISSUED" && invoice.Status == "DRAFT"
+
 	if input.Status != nil {
 		invoice.Status = *input.Status
+	}
+
+	if input.Currency != nil {
+		invoice.Currency = *input.Currency
 	}
 
 	if input.TotalAmount != nil {
@@ -393,20 +391,50 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, input UpdateInvoiceI
 		invoice.DueDate = input.DueDate
 	}
 
-	if input.IssuedAt != nil {
+	if issuingNow && invoice.IssuedAt == nil {
+		now := time.Now()
+		invoice.IssuedAt = &now
+	} else if input.IssuedAt != nil {
 		invoice.IssuedAt = input.IssuedAt
-	}
-
-	if input.PaidAt != nil {
-		invoice.PaidAt = input.PaidAt
-	}
-
-	if input.VoidedAt != nil {
-		invoice.VoidedAt = input.VoidedAt
 	}
 
 	if input.AllowedPaymentRails != nil {
 		invoice.AllowedPaymentRails = pq.StringArray(*input.AllowedPaymentRails)
+	}
+
+	if issuingNow {
+		transaction := s.appCtx.DB.Begin()
+		transCtx := lib.WithTransaction(ctx, transaction)
+
+		if updateErr := s.repo.Update(transCtx, invoice); updateErr != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+				Err:      updateErr,
+				Metadata: map[string]string{"function": "UpdateInvoice", "action": "updating invoice to ISSUED"},
+			})
+		}
+
+		if journalErr := s.recordIssuanceEntry(transCtx, invoice); journalErr != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError("Failed to create journal entry for invoice", &pkg.RentLoopErrorParams{
+				Err: journalErr,
+				Metadata: map[string]string{
+					"function":    "UpdateInvoice",
+					"action":      "creating journal entry",
+					"invoiceCode": invoice.Code,
+				},
+			})
+		}
+
+		if commitErr := transaction.Commit().Error; commitErr != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+				Err:      commitErr,
+				Metadata: map[string]string{"function": "UpdateInvoice", "action": "committing transaction"},
+			})
+		}
+
+		return invoice, nil
 	}
 
 	updateErr := s.repo.Update(ctx, invoice)
@@ -982,6 +1010,38 @@ func (s *invoiceService) GetLineItems(ctx context.Context, invoiceID string) ([]
 	return lineItems, nil
 }
 
+// recordIssuanceEntry posts the journal entry for an invoice being issued.
+// It is called both on create (status=ISSUED) and when a DRAFT invoice is issued later.
+func (s *invoiceService) recordIssuanceEntry(ctx context.Context, invoice *models.Invoice) error {
+	journalLines := buildJournalEntryForInvoice(invoice, s.appCtx.Config.ChartOfAccounts)
+	if len(journalLines) == 0 {
+		return nil
+	}
+
+	issuedAt := time.Now()
+	if invoice.IssuedAt != nil {
+		issuedAt = *invoice.IssuedAt
+	}
+	transactionDate := issuedAt.Format(time.RFC3339)
+
+	_, err := s.accountingService.RecordInvoiceCreated(ctx, accounting.CreateJournalEntryRequest{
+		Status:          string(accounting.JournalEntryStatusPosted),
+		Reference:       invoice.Code,
+		TransactionDate: &transactionDate,
+		Metadata: map[string]any{
+			"invoice_id":   invoice.ID.String(),
+			"invoice_code": invoice.Code,
+			"context_type": invoice.ContextType,
+			"payer_type":   invoice.PayerType,
+			"payee_type":   invoice.PayeeType,
+			"client_id":    lib.SafeString(invoice.ClientID),
+			"property_id":  lib.SafeString(invoice.PropertyID),
+		},
+		Lines: journalLines,
+	})
+	return err
+}
+
 // ============================================================================
 // Invoice Accounting Utilities
 // ============================================================================
@@ -1064,6 +1124,13 @@ func buildLeaseRentJournalEntry(
 		case "MAINTENANCE_FEE":
 			lines = append(lines, accounting.CreateJournalEntryLineRequest{
 				AccountID: accounts.MaintenanceReimbursementID,
+				Debit:     0,
+				Credit:    lineItem.TotalAmount,
+				Notes:     lib.StringPointer(lineItem.Label),
+			})
+		case "BOOKING_FEE":
+			lines = append(lines, accounting.CreateJournalEntryLineRequest{
+				AccountID: accounts.RentalIncomeID,
 				Debit:     0,
 				Credit:    lineItem.TotalAmount,
 				Notes:     lib.StringPointer(lineItem.Label),
@@ -1158,7 +1225,7 @@ func buildJournalEntryForInvoice(
 	switch invoice.ContextType {
 	case "TENANT_APPLICATION":
 		return buildTenantApplicationJournalEntry(invoice, accounts)
-	case "LEASE_RENT":
+	case "LEASE_RENT", "BOOKING_FEE":
 		return buildLeaseRentJournalEntry(invoice, accounts)
 	case "SAAS_FEE":
 		return buildSaasJournalEntry(invoice, accounts)

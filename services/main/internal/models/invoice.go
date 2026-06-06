@@ -18,7 +18,7 @@ type Invoice struct {
 	Client     *Client
 
 	// Who is paying the invoice
-	PayerType string `gorm:"not null;"` //  'TENANT_APPLICATION' | 'TENANT' | 'PROPERTY_OWNER' | 'EXTERNAL'
+	PayerType string `gorm:"not null;"` //  'TENANT_APPLICATION' | 'GUEST' | 'TENANT' | 'PROPERTY_OWNER' | 'EXTERNAL'
 
 	PayerClientID *string
 	PayerClient   *Client
@@ -37,13 +37,16 @@ type Invoice struct {
 	PayeeTenantID *string
 	PayeeTenant   *Tenant
 
-	ContextType string `gorm:"not null;"` // 'TENANT_APPLICATION' | 'LEASE_RENT' | 'MAINTENANCE' | 'SAAS_FEE' | 'GENERAL_EXPENSE' | 'MAINTENANCE_EXPENSE'
+	ContextType string `gorm:"not null;"` // 'TENANT_APPLICATION' | 'LEASE_RENT' | 'MAINTENANCE' | 'SAAS_FEE' | 'GENERAL_EXPENSE' | 'MAINTENANCE_EXPENSE' | 'BOOKING_FEE'
 
 	ContextTenantApplicationID *string
 	ContextTenantApplication   *TenantApplication
 
 	ContextLeaseID *string
 	ContextLease   *Lease
+
+	ContextBookingID *string
+	ContextBooking   *Booking
 
 	ContextMaintenanceRequestID *string
 	ContextMaintenanceRequest   *MaintenanceRequest
@@ -83,7 +86,7 @@ type InvoiceLineItem struct {
 	Invoice   *Invoice
 
 	Label    string `gorm:"not null;"` // "January Rent", "Security Deposit"
-	Category string `gorm:"not null;"` // 'RENT', 'SECURITY_DEPOSIT', 'INITIAL_DEPOSIT', 'MAINTENANCE_FEE', 'SAAS_FEE', 'EXPENSE'
+	Category string `gorm:"not null;"` // 'RENT', 'SECURITY_DEPOSIT', 'INITIAL_DEPOSIT', 'MAINTENANCE_FEE', 'SAAS_FEE', 'EXPENSE', 'BOOKING_FEE'
 
 	Quantity    int64  `gorm:"not null;"`
 	UnitAmount  int64  `gorm:"not null;"`
