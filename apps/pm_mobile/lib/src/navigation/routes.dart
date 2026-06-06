@@ -5,6 +5,7 @@ import 'package:rentloop_manager/src/architecture/app_startup.dart';
 import 'package:rentloop_manager/src/modules/auth/login/root.dart';
 import 'package:rentloop_manager/src/modules/auth/welcome/root.dart';
 import 'package:rentloop_manager/src/modules/auth/workspace_select/root.dart';
+import 'package:rentloop_manager/src/modules/main/activity/maintenance_detail.dart';
 import 'package:rentloop_manager/src/modules/main/activity/root.dart';
 import 'package:rentloop_manager/src/modules/main/home/root.dart';
 import 'package:rentloop_manager/src/modules/main/notifications/root.dart';
@@ -100,6 +101,14 @@ GoRouter buildRoutes(WidgetRef ref) {
               GoRoute(
                 path: '/activity',
                 builder: (_, __) => const ActivityScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'maintenance/:id',
+                    builder: (_, state) => MaintenanceDetailScreen(
+                      id: state.pathParameters['id']!,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
@@ -141,9 +142,9 @@ class _Header extends StatelessWidget {
         ),
         // Segmented strip
         Container(
-          color: RLTokens.fill,
           padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 4, RLTokens.gutter, 12),
           decoration: const BoxDecoration(
+            color: RLTokens.fill,
             border: Border(bottom: BorderSide(color: RLTokens.hairlineSoft)),
           ),
           child: RLSegmented(
@@ -228,7 +229,10 @@ class _MaintCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final priTone = statusTone(m.priority);
     return GestureDetector(
-      onTap: () async => Haptics.vibrate(HapticsType.selection),
+      onTap: () async {
+        await Haptics.vibrate(HapticsType.selection);
+        if (context.mounted) context.push('/activity/maintenance/${m.id}');
+      },
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
