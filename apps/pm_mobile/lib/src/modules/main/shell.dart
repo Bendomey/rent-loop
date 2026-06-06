@@ -1,15 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rentloop_manager/src/shared/toast.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 
-class MainShell extends StatelessWidget {
+class MainShell extends ConsumerWidget {
   const MainShell(this.shell, {super.key});
   final StatefulNavigationShell shell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final toast = ref.watch(rlToastProvider);
     return Scaffold(
-      body: shell,
+      body: Stack(
+        children: [
+          shell,
+          if (toast != null)
+            Positioned(
+              left: 14,
+              right: 14,
+              bottom: 10,
+              child: RLToastWidget(
+                toast: toast,
+                onDismiss: () => ref.read(rlToastProvider.notifier).dismiss(),
+              ),
+            ),
+        ],
+      ),
       bottomNavigationBar: _TabBar(
         currentIndex: shell.currentIndex,
         onTap: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),

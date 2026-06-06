@@ -893,6 +893,253 @@ class RLFilterChips extends StatelessWidget {
   }
 }
 
+// ── Inline banner ─────────────────────────────────────────────────────────────
+// Two families: banners stay inline where the user is acting; toasts handle
+// async results. Three tones: danger (form submit failed), warning (offline /
+// connection lost), info (contextual guidance).
+
+enum RLBannerTone { danger, warning, info }
+
+extension _RLBannerToneX on RLBannerTone {
+  Color get fg => switch (this) {
+    RLBannerTone.danger  => RLTokens.crimson,
+    RLBannerTone.warning => RLTokens.warning,
+    RLBannerTone.info    => RLTokens.info,
+  };
+
+  Color get bg => switch (this) {
+    RLBannerTone.danger  => const Color.fromRGBO(200, 0, 58, 0.07),
+    RLBannerTone.warning => const Color.fromRGBO(233, 123, 42, 0.09),
+    RLBannerTone.info    => const Color.fromRGBO(46, 108, 246, 0.07),
+  };
+
+  Color get border => switch (this) {
+    RLBannerTone.danger  => const Color.fromRGBO(200, 0, 58, 0.20),
+    RLBannerTone.warning => const Color.fromRGBO(233, 123, 42, 0.26),
+    RLBannerTone.info    => const Color.fromRGBO(46, 108, 246, 0.20),
+  };
+
+  IconData get defaultIcon => switch (this) {
+    RLBannerTone.danger  => Icons.warning_rounded,
+    RLBannerTone.warning => Icons.wifi_off_rounded,
+    RLBannerTone.info    => Icons.info_outline_rounded,
+  };
+}
+
+class RLInlineBanner extends StatelessWidget {
+  const RLInlineBanner({
+    super.key,
+    this.tone = RLBannerTone.danger,
+    this.icon,
+    required this.title,
+    this.body,
+    this.actionLabel,
+    this.onAction,
+    this.onDismiss,
+  });
+
+  final RLBannerTone tone;
+  final IconData? icon;
+  final String title;
+  final String? body;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+  final VoidCallback? onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: tone.bg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: tone.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(9),
+              border: Border.all(color: tone.border),
+            ),
+            child: Icon(icon ?? tone.defaultIcon, size: 17, color: tone.fg),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          fontFamily: RLTokens.fontSans,
+                          fontSize: 14,
+                          fontWeight: RLTokens.bold,
+                          color: RLTokens.ink,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                    if (onDismiss != null) ...[
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: onDismiss,
+                        child: const Padding(
+                          padding: EdgeInsets.all(2),
+                          child: Icon(Icons.close_rounded, size: 16, color: RLTokens.mutedSoft),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                if (body != null) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    body!,
+                    style: TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 12.5,
+                      color: RLTokens.muted,
+                      height: 1.45,
+                    ),
+                  ),
+                ],
+                if (actionLabel != null) ...[
+                  const SizedBox(height: 11),
+                  GestureDetector(
+                    onTap: onAction,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(9),
+                        border: Border.all(color: tone.border),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.refresh_rounded, size: 14, color: tone.fg),
+                          const SizedBox(width: 6),
+                          Text(
+                            actionLabel!,
+                            style: TextStyle(
+                              fontFamily: RLTokens.fontSans,
+                              fontSize: 12.5,
+                              fontWeight: RLTokens.semibold,
+                              color: tone.fg,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Section error ─────────────────────────────────────────────────────────────
+// Shown inside a card when a data fetch fails. Always offer a Retry.
+
+class RLSectionError extends StatelessWidget {
+  const RLSectionError({
+    super.key,
+    this.title = "Couldn't load",
+    this.body = 'Check your connection and try again.',
+    this.onRetry,
+    this.compact = false,
+  });
+
+  final String title;
+  final String body;
+  final VoidCallback? onRetry;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return RLCard(
+      padding: EdgeInsets.all(compact ? 16 : 22),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: RLTokens.fill,
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: const Icon(Icons.wifi_off_rounded, size: 22, color: RLTokens.mutedSoft),
+          ),
+          SizedBox(height: compact ? 8 : 11),
+          Text(
+            title,
+            style: TextStyle(
+              fontFamily: RLTokens.fontSans,
+              fontSize: 15,
+              fontWeight: RLTokens.semibold,
+              color: RLTokens.ink,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 3),
+          Text(
+            body,
+            style: TextStyle(
+              fontFamily: RLTokens.fontSans,
+              fontSize: 12.5,
+              color: RLTokens.muted,
+              height: 1.45,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 13),
+          GestureDetector(
+            onTap: onRetry,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+              decoration: BoxDecoration(
+                color: RLTokens.ink,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.refresh_rounded, size: 15, color: Colors.white),
+                  const SizedBox(width: 7),
+                  Text(
+                    'Try again',
+                    style: TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 13,
+                      fontWeight: RLTokens.semibold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Icon button ───────────────────────────────────────────────────────────────
 
 class RLIconBtn extends StatelessWidget {
