@@ -1,0 +1,98 @@
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:rentloop_manager/src/architecture/app_startup.dart';
+import 'package:rentloop_manager/src/modules/auth/login/root.dart';
+import 'package:rentloop_manager/src/modules/auth/welcome/root.dart';
+import 'package:rentloop_manager/src/modules/main/activity/root.dart';
+import 'package:rentloop_manager/src/modules/main/home/root.dart';
+import 'package:rentloop_manager/src/modules/main/money/root.dart';
+import 'package:rentloop_manager/src/modules/main/more/root.dart';
+import 'package:rentloop_manager/src/modules/main/properties/root.dart';
+import 'package:rentloop_manager/src/modules/main/shell.dart';
+import 'splash.dart';
+
+// Used by notification-driven navigation from outside the widget tree.
+GoRouter? appRouter;
+
+class _RouterNotifier extends ChangeNotifier {
+  _RouterNotifier(this._ref) {
+    _ref.listen<AppStartupState>(
+      appStartupProvider,
+      (_, __) => notifyListeners(),
+    );
+  }
+  final WidgetRef _ref;
+}
+
+GoRouter buildRoutes(WidgetRef ref) {
+  final notifier = _RouterNotifier(ref);
+
+  final router = GoRouter(
+    initialLocation: '/splash',
+    refreshListenable: notifier,
+    redirect: (context, state) {
+      final startup = ref.read(appStartupProvider);
+      final loc = state.matchedLocation;
+
+      switch (startup.status) {
+        case AppStartupStatus.loading:
+        case AppStartupStatus.error:
+          if (loc == '/splash') return null;
+          return '/splash';
+
+        case AppStartupStatus.unauthenticated:
+          if (loc.startsWith('/auth')) return null;
+          return '/auth/welcome';
+
+        case AppStartupStatus.ready:
+          if (loc == '/splash' || loc.startsWith('/auth')) return '/';
+          return null;
+      }
+    },
+    routes: [
+      GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
+      GoRoute(path: '/auth/welcome', builder: (_, __) => const WelcomeScreen()),
+      GoRoute(path: '/auth/login', builder: (_, __) => const LoginScreen()),
+      StatefulShellRoute.indexedStack(
+        builder: (_, __, shell) => MainShell(shell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/properties',
+                builder: (_, __) => const PropertiesScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/activity',
+                builder: (_, __) => const ActivityScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/money', builder: (_, __) => const MoneyScreen()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/more', builder: (_, __) => const MoreScreen()),
+            ],
+          ),
+        ],
+      ),
+    ],
+  );
+
+  appRouter = router;
+  return router;
+}
