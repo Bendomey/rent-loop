@@ -90,7 +90,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
               children: const [
                 _MaintList(),
                 _AppsList(),
-                _BookingsListStub(),
+                _BookingsList(),
               ],
             ),
           ),
@@ -461,52 +461,252 @@ class _AppCard extends StatelessWidget {
 String _fmtN(int n) =>
     n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');
 
-// ── Bookings stub ─────────────────────────────────────────────────────────────
+// ── Bookings data ─────────────────────────────────────────────────────────────
 
-class _BookingsListStub extends StatelessWidget {
-  const _BookingsListStub();
+class _BookingData {
+  const _BookingData({
+    required this.id,
+    required this.guest,
+    required this.unit,
+    required this.status,
+    required this.inDate,
+    required this.outDate,
+    required this.nights,
+    required this.amount,
+  });
+  final String id;
+  final String guest;
+  final String unit;
+  final String status;
+  final String inDate;
+  final String outDate;
+  final int    nights;
+  final int    amount;
+}
 
-  static const _items = [
-    ('Michael Tetteh',  'Suite 1 · Labadi Beach', 'Checked In'),
-    ('Sarah Addai',     'Suite 4 · Labadi Beach', 'Confirmed'),
-    ('Corporate · MTN', 'Suite 2 · Labadi Beach', 'Pending'),
-    ('Linda Quaye',     'Suite 6 · Labadi Beach', 'Confirmed'),
-  ];
+const _kBookings = [
+  _BookingData(id: 'b1', guest: 'Michael Tetteh',  unit: 'Suite 1 · Labadi Beach', status: 'Checked In', inDate: 'Jun 3',  outDate: 'Jun 7',  nights: 4, amount: 3200),
+  _BookingData(id: 'b2', guest: 'Sarah Addai',      unit: 'Suite 4 · Labadi Beach', status: 'Confirmed',  inDate: 'Jun 8',  outDate: 'Jun 11', nights: 3, amount: 2400),
+  _BookingData(id: 'b3', guest: 'Corporate · MTN',  unit: 'Suite 2 · Labadi Beach', status: 'Pending',    inDate: 'Jun 12', outDate: 'Jun 19', nights: 7, amount: 5600),
+  _BookingData(id: 'b4', guest: 'Linda Quaye',      unit: 'Suite 6 · Labadi Beach', status: 'Confirmed',  inDate: 'Jun 14', outDate: 'Jun 16', nights: 2, amount: 1600),
+];
+
+// ── Bookings list ─────────────────────────────────────────────────────────────
+
+class _BookingsList extends StatelessWidget {
+  const _BookingsList();
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 12, RLTokens.gutter, 120),
-      itemCount: _items.length,
-      itemBuilder: (_, i) {
-        final (guest, unit, status) = _items[i];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: RLTokens.surface,
-            borderRadius: BorderRadius.circular(RLTokens.rLg),
-            border: Border.all(color: RLTokens.hairline),
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 6, RLTokens.gutter, 120),
+      children: [
+        const _WeekStrip(),
+        RLLabel('Upcoming · Labadi Beach Suites'),
+        for (final b in _kBookings)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _BookingCard(b: b),
           ),
-          child: Row(
+      ],
+    );
+  }
+}
+
+// ── Week strip calendar ───────────────────────────────────────────────────────
+
+class _WeekStrip extends StatelessWidget {
+  const _WeekStrip();
+
+  static const _days  = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  static const _dates = [2, 3, 4, 5, 6, 7, 8];
+  static const _busyIdx  = {0, 1, 2}; // days with bookings
+  static const _todayIdx = 1;         // Tuesday
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: RLTokens.surface,
+        borderRadius: BorderRadius.circular(RLTokens.rLg),
+        border: Border.all(color: RLTokens.hairline),
+      ),
+      child: Column(
+        children: [
+          // Month header + chevrons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              RLIconTile(icon: Icons.calendar_today_outlined, tone: statusTone(status)),
-              const SizedBox(width: 13),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(guest, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: RLTokens.textRowTitle, fontWeight: RLTokens.semibold, color: RLTokens.ink)),
-                    const SizedBox(height: 2),
-                    Text(unit, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12, color: RLTokens.muted)),
-                  ],
+              const Text(
+                'June 2026',
+                style: TextStyle(
+                  fontFamily: RLTokens.fontSerif,
+                  fontSize: 17,
+                  color: RLTokens.ink,
                 ),
               ),
-              RLPill(status, tone: statusTone(status)),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () async => Haptics.vibrate(HapticsType.selection),
+                    child: const Padding(
+                      padding: EdgeInsets.all(6),
+                      child: Icon(Icons.chevron_left, size: 20, color: RLTokens.inkSoft),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () async => Haptics.vibrate(HapticsType.selection),
+                    child: const Padding(
+                      padding: EdgeInsets.all(6),
+                      child: Icon(Icons.chevron_right, size: 20, color: RLTokens.inkSoft),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
-        );
-      },
+          const SizedBox(height: 14),
+          // Day columns
+          Row(
+            children: List.generate(7, (i) {
+              final busy  = _busyIdx.contains(i);
+              final today = i == _todayIdx;
+              final circleBg  = today ? RLTokens.crimson : busy ? RLTokens.crimsonTint : RLTokens.fill;
+              final textColor = today ? Colors.white    : busy ? RLTokens.crimson      : RLTokens.muted;
+              return Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      _days[i],
+                      style: const TextStyle(
+                        fontFamily: RLTokens.fontMono,
+                        fontSize: 10,
+                        color: RLTokens.mutedSoft,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: circleBg,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${_dates[i]}',
+                          style: TextStyle(
+                            fontFamily: RLTokens.fontSans,
+                            fontSize: 13,
+                            fontWeight: RLTokens.semibold,
+                            color: textColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: busy ? RLTokens.crimson : Colors.transparent,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Booking card ──────────────────────────────────────────────────────────────
+
+class _BookingCard extends StatelessWidget {
+  const _BookingCard({required this.b});
+  final _BookingData b;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () async => Haptics.vibrate(HapticsType.selection),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: RLTokens.surface,
+          borderRadius: BorderRadius.circular(RLTokens.rLg),
+          border: Border.all(color: RLTokens.hairline),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Guest name + unit + status pill
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        b.guest,
+                        style: const TextStyle(
+                          fontFamily: RLTokens.fontSans,
+                          fontSize: 15,
+                          fontWeight: RLTokens.semibold,
+                          color: RLTokens.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        b.unit,
+                        style: const TextStyle(
+                          fontFamily: RLTokens.fontSans,
+                          fontSize: 12.5,
+                          color: RLTokens.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                RLPill(b.status, tone: statusTone(b.status)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(height: 1, color: RLTokens.hairlineSoft),
+            const SizedBox(height: 12),
+            // Date range + amount
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '📅 ${b.inDate} → ${b.outDate} · ${b.nights}n',
+                  style: const TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: 12.5,
+                    color: RLTokens.inkSoft,
+                  ),
+                ),
+                Text(
+                  'GH₵ ${_fmtN(b.amount)}',
+                  style: const TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: 14,
+                    fontWeight: RLTokens.bold,
+                    color: RLTokens.ink,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
