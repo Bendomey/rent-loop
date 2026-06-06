@@ -1192,3 +1192,109 @@ class RLIconBtn extends StatelessWidget {
     );
   }
 }
+
+// ── Status stepper ────────────────────────────────────────────────────────────
+
+class RLStepper extends StatelessWidget {
+  const RLStepper({super.key, required this.steps, required this.current});
+
+  final List<String> steps;
+  final int current; // 0-based index of the active step
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: steps.asMap().entries.map((e) {
+        final i      = e.key;
+        final label  = e.value;
+        final done   = i < current;
+        final active = i == current;
+        final isLast = i == steps.length - 1;
+
+        return Expanded(
+          child: Column(
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 2,
+                      color: i == 0
+                          ? Colors.transparent
+                          : (done || active)
+                              ? RLTokens.crimson
+                              : RLTokens.hairline,
+                    ),
+                  ),
+                  _RLStepCircle(done: done, active: active),
+                  Expanded(
+                    child: Container(
+                      height: 2,
+                      color: isLast
+                          ? Colors.transparent
+                          : done
+                              ? RLTokens.crimson
+                              : RLTokens.hairline,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: RLTokens.fontSans,
+                  fontSize: 10,
+                  fontWeight: active ? RLTokens.bold : RLTokens.medium,
+                  color: (done || active) ? RLTokens.ink : RLTokens.mutedSoft,
+                  height: 1.2,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _RLStepCircle extends StatelessWidget {
+  const _RLStepCircle({required this.done, required this.active});
+  final bool done;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: done
+            ? RLTokens.crimson
+            : active
+                ? RLTokens.surface
+                : RLTokens.fill,
+        border: Border.all(
+          color: (done || active) ? RLTokens.crimson : RLTokens.hairline,
+          width: 2,
+        ),
+      ),
+      child: Center(
+        child: done
+            ? const Icon(Icons.check_rounded, size: 13, color: Colors.white)
+            : Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: active ? RLTokens.crimson : RLTokens.micro,
+                ),
+              ),
+      ),
+    );
+  }
+}

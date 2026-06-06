@@ -634,7 +634,10 @@ class _BookingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () async => Haptics.vibrate(HapticsType.selection),
+      onTap: () async {
+        await Haptics.vibrate(HapticsType.selection);
+        if (context.mounted) context.push('/activity/booking/${b.id}');
+      },
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
