@@ -55,33 +55,47 @@ class _ActivityScreenState extends State<ActivityScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: RLTokens.surface,
-      body: Stack(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async => Haptics.vibrate(HapticsType.medium),
+        backgroundColor: RLTokens.crimson,
+        foregroundColor: Colors.white,
+        elevation: 6,
+        shape: const StadiumBorder(),
+        icon: const Icon(Icons.add, size: 20),
+        label: Text(
+          _tab == 'apps'
+              ? 'Application'
+              : _tab == 'bookings'
+                  ? 'Booking'
+                  : 'Request',
+          style: const TextStyle(
+            fontFamily: RLTokens.fontSans,
+            fontWeight: RLTokens.semibold,
+            fontSize: RLTokens.textAction,
+          ),
+        ),
+      ),
+      body: Column(
         children: [
-          Column(
-            children: [
-              _Header(
-                selectedTab: _tab,
-                onTabChanged: (v) async {
-                  await Haptics.vibrate(HapticsType.selection);
-                  setState(() => _tab = v);
-                },
-              ),
-              Expanded(
+          _Header(
+            selectedTab: _tab,
+            onTabChanged: (v) async {
+              await Haptics.vibrate(HapticsType.selection);
+              setState(() => _tab = v);
+            },
+          ),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 140),
+              child: KeyedSubtree(
+                key: ValueKey(_tab),
                 child: RefreshIndicator(
                   color: RLTokens.crimson,
                   onRefresh: () async => Haptics.vibrate(HapticsType.light),
                   child: _tabContent,
                 ),
               ),
-            ],
-          ),
-          RLFAB(
-            label: _tab == 'apps'
-                ? 'Application'
-                : _tab == 'bookings'
-                    ? 'Booking'
-                    : 'Request',
-            onPressed: () async => Haptics.vibrate(HapticsType.medium),
+            ),
           ),
         ],
       ),
@@ -144,7 +158,7 @@ class _Header extends StatelessWidget {
         Container(
           padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 4, RLTokens.gutter, 12),
           decoration: const BoxDecoration(
-            color: RLTokens.fill,
+            color: RLTokens.surface,
             border: Border(bottom: BorderSide(color: RLTokens.hairlineSoft)),
           ),
           child: RLSegmented(
