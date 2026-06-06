@@ -57,8 +57,7 @@ type Booking struct {
 	CreatedByClientUserID  *string `gorm:"index;"`
 	CreatedByClientUser    *ClientUser
 
-	InvoiceID *string `gorm:"index;"`
-	Invoice   *Invoice
+	Invoice *Invoice `gorm:"foreignKey:ContextBookingID;references:ID"`
 
 	Meta datatypes.JSON `gorm:"type:jsonb;"`
 }

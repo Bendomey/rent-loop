@@ -5,6 +5,14 @@ import (
 	"github.com/gofrs/uuid"
 )
 
+func bookingInvoiceID(b *models.Booking) *string {
+	if b.Invoice == nil {
+		return nil
+	}
+	id := b.Invoice.ID.String()
+	return &id
+}
+
 type AdminOutputBooking struct {
 	ID                     string  `json:"id"`
 	Code                   string  `json:"code"`
@@ -85,7 +93,7 @@ func DBBookingToRest(i *models.Booking) any {
 		"requires_upfront_payment":  i.RequiresUpfrontPayment,
 		"created_by_client_user_id": i.CreatedByClientUserID,
 		"created_by_client_user":    DBClientUserToRest(i.CreatedByClientUser),
-		"invoice_id":                i.InvoiceID,
+		"invoice_id":                bookingInvoiceID(i),
 		"invoice":                   DBInvoiceToRest(i.Invoice),
 		"meta":                      i.Meta,
 		"created_at":                i.CreatedAt,
@@ -148,7 +156,7 @@ func DBPublicBookingToRest(i *models.Booking) any {
 		"property":            DBPublicPropertyToRest(&i.Property),
 		"canceled_at":         i.CanceledAt,
 		"cancellation_reason": i.CancellationReason,
-		"invoice_id":          i.InvoiceID,
+		"invoice_id":          bookingInvoiceID(i),
 		"invoice":             DBInvoiceToRest(i.Invoice),
 		"meta":                i.Meta,
 		"created_at":          i.CreatedAt,
