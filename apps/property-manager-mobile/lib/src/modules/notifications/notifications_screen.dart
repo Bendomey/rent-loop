@@ -114,14 +114,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  for (int i = 0; i < 3; i++) ...[
-                    _UnreadCard(item: _items[i]),
-                    if (i < 2) const SizedBox(height: 8),
-                  ],
-                  const SizedBox(height: 12),
-                  for (int i = 3; i < 6; i++) ...[
-                    _ReadRow(item: _items[i]),
-                    if (i < 5) const SizedBox(height: 4),
+                  for (int i = 0; i < _items.length; i++) ...[
+                    if (_unreadIndices.contains(i))
+                      _UnreadCard(item: _items[i])
+                    else
+                      _ReadRow(item: _items[i]),
+                    if (i < _items.length - 1) ...[
+                      if (_unreadIndices.contains(i) ||
+                          _unreadIndices.contains(i + 1))
+                        const SizedBox(height: 8)
+                      else
+                        const SizedBox(height: 4),
+                    ],
                   ],
                 ],
               ),
