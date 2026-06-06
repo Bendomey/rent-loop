@@ -23,7 +23,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     ),
     _NotificationItem(
       icon: Icons.build_rounded,
-      iconBg: AppColors.pinkTint,
+      iconBg: AppColors.pinkTintStrong,
       iconColor: AppColors.primary,
       title: 'New maintenance request',
       subtitle: 'Leaking kitchen tap — Unit 4B. High priority',
@@ -101,16 +101,32 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       ),
       body: SafeArea(
         top: false,
-        child: ListView.separated(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          itemCount: _items.length,
-          separatorBuilder: (_, __) =>
-              const Divider(height: 1, indent: 76, endIndent: 20),
-          itemBuilder: (context, index) {
-            final item = _items[index];
-            final unread = _unreadIndices.contains(index);
-            return _NotificationTile(item: item, unread: unread);
-          },
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                border: Border.all(color: AppColors.border),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (int i = 0; i < 3; i++) ...[
+                    _UnreadCard(item: _items[i]),
+                    if (i < 2) const SizedBox(height: 8),
+                  ],
+                  const SizedBox(height: 12),
+                  for (int i = 3; i < 6; i++) ...[
+                    _ReadRow(item: _items[i]),
+                    if (i < 5) const SizedBox(height: 4),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -137,70 +153,105 @@ class _NotificationItem {
   final bool unread;
 }
 
-class _NotificationTile extends StatelessWidget {
-  const _NotificationTile({required this.item, required this.unread});
+class _NotificationContent extends StatelessWidget {
+  const _NotificationContent({required this.item, required this.showDot});
 
   final _NotificationItem item;
-  final bool unread;
+  final bool showDot;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: item.iconBg,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          alignment: Alignment.center,
+          child: Icon(item.icon, color: item.iconColor, size: 20),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      item.title,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    item.time,
+                    style: const TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (showDot) ...[
+                    const SizedBox(width: 6),
+                    const _UnreadDot(),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                item.subtitle,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _UnreadCard extends StatelessWidget {
+  const _UnreadCard({required this.item});
+  final _NotificationItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.pinkTint,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () {},
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: _NotificationContent(item: item, showDot: true),
+        ),
+      ),
+    );
+  }
+}
+
+class _ReadRow extends StatelessWidget {
+  const _ReadRow({required this.item});
+  final _NotificationItem item;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {},
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: item.iconBg,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              alignment: Alignment.center,
-              child: Icon(item.icon, color: item.iconColor, size: 20),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          item.title,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        item.time,
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      if (unread) ...[
-                        const SizedBox(width: 6),
-                        const _UnreadDot(),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    item.subtitle,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+        child: _NotificationContent(item: item, showDot: false),
       ),
     );
   }
