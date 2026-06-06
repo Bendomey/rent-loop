@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/modules/main/workspace_sheet.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -65,22 +66,30 @@ class _TopHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RLTopHeader(
-      eyebrow: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            _kWorkspaceName,
-            style: TextStyle(
-              fontFamily: RLTokens.fontMono,
-              fontSize: 10.5,
-              fontWeight: RLTokens.semibold,
-              letterSpacing: 1,
-              color: RLTokens.crimson,
+      eyebrow: GestureDetector(
+        onTap: () async {
+          await Haptics.vibrate(HapticsType.selection);
+          if (context.mounted) {
+            await showWorkspaceSheet(context, activeId: 'ws1');
+          }
+        },
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _kWorkspaceName,
+              style: TextStyle(
+                fontFamily: RLTokens.fontMono,
+                fontSize: 10.5,
+                fontWeight: RLTokens.semibold,
+                letterSpacing: 1,
+                color: RLTokens.crimson,
+              ),
             ),
-          ),
-          const SizedBox(width: 4),
-          const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: RLTokens.crimson),
-        ],
+            const SizedBox(width: 4),
+            const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: RLTokens.crimson),
+          ],
+        ),
       ),
       title: 'Good morning',
       trailing: [

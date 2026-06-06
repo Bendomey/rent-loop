@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-enum AppStartupStatus { loading, unauthenticated, ready, error }
+enum AppStartupStatus { loading, unauthenticated, workspaceSelect, ready, error }
 
 class AppStartupState {
   const AppStartupState({required this.status, this.errorMessage});
@@ -28,6 +28,12 @@ class AppStartupNotifier extends Notifier<AppStartupState> {
     if (email != 'akosua@owusuestates.com' || password != 'rentloop2026') {
       throw Exception('Incorrect email or password.');
     }
+    // Go to workspace selection before entering the main shell.
+    state = const AppStartupState(status: AppStartupStatus.workspaceSelect);
+  }
+
+  void selectWorkspace() {
+    // Called once the user picks a workspace; enters the main shell.
     state = const AppStartupState(status: AppStartupStatus.ready);
   }
 

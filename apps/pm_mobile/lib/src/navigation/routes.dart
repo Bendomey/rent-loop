@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:rentloop_manager/src/architecture/app_startup.dart';
 import 'package:rentloop_manager/src/modules/auth/login/root.dart';
 import 'package:rentloop_manager/src/modules/auth/welcome/root.dart';
+import 'package:rentloop_manager/src/modules/auth/workspace_select/root.dart';
 import 'package:rentloop_manager/src/modules/main/activity/root.dart';
 import 'package:rentloop_manager/src/modules/main/home/root.dart';
 import 'package:rentloop_manager/src/modules/main/money/root.dart';
@@ -45,6 +46,10 @@ GoRouter buildRoutes(WidgetRef ref) {
           if (loc.startsWith('/auth')) return null;
           return '/auth/welcome';
 
+        case AppStartupStatus.workspaceSelect:
+          if (loc == '/auth/workspace-select') return null;
+          return '/auth/workspace-select';
+
         case AppStartupStatus.ready:
           if (loc == '/splash' || loc.startsWith('/auth')) return '/';
           return null;
@@ -54,6 +59,7 @@ GoRouter buildRoutes(WidgetRef ref) {
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
       GoRoute(path: '/auth/welcome', builder: (_, __) => const WelcomeScreen()),
       GoRoute(path: '/auth/login', builder: (_, __) => const LoginScreen()),
+      GoRoute(path: '/auth/workspace-select', builder: (_, __) => const WorkspaceSelectScreen()),
       StatefulShellRoute.indexedStack(
         builder: (_, __, shell) => MainShell(shell),
         branches: [
