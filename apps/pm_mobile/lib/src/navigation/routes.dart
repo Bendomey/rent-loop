@@ -11,6 +11,7 @@ import 'package:rentloop_manager/src/modules/main/activity/maintenance_detail.da
 import 'package:rentloop_manager/src/modules/main/activity/root.dart';
 import 'package:rentloop_manager/src/modules/main/home/root.dart';
 import 'package:rentloop_manager/src/modules/main/notifications/root.dart';
+import 'package:rentloop_manager/src/modules/main/money/invoice_detail.dart';
 import 'package:rentloop_manager/src/modules/main/money/root.dart';
 import 'package:rentloop_manager/src/modules/main/more/root.dart';
 import 'package:rentloop_manager/src/modules/main/properties/detail.dart';
@@ -128,7 +129,18 @@ GoRouter buildRoutes(WidgetRef ref) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/money', builder: (_, __) => const MoneyScreen()),
+              GoRoute(
+                path: '/money',
+                builder: (_, __) => const MoneyScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'invoice/:id',
+                    builder: (_, state) => InvoiceDetailScreen(
+                      id: state.pathParameters['id']!,
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
           StatefulShellBranch(
