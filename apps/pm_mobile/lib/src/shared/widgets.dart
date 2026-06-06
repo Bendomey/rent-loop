@@ -451,38 +451,35 @@ class RLFAB extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      right: 18,
-      bottom: RLTokens.tabbarH + 8,
-      child: GestureDetector(
-        onTap: onPressed,
-        child: Container(
-          height: 52,
-          padding: EdgeInsets.symmetric(horizontal: label != null ? 20 : 0),
-          width: label != null ? null : 52,
-          decoration: BoxDecoration(
-            color: RLTokens.crimson,
-            borderRadius: BorderRadius.circular(26),
-            boxShadow: RLTokens.elevFab,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 22, color: Colors.white),
-              if (label != null) ...[
-                const SizedBox(width: 8),
-                Text(
-                  label!,
-                  style: TextStyle(fontFamily: RLTokens.fontSans, 
-                    fontSize: RLTokens.textAction,
-                    fontWeight: RLTokens.semibold,
-                    color: Colors.white,
-                  ),
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        height: 52,
+        padding: EdgeInsets.symmetric(horizontal: label != null ? 20 : 0),
+        width: label != null ? null : 52,
+        decoration: BoxDecoration(
+          color: RLTokens.crimson,
+          borderRadius: BorderRadius.circular(26),
+          boxShadow: RLTokens.elevFab,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 22, color: Colors.white),
+            if (label != null) ...[
+              const SizedBox(width: 8),
+              Text(
+                label!,
+                style: const TextStyle(
+                  fontFamily: RLTokens.fontSans,
+                  fontSize: RLTokens.textAction,
+                  fontWeight: RLTokens.semibold,
+                  color: Colors.white,
                 ),
-              ],
+              ),
             ],
-          ),
+          ],
         ),
       ),
     );

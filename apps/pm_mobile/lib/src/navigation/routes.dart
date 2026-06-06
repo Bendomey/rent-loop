@@ -189,6 +189,14 @@ GoRouter buildRoutes(WidgetRef ref) {
                 MaintenanceDetailScreen(id: state.pathParameters['id']!),
       ),
       GoRoute(
+        path: '/activity/bookings/add',
+        builder: (_, __) => const AddBookingScreen(),
+      ),
+      GoRoute(
+        path: '/activity/applications/add',
+        builder: (_, __) => const AddApplicationScreen(),
+      ),
+      GoRoute(
         path: '/activity/bookings/:id',
         builder:
             (_, state) => BookingDetailScreen(id: state.pathParameters['id']!),
@@ -198,14 +206,6 @@ GoRouter buildRoutes(WidgetRef ref) {
         builder:
             (_, state) =>
                 ApplicationDetailScreen(id: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/activity/bookings/add',
-        builder: (_, __) => const AddBookingScreen(),
-      ),
-      GoRoute(
-        path: '/activity/applications/add',
-        builder: (_, __) => const AddApplicationScreen(),
       ),
 
       // money routes

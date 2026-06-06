@@ -162,6 +162,7 @@ class _MoneyScreenState extends State<MoneyScreen> {
     return Scaffold(
       backgroundColor: RLTokens.surface,
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab-money',
         onPressed: () async => Haptics.vibrate(HapticsType.medium),
         backgroundColor: RLTokens.crimson,
         foregroundColor: Colors.white,

@@ -73,6 +73,7 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
     return Scaffold(
       backgroundColor: RLTokens.surface,
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab-properties',
         onPressed: () async {
           await Haptics.vibrate(HapticsType.medium);
           if (context.mounted) context.push('/properties/add');

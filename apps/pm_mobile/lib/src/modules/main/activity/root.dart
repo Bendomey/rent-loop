@@ -126,6 +126,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
     return Scaffold(
       backgroundColor: RLTokens.surface,
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab-activity',
         onPressed: () async {
           await Haptics.vibrate(HapticsType.medium);
           if (!context.mounted) return;
