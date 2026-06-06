@@ -201,7 +201,7 @@ class RLMoney extends StatelessWidget {
           style: TextStyle(fontFamily: RLTokens.fontSans, 
             fontSize: size * 0.5,
             fontWeight: RLTokens.semibold,
-            color: color.withAlpha((color.a * 0.6).round()),
+            color: color.withAlpha((255 * color.a * 0.6).round()),
             height: 1,
           ),
         ),
