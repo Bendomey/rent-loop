@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/architecture/app_startup.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
-import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // UTM-tagged deep links from the login screen.
@@ -34,6 +34,8 @@ Future<void> _launch(Uri url) async {
     await launchUrl(url, mode: LaunchMode.externalApplication);
   }
 }
+
+// ── Screen ────────────────────────────────────────────────────────────────────
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -91,202 +93,215 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: RLTokens.surface,
+      // Pure white — matches MG.bg in the design spec, overrides the
+      // theme's paper scaffold background.
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(28, 32, 28, 34),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Logo ──────────────────────────────────────────
-              Row(
-                children: [
-                  const _LogoMark(size: 30),
-                  const SizedBox(width: 10),
-                  RichText(
-                    text: TextSpan(
-                      style: TextStyle(
-                        fontFamily: RLTokens.fontSans,
-                        fontSize: 20,
-                        fontWeight: RLTokens.bold,
-                        letterSpacing: -0.4,
-                        color: RLTokens.ink,
-                      ),
-                      children: const [
-                        TextSpan(text: 'rent', style: TextStyle(color: RLTokens.crimson)),
-                        TextSpan(text: 'loop'),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 46),
-
-              // ── Heading ───────────────────────────────────────
-              Text(
-                'Sign in',
-                style: TextStyle(
-                  fontFamily: RLTokens.fontSerif,
-                  fontSize: 32,
-                  letterSpacing: -0.6,
-                  color: RLTokens.ink,
-                  height: 1.1,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Manage your portfolio from anywhere.',
-                style: TextStyle(
-                  fontFamily: RLTokens.fontSans,
-                  fontSize: 14.5,
-                  color: RLTokens.muted,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 30),
-
-              // ── Error banner ──────────────────────────────────
-              if (_error != null) ...[
-                RLInlineBanner(
-                  tone: RLBannerTone.danger,
-                  title: 'Sign-in failed',
-                  body: _error,
-                  onDismiss: () => setState(() => _error = null),
-                ),
-                const SizedBox(height: 18),
-              ],
-
-              // ── Fields ────────────────────────────────────────
-              _FieldLabel('EMAIL'),
-              const SizedBox(height: 7),
-              _InputField(
-                controller: _emailCtrl,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.next,
-                autofillHints: const [AutofillHints.email],
-              ),
-              const SizedBox(height: 14),
-
-              _FieldLabel('PASSWORD'),
-              const SizedBox(height: 7),
-              _InputField(
-                controller: _passCtrl,
-                obscureText: !_showPass,
-                mono: true,
-                textInputAction: TextInputAction.done,
-                autofillHints: const [AutofillHints.password],
-                onSubmitted: (_) => _signIn(),
-                trailing: GestureDetector(
-                  onTap: () async {
-                    await Haptics.vibrate(HapticsType.selection);
-                    setState(() => _showPass = !_showPass);
-                  },
-                  child: Text(
-                    _showPass ? 'Hide' : 'Show',
-                    style: TextStyle(
-                      fontFamily: RLTokens.fontSans,
-                      fontSize: 12.5,
-                      fontWeight: RLTokens.semibold,
-                      color: RLTokens.crimson,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Align(
-                alignment: Alignment.centerRight,
-                child: GestureDetector(
-                  onTap: () async {
-                    await Haptics.vibrate(HapticsType.selection);
-                    await _launch(_forgotPasswordUrl());
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Text(
-                      'Forgot password?',
-                      style: TextStyle(
-                        fontFamily: RLTokens.fontSans,
-                        fontSize: 13,
-                        fontWeight: RLTokens.semibold,
-                        color: RLTokens.crimson,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // ── Submit ────────────────────────────────────────
-              GestureDetector(
-                onTap: _loading ? null : _signIn,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: BoxDecoration(
-                    color: _loading
-                        ? RLTokens.crimson.withAlpha(180)
-                        : RLTokens.crimson,
-                    borderRadius: BorderRadius.circular(RLTokens.rMd),
-                  ),
-                  child: Center(
-                    child: _loading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            'Sign in',
+        child: Column(
+          children: [
+            // ── Scrollable content ─────────────────────────────────
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(28, 32, 28, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Logo
+                    Row(
+                      children: [
+                        const _LogoMark(size: 30),
+                        const SizedBox(width: 10),
+                        RichText(
+                          text: TextSpan(
                             style: TextStyle(
                               fontFamily: RLTokens.fontSans,
-                              fontSize: 15.5,
-                              fontWeight: RLTokens.semibold,
-                              color: Colors.white,
-                              letterSpacing: 0.1,
+                              fontSize: 20,
+                              fontWeight: RLTokens.bold,
+                              letterSpacing: -0.4,
+                              color: RLTokens.ink,
                             ),
+                            children: const [
+                              TextSpan(text: 'rent', style: TextStyle(color: RLTokens.crimson)),
+                              TextSpan(text: 'loop'),
+                            ],
                           ),
-                  ),
-                ),
-              ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 46),
 
-              const SizedBox(height: 40),
-              Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
+                    // Heading
                     Text(
-                      'New here?',
+                      'Sign in',
                       style: TextStyle(
-                        fontFamily: RLTokens.fontSans,
-                        fontSize: 13,
-                        color: RLTokens.muted,
+                        fontFamily: RLTokens.fontSerif,
+                        fontSize: 32,
+                        letterSpacing: -0.6,
+                        color: RLTokens.ink,
+                        height: 1.1,
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Manage your portfolio from anywhere.',
+                      style: TextStyle(
+                        fontFamily: RLTokens.fontSans,
+                        fontSize: 14.5,
+                        color: RLTokens.muted,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+
+                    // Error banner
+                    if (_error != null) ...[
+                      RLInlineBanner(
+                        tone: RLBannerTone.danger,
+                        title: 'Sign-in failed',
+                        body: _error,
+                        onDismiss: () => setState(() => _error = null),
+                      ),
+                      const SizedBox(height: 18),
+                    ],
+
+                    // Email
+                    _FieldLabel('EMAIL'),
+                    const SizedBox(height: 7),
+                    _LoginField(
+                      controller: _emailCtrl,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.email],
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Password
+                    _FieldLabel('PASSWORD'),
+                    const SizedBox(height: 7),
+                    _LoginField(
+                      controller: _passCtrl,
+                      obscureText: !_showPass,
+                      mono: true,
+                      textInputAction: TextInputAction.done,
+                      autofillHints: const [AutofillHints.password],
+                      onSubmitted: (_) => _signIn(),
+                      trailing: GestureDetector(
+                        onTap: () async {
+                          await Haptics.vibrate(HapticsType.selection);
+                          setState(() => _showPass = !_showPass);
+                        },
+                        child: Text(
+                          _showPass ? 'Hide' : 'Show',
+                          style: TextStyle(
+                            fontFamily: RLTokens.fontSans,
+                            fontSize: 12.5,
+                            fontWeight: RLTokens.semibold,
+                            color: RLTokens.crimson,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+
+                    // Forgot password
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () async {
+                          await Haptics.vibrate(HapticsType.selection);
+                          await _launch(_forgotPasswordUrl());
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Text(
+                            'Forgot password?',
+                            style: TextStyle(
+                              fontFamily: RLTokens.fontSans,
+                              fontSize: 13,
+                              fontWeight: RLTokens.semibold,
+                              color: RLTokens.crimson,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Sign in button
                     GestureDetector(
-                      onTap: () async {
-                        await Haptics.vibrate(HapticsType.selection);
-                        await _launch(_applyUrl());
-                      },
-                      child: Text(
-                        'Apply as landlord/real estate',
-                        style: TextStyle(
-                          fontFamily: RLTokens.fontSans,
-                          fontSize: 13,
-                          fontWeight: RLTokens.semibold,
-                          color: RLTokens.ink,
+                      onTap: _loading ? null : _signIn,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: _loading
+                              ? RLTokens.crimson.withAlpha(180)
+                              : RLTokens.crimson,
+                          borderRadius: BorderRadius.circular(RLTokens.rMd),
+                        ),
+                        child: Center(
+                          child: _loading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(
+                                  'Sign in',
+                                  style: TextStyle(
+                                    fontFamily: RLTokens.fontSans,
+                                    fontSize: 15.5,
+                                    fontWeight: RLTokens.semibold,
+                                    color: Colors.white,
+                                    letterSpacing: 0.1,
+                                  ),
+                                ),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+
+            // ── Footer — pinned to the bottom ──────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(28, 16, 28, 34),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'New here?',
+                    style: TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 13,
+                      color: RLTokens.muted,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () async {
+                      await Haptics.vibrate(HapticsType.selection);
+                      await _launch(_applyUrl());
+                    },
+                    child: Text(
+                      'Apply as landlord/real estate',
+                      style: TextStyle(
+                        fontFamily: RLTokens.fontSans,
+                        fontSize: 13,
+                        fontWeight: RLTokens.semibold,
+                        color: RLTokens.ink,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -314,8 +329,11 @@ class _FieldLabel extends StatelessWidget {
   }
 }
 
-class _InputField extends StatelessWidget {
-  const _InputField({
+// Custom login field — uses a styled Container so we own the border completely.
+// The inner TextField has ALL decoration states set to none so the theme's
+// OutlineInputBorder (set globally in inputDecorationTheme) can't bleed in.
+class _LoginField extends StatelessWidget {
+  const _LoginField({
     required this.controller,
     this.obscureText = false,
     this.mono = false,
@@ -339,7 +357,7 @@ class _InputField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: RLTokens.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(RLTokens.rMd),
         border: Border.all(color: RLTokens.hairline),
       ),
@@ -365,13 +383,18 @@ class _InputField extends StatelessWidget {
                       fontSize: 15,
                       color: RLTokens.ink,
                     ),
-              decoration: InputDecoration(
+              // Fully neutralise every Material border state so the theme's
+              // OutlineInputBorder doesn't add a second border ring.
+              decoration: const InputDecoration(
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 15,
-                  vertical: 15,
-                ),
+                filled: false,
+                contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                focusedErrorBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
               ),
             ),
           ),
@@ -387,7 +410,6 @@ class _InputField extends StatelessWidget {
 }
 
 // ── Logo mark ─────────────────────────────────────────────────────────────────
-// Crimson square with white house outline — matches MgMark in the design spec.
 
 class _LogoMark extends StatelessWidget {
   const _LogoMark({required this.size});
@@ -421,7 +443,6 @@ class _HouseMarkPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    // House outline: left wall → peak → right wall
     canvas.drawPath(
       Path()
         ..moveTo(5 * s, 21 * s)
@@ -432,7 +453,6 @@ class _HouseMarkPainter extends CustomPainter {
       stroke,
     );
 
-    // Door
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(10 * s, 14 * s, 6 * s, 7 * s),
