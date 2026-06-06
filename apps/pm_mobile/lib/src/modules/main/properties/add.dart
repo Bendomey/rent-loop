@@ -1,168 +1,89 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
-import 'package:rentloop_manager/src/shared/widgets.dart';
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-const _kSteps = ['Basics', 'Location', 'Units', 'Review'];
-
-const _kPropertyTypes = [
-  _PropType(label: 'Residential',  sub: 'Apartments & houses',     icon: Icons.apartment_rounded),
-  _PropType(label: 'Commercial',   sub: 'Offices & retail spaces',  icon: Icons.business_rounded),
-  _PropType(label: 'Short-stay',   sub: 'Serviced / Airbnb-style',  icon: Icons.hotel_rounded),
-  _PropType(label: 'Mixed use',    sub: 'Residential + commercial', icon: Icons.layers_rounded),
-];
-
-const _kRegions = [
-  'Greater Accra', 'Ashanti', 'Eastern', 'Western', 'Central', 'Volta',
-  'Northern', 'Upper East', 'Upper West', 'Oti', 'Savannah',
-  'Bono', 'Bono East', 'Ahafo', 'North East', 'Western North',
-];
-
-class _PropType {
-  const _PropType({required this.label, required this.sub, required this.icon});
-  final String   label;
-  final String   sub;
-  final IconData icon;
-}
-
-// ── Screen ────────────────────────────────────────────────────────────────────
+const _kSteps = ['Property type', 'Basic info', 'Address', 'Review'];
 
 class AddPropertyScreen extends StatefulWidget {
   const AddPropertyScreen({super.key});
 
   @override
-  State<AddPropertyScreen> createState() => _AddPropertyScreenState();
+  State<AddPropertyScreen> createState() => _State();
 }
 
-class _AddPropertyScreenState extends State<AddPropertyScreen> {
-  int _step = 0;
+class _State extends State<AddPropertyScreen> {
+  int _step = 1; // 1-based
 
-  // Step 0 — Basics
-  final _nameCtrl = TextEditingController();
-  int _typeIndex  = -1;
+  // Step 1
+  String _type   = 'Single Unit';
+  String _status = 'Active';
+  String _rental = 'Long-term (Leases)';
 
-  // Step 1 — Location
-  final _addressCtrl = TextEditingController();
-  final _cityCtrl    = TextEditingController();
-  String? _region;
+  // Step 2
+  final _nameCtrl    = TextEditingController(text: 'Cantonments Court');
+  final _detailsCtrl = TextEditingController(
+    text: 'Gated 2-bed apartment block, 24 units, borehole water and standby generator.',
+  );
+  final _tagDraftCtrl = TextEditingController();
+  List<String> _tags = ['Apartments', 'Gated'];
 
-  // Step 2 — Units
-  final _unitCountCtrl = TextEditingController(text: '1');
-  bool _hasBlocks = false;
-  final _blockCtrl = TextEditingController();
-
-  final _formKey1 = GlobalKey<FormState>();
-  final _formKey2 = GlobalKey<FormState>();
-
-  bool _submitting = false;
+  // Step 3
+  final _addressCtrl = TextEditingController(text: '12 Switchback Rd, Cantonments, Accra');
+  final _gpsCtrl     = TextEditingController();
 
   @override
   void dispose() {
     _nameCtrl.dispose();
+    _detailsCtrl.dispose();
+    _tagDraftCtrl.dispose();
     _addressCtrl.dispose();
-    _cityCtrl.dispose();
-    _unitCountCtrl.dispose();
-    _blockCtrl.dispose();
+    _gpsCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _onBack() async {
-    await Haptics.vibrate(HapticsType.selection);
-    if (!mounted) return;
-    if (_step == 0) {
-      context.pop();
-    } else {
-      setState(() => _step--);
-    }
+  void _next() {
+    Haptics.vibrate(HapticsType.selection);
+    if (_step < 4) setState(() => _step++);
   }
 
-  Future<void> _onContinue() async {
-    if (_step == 0) {
-      if (_nameCtrl.text.trim().isEmpty) {
-        _showError('Please enter a property name.');
-        return;
-      }
-      if (_typeIndex < 0) {
-        _showError('Please select a property type.');
-        return;
-      }
-    } else if (_step == 1) {
-      if (!_formKey1.currentState!.validate()) return;
-      if (_region == null) {
-        _showError('Please select a region.');
-        return;
-      }
-    } else if (_step == 2) {
-      if (!_formKey2.currentState!.validate()) return;
-    }
-
-    await Haptics.vibrate(HapticsType.selection);
-
-    if (_step < 3) {
-      setState(() => _step++);
-    } else {
-      await _submit();
-    }
+  void _back() {
+    Haptics.vibrate(HapticsType.selection);
+    if (_step > 1) setState(() => _step--);
   }
 
-  Future<void> _submit() async {
-    setState(() => _submitting = true);
-    await Haptics.vibrate(HapticsType.medium);
-    // TODO: wire to CreatePropertyNotifier
-    await Future.delayed(const Duration(milliseconds: 1200));
-    if (!mounted) return;
-    setState(() => _submitting = false);
-    await Haptics.vibrate(HapticsType.success);
-    if (mounted) context.pop();
+  void _addTag() {
+    final t = _tagDraftCtrl.text.trim();
+    if (t.isEmpty) return;
+    setState(() {
+      _tags = [..._tags, t];
+      _tagDraftCtrl.clear();
+    });
   }
 
-  void _showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg, style: const TextStyle(fontFamily: RLTokens.fontSans)),
-        backgroundColor: RLTokens.ink,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(RLTokens.rMd)),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
+  void _removeTag(int i) {
+    setState(() => _tags = [..._tags]..removeAt(i));
   }
 
   @override
   Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).padding.bottom;
     return Scaffold(
       backgroundColor: RLTokens.surface,
       body: Column(
         children: [
-          RLBackHeader(title: 'Add property', onBack: _onBack),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 6, RLTokens.gutter, 0),
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-              decoration: BoxDecoration(
-                color: RLTokens.surface,
-                borderRadius: BorderRadius.circular(RLTokens.rLg),
-                border: Border.all(color: RLTokens.hairline),
-              ),
-              child: RLStepper(steps: _kSteps, current: _step),
-            ),
-          ),
-          const SizedBox(height: 16),
+          _WizHeader(step: _step, onClose: () => context.pop()),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 0, RLTokens.gutter, 24),
+              padding: EdgeInsets.fromLTRB(20, 14, 20, 120 + bottom),
               child: _buildStep(),
             ),
           ),
-          _ActionBar(
+          _WizFooter(
             step: _step,
-            submitting: _submitting,
-            onBack: _step > 0 ? _onBack : null,
-            onContinue: _onContinue,
+            onBack: _back,
+            onNext: _next,
+            onCancel: () => context.pop(),
           ),
         ],
       ),
@@ -170,473 +91,870 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   }
 
   Widget _buildStep() {
-    switch (_step) {
-      case 0:
-        return _StepBasics(
-          nameCtrl: _nameCtrl,
-          typeIndex: _typeIndex,
-          onTypeSelected: (i) => setState(() => _typeIndex = i),
-        );
-      case 1:
-        return _StepLocation(
-          formKey: _formKey1,
-          addressCtrl: _addressCtrl,
-          cityCtrl: _cityCtrl,
-          region: _region,
-          onRegion: (v) => setState(() => _region = v),
-        );
-      case 2:
-        return _StepUnits(
-          formKey: _formKey2,
-          unitCountCtrl: _unitCountCtrl,
-          hasBlocks: _hasBlocks,
-          blockCtrl: _blockCtrl,
-          onHasBlocks: (v) => setState(() => _hasBlocks = v),
-        );
-      case 3:
-        return _StepReview(
-          name: _nameCtrl.text.trim(),
-          type: _typeIndex >= 0 ? _kPropertyTypes[_typeIndex].label : '',
-          address: _addressCtrl.text.trim(),
-          city: _cityCtrl.text.trim(),
-          region: _region ?? '',
-          unitCount: _unitCountCtrl.text.trim(),
-          hasBlocks: _hasBlocks,
-          blockLabel: _blockCtrl.text.trim(),
-          onEdit: (s) => setState(() => _step = s),
-        );
-      default:
-        return const SizedBox();
-    }
+    return switch (_step) {
+      1 => _Step1(
+        type:   _type,
+        status: _status,
+        rental: _rental,
+        onType:   (v) { Haptics.vibrate(HapticsType.selection); setState(() => _type   = v); },
+        onStatus: (v) { Haptics.vibrate(HapticsType.selection); setState(() => _status = v); },
+        onRental: (v) { Haptics.vibrate(HapticsType.selection); setState(() => _rental = v); },
+      ),
+      2 => _Step2(
+        nameCtrl:    _nameCtrl,
+        detailsCtrl: _detailsCtrl,
+        tagDraftCtrl: _tagDraftCtrl,
+        tags:    _tags,
+        onAddTag:    _addTag,
+        onRemoveTag: _removeTag,
+      ),
+      3 => _Step3(
+        addressCtrl: _addressCtrl,
+        gpsCtrl:     _gpsCtrl,
+      ),
+      _ => _Step4(
+        type:    _type,
+        status:  _status,
+        rental:  _rental,
+        name:    _nameCtrl.text,
+        details: _detailsCtrl.text,
+        tags:    _tags,
+        address: _addressCtrl.text,
+        gps:     _gpsCtrl.text,
+        onEdit:  (s) { Haptics.vibrate(HapticsType.selection); setState(() => _step = s); },
+      ),
+    };
   }
 }
 
-// ── Step 0 — Basics ───────────────────────────────────────────────────────────
+// ── Header ────────────────────────────────────────────────────────────────────
 
-class _StepBasics extends StatelessWidget {
-  const _StepBasics({
-    required this.nameCtrl,
-    required this.typeIndex,
-    required this.onTypeSelected,
-  });
-
-  final TextEditingController nameCtrl;
-  final int typeIndex;
-  final void Function(int) onTypeSelected;
+class _WizHeader extends StatelessWidget {
+  const _WizHeader({required this.step, required this.onClose});
+  final int step;
+  final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _SectionTitle('Property name'),
-        _RLField(
-          controller: nameCtrl,
-          hint: 'e.g. Cantonments Court',
-          textCapitalization: TextCapitalization.words,
-        ),
-        const SizedBox(height: 22),
-        const _SectionTitle('Property type'),
-        const SizedBox(height: 4),
-        ...List.generate(_kPropertyTypes.length, (i) {
-          final t      = _kPropertyTypes[i];
-          final active = i == typeIndex;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: GestureDetector(
-              onTap: () async {
-                await Haptics.vibrate(HapticsType.selection);
-                onTypeSelected(i);
-              },
-              behavior: HitTestBehavior.opaque,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 160),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: active ? RLTokens.crimsonTint : RLTokens.surface,
-                  borderRadius: BorderRadius.circular(RLTokens.rLg),
-                  border: Border.all(
-                    color: active ? RLTokens.crimson : RLTokens.hairline,
-                    width: active ? 1.5 : 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: active ? RLTokens.crimsonTint2 : RLTokens.fill,
-                        borderRadius: BorderRadius.circular(RLTokens.rSm),
-                      ),
-                      child: Icon(t.icon, size: 20, color: active ? RLTokens.crimson : RLTokens.inkSoft),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            t.label,
-                            style: TextStyle(
-                              fontFamily: RLTokens.fontSans,
-                              fontSize: 15,
-                              fontWeight: RLTokens.semibold,
-                              color: active ? RLTokens.crimson : RLTokens.ink,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            t.sub,
-                            style: const TextStyle(
-                              fontFamily: RLTokens.fontSans,
-                              fontSize: 12.5,
-                              color: RLTokens.muted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (active)
-                      const Icon(Icons.check_circle_rounded, size: 20, color: RLTokens.crimson)
-                    else
-                      Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: RLTokens.hairline, width: 1.5),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }),
-      ],
-    );
-  }
-}
-
-// ── Step 1 — Location ─────────────────────────────────────────────────────────
-
-class _StepLocation extends StatelessWidget {
-  const _StepLocation({
-    required this.formKey,
-    required this.addressCtrl,
-    required this.cityCtrl,
-    required this.region,
-    required this.onRegion,
-  });
-
-  final GlobalKey<FormState> formKey;
-  final TextEditingController addressCtrl;
-  final TextEditingController cityCtrl;
-  final String? region;
-  final void Function(String?) onRegion;
-
-  @override
-  Widget build(BuildContext context) {
-    return Form(
-      key: formKey,
+    final top = MediaQuery.of(context).padding.top;
+    return Container(
+      color: RLTokens.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionTitle('Street address'),
-          _RLField(
-            controller: addressCtrl,
-            hint: 'e.g. 14 Independence Avenue',
-            textCapitalization: TextCapitalization.words,
-            validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
-          ),
-          const SizedBox(height: 16),
-          const _SectionTitle('City / area'),
-          _RLField(
-            controller: cityCtrl,
-            hint: 'e.g. Cantonments, Accra',
-            textCapitalization: TextCapitalization.words,
-            validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
-          ),
-          const SizedBox(height: 16),
-          const _SectionTitle('Region'),
-          const SizedBox(height: 4),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            decoration: BoxDecoration(
-              color: RLTokens.fill,
-              borderRadius: BorderRadius.circular(RLTokens.rMd),
-              border: Border.all(color: RLTokens.hairline),
+          SizedBox(height: top),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 4, 16, 12),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, size: 22, color: RLTokens.ink),
+                  onPressed: () async {
+                    await Haptics.vibrate(HapticsType.selection);
+                    onClose();
+                  },
+                ),
+                const Expanded(
+                  child: Center(
+                    child: Text(
+                      'Add property',
+                      style: TextStyle(
+                        fontFamily: RLTokens.fontSans,
+                        fontSize: 16,
+                        fontWeight: RLTokens.semibold,
+                        color: RLTokens.ink,
+                      ),
+                    ),
+                  ),
+                ),
+                Text(
+                  '$step/4',
+                  style: const TextStyle(
+                    fontFamily: RLTokens.fontMono,
+                    fontSize: 11.5,
+                    color: RLTokens.muted,
+                  ),
+                ),
+              ],
             ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: region,
-                hint: Text(
-                  'Select region',
-                  style: TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 15,
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: List.generate(4, (i) {
+                    return Expanded(
+                      child: Container(
+                        margin: EdgeInsets.only(right: i < 3 ? 5 : 0),
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: i < step ? RLTokens.crimson : RLTokens.fill,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Step $step · ${_kSteps[step - 1]}',
+                  style: const TextStyle(
+                    fontFamily: RLTokens.fontMono,
+                    fontSize: 10.5,
+                    letterSpacing: 0.6,
                     color: RLTokens.mutedSoft,
                   ),
                 ),
-                isExpanded: true,
-                icon: const Icon(Icons.keyboard_arrow_down_rounded, color: RLTokens.muted),
-                style: const TextStyle(
-                  fontFamily: RLTokens.fontSans,
-                  fontSize: 15,
-                  color: RLTokens.ink,
-                ),
-                items: _kRegions
-                    .map((r) => DropdownMenuItem(value: r, child: Text(r)))
-                    .toList(),
-                onChanged: (v) async {
-                  await Haptics.vibrate(HapticsType.selection);
-                  onRegion(v);
-                },
-              ),
+              ],
             ),
           ),
+          const Divider(height: 1, color: RLTokens.hairline),
         ],
       ),
     );
   }
 }
 
-// ── Step 2 — Units ────────────────────────────────────────────────────────────
+// ── Footer ────────────────────────────────────────────────────────────────────
 
-class _StepUnits extends StatelessWidget {
-  const _StepUnits({
-    required this.formKey,
-    required this.unitCountCtrl,
-    required this.hasBlocks,
-    required this.blockCtrl,
-    required this.onHasBlocks,
+class _WizFooter extends StatelessWidget {
+  const _WizFooter({
+    required this.step,
+    required this.onBack,
+    required this.onNext,
+    required this.onCancel,
   });
-
-  final GlobalKey<FormState> formKey;
-  final TextEditingController unitCountCtrl;
-  final bool hasBlocks;
-  final TextEditingController blockCtrl;
-  final void Function(bool) onHasBlocks;
+  final int step;
+  final VoidCallback onBack;
+  final VoidCallback onNext;
+  final VoidCallback onCancel;
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final bottom = MediaQuery.of(context).padding.bottom;
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + bottom),
+      decoration: const BoxDecoration(
+        color: RLTokens.surface,
+        border: Border(top: BorderSide(color: RLTokens.hairline)),
+      ),
+      child: Row(
         children: [
-          const _SectionTitle('Number of units'),
-          _RLField(
-            controller: unitCountCtrl,
-            hint: '1',
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            validator: (v) {
-              if (v == null || v.trim().isEmpty) return 'Required';
-              final n = int.tryParse(v.trim());
-              if (n == null || n < 1) return 'Must be at least 1';
-              if (n > 999) return 'Max 999 units';
-              return null;
-            },
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'You can always add more units later.',
-            style: TextStyle(
-              fontFamily: RLTokens.fontSans,
-              fontSize: 12.5,
-              color: RLTokens.muted,
-            ),
-          ),
-          const SizedBox(height: 22),
-          GestureDetector(
-            onTap: () async {
-              await Haptics.vibrate(HapticsType.selection);
-              onHasBlocks(!hasBlocks);
-            },
-            behavior: HitTestBehavior.opaque,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: RLTokens.surface,
-                borderRadius: BorderRadius.circular(RLTokens.rLg),
-                border: Border.all(color: RLTokens.hairline),
-              ),
-              child: Row(
-                children: [
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          step == 1
+              ? GestureDetector(
+                  onTap: onCancel,
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(
+                        fontFamily: RLTokens.fontSans,
+                        fontSize: 14.5,
+                        fontWeight: RLTokens.semibold,
+                        color: RLTokens.muted,
+                      ),
+                    ),
+                  ),
+                )
+              : GestureDetector(
+                  onTap: onBack,
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+                    child: Row(
                       children: [
+                        Icon(Icons.chevron_left_rounded, size: 18, color: RLTokens.ink),
+                        SizedBox(width: 4),
                         Text(
-                          'Organise units into blocks',
+                          'Back',
                           style: TextStyle(
                             fontFamily: RLTokens.fontSans,
-                            fontSize: 15,
+                            fontSize: 14.5,
                             fontWeight: RLTokens.semibold,
                             color: RLTokens.ink,
-                          ),
-                        ),
-                        SizedBox(height: 3),
-                        Text(
-                          'e.g. Block A, Block B, Floor 1…',
-                          style: TextStyle(
-                            fontFamily: RLTokens.fontSans,
-                            fontSize: 12.5,
-                            color: RLTokens.muted,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Switch(
-                    value: hasBlocks,
-                    onChanged: (_) async {
-                      await Haptics.vibrate(HapticsType.selection);
-                      onHasBlocks(!hasBlocks);
-                    },
-                    thumbColor: WidgetStateProperty.resolveWith((s) =>
-                        s.contains(WidgetState.selected) ? RLTokens.crimson : null),
+                ),
+          const Spacer(),
+          GestureDetector(
+            onTap: onNext,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
+              decoration: BoxDecoration(
+                color: RLTokens.crimson,
+                borderRadius: BorderRadius.circular(RLTokens.rMd),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    step < 4 ? 'Next' : 'Submit property',
+                    style: const TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 14.5,
+                      fontWeight: RLTokens.semibold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Icon(
+                    step < 4 ? Icons.arrow_forward_rounded : Icons.check_rounded,
+                    size: 16,
+                    color: Colors.white,
                   ),
                 ],
               ),
             ),
           ),
-          if (hasBlocks) ...[
-            const SizedBox(height: 16),
-            const _SectionTitle('Block / floor label'),
-            _RLField(
-              controller: blockCtrl,
-              hint: 'e.g. Block A',
-              textCapitalization: TextCapitalization.words,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'More blocks can be added after creating the property.',
-              style: TextStyle(
-                fontFamily: RLTokens.fontSans,
-                fontSize: 12.5,
-                color: RLTokens.muted,
-              ),
-            ),
-          ],
         ],
       ),
     );
   }
 }
 
-// ── Step 3 — Review ───────────────────────────────────────────────────────────
+// ── Step 1 — Type & status ────────────────────────────────────────────────────
 
-class _StepReview extends StatelessWidget {
-  const _StepReview({
-    required this.name,
+class _Step1 extends StatelessWidget {
+  const _Step1({
     required this.type,
-    required this.address,
-    required this.city,
-    required this.region,
-    required this.unitCount,
-    required this.hasBlocks,
-    required this.blockLabel,
-    required this.onEdit,
+    required this.status,
+    required this.rental,
+    required this.onType,
+    required this.onStatus,
+    required this.onRental,
   });
-
-  final String name;
-  final String type;
-  final String address;
-  final String city;
-  final String region;
-  final String unitCount;
-  final bool   hasBlocks;
-  final String blockLabel;
-  final void Function(int step) onEdit;
+  final String type, status, rental;
+  final ValueChanged<String> onType, onStatus, onRental;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
+        const Text(
+          'What type of property is this?',
+          style: TextStyle(
+            fontFamily: RLTokens.fontSerif,
+            fontSize: 25,
             color: RLTokens.ink,
-            borderRadius: BorderRadius.circular(RLTokens.rLg),
+            letterSpacing: -0.4,
+            height: 1.1,
           ),
-          child: Row(
+        ),
+        const SizedBox(height: 7),
+        RichText(
+          text: const TextSpan(
+            style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13.5, color: RLTokens.muted, height: 1.5),
             children: [
-              const Icon(Icons.apartment_rounded, size: 22, color: Colors.white),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name.isEmpty ? 'Untitled property' : name,
-                      style: const TextStyle(
-                        fontFamily: RLTokens.fontSerif,
-                        fontSize: 20,
-                        color: Colors.white,
-                        height: 1.1,
-                      ),
+              TextSpan(text: 'Choose the category that best matches your property\'s layout or use. '),
+              TextSpan(
+                text: 'Learn more',
+                style: TextStyle(color: RLTokens.crimson, fontWeight: RLTokens.semibold),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(child: _TypeCard(
+              icon: Icons.home_outlined,
+              title: 'Single Unit',
+              desc: 'One complete space, rented by one tenant.',
+              selected: type == 'Single Unit',
+              onTap: () => onType('Single Unit'),
+            )),
+            const SizedBox(width: 10),
+            Expanded(child: _TypeCard(
+              icon: Icons.apartment_outlined,
+              title: 'Multi-Unit',
+              desc: 'Divided into separate spaces for many tenants.',
+              selected: type == 'Multi-Unit',
+              onTap: () => onType('Multi-Unit'),
+            )),
+          ],
+        ),
+        const SizedBox(height: 24),
+        const _SectionLabel('Status'),
+        const SizedBox(height: 10),
+        _StatusPills(value: status, onChange: onStatus),
+        const SizedBox(height: 24),
+        const _SectionLabel('What rentals does this property handle?'),
+        const SizedBox(height: 10),
+        _RentalRow(
+          icon: Icons.description_outlined,
+          title: 'Long-term (Leases)',
+          desc: 'Monthly rent, applications, lease agreements.',
+          selected: rental == 'Long-term (Leases)',
+          onTap: () => onRental('Long-term (Leases)'),
+        ),
+        const SizedBox(height: 10),
+        _RentalRow(
+          icon: Icons.calendar_month_outlined,
+          title: 'Short-term (Bookings)',
+          desc: 'Nightly stays, booking link, availability calendar.',
+          selected: rental == 'Short-term (Bookings)',
+          onTap: () => onRental('Short-term (Bookings)'),
+        ),
+        const SizedBox(height: 10),
+        _RentalRow(
+          icon: Icons.grid_view_rounded,
+          title: 'Both',
+          desc: 'Some units long-term, others for short stays.',
+          selected: rental == 'Both',
+          onTap: () => onRental('Both'),
+        ),
+      ],
+    );
+  }
+}
+
+class _TypeCard extends StatelessWidget {
+  const _TypeCard({
+    required this.icon,
+    required this.title,
+    required this.desc,
+    required this.selected,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String title, desc;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: selected ? RLTokens.crimsonTint : RLTokens.surface,
+          border: Border.all(
+            color: selected ? RLTokens.crimson : RLTokens.hairline,
+            width: 1.5,
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, size: 30, color: selected ? RLTokens.crimson : RLTokens.ink),
+                const SizedBox(height: 10),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: 15,
+                    fontWeight: RLTokens.bold,
+                    color: RLTokens.ink,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  desc,
+                  style: const TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: 12,
+                    color: RLTokens.muted,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+            if (selected)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  decoration: const BoxDecoration(
+                    color: RLTokens.crimson,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check_rounded, size: 12, color: Colors.white),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusPills extends StatelessWidget {
+  const _StatusPills({required this.value, required this.onChange});
+  final String value;
+  final ValueChanged<String> onChange;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: ['Active', 'Inactive', 'Maintenance'].map((o) {
+        final on = value == o;
+        return Expanded(
+          flex: o == 'Maintenance' ? 12 : 10,
+          child: GestureDetector(
+            onTap: () => onChange(o),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              margin: EdgeInsets.only(right: o == 'Maintenance' ? 0 : 8),
+              padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 8),
+              decoration: BoxDecoration(
+                color: on ? RLTokens.crimson : RLTokens.surface,
+                border: Border.all(color: on ? RLTokens.crimson : RLTokens.hairline),
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: Center(
+                child: Text(
+                  o,
+                  style: TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: 13.5,
+                    fontWeight: RLTokens.semibold,
+                    color: on ? Colors.white : RLTokens.muted,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _RentalRow extends StatelessWidget {
+  const _RentalRow({
+    required this.icon,
+    required this.title,
+    required this.desc,
+    required this.selected,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String title, desc;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: selected ? RLTokens.crimsonTint : RLTokens.surface,
+          border: Border.all(
+            color: selected ? RLTokens.crimson : RLTokens.hairline,
+            width: 1.5,
+          ),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: selected ? RLTokens.surface : RLTokens.fill,
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: Icon(icon, size: 20, color: selected ? RLTokens.crimson : RLTokens.inkSoft),
+            ),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 14.5,
+                      fontWeight: RLTokens.semibold,
+                      color: RLTokens.ink,
                     ),
-                    if (type.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        type,
-                        style: TextStyle(
-                          fontFamily: RLTokens.fontSans,
-                          fontSize: 13,
-                          color: Colors.white.withAlpha(160),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    desc,
+                    style: const TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 12,
+                      color: RLTokens.muted,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: selected ? RLTokens.crimson : RLTokens.hairline,
+                  width: 1.5,
+                ),
+                color: selected ? RLTokens.crimson : RLTokens.surface,
+              ),
+              child: selected
+                  ? const Center(
+                      child: CircleAvatar(radius: 4, backgroundColor: Colors.white),
+                    )
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Step 2 — Basic info ───────────────────────────────────────────────────────
+
+class _Step2 extends StatelessWidget {
+  const _Step2({
+    required this.nameCtrl,
+    required this.detailsCtrl,
+    required this.tagDraftCtrl,
+    required this.tags,
+    required this.onAddTag,
+    required this.onRemoveTag,
+  });
+  final TextEditingController nameCtrl, detailsCtrl, tagDraftCtrl;
+  final List<String> tags;
+  final VoidCallback onAddTag;
+  final ValueChanged<int> onRemoveTag;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Basic information',
+          style: TextStyle(
+            fontFamily: RLTokens.fontSerif,
+            fontSize: 25,
+            color: RLTokens.ink,
+            letterSpacing: -0.4,
+            height: 1.1,
+          ),
+        ),
+        const SizedBox(height: 7),
+        const Text(
+          'Name your property and add a photo.',
+          style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13.5, color: RLTokens.muted),
+        ),
+        const SizedBox(height: 22),
+        const _WLabel('Name'),
+        _WInput(controller: nameCtrl, placeholder: 'e.g. Cantonments Court'),
+        const SizedBox(height: 20),
+        const _WLabel('Property image', optional: true),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: RLTokens.hairline, width: 1.5, style: BorderStyle.solid),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Column(
+            children: [
+              Container(
+                height: 130,
+                decoration: BoxDecoration(
+                  color: RLTokens.fill,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(13)),
+                ),
+                child: const Center(
+                  child: Icon(Icons.camera_alt_outlined, size: 30, color: RLTokens.mutedSoft),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: GestureDetector(
+                  onTap: () => Haptics.vibrate(HapticsType.selection),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 18),
+                    decoration: BoxDecoration(
+                      color: RLTokens.surface,
+                      border: Border.all(color: RLTokens.hairline),
+                      borderRadius: BorderRadius.circular(RLTokens.rMd),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.add_rounded, size: 16, color: RLTokens.ink),
+                        SizedBox(width: 6),
+                        Text(
+                          'Choose image',
+                          style: TextStyle(
+                            fontFamily: RLTokens.fontSans,
+                            fontSize: 13.5,
+                            fontWeight: RLTokens.semibold,
+                            color: RLTokens.ink,
+                          ),
                         ),
-                      ),
-                    ],
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
-        _ReviewCard(
-          title: 'BASICS',
-          step: 0,
-          onEdit: onEdit,
-          rows: [
-            _ReviewRow('Name', name),
-            _ReviewRow('Type', type),
+        const SizedBox(height: 20),
+        const _WLabel('Details', optional: true),
+        TextField(
+          controller: detailsCtrl,
+          maxLines: 4,
+          textCapitalization: TextCapitalization.sentences,
+          style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14.5, color: RLTokens.ink, height: 1.5),
+          decoration: InputDecoration(
+            hintText: 'Briefly describe your property…',
+            hintStyle: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14.5, color: RLTokens.mutedSoft),
+            filled: true,
+            fillColor: RLTokens.surface,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            border:        OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.hairline, width: 1.5)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.hairline, width: 1.5)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.crimson,   width: 1.5)),
+          ),
+        ),
+        const SizedBox(height: 20),
+        const _WLabel('Tags', optional: true),
+        Row(
+          children: [
+            Expanded(child: _WInput(controller: tagDraftCtrl, placeholder: 'Type a tag…')),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () async {
+                await Haptics.vibrate(HapticsType.selection);
+                onAddTag();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                decoration: BoxDecoration(
+                  color: RLTokens.ink,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'Add',
+                  style: TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: 14.5,
+                    fontWeight: RLTokens.semibold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
-        const SizedBox(height: 10),
-        _ReviewCard(
-          title: 'LOCATION',
-          step: 1,
-          onEdit: onEdit,
-          rows: [
-            _ReviewRow('Address', address),
-            _ReviewRow('City', city),
-            _ReviewRow('Region', region),
-          ],
-        ),
-        const SizedBox(height: 10),
-        _ReviewCard(
-          title: 'UNITS',
-          step: 2,
-          onEdit: onEdit,
-          rows: [
-            _ReviewRow('Unit count', unitCount),
-            if (hasBlocks) _ReviewRow('Block label', blockLabel.isEmpty ? '—' : blockLabel),
-          ],
-        ),
-        const SizedBox(height: 18),
+        if (tags.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: tags.asMap().entries.map((e) {
+              return Container(
+                padding: const EdgeInsets.fromLTRB(12, 6, 8, 6),
+                decoration: BoxDecoration(
+                  color: RLTokens.fill,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      e.value,
+                      style: const TextStyle(
+                        fontFamily: RLTokens.fontSans,
+                        fontSize: 12.5,
+                        fontWeight: RLTokens.semibold,
+                        color: RLTokens.ink,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    GestureDetector(
+                      onTap: () async {
+                        await Haptics.vibrate(HapticsType.selection);
+                        onRemoveTag(e.key);
+                      },
+                      child: const Icon(Icons.close_rounded, size: 14, color: RLTokens.mutedSoft),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// ── Step 3 — Address ──────────────────────────────────────────────────────────
+
+class _Step3 extends StatelessWidget {
+  const _Step3({required this.addressCtrl, required this.gpsCtrl});
+  final TextEditingController addressCtrl, gpsCtrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         const Text(
-          'Review the details above before creating the property. You can always make changes later.',
+          'Where is it located?',
           style: TextStyle(
-            fontFamily: RLTokens.fontSans,
-            fontSize: 13,
-            color: RLTokens.muted,
-            height: 1.5,
+            fontFamily: RLTokens.fontSerif,
+            fontSize: 25,
+            color: RLTokens.ink,
+            letterSpacing: -0.4,
+            height: 1.1,
+          ),
+        ),
+        const SizedBox(height: 7),
+        const Text(
+          'Search the address, or drop a Ghana Post GPS code.',
+          style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13.5, color: RLTokens.muted),
+        ),
+        const SizedBox(height: 22),
+        const _WLabel('Address'),
+        _WInput(
+          controller: addressCtrl,
+          placeholder: 'Search address',
+          prefixIcon: Icons.search_rounded,
+        ),
+        const SizedBox(height: 16),
+        // Map placeholder
+        Container(
+          height: 150,
+          decoration: BoxDecoration(
+            color: const Color(0xFFEDEBE6),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: RLTokens.hairline),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.location_on_rounded, size: 30, color: RLTokens.crimson),
+                const SizedBox(height: 6),
+                const Text(
+                  'Map preview',
+                  style: TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: 12.5,
+                    color: RLTokens.muted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        const _WLabel('Ghana Post GPS', optional: true),
+        _WInput(controller: gpsCtrl, placeholder: 'e.g. GM-123-4567'),
+      ],
+    );
+  }
+}
+
+// ── Step 4 — Review ───────────────────────────────────────────────────────────
+
+class _Step4 extends StatelessWidget {
+  const _Step4({
+    required this.type,
+    required this.status,
+    required this.rental,
+    required this.name,
+    required this.details,
+    required this.tags,
+    required this.address,
+    required this.gps,
+    required this.onEdit,
+  });
+  final String type, status, rental, name, details, address, gps;
+  final List<String> tags;
+  final ValueChanged<int> onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Review & submit',
+          style: TextStyle(
+            fontFamily: RLTokens.fontSerif,
+            fontSize: 25,
+            color: RLTokens.ink,
+            letterSpacing: -0.4,
+            height: 1.1,
+          ),
+        ),
+        const SizedBox(height: 7),
+        const Text(
+          'Check everything below. Edit any step before submitting.',
+          style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 13.5, color: RLTokens.muted, height: 1.5),
+        ),
+        const SizedBox(height: 20),
+        _ReviewCard(
+          title: 'Type & status',
+          onEdit: () => onEdit(1),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _ReviewPill(type),
+              _ReviewPill(status, tone: _PillTone.green),
+              _ReviewPill(rental, tone: _PillTone.blue),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        _ReviewCard(
+          title: 'Basic information',
+          onEdit: () => onEdit(2),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(child: _ReviewPair(k: 'Name', v: name)),
+                  const SizedBox(width: 14),
+                  Expanded(child: _ReviewPair(k: 'Tags', v: tags.isEmpty ? '—' : tags.join(', '))),
+                ],
+              ),
+              const SizedBox(height: 8),
+              _ReviewPair(k: 'Details', v: details.isEmpty ? '—' : details),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        _ReviewCard(
+          title: 'Address',
+          onEdit: () => onEdit(3),
+          child: Row(
+            children: [
+              Expanded(child: _ReviewPair(k: 'Address', v: address.isEmpty ? '—' : address)),
+              const SizedBox(width: 14),
+              SizedBox(width: 96, child: _ReviewPair(k: 'GPS', v: gps.isEmpty ? '—' : gps)),
+            ],
           ),
         ),
       ],
@@ -645,17 +963,10 @@ class _StepReview extends StatelessWidget {
 }
 
 class _ReviewCard extends StatelessWidget {
-  const _ReviewCard({
-    required this.title,
-    required this.step,
-    required this.rows,
-    required this.onEdit,
-  });
-
+  const _ReviewCard({required this.title, required this.onEdit, required this.child});
   final String title;
-  final int step;
-  final List<_ReviewRow> rows;
-  final void Function(int) onEdit;
+  final VoidCallback onEdit;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
@@ -663,8 +974,8 @@ class _ReviewCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: RLTokens.surface,
-        borderRadius: BorderRadius.circular(RLTokens.rLg),
         border: Border.all(color: RLTokens.hairline),
+        borderRadius: BorderRadius.circular(RLTokens.rLg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -675,252 +986,183 @@ class _ReviewCard extends StatelessWidget {
                 child: Text(
                   title,
                   style: const TextStyle(
-                    fontFamily: RLTokens.fontMono,
-                    fontSize: 10.5,
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: 14.5,
                     fontWeight: RLTokens.bold,
-                    color: RLTokens.muted,
-                    letterSpacing: 0.8,
+                    color: RLTokens.ink,
                   ),
                 ),
               ),
               GestureDetector(
-                onTap: () async {
-                  await Haptics.vibrate(HapticsType.selection);
-                  onEdit(step);
-                },
-                child: const Text(
-                  'Edit',
-                  style: TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 13,
-                    fontWeight: RLTokens.semibold,
-                    color: RLTokens.crimson,
-                  ),
+                onTap: onEdit,
+                child: const Row(
+                  children: [
+                    Icon(Icons.settings_outlined, size: 14, color: RLTokens.crimson),
+                    SizedBox(width: 4),
+                    Text(
+                      'Edit',
+                      style: TextStyle(
+                        fontFamily: RLTokens.fontSans,
+                        fontSize: 13,
+                        fontWeight: RLTokens.semibold,
+                        color: RLTokens.crimson,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          ...List.generate(rows.length, (i) {
-            final r      = rows[i];
-            final isLast = i == rows.length - 1;
-            return Column(
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 100,
-                      child: Text(
-                        r.label,
-                        style: const TextStyle(
-                          fontFamily: RLTokens.fontSans,
-                          fontSize: 13.5,
-                          color: RLTokens.muted,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        r.value.isEmpty ? '—' : r.value,
-                        style: const TextStyle(
-                          fontFamily: RLTokens.fontSans,
-                          fontSize: 13.5,
-                          fontWeight: RLTokens.semibold,
-                          color: RLTokens.ink,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                if (!isLast)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Container(height: 1, color: RLTokens.hairlineSoft),
-                  ),
-              ],
-            );
-          }),
+          child,
         ],
       ),
     );
   }
 }
 
-class _ReviewRow {
-  const _ReviewRow(this.label, this.value);
+class _ReviewPair extends StatelessWidget {
+  const _ReviewPair({required this.k, required this.v});
+  final String k, v;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          k.toUpperCase(),
+          style: const TextStyle(
+            fontFamily: RLTokens.fontMono,
+            fontSize: 10,
+            letterSpacing: 0.5,
+            color: RLTokens.mutedSoft,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          v,
+          style: const TextStyle(
+            fontFamily: RLTokens.fontSans,
+            fontSize: 14,
+            color: RLTokens.ink,
+            height: 1.4,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+enum _PillTone { gray, green, blue }
+
+class _ReviewPill extends StatelessWidget {
+  const _ReviewPill(this.label, {this.tone = _PillTone.gray});
   final String label;
-  final String value;
+  final _PillTone tone;
+
+  @override
+  Widget build(BuildContext context) {
+    final (bg, fg) = switch (tone) {
+      _PillTone.green => (RLTokens.successBg, RLTokens.success),
+      _PillTone.blue  => (RLTokens.infoBg,    RLTokens.info),
+      _PillTone.gray  => (RLTokens.neutralBg,  RLTokens.inkSoft),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(RLTokens.rPill)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: RLTokens.fontSans,
+          fontSize: 12.5,
+          fontWeight: RLTokens.semibold,
+          color: fg,
+        ),
+      ),
+    );
+  }
 }
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
   final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontFamily: RLTokens.fontSans,
+        fontSize: 13.5,
+        fontWeight: RLTokens.semibold,
+        color: RLTokens.ink,
+      ),
+    );
+  }
+}
+
+class _WLabel extends StatelessWidget {
+  const _WLabel(this.text, {this.optional = false});
+  final String text;
+  final bool optional;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontFamily: RLTokens.fontSans,
-          fontSize: 13.5,
-          fontWeight: RLTokens.semibold,
-          color: RLTokens.ink,
-        ),
-      ),
-    );
-  }
-}
-
-class _RLField extends StatelessWidget {
-  const _RLField({
-    required this.controller,
-    required this.hint,
-    this.keyboardType,
-    this.inputFormatters,
-    this.validator,
-    this.textCapitalization = TextCapitalization.none,
-  });
-
-  final TextEditingController controller;
-  final String hint;
-  final TextInputType? keyboardType;
-  final List<TextInputFormatter>? inputFormatters;
-  final String? Function(String?)? validator;
-  final TextCapitalization textCapitalization;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatters,
-      validator: validator,
-      textCapitalization: textCapitalization,
-      style: const TextStyle(
-        fontFamily: RLTokens.fontSans,
-        fontSize: 15,
-        color: RLTokens.ink,
-      ),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(
-          fontFamily: RLTokens.fontSans,
-          fontSize: 15,
-          color: RLTokens.mutedSoft,
-        ),
-        filled: true,
-        fillColor: RLTokens.fill,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(RLTokens.rMd),
-          borderSide: const BorderSide(color: RLTokens.hairline),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(RLTokens.rMd),
-          borderSide: const BorderSide(color: RLTokens.hairline),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(RLTokens.rMd),
-          borderSide: const BorderSide(color: RLTokens.crimson, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(RLTokens.rMd),
-          borderSide: const BorderSide(color: RLTokens.danger),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(RLTokens.rMd),
-          borderSide: const BorderSide(color: RLTokens.danger, width: 1.5),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Action bar ────────────────────────────────────────────────────────────────
-
-class _ActionBar extends StatelessWidget {
-  const _ActionBar({
-    required this.step,
-    required this.submitting,
-    required this.onContinue,
-    this.onBack,
-  });
-
-  final int step;
-  final bool submitting;
-  final VoidCallback? onBack;
-  final VoidCallback onContinue;
-
-  @override
-  Widget build(BuildContext context) {
-    final isReview    = step == 3;
-    final bottomInset = MediaQuery.of(context).padding.bottom;
-
-    return Container(
-      padding: EdgeInsets.fromLTRB(RLTokens.gutter, 12, RLTokens.gutter, 12 + bottomInset),
-      decoration: const BoxDecoration(
-        color: RLTokens.surface,
-        border: Border(top: BorderSide(color: RLTokens.hairline)),
-      ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          if (onBack != null) ...[
-            GestureDetector(
-              onTap: onBack,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                decoration: BoxDecoration(
-                  color: RLTokens.fill,
-                  borderRadius: BorderRadius.circular(RLTokens.rMd),
-                ),
-                child: const Text(
-                  'Back',
-                  style: TextStyle(
-                    fontFamily: RLTokens.fontSans,
-                    fontSize: 15,
-                    fontWeight: RLTokens.semibold,
-                    color: RLTokens.ink,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-          ],
-          Expanded(
-            child: GestureDetector(
-              onTap: submitting ? null : onContinue,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  color: RLTokens.crimson,
-                  borderRadius: BorderRadius.circular(RLTokens.rMd),
-                ),
-                child: Center(
-                  child: submitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      : Text(
-                          isReview ? 'Create property' : 'Continue',
-                          style: const TextStyle(
-                            fontFamily: RLTokens.fontSans,
-                            fontSize: 15.5,
-                            fontWeight: RLTokens.semibold,
-                            color: Colors.white,
-                          ),
-                        ),
-                ),
-              ),
+          Text(
+            text,
+            style: const TextStyle(
+              fontFamily: RLTokens.fontSans,
+              fontSize: 13.5,
+              fontWeight: RLTokens.semibold,
+              color: RLTokens.ink,
             ),
           ),
+          if (optional)
+            const Text(
+              'Optional',
+              style: TextStyle(fontFamily: RLTokens.fontSans, fontSize: 11.5, color: RLTokens.mutedSoft),
+            ),
         ],
+      ),
+    );
+  }
+}
+
+class _WInput extends StatelessWidget {
+  const _WInput({
+    required this.controller,
+    required this.placeholder,
+    this.prefixIcon,
+  });
+  final TextEditingController controller;
+  final String placeholder;
+  final IconData? prefixIcon;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, color: RLTokens.ink),
+      decoration: InputDecoration(
+        hintText: placeholder,
+        hintStyle: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 15, color: RLTokens.mutedSoft),
+        prefixIcon: prefixIcon != null
+            ? Icon(prefixIcon, size: 18, color: RLTokens.mutedSoft)
+            : null,
+        filled: true,
+        fillColor: RLTokens.surface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        border:        OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.hairline, width: 1.5)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.hairline, width: 1.5)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: RLTokens.crimson,   width: 1.5)),
       ),
     );
   }
