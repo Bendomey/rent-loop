@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
-import 'package:rentloop_manager/src/modules/main/properties/edit_sheets.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
 
@@ -117,66 +116,32 @@ class PropertyDetailScreen extends StatelessWidget {
                           children: [
                             RLPill(p.status, tone: isActive ? RLTone.success : RLTone.neutral),
                             const SizedBox(width: 8),
-                            // Tappable mode pill → rental mode sheet
-                            GestureDetector(
-                              onTap: () async {
-                                await Haptics.vibrate(HapticsType.selection);
-                                if (context.mounted) {
-                                  showRentalModeSheet(
-                                    context,
-                                    current: p.mode == 'Both' ? 'both' : p.mode == 'Lease' ? 'lease' : 'booking',
-                                  );
-                                }
-                              },
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (p.mode == 'Both') ...[
-                                    RLPill('Long stay', tone: RLTone.neutral),
-                                    const SizedBox(width: 6),
-                                    RLPill('Short stay', tone: RLTone.neutral),
-                                  ] else
-                                    RLPill(
-                                      p.mode == 'Lease' ? 'Long stay' : 'Short stay',
-                                      tone: RLTone.neutral,
-                                    ),
-                                  const SizedBox(width: 6),
-                                  const Icon(Icons.edit_outlined, size: 13, color: RLTokens.micro),
-                                ],
+                            if (p.mode == 'Both') ...[
+                              RLPill('Long stay', tone: RLTone.neutral),
+                              const SizedBox(width: 6),
+                              RLPill('Short stay', tone: RLTone.neutral),
+                            ] else
+                              RLPill(
+                                p.mode == 'Lease' ? 'Long stay' : 'Short stay',
+                                tone: RLTone.neutral,
                               ),
-                            ),
                           ],
                         ),
                         const SizedBox(height: 14),
 
-                        // Location — tappable → location sheet
-                        GestureDetector(
-                          onTap: () async {
-                            await Haptics.vibrate(HapticsType.selection);
-                            if (context.mounted) {
-                              showLocationSheet(
-                                context,
-                                address: '14 Independence Avenue, ${p.area}',
-                              );
-                            }
-                          },
-                          behavior: HitTestBehavior.opaque,
-                          child: Row(
-                            children: [
-                              const Icon(Icons.location_on_outlined, size: 15, color: RLTokens.mutedSoft),
-                              const SizedBox(width: 6),
-                              Text(
-                                p.area,
-                                style: const TextStyle(
-                                  fontFamily: RLTokens.fontSans,
-                                  fontSize: 13.5,
-                                  color: RLTokens.muted,
-                                ),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on_outlined, size: 15, color: RLTokens.mutedSoft),
+                            const SizedBox(width: 6),
+                            Text(
+                              p.area,
+                              style: const TextStyle(
+                                fontFamily: RLTokens.fontSans,
+                                fontSize: 13.5,
+                                color: RLTokens.muted,
                               ),
-                              const SizedBox(width: 6),
-                              const Icon(Icons.edit_outlined, size: 12, color: RLTokens.micro),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 16),
 
@@ -267,82 +232,6 @@ class _HeroImage extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ),
-          // Edit details button (top-right of hero)
-          Positioned(
-            top: 12,
-            right: 14,
-            child: Builder(
-              builder: (ctx) => GestureDetector(
-                onTap: () async {
-                  await Haptics.vibrate(HapticsType.selection);
-                  if (ctx.mounted) {
-                    showBasicDetailsSheet(ctx, name: name);
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(70),
-                    borderRadius: BorderRadius.circular(RLTokens.rPill),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.edit_outlined, size: 13, color: Colors.white.withAlpha(230)),
-                      const SizedBox(width: 5),
-                      Text(
-                        'Edit',
-                        style: TextStyle(
-                          fontFamily: RLTokens.fontSans,
-                          fontSize: 12,
-                          fontWeight: RLTokens.semibold,
-                          color: Colors.white.withAlpha(230),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Switch type button (bottom-right of hero)
-          Positioned(
-            bottom: 14,
-            right: 14,
-            child: Builder(
-              builder: (ctx) => GestureDetector(
-                onTap: () async {
-                  await Haptics.vibrate(HapticsType.selection);
-                  if (ctx.mounted) {
-                    showSwitchTypeSheet(ctx, current: type.toLowerCase().replaceAll(' ', '_'));
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(70),
-                    borderRadius: BorderRadius.circular(RLTokens.rPill),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.swap_horiz_rounded, size: 13, color: Colors.white.withAlpha(230)),
-                      const SizedBox(width: 5),
-                      Text(
-                        'Type',
-                        style: TextStyle(
-                          fontFamily: RLTokens.fontSans,
-                          fontSize: 12,
-                          fontWeight: RLTokens.semibold,
-                          color: Colors.white.withAlpha(230),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ),
           ),
         ],
