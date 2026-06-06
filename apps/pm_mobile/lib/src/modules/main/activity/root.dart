@@ -89,7 +89,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
               index: ['maint', 'apps', 'bookings'].indexOf(_tab),
               children: const [
                 _MaintList(),
-                _AppsListStub(),
+                _AppsList(),
                 _BookingsListStub(),
               ],
             ),
@@ -322,55 +322,144 @@ class _MaintCard extends StatelessWidget {
   }
 }
 
-// ── Applications stub ─────────────────────────────────────────────────────────
+// ── Applications data ─────────────────────────────────────────────────────────
 
-class _AppsListStub extends StatelessWidget {
-  const _AppsListStub();
+class _AppData {
+  const _AppData({
+    required this.id,
+    required this.name,
+    required this.unit,
+    required this.status,
+    required this.age,
+    required this.rent,
+    required this.stage,
+  });
+  final String id;
+  final String name;
+  final String unit;
+  final String status;
+  final String age;
+  final int    rent;
+  final int    stage;
+}
 
-  static const _items = [
-    ('Emmanuel Asante', 'Unit 3B · Applied 1d ago', RLTone.info),
-    ('Abena Frimpong',  'Unit 5C · Applied 2d ago', RLTone.info),
-    ('Kwame Boateng',   'Unit 1A · Applied 4d ago', RLTone.neutral),
-    ('Selorm Kudjo',    'Unit 9 · Applied 4d ago',  RLTone.neutral),
-  ];
+const _kApps = [
+  _AppData(id: 'a1', name: 'Adjoa Frimpong', unit: 'Unit 1C · Cantonments Court', status: 'New',         age: 'Today',  rent: 3000, stage: 1),
+  _AppData(id: 'a2', name: 'Daniel Ofori',   unit: 'Unit 12 · Spintex Heights',   status: 'In Progress', age: '2d ago', rent: 3500, stage: 3),
+  _AppData(id: 'a3', name: 'Naa Adjeley',    unit: 'Shop 5 · Osu Retail Block',   status: 'In Progress', age: '3d ago', rent: 6000, stage: 2),
+  _AppData(id: 'a4', name: 'Selorm Kudjo',   unit: 'Unit 9 · Spintex Heights',    status: 'New',         age: '4d ago', rent: 3500, stage: 1),
+];
+
+// ── Applications list ─────────────────────────────────────────────────────────
+
+class _AppsList extends StatelessWidget {
+  const _AppsList();
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 12, RLTokens.gutter, 120),
-      itemCount: _items.length,
-      itemBuilder: (_, i) {
-        final (title, sub, tone) = _items[i];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: RLTokens.surface,
-            borderRadius: BorderRadius.circular(RLTokens.rLg),
-            border: Border.all(color: RLTokens.hairline),
-          ),
-          child: Row(
-            children: [
-              RLIconTile(icon: Icons.person_add_outlined, tone: tone),
-              const SizedBox(width: 13),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: RLTokens.textRowTitle, fontWeight: RLTokens.semibold, color: RLTokens.ink)),
-                    const SizedBox(height: 2),
-                    Text(sub, style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 12, color: RLTokens.muted)),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right, color: RLTokens.micro, size: 18),
-            ],
-          ),
-        );
-      },
+      padding: const EdgeInsets.fromLTRB(RLTokens.gutter, 6, RLTokens.gutter, 120),
+      itemCount: _kApps.length,
+      itemBuilder: (_, i) => Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: _AppCard(a: _kApps[i]),
+      ),
     );
   }
 }
+
+class _AppCard extends StatelessWidget {
+  const _AppCard({required this.a});
+  final _AppData a;
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = a.stage / 5 * 100;
+    return GestureDetector(
+      onTap: () async => Haptics.vibrate(HapticsType.selection),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: RLTokens.surface,
+          borderRadius: BorderRadius.circular(RLTokens.rLg),
+          border: Border.all(color: RLTokens.hairline),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Avatar + name/unit + status pill
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                RLAvatar(a.name, size: 42),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        a.name,
+                        style: const TextStyle(
+                          fontFamily: RLTokens.fontSans,
+                          fontSize: 15.5,
+                          fontWeight: RLTokens.semibold,
+                          color: RLTokens.ink,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        a.unit,
+                        style: const TextStyle(
+                          fontFamily: RLTokens.fontSans,
+                          fontSize: 12.5,
+                          color: RLTokens.muted,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                RLPill(a.status, tone: statusTone(a.status)),
+              ],
+            ),
+            const SizedBox(height: 14),
+            // Step label + rent/age
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'STEP ${a.stage}/5',
+                  style: const TextStyle(
+                    fontFamily: RLTokens.fontMono,
+                    fontSize: 10,
+                    color: RLTokens.mutedSoft,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                Text(
+                  'GH₵ ${_fmtN(a.rent)}/mo · ${a.age}',
+                  style: const TextStyle(
+                    fontFamily: RLTokens.fontSans,
+                    fontSize: 12,
+                    color: RLTokens.muted,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            // Progress bar
+            RLBar(percent: pct, height: 6),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _fmtN(int n) =>
+    n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');
 
 // ── Bookings stub ─────────────────────────────────────────────────────────────
 
