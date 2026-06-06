@@ -7,6 +7,7 @@ import 'package:rentloop_manager/src/modules/auth/welcome/root.dart';
 import 'package:rentloop_manager/src/modules/auth/workspace_select/root.dart';
 import 'package:rentloop_manager/src/modules/main/activity/root.dart';
 import 'package:rentloop_manager/src/modules/main/home/root.dart';
+import 'package:rentloop_manager/src/modules/main/notifications/root.dart';
 import 'package:rentloop_manager/src/modules/main/money/root.dart';
 import 'package:rentloop_manager/src/modules/main/more/root.dart';
 import 'package:rentloop_manager/src/modules/main/properties/root.dart';
@@ -65,7 +66,16 @@ GoRouter buildRoutes(WidgetRef ref) {
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
+              GoRoute(
+                path: '/',
+                builder: (_, __) => const HomeScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'notifications',
+                    builder: (_, __) => const NotificationsScreen(),
+                  ),
+                ],
+              ),
             ],
           ),
           StatefulShellBranch(

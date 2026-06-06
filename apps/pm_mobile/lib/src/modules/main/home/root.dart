@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:rentloop_manager/src/modules/main/workspace_sheet.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
@@ -96,7 +97,10 @@ class _TopHeader extends StatelessWidget {
         RLIconBtn(
           icon: Icons.notifications_outlined,
           badge: _kUnreadCount,
-          onTap: () async => Haptics.vibrate(HapticsType.selection),
+          onTap: () async {
+            await Haptics.vibrate(HapticsType.selection);
+            if (context.mounted) context.push('/notifications');
+          },
         ),
         RLAvatar(_kManagerName, size: 38, crimsonTone: true),
       ],
