@@ -171,7 +171,8 @@ class _State extends State<PropertyGeneralSettingsScreen> {
                           const SizedBox(width: 12),
                           Switch(
                             value: _active,
-                            activeThumbColor: RLTokens.crimson,
+                            thumbColor: WidgetStateProperty.resolveWith((s) =>
+                                s.contains(WidgetState.selected) ? RLTokens.crimson : null),
                             onChanged: (_) async {
                               await Haptics.vibrate(HapticsType.selection);
                               setState(() => _active = !_active);

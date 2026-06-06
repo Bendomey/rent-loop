@@ -497,7 +497,8 @@ class _StepUnits extends StatelessWidget {
                       await Haptics.vibrate(HapticsType.selection);
                       onHasBlocks(!hasBlocks);
                     },
-                    activeThumbColor: RLTokens.crimson,
+                    thumbColor: WidgetStateProperty.resolveWith((s) =>
+                        s.contains(WidgetState.selected) ? RLTokens.crimson : null),
                   ),
                 ],
               ),
