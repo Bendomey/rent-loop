@@ -332,25 +332,32 @@ class _ManageGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actions = [
-      _ManageAction(icon: Icons.grid_view_rounded,         label: 'Units',        count: p.units),
-      _ManageAction(icon: Icons.people_outline_rounded,    label: 'Tenants',      count: p.occupied),
-      _ManageAction(icon: Icons.description_outlined,      label: 'Leases',       count: p.occupied),
-      _ManageAction(icon: Icons.assignment_outlined,       label: 'Applications', count: 2),
-      _ManageAction(icon: Icons.calendar_today_outlined,   label: 'Bookings',     count: p.mode != 'Lease' ? 4 : 0),
-      const _ManageAction(icon: Icons.explore_outlined,   label: 'Calendar'),
+      _ManageAction(icon: Icons.grid_view_rounded,       label: 'Units',        count: p.units),
+      _ManageAction(icon: Icons.people_outline_rounded,  label: 'Tenants',      count: p.occupied),
+      _ManageAction(icon: Icons.description_outlined,    label: 'Leases',       count: p.occupied),
+      _ManageAction(icon: Icons.assignment_outlined,     label: 'Applications', count: 2),
+      _ManageAction(icon: Icons.calendar_today_outlined, label: 'Bookings',     count: p.mode != 'Lease' ? 4 : 0),
+      const _ManageAction(icon: Icons.explore_outlined,  label: 'Calendar'),
     ];
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: actions.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 1.0,
-      ),
-      itemBuilder: (_, i) => _ManageCell(action: actions[i]),
+    Widget row(int start) => Row(
+      children: List.generate(3, (j) {
+        final idx = start + j;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(left: j == 0 ? 0 : 5, right: j == 2 ? 0 : 5),
+            child: _ManageCell(action: actions[idx]),
+          ),
+        );
+      }),
+    );
+
+    return Column(
+      children: [
+        row(0),
+        const SizedBox(height: 10),
+        row(3),
+      ],
     );
   }
 }
@@ -363,7 +370,9 @@ class _ManageCell extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async => Haptics.vibrate(HapticsType.selection),
-      child: Container(
+      child: SizedBox(
+        height: 96,
+        child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: RLTokens.surface,
@@ -395,6 +404,7 @@ class _ManageCell extends StatelessWidget {
               ),
           ],
         ),
+      ),
       ),
     );
   }
