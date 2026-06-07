@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:rentloop_manager/src/modules/main/checklist_sheet.dart';
 import 'package:rentloop_manager/src/modules/main/workspace_sheet.dart';
 import 'package:rentloop_manager/src/shared/tokens.dart';
 import 'package:rentloop_manager/src/shared/widgets.dart';
@@ -41,6 +42,8 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
+                  const ChecklistBanner(),
+                  const SizedBox(height: 10),
                   _RevenueCard(),
                   const SizedBox(height: 10),
                   _StatGrid(),
