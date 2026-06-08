@@ -181,6 +181,7 @@ class _OCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: RLTokens.surface,
@@ -188,6 +189,7 @@ class _OCard extends StatelessWidget {
         border: Border.all(color: RLTokens.hairline),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
@@ -662,6 +664,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
         widget.onClose();
       },
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _FormLabel(
             label: widget.isCompany ? 'Company name' : 'Full name',
@@ -771,6 +774,7 @@ class _EditCompanySheetState extends State<_EditCompanySheet> {
         widget.onClose();
       },
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _FormLabel(label: 'Description', optional: true),
           const SizedBox(height: 6),
@@ -849,6 +853,7 @@ class _EditIdentitySheetState extends State<_EditIdentitySheet> {
             widget.onClose();
           },
           body: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const _FormLabel(label: 'ID type'),
               const SizedBox(height: 8),
@@ -1125,7 +1130,6 @@ class _FormLabel extends StatelessWidget {
       );
     }
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           label,
@@ -1212,6 +1216,7 @@ class _InputField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: RLTokens.surface,
         borderRadius: BorderRadius.circular(RLTokens.rMd),
@@ -1267,6 +1272,7 @@ class _TextAreaField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: RLTokens.surface,
         borderRadius: BorderRadius.circular(RLTokens.rMd),
@@ -1312,6 +1318,7 @@ class _PhoneField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: RLTokens.surface,
         borderRadius: BorderRadius.circular(RLTokens.rMd),
