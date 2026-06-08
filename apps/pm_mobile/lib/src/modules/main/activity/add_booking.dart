@@ -31,6 +31,8 @@ class AddBookingScreen extends StatefulWidget {
 }
 
 class _AddBookingScreenState extends State<AddBookingScreen> {
+  // null = type not yet chosen, 'admin' = admin form, 'guest' = guest link
+  String? _mode;
   String _unit = '';
   String? _start;
   String? _end;
@@ -46,6 +48,9 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
   final _gIdCtrl = TextEditingController();
   bool _guestFound = false;
   String? _activePicker;
+  // guest link state
+  String _glUnit = '';
+  bool _glCopied = false;
 
   @override
   void dispose() {
@@ -723,6 +728,46 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
               onUse: _useGuest,
               onClose: () => setState(() => _activePicker = null),
             ),
+
+          // ── Type selection (shown on open until mode is chosen) ────────────
+          if (_mode == null)
+            _NewBookingTypeSheet(
+              onAdmin: () async {
+                await Haptics.vibrate(HapticsType.selection);
+                setState(() => _mode = 'admin');
+              },
+              onGuestLink: () async {
+                await Haptics.vibrate(HapticsType.selection);
+                setState(() => _mode = 'guest');
+              },
+              onClose: () async {
+                await Haptics.vibrate(HapticsType.selection);
+                if (context.mounted) Navigator.of(context).pop();
+              },
+            ),
+
+          // ── Guest link sheet ───────────────────────────────────────────────
+          if (_mode == 'guest')
+            _GuestLinkSheet(
+              unit: _glUnit,
+              copied: _glCopied,
+              showUnitPicker: _activePicker == 'glUnit',
+              onOpenPicker: () => setState(() => _activePicker = 'glUnit'),
+              onPickUnit: (v) => setState(() {
+                _glUnit = v;
+                _activePicker = null;
+                _glCopied = false;
+              }),
+              onClosePicker: () => setState(() => _activePicker = null),
+              onCopy: () async {
+                await Haptics.vibrate(HapticsType.medium);
+                setState(() => _glCopied = true);
+              },
+              onClose: () async {
+                await Haptics.vibrate(HapticsType.selection);
+                if (context.mounted) Navigator.of(context).pop();
+              },
+            ),
         ],
       ),
     );
@@ -1063,6 +1108,8 @@ class _InputField extends StatelessWidget {
                   color: RLTokens.mutedSoft,
                 ),
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -1109,6 +1156,8 @@ class _TextAreaField extends StatelessWidget {
             color: RLTokens.mutedSoft,
           ),
           border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
           isDense: true,
           contentPadding: EdgeInsets.symmetric(vertical: 13),
         ),
@@ -1178,6 +1227,8 @@ class _PhoneField extends StatelessWidget {
                   color: RLTokens.mutedSoft,
                 ),
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -1336,6 +1387,8 @@ class _FindGuestSheetState extends State<_FindGuestSheet> {
                                         color: RLTokens.mutedSoft,
                                       ),
                                       border: InputBorder.none,
+                                      enabledBorder: InputBorder.none,
+                                      focusedBorder: InputBorder.none,
                                       isDense: true,
                                       contentPadding: EdgeInsets.symmetric(
                                           vertical: 14),
@@ -1419,6 +1472,375 @@ class _FindGuestSheetState extends State<_FindGuestSheet> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── New booking type sheet ────────────────────────────────────────────────────
+
+class _NewBookingTypeSheet extends StatelessWidget {
+  const _NewBookingTypeSheet({
+    required this.onAdmin,
+    required this.onGuestLink,
+    required this.onClose,
+  });
+  final VoidCallback onAdmin;
+  final VoidCallback onGuestLink;
+  final VoidCallback onClose;
+
+  Widget _option(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String desc,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: RLTokens.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: RLTokens.hairline),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: RLTokens.crimsonTint,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, size: 22, color: RLTokens.crimson),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 15.5,
+                      fontWeight: RLTokens.semibold,
+                      color: RLTokens.ink,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    desc,
+                    style: const TextStyle(
+                      fontFamily: RLTokens.fontSans,
+                      fontSize: 12.5,
+                      color: RLTokens.muted,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right_rounded, size: 18, color: RLTokens.micro),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    return GestureDetector(
+      onTap: onClose,
+      child: Container(
+        color: const Color.fromRGBO(17, 17, 16, 0.38),
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: GestureDetector(
+            onTap: () {},
+            child: Container(
+              decoration: const BoxDecoration(
+                color: RLTokens.surface,
+                borderRadius:
+                    BorderRadius.vertical(top: Radius.circular(RLTokens.rXl)),
+                boxShadow: RLTokens.elevSheet,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 10),
+                  Container(
+                    width: 38,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: RLTokens.hairline,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(20, 10, 20, 4),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'New booking',
+                        style: TextStyle(
+                          fontFamily: RLTokens.fontSerif,
+                          fontSize: 20,
+                          color: RLTokens.ink,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(20, 12, 20, 20 + bottomInset),
+                    child: Column(
+                      children: [
+                        _option(
+                          context,
+                          icon: Icons.person_outline_rounded,
+                          title: 'Admin booking',
+                          desc: "Create a booking on the guest's behalf.",
+                          onTap: onAdmin,
+                        ),
+                        const SizedBox(height: 10),
+                        _option(
+                          context,
+                          icon: Icons.bolt_outlined,
+                          title: 'Guest link',
+                          desc: 'Generate a self-booking link to share.',
+                          onTap: onGuestLink,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Guest link sheet ──────────────────────────────────────────────────────────
+
+class _GuestLinkSheet extends StatelessWidget {
+  const _GuestLinkSheet({
+    required this.unit,
+    required this.copied,
+    required this.showUnitPicker,
+    required this.onOpenPicker,
+    required this.onPickUnit,
+    required this.onClosePicker,
+    required this.onCopy,
+    required this.onClose,
+  });
+  final String unit;
+  final bool copied;
+  final bool showUnitPicker;
+  final VoidCallback onOpenPicker;
+  final ValueChanged<String> onPickUnit;
+  final VoidCallback onClosePicker;
+  final VoidCallback onCopy;
+  final VoidCallback onClose;
+
+  static const _kUrl =
+      'https://rentloopapp.com/book/emirate-hotel-nrrf2yyjyj/002-n7c0u86283';
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    return GestureDetector(
+      onTap: onClose,
+      child: Container(
+        color: const Color.fromRGBO(17, 17, 16, 0.38),
+        child: Stack(
+          children: [
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: GestureDetector(
+                onTap: () {},
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: RLTokens.surface,
+                    borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(RLTokens.rXl)),
+                    boxShadow: RLTokens.elevSheet,
+                  ),
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.72,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 10),
+                        Center(
+                          child: Container(
+                            width: 38,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: RLTokens.hairline,
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 10, 14, 6),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.bolt_outlined,
+                                  size: 22, color: RLTokens.crimson),
+                              const SizedBox(width: 9),
+                              const Expanded(
+                                child: Text(
+                                  'Guest booking link',
+                                  style: TextStyle(
+                                    fontFamily: RLTokens.fontSerif,
+                                    fontSize: 20,
+                                    color: RLTokens.ink,
+                                    letterSpacing: -0.3,
+                                  ),
+                                ),
+                              ),
+                              RLIconBtn(
+                                icon: Icons.close,
+                                bg: RLTokens.fill,
+                                iconColor: RLTokens.inkSoft,
+                                onTap: onClose,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(
+                              20, 4, 20, 28 + bottomInset),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Select a unit to generate a self-booking link you can share with your guest.',
+                                style: TextStyle(
+                                  fontFamily: RLTokens.fontSans,
+                                  fontSize: 13,
+                                  color: RLTokens.muted,
+                                  height: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              const RLInlineBanner(
+                                tone: RLBannerTone.danger,
+                                icon: Icons.info_outline_rounded,
+                                title: 'Only available units are listed',
+                                body:
+                                    "If a unit is missing, make sure it's not in draft or occupied state.",
+                              ),
+                              const SizedBox(height: 14),
+                              _SelectField(
+                                value: unit,
+                                placeholder: 'Select unit',
+                                onTap: onOpenPicker,
+                              ),
+                              const SizedBox(height: 14),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: RLTokens.fill,
+                                  borderRadius:
+                                      BorderRadius.circular(RLTokens.rMd),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'BOOKING URL',
+                                      style: TextStyle(
+                                        fontFamily: RLTokens.fontMono,
+                                        fontSize: 9.5,
+                                        letterSpacing: 0.8,
+                                        color: RLTokens.mutedSoft,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    const Text(
+                                      _kUrl,
+                                      style: TextStyle(
+                                        fontFamily: RLTokens.fontMono,
+                                        fontSize: 13,
+                                        color: RLTokens.ink,
+                                        height: 1.5,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 14),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: RLBtn(
+                                            label: copied
+                                                ? 'Copied!'
+                                                : 'Copy link',
+                                            kind: RLBtnKind.primary,
+                                            icon: copied
+                                                ? Icons.check_rounded
+                                                : Icons.content_copy_rounded,
+                                            onPressed: onCopy,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        GestureDetector(
+                                          onTap: () async {
+                                            await Haptics.vibrate(
+                                                HapticsType.selection);
+                                          },
+                                          child: Container(
+                                            width: 46,
+                                            height: 46,
+                                            decoration: BoxDecoration(
+                                              color: RLTokens.surface,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                  color: RLTokens.hairline),
+                                            ),
+                                            child: const Icon(
+                                              Icons.ios_share_rounded,
+                                              size: 18,
+                                              color: RLTokens.ink,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (showUnitPicker)
+              _PickerSheet(
+                title: 'Select unit',
+                options: _kUnits.map((l) => _PickerOption(label: l)).toList(),
+                selected: unit,
+                onPick: onPickUnit,
+                onClose: onClosePicker,
+              ),
+          ],
         ),
       ),
     );

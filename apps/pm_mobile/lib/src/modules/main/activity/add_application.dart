@@ -748,7 +748,7 @@ class _InputField extends StatelessWidget {
             child: TextField(
               controller: controller,
               style: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14.5, color: RLTokens.ink),
-              decoration: InputDecoration(hintText: placeholder, hintStyle: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14.5, color: RLTokens.mutedSoft), border: InputBorder.none, isDense: true, contentPadding: const EdgeInsets.symmetric(vertical: 14)),
+              decoration: InputDecoration(hintText: placeholder, hintStyle: const TextStyle(fontFamily: RLTokens.fontSans, fontSize: 14.5, color: RLTokens.mutedSoft), border: InputBorder.none, enabledBorder: InputBorder.none, focusedBorder: InputBorder.none, isDense: true, contentPadding: const EdgeInsets.symmetric(vertical: 14)),
             ),
           ),
         ],
@@ -786,7 +786,7 @@ class _PhoneField extends StatelessWidget {
               controller: controller,
               keyboardType: TextInputType.phone,
               style: const TextStyle(fontFamily: RLTokens.fontMono, fontSize: 15, color: RLTokens.ink, letterSpacing: 0.5),
-              decoration: const InputDecoration(hintText: '24 000 0000', hintStyle: TextStyle(fontFamily: RLTokens.fontMono, fontSize: 15, color: RLTokens.mutedSoft), border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 14)),
+              decoration: const InputDecoration(hintText: '24 000 0000', hintStyle: TextStyle(fontFamily: RLTokens.fontMono, fontSize: 15, color: RLTokens.mutedSoft), border: InputBorder.none, enabledBorder: InputBorder.none, focusedBorder: InputBorder.none, isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 14)),
             ),
           ),
         ],

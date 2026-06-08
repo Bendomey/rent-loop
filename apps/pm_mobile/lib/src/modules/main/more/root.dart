@@ -47,6 +47,7 @@ class MoreScreen extends ConsumerWidget {
     ];
 
     final orgRows = [
+      const _RowItem(label: 'General settings',                   sub: 'Profile, company, location', icon: Icons.settings_outlined,   bg: RLTokens.neutralBg,   fg: RLTokens.neutral, route: '/more/settings'),
       const _RowItem(label: 'Members & roles',                    sub: '5 members',         icon: Icons.person_outline_rounded,  bg: RLTokens.neutralBg,   fg: RLTokens.neutral, route: '/more/members'),
       const _RowItem(label: 'Payment accounts',                   sub: 'MoMo · Bank transfer', icon: Icons.credit_card_outlined, bg: RLTokens.successBg,   fg: RLTokens.success, route: '/more/payment-accounts'),
       const _RowItem(label: 'Rentloop x $_kWsName\'s Agreement',  sub: '3 templates',       icon: Icons.folder_outlined,         bg: RLTokens.infoBg,      fg: RLTokens.info,    route: '/more/agreement'),
@@ -54,7 +55,6 @@ class MoreScreen extends ConsumerWidget {
     ];
 
     final accountRows = [
-      const _RowItem(label: 'Settings',      sub: 'Notifications, language', icon: Icons.settings_outlined,   bg: RLTokens.neutralBg, fg: RLTokens.neutral, route: '/more/settings'),
       _RowItem(
         label: 'Help & support',
         sub: 'WhatsApp us',
@@ -73,7 +73,7 @@ class MoreScreen extends ConsumerWidget {
         bg: RLTokens.neutralBg,
         fg: RLTokens.neutral,
         action: (_) async {
-          await Share.share('https://rentloopapp.com/managers');
+          await Share.shareUri(Uri.parse('https://rentloopapp.com/managers'));
         },
       ),
     ];

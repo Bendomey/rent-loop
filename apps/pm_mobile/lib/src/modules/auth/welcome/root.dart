@@ -506,26 +506,29 @@ class _StageDashboard extends StatelessWidget {
                     children: [
                       _Donut(pct: 0.88, size: 60, thickness: 9, label: '88%'),
                       const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            '56',
-                            style: TextStyle(
-                              fontFamily: RLTokens.fontSerif,
-                              fontSize: 17,
-                              color: RLTokens.ink,
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              '56',
+                              style: TextStyle(
+                                fontFamily: RLTokens.fontSerif,
+                                fontSize: 17,
+                                color: RLTokens.ink,
+                              ),
                             ),
-                          ),
-                          const Text(
-                            'occupied',
-                            style: TextStyle(
-                              fontFamily: RLTokens.fontSans,
-                              fontSize: 10.5,
-                              color: RLTokens.muted,
+                            const Text(
+                              'occupied',
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: RLTokens.fontSans,
+                                fontSize: 10.5,
+                                color: RLTokens.muted,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ],
                   ),

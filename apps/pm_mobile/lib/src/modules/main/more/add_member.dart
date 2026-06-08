@@ -442,6 +442,8 @@ class _InputField extends StatelessWidget {
                   color: RLTokens.mutedSoft,
                 ),
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
                 isDense: true,
                 contentPadding:
                     const EdgeInsets.symmetric(vertical: 14),
@@ -510,6 +512,8 @@ class _PhoneField extends StatelessWidget {
                   color: RLTokens.mutedSoft,
                 ),
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.symmetric(vertical: 14),
               ),
