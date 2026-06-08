@@ -7,6 +7,7 @@ import 'package:rentloop_manager/src/modules/auth/welcome/root.dart';
 import 'package:rentloop_manager/src/modules/auth/workspace_select/root.dart';
 import 'package:rentloop_manager/src/modules/main/activity/add_application.dart';
 import 'package:rentloop_manager/src/modules/main/activity/add_booking.dart';
+import 'package:rentloop_manager/src/modules/main/activity/add_maintenance.dart';
 import 'package:rentloop_manager/src/modules/main/activity/application_detail.dart';
 import 'package:rentloop_manager/src/modules/main/activity/booking_detail.dart';
 import 'package:rentloop_manager/src/modules/main/activity/maintenance_detail.dart';
@@ -27,6 +28,8 @@ import 'package:rentloop_manager/src/modules/main/announcements/root.dart';
 import 'package:rentloop_manager/src/modules/main/more/agreement.dart';
 import 'package:rentloop_manager/src/modules/main/more/billing.dart';
 import 'package:rentloop_manager/src/modules/main/more/documents.dart';
+import 'package:rentloop_manager/src/modules/main/more/add_member.dart';
+import 'package:rentloop_manager/src/modules/main/more/my_profile.dart';
 import 'package:rentloop_manager/src/modules/main/more/members.dart';
 import 'package:rentloop_manager/src/modules/main/more/payment_accounts.dart';
 import 'package:rentloop_manager/src/modules/main/more/root.dart';
@@ -183,6 +186,10 @@ GoRouter buildRoutes(WidgetRef ref) {
 
       // activity routes
       GoRoute(
+        path: '/activity/maintenances/add',
+        builder: (_, __) => const AddMaintenanceScreen(),
+      ),
+      GoRoute(
         path: '/activity/maintenances/:id',
         builder:
             (_, state) =>
@@ -221,6 +228,10 @@ GoRouter buildRoutes(WidgetRef ref) {
 
       // more routes
       GoRoute(
+        path: '/more/my-profile',
+        builder: (_, __) => const MyProfileScreen(),
+      ),
+      GoRoute(
         path: '/more/announcements',
         builder: (_, __) => const AnnouncementsScreen(),
         routes: [
@@ -234,7 +245,16 @@ GoRouter buildRoutes(WidgetRef ref) {
         path: '/more/documents',
         builder: (_, __) => const DocumentsScreen(),
       ),
-      GoRoute(path: '/more/members', builder: (_, __) => const MembersScreen()),
+      GoRoute(
+        path: '/more/members',
+        builder: (_, __) => const MembersScreen(),
+        routes: [
+          GoRoute(
+            path: 'add',
+            builder: (_, __) => const AddMemberScreen(),
+          ),
+        ],
+      ),
       GoRoute(
         path: '/more/payment-accounts',
         builder: (_, __) => const PaymentAccountsScreen(),

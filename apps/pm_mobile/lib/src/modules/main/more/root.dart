@@ -159,7 +159,10 @@ class _ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () async => Haptics.vibrate(HapticsType.selection),
+      onTap: () async {
+        await Haptics.vibrate(HapticsType.selection);
+        if (context.mounted) context.push('/more/my-profile');
+      },
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(

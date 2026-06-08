@@ -130,7 +130,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
         onPressed: () async {
           await Haptics.vibrate(HapticsType.medium);
           if (!context.mounted) return;
-          if (_tab == 'apps') {
+          if (_tab == 'maint') {
+            context.push('/activity/maintenances/add');
+          } else if (_tab == 'apps') {
             context.push('/activity/applications/add');
           } else if (_tab == 'bookings') {
             context.push('/activity/bookings/add');
