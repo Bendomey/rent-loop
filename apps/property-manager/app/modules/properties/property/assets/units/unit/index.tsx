@@ -4,6 +4,7 @@ import {
 	Building2,
 	ChevronDown,
 	Home,
+	ImageIcon,
 	LayoutGrid,
 	Pencil,
 	Store,
@@ -195,11 +196,17 @@ export function PropertyAssetUnitModule() {
 			<div className="col-span-12 lg:col-span-4">
 				<Card className="overflow-hidden pt-0 shadow-none">
 					<div className="h-full w-full overflow-hidden">
-						<Image
-							className="h-full w-full object-cover"
-							src={unit.images?.[0] ?? 'https://placehold.co/600x400'}
-							alt={unit.name}
-						/>
+						{unit.images?.[0] ? (
+							<Image
+								className="h-full w-full object-cover"
+								src={unit.images[0]}
+								alt={unit.name}
+							/>
+						) : (
+							<div className="bg-muted flex h-48 w-full items-center justify-center">
+								<ImageIcon className="text-muted-foreground size-10" />
+							</div>
+						)}
 					</div>
 
 					<CardHeader className="flex items-start justify-between">
@@ -383,9 +390,6 @@ export function PropertyAssetUnitModule() {
 				opened={openDeleteModal}
 				setOpened={(open) => {
 					setOpenDeleteModal(open)
-					if (!open) {
-						void navigate(`/properties/${unit.property_id}/assets/units`)
-					}
 				}}
 				data={unit}
 			/>

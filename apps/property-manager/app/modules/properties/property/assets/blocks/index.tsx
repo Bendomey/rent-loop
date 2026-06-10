@@ -2,6 +2,7 @@ import dayjs from 'dayjs'
 import {
 	Building,
 	Clock,
+	ImageIcon,
 	Info,
 	MoreHorizontalIcon,
 	Pencil,
@@ -82,7 +83,7 @@ export function PropertyAssetBlocksModule() {
 	const isLoading = isPending || isRefetching
 
 	return (
-		<div className="m-6 space-y-3">
+		<div className="mx-auto my-6 w-full max-w-7xl px-6 space-y-3">
 			<div>
 				<div className="flex items-center gap-2">
 					<TypographyH4 className="mb-1">Manage Blocks</TypographyH4>
@@ -117,11 +118,17 @@ export function PropertyAssetBlocksModule() {
 							className="gap-2 overflow-hidden pt-0 pb-3 shadow-none"
 						>
 							<div className="h-44 w-full overflow-hidden">
-								<Image
-									className="h-full w-full object-cover"
-									src={data.images?.[0] ?? 'https://placehold.co/600x400'}
-									alt={data.name}
-								/>
+								{data.images?.[0] ? (
+									<Image
+										className="h-full w-full object-cover"
+										src={data.images[0]}
+										alt={data.name}
+									/>
+								) : (
+									<div className="bg-muted flex h-44 w-full items-center justify-center">
+										<ImageIcon className="text-muted-foreground size-10" />
+									</div>
+								)}
 							</div>
 
 							<CardHeader className="flex items-center justify-between">

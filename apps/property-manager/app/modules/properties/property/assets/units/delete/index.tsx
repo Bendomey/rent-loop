@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { Dispatch, SetStateAction } from 'react'
+import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { useDeletePropertyUnit } from '~/api/units'
 import {
@@ -30,6 +31,7 @@ export default function DeletePropertyUnitModal({
 }: Props) {
 	const queryClient = useQueryClient()
 	const { clientUser } = useClient()
+	const navigate = useNavigate()
 
 	const { mutate, isPending } = useDeletePropertyUnit()
 
@@ -47,7 +49,7 @@ export default function DeletePropertyUnitModal({
 					},
 					onSuccess: () => {
 						toast.success(`${data.name} has been successfully deleted`)
-
+						void navigate(`/properties/${data.property_id}/assets/units`)
 						void queryClient.invalidateQueries({
 							queryKey: [QUERY_KEYS.PROPERTY_UNITS],
 						})
