@@ -4,6 +4,7 @@ import {
 	Copy,
 	EllipsisVertical,
 	Eye,
+	ImageIcon,
 	Info,
 	Users,
 } from 'lucide-react'
@@ -87,11 +88,17 @@ export function PropertyAssetUnitsModule() {
 						className="gap-2 overflow-hidden pt-0 pb-3 shadow-none"
 					>
 						<div className="h-44 w-full overflow-hidden">
-							<Image
-								className="h-full w-full object-cover"
-								src={data.images?.[0] ?? 'https://placehold.co/600x400'}
-								alt={data.name}
-							/>
+							{data.images?.[0] ? (
+								<Image
+									className="h-full w-full object-cover"
+									src={data.images[0]}
+									alt={data.name}
+								/>
+							) : (
+							<div className="bg-muted flex h-44 w-full items-center justify-center">
+								<ImageIcon className="text-muted-foreground size-10" />
+							</div>
+							)}
 						</div>
 
 						<CardHeader className="flex items-center justify-between">
@@ -181,7 +188,7 @@ export function PropertyAssetUnitsModule() {
 	)
 
 	return (
-		<div className="mx-6 my-6 flex flex-col gap-4 sm:gap-6">
+		<div className="mx-auto my-6 w-full max-w-7xl px-6 flex flex-col gap-4 sm:gap-6">
 			<div>
 				<div className="flex items-center gap-2">
 					<TypographyH4 className="mb-1">Manage Units</TypographyH4>
