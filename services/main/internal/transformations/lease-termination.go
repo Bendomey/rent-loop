@@ -16,14 +16,14 @@ type OutputLeaseTermination struct {
 	Reason string `json:"reason" example:"Both parties agreed to end the tenancy"`
 	Status string `json:"status" example:"LeaseTermination.Status.InProgress"`
 
-	LeaseChecklistID *string              `json:"lease_checklist_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	LeaseChecklistID *string               `json:"lease_checklist_id,omitempty" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 	LeaseChecklist   *OutputLeaseChecklist `json:"lease_checklist,omitempty"`
 
 	DocumentMode *string `json:"document_mode,omitempty" example:"MANUAL"`
 	DocumentUrl  *string `json:"document_url,omitempty"  example:"https://example.com/termination.pdf"`
 	DocumentID   *string `json:"document_id,omitempty"   example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 
-	InitiatedById string           `json:"initiated_by_id" example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"`
+	InitiatedById string            `json:"initiated_by_id" example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"`
 	InitiatedBy   *OutputClientUser `json:"initiated_by,omitempty"`
 
 	CompletedAt   *time.Time        `json:"completed_at,omitempty"    example:"2024-12-01T10:00:00Z"`

@@ -33,7 +33,7 @@ type LeaseTermination struct {
 	Document     *Document
 
 	// process tracking
-	InitiatedById string `gorm:"not null;"`
+	InitiatedById string     `gorm:"not null;"`
 	InitiatedBy   ClientUser `gorm:"foreignKey:InitiatedById"`
 
 	CompletedAt   *time.Time
