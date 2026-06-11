@@ -33,6 +33,7 @@ export function getInvoicePayeeTypeLabel(
 	const labelMap: Record<Invoice['payee_type'], string> = {
 		RENTLOOP: 'System',
 		PROPERTY_OWNER: 'Owner',
+		TENANT: 'Tenant',
 	}
 
 	return labelMap[payee_type] ?? payee_type
@@ -48,6 +49,7 @@ export function getInvoiceContextTypeLabel(
 		MAINTENANCE_EXPENSE: 'Maintenance Expense',
 		SAAS_FEE: 'Platform',
 		GENERAL_EXPENSE: 'Expense',
+		LEASE_TERMINATION: 'Termination',
 	}
 
 	return labelMap[context_type] ?? context_type

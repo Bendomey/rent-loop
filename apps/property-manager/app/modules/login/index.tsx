@@ -1,8 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import {
-	AlertCircleIcon,
-	CheckCircle2Icon,
-} from 'lucide-react'
+import { AlertCircleIcon, CheckCircle2Icon } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Link, useFetcher, useLoaderData } from 'react-router'
 import { z } from 'zod'
@@ -57,12 +54,12 @@ export function LoginModule() {
 							<FieldGroup>
 								<div className="flex flex-col gap-2">
 									<div className="flex flex-col gap-2 font-medium">
-										<TypographyH1 className="mt-4 text-rose-600 font-black text-7xl md:text-7xl">rl<span className='text-black'>.</span></TypographyH1>
+										<TypographyH1 className="mt-4 text-7xl font-black text-rose-600 md:text-7xl">
+											rl<span className="text-black">.</span>
+										</TypographyH1>
 									</div>
 
-									<TypographyH3 className="mt-4">
-										Welcome back!
-									</TypographyH3>
+									<TypographyH3 className="mt-4">Welcome back!</TypographyH3>
 									<FieldDescription>
 										Don&apos;t have an account?{' '}
 										<Link to="/apply">Apply as landlord/real estate</Link>

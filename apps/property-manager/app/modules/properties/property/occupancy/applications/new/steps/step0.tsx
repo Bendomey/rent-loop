@@ -213,13 +213,17 @@ export function Step0() {
 											<div
 												className={cn(
 													'rounded-lg p-2',
-													isSelected ? 'bg-rose-100 dark:bg-rose-900/50' : 'bg-zinc-100 dark:bg-zinc-800',
+													isSelected
+														? 'bg-rose-100 dark:bg-rose-900/50'
+														: 'bg-zinc-100 dark:bg-zinc-800',
 												)}
 											>
 												<option.icon
 													className={cn(
 														'size-6',
-														isSelected ? 'text-rose-600' : 'text-zinc-600 dark:text-zinc-400',
+														isSelected
+															? 'text-rose-600'
+															: 'text-zinc-600 dark:text-zinc-400',
 													)}
 												/>
 											</div>

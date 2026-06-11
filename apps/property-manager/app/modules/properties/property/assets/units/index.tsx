@@ -95,9 +95,9 @@ export function PropertyAssetUnitsModule() {
 									alt={data.name}
 								/>
 							) : (
-							<div className="bg-muted flex h-44 w-full items-center justify-center">
-								<ImageIcon className="text-muted-foreground size-10" />
-							</div>
+								<div className="bg-muted flex h-44 w-full items-center justify-center">
+									<ImageIcon className="text-muted-foreground size-10" />
+								</div>
 							)}
 						</div>
 
@@ -188,7 +188,7 @@ export function PropertyAssetUnitsModule() {
 	)
 
 	return (
-		<div className="mx-auto my-6 w-full max-w-7xl px-6 flex flex-col gap-4 sm:gap-6">
+		<div className="mx-auto my-6 flex w-full max-w-7xl flex-col gap-4 px-6 sm:gap-6">
 			<div>
 				<div className="flex items-center gap-2">
 					<TypographyH4 className="mb-1">Manage Units</TypographyH4>

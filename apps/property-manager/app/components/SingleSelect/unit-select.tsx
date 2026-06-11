@@ -53,12 +53,12 @@ export function UnitSelect({
 		if (data && data.rows) {
 			return data.rows.map((item) => ({
 				value: item.id,
-				label:
-					['Unit.Status.Available', 'Unit.Status.PartiallyOccupied'].includes(
-						item.status,
-					)
-						? `${item.name} (Available)`
-						: `${item.name} (${getPropertyUnitStatusLabel(item.status)})`,
+				label: [
+					'Unit.Status.Available',
+					'Unit.Status.PartiallyOccupied',
+				].includes(item.status)
+					? `${item.name} (Available)`
+					: `${item.name} (${getPropertyUnitStatusLabel(item.status)})`,
 				isAvailable:
 					item.status === 'Unit.Status.Available' ||
 					item.status === 'Unit.Status.PartiallyOccupied',

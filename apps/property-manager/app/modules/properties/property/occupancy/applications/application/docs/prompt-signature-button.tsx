@@ -43,9 +43,9 @@ const SigningRequestSchema = z.object({
 		.string()
 		.email({ message: 'Invalid email' })
 		.or(z.literal('')),
-	signer_phone: z
-		.string()
-		.refine((v) => !v || isValidPhoneNumber(v), { message: 'Enter a valid phone number' }),
+	signer_phone: z.string().refine((v) => !v || isValidPhoneNumber(v), {
+		message: 'Enter a valid phone number',
+	}),
 })
 
 type SigningRequestFormValues = z.infer<typeof SigningRequestSchema>
@@ -132,7 +132,8 @@ export function PromptSignatureButton({
 	const onSubmit = useCallback(
 		async (values: SigningRequestFormValues) => {
 			const normalizedPhone = values.signer_phone
-				? (normalizeInternationalPhoneNumber(values.signer_phone) ?? values.signer_phone)
+				? (normalizeInternationalPhoneNumber(values.signer_phone) ??
+					values.signer_phone)
 				: undefined
 
 			try {

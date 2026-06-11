@@ -136,7 +136,8 @@ export function EditMemberModule() {
 				clientId: safeString(clientUser?.client_id),
 				id: safeString(memberId),
 				name: data.name,
-				phoneNumber: normalizeInternationalPhoneNumber(data.phone) ?? data.phone,
+				phoneNumber:
+					normalizeInternationalPhoneNumber(data.phone) ?? data.phone,
 			})
 
 			// Diff property assignments
