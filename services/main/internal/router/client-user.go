@@ -288,6 +288,21 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 							r.Route("/expenses", func(r chi.Router) {
 								r.Get("/", handlers.ExpenseHandler.ListLeaseExpenses)
 							})
+
+							r.Route("/terminations", func(r chi.Router) {
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Post("/", handlers.LeaseTerminationHandler.CreateLeaseTermination)
+								r.Get("/", handlers.LeaseTerminationHandler.ListLeaseTerminations)
+								r.Route("/{termination_id}", func(r chi.Router) {
+									r.Get("/", handlers.LeaseTerminationHandler.GetLeaseTermination)
+									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+										Patch("/", handlers.LeaseTerminationHandler.UpdateLeaseTermination)
+									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+										Patch("/complete", handlers.LeaseTerminationHandler.CompleteLeaseTermination)
+									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+										Patch("/cancel", handlers.LeaseTerminationHandler.CancelLeaseTermination)
+								})
+							})
 						})
 
 						r.Route("/tenants/{tenant_id}", func(r chi.Router) {
