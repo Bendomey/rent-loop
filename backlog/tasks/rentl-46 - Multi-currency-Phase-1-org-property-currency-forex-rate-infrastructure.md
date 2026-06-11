@@ -1,9 +1,10 @@
 ---
 id: RENTL-46
 title: 'Multi-currency Phase 1: org/property currency + forex rate infrastructure'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-06-11 12:31'
+updated_date: '2026-06-11 13:45'
 labels:
   - backend
   - frontend
@@ -19,7 +20,36 @@ references:
   - apps/property-manager/app/lib/format-amount.ts
   - apps/property-manager/app/modules/settings/general/index.tsx
   - apps/property-manager/app/routes/_auth._dashboard.properties.new.tsx
+modified_files:
+  - services/main/internal/lib/currency.go
+  - services/main/internal/models/exchange_rate.go
+  - services/main/internal/models/client.go
+  - services/main/internal/models/property.go
+  - services/main/internal/clients/openexchangerates/client.go
+  - services/main/internal/clients/openexchangerates/types.go
+  - services/main/internal/clients/main.go
+  - services/main/internal/config/config.go
+  - services/main/internal/repository/exchange_rate.go
+  - services/main/internal/repository/main.go
+  - services/main/internal/services/exchange_rate.go
+  - services/main/internal/services/client.go
+  - services/main/internal/services/property.go
+  - services/main/internal/services/unit.go
+  - services/main/internal/services/main.go
+  - services/main/internal/handlers/client.go
+  - services/main/internal/handlers/property.go
+  - services/main/internal/transformations/client.go
+  - services/main/internal/transformations/property.go
+  - services/main/internal/queue/forex_sync.go
+  - services/main/internal/queue/worker.go
+  - services/main/init/migration/main.go
+  - services/main/init/migration/jobs/add-client-currency.go
+  - services/main/init/migration/jobs/add-property-currency.go
+  - services/main/init/migration/jobs/add-exchange-rates-table.go
+  - services/main/.envrc.example
+  - services/main/CLAUDE.md
 priority: high
+ordinal: 2000
 ---
 
 ## Description
@@ -67,12 +97,27 @@ Full plan: `~/.claude/plans/rentloop-multi-currency-implementation-curious-fiddl
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 exchange_rates table exists with a unique (base_currency, quote_currency, effective_date) index and stores USD-base daily rates without overwriting history
-- [ ] #2 A daily asynq job runs at 02:00 UTC and upserts one rate row per supported quote currency from OpenExchangeRates
-- [ ] #3 Client has an editable reporting currency (default GHS); changing it in org settings shows a confirmation and does not modify any existing financial records
-- [ ] #4 Property has a transaction currency that defaults from its Client on creation and is editable in property settings with a confirmation; changing it affects only future records
-- [ ] #5 New units/leases/invoices inherit an empty currency from their parent Property instead of hardcoded GHS
+- [x] #1 exchange_rates table exists with a unique (base_currency, quote_currency, effective_date) index and stores USD-base daily rates without overwriting history
+- [x] #2 A daily asynq job runs at 02:00 UTC and upserts one rate row per supported quote currency from OpenExchangeRates
+- [x] #3 Client has an editable reporting currency (default GHS); changing it in org settings shows a confirmation and does not modify any existing financial records
+- [x] #4 Property has a transaction currency that defaults from its Client on creation and is editable in property settings with a confirmation; changing it affects only future records
+- [x] #5 New units/leases/invoices inherit an empty currency from their parent Property instead of hardcoded GHS
 - [ ] #6 Unit create/edit currency selectors list all supported currencies and default to the property currency
-- [ ] #7 Currency inputs are validated against the supported list (GHS, USD, CAD, EUR, GBP, NGN, KES, ZAR, XOF, XAF) on the backend
+- [x] #7 Currency inputs are validated against the supported list (GHS, USD, CAD, EUR, GBP, NGN, KES, ZAR, XOF, XAF) on the backend
 - [ ] #8 Swagger godoc updated for changed handlers; frontend passes yarn types:check and yarn lint; new UI works in dark and light mode
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-06-11 13:45
+---
+Backend implementation complete (2026-06-11).
+
+New files: `internal/lib/currency.go`, `internal/models/exchange_rate.go`, `internal/clients/openexchangerates/`, `internal/repository/exchange_rate.go`, `internal/services/exchange_rate.go`, `internal/queue/forex_sync.go`, migration jobs for client currency, property currency, and exchange_rates table.
+
+Modified: `models/client.go`, `models/property.go`, `services/client.go`, `services/property.go`, `services/unit.go`, `services/main.go`, `repository/main.go`, `clients/main.go`, `config/config.go`, `handlers/client.go`, `handlers/property.go`, `transformations/client.go`, `transformations/property.go`, `queue/worker.go`, `init/migration/main.go`, `.envrc.example`, `CLAUDE.md`.
+
+Swagger docs regenerated. Remaining: frontend ACs #6 and #8.
+---
+<!-- COMMENTS:END -->

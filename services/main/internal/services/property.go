@@ -37,6 +37,7 @@ type PropertyService interface {
 type propertyService struct {
 	appCtx                    pkg.AppContext
 	repo                      repository.PropertyRepository
+	clientService             ClientService
 	clientUserService         ClientUserService
 	clientUserPropertyService ClientUserPropertyService
 	unitService               UnitService
@@ -47,6 +48,7 @@ type propertyService struct {
 type PropertyServiceDependencies struct {
 	AppCtx                    pkg.AppContext
 	Repo                      repository.PropertyRepository
+	ClientService             ClientService
 	ClientUserService         ClientUserService
 	ClientUserPropertyService ClientUserPropertyService
 	UnitService               UnitService
@@ -58,6 +60,7 @@ func NewPropertyService(deps PropertyServiceDependencies) PropertyService {
 	return &propertyService{
 		appCtx:                    deps.AppCtx,
 		repo:                      deps.Repo,
+		clientService:             deps.ClientService,
 		clientUserService:         deps.ClientUserService,
 		clientUserPropertyService: deps.ClientUserPropertyService,
 		unitService:               deps.UnitService,
@@ -83,6 +86,7 @@ type CreatePropertyInput struct {
 	GPSAddress  *string
 	ClientID    string
 	CreatedByID string
+	Currency    *string // if nil, defaults to Client.Currency
 }
 
 func (s *propertyService) CreateProperty(
@@ -110,6 +114,16 @@ func (s *propertyService) CreateProperty(
 		modes = pq.StringArray{}
 	}
 
+	currency := "GHS"
+	if input.Currency != nil {
+		currency = *input.Currency
+	} else {
+		client, clientErr := s.clientService.GetClient(ctx, input.ClientID)
+		if clientErr == nil && client.Currency != "" {
+			currency = client.Currency
+		}
+	}
+
 	property := models.Property{
 		Type:        input.Type,
 		Status:      input.Status,
@@ -127,6 +141,7 @@ func (s *propertyService) CreateProperty(
 		GPSAddress:  input.GPSAddress,
 		ClientID:    input.ClientID,
 		CreatedByID: input.CreatedByID,
+		Currency:    currency,
 	}
 
 	transaction := s.appCtx.DB.Begin()
@@ -263,6 +278,7 @@ type UpdatePropertyInput struct {
 	PropertyID  string
 	ClientID    string
 	Name        *string
+	Currency    *string
 	Description lib.Optional[string]
 	Images      lib.Optional[[]string]
 	Tags        lib.Optional[[]string]
@@ -300,6 +316,13 @@ func (s *propertyService) UpdateProperty(
 		return nil, pkg.NotFoundError("PropertyNotFound", &pkg.RentLoopErrorParams{
 			Err: err,
 		})
+	}
+
+	if input.Currency != nil {
+		if !lib.IsSupportedCurrency(*input.Currency) {
+			return nil, pkg.BadRequestError("UnsupportedCurrency", nil)
+		}
+		property.Currency = *input.Currency
 	}
 
 	if input.Name != nil {

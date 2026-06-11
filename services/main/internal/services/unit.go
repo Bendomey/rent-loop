@@ -27,22 +27,30 @@ type UnitService interface {
 	SetSystemUnitStatus(ctx context.Context, input UpdateUnitStatusInput) error
 	DeleteUnit(ctx context.Context, input repository.DeleteUnitInput) error
 	updateUnitCount(ctx context.Context, input UpdateUnitCountInput) error
+	resolveUnitCurrency(ctx context.Context, currency, propertyID string) string
 }
 
 type unitService struct {
 	appCtx               pkg.AppContext
 	repo                 repository.UnitRepository
+	propertyRepo         repository.PropertyRepository
 	propertyBlockService PropertyBlockService
 }
 
 type UnitServiceDependencies struct {
 	AppCtx               pkg.AppContext
 	Repo                 repository.UnitRepository
+	PropertyRepo         repository.PropertyRepository
 	PropertyBlockService PropertyBlockService
 }
 
 func NewUnitService(deps UnitServiceDependencies) UnitService {
-	return &unitService{appCtx: deps.AppCtx, repo: deps.Repo, propertyBlockService: deps.PropertyBlockService}
+	return &unitService{
+		appCtx:               deps.AppCtx,
+		repo:                 deps.Repo,
+		propertyRepo:         deps.PropertyRepo,
+		propertyBlockService: deps.PropertyBlockService,
+	}
 }
 
 type CreateUnitInput struct {
@@ -61,6 +69,18 @@ type CreateUnitInput struct {
 	CreatedByID         string
 	Features            *map[string]any
 	MaxOccupantsAllowed int
+}
+
+func (s *unitService) resolveUnitCurrency(ctx context.Context, currency, propertyID string) string {
+	if currency != "" {
+		return currency
+	}
+	prop, err := s.propertyRepo.GetByID(ctx, repository.GetPropertyQuery{ID: propertyID})
+	if err == nil && prop.Currency != "" {
+		return prop.Currency
+	}
+
+	return "GHS"
 }
 
 func (s *unitService) CreateUnit(ctx context.Context, input CreateUnitInput) (*models.Unit, error) {
@@ -91,6 +111,8 @@ func (s *unitService) CreateUnit(ctx context.Context, input CreateUnitInput) (*m
 		features = datatypes.JSON{}
 	}
 
+	currency := s.resolveUnitCurrency(ctx, input.RentFeeCurrency, input.PropertyID)
+
 	unit := models.Unit{
 		PropertyID:          input.PropertyID,
 		PropertyBlockID:     input.PropertyBlockID,
@@ -102,7 +124,7 @@ func (s *unitService) CreateUnit(ctx context.Context, input CreateUnitInput) (*m
 		Status:              input.Status,
 		Area:                input.Area,
 		RentFee:             input.RentFee,
-		RentFeeCurrency:     input.RentFeeCurrency,
+		RentFeeCurrency:     currency,
 		PaymentFrequency:    input.PaymentFrequency,
 		CreatedById:         input.CreatedByID,
 		Features:            features,

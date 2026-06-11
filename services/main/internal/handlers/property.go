@@ -26,6 +26,7 @@ type CreatePropertyRequest struct {
 	Status      string   `json:"status"                validate:"required,oneof=Property.Status.Active Property.Status.Maintenance Property.Status.Inactive" example:"Property.Status.Active"                                description:"Current operational status of the property"`
 	Name        string   `json:"name"                  validate:"required,min=3,max=100"                                                                     example:"Oceanview Apartment"                                   description:"Human-readable name of the property."`
 	Description *string  `json:"description,omitempty"                                                                                                       example:"A luxurious apartment overlooking the Atlantic Ocean." description:"Brief description of the property."`
+	Currency    *string  `json:"currency,omitempty"    validate:"omitempty"                                                                                  example:"GHS"                                                   description:"Transaction currency for this property. Defaults to the org reporting currency."`
 	Images      []string `json:"images,omitempty"      validate:"omitempty,dive,url"                                                                         example:"https://example.com/images/1.jpg"                      description:"Array of image URLs associated with the property."`
 	Tags        []string `json:"tags,omitempty"        validate:"omitempty,dive,min=1,max=30"                                                                example:"beachfront,furnished"                                  description:"Tags for categorizing the property."`
 	Modes       []string `json:"modes,omitempty"       validate:"omitempty,dive,oneof=LEASE BOOKING"                                                         example:"LEASE,BOOKING"                                         description:"Rental modes for the property. Options: LEASE | BOOKING."`
@@ -78,6 +79,7 @@ func (h *PropertyHandler) CreateProperty(w http.ResponseWriter, r *http.Request)
 		Status:      body.Status,
 		Name:        body.Name,
 		Description: body.Description,
+		Currency:    body.Currency,
 		Images:      body.Images,
 		Tags:        body.Tags,
 		Modes:       body.Modes,
@@ -273,6 +275,7 @@ func (h *PropertyHandler) GetPropertyBySlug(w http.ResponseWriter, r *http.Reque
 
 type UpdatePropertyRequest struct {
 	Name        *string                `json:"name"        validate:"omitempty,min=3,max=100"                                                                     example:"Oceanview Apartment"                                   description:"Human-readable name of the property."`
+	Currency    *string                `json:"currency"    validate:"omitempty"                                                                                   example:"GHS"                                                   description:"Transaction currency. Must be a supported currency code."`
 	Description lib.Optional[string]   `json:"description" validate:"omitempty"                                                                                   example:"A luxurious apartment overlooking the Atlantic Ocean." description:"Brief description of the property."                           swaggertype:"string"`
 	Images      lib.Optional[[]string] `json:"images"      validate:"omitempty,dive,url"                                                                          example:"https://example.com/images/1.jpg"                      description:"Array of image URLs associated with the property."            swaggertype:"array,string"`
 	Tags        lib.Optional[[]string] `json:"tags"        validate:"omitempty,dive,min=1,max=30"                                                                 example:"beachfront,furnished"                                  description:"Tags for categorizing the property."                          swaggertype:"array,string"`
@@ -331,6 +334,7 @@ func (h *PropertyHandler) UpdateProperty(w http.ResponseWriter, r *http.Request)
 		PropertyID:  propertyID,
 		ClientID:    currentClientUser.ClientID,
 		Name:        body.Name,
+		Currency:    body.Currency,
 		Description: body.Description,
 		Images:      body.Images,
 		Tags:        body.Tags,

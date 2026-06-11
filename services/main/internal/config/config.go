@@ -86,9 +86,15 @@ type IChartOfAccounts struct {
 	PropertyManagementExpenseID string
 }
 
+type IOpenExchangeRatesAPI struct {
+	BaseURL string
+	AppID   string
+}
+
 type IClients struct {
-	AccountingAPI IAccountingAPI
-	GatekeeperAPI IGatekeeperAPI
+	AccountingAPI        IAccountingAPI
+	GatekeeperAPI        IGatekeeperAPI
+	OpenExchangeRatesAPI IOpenExchangeRatesAPI
 }
 
 type IFirebase struct {
@@ -184,6 +190,10 @@ func Load() Config {
 				BaseURL:   getEnv("GATEKEEPER_API_BASE_URL", "http://localhost:8082/api/v1"),
 				ApiKey:    getEnv("GATEKEEPER_API_KEY", "fake-api-key"),
 				ProjectID: getEnv("GATEKEEPER_PROJECT_ID", "fake-project-id"),
+			},
+			OpenExchangeRatesAPI: IOpenExchangeRatesAPI{
+				BaseURL: getEnv("OPENEXCHANGERATES_BASE_URL", "https://openexchangerates.org/api"),
+				AppID:   getEnv("OPENEXCHANGERATES_APP_ID", ""),
 			},
 		},
 		CubeApiSecret: getEnv("CUBEJS_API_SECRET", "superdupercubeapisecret"),

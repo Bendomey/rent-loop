@@ -57,6 +57,7 @@ func RegisterWorkers(redisURL string, appCtx pkg.AppContext, repo repository.Rep
 			AnnouncementHandlers(svcs.AnnouncementService),
 			LeaseInvoicingHandlers(repo.LeaseRepository, svcs.LeaseService),
 			InvoiceReminderHandlers(repo.InvoiceRepository, appCtx, svcs.NotificationService),
+			ForexSyncHandlers(svcs.ExchangeRateService),
 		)
 		if err := queueServer.Run(mux); err != nil {
 			raven.CaptureError(err, nil)
@@ -88,6 +89,12 @@ func RegisterScheduler(redisURL string) {
 	if _, err = scheduler.Register("0 0 * * *", asynq.NewTask(TypeInvoiceReminder, nil), asynq.MaxRetry(1)); err != nil {
 		raven.CaptureError(err, nil)
 		log.Fatal("failed to register invoice reminder schedule:", err)
+	}
+
+	// Daily at 02:00 UTC — fetch USD-base rates from OpenExchangeRates.
+	if _, err = scheduler.Register("0 2 * * *", asynq.NewTask(TypeForexSync, nil), asynq.MaxRetry(2)); err != nil {
+		raven.CaptureError(err, nil)
+		log.Fatal("failed to register forex sync schedule:", err)
 	}
 
 	go func() {

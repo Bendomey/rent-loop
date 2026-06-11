@@ -912,6 +912,9 @@ definitions:
         maxLength: 100
         minLength: 2
         type: string
+      currency:
+        example: GHS
+        type: string
       description:
         example: A luxurious apartment overlooking the Atlantic Ocean.
         type: string
@@ -1610,6 +1613,9 @@ definitions:
       country:
         minLength: 2
         type: string
+      currency:
+        example: GHS
+        type: string
       description:
         maxLength: 500
         type: string
@@ -1865,6 +1871,9 @@ definitions:
         example: Ghana
         maxLength: 100
         minLength: 2
+        type: string
+      currency:
+        example: GHS
         type: string
       description:
         example: A luxurious apartment overlooking the Atlantic Ocean.
