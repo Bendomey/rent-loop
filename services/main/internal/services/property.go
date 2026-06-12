@@ -115,7 +115,10 @@ func (s *propertyService) CreateProperty(
 	}
 
 	currency := "GHS"
-	if input.Currency != nil {
+	if input.Currency != nil && *input.Currency != "" {
+		if !lib.IsSupportedCurrency(*input.Currency) {
+			return nil, pkg.BadRequestError("UnsupportedCurrency", nil)
+		}
 		currency = *input.Currency
 	} else {
 		client, clientErr := s.clientService.GetClient(ctx, input.ClientID)

@@ -108,7 +108,6 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.MakeTenantCreatedByIdNullable(),
 		jobs.AddClientCurrency(),
 		jobs.AddPropertyCurrency(),
-		jobs.AddExchangeRatesTable(),
 	})
 	if err := m.Migrate(); err != nil {
 		return fmt.Errorf("[Migration.Migrate]: %v", err)

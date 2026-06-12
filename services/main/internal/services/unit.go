@@ -111,6 +111,9 @@ func (s *unitService) CreateUnit(ctx context.Context, input CreateUnitInput) (*m
 		features = datatypes.JSON{}
 	}
 
+	if input.RentFeeCurrency != "" && !lib.IsSupportedCurrency(input.RentFeeCurrency) {
+		return nil, pkg.BadRequestError("UnsupportedCurrency", nil)
+	}
 	currency := s.resolveUnitCurrency(ctx, input.RentFeeCurrency, input.PropertyID)
 
 	unit := models.Unit{

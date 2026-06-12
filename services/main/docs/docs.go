@@ -17876,7 +17876,6 @@ const docTemplate = `{
                 "name",
                 "payment_frequency",
                 "rent_fee",
-                "rent_fee_currency",
                 "status",
                 "type"
             ],

@@ -31,12 +31,16 @@ func NewClient(baseURL, appID string) Client {
 }
 
 func (c *oxrClient) GetLatestRates(ctx context.Context) (*LatestRatesResponse, error) {
-	url := fmt.Sprintf("%s/latest.json?app_id=%s", c.baseURL, c.appID)
+	url := fmt.Sprintf("%s/latest.json", c.baseURL)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("openexchangerates: create request: %w", err)
 	}
+
+	q := req.URL.Query()
+	q.Set("app_id", c.appID)
+	req.URL.RawQuery = q.Encode()
 	req.Header.Set("Accept", "application/json")
 
 	resp, err := c.httpClient.Do(req)
