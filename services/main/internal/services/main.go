@@ -191,13 +191,13 @@ func NewServices(params INewServicesParams) Services {
 		InvoiceService:       invoiceService,
 	})
 
-	leaseTerminationService := NewLeaseTerminationService(
-		params.AppCtx,
-		params.Repository.LeaseTerminationRepository,
-		params.Repository.LeaseRepository,
-		unitService,
-		notificationService,
-	)
+	leaseTerminationService := NewLeaseTerminationService(LeaseTerminationServiceDeps{
+		AppCtx:              params.AppCtx,
+		Repo:                params.Repository.LeaseTerminationRepository,
+		LeaseRepo:           params.Repository.LeaseRepository,
+		UnitService:         unitService,
+		NotificationService: notificationService,
+	})
 
 	expenseService := NewExpenseService(ExpenseServiceDeps{
 		AppCtx:         params.AppCtx,

@@ -10,7 +10,7 @@ import (
 
 type LeaseTerminationRepository interface {
 	Create(ctx context.Context, termination *models.LeaseTermination) error
-	GetOneWithPopulate(ctx context.Context, query GetLeaseTerminationQuery) (*models.LeaseTermination, error)
+	GetOne(ctx context.Context, query GetTerminatedLeaseQuery) (*models.LeaseTermination, error)
 	List(ctx context.Context, filter ListLeaseTerminationsFilter) (*[]models.LeaseTermination, error)
 	Count(ctx context.Context, filter ListLeaseTerminationsFilter) (int64, error)
 	Update(ctx context.Context, termination *models.LeaseTermination) error
@@ -29,13 +29,13 @@ func (r *leaseTerminationRepository) Create(ctx context.Context, termination *mo
 	return db.WithContext(ctx).Create(termination).Error
 }
 
-type GetLeaseTerminationQuery struct {
+type GetTerminatedLeaseQuery struct {
 	ID       string
 	LeaseID  string
 	Populate *[]string
 }
 
-func (r *leaseTerminationRepository) GetOneWithPopulate(ctx context.Context, query GetLeaseTerminationQuery) (*models.LeaseTermination, error) {
+func (r *leaseTerminationRepository) GetOne(ctx context.Context, query GetTerminatedLeaseQuery) (*models.LeaseTermination, error) {
 	var termination models.LeaseTermination
 
 	db := r.DB.WithContext(ctx).Where("id = ? AND lease_id = ?", query.ID, query.LeaseID)

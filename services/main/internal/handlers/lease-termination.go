@@ -163,7 +163,7 @@ func (h *LeaseTerminationHandler) GetLeaseTermination(w http.ResponseWriter, r *
 	terminationID := chi.URLParam(r, "termination_id")
 	populate := GetPopulateFields(r)
 
-	termination, err := h.service.GetOne(r.Context(), repository.GetLeaseTerminationQuery{
+	termination, err := h.service.GetOne(r.Context(), repository.GetTerminatedLeaseQuery{
 		ID:       terminationID,
 		LeaseID:  leaseID,
 		Populate: populate,

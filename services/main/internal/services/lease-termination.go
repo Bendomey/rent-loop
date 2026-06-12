@@ -19,7 +19,7 @@ import (
 
 type LeaseTerminationService interface {
 	Create(ctx context.Context, input CreateLeaseTerminationInput) (*models.LeaseTermination, error)
-	GetOne(ctx context.Context, query repository.GetLeaseTerminationQuery) (*models.LeaseTermination, error)
+	GetOne(ctx context.Context, query repository.GetTerminatedLeaseQuery) (*models.LeaseTermination, error)
 	List(ctx context.Context, filter repository.ListLeaseTerminationsFilter) ([]models.LeaseTermination, error)
 	Count(ctx context.Context, filter repository.ListLeaseTerminationsFilter) (int64, error)
 	Update(ctx context.Context, input UpdateLeaseTerminationInput) (*models.LeaseTermination, error)
@@ -35,19 +35,21 @@ type leaseTerminationService struct {
 	notificationService NotificationService
 }
 
-func NewLeaseTerminationService(
-	appCtx pkg.AppContext,
-	repo repository.LeaseTerminationRepository,
-	leaseRepo repository.LeaseRepository,
-	unitService UnitService,
-	notificationService NotificationService,
-) LeaseTerminationService {
+type LeaseTerminationServiceDeps struct {
+	AppCtx              pkg.AppContext
+	Repo                repository.LeaseTerminationRepository
+	LeaseRepo           repository.LeaseRepository
+	UnitService         UnitService
+	NotificationService NotificationService
+}
+
+func NewLeaseTerminationService(deps LeaseTerminationServiceDeps) LeaseTerminationService {
 	return &leaseTerminationService{
-		appCtx:              appCtx,
-		repo:                repo,
-		leaseRepo:           leaseRepo,
-		unitService:         unitService,
-		notificationService: notificationService,
+		appCtx:              deps.AppCtx,
+		repo:                deps.Repo,
+		leaseRepo:           deps.LeaseRepo,
+		unitService:         deps.UnitService,
+		notificationService: deps.NotificationService,
 	}
 }
 
@@ -64,7 +66,10 @@ func (s *leaseTerminationService) Create(ctx context.Context, input CreateLeaseT
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, pkg.NotFoundError("LeaseNotFound", &pkg.RentLoopErrorParams{Err: err})
 		}
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "Create", "action": "fetching lease"},
+		})
 	}
 
 	if lease.Status != "Lease.Status.Active" {
@@ -78,7 +83,10 @@ func (s *leaseTerminationService) Create(ctx context.Context, input CreateLeaseT
 		Status:  &inProgressStatus,
 	})
 	if countErr != nil {
-		return nil, pkg.InternalServerError(countErr.Error(), &pkg.RentLoopErrorParams{Err: countErr})
+		return nil, pkg.InternalServerError(countErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      countErr,
+			Metadata: map[string]string{"function": "Create", "action": "counting existing terminations"},
+		})
 	}
 	if existingCount > 0 {
 		return nil, pkg.BadRequestError("TerminationAlreadyInProgress", nil)
@@ -97,19 +105,25 @@ func (s *leaseTerminationService) Create(ctx context.Context, input CreateLeaseT
 		if errors.As(createErr, &pgErr) && pgErr.Code == "23505" {
 			return nil, pkg.BadRequestError("TerminationAlreadyInProgress", nil)
 		}
-		return nil, pkg.InternalServerError(createErr.Error(), &pkg.RentLoopErrorParams{Err: createErr})
+		return nil, pkg.InternalServerError(createErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      createErr,
+			Metadata: map[string]string{"function": "Create", "action": "creating termination"},
+		})
 	}
 
 	return termination, nil
 }
 
-func (s *leaseTerminationService) GetOne(ctx context.Context, query repository.GetLeaseTerminationQuery) (*models.LeaseTermination, error) {
-	termination, err := s.repo.GetOneWithPopulate(ctx, query)
+func (s *leaseTerminationService) GetOne(ctx context.Context, query repository.GetTerminatedLeaseQuery) (*models.LeaseTermination, error) {
+	termination, err := s.repo.GetOne(ctx, query)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, pkg.NotFoundError("LeaseTerminationNotFound", &pkg.RentLoopErrorParams{Err: err})
 		}
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "GetOne", "action": "fetching termination"},
+		})
 	}
 	return termination, nil
 }
@@ -117,7 +131,10 @@ func (s *leaseTerminationService) GetOne(ctx context.Context, query repository.G
 func (s *leaseTerminationService) List(ctx context.Context, filter repository.ListLeaseTerminationsFilter) ([]models.LeaseTermination, error) {
 	result, err := s.repo.List(ctx, filter)
 	if err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "List", "action": "listing terminations"},
+		})
 	}
 	return *result, nil
 }
@@ -125,7 +142,10 @@ func (s *leaseTerminationService) List(ctx context.Context, filter repository.Li
 func (s *leaseTerminationService) Count(ctx context.Context, filter repository.ListLeaseTerminationsFilter) (int64, error) {
 	count, err := s.repo.Count(ctx, filter)
 	if err != nil {
-		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "Count", "action": "counting terminations"},
+		})
 	}
 	return count, nil
 }
@@ -143,12 +163,15 @@ type UpdateLeaseTerminationInput struct {
 }
 
 func (s *leaseTerminationService) Update(ctx context.Context, input UpdateLeaseTerminationInput) (*models.LeaseTermination, error) {
-	termination, err := s.repo.GetOneWithPopulate(ctx, repository.GetLeaseTerminationQuery{ID: input.ID, LeaseID: input.LeaseID})
+	termination, err := s.repo.GetOne(ctx, repository.GetTerminatedLeaseQuery{ID: input.ID, LeaseID: input.LeaseID})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, pkg.NotFoundError("LeaseTerminationNotFound", &pkg.RentLoopErrorParams{Err: err})
 		}
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "Update", "action": "fetching termination"},
+		})
 	}
 
 	if termination.Status != "LeaseTermination.Status.InProgress" {
@@ -175,7 +198,10 @@ func (s *leaseTerminationService) Update(ctx context.Context, input UpdateLeaseT
 	}
 
 	if updateErr := s.repo.Update(ctx, termination); updateErr != nil {
-		return nil, pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{Err: updateErr})
+		return nil, pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      updateErr,
+			Metadata: map[string]string{"function": "Update", "action": "saving termination"},
+		})
 	}
 
 	return termination, nil
@@ -188,12 +214,15 @@ type CompleteLeaseTerminationInput struct {
 }
 
 func (s *leaseTerminationService) Complete(ctx context.Context, input CompleteLeaseTerminationInput) error {
-	termination, err := s.repo.GetOneWithPopulate(ctx, repository.GetLeaseTerminationQuery{ID: input.ID, LeaseID: input.LeaseID})
+	termination, err := s.repo.GetOne(ctx, repository.GetTerminatedLeaseQuery{ID: input.ID, LeaseID: input.LeaseID})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return pkg.NotFoundError("LeaseTerminationNotFound", &pkg.RentLoopErrorParams{Err: err})
 		}
-		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "Complete", "action": "fetching termination"},
+		})
 	}
 
 	if termination.Status != "LeaseTermination.Status.InProgress" {
@@ -208,7 +237,10 @@ func (s *leaseTerminationService) Complete(ctx context.Context, input CompleteLe
 		if errors.Is(leaseErr, gorm.ErrRecordNotFound) {
 			return pkg.NotFoundError("LeaseNotFound", &pkg.RentLoopErrorParams{Err: leaseErr})
 		}
-		return pkg.InternalServerError(leaseErr.Error(), &pkg.RentLoopErrorParams{Err: leaseErr})
+		return pkg.InternalServerError(leaseErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      leaseErr,
+			Metadata: map[string]string{"function": "Complete", "action": "fetching lease"},
+		})
 	}
 
 	tx := s.appCtx.DB.Begin()
@@ -222,7 +254,10 @@ func (s *leaseTerminationService) Complete(ctx context.Context, input CompleteLe
 
 	if updateErr := s.repo.Update(txCtx, termination); updateErr != nil {
 		tx.Rollback()
-		return pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{Err: updateErr})
+		return pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      updateErr,
+			Metadata: map[string]string{"function": "Complete", "action": "updating termination status"},
+		})
 	}
 
 	lease.Status = "Lease.Status.Terminated"
@@ -237,18 +272,27 @@ func (s *leaseTerminationService) Complete(ctx context.Context, input CompleteLe
 
 	if leaseUpdateErr := s.leaseRepo.Update(txCtx, lease); leaseUpdateErr != nil {
 		tx.Rollback()
-		return pkg.InternalServerError(leaseUpdateErr.Error(), &pkg.RentLoopErrorParams{Err: leaseUpdateErr})
+		return pkg.InternalServerError(leaseUpdateErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      leaseUpdateErr,
+			Metadata: map[string]string{"function": "Complete", "action": "updating lease status"},
+		})
 	}
 
 	// Check remaining active leases for this unit before reverting status
 	activeCount, countErr := s.leaseRepo.CountActiveByUnitID(txCtx, lease.UnitId)
 	if countErr != nil {
 		tx.Rollback()
-		return pkg.InternalServerError(countErr.Error(), &pkg.RentLoopErrorParams{Err: countErr})
+		return pkg.InternalServerError(countErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      countErr,
+			Metadata: map[string]string{"function": "Complete", "action": "counting active leases for unit"},
+		})
 	}
 
 	if commitErr := tx.Commit().Error; commitErr != nil {
-		return pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{Err: commitErr})
+		return pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      commitErr,
+			Metadata: map[string]string{"function": "Complete", "action": "committing transaction"},
+		})
 	}
 
 	// Release unit if no remaining active leases
@@ -316,12 +360,15 @@ type CancelLeaseTerminationInput struct {
 }
 
 func (s *leaseTerminationService) Cancel(ctx context.Context, input CancelLeaseTerminationInput) error {
-	termination, err := s.repo.GetOneWithPopulate(ctx, repository.GetLeaseTerminationQuery{ID: input.ID, LeaseID: input.LeaseID})
+	termination, err := s.repo.GetOne(ctx, repository.GetTerminatedLeaseQuery{ID: input.ID, LeaseID: input.LeaseID})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return pkg.NotFoundError("LeaseTerminationNotFound", &pkg.RentLoopErrorParams{Err: err})
 		}
-		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
+		return pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err:      err,
+			Metadata: map[string]string{"function": "Cancel", "action": "fetching termination"},
+		})
 	}
 
 	if termination.Status != "LeaseTermination.Status.InProgress" {
@@ -334,7 +381,10 @@ func (s *leaseTerminationService) Cancel(ctx context.Context, input CancelLeaseT
 	termination.CancelledById = &input.ClientUserID
 
 	if updateErr := s.repo.Update(ctx, termination); updateErr != nil {
-		return pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{Err: updateErr})
+		return pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      updateErr,
+			Metadata: map[string]string{"function": "Cancel", "action": "saving termination"},
+		})
 	}
 
 	return nil
