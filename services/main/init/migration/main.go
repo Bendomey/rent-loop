@@ -106,6 +106,7 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddBookingConfirmedFields(),
 		jobs.AddBookingStayFrequency(),
 		jobs.MakeTenantCreatedByIdNullable(),
+		jobs.AddLeaseTerminationInProgressUniqueIndex(),
 	})
 	if err := m.Migrate(); err != nil {
 		return fmt.Errorf("[Migration.Migrate]: %v", err)

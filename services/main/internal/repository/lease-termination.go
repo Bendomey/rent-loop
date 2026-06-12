@@ -10,7 +10,7 @@ import (
 
 type LeaseTerminationRepository interface {
 	Create(ctx context.Context, termination *models.LeaseTermination) error
-	GetOne(ctx context.Context, id string, leaseID string) (*models.LeaseTermination, error)
+	GetOneWithPopulate(ctx context.Context, query GetLeaseTerminationQuery) (*models.LeaseTermination, error)
 	List(ctx context.Context, filter ListLeaseTerminationsFilter) (*[]models.LeaseTermination, error)
 	Count(ctx context.Context, filter ListLeaseTerminationsFilter) (int64, error)
 	Update(ctx context.Context, termination *models.LeaseTermination) error
@@ -29,15 +29,27 @@ func (r *leaseTerminationRepository) Create(ctx context.Context, termination *mo
 	return db.WithContext(ctx).Create(termination).Error
 }
 
-func (r *leaseTerminationRepository) GetOne(ctx context.Context, id string, leaseID string) (*models.LeaseTermination, error) {
+type GetLeaseTerminationQuery struct {
+	ID       string
+	LeaseID  string
+	Populate *[]string
+}
+
+func (r *leaseTerminationRepository) GetOneWithPopulate(ctx context.Context, query GetLeaseTerminationQuery) (*models.LeaseTermination, error) {
 	var termination models.LeaseTermination
-	result := r.DB.WithContext(ctx).
-		Where("id = ? AND lease_id = ?", id, leaseID).
-		Preload("Checklist").
-		First(&termination)
-	if result.Error != nil {
+
+	db := r.DB.WithContext(ctx).Where("id = ? AND lease_id = ?", query.ID, query.LeaseID)
+
+	if query.Populate != nil {
+		for _, field := range *query.Populate {
+			db = db.Preload(field)
+		}
+	}
+
+	if result := db.First(&termination); result.Error != nil {
 		return nil, result.Error
 	}
+
 	return &termination, nil
 }
 
@@ -55,7 +67,13 @@ func (r *leaseTerminationRepository) List(ctx context.Context, filter ListLeaseT
 		leaseTerminationFilterScope("status", filter.Status),
 		PaginationScope(filter.Page, filter.PageSize),
 		OrderScope("lease_terminations", filter.OrderBy, filter.Order),
-	).Preload("Checklist")
+	)
+
+	if filter.Populate != nil {
+		for _, field := range *filter.Populate {
+			db = db.Preload(field)
+		}
+	}
 
 	if result := db.Find(&terminations); result.Error != nil {
 		return nil, result.Error

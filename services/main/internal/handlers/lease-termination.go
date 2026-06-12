@@ -161,8 +161,13 @@ func (h *LeaseTerminationHandler) ListLeaseTerminations(w http.ResponseWriter, r
 func (h *LeaseTerminationHandler) GetLeaseTermination(w http.ResponseWriter, r *http.Request) {
 	leaseID := chi.URLParam(r, "lease_id")
 	terminationID := chi.URLParam(r, "termination_id")
+	populate := GetPopulateFields(r)
 
-	termination, err := h.service.GetOne(r.Context(), terminationID, leaseID)
+	termination, err := h.service.GetOne(r.Context(), repository.GetLeaseTerminationQuery{
+		ID:       terminationID,
+		LeaseID:  leaseID,
+		Populate: populate,
+	})
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return

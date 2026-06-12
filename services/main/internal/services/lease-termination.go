@@ -12,13 +12,14 @@ import (
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/pkg"
+	"github.com/jackc/pgx/v5/pgconn"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type LeaseTerminationService interface {
 	Create(ctx context.Context, input CreateLeaseTerminationInput) (*models.LeaseTermination, error)
-	GetOne(ctx context.Context, id string, leaseID string) (*models.LeaseTermination, error)
+	GetOne(ctx context.Context, query repository.GetLeaseTerminationQuery) (*models.LeaseTermination, error)
 	List(ctx context.Context, filter repository.ListLeaseTerminationsFilter) ([]models.LeaseTermination, error)
 	Count(ctx context.Context, filter repository.ListLeaseTerminationsFilter) (int64, error)
 	Update(ctx context.Context, input UpdateLeaseTerminationInput) (*models.LeaseTermination, error)
@@ -92,14 +93,18 @@ func (s *leaseTerminationService) Create(ctx context.Context, input CreateLeaseT
 	}
 
 	if createErr := s.repo.Create(ctx, termination); createErr != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(createErr, &pgErr) && pgErr.Code == "23505" {
+			return nil, pkg.BadRequestError("TerminationAlreadyInProgress", nil)
+		}
 		return nil, pkg.InternalServerError(createErr.Error(), &pkg.RentLoopErrorParams{Err: createErr})
 	}
 
 	return termination, nil
 }
 
-func (s *leaseTerminationService) GetOne(ctx context.Context, id string, leaseID string) (*models.LeaseTermination, error) {
-	termination, err := s.repo.GetOne(ctx, id, leaseID)
+func (s *leaseTerminationService) GetOne(ctx context.Context, query repository.GetLeaseTerminationQuery) (*models.LeaseTermination, error) {
+	termination, err := s.repo.GetOneWithPopulate(ctx, query)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, pkg.NotFoundError("LeaseTerminationNotFound", &pkg.RentLoopErrorParams{Err: err})
@@ -138,7 +143,7 @@ type UpdateLeaseTerminationInput struct {
 }
 
 func (s *leaseTerminationService) Update(ctx context.Context, input UpdateLeaseTerminationInput) (*models.LeaseTermination, error) {
-	termination, err := s.repo.GetOne(ctx, input.ID, input.LeaseID)
+	termination, err := s.repo.GetOneWithPopulate(ctx, repository.GetLeaseTerminationQuery{ID: input.ID, LeaseID: input.LeaseID})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, pkg.NotFoundError("LeaseTerminationNotFound", &pkg.RentLoopErrorParams{Err: err})
@@ -183,7 +188,7 @@ type CompleteLeaseTerminationInput struct {
 }
 
 func (s *leaseTerminationService) Complete(ctx context.Context, input CompleteLeaseTerminationInput) error {
-	termination, err := s.repo.GetOne(ctx, input.ID, input.LeaseID)
+	termination, err := s.repo.GetOneWithPopulate(ctx, repository.GetLeaseTerminationQuery{ID: input.ID, LeaseID: input.LeaseID})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return pkg.NotFoundError("LeaseTerminationNotFound", &pkg.RentLoopErrorParams{Err: err})
@@ -249,11 +254,16 @@ func (s *leaseTerminationService) Complete(ctx context.Context, input CompleteLe
 	// Release unit if no remaining active leases
 	if activeCount == 0 {
 		go func() {
-			_ = s.unitService.SetSystemUnitStatus(context.Background(), UpdateUnitStatusInput{
+			if err := s.unitService.SetSystemUnitStatus(context.Background(), UpdateUnitStatusInput{
 				UnitID:     lease.UnitId,
 				PropertyID: lease.Unit.PropertyID,
 				Status:     "Unit.Status.Available",
-			})
+			}); err != nil {
+				log.WithError(err).WithFields(log.Fields{
+					"unit_id":        lease.UnitId,
+					"termination_id": input.ID,
+				}).Error("failed to set unit status to Available after lease termination")
+			}
 		}()
 	}
 
@@ -306,7 +316,7 @@ type CancelLeaseTerminationInput struct {
 }
 
 func (s *leaseTerminationService) Cancel(ctx context.Context, input CancelLeaseTerminationInput) error {
-	termination, err := s.repo.GetOne(ctx, input.ID, input.LeaseID)
+	termination, err := s.repo.GetOneWithPopulate(ctx, repository.GetLeaseTerminationQuery{ID: input.ID, LeaseID: input.LeaseID})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return pkg.NotFoundError("LeaseTerminationNotFound", &pkg.RentLoopErrorParams{Err: err})
