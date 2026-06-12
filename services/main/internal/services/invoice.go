@@ -95,6 +95,7 @@ type CreateInvoiceInput struct {
 	ContextLeaseID              *string
 	ContextMaintenanceRequestID *string
 	ContextExpenseID            *string
+	ContextLeaseTerminationID   *string
 	TotalAmount                 int64
 	Taxes                       int64
 	SubTotal                    int64
@@ -173,6 +174,7 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 		ContextLeaseID:              input.ContextLeaseID,
 		ContextMaintenanceRequestID: input.ContextMaintenanceRequestID,
 		ContextExpenseID:            input.ContextExpenseID,
+		ContextLeaseTerminationID:   input.ContextLeaseTerminationID,
 		TotalAmount:                 input.TotalAmount,
 		Taxes:                       input.Taxes,
 		SubTotal:                    input.SubTotal,

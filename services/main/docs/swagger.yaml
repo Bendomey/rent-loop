@@ -31,6 +31,9 @@ definitions:
         - MAINTENANCE_FEE
         - SAAS_FEE
         - EXPENSE
+        - DEPOSIT_REFUND
+        - EARLY_TERMINATION_FEE
+        - DAMAGE_CHARGE
         example: RENT
         type: string
       currency:
@@ -757,6 +760,22 @@ definitions:
         type: string
     required:
     - checklist_items
+    - type
+    type: object
+  handlers.CreateLeaseTerminationRequest:
+    properties:
+      reason:
+        example: Both parties agreed
+        type: string
+      type:
+        enum:
+        - EVICTION
+        - MUTUAL_AGREEMENT
+        - TENANT_INITIATED
+        example: MUTUAL_AGREEMENT
+        type: string
+    required:
+    - reason
     - type
     type: object
   handlers.CreateMaintenanceRequestBody:
@@ -1744,6 +1763,28 @@ definitions:
         example: Hours
         type: string
       utility_transfers_date:
+        type: string
+    type: object
+  handlers.UpdateLeaseTerminationRequest:
+    properties:
+      document_id:
+        type: string
+      document_mode:
+        type: string
+      document_url:
+        type: string
+      lease_checklist_id:
+        type: string
+      reason:
+        example: Non-payment of rent
+        minLength: 1
+        type: string
+      type:
+        enum:
+        - EVICTION
+        - MUTUAL_AGREEMENT
+        - TENANT_INITIATED
+        example: EVICTION
         type: string
     type: object
   handlers.UpdateMaintenanceRequestBody:
@@ -3801,6 +3842,68 @@ definitions:
         type: array
       status:
         example: FUNCTIONAL
+        type: string
+      updated_at:
+        example: "2024-06-10T09:00:00Z"
+        type: string
+    type: object
+  transformations.OutputLeaseTermination:
+    properties:
+      cancelled_at:
+        example: "2024-12-01T10:00:00Z"
+        type: string
+      cancelled_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      cancelled_by_id:
+        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
+        type: string
+      code:
+        example: 2606ABC123
+        type: string
+      completed_at:
+        example: "2024-12-01T10:00:00Z"
+        type: string
+      completed_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      completed_by_id:
+        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
+        type: string
+      created_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      document_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      document_mode:
+        example: MANUAL
+        type: string
+      document_url:
+        example: https://example.com/termination.pdf
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      initiated_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      initiated_by_id:
+        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
+        type: string
+      lease_checklist:
+        $ref: '#/definitions/transformations.OutputLeaseChecklist'
+      lease_checklist_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      lease_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      reason:
+        example: Both parties agreed to end the tenancy
+        type: string
+      status:
+        example: LeaseTermination.Status.InProgress
+        type: string
+      type:
+        example: MUTUAL_AGREEMENT
         type: string
       updated_at:
         example: "2024-06-10T09:00:00Z"
@@ -9900,6 +10003,397 @@ paths:
       summary: Cancel lease (Admin)
       tags:
       - Lease
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/terminations:
+    get:
+      consumes:
+      - application/json
+      description: List terminations for a lease
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - in: query
+        name: end_date
+        type: string
+      - collectionFormat: multi
+        example:
+        - a8098c1a-f86e-11da-bd1a-00112444be1e
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      - in: query
+        name: order_by
+        type: string
+      - in: query
+        minimum: 0
+        name: page
+        type: integer
+      - in: query
+        minimum: 0
+        name: page_size
+        type: integer
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
+      - in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        minItems: 1
+        name: search_fields
+        type: array
+      - in: query
+        name: start_date
+        type: string
+      - enum:
+        - LeaseTermination.Status.InProgress
+        - LeaseTermination.Status.Completed
+        - LeaseTermination.Status.Cancelled
+        example: LeaseTermination.Status.InProgress
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
+                  rows:
+                    items:
+                      $ref: '#/definitions/transformations.OutputLeaseTermination'
+                    type: array
+                type: object
+            type: object
+        "400":
+          description: Error occurred
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List lease terminations (Admin)
+      tags:
+      - LeaseTermination
+    post:
+      consumes:
+      - application/json
+      description: Start a lease termination process for an active lease
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Create termination request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateLeaseTerminationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Termination Created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputLeaseTermination'
+            type: object
+        "400":
+          description: Lease not Active or InProgress termination already exists
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create lease termination (Admin)
+      tags:
+      - LeaseTermination
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/terminations/{termination_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a single lease termination by ID
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Termination ID
+        in: path
+        name: termination_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Termination
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputLeaseTermination'
+            type: object
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get lease termination (Admin)
+      tags:
+      - LeaseTermination
+    patch:
+      consumes:
+      - application/json
+      description: Update fields on an InProgress lease termination
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Termination ID
+        in: path
+        name: termination_id
+        required: true
+        type: string
+      - description: Update request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateLeaseTerminationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputLeaseTermination'
+            type: object
+        "400":
+          description: Termination not InProgress
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update lease termination (Admin)
+      tags:
+      - LeaseTermination
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/terminations/{termination_id}/cancel:
+    patch:
+      consumes:
+      - application/json
+      description: Cancel an in-progress lease termination — lease remains Active
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Termination ID
+        in: path
+        name: termination_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Cancelled
+        "400":
+          description: Termination not InProgress
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Cancel lease termination (Admin)
+      tags:
+      - LeaseTermination
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/terminations/{termination_id}/complete:
+    patch:
+      consumes:
+      - application/json
+      description: Complete a lease termination — sets lease to Terminated and releases
+        the unit (transactional)
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Termination ID
+        in: path
+        name: termination_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Completed
+        "400":
+          description: Termination not InProgress
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Complete lease termination (Admin)
+      tags:
+      - LeaseTermination
   /api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests:
     get:
       consumes:

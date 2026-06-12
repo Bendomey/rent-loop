@@ -51,6 +51,9 @@ type Invoice struct {
 	ContextExpenseID *string
 	ContextExpense   *Expense
 
+	ContextLeaseTerminationID *string
+	ContextLeaseTermination   *LeaseTermination
+
 	TotalAmount int64  `gorm:"not null;"` // in smallest currency unit, e.g., pesewas
 	Taxes       int64  `gorm:"not null;default:0"`
 	SubTotal    int64  `gorm:"not null;"`                // TotalAmount - Taxes

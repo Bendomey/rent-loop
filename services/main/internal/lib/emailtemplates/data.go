@@ -120,6 +120,12 @@ type LeaseCancelledData struct {
 	CancellationReason string
 }
 
+type LeaseTerminatedData struct {
+	TenantName        string
+	UnitName          string
+	TerminationReason string
+}
+
 // ─── Invoice ──────────────────────────────────────────────────────────────────
 
 type InvoiceCreatedData struct {
