@@ -27,6 +27,8 @@ type Property struct {
 	City       string  `gorm:"not null;"`
 	GPSAddress *string
 
+	Currency string `gorm:"not null;default:'GHS'"` // transaction currency; inherits from Client.Currency on creation
+
 	Type   string `gorm:"not null;index;"` // SINGLE | MULTI
 	Status string `gorm:"not null;index;"` // ACTIVE | MAINTENANCE | INACTIVE
 

@@ -399,6 +399,10 @@ FINCORE_ACCOUNT_MAINTENANCE_REIMBURSEMENT=
 FINCORE_ACCOUNT_SUBSCRIPTION_REVENUE=
 FINCORE_ACCOUNT_MAINTENANCE_EXPENSE=
 FINCORE_ACCOUNT_PROPERTY_MGMT_EXPENSE=
+
+# OpenExchangeRates — daily USD-base forex sync (Phase 1 multi-currency)
+OPENEXCHANGERATES_BASE_URL=https://openexchangerates.org/api
+OPENEXCHANGERATES_APP_ID=
 ```
 
 Use `direnv` with `.envrc` (copy from `.envrc.example`).

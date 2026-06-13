@@ -912,6 +912,9 @@ definitions:
         maxLength: 100
         minLength: 2
         type: string
+      currency:
+        example: GHS
+        type: string
       description:
         example: A luxurious apartment overlooking the Atlantic Ocean.
         type: string
@@ -1171,7 +1174,6 @@ definitions:
     - name
     - payment_frequency
     - rent_fee
-    - rent_fee_currency
     - status
     - type
     type: object
@@ -1610,6 +1612,9 @@ definitions:
       country:
         minLength: 2
         type: string
+      currency:
+        example: GHS
+        type: string
       description:
         maxLength: 500
         type: string
@@ -1865,6 +1870,9 @@ definitions:
         example: Ghana
         maxLength: 100
         minLength: 2
+        type: string
+      currency:
+        example: GHS
         type: string
       description:
         example: A luxurious apartment overlooking the Atlantic Ocean.

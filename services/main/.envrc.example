@@ -56,6 +56,10 @@ export GATEKEEPER_API_BASE_URL=https://api.gatekeeperpro.live/api
 export GATEKEEPER_API_KEY=
 export GATEKEEPER_PROJECT_ID=
 
+# OpenExchangeRates — USD-base daily forex rates
+export OPENEXCHANGERATES_BASE_URL=https://openexchangerates.org/api
+export OPENEXCHANGERATES_APP_ID=
+
 # Cube.js — must match the secret in services/cube/.env
 export CUBEJS_API_SECRET=
 

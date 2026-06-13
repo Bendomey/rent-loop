@@ -28,11 +28,12 @@ type UpdateClientRequest struct {
 	Type               *string              `json:"type"                validate:"omitempty,oneof=INDIVIDUAL COMPANY"`
 	SubType            *string              `json:"sub_type"            validate:"omitempty,oneof=LANDLORD PROPERTY_MANAGER DEVELOPER AGENCY"`
 	Name               *string              `json:"name"                validate:"omitempty,min=2"`
-	Description        lib.Optional[string] `json:"description"         validate:"omitempty,max=500"                                          swaggertype:"string"`
-	RegistrationNumber lib.Optional[string] `json:"registration_number"                                                                       swaggertype:"string"`
-	WebsiteUrl         lib.Optional[string] `json:"website_url"         validate:"omitempty,url"                                              swaggertype:"string"`
-	SupportPhone       lib.Optional[string] `json:"support_phone"                                                                             swaggertype:"string"`
-	SupportEmail       lib.Optional[string] `json:"support_email"       validate:"omitempty,email"                                            swaggertype:"string"`
+	Currency           *string              `json:"currency"            validate:"omitempty"                                                  example:"GHS" description:"Org reporting currency (ISO 4217); must be one of the supported currencies"`
+	Description        lib.Optional[string] `json:"description"         validate:"omitempty,max=500"                                                                                                                                                 swaggertype:"string"`
+	RegistrationNumber lib.Optional[string] `json:"registration_number"                                                                                                                                                                              swaggertype:"string"`
+	WebsiteUrl         lib.Optional[string] `json:"website_url"         validate:"omitempty,url"                                                                                                                                                     swaggertype:"string"`
+	SupportPhone       lib.Optional[string] `json:"support_phone"                                                                                                                                                                                    swaggertype:"string"`
+	SupportEmail       lib.Optional[string] `json:"support_email"       validate:"omitempty,email"                                                                                                                                                   swaggertype:"string"`
 	Address            *string              `json:"address"             validate:"omitempty,min=5"`
 	Country            *string              `json:"country"             validate:"omitempty,min=2"`
 	Region             *string              `json:"region"              validate:"omitempty,min=2"`
@@ -40,10 +41,10 @@ type UpdateClientRequest struct {
 	Latitude           *float64             `json:"latitude"`
 	Longitude          *float64             `json:"longitude"`
 	// individual identity fields
-	IDType        lib.Optional[string] `json:"id_type"             validate:"omitempty,oneof=DRIVERS_LICENSE PASSPORT NATIONAL_ID"       swaggertype:"string"`
-	IDNumber      lib.Optional[string] `json:"id_number"                                                                                 swaggertype:"string"`
-	IDExpiry      lib.Optional[string] `json:"id_expiry"                                                                                 swaggertype:"string"`
-	IDDocumentURL lib.Optional[string] `json:"id_document_url"     validate:"omitempty,url"                                              swaggertype:"string"`
+	IDType        lib.Optional[string] `json:"id_type"             validate:"omitempty,oneof=DRIVERS_LICENSE PASSPORT NATIONAL_ID"                                                                                                              swaggertype:"string"`
+	IDNumber      lib.Optional[string] `json:"id_number"                                                                                                                                                                                        swaggertype:"string"`
+	IDExpiry      lib.Optional[string] `json:"id_expiry"                                                                                                                                                                                        swaggertype:"string"`
+	IDDocumentURL lib.Optional[string] `json:"id_document_url"     validate:"omitempty,url"                                                                                                                                                     swaggertype:"string"`
 }
 
 // UpdateClient godoc
@@ -94,6 +95,7 @@ func (h *clientHandler) UpdateClient(w http.ResponseWriter, r *http.Request) {
 		Type:               body.Type,
 		SubType:            body.SubType,
 		Name:               body.Name,
+		Currency:           body.Currency,
 		Description:        body.Description,
 		RegistrationNumber: body.RegistrationNumber,
 		WebsiteUrl:         body.WebsiteUrl,
