@@ -83,7 +83,7 @@ export function PropertyAssetBlocksModule() {
 	const isLoading = isPending || isRefetching
 
 	return (
-		<div className="mx-auto my-6 w-full max-w-7xl px-6 space-y-3">
+		<div className="mx-auto my-6 w-full max-w-7xl space-y-3 px-6">
 			<div>
 				<div className="flex items-center gap-2">
 					<TypographyH4 className="mb-1">Manage Blocks</TypographyH4>

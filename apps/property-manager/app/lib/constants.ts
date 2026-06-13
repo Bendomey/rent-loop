@@ -34,6 +34,7 @@ export const QUERY_KEYS = {
 	AGREEMENTS: 'agreements',
 	BOOKINGS: 'bookings',
 	DATE_BLOCKS: 'date-blocks',
+	LEASE_TERMINATIONS: 'lease-terminations',
 } as const
 
 export const PermissionState = {

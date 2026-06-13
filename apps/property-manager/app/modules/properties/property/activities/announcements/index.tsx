@@ -150,7 +150,7 @@ export function PropertyActivitiesAnnouncementsModule() {
 	)
 
 	return (
-		<div className="mx-6 my-6 md:mx-auto max-w-4xl flex flex-col gap-4 sm:gap-6">
+		<div className="mx-6 my-6 flex max-w-4xl flex-col gap-4 sm:gap-6 md:mx-auto">
 			<div
 				id="announcements-header"
 				className="flex flex-row items-center justify-between"

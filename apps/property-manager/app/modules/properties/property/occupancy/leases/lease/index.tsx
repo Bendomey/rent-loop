@@ -13,6 +13,7 @@ import { ChecklistAlerts } from './components/checklist-alerts'
 import { ChecklistSection } from './components/checklist-section'
 import { StartLeaseDialog } from './components/start-lease-dialog'
 import { LeaseExpensesTab } from './expenses-tab'
+import { useGetLeaseTerminations } from '~/api/lease-terminations'
 import { Image } from '~/components/Image'
 import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { useHasPropertyPermissions } from '~/components/permissions/use-has-role'
@@ -31,6 +32,8 @@ import { TypographyMuted } from '~/components/ui/typography'
 import { useTour } from '~/hooks/use-tour'
 import { PermissionState } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
+import { safeString } from '~/lib/strings'
+import { useClient } from '~/providers/client-provider'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { getLeaseStatusClass, getLeaseStatusLabel } from '~/lib/lease.utils'
 import {
@@ -71,6 +74,7 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 export function LeaseDetailModule() {
 	const { lease, clientUserProperty } = useLoaderData<typeof loader>()
 	const { clientUserProperty: ctxProp } = useProperty()
+	const { clientUser } = useClient()
 	const { hasPermissions: managerPermission } = useHasPropertyPermissions({
 		roles: ['MANAGER'],
 	})
@@ -86,6 +90,14 @@ export function LeaseDetailModule() {
 
 	const propertyId =
 		clientUserProperty?.property_id ?? ctxProp?.property_id ?? ''
+
+	const { data: terminationsData } = useGetLeaseTerminations(
+		safeString(clientUser?.client_id),
+		propertyId,
+		lease?.id ?? '',
+		{ filters: { status: 'InProgress' }, pagination: { page: 1, per: 1 } },
+	)
+	const hasInProgressTermination = Boolean(terminationsData?.rows?.[0])
 
 	if (!lease) {
 		return (
@@ -231,8 +243,14 @@ export function LeaseDetailModule() {
 							<CardFooter className="flex justify-end gap-2 border-t pt-4">
 								{isTerminable && (
 									<PropertyPermissionGuard roles={['MANAGER']}>
-										<Button variant="destructive" size="sm" disabled>
-											Terminate Lease
+										<Button variant="destructive" size="sm" asChild>
+											<Link
+												to={`/properties/${propertyId}/occupancy/leases/${lease.id}/terminate`}
+											>
+												{hasInProgressTermination
+													? 'Continue Termination'
+													: 'Terminate Lease'}
+											</Link>
 										</Button>
 									</PropertyPermissionGuard>
 								)}

@@ -59,7 +59,11 @@ const schema = z
 		guest_phone: z
 			.string({ error: 'Required' })
 			.refine(isValidPhoneNumber, { message: 'Enter a valid phone number' }),
-		guest_email: z.string().email({ message: 'Invalid email' }).optional().or(z.literal('')),
+		guest_email: z
+			.string()
+			.email({ message: 'Invalid email' })
+			.optional()
+			.or(z.literal('')),
 		guest_id_number: z.string().optional(),
 		guest_gender: z.enum(['MALE', 'FEMALE'], { error: 'Required' }),
 	})
@@ -124,14 +128,9 @@ function BookingRangeCalendar({
 	const { data: blocks = [], isPending: loadingAvailability } =
 		useGetUnitAvailability(clientId, propertyId, unitId, today, ninetyDaysOut)
 
-	const disabledDates = useMemo(
-		() => blocksToDisabledDates(blocks),
-		[blocks],
-	)
+	const disabledDates = useMemo(() => blocksToDisabledDates(blocks), [blocks])
 
-	const handleSelect = (
-		range: { from?: Date; to?: Date } | undefined,
-	) => {
+	const handleSelect = (range: { from?: Date; to?: Date } | undefined) => {
 		if (!range?.from || !range.to) {
 			onRangeSelect(null)
 			return
@@ -140,9 +139,7 @@ function BookingRangeCalendar({
 	}
 
 	if (loadingAvailability) {
-		return (
-			<div className="bg-muted h-64 w-full animate-pulse rounded-xl" />
-		)
+		return <div className="bg-muted h-64 w-full animate-pulse rounded-xl" />
 	}
 
 	const blockedCount = blocks.length
@@ -163,7 +160,11 @@ function BookingRangeCalendar({
 				mode="range"
 				selected={selectedRange ?? undefined}
 				onSelect={handleSelect}
-				disabled={[{ before: today }, { after: ninetyDaysOut }, ...disabledDates]}
+				disabled={[
+					{ before: today },
+					{ after: ninetyDaysOut },
+					...disabledDates,
+				]}
 				startMonth={today}
 				endMonth={ninetyDaysOut}
 				numberOfMonths={isDesktop ? 2 : 1}
@@ -182,13 +183,13 @@ function DateStatsStrip({
 }) {
 	const { count, label } = getBookingDuration(checkIn, checkOut, 'DAILY')
 	return (
-		<div className="bg-muted/40 border rounded-lg">
+		<div className="bg-muted/40 rounded-lg border">
 			<div className="grid grid-cols-3 divide-x">
 				<div className="flex flex-col gap-0.5 px-4 py-3">
 					<p className="text-muted-foreground text-[10px] font-light tracking-widest uppercase">
 						Check-in
 					</p>
-					<p className="text-sm font-bold font-serif">
+					<p className="font-serif text-sm font-bold">
 						{dayjs(checkIn).format('MMM D, YYYY')}
 					</p>
 					<p className="text-muted-foreground text-xs">
@@ -199,7 +200,7 @@ function DateStatsStrip({
 					<p className="text-muted-foreground text-[10px] font-light tracking-widest uppercase">
 						Check-out
 					</p>
-					<p className="text-sm font-bold font-serif">
+					<p className="font-serif text-sm font-bold">
 						{dayjs(checkOut).format('MMM D, YYYY')}
 					</p>
 					<p className="text-muted-foreground text-xs">
@@ -210,7 +211,7 @@ function DateStatsStrip({
 					<p className="text-muted-foreground text-[10px] font-light tracking-widest uppercase">
 						Duration
 					</p>
-					<p className="text-sm font-bold font-serif">
+					<p className="font-serif text-sm font-bold">
 						{count} {label}
 					</p>
 				</div>
@@ -277,7 +278,7 @@ function GuestSearchModal({
 					</div>
 
 					{result ? (
-						<div className="border rounded-lg p-4 space-y-3">
+						<div className="space-y-3 rounded-lg border p-4">
 							<div className="space-y-1">
 								<p className="font-medium">
 									{result.first_name} {result.last_name}
@@ -334,7 +335,7 @@ function LiveSummary({
 					<p className="text-muted-foreground text-[10px] font-light tracking-widest uppercase">
 						Live Summary
 					</p>
-					<CardTitle className="text-xl font-serif font-bold">
+					<CardTitle className="font-serif text-xl font-bold">
 						{unit?.name ?? (
 							<span className="text-muted-foreground font-sans text-base font-normal">
 								No unit selected
@@ -390,7 +391,7 @@ function LiveSummary({
 					<Separator />
 
 					<div>
-						<p className="text-muted-foreground text-[10px] tracking-widest uppercase mb-1">
+						<p className="text-muted-foreground mb-1 text-[10px] tracking-widest uppercase">
 							Guest
 						</p>
 						<p
@@ -409,7 +410,8 @@ function LiveSummary({
 			<div className="flex gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 dark:border-rose-900/40 dark:bg-rose-950/20">
 				<Info className="mt-0.5 size-4 shrink-0 text-yellow-600" />
 				<p className="text-xs text-yellow-700 dark:text-yellow-400">
-					The guest will receive a confirmation email with check-in instructions.
+					The guest will receive a confirmation email with check-in
+					instructions.
 				</p>
 			</div>
 		</div>
@@ -459,7 +461,8 @@ export function NewBookingModule() {
 			? `${guestFirst ?? ''} ${guestLast ?? ''}`.trim()
 			: undefined
 
-	const selectedRange = checkIn && checkOut ? { from: checkIn, to: checkOut } : null
+	const selectedRange =
+		checkIn && checkOut ? { from: checkIn, to: checkOut } : null
 
 	const handleUnitChange = (unitId: string) => {
 		form.setValue('unit_id', unitId)
@@ -472,9 +475,7 @@ export function NewBookingModule() {
 		}
 	}
 
-	const handleRangeSelect = (
-		range: { from: Date; to: Date } | null,
-	) => {
+	const handleRangeSelect = (range: { from: Date; to: Date } | null) => {
 		if (range) {
 			form.setValue('check_in_date', range.from)
 			form.setValue('check_out_date', range.to)
@@ -512,11 +513,11 @@ export function NewBookingModule() {
 				guest_gender: values.guest_gender,
 			})
 			toast.success('Booking created')
-			void navigate(`/properties/${propertyId}/occupancy/bookings/${booking?.id}`)
-		} catch {
-			toast.error(
-				'Failed to create booking',
+			void navigate(
+				`/properties/${propertyId}/occupancy/bookings/${booking?.id}`,
 			)
+		} catch {
+			toast.error('Failed to create booking')
 		}
 	}
 
@@ -531,8 +532,8 @@ export function NewBookingModule() {
 				<div>
 					<TypographyH4>New Booking</TypographyH4>
 					<TypographyMuted>
-						Create a booking on behalf of a guest. They'll receive a confirmation
-						email.
+						Create a booking on behalf of a guest. They'll receive a
+						confirmation email.
 					</TypographyMuted>
 				</div>
 			</div>
@@ -576,23 +577,21 @@ export function NewBookingModule() {
 										)}
 									/>
 
-									{
-										!form.watch('unit_id') ? (
-											<div className="flex gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 dark:border-rose-900/40 dark:bg-rose-950/20">
-												<Info className="mt-0.5 size-4 shrink-0 text-yellow-600" />
-												<p className="text-xs text-yellow-700 dark:text-yellow-400">
-													Only available units are listed. If a unit is missing, make sure
-													it's not in draft or occupied state.{' '}
-													<a
-														href={`/properties/${propertyId}/assets/units`}
-														className="underline underline-offset-2"
-													>
-														Manage units
-													</a>
-												</p>
-											</div>
-										) : null
-									}
+									{!form.watch('unit_id') ? (
+										<div className="flex gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 dark:border-rose-900/40 dark:bg-rose-950/20">
+											<Info className="mt-0.5 size-4 shrink-0 text-yellow-600" />
+											<p className="text-xs text-yellow-700 dark:text-yellow-400">
+												Only available units are listed. If a unit is missing,
+												make sure it's not in draft or occupied state.{' '}
+												<a
+													href={`/properties/${propertyId}/assets/units`}
+													className="underline underline-offset-2"
+												>
+													Manage units
+												</a>
+											</p>
+										</div>
+									) : null}
 
 									{selectedUnitId ? (
 										<div className="space-y-3">
@@ -686,7 +685,7 @@ export function NewBookingModule() {
 										<button
 											type="button"
 											onClick={() => setGuestModalOpen(true)}
-											className="text-rose-600 hover:text-rose-700 text-sm flex items-center gap-1"
+											className="flex items-center gap-1 text-sm text-rose-600 hover:text-rose-700"
 										>
 											<Search className="size-3.5" />
 											Find existing guest
@@ -747,7 +746,7 @@ export function NewBookingModule() {
 												<FormItem>
 													<FormLabel>
 														Email{' '}
-														<span className="text-muted-foreground font-normal text-xs">
+														<span className="text-muted-foreground text-xs font-normal">
 															optional
 														</span>
 													</FormLabel>
@@ -766,7 +765,10 @@ export function NewBookingModule() {
 											render={({ field }) => (
 												<FormItem>
 													<FormLabel>Gender</FormLabel>
-													<Select value={field.value} onValueChange={field.onChange}>
+													<Select
+														value={field.value}
+														onValueChange={field.onChange}
+													>
 														<FormControl className="w-full">
 															<SelectTrigger>
 																<SelectValue placeholder="Select gender" />
@@ -788,7 +790,7 @@ export function NewBookingModule() {
 												<FormItem>
 													<FormLabel>
 														ID number{' '}
-														<span className="text-muted-foreground font-normal text-xs">
+														<span className="text-muted-foreground text-xs font-normal">
 															optional
 														</span>
 													</FormLabel>
@@ -799,7 +801,6 @@ export function NewBookingModule() {
 												</FormItem>
 											)}
 										/>
-
 									</div>
 								</CardContent>
 							</Card>

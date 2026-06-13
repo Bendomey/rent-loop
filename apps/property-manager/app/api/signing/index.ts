@@ -39,6 +39,7 @@ export interface GenerateSigningTokenInput {
 	role: 'TENANT' | 'PM_WITNESS' | 'TENANT_WITNESS'
 	tenant_application_id?: string
 	lease_id?: string
+	lease_termination_id?: string
 	signer_name?: string
 	signer_email?: string
 	signer_phone?: string
@@ -122,6 +123,7 @@ export interface SignDocumentDirectInput {
 	signature_url: string
 	tenant_application_id?: string
 	lease_id?: string
+	lease_termination_id?: string
 }
 
 const signDocumentDirect = async ({
