@@ -1,10 +1,10 @@
 ---
 id: RENTL-46
 title: 'Multi-currency Phase 1: org/property currency + forex rate infrastructure'
-status: In Progress
-assignee: []
+status: Done
+assignee: [EbenDomey, Gideon]
 created_date: '2026-06-11 12:31'
-updated_date: '2026-06-11 13:45'
+updated_date: '2026-06-13 08:50'
 labels:
   - backend
   - frontend
@@ -49,10 +49,8 @@ modified_files:
   - services/main/.envrc.example
   - services/main/CLAUDE.md
 priority: high
-ordinal: 2000
----
-
-## Description
+ordinal: 1000
+---## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Foundation phase for multi-currency support so property managers operating across Canada, the US, the UK, Ghana, and other markets can run properties in their operational currency and have a portfolio reporting currency.
