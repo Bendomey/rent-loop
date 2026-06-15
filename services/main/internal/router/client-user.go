@@ -301,6 +301,8 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 										Patch("/complete", handlers.LeaseTerminationHandler.CompleteLeaseTermination)
 									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 										Patch("/cancel", handlers.LeaseTerminationHandler.CancelLeaseTermination)
+									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+										Post("/invoices", handlers.InvoiceHandler.CreateInvoice)
 								})
 							})
 						})

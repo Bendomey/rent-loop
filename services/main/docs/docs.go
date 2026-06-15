@@ -6099,6 +6099,11 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "name": "context_lease_termination_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "context_type",
                         "in": "query"
                     },
@@ -21802,6 +21807,13 @@ const docTemplate = `{
                     "additionalProperties": {}
                 },
                 "context_lease_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "context_lease_termination": {
+                    "$ref": "#/definitions/transformations.OutputLeaseTermination"
+                },
+                "context_lease_termination_id": {
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
                 },

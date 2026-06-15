@@ -3513,6 +3513,11 @@ definitions:
       context_lease_id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
+      context_lease_termination:
+        $ref: '#/definitions/transformations.OutputLeaseTermination'
+      context_lease_termination_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
       context_maintenance_request_id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
         type: string
@@ -8478,6 +8483,9 @@ paths:
       - in: query
         name: active
         type: boolean
+      - in: query
+        name: context_lease_termination_id
+        type: string
       - in: query
         name: context_type
         type: string

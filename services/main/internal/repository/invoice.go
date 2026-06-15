@@ -95,6 +95,7 @@ type ListInvoicesFilter struct {
 	PayeeClientID              *string
 	PayeeTenantID              *string
 	ContextType                *string
+	ContextLeaseTerminationID  *string
 	Status                     *[]string
 	Active                     *bool
 	PropertyID                 *string
@@ -115,6 +116,7 @@ func (r *invoiceRepository) List(ctx context.Context, filterQuery ListInvoicesFi
 		invoicePayeeClientIDScope(filterQuery.PayeeClientID),
 		invoicePayeeTenantIDScope(filterQuery.PayeeTenantID),
 		invoiceContextTypeScope(filterQuery.ContextType),
+		invoiceLeaseTerminationIDScope(filterQuery.ContextLeaseTerminationID),
 		invoiceStatusScope(filterQuery.Status),
 		DateRangeScope("invoices", filterQuery.DateRange),
 		SearchScope("invoices", filterQuery.Search),
@@ -346,6 +348,15 @@ func invoiceClientIDScope(clientID *string) func(db *gorm.DB) *gorm.DB {
 // It returns invoices whose context_lease_id matches leaseID OR whose
 // context_tenant_application_id matches tenantApplicationID (when provided).
 // If both are nil, no filter is applied.
+func invoiceLeaseTerminationIDScope(leaseTerminationID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if leaseTerminationID == nil {
+			return db
+		}
+		return db.Where("invoices.context_lease_termination_id = ?", *leaseTerminationID)
+	}
+}
+
 func invoiceLeaseContextScope(leaseID *string, tenantApplicationID *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if leaseID == nil && tenantApplicationID == nil {
