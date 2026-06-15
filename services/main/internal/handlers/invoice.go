@@ -210,21 +210,26 @@ type ListInvoicesQuery struct {
 	Active                    *bool     `json:"active"          query:"active"                                                                                description:"Filter invoices by active status. true for active invoices, false for VOID invoices"`
 }
 
-// ListInvoices godoc
+// CreateInvoice godoc
 //
-//	@Summary		List invoices (Admin)
-//	@Description	List invoices with optional filters (Admin)
+//	@Summary		Create lease termination invoice (Admin)
+//	@Description	Create a new invoice for a lease termination (Admin)
 //	@Tags			Invoice
 //	@Accept			json
 //	@Security		BearerAuth
 //	@Produce		json
-//	@Param			property_id	path		string																								true	"Property ID"
-//	@Param			q			query		ListInvoicesQuery																					true	"Query parameters"
-//	@Success		200			{object}	object{data=object{rows=[]transformations.OutputInvoice,meta=lib.HTTPReturnPaginatedMetaResponse}}	"Invoices"
-//	@Failure		400			{object}	lib.HTTPError																						"Error occurred when listing invoices"
-//	@Failure		401			{object}	string																								"Invalid or absent authentication token"
-//	@Failure		500			{object}	string																								"An unexpected error occurred"
-//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices [get]
+//	@Param			client_id		path		string					true	"Client ID"
+//	@Param			property_id	path		string					true	"Property ID"
+//	@Param			lease_id		path		string					true	"Lease ID"
+//	@Param			termination_id	path		string				true	"Termination ID"
+//	@Param			body		body		CreateInvoiceRequest		true	"Create invoice request body"
+//	@Success		201			{object}	object{data=transformations.OutputInvoice}	"Invoice created successfully"
+//	@Failure		400			{object}	lib.HTTPError				"Error occurred when creating invoice"
+//	@Failure		401			{object}	string				"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError				"Lease termination not found"
+//	@Failure		422			{object}	lib.HTTPError				"Validation error"
+//	@Failure		500			{object}	string				"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/terminations/{termination_id}/invoices [post]
 func (h *InvoiceHandler) CreateInvoice(w http.ResponseWriter, r *http.Request) {
 	_, ok := lib.ClientUserFromContext(r.Context())
 	if !ok {
@@ -304,6 +309,96 @@ func (h *InvoiceHandler) CreateInvoice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	invoice, err := h.service.CreateInvoice(r.Context(), input)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBInvoiceToRest(invoice),
+	})
+}
+
+func createLeaseTerminationInvoice(w http.ResponseWriter, r *http.Request, appCtx pkg.AppContext, invoiceService services.InvoiceService, terminationService services.LeaseTerminationService) {
+	_, ok := lib.ClientUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	leaseID := chi.URLParam(r, "lease_id")
+	terminationID := chi.URLParam(r, "termination_id")
+	propertyID := chi.URLParam(r, "property_id")
+	clientID := chi.URLParam(r, "client_id")
+
+	var body CreateInvoiceRequest
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	if !lib.ValidateRequest(appCtx.Validator, body, w) {
+		return
+	}
+
+	_, err := terminationService.GetOne(r.Context(), repository.GetTerminatedLeaseQuery{
+		ID:      terminationID,
+		LeaseID: leaseID,
+	})
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	lineItems := make([]services.LineItemInput, len(body.LineItems))
+	for i, item := range body.LineItems {
+		lineItems[i] = services.LineItemInput{
+			Label:       item.Label,
+			Category:    item.Category,
+			Quantity:    item.Quantity,
+			UnitAmount:  item.UnitAmount,
+			TotalAmount: item.UnitAmount * item.Quantity,
+			Currency:    item.Currency,
+			Metadata:    item.Metadata,
+		}
+	}
+
+	totalAmount := int64(0)
+	currency := "GHS"
+	if len(lineItems) > 0 {
+		currency = lineItems[0].Currency
+	}
+	for _, item := range lineItems {
+		totalAmount += item.TotalAmount
+	}
+
+	input := services.CreateInvoiceInput{
+		ClientID:                  &clientID,
+		PropertyID:                &propertyID,
+		PayerType:                 body.PayerType,
+		PayeeType:                 body.PayeeType,
+		ContextType:               "LEASE_TERMINATION",
+		ContextLeaseTerminationID: &terminationID,
+		TotalAmount:               totalAmount,
+		Taxes:                     0,
+		SubTotal:                  totalAmount,
+		Currency:                  currency,
+		Status:                    "DRAFT",
+		DueDate:                   nil,
+		LineItems:                 lineItems,
+	}
+
+	if body.DueDate != nil {
+		dueDate, parseErr := time.Parse(time.RFC3339, *body.DueDate)
+		if parseErr != nil {
+			http.Error(w, "Invalid due date format", http.StatusUnprocessableEntity)
+			return
+		}
+		input.DueDate = &dueDate
+	}
+
+	invoice, err := invoiceService.CreateInvoice(r.Context(), input)
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return

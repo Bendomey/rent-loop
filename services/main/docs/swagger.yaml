@@ -719,6 +719,33 @@ definitions:
     - title
     - type
     type: object
+  handlers.CreateInvoiceRequest:
+    properties:
+      due_date:
+        example: "2024-07-01T00:00:00Z"
+        type: string
+      line_items:
+        items:
+          $ref: '#/definitions/handlers.InvoiceLineItemRequest'
+        minItems: 1
+        type: array
+      payee_type:
+        enum:
+        - PROPERTY_OWNER
+        - TENANT
+        example: PROPERTY_OWNER
+        type: string
+      payer_type:
+        enum:
+        - TENANT
+        - PROPERTY_OWNER
+        example: TENANT
+        type: string
+    required:
+    - line_items
+    - payee_type
+    - payer_type
+    type: object
   handlers.CreateLeaseChecklistItemRequest:
     properties:
       description:
@@ -1289,6 +1316,45 @@ definitions:
     required:
     - document_id
     - role
+    type: object
+  handlers.InvoiceLineItemRequest:
+    properties:
+      category:
+        enum:
+        - RENT
+        - SECURITY_DEPOSIT
+        - INITIAL_DEPOSIT
+        - MAINTENANCE_FEE
+        - SAAS_FEE
+        - EXPENSE
+        - DEPOSIT_REFUND
+        - EARLY_TERMINATION_FEE
+        - DAMAGE_CHARGE
+        example: RENT
+        type: string
+      currency:
+        example: GHS
+        type: string
+      label:
+        example: January Rent
+        type: string
+      metadata:
+        additionalProperties: {}
+        type: object
+      quantity:
+        example: 1
+        minimum: 1
+        type: integer
+      unit_amount:
+        example: 100000
+        minimum: 0
+        type: integer
+    required:
+    - category
+    - currency
+    - label
+    - quantity
+    - unit_amount
     type: object
   handlers.LinkClientUserToPropertiesRequest:
     properties:
@@ -8477,128 +8543,6 @@ paths:
       summary: Generate invoices from an expense
       tags:
       - Expenses
-  /api/v1/admin/clients/{client_id}/properties/{property_id}/invoices:
-    get:
-      consumes:
-      - application/json
-      description: List invoices with optional filters (Admin)
-      parameters:
-      - description: Property ID
-        in: path
-        name: property_id
-        required: true
-        type: string
-      - in: query
-        name: active
-        type: boolean
-      - in: query
-        name: context_lease_termination_id
-        type: string
-      - in: query
-        name: context_type
-        type: string
-      - in: query
-        name: end_date
-        type: string
-      - collectionFormat: multi
-        example:
-        - a8098c1a-f86e-11da-bd1a-00112444be1e
-        in: query
-        items:
-          type: string
-        name: ids
-        type: array
-      - enum:
-        - asc
-        - desc
-        in: query
-        name: order
-        type: string
-      - in: query
-        name: order_by
-        type: string
-      - in: query
-        minimum: 0
-        name: page
-        type: integer
-      - in: query
-        minimum: 0
-        name: page_size
-        type: integer
-      - in: query
-        name: payee_client_id
-        type: string
-      - in: query
-        name: payee_type
-        type: string
-      - in: query
-        name: payer_client_id
-        type: string
-      - in: query
-        name: payer_lease_id
-        type: string
-      - in: query
-        name: payer_type
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: populate
-        type: array
-      - in: query
-        name: query
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        minItems: 1
-        name: search_fields
-        type: array
-      - in: query
-        name: start_date
-        type: string
-      - collectionFormat: csv
-        in: query
-        items:
-          type: string
-        name: status
-        type: array
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Invoices
-          schema:
-            properties:
-              data:
-                properties:
-                  meta:
-                    $ref: '#/definitions/lib.HTTPReturnPaginatedMetaResponse'
-                  rows:
-                    items:
-                      $ref: '#/definitions/transformations.OutputInvoice'
-                    type: array
-                type: object
-            type: object
-        "400":
-          description: Error occurred when listing invoices
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: List invoices (Admin)
-      tags:
-      - Invoice
   /api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}:
     delete:
       consumes:
@@ -10408,6 +10352,73 @@ paths:
       security:
       - BearerAuth: []
       summary: Complete lease termination (Admin)
+      tags:
+      - LeaseTermination
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/terminations/{termination_id}/invoices:
+    post:
+      consumes:
+      - application/json
+      description: Create a new invoice for a lease termination (Admin)
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Termination ID
+        in: path
+        name: termination_id
+        required: true
+        type: string
+      - description: Create invoice request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateInvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Invoice created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputInvoice'
+            type: object
+        "400":
+          description: Error occurred when creating invoice
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Lease termination not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create lease termination invoice (Admin)
       tags:
       - LeaseTermination
   /api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests:

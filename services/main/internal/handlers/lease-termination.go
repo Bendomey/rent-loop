@@ -13,12 +13,13 @@ import (
 )
 
 type LeaseTerminationHandler struct {
-	appCtx  pkg.AppContext
-	service services.LeaseTerminationService
+	appCtx         pkg.AppContext
+	service        services.LeaseTerminationService
+	invoiceService services.InvoiceService
 }
 
-func NewLeaseTerminationHandler(appCtx pkg.AppContext, service services.LeaseTerminationService) LeaseTerminationHandler {
-	return LeaseTerminationHandler{appCtx: appCtx, service: service}
+func NewLeaseTerminationHandler(appCtx pkg.AppContext, service services.LeaseTerminationService, invoiceService services.InvoiceService) LeaseTerminationHandler {
+	return LeaseTerminationHandler{appCtx: appCtx, service: service, invoiceService: invoiceService}
 }
 
 type CreateLeaseTerminationRequest struct {
@@ -176,6 +177,30 @@ func (h *LeaseTerminationHandler) GetLeaseTermination(w http.ResponseWriter, r *
 	json.NewEncoder(w).Encode(map[string]any{
 		"data": transformations.DBLeaseTerminationToRest(termination),
 	})
+}
+
+// CreateLeaseTerminationInvoice godoc
+//
+//	@Summary		Create lease termination invoice (Admin)
+//	@Description	Create a new invoice for a lease termination (Admin)
+//	@Tags			LeaseTermination
+//	@Accept		json
+//	@Security	BearerAuth
+//	@Produce		json
+//	@Param		client_id		path		string					true	"Client ID"
+//	@Param		property_id	path		string					true	"Property ID"
+//	@Param		lease_id		path		string					true	"Lease ID"
+//	@Param		termination_id	path		string				true	"Termination ID"
+//	@Param		body		body		CreateInvoiceRequest		true	"Create invoice request body"
+//	@Success		201		{object}	object{data=transformations.OutputInvoice}	"Invoice created successfully"
+//	@Failure		400		{object}	lib.HTTPError				"Error occurred when creating invoice"
+//	@Failure		401		{object}	string				"Invalid or absent authentication token"
+//	@Failure		404		{object}	lib.HTTPError				"Lease termination not found"
+//	@Failure		422		{object}	lib.HTTPError				"Validation error"
+//	@Failure		500		{object}	string				"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/terminations/{termination_id}/invoices [post]
+func (h *LeaseTerminationHandler) CreateLeaseTerminationInvoice(w http.ResponseWriter, r *http.Request) {
+	createLeaseTerminationInvoice(w, r, h.appCtx, h.invoiceService, h.service)
 }
 
 type UpdateLeaseTerminationRequest struct {
