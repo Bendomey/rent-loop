@@ -18247,6 +18247,10 @@ const docTemplate = `{
                     "minLength": 2,
                     "example": "Ghana"
                 },
+                "currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
                 "description": {
                     "type": "string",
                     "example": "A luxurious apartment overlooking the Atlantic Ocean."
@@ -18496,7 +18500,6 @@ const docTemplate = `{
                 "name",
                 "payment_frequency",
                 "rent_fee",
-                "rent_fee_currency",
                 "status",
                 "type"
             ],
@@ -19201,6 +19204,10 @@ const docTemplate = `{
                     "type": "string",
                     "minLength": 2
                 },
+                "currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
                 "description": {
                     "type": "string",
                     "maxLength": 500
@@ -19586,6 +19593,10 @@ const docTemplate = `{
                     "maxLength": 100,
                     "minLength": 2,
                     "example": "Ghana"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "GHS"
                 },
                 "description": {
                     "type": "string",

@@ -26,6 +26,8 @@ type Client struct {
 	IDExpiry      *string
 	IDDocumentURL *string
 
+	Currency string `gorm:"not null;default:'GHS'"` // reporting currency for the org
+
 	ClientApplicationId string `gorm:"not null;"`
 	ClientApplication   ClientApplication
 

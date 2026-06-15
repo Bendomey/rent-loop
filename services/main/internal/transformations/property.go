@@ -52,6 +52,7 @@ func DBPropertyToRest(i *models.Property) interface{} {
 		"region":        i.Region,
 		"city":          i.City,
 		"gps_address":   i.GPSAddress,
+		"currency":      i.Currency,
 		"client_id":     i.ClientID,
 		"client":        DBClientToRestClient(&i.Client),
 		"created_by_id": i.CreatedByID,
