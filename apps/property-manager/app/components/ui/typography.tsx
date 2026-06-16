@@ -8,7 +8,7 @@ export function TypographyH1({
 	return (
 		<h1
 			className={cn(
-				'scroll-m-20 text-2xl font-serif font-normal tracking-normal text-balance md:text-4xl',
+				'scroll-m-20 font-serif text-2xl font-normal tracking-normal text-balance md:text-4xl',
 				className,
 			)}
 			{...props}
@@ -44,7 +44,7 @@ export function TypographyH3({
 	return (
 		<h3
 			className={cn(
-				'scroll-m-20 text-2xl font-serif font-semibold tracking-normal',
+				'scroll-m-20 font-serif text-2xl font-semibold tracking-normal',
 				className,
 			)}
 			{...props}
@@ -62,7 +62,7 @@ export function TypographyH4({
 	return (
 		<h4
 			className={cn(
-				'scroll-m-20 text-xl font-serif font-semibold tracking-light',
+				'tracking-light scroll-m-20 font-serif text-xl font-semibold',
 				className,
 			)}
 			{...props}
@@ -80,7 +80,7 @@ export function TypographyH5({
 	return (
 		<h5
 			className={cn(
-				'scroll-m-20 text-lg font-serif font-semibold tracking-light',
+				'tracking-light scroll-m-20 font-serif text-lg font-semibold',
 				className,
 			)}
 			{...props}

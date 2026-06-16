@@ -588,11 +588,16 @@ export function ApplyModule() {
 										<FormDescription>
 											Enter your phone number in international format, for
 											example{' '}
-											<span className="font-medium">+233 201 234 567</span>. By
-											clicking submit, you agree to our{' '}
+											<span className="font-medium">+233 201 234 567</span>.
+										</FormDescription>
+										<FormDescription>
+											{' '}
+											By clicking submit, you agree to our{' '}
 											<a
-												className="underline hover:text-rose-700"
+												className="text co-rose-600 underline hover:text-rose-700"
 												href={`${rentLoopWebsiteUrl}/terms`}
+												target="_blank"
+												rel="noopener noreferrer"
 											>
 												Terms of Service
 											</a>{' '}
@@ -600,6 +605,8 @@ export function ApplyModule() {
 											<a
 												className="underline hover:text-rose-700"
 												href={`${rentLoopWebsiteUrl}/privacy-policy`}
+												target="_blank"
+												rel="noopener noreferrer"
 											>
 												Privacy Policy
 											</a>
@@ -610,9 +617,9 @@ export function ApplyModule() {
 							/>
 						</FieldGroup>
 
-						<div className="flex items-center justify-end gap-x-5">
+						<div className="mb-10 flex items-center justify-between gap-x-5">
 							<Link to="/login">
-								<Button type="button" size="sm" variant="ghost">
+								<Button type="button" size="sm" variant="outline">
 									<Home />
 									Go Home
 								</Button>

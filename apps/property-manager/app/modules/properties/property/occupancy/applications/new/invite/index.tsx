@@ -56,7 +56,9 @@ const ValidationSchema = z
 		email: z.email('Please enter a valid email address').optional(),
 		phone: z
 			.string({ error: 'Phone Number is required' })
-			.refine((v) => !v || isValidPhoneNumber(v), { message: 'Enter a valid phone number' })
+			.refine((v) => !v || isValidPhoneNumber(v), {
+				message: 'Enter a valid phone number',
+			})
 			.optional(),
 	})
 	.superRefine((data, ctx) => {

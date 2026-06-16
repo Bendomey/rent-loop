@@ -27,6 +27,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 			origin: getDomainUrl(request),
 			error,
 			success,
+			rentLoopWebsiteUrl: environmentVariables().RENTLOOP_WEBSITE_URL,
 		},
 		{
 			headers: {
