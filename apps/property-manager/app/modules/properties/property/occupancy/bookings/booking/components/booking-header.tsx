@@ -189,7 +189,7 @@ export function BookingHeader({
 						<p className="text-muted-foreground text-[10px] font-semibold tracking-widest uppercase">
 							Stay Summary
 						</p>
-						<TypographyH2 >
+						<TypographyH2>
 							<span className="text-rose-600">{count}</span> {label} at{' '}
 							{booking.unit?.name ?? '—'}
 						</TypographyH2>

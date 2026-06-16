@@ -152,7 +152,9 @@ export function PropertyTenantApplicationEmergencyContact({
 				property_id,
 				data: {
 					...data,
-					emergency_contact_phone: normalizeInternationalPhoneNumber(data.emergency_contact_phone) ?? data.emergency_contact_phone,
+					emergency_contact_phone:
+						normalizeInternationalPhoneNumber(data.emergency_contact_phone) ??
+						data.emergency_contact_phone,
 				},
 			},
 			{

@@ -178,9 +178,7 @@ export default function ActivityFeed() {
 										</div>
 									) : (
 										<Avatar className="h-6 w-6 md:h-8 md:w-8">
-											<AvatarImage
-												src={item.user.avatar || undefined}
-											/>
+											<AvatarImage src={item.user.avatar || undefined} />
 											<AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
 												{item.user.initials}
 											</AvatarFallback>

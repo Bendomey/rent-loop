@@ -43,7 +43,7 @@ export function BookingStatsStrip({ booking }: { booking: Booking }) {
 							<p className="text-muted-foreground text-[10px] font-light tracking-widest uppercase">
 								{s.label}
 							</p>
-							<p className="text-lg font-bold font-serif">{s.value}</p>
+							<p className="font-serif text-lg font-bold">{s.value}</p>
 							{s.sub ? (
 								<p className="text-muted-foreground text-xs">{s.sub}</p>
 							) : null}

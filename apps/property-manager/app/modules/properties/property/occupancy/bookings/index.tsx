@@ -119,7 +119,7 @@ export function PropertyBookingsModule() {
 	)
 
 	return (
-		<div className="mx-6 my-6 mx-auto max-w-4xl flex flex-col gap-4 sm:gap-6">
+		<div className="mx-6 mx-auto my-6 flex max-w-4xl flex-col gap-4 sm:gap-6">
 			<div className="space-y-1">
 				<TypographyH4>Bookings</TypographyH4>
 				<TypographyMuted>All bookings for this property.</TypographyMuted>

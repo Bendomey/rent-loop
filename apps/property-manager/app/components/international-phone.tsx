@@ -46,10 +46,10 @@ export function InternationalPhoneInput({
 				onChange={(value) => onChange(value ?? '')}
 				placeholder={placeholder}
 				className="flex h-10 w-full items-center gap-2"
-				inputClassName={cn(
-					'flex-1 border-0 bg-transparent px-2 py-2 text-sm shadow-none',
-					'focus-visible:ring-0 focus-visible:outline-none',
-				)}
+				numberInputProps={{
+					className:
+						'flex-1 border-0 bg-transparent px-2 py-2 text-sm shadow-none focus-visible:!ring-0 focus-visible:!outline-none focus-visible:!ring-offset-0',
+				}}
 				countrySelectProps={{
 					className: 'border-0 bg-transparent text-sm shadow-none focus:ring-0',
 				}}

@@ -1,4 +1,13 @@
-import { ChevronDown, Copy, ExternalLink, Info, Link2, RotateCw, ToggleLeft, UserCog } from 'lucide-react'
+import {
+	ChevronDown,
+	Copy,
+	ExternalLink,
+	Info,
+	Link2,
+	RotateCw,
+	ToggleLeft,
+	UserCog,
+} from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
@@ -104,10 +113,10 @@ function GuestLinkModal({
 							onValueChange={setSelectedUnitId}
 							disabled={isPending}
 						>
-							<SelectTrigger className='w-full'>
+							<SelectTrigger className="w-full">
 								<SelectValue placeholder="Select a unit" />
 							</SelectTrigger>
-							<SelectContent >
+							<SelectContent>
 								{units.map((u) => (
 									<SelectItem key={u.id} value={u.id}>
 										{u.name}
@@ -138,12 +147,7 @@ function GuestLinkModal({
 										<Copy className="size-3.5" />
 										Copy link
 									</Button>
-									<Button
-										type="button"
-										variant="outline"
-										size="sm"
-										asChild
-									>
+									<Button type="button" variant="outline" size="sm" asChild>
 										<a href={bookingUrl} target="_blank" rel="noreferrer">
 											<ExternalLink className="size-3.5" />
 										</a>
@@ -159,7 +163,7 @@ function GuestLinkModal({
 							</div>
 						)
 					) : null}
-					</div>
+				</div>
 			</DialogContent>
 		</Dialog>
 	)
@@ -237,63 +241,65 @@ export function PropertyBookingsController({
 
 	return (
 		<>
-		<div className="flex w-full flex-col gap-2">
-			<div className="w-full rounded-md border p-4">
-				<div className="flex w-full flex-wrap items-center gap-2 text-sm">
-					<FilterSet label="Filters" urlParam="filters" filters={filters} />
+			<div className="flex w-full flex-col gap-2">
+				<div className="w-full rounded-md border p-4">
+					<div className="flex w-full flex-wrap items-center gap-2 text-sm">
+						<FilterSet label="Filters" urlParam="filters" filters={filters} />
+					</div>
+				</div>
+				<div className="flex flex-wrap items-center justify-between gap-4">
+					<div />
+					<div className="flex items-center justify-end gap-2">
+						<PropertyPermissionGuard roles={['MANAGER']}>
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button
+										size="sm"
+										className="bg-rose-600 text-white hover:bg-rose-700"
+									>
+										New Booking
+										<ChevronDown className="ml-1 size-3.5" />
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align="end">
+									<DropdownMenuItem
+										onClick={() =>
+											void navigate(
+												`/properties/${propertyId}/occupancy/bookings/new`,
+											)
+										}
+									>
+										<UserCog className="size-4" />
+										Admin booking
+									</DropdownMenuItem>
+									<DropdownMenuItem onClick={() => setGuestLinkOpen(true)}>
+										<Link2 className="size-4" />
+										Guest link
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</PropertyPermissionGuard>
+						<Button
+							onClick={() => refetch()}
+							disabled={isLoading}
+							variant="outline"
+							size="sm"
+						>
+							<RotateCw
+								className={cn('size-4', { 'animate-spin': isLoading })}
+							/>
+							Refresh
+						</Button>
+					</div>
 				</div>
 			</div>
-			<div className="flex flex-wrap items-center justify-between gap-4">
-				<div />
-				<div className="flex items-center justify-end gap-2">
-					<PropertyPermissionGuard roles={['MANAGER']}>
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									size="sm"
-									className="bg-rose-600 text-white hover:bg-rose-700"
-								>
-									New Booking
-									<ChevronDown className="ml-1 size-3.5" />
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end">
-								<DropdownMenuItem
-									onClick={() =>
-										void navigate(
-											`/properties/${propertyId}/occupancy/bookings/new`,
-										)
-									}
-								>
-									<UserCog className="size-4" />
-									Admin booking
-								</DropdownMenuItem>
-								<DropdownMenuItem onClick={() => setGuestLinkOpen(true)}>
-									<Link2 className="size-4" />
-									Guest link
-								</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
-					</PropertyPermissionGuard>
-					<Button
-						onClick={() => refetch()}
-						disabled={isLoading}
-						variant="outline"
-						size="sm"
-					>
-						<RotateCw className={cn('size-4', { 'animate-spin': isLoading })} />
-						Refresh
-					</Button>
-				</div>
-			</div>
-		</div>
-		<GuestLinkModal
-			open={guestLinkOpen}
-			onOpenChange={setGuestLinkOpen}
-			propertySlug={propertySlug}
-			clientId={clientId}
-			propertyId={propertyId}
-		/>
+			<GuestLinkModal
+				open={guestLinkOpen}
+				onOpenChange={setGuestLinkOpen}
+				propertySlug={propertySlug}
+				clientId={clientId}
+				propertyId={propertyId}
+			/>
 		</>
 	)
 }
