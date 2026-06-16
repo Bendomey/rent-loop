@@ -23,5 +23,5 @@ module.exports = {
   },
 
   contextToAppId: ({ securityContext }) =>
-    `RENTLOOP_${securityContext?.clientId ?? 'anon'}`,
+    `RENTLOOP_${securityContext?.clientId ?? 'anon'}_${securityContext?.reportingCurrency ?? 'GHS'}`,
 }

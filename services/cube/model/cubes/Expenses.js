@@ -24,10 +24,59 @@ cube(`Expenses`, {
       title: `Total Expense Amount (pesewas)`,
     },
 
+    totalAmountConverted: {
+      sql: `${CUBE}.amount *
+        COALESCE(
+          (SELECT er.rate FROM exchange_rates er
+           WHERE er.base_currency = 'USD'
+             AND er.quote_currency = '${COMPILE_CONTEXT.securityContext?.reportingCurrency ?? 'GHS'}'
+             AND er.effective_date <= ${CUBE}.created_at::date
+           ORDER BY er.effective_date DESC LIMIT 1),
+          1
+        ) / NULLIF(
+          COALESCE(
+            (SELECT er.rate FROM exchange_rates er
+             WHERE er.base_currency = 'USD'
+               AND er.quote_currency = ${CUBE}.currency
+               AND er.effective_date <= ${CUBE}.created_at::date
+             ORDER BY er.effective_date DESC LIMIT 1),
+            1
+          ),
+          0
+        )`,
+      type: `sum`,
+      title: `Total Expense Amount (converted to reporting currency)`,
+    },
+
     maintenanceAmount: {
       sql: `amount`,
       type: `sum`,
       title: `Maintenance Expense Amount (pesewas)`,
+      filters: [{ sql: `${CUBE}.context_type = 'MAINTENANCE'` }],
+    },
+
+    maintenanceAmountConverted: {
+      sql: `${CUBE}.amount *
+        COALESCE(
+          (SELECT er.rate FROM exchange_rates er
+           WHERE er.base_currency = 'USD'
+             AND er.quote_currency = '${COMPILE_CONTEXT.securityContext?.reportingCurrency ?? 'GHS'}'
+             AND er.effective_date <= ${CUBE}.created_at::date
+           ORDER BY er.effective_date DESC LIMIT 1),
+          1
+        ) / NULLIF(
+          COALESCE(
+            (SELECT er.rate FROM exchange_rates er
+             WHERE er.base_currency = 'USD'
+               AND er.quote_currency = ${CUBE}.currency
+               AND er.effective_date <= ${CUBE}.created_at::date
+             ORDER BY er.effective_date DESC LIMIT 1),
+            1
+          ),
+          0
+        )`,
+      type: `sum`,
+      title: `Maintenance Expense Amount (converted to reporting currency)`,
       filters: [{ sql: `${CUBE}.context_type = 'MAINTENANCE'` }],
     },
   },

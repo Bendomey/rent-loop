@@ -5231,6 +5231,12 @@ paths:
     get:
       description: Returns a signed JWT for querying the Cube.js analytics API. The
         token is scoped to the authenticated client.
+      parameters:
+      - description: Reporting currency override (e.g. GHS, USD). Defaults to the
+          client's configured currency.
+        in: query
+        name: currency
+        type: string
       produces:
       - application/json
       responses:
@@ -5241,6 +5247,10 @@ paths:
               data:
                 $ref: '#/definitions/handlers.analyticsTokenResponse'
             type: object
+        "400":
+          description: Unsupported currency
+          schema:
+            type: string
         "401":
           description: Unauthorized
           schema:
