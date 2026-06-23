@@ -8665,6 +8665,53 @@ paths:
       summary: Update invoice (Admin)
       tags:
       - Invoice
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/issue:
+    patch:
+      consumes:
+      - application/json
+      description: Issue a draft invoice, changing its status to ISSUED (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invoice Issued Successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputInvoice'
+            type: object
+        "400":
+          description: Error occurred when issuing invoice
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Invoice not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Issue draft invoice (Admin)
+      tags:
+      - Invoice
   /api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/line-items:
     get:
       consumes:

@@ -137,7 +137,6 @@ func (s *bookingService) CreateBooking(ctx context.Context, input CreateBookingI
 		Gender:      input.GuestGender,
 		CreatedById: input.CreatedByClientUserID,
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +243,6 @@ func (s *bookingService) CreateBooking(ctx context.Context, input CreateBookingI
 		ID:       booking.ID.String(),
 		Populate: &[]string{"Tenant", "Unit"},
 	})
-
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
@@ -365,7 +363,7 @@ func (s *bookingService) UpdateBooking(ctx context.Context, input UpdateBookingI
 			paymentFrequency = "months"
 		}
 
-		// TODO: work on adding line items updates to invoice service and then call the update invoice service here
+		// TODO: get that invoice line with category "BOOKING_FEE" and update the unit amount/total amount/quantity/label accordingly
 
 		fmt.Sprintf("Booking for %s for %d %s", unit.Name, quantity, paymentFrequency, totalRate)
 	}

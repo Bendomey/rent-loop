@@ -355,13 +355,16 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, input UpdateInvoiceI
 
 	// if the invoice is already issued, we can't continue
 	if invoice.Status == "ISSUED" {
-		return nil, pkg.BadRequestError("Cannot update an invoice that has already been issued", &pkg.RentLoopErrorParams{
-			Metadata: map[string]string{
-				"function": "UpdateInvoice",
-				"action":   "checking invoice status",
-				"status":   invoice.Status,
+		return nil, pkg.BadRequestError(
+			"Cannot update an invoice that has already been issued",
+			&pkg.RentLoopErrorParams{
+				Metadata: map[string]string{
+					"function": "UpdateInvoice",
+					"action":   "checking invoice status",
+					"status":   invoice.Status,
+				},
 			},
-		})
+		)
 	}
 
 	issuingNow := input.Status != nil && *input.Status == "ISSUED" && invoice.Status == "DRAFT"
@@ -1000,7 +1003,10 @@ type UpdateLineItemInput struct {
 	Metadata    *map[string]any
 }
 
-func (s *invoiceService) UpdateLineItem(ctx context.Context, input UpdateLineItemInput) (*models.InvoiceLineItem, error) {
+func (s *invoiceService) UpdateLineItem(
+	ctx context.Context,
+	input UpdateLineItemInput,
+) (*models.InvoiceLineItem, error) {
 	// Get invoice to validate status
 	invoice, getErr := s.repo.GetByQuery(ctx, repository.GetInvoiceQuery{
 		Query: map[string]any{

@@ -311,7 +311,6 @@ func (h *BookingHandler) UpdateBooking(w http.ResponseWriter, r *http.Request) {
 		CheckOutDate:           body.CheckOutDate,
 		Meta:                   body.Meta,
 	})
-
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return
