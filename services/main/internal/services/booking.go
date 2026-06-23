@@ -259,7 +259,10 @@ func (s *bookingService) CreateBooking(ctx context.Context, input CreateBookingI
 }
 
 func (s *bookingService) UpdateBooking(ctx context.Context, input UpdateBookingInput) (*models.Booking, error) {
-	booking, err := s.repo.GetByIDWithPopulate(ctx, repository.GetBookingQuery{ID: input.BookingID})
+	booking, err := s.repo.GetByIDWithPopulate(
+		ctx,
+		repository.GetBookingQuery{ID: input.BookingID, Populate: &[]string{"Invoice"}},
+	)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, pkg.NotFoundError("BookingNotFound", &pkg.RentLoopErrorParams{Err: err})
@@ -363,9 +366,53 @@ func (s *bookingService) UpdateBooking(ctx context.Context, input UpdateBookingI
 			paymentFrequency = "months"
 		}
 
-		// TODO: get that invoice line with category "BOOKING_FEE" and update the unit amount/total amount/quantity/label accordingly
+		if booking.Invoice == nil || booking.Invoice.ID.String() == "" {
+			return nil, pkg.InternalServerError("Booking invoice not loaded", &pkg.RentLoopErrorParams{
+				Err:      errors.New("invoice missing from booking"),
+				Metadata: map[string]string{"function": "UpdateBooking", "action": "resolving booking invoice"},
+			})
+		}
 
-		fmt.Sprintf("Booking for %s for %d %s", unit.Name, quantity, paymentFrequency, totalRate)
+		lineItems, lineItemsErr := s.invoiceService.GetLineItems(transCtx, booking.Invoice.ID.String())
+		if lineItemsErr != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError(lineItemsErr.Error(), &pkg.RentLoopErrorParams{
+				Err: lineItemsErr,
+				Metadata: map[string]string{
+					"function": "UpdateBooking",
+					"action":   "fetching booking invoice line items",
+				},
+			})
+		}
+
+		var bookingLineItem *models.InvoiceLineItem
+		for i := range lineItems {
+			if lineItems[i].Category == "BOOKING_FEE" {
+				bookingLineItem = &lineItems[i]
+				break
+			}
+		}
+
+		if bookingLineItem == nil {
+			return nil, pkg.NotFoundError("BookingInvoiceLineItemNotFound", &pkg.RentLoopErrorParams{
+				Err:      errors.New("booking invoice line item not found"),
+				Metadata: map[string]string{"function": "UpdateBooking", "action": "finding booking fee line item"},
+			})
+		}
+
+		label := fmt.Sprintf("Booking for %s for %d %s", unit.Name, quantity, paymentFrequency)
+		if _, updateErr := s.invoiceService.UpdateLineItem(transCtx, UpdateLineItemInput{
+			InvoiceID:   booking.Invoice.ID.String(),
+			LineItemID:  bookingLineItem.ID.String(),
+			Label:       &label,
+			Quantity:    &quantity,
+			UnitAmount:  &newBookingRate,
+			TotalAmount: &totalRate,
+			Currency:    &booking.Currency,
+		}); updateErr != nil {
+			transaction.Rollback()
+			return nil, updateErr
+		}
 	}
 
 	if err := s.repo.Update(transCtx, booking); err != nil {
