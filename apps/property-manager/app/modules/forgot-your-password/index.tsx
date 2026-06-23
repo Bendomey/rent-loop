@@ -2,11 +2,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import {
 	AlertCircleIcon,
 	CheckCircle2Icon,
-	GalleryVerticalEnd,
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Link, useFetcher, useLoaderData } from 'react-router'
 import { z } from 'zod'
+import { ExternalLink } from '~/components/external-link'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 
 import { Button } from '~/components/ui/button'
@@ -22,7 +22,6 @@ import {
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
 import { TypographyH1, TypographyMuted } from '~/components/ui/typography'
-import { APP_NAME } from '~/lib/constants'
 import { cn } from '~/lib/utils'
 
 const ValidationSchema = z.object({
@@ -32,7 +31,7 @@ const ValidationSchema = z.object({
 type FormSchema = z.infer<typeof ValidationSchema>
 
 export function ForgotYourPasswordModule() {
-	const { error, success } = useLoaderData()
+	const { error, success, rentLoopWebsiteUrl } = useLoaderData()
 	const fetcher = useFetcher<{ error: string }>()
 
 	const rhfMethods = useForm<FormSchema>({
@@ -55,11 +54,10 @@ export function ForgotYourPasswordModule() {
 						<form onSubmit={onSubmit}>
 							<FieldGroup>
 								<div className="flex flex-col gap-3">
-									<div className="mb-4 flex flex-col gap-2 font-medium">
-										<div className="flex size-8 items-center justify-center rounded-md">
-											<GalleryVerticalEnd className="size-16" />
-										</div>
-										<span className="sr-only">{APP_NAME}.</span>
+									<div className="flex flex-col gap-2 font-medium">
+										<TypographyH1 className="mt-4 text-7xl font-black text-rose-600 md:text-7xl">
+											rl<span className="text-black">.</span>
+										</TypographyH1>
 									</div>
 
 									<TypographyH1>Forgot Your Password?</TypographyH1>
@@ -123,7 +121,18 @@ export function ForgotYourPasswordModule() {
 					</Form>
 					<FieldDescription className="px-6 text-center">
 						By clicking continue, you agree to our{' '}
-						<a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+						<ExternalLink
+							to={`${rentLoopWebsiteUrl}/terms`}
+						>
+							Terms of Service
+						</ExternalLink>{' '}
+						and{' '}
+						<ExternalLink
+							to={`${rentLoopWebsiteUrl}/privacy-policy`}
+						>
+							Privacy Policy
+						</ExternalLink>
+						.
 					</FieldDescription>
 				</div>
 			</div>

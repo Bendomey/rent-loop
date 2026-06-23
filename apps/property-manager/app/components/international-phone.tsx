@@ -1,14 +1,14 @@
-import PhoneInput from 'react-phone-number-input'
-import 'react-phone-number-input/style.css'
+import type { CountryCode } from 'libphonenumber-js'
 import { HelpCircle } from 'lucide-react'
-import { cn } from '~/lib/utils'
+import PhoneInput from 'react-phone-number-input'
+import { InputGroupButton } from '~/components/ui/input-group'
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipTrigger,
 } from '~/components/ui/tooltip'
-import { InputGroupButton } from '~/components/ui/input-group'
-import type { CountryCode } from 'libphonenumber-js'
+import { cn } from '~/lib/utils'
+import 'react-phone-number-input/style.css'
 
 type InternationalPhoneInputProps = {
 	value?: string
