@@ -1683,14 +1683,7 @@ definitions:
         items:
           type: string
         type: array
-      status:
-        enum:
-        - DRAFT
-        - ISSUED
-        - PARTIALLY_PAID
-        - PAID
-        - VOID
-        example: ISSUED
+      due_date:
         type: string
     type: object
   handlers.UpdateLeaseChecklistItemRequest:
@@ -1750,6 +1743,40 @@ definitions:
         type: string
       utility_transfers_date:
         type: string
+    type: object
+  handlers.UpdateLineItemRequest:
+    properties:
+      category:
+        enum:
+        - RENT
+        - SECURITY_DEPOSIT
+        - INITIAL_DEPOSIT
+        - MAINTENANCE_FEE
+        - SAAS_FEE
+        - EXPENSE
+        example: RENT
+        type: string
+      currency:
+        example: GHS
+        type: string
+      label:
+        example: January Rent
+        type: string
+      metadata:
+        additionalProperties: {}
+        type: object
+      quantity:
+        example: 1
+        minimum: 1
+        type: integer
+      total_amount:
+        example: 100000
+        minimum: 0
+        type: integer
+      unit_amount:
+        example: 100000
+        minimum: 0
+        type: integer
     type: object
   handlers.UpdateMaintenanceRequestBody:
     properties:
@@ -8784,6 +8811,67 @@ paths:
       security:
       - BearerAuth: []
       summary: Remove line item from invoice (Admin)
+      tags:
+      - Invoice
+    patch:
+      consumes:
+      - application/json
+      description: Update a line item on an existing draft invoice (Admin)
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      - description: Line Item ID
+        in: path
+        name: line_item_id
+        required: true
+        type: string
+      - description: Update line item request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateLineItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Line Item Updated Successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputInvoiceLineItem'
+            type: object
+        "400":
+          description: Error occurred when updating line item
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "404":
+          description: Invoice or line item not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update line item on invoice (Admin)
       tags:
       - Invoice
   /api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/void:
