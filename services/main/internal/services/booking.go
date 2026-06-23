@@ -184,7 +184,17 @@ func (s *bookingService) CreateBooking(ctx context.Context, input CreateBookingI
 		paymentFrequency = "months"
 	}
 
-	// create invoice record
+	if err := s.repo.Create(transCtx, booking); err != nil {
+		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+			Err: err,
+			Metadata: map[string]string{
+				"function": "CreateBooking",
+				"action":   "creating booking record",
+			},
+		})
+	}
+
+	// create invoice record after booking record exists so the booking foreign key is valid
 	clientID := unit.Property.ClientID
 	propertyID := unit.PropertyID
 	bookingID := booking.ID.String()
@@ -215,17 +225,8 @@ func (s *bookingService) CreateBooking(ctx context.Context, input CreateBookingI
 	})
 
 	if invoiceErr != nil {
+		transaction.Rollback()
 		return nil, invoiceErr
-	}
-
-	if err := s.repo.Create(transCtx, booking); err != nil {
-		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
-			Err: err,
-			Metadata: map[string]string{
-				"function": "CreateBooking",
-				"action":   "creating booking record",
-			},
-		})
 	}
 
 	if commitErr := transaction.Commit().Error; commitErr != nil {
