@@ -90,7 +90,7 @@ const ValidationSchema = z.object({
 	rent_fee: z.number().positive('Rent fee must be a positive number'),
 	rent_fee_currency: z.string().min(1, 'Currency is required'),
 	payment_frequency: z.enum(
-		['DAILY', 'WEEKLY', 'MONTHLY'], // 'QUARTERLY', 'BIANNUALLY', 'ANNUALLY'
+		['DAILY', 'WEEKLY', 'MONTHLY', 'QUARTERLY', 'BIANNUALLY', 'ANNUALLY'],
 		{ error: 'Please select a payment frequency' },
 	),
 })
@@ -162,6 +162,9 @@ export function NewPropertyAssetUnitsModule() {
 		DAILY: 'Price per Day',
 		WEEKLY: 'Price per Week',
 		MONTHLY: 'Price per Month',
+		QUARTERLY: 'Price per Quarter',
+		BIANNUALLY: 'Price per 6 Months',
+		ANNUALLY: 'Price per Year',
 	}
 
 	const createFetcher = useFetcher<{ error: string }>()
