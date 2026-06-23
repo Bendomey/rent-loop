@@ -35,3 +35,15 @@ export function getBookingRateLabel(frequency: string): string {
 			return 'Daily rate'
 	}
 }
+
+/** Returns the frequency suffix for rate display, e.g. "/night", "/week", "/month". */
+export function getBookingRateFrequencySuffix(frequency: string): string {
+	switch (frequency?.toUpperCase()) {
+		case 'WEEKLY':
+			return '/week'
+		case 'MONTHLY':
+			return '/month'
+		default:
+			return '/day'
+	}
+}
