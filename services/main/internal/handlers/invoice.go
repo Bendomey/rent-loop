@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/lib"
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
@@ -29,8 +30,8 @@ func NewInvoiceHandler(appCtx pkg.AppContext, services services.Services) Invoic
 }
 
 type UpdateInvoiceRequest struct {
-	Status              *string   `json:"status,omitempty"                validate:"omitempty,oneof=DRAFT ISSUED PARTIALLY_PAID PAID VOID" example:"ISSUED"    description:"Invoice status"`
-	AllowedPaymentRails *[]string `json:"allowed_payment_rails,omitempty" validate:"omitempty,dive,oneof=MOMO BANK OFFLINE CARD"           example:"MOMO,BANK" description:"Allowed payment rails"`
+	AllowedPaymentRails *[]string  `json:"allowed_payment_rails,omitempty" validate:"omitempty,dive,oneof=MOMO BANK OFFLINE CARD" example:"MOMO,BANK" description:"Allowed payment rails"`
+	DueDate             *time.Time `json:"due_date,omitempty"              validate:"omitempty"`
 }
 
 // UpdateInvoice godoc
@@ -67,7 +68,7 @@ func (h *InvoiceHandler) UpdateInvoice(w http.ResponseWriter, r *http.Request) {
 
 	input := services.UpdateInvoiceInput{
 		InvoiceID:           invoiceID,
-		Status:              body.Status,
+		DueDate:             body.DueDate,
 		AllowedPaymentRails: body.AllowedPaymentRails,
 	}
 
@@ -129,6 +130,42 @@ func (h *InvoiceHandler) VoidInvoice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	invoice, err := h.service.VoidInvoice(r.Context(), input)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBInvoiceToRest(invoice),
+	})
+}
+
+// IssueInvoice godoc
+//
+//	@Summary		Issue draft invoice (Admin)
+//	@Description	Issue a draft invoice, changing its status to ISSUED (Admin)
+//	@Tags			Invoice
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path		string										true	"Property ID"
+//	@Param			invoice_id	path		string										true	"Invoice ID"
+//	@Success		200			{object}	object{data=transformations.OutputInvoice}	"Invoice Issued Successfully"
+//	@Failure		400			{object}	lib.HTTPError								"Error occurred when issuing invoice"
+//	@Failure		401			{object}	string										"Invalid or absent authentication token"
+//	@Failure		404			{object}	lib.HTTPError								"Invoice not found"
+//	@Failure		500			{object}	string										"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/issue [patch]
+func (h *InvoiceHandler) IssueInvoice(w http.ResponseWriter, r *http.Request) {
+	invoiceID := chi.URLParam(r, "invoice_id")
+	status := "ISSUED"
+
+	input := services.UpdateInvoiceInput{
+		InvoiceID: invoiceID,
+		Status:    &status,
+	}
+
+	invoice, err := h.service.UpdateInvoice(r.Context(), input)
 	if err != nil {
 		HandleErrorResponse(w, err)
 		return
@@ -406,6 +443,73 @@ func (h *InvoiceHandler) RemoveLineItem(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+type UpdateLineItemRequest struct {
+	Label       *string         `json:"label,omitempty"        validate:"omitempty"                                                                              example:"January Rent" description:"Label for the line item"`
+	Category    *string         `json:"category,omitempty"     validate:"omitempty,oneof=RENT SECURITY_DEPOSIT INITIAL_DEPOSIT MAINTENANCE_FEE SAAS_FEE EXPENSE" example:"RENT"         description:"Category of line item"`
+	Quantity    *int64          `json:"quantity,omitempty"     validate:"omitempty,min=1"                                                                        example:"1"            description:"Quantity"`
+	UnitAmount  *int64          `json:"unit_amount,omitempty"  validate:"omitempty,min=0"                                                                        example:"100000"       description:"Unit amount in smallest currency unit"`
+	TotalAmount *int64          `json:"total_amount,omitempty" validate:"omitempty,min=0"                                                                        example:"100000"       description:"Total amount in smallest currency unit"`
+	Currency    *string         `json:"currency,omitempty"     validate:"omitempty"                                                                              example:"GHS"          description:"Currency code"`
+	Metadata    *map[string]any `json:"metadata,omitempty"                                                                                                                              description:"Additional metadata"`
+}
+
+// UpdateLineItem godoc
+//
+//	@Summary		Update line item on invoice (Admin)
+//	@Description	Update a line item on an existing draft invoice (Admin)
+//	@Tags			Invoice
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id		path		string												true	"Property ID"
+//	@Param			invoice_id		path		string												true	"Invoice ID"
+//	@Param			line_item_id	path		string												true	"Line Item ID"
+//	@Param			body			body		UpdateLineItemRequest								true	"Update line item request body"
+//	@Success		200				{object}	object{data=transformations.OutputInvoiceLineItem}	"Line Item Updated Successfully"
+//	@Failure		400				{object}	lib.HTTPError										"Error occurred when updating line item"
+//	@Failure		401				{object}	string												"Invalid or absent authentication token"
+//	@Failure		404				{object}	lib.HTTPError										"Invoice or line item not found"
+//	@Failure		422				{object}	lib.HTTPError										"Validation error"
+//	@Failure		500				{object}	string												"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/line-items/{line_item_id} [patch]
+func (h *InvoiceHandler) UpdateLineItem(w http.ResponseWriter, r *http.Request) {
+	var body UpdateLineItemRequest
+	invoiceID := chi.URLParam(r, "invoice_id")
+	lineItemID := chi.URLParam(r, "line_item_id")
+
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	isPassedValidation := lib.ValidateRequest(h.appCtx.Validator, body, w)
+	if !isPassedValidation {
+		return
+	}
+
+	input := services.UpdateLineItemInput{
+		InvoiceID:   invoiceID,
+		LineItemID:  lineItemID,
+		Label:       body.Label,
+		Category:    body.Category,
+		Quantity:    body.Quantity,
+		UnitAmount:  body.UnitAmount,
+		TotalAmount: body.TotalAmount,
+		Currency:    body.Currency,
+		Metadata:    body.Metadata,
+	}
+
+	lineItem, err := h.service.UpdateLineItem(r.Context(), input)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBInvoiceLineItemToRest(lineItem),
+	})
 }
 
 type TenantListInvoicesQuery struct {
