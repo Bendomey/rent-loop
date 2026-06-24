@@ -10,6 +10,16 @@ import {
 	useUpdateLineItem,
 } from '~/api/invoices'
 import { useGetPaymentAccounts } from '~/api/payment-accounts'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '~/components/ui/alert-dialog'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
@@ -328,6 +338,7 @@ export function PaymentCard({
 	const [editMode, setEditMode] = useState(false)
 	const [addOpen, setAddOpen] = useState(false)
 	const [editingItem, setEditingItem] = useState<InvoiceLineItem | null>(null)
+	const [deletingItemId, setDeletingItemId] = useState<string | null>(null)
 	const [payOpen, setPayOpen] = useState(false)
 
 	const { mutateAsync: addLineItem, isPending: isAdding } = useAddLineItem()
@@ -499,8 +510,7 @@ export function PaymentCard({
 					<Separator />
 
 					<div className="space-y-2">
-						{/* Show line items in edit mode if they exist, otherwise show the base breakdown */}
-						{editMode && lineItems.length > 0 ? (
+						{lineItems.length > 0 ? (
 							lineItems.map((item) => (
 								<div key={item.id} className="flex items-center justify-between gap-2">
 									<span className="text-muted-foreground min-w-0 flex-1 truncate text-xs">
@@ -511,22 +521,25 @@ export function PaymentCard({
 										<span className="text-xs font-medium">
 											{formatAmount(convertPesewasToCedis(item.total_amount), booking.currency)}
 										</span>
-										<button
-											type="button"
-											onClick={() => setEditingItem(item)}
-											className="text-muted-foreground hover:text-foreground ml-1 transition-colors"
-										>
-											<Pencil className="size-3" />
-										</button>
-										{item.category !== 'BOOKING_FEE' && (
-											<button
-												type="button"
-												onClick={() => void handleRemoveLineItem(item.id)}
-												disabled={isRemoving}
-												className="text-muted-foreground hover:text-destructive transition-colors"
-											>
-												<Trash2 className="size-3" />
-											</button>
+										{editMode && (
+											<>
+												<button
+													type="button"
+													onClick={() => setEditingItem(item)}
+													className="text-muted-foreground hover:text-foreground ml-1 transition-colors"
+												>
+													<Pencil className="size-3" />
+												</button>
+												{item.category !== 'BOOKING_FEE' && (
+													<button
+														type="button"
+														onClick={() => setDeletingItemId(item.id)}
+														className="text-muted-foreground hover:text-destructive transition-colors"
+													>
+														<Trash2 className="size-3" />
+													</button>
+												)}
+											</>
 										)}
 									</div>
 								</div>
@@ -625,6 +638,34 @@ export function PaymentCard({
 					onSuccess={invalidate}
 				/>
 			) : null}
+
+			<AlertDialog
+				open={!!deletingItemId}
+				onOpenChange={(v) => { if (!v) setDeletingItemId(null) }}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Remove line item?</AlertDialogTitle>
+						<AlertDialogDescription>
+							This will permanently remove the line item from the invoice.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							className="bg-destructive text-white hover:bg-destructive/90"
+							disabled={isRemoving}
+							onClick={() => {
+								if (deletingItemId) void handleRemoveLineItem(deletingItemId)
+								setDeletingItemId(null)
+							}}
+						>
+							{isRemoving ? <Spinner /> : null}
+							Remove
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</>
 	)
 }
