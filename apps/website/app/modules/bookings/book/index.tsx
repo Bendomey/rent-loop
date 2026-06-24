@@ -91,7 +91,10 @@ export function BookModule({ unit }: Props) {
 
 		try {
 			const cleanedGuest = Object.fromEntries(
-				Object.entries(guestValues).map(([k, v]) => [k, v === '' ? undefined : v]),
+				Object.entries(guestValues).map(([k, v]) => [
+					k,
+					v === '' ? undefined : v,
+				]),
 			) as GuestFormValues
 			const booking = await createBooking(unit.slug, {
 				check_in_date: selectedRange.from.toISOString(),

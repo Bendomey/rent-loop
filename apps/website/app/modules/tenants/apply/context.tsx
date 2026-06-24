@@ -12,6 +12,8 @@ interface TenantApplicationContextType {
 	goNext: () => void
 	allowEdit: (value: boolean) => void
 	isEditable: boolean
+	setOpenAddress: (value: boolean) => void
+	isOpenAddress: boolean
 	updateFormData: (data: Partial<CreatePropertyTenantApplicationInput>) => void
 	formData: Partial<CreatePropertyTenantApplicationInput>
 	isSubmitting: boolean
@@ -32,6 +34,7 @@ export function CreateNewPropertyTenantApplicationProvider({
 	const createFetcher = useFetcher<{ error: string }>()
 	const [stepCount, setStepCount] = useState(0)
 	const [isEditable, setisEditable] = useState(false)
+	const [isOpenAddress, setisOpenAddress] = useState(false)
 	const [formData, setFormData] = useState<
 		Partial<CreatePropertyTenantApplicationInput>
 	>({})
@@ -41,6 +44,7 @@ export function CreateNewPropertyTenantApplicationProvider({
 	const goNext = () => setStepCount((prev) => prev + 1)
 	const goToPage = (page: number) => setStepCount(page)
 	const allowEdit = (value: boolean) => setisEditable(value)
+	const setOpenAddress = (value: boolean) => setisOpenAddress(value)
 
 	// where there is an error in the action data, show an error toast
 	useEffect(() => {
@@ -95,6 +99,8 @@ export function CreateNewPropertyTenantApplicationProvider({
 		isSubmitting,
 		allowEdit,
 		isEditable,
+		setOpenAddress,
+		isOpenAddress,
 	}
 
 	return (
