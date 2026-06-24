@@ -1285,7 +1285,7 @@ func buildLeaseRentJournalEntry(
 	// Credit appropriate accounts based on line items
 	for _, lineItem := range invoice.LineItems {
 		switch lineItem.Category {
-		case "RENT":
+		case "RENT", "OTHER", "BOOKING_FEE":
 			lines = append(lines, accounting.CreateJournalEntryLineRequest{
 				AccountID: accounts.RentalIncomeID,
 				Debit:     0,
@@ -1295,13 +1295,6 @@ func buildLeaseRentJournalEntry(
 		case "MAINTENANCE_FEE":
 			lines = append(lines, accounting.CreateJournalEntryLineRequest{
 				AccountID: accounts.MaintenanceReimbursementID,
-				Debit:     0,
-				Credit:    lineItem.TotalAmount,
-				Notes:     lib.StringPointer(lineItem.Label),
-			})
-		case "BOOKING_FEE":
-			lines = append(lines, accounting.CreateJournalEntryLineRequest{
-				AccountID: accounts.RentalIncomeID,
 				Debit:     0,
 				Credit:    lineItem.TotalAmount,
 				Notes:     lib.StringPointer(lineItem.Label),

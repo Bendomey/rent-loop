@@ -86,7 +86,7 @@ type InvoiceLineItem struct {
 	Invoice   *Invoice
 
 	Label    string `gorm:"not null;"` // "January Rent", "Security Deposit"
-	Category string `gorm:"not null;"` // 'RENT', 'SECURITY_DEPOSIT', 'INITIAL_DEPOSIT', 'MAINTENANCE_FEE', 'SAAS_FEE', 'EXPENSE', 'BOOKING_FEE'
+	Category string `gorm:"not null;"` // 'RENT', 'SECURITY_DEPOSIT', 'INITIAL_DEPOSIT', 'MAINTENANCE_FEE', 'SAAS_FEE', 'EXPENSE', 'BOOKING_FEE', 'OTHER'
 
 	Quantity    int64  `gorm:"not null;"`
 	UnitAmount  int64  `gorm:"not null;"`
