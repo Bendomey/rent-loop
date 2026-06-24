@@ -45,7 +45,7 @@ const getBooking = async (
 ) => {
 	try {
 		const response = await fetchClient<ApiResponse<Booking>>(
-			`/v1/admin/clients/${clientId}/properties/${propertyId}/bookings/${bookingId}?populate=Tenant,Unit,Property,Invoice,ConfirmedBy,ConfirmedBy.User,CheckedInBy,CheckedInBy.User,CheckedOutBy,CheckedOutBy.User,CanceledBy,CanceledBy.User,CreatedByClientUser,CreatedByClientUser.User`,
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/bookings/${bookingId}?populate=Tenant,Unit,Property,Invoice,Invoice.LineItems,ConfirmedBy,ConfirmedBy.User,CheckedInBy,CheckedInBy.User,CheckedOutBy,CheckedOutBy.User,CanceledBy,CanceledBy.User,CreatedByClientUser,CreatedByClientUser.User`,
 		)
 		return response.parsedBody.data
 	} catch (error: unknown) {
@@ -353,3 +353,38 @@ const deleteDateBlock = async ({
 
 export const useDeleteDateBlock = () =>
 	useMutation({ mutationFn: deleteDateBlock })
+
+const payBookingInvoice = async ({
+	clientId,
+	propertyId,
+	bookingId,
+	invoiceId,
+	body,
+}: {
+	clientId: string
+	propertyId: string
+	bookingId: string
+	invoiceId: string
+	body: {
+		amount: number
+		payment_account_id: string
+		provider: string
+		reference?: string
+	}
+}) => {
+	try {
+		await fetchClient(
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/bookings/${bookingId}/invoice/${invoiceId}/pay`,
+			{ method: 'POST', body: JSON.stringify(body) },
+		)
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+
+export const usePayBookingInvoice = () =>
+	useMutation({ mutationFn: payBookingInvoice })

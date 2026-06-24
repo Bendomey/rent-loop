@@ -1,9 +1,21 @@
+import { Pencil } from 'lucide-react'
 import { Card, CardContent } from '~/components/ui/card'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '~/components/ui/tooltip'
 import { getBookingDuration } from '~/lib/booking.utils'
 import { localizedDayjs } from '~/lib/date'
 import { getPaymentFrequencyLabel } from '~/lib/properties.utils'
 
-export function BookingStatsStrip({ booking }: { booking: Booking }) {
+export function BookingStatsStrip({
+	booking,
+	onEditDates,
+}: {
+	booking: Booking
+	onEditDates?: () => void
+}) {
 	const { count, label } = getBookingDuration(
 		booking.check_in_date,
 		booking.check_out_date,
@@ -37,9 +49,9 @@ export function BookingStatsStrip({ booking }: { booking: Booking }) {
 	return (
 		<Card className="shadow-none">
 			<CardContent className="p-0">
-				<div className="grid grid-cols-2 divide-x divide-y sm:grid-cols-4 sm:divide-y-0">
+				<div className="relative grid grid-cols-2 divide-x divide-y sm:grid-cols-4 sm:divide-y-0">
 					{stats.map((s) => (
-						<div key={s.label} className="flex flex-col gap-0.5 px-4">
+						<div key={s.label} className="flex flex-col gap-0.5 px-4 py-2">
 							<p className="text-muted-foreground text-[10px] font-light tracking-widest uppercase">
 								{s.label}
 							</p>
@@ -49,6 +61,21 @@ export function BookingStatsStrip({ booking }: { booking: Booking }) {
 							) : null}
 						</div>
 					))}
+					{onEditDates ? (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<button
+									type="button"
+									onClick={onEditDates}
+									className="text-muted-foreground hover:text-foreground absolute top-2 right-3 transition-colors"
+									aria-label="Edit dates"
+								>
+									<Pencil className="size-3.5" />
+								</button>
+							</TooltipTrigger>
+							<TooltipContent>Edit check-in / check-out dates</TooltipContent>
+						</Tooltip>
+					) : null}
 				</div>
 			</CardContent>
 		</Card>

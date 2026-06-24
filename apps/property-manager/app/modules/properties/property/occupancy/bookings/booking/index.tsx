@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { ActivityCard } from './components/activity-card'
 import { BookingHeader } from './components/booking-header'
 import { BookingStatsStrip } from './components/booking-stats-strip'
+import { EditDatesModal } from './components/edit-dates-modal'
 import { GuestCard } from './components/guest-card'
 import { NotesCard } from './components/notes-card'
 import { PaymentCard } from './components/payment-card'
@@ -180,6 +181,7 @@ export function BookingDetailModule() {
 	const [checkInOpen, setCheckInOpen] = useState(false)
 	const [completeOpen, setCompleteOpen] = useState(false)
 	const [cancelOpen, setCancelOpen] = useState(false)
+	const [editDatesOpen, setEditDatesOpen] = useState(false)
 
 	const invalidate = () =>
 		queryClient.invalidateQueries({
@@ -252,6 +254,8 @@ export function BookingDetailModule() {
 		)
 	}
 
+	console.log(booking)
+
 	return (
 		<div className="mx-auto max-w-4xl space-y-4 p-5">
 			<PropertyPermissionGuard roles={['MANAGER']}>
@@ -265,7 +269,14 @@ export function BookingDetailModule() {
 				/>
 			</PropertyPermissionGuard>
 
-			<BookingStatsStrip booking={booking} />
+			<BookingStatsStrip
+				booking={booking}
+				onEditDates={
+					booking.status === 'PENDING'
+						? () => setEditDatesOpen(true)
+						: undefined
+				}
+			/>
 
 			<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 				{/* Left column */}
@@ -276,7 +287,11 @@ export function BookingDetailModule() {
 
 				{/* Right column */}
 				<div className="space-y-4">
-					<PaymentCard booking={booking} />
+					<PaymentCard
+						booking={booking}
+						clientId={clientId}
+						propertyId={propertyId}
+					/>
 					<ActivityCard booking={booking} />
 					<NotesCard
 						booking={booking}
@@ -320,6 +335,13 @@ export function BookingDetailModule() {
 				isPending={isCancelling}
 				onOpenChange={setCancelOpen}
 				onConfirm={handleCancel}
+			/>
+			<EditDatesModal
+				open={editDatesOpen}
+				onOpenChange={setEditDatesOpen}
+				booking={booking}
+				clientId={clientId}
+				propertyId={propertyId}
 			/>
 		</div>
 	)
