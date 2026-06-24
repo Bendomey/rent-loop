@@ -212,7 +212,11 @@ function RecordPaymentDialog({
 
 	const { data: accountsData } = useGetPaymentAccounts(clientId, {
 		pagination: { per: 100 },
-		filters: {},
+		filters: {
+			owner_types: ['PROPERTY_MANAGER', 'SYSTEM'],
+			status: 'ACTIVE',
+			rail: invoice.allowed_payment_rails?.[0],
+		},
 	})
 	const accounts = accountsData?.rows ?? []
 

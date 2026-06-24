@@ -254,8 +254,6 @@ export function BookingDetailModule() {
 		)
 	}
 
-	console.log(booking)
-
 	return (
 		<div className="mx-auto max-w-4xl space-y-4 p-5">
 			<PropertyPermissionGuard roles={['MANAGER']}>
