@@ -111,9 +111,9 @@ function MenuItem({ label, subItems, href }: MenuItemProps) {
 		<Link to={href} className="cursor-pointer">
 			<div
 				className={cn(
-					'flex items-center space-x-3 px-5 py-2 hover:bg-gray-50',
+					'flex items-center gap-3 px-5 py-2.5 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-700/60',
 					{
-						'bg-gray-100 font-medium': isActive,
+						'bg-zinc-100 dark:bg-zinc-700': isActive,
 					},
 				)}
 			>
@@ -127,10 +127,10 @@ function MenuItem({ label, subItems, href }: MenuItemProps) {
 									className={cn(
 										'rounded-full px-2 py-0.5 text-xs font-medium',
 										allDone
-											? 'bg-green-100 text-green-700'
+											? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400'
 											: doneCount > 0
-												? 'bg-yellow-100 text-yellow-700'
-												: 'bg-gray-100 text-gray-600',
+												? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400'
+												: 'bg-zinc-100 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400',
 									)}
 								>
 									{doneCount}/{subItems.length}
@@ -155,7 +155,7 @@ function MenuItem({ label, subItems, href }: MenuItemProps) {
 							</TooltipContent>
 						</Tooltip>
 					) : null}
-					<ChevronRight className="h-5 w-auto text-gray-400" />
+					<ChevronRight className="h-4 w-4 shrink-0 text-zinc-400 dark:text-zinc-500" />
 				</div>
 			</div>
 		</Link>
