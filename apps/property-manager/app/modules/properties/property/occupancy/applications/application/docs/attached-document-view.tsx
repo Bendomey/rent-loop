@@ -13,6 +13,7 @@ import { getWitnessNodesFromContent } from '~/lib/document.utils'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import { useClient } from '~/providers/client-provider'
+import { en } from 'zod/v4/locales'
 
 interface AttachedDocumentViewProps {
 	tenantApplication: TenantApplication
@@ -279,6 +280,9 @@ export function AttachedDocumentView({
 									role="TENANT"
 									propertyId={safeString(propertyId)}
 									tenantApplicationId={applicationId}
+									email={safeString(tenantApplication?.email)}
+									phone={safeString(tenantApplication?.phone)}
+									name={safeString(tenantApplication?.first_name + ' ' + tenantApplication?.last_name)}
 								/>
 							)}
 
@@ -302,6 +306,12 @@ export function AttachedDocumentView({
 												existingToken={witnessToken}
 												documentId={safeString(documentId)}
 												propertyId={safeString(propertyId)}
+												{...(entry.role !== 'pm_witness'
+													? {
+														name: safeString(tenantApplication?.emergency_contact_name),
+														phone: safeString(tenantApplication?.emergency_contact_phone),
+													}
+													: {})}
 												role={
 													entry.role === 'pm_witness'
 														? 'PM_WITNESS'
