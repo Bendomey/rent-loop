@@ -3,13 +3,13 @@ import { Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
-import { usePayBookingInvoice } from '~/api/bookings'
+import { usePayInvoice } from '~/api/invoices'
 import {
 	useAddLineItem,
 	useRemoveLineItem,
 	useUpdateLineItem,
 } from '~/api/invoices'
-import { useGetPaymentAccounts } from '~/api/payment-accounts'
+import { RecordPaymentDialog } from '~/components/blocks/record-payment-dialog'
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -32,13 +32,6 @@ import {
 } from '~/components/ui/dialog'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '~/components/ui/select'
 import { Separator } from '~/components/ui/separator'
 import { Spinner } from '~/components/ui/spinner'
 import { TypographyH1 } from '~/components/ui/typography'
@@ -74,13 +67,6 @@ const INVOICE_STATUS_CONFIG: Record<
 		label: 'Void',
 		className: 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-500',
 	},
-}
-
-const RAIL_LABELS: Record<string, string> = {
-	MOMO: 'Mobile Money',
-	BANK_TRANSFER: 'Bank Transfer',
-	OFFLINE: 'Cash / Offline',
-	CARD: 'Card',
 }
 
 interface LineItemFormValues {
@@ -199,129 +185,6 @@ function LineItemDialog({
 	)
 }
 
-function RecordPaymentDialog({
-	open,
-	onOpenChange,
-	invoice,
-	clientId,
-	propertyId,
-	bookingId,
-	onSuccess,
-}: {
-	open: boolean
-	onOpenChange: (v: boolean) => void
-	invoice: Invoice
-	clientId: string
-	propertyId: string
-	bookingId: string
-	onSuccess: () => void
-}) {
-	const [selectedAccountId, setSelectedAccountId] = useState('')
-	const [reference, setReference] = useState('')
-	const { mutateAsync: pay, isPending } = usePayBookingInvoice()
-
-	const { data: accountsData } = useGetPaymentAccounts(clientId, {
-		pagination: { per: 100 },
-		filters: {
-			owner_types: ['PROPERTY_MANAGER', 'SYSTEM'],
-			status: 'ACTIVE',
-			rail: invoice.allowed_payment_rails?.[0],
-		},
-	})
-	const accounts = accountsData?.rows ?? []
-
-	const selectedAccount = accounts.find((a) => a.id === selectedAccountId)
-
-	const handlePay = async () => {
-		if (!selectedAccount) return
-		try {
-			await pay({
-				clientId,
-				propertyId,
-				bookingId,
-				invoiceId: invoice.id,
-				body: {
-					amount: invoice.total_amount,
-					payment_account_id: selectedAccountId,
-					provider: selectedAccount.rail,
-					reference: reference || undefined,
-				},
-			})
-			toast.success('Payment recorded')
-			onSuccess()
-			onOpenChange(false)
-		} catch {
-			toast.error('Failed to record payment')
-		}
-	}
-
-	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-sm">
-				<DialogHeader>
-					<DialogTitle>Record Payment</DialogTitle>
-				</DialogHeader>
-
-				<div className="space-y-3">
-					<p className="text-muted-foreground text-sm">
-						Recording offline payment of{' '}
-						<span className="text-foreground font-medium">
-							{formatAmount(convertPesewasToCedis(invoice.total_amount), invoice.currency)}
-						</span>
-					</p>
-
-					<div className="space-y-1.5">
-						<Label>Payment account</Label>
-						<Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-							<SelectTrigger className="w-full">
-								<SelectValue placeholder="Select an account" />
-							</SelectTrigger>
-							<SelectContent>
-								{accounts.map((account) => (
-									<SelectItem key={account.id} value={account.id}>
-										{RAIL_LABELS[account.rail] ?? account.rail}
-										{account.identifier ? ` · ${account.identifier}` : null}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
-
-					<div className="space-y-1.5">
-						<Label>
-							Reference{' '}
-							<span className="text-muted-foreground font-normal">(optional)</span>
-						</Label>
-						<Input
-							placeholder="e.g. RCP-2024-001"
-							value={reference}
-							onChange={(e) => setReference(e.target.value)}
-						/>
-					</div>
-				</div>
-
-				<DialogFooter>
-					<Button
-						type="button"
-						variant="outline"
-						onClick={() => onOpenChange(false)}
-						disabled={isPending}
-					>
-						Cancel
-					</Button>
-					<Button
-						onClick={() => void handlePay()}
-						disabled={isPending || !selectedAccountId}
-					>
-						{isPending ? <Spinner /> : null}
-						Confirm payment
-					</Button>
-				</DialogFooter>
-			</DialogContent>
-		</Dialog>
-	)
-}
-
 export function PaymentCard({
 	booking,
 	clientId,
@@ -341,6 +204,7 @@ export function PaymentCard({
 	const [deletingItemId, setDeletingItemId] = useState<string | null>(null)
 	const [payOpen, setPayOpen] = useState(false)
 
+	const { mutateAsync: pay, isPending: isPaying } = usePayBookingInvoice()
 	const { mutateAsync: addLineItem, isPending: isAdding } = useAddLineItem()
 	const { mutateAsync: updateLineItem, isPending: isUpdating } = useUpdateLineItem()
 	const { mutateAsync: removeLineItem, isPending: isRemoving } = useRemoveLineItem()
@@ -622,9 +486,23 @@ export function PaymentCard({
 					onOpenChange={setPayOpen}
 					invoice={invoice}
 					clientId={resolvedClientId}
-					propertyId={propertyId}
-					bookingId={booking.id}
-					onSuccess={invalidate}
+					isPending={isPaying}
+					onConfirm={async ({ payment_account_id, provider, reference }) => {
+						try {
+							await pay({
+								clientId: resolvedClientId,
+								propertyId,
+								bookingId: booking.id,
+								invoiceId: invoice.id,
+								body: { amount: invoice.total_amount, payment_account_id, provider, reference },
+							})
+							toast.success('Payment recorded')
+							void invalidate()
+							setPayOpen(false)
+						} catch {
+							toast.error('Failed to record payment')
+						}
+					}}
 				/>
 			) : null}
 

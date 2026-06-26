@@ -1,6 +1,5 @@
 import dayjs from 'dayjs'
 import {
-	AlertCircle,
 	CalendarClock,
 	CheckCircle2,
 	Clock,
@@ -12,8 +11,7 @@ import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { useDeleteInvoice, useVoidInvoice } from '~/api/invoices'
 import { usePayInvoice } from '~/api/invoices'
-import { useGetPaymentAccounts } from '~/api/payment-accounts'
-import { Alert, AlertDescription } from '~/components/ui/alert'
+import { RecordPaymentDialog } from '~/components/blocks/record-payment-dialog'
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -34,22 +32,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from '~/components/ui/card'
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from '~/components/ui/dialog'
-import { Input } from '~/components/ui/input'
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '~/components/ui/select'
 import { Separator } from '~/components/ui/separator'
 import { Spinner } from '~/components/ui/spinner'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
@@ -107,22 +89,6 @@ export function InvoiceDetails({
 	const { clientUser } = useClient()
 	const [showReconfigureAlert, setShowReconfigureAlert] = useState(false)
 	const [showPayDialog, setShowPayDialog] = useState(false)
-	const [selectedAccountId, setSelectedAccountId] = useState<string>('')
-	const [reference, setReference] = useState('')
-
-	const { data: accountsData } = useGetPaymentAccounts(
-		safeString(clientUser?.client_id),
-		{
-			filters: { owner_types: ['PROPERTY_OWNER', 'SYSTEM'], status: 'ACTIVE' },
-		},
-	)
-	const accounts = (accountsData?.rows ?? [])?.filter((a) =>
-		invoice.allowed_payment_rails.includes(a.rail),
-	)
-
-	const selectedAccount = accounts.find(
-		(a: PaymentAccount) => a.id === selectedAccountId,
-	)
 
 	const { isPending: isVoiding, mutate: voidInvoiceMutation } = useVoidInvoice()
 	const { mutate: deleteInvoiceMutation } = useDeleteInvoice()
@@ -166,19 +132,21 @@ export function InvoiceDetails({
 		)
 	}
 
-	const handleRecordPayment = () => {
-		if (!selectedAccount) return
+	const handleRecordPayment = ({
+		payment_account_id,
+		provider,
+		reference,
+	}: {
+		payment_account_id: string
+		provider: string
+		reference?: string
+	}) => {
 		payInvoiceMutation(
 			{
 				client_id: safeString(clientUser?.client_id),
 				property_id: propertyId,
 				invoice_id: invoice.id,
-				body: {
-					amount: invoice.total_amount,
-					payment_account_id: selectedAccount.id,
-					provider: 'CASH', // We only support recording cash payments for now
-					...(reference ? { reference } : {}),
-				},
+				body: { amount: invoice.total_amount, payment_account_id, provider: provider as 'MTN' | 'VODAFONE' | 'AIRTELTIGO' | 'PAYSTACK' | 'BANK_API' | 'CASH', reference },
 			},
 			{
 				onError: () => {
@@ -379,84 +347,14 @@ export function InvoiceDetails({
 				</AlertDialogContent>
 			</AlertDialog>
 
-			{/* Record Payment dialog with payment rail selection */}
-			<Dialog open={showPayDialog} onOpenChange={setShowPayDialog}>
-				<DialogContent className="sm:max-w-sm">
-					<DialogHeader>
-						<DialogTitle>Record Payment</DialogTitle>
-						<DialogDescription>
-							Record an offline payment of{' '}
-							<strong>
-								{formatAmount(
-									convertPesewasToCedis(invoice.total_amount),
-									invoice.currency,
-								)}
-							</strong>{' '}
-							for this invoice.
-						</DialogDescription>
-					</DialogHeader>
-
-					<div className="space-y-4 py-2">
-						<Alert className="border-blue-200 bg-blue-50">
-							<AlertCircle className="size-4 text-blue-500" />
-							<AlertDescription className="text-xs text-blue-700">
-								We only support offline payments for now. To enable online
-								payments, reach out to support.
-							</AlertDescription>
-						</Alert>
-
-						<div className="space-y-1.5">
-							<label className="text-sm font-medium">Payment Account</label>
-							<Select
-								value={selectedAccountId}
-								onValueChange={setSelectedAccountId}
-							>
-								<SelectTrigger className="w-full">
-									<SelectValue placeholder="Select an account" />
-								</SelectTrigger>
-								<SelectContent>
-									{accounts.map((account: PaymentAccount) => (
-										<SelectItem key={account.id} value={account.id}>
-											{RAIL_LABELS[account.rail]}
-											{account.identifier ? ` · ${account.identifier}` : null}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</div>
-						<div className="space-y-1.5">
-							<label className="text-sm font-medium">
-								Reference{' '}
-								<span className="text-muted-foreground font-normal">
-									(optional)
-								</span>
-							</label>
-							<Input
-								placeholder="e.g. RCP-2024-001"
-								value={reference}
-								onChange={(e) => setReference(e.target.value)}
-							/>
-						</div>
-					</div>
-
-					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => setShowPayDialog(false)}
-							disabled={isRecordingPayment}
-						>
-							Cancel
-						</Button>
-						<Button
-							onClick={handleRecordPayment}
-							disabled={isRecordingPayment || !selectedAccount}
-						>
-							{isRecordingPayment ? <Spinner /> : null}
-							Confirm Payment
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+			<RecordPaymentDialog
+				open={showPayDialog}
+				onOpenChange={setShowPayDialog}
+				invoice={invoice}
+				clientId={safeString(clientUser?.client_id)}
+				isPending={isRecordingPayment}
+				onConfirm={handleRecordPayment}
+			/>
 		</>
 	)
 }
