@@ -48,6 +48,7 @@ type InvoiceService interface {
 type invoiceService struct {
 	appCtx              pkg.AppContext
 	repo                repository.InvoiceRepository
+	paymentRepo         repository.PaymentRepository
 	accountingService   AccountingService
 	notificationService NotificationService
 	tenantAccountRepo   repository.TenantAccountRepository
@@ -57,6 +58,7 @@ type invoiceService struct {
 func NewInvoiceService(
 	appCtx pkg.AppContext,
 	repo repository.InvoiceRepository,
+	paymentRepo repository.PaymentRepository,
 	accountingService AccountingService,
 	notificationService NotificationService,
 	tenantAccountRepo repository.TenantAccountRepository,
@@ -65,6 +67,7 @@ func NewInvoiceService(
 	return &invoiceService{
 		appCtx:              appCtx,
 		repo:                repo,
+		paymentRepo:         paymentRepo,
 		accountingService:   accountingService,
 		notificationService: notificationService,
 		tenantAccountRepo:   tenantAccountRepo,
@@ -612,6 +615,37 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, input VoidInvoiceInput
 				"action":   "updating invoice status to VOID",
 			},
 		})
+	}
+
+	// delete all pending payments for the invoice
+	invoiceID := invoice.ID.String()
+	pendingPayments, pendingErr := s.paymentRepo.List(transCtx, repository.ListPaymentsFilter{
+		InvoiceID: &invoiceID,
+		Statuses:  &[]string{"PENDING"},
+	})
+	if pendingErr != nil {
+		transaction.Rollback()
+		return nil, pkg.InternalServerError(pendingErr.Error(), &pkg.RentLoopErrorParams{
+			Err: pendingErr,
+			Metadata: map[string]string{
+				"function":   "VoidInvoice",
+				"action":     "listing pending payments",
+				"invoice_id": invoiceID,
+			},
+		})
+	}
+	for i := range *pendingPayments {
+		if err := failOfflinePayment(transCtx, s.paymentRepo, &(*pendingPayments)[i], "invoice voided"); err != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+				Metadata: map[string]string{
+					"function":   "VoidInvoice",
+					"action":     "failing pending payment",
+					"invoice_id": invoiceID,
+					"payment_id": (*pendingPayments)[i].ID.String(),
+				},
+			})
+		}
 	}
 
 	// Create reversing journal entry to undo the original accounting entries
