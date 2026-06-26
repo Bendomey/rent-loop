@@ -728,7 +728,7 @@ func (s *bookingService) CountBookings(
 }
 
 func (s *bookingService) GetBookingByTrackingCode(ctx context.Context, trackingCode string) (*models.Booking, error) {
-	booking, err := s.repo.GetByTrackingCode(ctx, trackingCode, []string{"Unit", "Property", "Tenant"})
+	booking, err := s.repo.GetByTrackingCode(ctx, trackingCode, []string{"Unit", "Property", "Tenant", "Invoice", "Invoice.LineItems", "Invoice.Payments"})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, pkg.NotFoundError("BookingNotFound", &pkg.RentLoopErrorParams{Err: err})
