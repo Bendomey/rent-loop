@@ -1,8 +1,72 @@
-import { RotateCw, ToggleLeft } from 'lucide-react'
+import { ChevronDown, Plus, RotateCw, ToggleLeft } from 'lucide-react'
+import { Link } from 'react-router'
 import { FilterSet } from '~/components/filter-set'
+import { PropertyPermissionGuard } from '~/components/permissions/permission-guard'
 import { SearchInput } from '~/components/search'
 import { Button } from '~/components/ui/button'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu'
 import { cn } from '~/lib/utils'
+import { useProperty } from '~/providers/property-provider'
+
+const AddTenantButton = ({
+	propertyId,
+	modes,
+}: {
+	propertyId?: string
+	modes?: Property['modes']
+}) => {
+	const base = `/properties/${propertyId}/occupancy`
+	const hasLease = modes?.includes('LEASE')
+	const hasBooking = modes?.includes('BOOKING')
+
+	if (hasLease && hasBooking) {
+		return (
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button
+						variant="default"
+						size="sm"
+						className="bg-rose-600 text-white hover:bg-rose-700"
+					>
+						<Plus className="size-4" />
+						Add Tenant
+						<ChevronDown className="size-4" />
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="end">
+					<DropdownMenuItem asChild>
+						<Link to={`${base}/applications/new`}>New Application</Link>
+					</DropdownMenuItem>
+					<DropdownMenuItem asChild>
+						<Link to={`${base}/bookings/new`}>New Booking</Link>
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
+		)
+	}
+
+	const to = hasBooking
+		? `${base}/bookings/new`
+		: `${base}/applications/new`
+
+	return (
+		<Link to={to}>
+			<Button
+				variant="default"
+				size="sm"
+				className="bg-rose-600 text-white hover:bg-rose-700"
+			>
+				<Plus className="size-4" />
+				Add Tenant
+			</Button>
+		</Link>
+	)
+}
 
 const filters: Array<Filter> = [
 	{
@@ -29,7 +93,7 @@ export const PropertyTenantsController = ({
 	isLoading: boolean
 	refetch: VoidFunction
 }) => {
-	// const { clientUserProperty } = useProperty()
+	const { clientUserProperty } = useProperty()
 
 	return (
 		<div className="flex w-full flex-col gap-2">
@@ -43,21 +107,9 @@ export const PropertyTenantsController = ({
 					<SearchInput placeholder="Search tenants..." />
 				</div>
 				<div className="flex items-center justify-end gap-2">
-					{/* TODO: bring this back later since now we have different ways to create tenants. */}
-					{/* <PropertyPermissionGuard roles={['MANAGER']}>
-						<Link
-							to={`/properties/${clientUserProperty?.property_id}/occupancy/applications/new`}
-						>
-							<Button
-								variant="default"
-								size="sm"
-								className="bg-rose-600 text-white hover:bg-rose-700"
-							>
-								<Plus className="size-4" />
-								Add Tenant
-							</Button>
-						</Link>
-					</PropertyPermissionGuard> */}
+					<PropertyPermissionGuard roles={['MANAGER']}>
+						<AddTenantButton propertyId={clientUserProperty?.property_id} modes={clientUserProperty?.property?.modes} />
+					</PropertyPermissionGuard>
 
 					<Button
 						onClick={() => refetch()}
