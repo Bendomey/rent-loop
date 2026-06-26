@@ -154,10 +154,38 @@ func (s *paymentService) CreateOfflinePayment(
 		})
 	}
 
+	// check if there're pending payments and fail those deliberately before creating a new one with the new amount.
+	pendingPayments, pendingPaymentsErr := s.repo.List(ctx, repository.ListPaymentsFilter{
+		InvoiceID: &input.InvoiceID,
+		Statuses:  &[]string{"PENDING"},
+	})
+	if pendingPaymentsErr != nil {
+		return nil, pkg.InternalServerError(pendingPaymentsErr.Error(), &pkg.RentLoopErrorParams{
+			Metadata: map[string]string{
+				"invoice_id": input.InvoiceID,
+				"function":   "CreateOfflinePayment",
+				"action":     "listing pending payments",
+			},
+		})
+	}
+
+	for i := range *pendingPayments {
+		if err := failOfflinePayment(ctx, s.repo, &(*pendingPayments)[i], "superseded by a new payment"); err != nil {
+			return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+				Metadata: map[string]string{
+					"invoice_id": input.InvoiceID,
+					"payment_id": (*pendingPayments)[i].ID.String(),
+					"function":   "CreateOfflinePayment",
+					"action":     "failing pending payment",
+				},
+			})
+		}
+	}
+
 	remainingBalance, remainingBalanceErr := getRemainingInvoiceBalance(ctx, GetRemainingInvoiceBalanceInput{
 		repo:     s.repo,
 		invoice:  *invoice,
-		statuses: []string{"SUCCESSFUL", "PENDING"},
+		statuses: []string{"SUCCESSFUL"},
 	})
 	if remainingBalanceErr != nil {
 		return nil, pkg.InternalServerError(remainingBalanceErr.Error(), &pkg.RentLoopErrorParams{
@@ -638,6 +666,28 @@ type GetRemainingInvoiceBalanceInput struct {
 	repo     repository.PaymentRepository
 	invoice  models.Invoice
 	statuses []string
+}
+
+func failOfflinePayment(
+	ctx context.Context,
+	repo repository.PaymentRepository,
+	payment *models.Payment,
+	reason string,
+) error {
+	existingMetadata := map[string]any{}
+	if payment.Metadata != nil {
+		_ = json.Unmarshal(*payment.Metadata, &existingMetadata)
+	}
+	existingMetadata["offline_response"] = map[string]any{
+		"reason": reason,
+	}
+	if metadataJSON, err := lib.InterfaceToJSON(existingMetadata); err == nil {
+		payment.Metadata = metadataJSON
+	}
+	now := time.Now()
+	payment.Status = "FAILED"
+	payment.FailedAt = &now
+	return repo.Update(ctx, payment)
 }
 
 func getRemainingInvoiceBalance(
