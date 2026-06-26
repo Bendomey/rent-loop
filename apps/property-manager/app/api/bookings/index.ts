@@ -45,7 +45,7 @@ const getBooking = async (
 ) => {
 	try {
 		const response = await fetchClient<ApiResponse<Booking>>(
-			`/v1/admin/clients/${clientId}/properties/${propertyId}/bookings/${bookingId}?populate=Tenant,Unit,Property,Invoice,Invoice.LineItems,ConfirmedBy,ConfirmedBy.User,CheckedInBy,CheckedInBy.User,CheckedOutBy,CheckedOutBy.User,CanceledBy,CanceledBy.User,CreatedByClientUser,CreatedByClientUser.User`,
+			`/v1/admin/clients/${clientId}/properties/${propertyId}/bookings/${bookingId}?populate=Tenant,Unit,Property,Invoice,Invoice.LineItems,Invoice.Payments,ConfirmedBy,ConfirmedBy.User,CheckedInBy,CheckedInBy.User,CheckedOutBy,CheckedOutBy.User,CanceledBy,CanceledBy.User,CreatedByClientUser,CreatedByClientUser.User`,
 		)
 		return response.parsedBody.data
 	} catch (error: unknown) {

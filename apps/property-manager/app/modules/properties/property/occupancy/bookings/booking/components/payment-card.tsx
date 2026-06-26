@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
+import dayjs from 'dayjs'
 import { Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -8,6 +9,7 @@ import {
 	useIssueInvoice,
 	useRemoveLineItem,
 	useUpdateLineItem,
+	useVerifyOfflinePayment,
 } from '~/api/invoices'
 import { RecordPaymentDialog } from '~/components/blocks/record-payment-dialog'
 import {
@@ -26,6 +28,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
@@ -34,6 +37,7 @@ import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { Separator } from '~/components/ui/separator'
 import { Spinner } from '~/components/ui/spinner'
+import { Textarea } from '~/components/ui/textarea'
 import { TypographyH1 } from '~/components/ui/typography'
 import { getBookingDuration, getBookingRateLabel } from '~/lib/booking.utils'
 import { QUERY_KEYS } from '~/lib/constants'
@@ -185,6 +189,188 @@ function LineItemDialog({
 	)
 }
 
+const PAYMENT_METHOD_LABELS: Record<Payment['payment_method'], string> = {
+	CHECK: 'Cheque',
+	MOMO: 'Mobile Money',
+	CARD: 'Card',
+	BANK_DIRECT: 'Bank Transfer',
+	OFFLINE: 'Offline / Cash',
+}
+
+function VerifyPaymentDialog({
+	open,
+	onOpenChange,
+	payment,
+	clientId,
+	propertyId,
+	onSuccess,
+}: {
+	open: boolean
+	onOpenChange: (v: boolean) => void
+	payment: Payment
+	clientId: string
+	propertyId: string
+	onSuccess?: () => void
+}) {
+	const { mutateAsync: verify, isPending } = useVerifyOfflinePayment()
+	const [declineMode, setDeclineMode] = useState(false)
+	const [declineReason, setDeclineReason] = useState('')
+
+	const handleOpenChange = (v: boolean) => {
+		if (!v) {
+			setDeclineMode(false)
+			setDeclineReason('')
+		}
+		onOpenChange(v)
+	}
+
+	const handleVerify = async (isSuccessful: boolean, reason?: string) => {
+		try {
+			await verify({
+				client_id: clientId,
+				property_id: propertyId,
+				payment_id: payment.id,
+				is_successful: isSuccessful,
+				metadata: reason ? { offline_response: { reason } } : undefined,
+			})
+			toast.success(isSuccessful ? 'Payment confirmed as received' : 'Payment marked as not received')
+			onSuccess?.()
+			handleOpenChange(false)
+		} catch {
+			toast.error('Failed to update payment status')
+		}
+	}
+
+	return (
+		<Dialog open={open} onOpenChange={handleOpenChange}>
+			<DialogContent className="sm:max-w-sm">
+				<DialogHeader>
+					<DialogTitle>Verify Payment</DialogTitle>
+					<DialogDescription>
+						{declineMode
+							? 'Let the guest know why their payment was not received.'
+							: 'Confirm whether you have received this payment from the guest.'}
+					</DialogDescription>
+				</DialogHeader>
+
+				{declineMode ? (
+					<div className="space-y-1.5">
+						<Label>Reason <span className="text-muted-foreground font-normal">(optional)</span></Label>
+						<Textarea
+							placeholder="e.g. Payment amount was incorrect"
+							value={declineReason}
+							onChange={(e) => setDeclineReason(e.target.value)}
+							rows={3}
+						/>
+					</div>
+				) : (
+					<div className="space-y-3 rounded-lg border p-4">
+						<div className="flex items-baseline justify-between">
+							<span className="text-muted-foreground text-xs">Amount</span>
+							<span className="text-base font-semibold">
+								{formatAmount(convertPesewasToCedis(payment.amount), payment.currency)}
+							</span>
+						</div>
+
+						<Separator />
+
+						<div className="space-y-2">
+							<div className="flex items-center justify-between">
+								<span className="text-muted-foreground text-xs">Method</span>
+								<span className="text-xs font-medium">
+									{PAYMENT_METHOD_LABELS[payment.payment_method] ?? payment.payment_method}
+								</span>
+							</div>
+
+							<div className="flex items-center justify-between">
+								<span className="text-muted-foreground text-xs">Reference</span>
+								<span className="font-mono text-xs">
+									{payment.reference || '—'}
+								</span>
+							</div>
+
+							{payment.email ? (
+								<div className="flex items-center justify-between gap-4">
+									<span className="text-muted-foreground shrink-0 text-xs">Email</span>
+									<span className="truncate text-xs">{payment.email}</span>
+								</div>
+							) : null}
+
+							<div className="flex items-center justify-between">
+								<span className="text-muted-foreground text-xs">Submitted</span>
+								<span className="text-xs">
+									{dayjs(payment.created_at).format('MMM D, YYYY · h:mm A')}
+								</span>
+							</div>
+						</div>
+					</div>
+				)}
+
+				<DialogFooter className="flex-row items-center justify-between sm:justify-between">
+					{declineMode ? (
+						<>
+							<Button
+								type="button"
+								variant="ghost"
+								size="sm"
+								disabled={isPending}
+								onClick={() => setDeclineMode(false)}
+							>
+								Back
+							</Button>
+							<Button
+								type="button"
+								variant="outline"
+								size="sm"
+								disabled={isPending}
+								className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+								onClick={() => void handleVerify(false, declineReason || undefined)}
+							>
+								{isPending ? <Spinner /> : null}
+								Confirm not received
+							</Button>
+						</>
+					) : (
+						<>
+							<Button
+								type="button"
+								variant="ghost"
+								size="sm"
+								disabled={isPending}
+								onClick={() => handleOpenChange(false)}
+							>
+								Close
+							</Button>
+							<div className="flex gap-2">
+								<Button
+									type="button"
+									variant="outline"
+									size="sm"
+									disabled={isPending}
+									className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+									onClick={() => setDeclineMode(true)}
+								>
+									Not received
+								</Button>
+								<Button
+										type="button"
+										size="sm"
+										disabled={isPending}
+										className="bg-teal-600 text-white hover:bg-teal-700"
+										onClick={() => void handleVerify(true)}
+									>
+										{isPending ? <Spinner /> : null}
+										Payment received
+									</Button>
+								</div>
+							</>
+						)}
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+		)
+}
+
 export function PaymentCard({
 	booking,
 	clientId,
@@ -203,6 +389,7 @@ export function PaymentCard({
 	const [editingItem, setEditingItem] = useState<InvoiceLineItem | null>(null)
 	const [deletingItemId, setDeletingItemId] = useState<string | null>(null)
 	const [payOpen, setPayOpen] = useState(false)
+	const [verifyOpen, setVerifyOpen] = useState(false)
 
 	const { mutateAsync: addLineItem, isPending: isAdding } = useAddLineItem()
 	const { mutateAsync: updateLineItem, isPending: isUpdating } = useUpdateLineItem()
@@ -239,6 +426,10 @@ export function PaymentCard({
 			: invoice?.status === 'PAID'
 				? INVOICE_STATUS_CONFIG['PAID']
 				: INVOICE_STATUS_CONFIG['ISSUED']
+
+	const pendingOfflinePayment = invoice?.payments?.find(
+		(p) => p.status === 'PENDING' && p.payment_method === 'OFFLINE',
+	) ?? null
 
 	const isPayable =
 		booking.status !== 'PENDING' &&
@@ -445,14 +636,26 @@ export function PaymentCard({
 					</div>
 
 					{isPayable && !editMode ? (
-						<Button
-							type="button"
-							size="sm"
-							className="w-full"
-							onClick={() => setPayOpen(true)}
-						>
-							Record payment
-						</Button>
+						pendingOfflinePayment ? (
+							<Button
+								type="button"
+								size="sm"
+								variant="outline"
+								className="w-full border-blue-300 text-blue-600 hover:bg-blue-50 hover:text-blue-700 dark:border-blue-700 dark:text-blue-400 dark:hover:bg-blue-950/40"
+								onClick={() => setVerifyOpen(true)}
+							>
+								Verify payment
+							</Button>
+						) : (
+							<Button
+								type="button"
+								size="sm"
+								className="w-full"
+								onClick={() => setPayOpen(true)}
+							>
+								Record payment
+							</Button>
+						)
 					) : null}
 				</CardContent>
 			</Card>
@@ -483,6 +686,17 @@ export function PaymentCard({
 				onSave={(v) => void handleUpdateLineItem(v)}
 				isPending={isUpdating}
 			/>
+
+			{pendingOfflinePayment ? (
+				<VerifyPaymentDialog
+					open={verifyOpen}
+					onOpenChange={setVerifyOpen}
+					payment={pendingOfflinePayment}
+					clientId={resolvedClientId}
+					propertyId={propertyId}
+					onSuccess={() => void invalidate()}
+				/>
+			) : null}
 
 			{invoice ? (
 				<RecordPaymentDialog

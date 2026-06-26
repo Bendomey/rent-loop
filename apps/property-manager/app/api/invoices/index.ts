@@ -333,3 +333,38 @@ const removeLineItem = async ({
 
 export const useRemoveLineItem = () => useMutation({ mutationFn: removeLineItem })
 
+/**
+ * Verify an offline payment — approve (is_successful: true) or decline (is_successful: false)
+ */
+interface VerifyOfflinePaymentInput {
+	client_id: string
+	property_id: string
+	payment_id: string
+	is_successful: boolean
+	metadata?: Record<string, unknown>
+}
+
+const verifyOfflinePayment = async ({
+	client_id,
+	property_id,
+	payment_id,
+	is_successful,
+	metadata,
+}: VerifyOfflinePaymentInput) => {
+	try {
+		const response = await fetchClient<ApiResponse<Payment>>(
+			`/v1/admin/clients/${client_id}/properties/${property_id}/payments/${payment_id}/verify`,
+			{ method: 'PATCH', body: JSON.stringify({ is_successful, metadata }) },
+		)
+		return response.parsedBody.data
+	} catch (error: unknown) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) throw error
+	}
+}
+
+export const useVerifyOfflinePayment = () =>
+	useMutation({ mutationFn: verifyOfflinePayment })
