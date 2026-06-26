@@ -441,60 +441,6 @@ export const useGenerateApplicationPaymentInvoice = () =>
 	useMutation({ mutationFn: generateApplicationPaymentInvoice })
 
 /**
- * Pay (record an offline payment for) an application invoice.
- */
-type PaymentProvider =
-	| 'MTN'
-	| 'VODAFONE'
-	| 'AIRTELTIGO'
-	| 'PAYSTACK'
-	| 'BANK_API'
-	| 'CASH'
-
-interface PayApplicationInvoiceInput {
-	client_id: string
-	property_id: string
-	tenant_application_id: string
-	invoice_id: string
-	body: {
-		amount: number
-		payment_account_id: string
-		provider: PaymentProvider
-		reference?: string
-		metadata?: Record<string, unknown>
-	}
-}
-
-const payApplicationInvoice = async ({
-	client_id,
-	property_id,
-	tenant_application_id,
-	invoice_id,
-	body,
-}: PayApplicationInvoiceInput) => {
-	try {
-		await fetchClient(
-			`/v1/admin/clients/${client_id}/properties/${property_id}/tenant-applications/${tenant_application_id}/invoice/${invoice_id}/pay`,
-			{
-				method: 'POST',
-				body: JSON.stringify(body),
-			},
-		)
-	} catch (error) {
-		if (error instanceof Response) {
-			const response = await error.json()
-			throw new Error(response.errors?.message || 'Unknown error')
-		}
-		if (error instanceof Error) {
-			throw error
-		}
-	}
-}
-
-export const usePayApplicationInvoice = () =>
-	useMutation({ mutationFn: payApplicationInvoice })
-
-/**
  * Bulk create lease applications from CSV/Excel upload.
  */
 export interface BulkCreateTenantApplicationEntry {

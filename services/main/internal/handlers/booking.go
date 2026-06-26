@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"math"
 	"net/http"
 	"slices"
 	"time"
@@ -53,14 +52,11 @@ type CreateBookingRequest struct {
 }
 
 type UpdateBookingRequest struct {
-	Notes                  lib.Optional[string]         `json:"notes"                    validate:"omitempty"`
-	Rate                   lib.Optional[int64]          `json:"rate"                     validate:"omitempty,gt=0"`
-	Currency               lib.Optional[string]         `json:"currency"                 validate:"omitempty"`
-	RequiresUpfrontPayment lib.Optional[bool]           `json:"requires_upfront_payment" validate:"omitempty"`
-	CheckInDate            lib.Optional[time.Time]      `json:"check_in_date"            validate:"omitempty"`
-	CheckOutDate           lib.Optional[time.Time]      `json:"check_out_date"           validate:"omitempty"`
-	Meta                   lib.Optional[datatypes.JSON] `json:"meta"                     validate:"omitempty"`
-	InvoiceID              lib.Optional[string]         `json:"invoice_id"                                         swaggertype:"string"`
+	Notes                  lib.Optional[string]         `json:"notes"                    validate:"omitempty" swaggertype:"string"`
+	RequiresUpfrontPayment lib.Optional[bool]           `json:"requires_upfront_payment" validate:"omitempty" swaggertype:"boolean"`
+	CheckInDate            lib.Optional[time.Time]      `json:"check_in_date"            validate:"omitempty" swaggertype:"string"`
+	CheckOutDate           lib.Optional[time.Time]      `json:"check_out_date"           validate:"omitempty" swaggertype:"string"`
+	Meta                   lib.Optional[datatypes.JSON] `json:"meta"                     validate:"omitempty" swaggertype:"object"`
 }
 
 type CancelBookingRequest struct {
@@ -306,13 +302,10 @@ func (h *BookingHandler) UpdateBooking(w http.ResponseWriter, r *http.Request) {
 	booking, err := h.bookingService.UpdateBooking(r.Context(), services.UpdateBookingInput{
 		BookingID:              bookingID,
 		Notes:                  body.Notes,
-		Rate:                   body.Rate,
-		Currency:               body.Currency,
 		RequiresUpfrontPayment: body.RequiresUpfrontPayment,
 		CheckInDate:            body.CheckInDate,
 		CheckOutDate:           body.CheckOutDate,
 		Meta:                   body.Meta,
-		InvoiceID:              body.InvoiceID,
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)
@@ -675,26 +668,12 @@ func (h *BookingHandler) PublicCreateBooking(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// calculate the rate based on the unit's rent fee and the length of stay based on frequency: WEEKLY | DAILY | MONTHLY | HOURLY
-	hours := body.CheckOutDate.Sub(body.CheckInDate).Hours()
-	rate := int64(0)
-	switch unit.PaymentFrequency {
-	case "HOURLY":
-		rate = int64(math.Ceil(hours)) * unit.RentFee
-	case "DAILY":
-		rate = int64(math.Ceil(hours/24)) * unit.RentFee
-	case "WEEKLY":
-		rate = int64(math.Ceil(hours/(24*7))) * unit.RentFee
-	case "MONTHLY":
-		rate = int64(math.Ceil(hours/(24*30))) * unit.RentFee
-	}
-
 	booking, err := h.bookingService.CreateBooking(r.Context(), services.CreateBookingInput{
 		UnitID:         unit.ID.String(),
 		PropertyID:     unit.PropertyID,
 		CheckInDate:    body.CheckInDate,
 		CheckOutDate:   body.CheckOutDate,
-		Rate:           rate,
+		Rate:           unit.RentFee,
 		Currency:       unit.RentFeeCurrency,
 		StayFrequency:  unit.PaymentFrequency,
 		BookingSource:  "GUEST_LINK",

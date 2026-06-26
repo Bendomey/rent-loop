@@ -52,7 +52,9 @@ export function PropertyCard({
 
 				{/* Property details */}
 				<div className="space-y-0.5">
-					<p className="text-lg font-semibold font-serif">{property?.name ?? unit.name}</p>
+					<p className="font-serif text-lg font-semibold">
+						{property?.name ?? unit.name}
+					</p>
 					{property ? (
 						<p className="text-muted-foreground text-xs">
 							{[property.address, property.city].filter(Boolean).join(' · ')}

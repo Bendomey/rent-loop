@@ -26,6 +26,7 @@ type InvoiceRepository interface {
 	CreateLineItem(context context.Context, lineItem *models.InvoiceLineItem) error
 	GetLineItem(context context.Context, lineItemID string) (*models.InvoiceLineItem, error)
 	GetLineItems(context context.Context, invoiceID string) ([]models.InvoiceLineItem, error)
+	UpdateLineItem(context context.Context, lineItem *models.InvoiceLineItem) error
 	DeleteLineItem(context context.Context, lineItemID string) error
 	ListForReminders(ctx context.Context) (*[]models.Invoice, error)
 }
@@ -446,6 +447,12 @@ func (r *invoiceRepository) GetLineItems(ctx context.Context, invoiceID string) 
 	}
 
 	return lineItems, nil
+}
+
+func (r *invoiceRepository) UpdateLineItem(ctx context.Context, lineItem *models.InvoiceLineItem) error {
+	db := lib.ResolveDB(ctx, r.DB)
+
+	return db.WithContext(ctx).Model(lineItem).Updates(lineItem).Error
 }
 
 func (r *invoiceRepository) DeleteLineItem(ctx context.Context, lineItemID string) error {

@@ -248,10 +248,7 @@ export function TermsOfUse() {
 					</p>
 					<p className="mt-4 text-base/7 text-gray-600">
 						Phone Number:{' '}
-						<a
-							href="tel:+233201080802"
-							className="text-rl-crimson"
-						>
+						<a href="tel:+233201080802" className="text-rl-crimson">
 							+233 201 080 802
 						</a>
 						<br />

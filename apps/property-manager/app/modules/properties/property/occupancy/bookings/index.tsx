@@ -1,12 +1,14 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { CalendarDays } from 'lucide-react'
+import { CalendarDays, Eye } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { PropertyBookingsController } from './controller'
 import { useGetPropertyBookings } from '~/api/bookings'
 import { DataTable } from '~/components/datatable'
 import { Badge } from '~/components/ui/badge'
+import { Button } from '~/components/ui/button'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
+import { getBookingRateFrequencySuffix } from '~/lib/booking.utils'
 import { PAGINATION_DEFAULTS } from '~/lib/constants'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { safeString } from '~/lib/strings'
@@ -47,7 +49,7 @@ export function PropertyBookingsModule() {
 		useGetPropertyBookings(clientId, propertyId, {
 			filters: { status, unit_id },
 			pagination: { page, per },
-			populate: ['Tenant', 'Unit'],
+			populate: ['Tenant', 'Unit', 'Invoice', 'Invoice.LineItems'],
 			sorter: { sort: 'desc', sort_by: 'created_at' },
 		})
 
@@ -76,9 +78,14 @@ export function PropertyBookingsModule() {
 				cell: ({ row }) => {
 					const t = row.original.tenant
 					return (
-						<span className="text-xs">
-							{t ? `${t.first_name} ${t.last_name}` : '—'}
-						</span>
+						<div>
+							<span className="text-xs">
+								{t ? `${t.first_name} ${t.last_name}` : '—'}
+							</span>
+							<span className="text-muted-foreground block text-xs font-light">
+								{t?.phone ?? t?.email}
+							</span>
+						</div>
 					)
 				},
 			},
@@ -103,15 +110,42 @@ export function PropertyBookingsModule() {
 				},
 			},
 			{
-				accessorKey: 'rate',
+				id: 'rate',
 				header: 'Rate',
-				cell: ({ getValue, row }) => (
-					<span className="text-xs font-semibold">
-						{formatAmount(
-							convertPesewasToCedis(getValue<number>()),
-							row.original.unit?.rent_fee_currency,
-						)}
-					</span>
+				cell: ({ row }) => {
+					const bookingFeeItem = row.original.invoice?.line_items?.find(
+						(item) => item.category === 'BOOKING_FEE',
+					)
+					return (
+						<span className="text-xs font-semibold">
+							{bookingFeeItem
+								? formatAmount(
+										convertPesewasToCedis(bookingFeeItem.unit_amount),
+										bookingFeeItem.currency,
+									)
+								: '—'}
+							<span className="text-muted-foreground block text-xs font-light">
+								{getBookingRateFrequencySuffix(row.original.stay_frequency)}
+							</span>
+						</span>
+					)
+				},
+			},
+			{
+				id: 'actions',
+				cell: ({ row }) => (
+					<Link
+						to={`/properties/${propertyId}/occupancy/bookings/${row.original.id}`}
+					>
+						<Button
+							variant="ghost"
+							className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+							size="icon"
+						>
+							<Eye />
+							<span className="sr-only">View booking</span>
+						</Button>
+					</Link>
 				),
 			},
 		],
@@ -119,7 +153,7 @@ export function PropertyBookingsModule() {
 	)
 
 	return (
-		<div className="mx-6 my-6 mx-auto max-w-4xl flex flex-col gap-4 sm:gap-6">
+		<div className="mx-auto my-6 flex max-w-4xl flex-col gap-4 px-6 sm:gap-6">
 			<div className="space-y-1">
 				<TypographyH4>Bookings</TypographyH4>
 				<TypographyMuted>All bookings for this property.</TypographyMuted>

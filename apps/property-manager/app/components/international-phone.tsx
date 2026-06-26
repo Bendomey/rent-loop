@@ -1,14 +1,14 @@
-import PhoneInput from 'react-phone-number-input'
-import 'react-phone-number-input/style.css'
+import type { CountryCode } from 'libphonenumber-js'
 import { HelpCircle } from 'lucide-react'
-import { cn } from '~/lib/utils'
+import PhoneInput from 'react-phone-number-input'
+import { InputGroupButton } from '~/components/ui/input-group'
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipTrigger,
 } from '~/components/ui/tooltip'
-import { InputGroupButton } from '~/components/ui/input-group'
-import type { CountryCode } from 'libphonenumber-js'
+import { cn } from '~/lib/utils'
+import 'react-phone-number-input/style.css'
 
 type InternationalPhoneInputProps = {
 	value?: string
@@ -46,10 +46,10 @@ export function InternationalPhoneInput({
 				onChange={(value) => onChange(value ?? '')}
 				placeholder={placeholder}
 				className="flex h-10 w-full items-center gap-2"
-				inputClassName={cn(
-					'flex-1 border-0 bg-transparent px-2 py-2 text-sm shadow-none',
-					'focus-visible:ring-0 focus-visible:outline-none',
-				)}
+				numberInputProps={{
+					className:
+						'flex-1 border-0 bg-transparent px-2 py-2 text-sm shadow-none focus-visible:!ring-0 focus-visible:!outline-none focus-visible:!ring-offset-0',
+				}}
 				countrySelectProps={{
 					className: 'border-0 bg-transparent text-sm shadow-none focus:ring-0',
 				}}

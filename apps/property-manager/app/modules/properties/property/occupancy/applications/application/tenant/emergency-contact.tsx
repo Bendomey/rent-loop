@@ -2,11 +2,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Pencil, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useTenantApplicationContext } from '../context'
 import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { Button } from '~/components/ui/button'
 import {
 	Card,
@@ -25,8 +27,6 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
-import { isValidPhoneNumber } from 'react-phone-number-input'
-import { InternationalPhoneInput } from '~/components/international-phone'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { Spinner } from '~/components/ui/spinner'
@@ -152,7 +152,9 @@ export function PropertyTenantApplicationEmergencyContact({
 				property_id,
 				data: {
 					...data,
-					emergency_contact_phone: normalizeInternationalPhoneNumber(data.emergency_contact_phone) ?? data.emergency_contact_phone,
+					emergency_contact_phone:
+						normalizeInternationalPhoneNumber(data.emergency_contact_phone) ??
+						data.emergency_contact_phone,
 				},
 			},
 			{

@@ -52,6 +52,7 @@ func NewServices(params INewServicesParams) Services {
 	invoiceService := NewInvoiceService(
 		params.AppCtx,
 		params.Repository.InvoiceRepository,
+		params.Repository.PaymentRepository,
 		accountingService,
 		notificationService,
 		params.Repository.TenantAccountRepository,
@@ -192,6 +193,7 @@ func NewServices(params INewServicesParams) Services {
 		UnitDateBlockRepo:    params.Repository.UnitDateBlockRepository,
 		TenantService:        tenantService,
 		InvoiceService:       invoiceService,
+		UnitService:          unitService,
 	})
 
 	exchangeRateService := NewExchangeRateService(params.AppCtx, params.Repository.ExchangeRateRepository)

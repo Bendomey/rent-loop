@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Check } from 'lucide-react'
 import { useRef } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 import { Link, useLoaderData, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -12,6 +13,7 @@ import {
 } from '~/api/client-user-properties'
 import { useUpdateClientUser } from '~/api/client-users'
 import { useGetMyProperties } from '~/api/properties'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { Button } from '~/components/ui/button'
 import { FieldGroup } from '~/components/ui/field'
 import {
@@ -37,8 +39,6 @@ import {
 	TypographyH4,
 	TypographyMuted,
 } from '~/components/ui/typography'
-import { isValidPhoneNumber } from 'react-phone-number-input'
-import { InternationalPhoneInput } from '~/components/international-phone'
 import { QUERY_KEYS } from '~/lib/constants'
 import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 import { safeString } from '~/lib/strings'
@@ -136,7 +136,8 @@ export function EditMemberModule() {
 				clientId: safeString(clientUser?.client_id),
 				id: safeString(memberId),
 				name: data.name,
-				phoneNumber: normalizeInternationalPhoneNumber(data.phone) ?? data.phone,
+				phoneNumber:
+					normalizeInternationalPhoneNumber(data.phone) ?? data.phone,
 			})
 
 			// Diff property assignments

@@ -1,6 +1,7 @@
 import type { Route } from './+types/_auth.properties.$propertyId.occupancy.bookings.new'
 import { propertyContext } from '~/lib/actions/property.context.server'
-import { getDomainUrl } from '~/lib/misc'
+import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
+import { getSocialMetas } from '~/lib/seo'
 import { NewBookingModule } from '~/modules'
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -9,5 +10,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export const handle = { breadcrumb: 'New' }
+
+export function meta({ loaderData, location, params }: Route.MetaArgs) {
+	return getSocialMetas({
+		title: `New Booking | ${loaderData?.clientUserProperty?.property?.name ?? params.propertyId}`,
+		url: getDisplayUrl({ origin: loaderData.origin, path: location.pathname }),
+		origin: loaderData.origin,
+	})
+}
 
 export default NewBookingModule

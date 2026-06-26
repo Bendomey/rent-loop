@@ -3,10 +3,12 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Copy, Mail, Phone } from 'lucide-react'
 import { useEffect, type Dispatch, type SetStateAction } from 'react'
 import { useForm } from 'react-hook-form'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 import { useLoaderData, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useInviteTenateToProperty } from '~/api/tenant-applications'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import {
 	AlertDialog,
 	AlertDialogContent,
@@ -23,8 +25,6 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
-import { isValidPhoneNumber } from 'react-phone-number-input'
-import { InternationalPhoneInput } from '~/components/international-phone'
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'
@@ -56,7 +56,9 @@ const ValidationSchema = z
 		email: z.email('Please enter a valid email address').optional(),
 		phone: z
 			.string({ error: 'Phone Number is required' })
-			.refine((v) => !v || isValidPhoneNumber(v), { message: 'Enter a valid phone number' })
+			.refine((v) => !v || isValidPhoneNumber(v), {
+				message: 'Enter a valid phone number',
+			})
 			.optional(),
 	})
 	.superRefine((data, ctx) => {

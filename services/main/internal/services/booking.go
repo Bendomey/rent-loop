@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -42,6 +43,7 @@ type bookingService struct {
 	unitDateBlockRepo    repository.UnitDateBlockRepository
 	tenantService        TenantService
 	invoiceService       InvoiceService
+	unitService          UnitService
 }
 
 type BookingServiceDeps struct {
@@ -51,6 +53,7 @@ type BookingServiceDeps struct {
 	UnitDateBlockRepo    repository.UnitDateBlockRepository
 	TenantService        TenantService
 	InvoiceService       InvoiceService
+	UnitService          UnitService
 }
 
 func NewBookingService(deps BookingServiceDeps) BookingService {
@@ -61,6 +64,7 @@ func NewBookingService(deps BookingServiceDeps) BookingService {
 		unitDateBlockRepo:    deps.UnitDateBlockRepo,
 		tenantService:        deps.TenantService,
 		invoiceService:       deps.InvoiceService,
+		unitService:          deps.UnitService,
 	}
 }
 
@@ -96,22 +100,19 @@ type CancelBookingInput struct {
 	CancellationReason string
 }
 
-type UpdateBookingInput struct {
-	BookingID string
-
-	Notes                  lib.Optional[string]
-	Rate                   lib.Optional[int64]
-	Currency               lib.Optional[string]
-	RequiresUpfrontPayment lib.Optional[bool]
-	CheckInDate            lib.Optional[time.Time]
-	CheckOutDate           lib.Optional[time.Time]
-	Meta                   lib.Optional[datatypes.JSON]
-	InvoiceID              lib.Optional[string]
-}
-
 func (s *bookingService) CreateBooking(ctx context.Context, input CreateBookingInput) (*models.Booking, error) {
 	if !input.CheckOutDate.After(input.CheckInDate) {
 		return nil, errors.New("check_out_date must be after check_in_date")
+	}
+
+	unit, unitErr := s.unitService.GetUnit(ctx, repository.GetUnitQuery{
+		PropertyID: input.PropertyID,
+		UnitID:     input.UnitID,
+		Populate:   &[]string{"Property"},
+	})
+
+	if unitErr != nil {
+		return nil, unitErr
 	}
 
 	tenant, err := s.tenantService.FindOrCreateLightTenant(ctx, FindOrCreateLightTenantInput{
@@ -128,14 +129,15 @@ func (s *bookingService) CreateBooking(ctx context.Context, input CreateBookingI
 		return nil, err
 	}
 
+	transaction := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, transaction)
+
 	booking := &models.Booking{
 		UnitID:                input.UnitID,
 		PropertyID:            input.PropertyID,
 		TenantID:              tenant.ID.String(),
 		CheckInDate:           input.CheckInDate,
 		CheckOutDate:          input.CheckOutDate,
-		Rate:                  input.Rate,
-		Currency:              input.Currency,
 		StayFrequency:         input.StayFrequency,
 		Status:                "PENDING",
 		BookingSource:         input.BookingSource,
@@ -143,12 +145,82 @@ func (s *bookingService) CreateBooking(ctx context.Context, input CreateBookingI
 		Notes:                 input.Notes,
 	}
 
-	if err := s.repo.Create(ctx, booking); err != nil {
+	// calculate the rate based on the unit's rent fee and the length of stay based on frequency: WEEKLY | DAILY | MONTHLY | HOURLY
+	hours := input.CheckOutDate.Sub(input.CheckInDate).Hours()
+
+	totalRate := int64(0)
+	quantity := int64(0)
+	paymentFrequency := "nights"
+	switch unit.PaymentFrequency {
+	case "HOURLY":
+		quantity = int64(math.Ceil(hours))
+		totalRate = quantity * input.Rate
+		paymentFrequency = "hours"
+	case "DAILY":
+		quantity = int64(math.Ceil(hours / 24))
+		totalRate = quantity * input.Rate
+		paymentFrequency = "nights"
+	case "WEEKLY":
+		quantity = int64(math.Ceil(hours / (24 * 7)))
+		totalRate = quantity * input.Rate
+		paymentFrequency = "weeks"
+	case "MONTHLY":
+		quantity = int64(math.Ceil(hours / (24 * 30)))
+		totalRate = quantity * input.Rate
+		paymentFrequency = "months"
+	}
+
+	if err := s.repo.Create(transCtx, booking); err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err: err,
 			Metadata: map[string]string{
 				"function": "CreateBooking",
 				"action":   "creating booking record",
+			},
+		})
+	}
+
+	// create invoice record after booking record exists so the booking foreign key is valid
+	clientID := unit.Property.ClientID
+	propertyID := unit.PropertyID
+	bookingID := booking.ID.String()
+
+	_, invoiceErr := s.invoiceService.CreateInvoice(transCtx, CreateInvoiceInput{
+		ClientID:         &clientID,
+		PropertyID:       &propertyID,
+		PayerType:        "GUEST",
+		PayeeType:        "PROPERTY_OWNER",
+		PayeeClientID:    &clientID,
+		ContextType:      "BOOKING_FEE",
+		ContextBookingID: &bookingID,
+		TotalAmount:      totalRate,
+		SubTotal:         totalRate,
+		Currency:         input.Currency,
+		Status:           "DRAFT",
+		DueDate:          nil,
+		LineItems: []LineItemInput{
+			{
+				Label:       fmt.Sprintf("Booking for %s for %d %s", unit.Name, quantity, paymentFrequency),
+				Category:    "BOOKING_FEE",
+				Quantity:    quantity,
+				UnitAmount:  input.Rate,
+				TotalAmount: totalRate,
+				Currency:    input.Currency,
+			},
+		},
+	})
+
+	if invoiceErr != nil {
+		transaction.Rollback()
+		return nil, invoiceErr
+	}
+
+	if commitErr := transaction.Commit().Error; commitErr != nil {
+		return nil, pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: commitErr,
+			Metadata: map[string]string{
+				"function": "CreateBooking",
+				"action":   "committing transaction",
 			},
 		})
 	}
@@ -168,13 +240,26 @@ func (s *bookingService) CreateBooking(ctx context.Context, input CreateBookingI
 		})
 	}
 
-	go s.sendBookingCreatedNotification(*bookingReloaded)
+	go s.sendBookingCreatedNotification(*bookingReloaded, totalRate, input.Currency)
 
 	return booking, nil
 }
 
+type UpdateBookingInput struct {
+	BookingID string
+
+	Notes                  lib.Optional[string]
+	RequiresUpfrontPayment lib.Optional[bool]
+	CheckInDate            lib.Optional[time.Time]
+	CheckOutDate           lib.Optional[time.Time]
+	Meta                   lib.Optional[datatypes.JSON]
+}
+
 func (s *bookingService) UpdateBooking(ctx context.Context, input UpdateBookingInput) (*models.Booking, error) {
-	booking, err := s.repo.GetByIDWithPopulate(ctx, repository.GetBookingQuery{ID: input.BookingID})
+	booking, err := s.repo.GetByIDWithPopulate(
+		ctx,
+		repository.GetBookingQuery{ID: input.BookingID, Populate: &[]string{"Invoice"}},
+	)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, pkg.NotFoundError("BookingNotFound", &pkg.RentLoopErrorParams{Err: err})
@@ -192,18 +277,19 @@ func (s *bookingService) UpdateBooking(ctx context.Context, input UpdateBookingI
 		})
 	}
 
-	// These fields are locked once the booking is confirmed.
-	preConfirmOnly := input.Rate.IsSet || input.Currency.IsSet ||
-		input.CheckInDate.IsSet || input.CheckOutDate.IsSet || input.InvoiceID.IsSet
-	if preConfirmOnly && booking.Status != "PENDING" {
+	// Dates are locked once the booking is confirmed.
+	if (input.CheckInDate.IsSet || input.CheckOutDate.IsSet) && booking.Status != "PENDING" {
 		return nil, pkg.BadRequestError(
-			"rate, currency, dates, and invoice can only be changed before the booking is confirmed",
+			"dates can only be changed before the booking is confirmed",
 			&pkg.RentLoopErrorParams{
 				Err:      errors.New("booking already confirmed"),
 				Metadata: map[string]string{"function": "UpdateBooking"},
 			},
 		)
 	}
+
+	transaction := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, transaction)
 
 	if input.Notes.IsSet {
 		booking.Notes = *input.Notes.Value
@@ -214,38 +300,125 @@ func (s *bookingService) UpdateBooking(ctx context.Context, input UpdateBookingI
 	if input.Meta.IsSet {
 		booking.Meta = *input.Meta.Value
 	}
-	if input.Rate.IsSet {
-		booking.Rate = *input.Rate.Value
-	}
-	if input.Currency.IsSet {
-		booking.Currency = *input.Currency.Value
-	}
+
 	if input.CheckInDate.IsSet {
 		booking.CheckInDate = *input.CheckInDate.Value
 	}
 	if input.CheckOutDate.IsSet {
 		booking.CheckOutDate = *input.CheckOutDate.Value
 	}
+
 	if input.CheckInDate.IsSet || input.CheckOutDate.IsSet {
 		if !booking.CheckOutDate.After(booking.CheckInDate) {
+			transaction.Rollback()
 			return nil, pkg.BadRequestError("check_out_date must be after check_in_date", &pkg.RentLoopErrorParams{
 				Err:      errors.New("invalid date range"),
 				Metadata: map[string]string{"function": "UpdateBooking"},
 			})
 		}
-	}
-	if input.InvoiceID.IsSet {
-		booking.InvoiceID = input.InvoiceID.Ptr()
+		if err := s.recalculateBookingInvoice(transCtx, booking); err != nil {
+			transaction.Rollback()
+			return nil, err
+		}
 	}
 
-	if err := s.repo.Update(ctx, booking); err != nil {
+	if err := s.repo.Update(transCtx, booking); err != nil {
+		transaction.Rollback()
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err:      err,
 			Metadata: map[string]string{"function": "UpdateBooking", "action": "saving booking"},
 		})
 	}
 
+	if commitErr := transaction.Commit().Error; commitErr != nil {
+		return nil, pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      commitErr,
+			Metadata: map[string]string{"function": "UpdateBooking", "action": "committing transaction"},
+		})
+	}
+
 	return booking, nil
+}
+
+// recalculateBookingInvoice recomputes the BOOKING_FEE line item totals based on
+// the current dates. The per-unit rate is read from the existing line item so no
+// rate field is needed on the booking model. Must be called within a transaction context.
+func (s *bookingService) recalculateBookingInvoice(ctx context.Context, booking *models.Booking) error {
+	if booking.Invoice == nil || booking.Invoice.ID.String() == "" {
+		return pkg.InternalServerError("booking invoice not loaded", &pkg.RentLoopErrorParams{
+			Err:      errors.New("invoice missing from booking"),
+			Metadata: map[string]string{"function": "recalculateBookingInvoice"},
+		})
+	}
+
+	lineItems, lineItemsErr := s.invoiceService.GetLineItems(ctx, booking.Invoice.ID.String())
+	if lineItemsErr != nil {
+		return pkg.InternalServerError(lineItemsErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      lineItemsErr,
+			Metadata: map[string]string{"function": "recalculateBookingInvoice", "action": "fetching line items"},
+		})
+	}
+
+	var bookingLineItem *models.InvoiceLineItem
+	for i := range lineItems {
+		if lineItems[i].Category == "BOOKING_FEE" {
+			bookingLineItem = &lineItems[i]
+			break
+		}
+	}
+	if bookingLineItem == nil {
+		return pkg.NotFoundError("BookingInvoiceLineItemNotFound", &pkg.RentLoopErrorParams{
+			Err:      errors.New("booking invoice line item not found"),
+			Metadata: map[string]string{"function": "recalculateBookingInvoice"},
+		})
+	}
+
+	unit, unitErr := s.unitService.GetUnit(ctx, repository.GetUnitQuery{
+		PropertyID: booking.PropertyID,
+		UnitID:     booking.UnitID,
+	})
+	if unitErr != nil {
+		return unitErr
+	}
+
+	unitRate := bookingLineItem.UnitAmount
+	hours := booking.CheckOutDate.Sub(booking.CheckInDate).Hours()
+	totalRate := int64(0)
+	quantity := int64(0)
+	paymentFrequency := "nights"
+	switch unit.PaymentFrequency {
+	case "HOURLY":
+		quantity = int64(math.Ceil(hours))
+		totalRate = quantity * unitRate
+		paymentFrequency = "hours"
+	case "DAILY":
+		quantity = int64(math.Ceil(hours / 24))
+		totalRate = quantity * unitRate
+		paymentFrequency = "nights"
+	case "WEEKLY":
+		quantity = int64(math.Ceil(hours / (24 * 7)))
+		totalRate = quantity * unitRate
+		paymentFrequency = "weeks"
+	case "MONTHLY":
+		quantity = int64(math.Ceil(hours / (24 * 30)))
+		totalRate = quantity * unitRate
+		paymentFrequency = "months"
+	}
+
+	label := fmt.Sprintf("Booking for %s for %d %s", unit.Name, quantity, paymentFrequency)
+	if _, updateErr := s.invoiceService.UpdateLineItem(ctx, UpdateLineItemInput{
+		InvoiceID:   booking.Invoice.ID.String(),
+		LineItemID:  bookingLineItem.ID.String(),
+		Label:       &label,
+		Quantity:    &quantity,
+		UnitAmount:  &unitRate,
+		TotalAmount: &totalRate,
+		Currency:    &bookingLineItem.Currency,
+	}); updateErr != nil {
+		return updateErr
+	}
+
+	return nil
 }
 
 func (s *bookingService) ConfirmBooking(ctx context.Context, input ConfirmBookingInput) (*models.Booking, error) {
@@ -555,7 +728,7 @@ func (s *bookingService) CountBookings(
 }
 
 func (s *bookingService) GetBookingByTrackingCode(ctx context.Context, trackingCode string) (*models.Booking, error) {
-	booking, err := s.repo.GetByTrackingCode(ctx, trackingCode, []string{"Unit", "Property", "Tenant"})
+	booking, err := s.repo.GetByTrackingCode(ctx, trackingCode, []string{"Unit", "Property", "Tenant", "Invoice", "Invoice.LineItems", "Invoice.Payments"})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, pkg.NotFoundError("BookingNotFound", &pkg.RentLoopErrorParams{Err: err})
@@ -578,14 +751,14 @@ func (s *bookingService) removeBookingDateBlock(ctx context.Context, bookingID s
 	}
 }
 
-func (s *bookingService) sendBookingCreatedNotification(booking models.Booking) {
+func (s *bookingService) sendBookingCreatedNotification(booking models.Booking, totalRate int64, currency string) {
 	emailData := emailtemplates.BookingCreatedData{
 		GuestName:    booking.Tenant.FirstName,
 		UnitName:     booking.Unit.Name,
 		CheckInDate:  booking.CheckInDate.Format("January 2, 2006 3:04pm"),
 		CheckOutDate: booking.CheckOutDate.Format("January 2, 2006 3:04pm"),
-		Rate:         lib.FormatAmount(lib.PesewasToCedis(booking.Rate)),
-		Currency:     booking.Currency,
+		Rate:         lib.FormatAmount(lib.PesewasToCedis(totalRate)),
+		Currency:     currency,
 		TrackingCode: booking.Code,
 	}
 

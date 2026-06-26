@@ -1,18 +1,18 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import dayjs from 'dayjs'
 import { ArrowLeft, Info, MapPin, Search } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { isValidPhoneNumber } from 'react-phone-number-input'
 import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import { useCreateBooking, useGetUnitAvailability } from '~/api/bookings'
+import { BookingRangeCalendar } from './components/booking-range-calendar'
+import { useCreateBooking } from '~/api/bookings'
 import { useGetTenantByPhone } from '~/api/tenants'
 import { useGetPropertyUnits } from '~/api/units'
 import { InternationalPhoneInput } from '~/components/international-phone'
 import { Button } from '~/components/ui/button'
-import { Calendar } from '~/components/ui/calendar'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import {
 	Dialog,
@@ -40,7 +40,7 @@ import { Separator } from '~/components/ui/separator'
 import { Spinner } from '~/components/ui/spinner'
 import { Textarea } from '~/components/ui/textarea'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
-import { getBookingDuration } from '~/lib/booking.utils'
+import { getBookingDuration, getBookingRateLabel } from '~/lib/booking.utils'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
@@ -59,7 +59,11 @@ const schema = z
 		guest_phone: z
 			.string({ error: 'Required' })
 			.refine(isValidPhoneNumber, { message: 'Enter a valid phone number' }),
-		guest_email: z.string().email({ message: 'Invalid email' }).optional().or(z.literal('')),
+		guest_email: z
+			.string()
+			.email({ message: 'Invalid email' })
+			.optional()
+			.or(z.literal('')),
 		guest_id_number: z.string().optional(),
 		guest_gender: z.enum(['MALE', 'FEMALE'], { error: 'Required' }),
 	})
@@ -70,125 +74,24 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>
 
-function useIsDesktop() {
-	const [isDesktop, setIsDesktop] = useState(() =>
-		typeof window !== 'undefined' ? window.innerWidth >= 1024 : true,
-	)
-	useEffect(() => {
-		const mq = window.matchMedia('(min-width: 1024px)')
-		const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches)
-		mq.addEventListener('change', handler)
-		return () => mq.removeEventListener('change', handler)
-	}, [])
-	return isDesktop
-}
-
-function blocksToDisabledDates(blocks: UnitDateBlock[]): Date[] {
-	const dates: Date[] = []
-	for (const block of blocks) {
-		const cursor = new Date(block.start_date)
-		const end = new Date(block.end_date)
-		while (cursor <= end) {
-			dates.push(new Date(cursor))
-			cursor.setDate(cursor.getDate() + 1)
-		}
-	}
-	return dates
-}
-
-function BookingRangeCalendar({
-	clientId,
-	propertyId,
-	unitId,
-	selectedRange,
-	onRangeSelect,
-}: {
-	clientId: string
-	propertyId: string
-	unitId: string
-	selectedRange: { from: Date; to: Date } | null
-	onRangeSelect: (range: { from: Date; to: Date } | null) => void
-}) {
-	const isDesktop = useIsDesktop()
-	const today = useMemo(() => {
-		const d = new Date()
-		d.setHours(0, 0, 0, 0)
-		return d
-	}, [])
-	const ninetyDaysOut = useMemo(() => {
-		const d = new Date(today)
-		d.setDate(d.getDate() + 90)
-		return d
-	}, [today])
-
-	const { data: blocks = [], isPending: loadingAvailability } =
-		useGetUnitAvailability(clientId, propertyId, unitId, today, ninetyDaysOut)
-
-	const disabledDates = useMemo(
-		() => blocksToDisabledDates(blocks),
-		[blocks],
-	)
-
-	const handleSelect = (
-		range: { from?: Date; to?: Date } | undefined,
-	) => {
-		if (!range?.from || !range.to) {
-			onRangeSelect(null)
-			return
-		}
-		onRangeSelect({ from: range.from, to: range.to })
-	}
-
-	if (loadingAvailability) {
-		return (
-			<div className="bg-muted h-64 w-full animate-pulse rounded-xl" />
-		)
-	}
-
-	const blockedCount = blocks.length
-
-	return (
-		<div className="space-y-2">
-			{blockedCount > 0 ? (
-				<p className="text-muted-foreground text-xs">
-					{blockedCount} date block{blockedCount > 1 ? 's' : ''} — greyed out
-					dates are unavailable
-				</p>
-			) : (
-				<p className="text-muted-foreground text-xs">
-					All dates available for the next 90 days
-				</p>
-			)}
-			<Calendar
-				mode="range"
-				selected={selectedRange ?? undefined}
-				onSelect={handleSelect}
-				disabled={[{ before: today }, { after: ninetyDaysOut }, ...disabledDates]}
-				startMonth={today}
-				endMonth={ninetyDaysOut}
-				numberOfMonths={isDesktop ? 2 : 1}
-				className="w-full [--cell-size:--spacing(9)]"
-			/>
-		</div>
-	)
-}
-
 function DateStatsStrip({
 	checkIn,
 	checkOut,
+	frequency,
 }: {
 	checkIn: Date
 	checkOut: Date
+	frequency: string
 }) {
-	const { count, label } = getBookingDuration(checkIn, checkOut, 'DAILY')
+	const { count, label } = getBookingDuration(checkIn, checkOut, frequency)
 	return (
-		<div className="bg-muted/40 border rounded-lg">
+		<div className="bg-muted/40 rounded-lg border">
 			<div className="grid grid-cols-3 divide-x">
 				<div className="flex flex-col gap-0.5 px-4 py-3">
 					<p className="text-muted-foreground text-[10px] font-light tracking-widest uppercase">
 						Check-in
 					</p>
-					<p className="text-sm font-bold font-serif">
+					<p className="font-serif text-sm font-bold">
 						{dayjs(checkIn).format('MMM D, YYYY')}
 					</p>
 					<p className="text-muted-foreground text-xs">
@@ -199,7 +102,7 @@ function DateStatsStrip({
 					<p className="text-muted-foreground text-[10px] font-light tracking-widest uppercase">
 						Check-out
 					</p>
-					<p className="text-sm font-bold font-serif">
+					<p className="font-serif text-sm font-bold">
 						{dayjs(checkOut).format('MMM D, YYYY')}
 					</p>
 					<p className="text-muted-foreground text-xs">
@@ -210,7 +113,7 @@ function DateStatsStrip({
 					<p className="text-muted-foreground text-[10px] font-light tracking-widest uppercase">
 						Duration
 					</p>
-					<p className="text-sm font-bold font-serif">
+					<p className="font-serif text-sm font-bold">
 						{count} {label}
 					</p>
 				</div>
@@ -277,7 +180,7 @@ function GuestSearchModal({
 					</div>
 
 					{result ? (
-						<div className="border rounded-lg p-4 space-y-3">
+						<div className="space-y-3 rounded-lg border p-4">
 							<div className="space-y-1">
 								<p className="font-medium">
 									{result.first_name} {result.last_name}
@@ -311,6 +214,7 @@ function LiveSummary({
 	checkOut,
 	rate,
 	currency,
+	frequency,
 	guestName,
 }: {
 	unit?: PropertyUnit
@@ -319,13 +223,14 @@ function LiveSummary({
 	checkOut?: Date
 	rate?: number
 	currency: string
+	frequency: string
 	guestName?: string
 }) {
-	const nights =
+	const { count, label: periodLabel } =
 		checkIn && checkOut
-			? getBookingDuration(checkIn, checkOut, 'DAILY').count
-			: 0
-	const total = rate && nights > 0 ? rate * nights : 0
+			? getBookingDuration(checkIn, checkOut, frequency)
+			: { count: 0, label: '' }
+	const total = rate && count > 0 ? rate * count : 0
 
 	return (
 		<div className="sticky top-6 space-y-4">
@@ -334,7 +239,7 @@ function LiveSummary({
 					<p className="text-muted-foreground text-[10px] font-light tracking-widest uppercase">
 						Live Summary
 					</p>
-					<CardTitle className="text-xl font-serif font-bold">
+					<CardTitle className="font-serif text-xl font-bold">
 						{unit?.name ?? (
 							<span className="text-muted-foreground font-sans text-base font-normal">
 								No unit selected
@@ -376,7 +281,7 @@ function LiveSummary({
 					<div className="space-y-2 text-sm">
 						<div className="flex justify-between">
 							<span className="text-muted-foreground">
-								{currency} {rate ?? 0} × {nights} nights
+								{currency} {rate ?? 0} × {count} {periodLabel}
 							</span>
 							<span>{formatAmount(total, currency)}</span>
 						</div>
@@ -390,7 +295,7 @@ function LiveSummary({
 					<Separator />
 
 					<div>
-						<p className="text-muted-foreground text-[10px] tracking-widest uppercase mb-1">
+						<p className="text-muted-foreground mb-1 text-[10px] tracking-widest uppercase">
 							Guest
 						</p>
 						<p
@@ -409,7 +314,8 @@ function LiveSummary({
 			<div className="flex gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 dark:border-rose-900/40 dark:bg-rose-950/20">
 				<Info className="mt-0.5 size-4 shrink-0 text-yellow-600" />
 				<p className="text-xs text-yellow-700 dark:text-yellow-400">
-					The guest will receive a confirmation email with check-in instructions.
+					The guest will receive a confirmation email with check-in
+					instructions.
 				</p>
 			</div>
 		</div>
@@ -421,6 +327,8 @@ export function NewBookingModule() {
 	const { clientUser } = useClient()
 	const navigate = useNavigate()
 	const [guestModalOpen, setGuestModalOpen] = useState(false)
+	const [frequency, setFrequency] =
+		useState<PropertyUnit['payment_frequency']>('DAILY')
 
 	const propertyId = clientUserProperty?.property_id ?? ''
 	const propertyName = clientUserProperty?.property?.name
@@ -459,7 +367,8 @@ export function NewBookingModule() {
 			? `${guestFirst ?? ''} ${guestLast ?? ''}`.trim()
 			: undefined
 
-	const selectedRange = checkIn && checkOut ? { from: checkIn, to: checkOut } : null
+	const selectedRange =
+		checkIn && checkOut ? { from: checkIn, to: checkOut } : null
 
 	const handleUnitChange = (unitId: string) => {
 		form.setValue('unit_id', unitId)
@@ -469,12 +378,11 @@ export function NewBookingModule() {
 		if (unit) {
 			form.setValue('rate', convertPesewasToCedis(unit.rent_fee))
 			form.setValue('currency', unit.rent_fee_currency)
+			setFrequency(unit.payment_frequency)
 		}
 	}
 
-	const handleRangeSelect = (
-		range: { from: Date; to: Date } | null,
-	) => {
+	const handleRangeSelect = (range: { from: Date; to: Date } | null) => {
 		if (range) {
 			form.setValue('check_in_date', range.from)
 			form.setValue('check_out_date', range.to)
@@ -512,11 +420,11 @@ export function NewBookingModule() {
 				guest_gender: values.guest_gender,
 			})
 			toast.success('Booking created')
-			void navigate(`/properties/${propertyId}/occupancy/bookings/${booking?.id}`)
-		} catch {
-			toast.error(
-				'Failed to create booking',
+			void navigate(
+				`/properties/${propertyId}/occupancy/bookings/${booking?.id}`,
 			)
+		} catch {
+			toast.error('Failed to create booking')
 		}
 	}
 
@@ -531,8 +439,8 @@ export function NewBookingModule() {
 				<div>
 					<TypographyH4>New Booking</TypographyH4>
 					<TypographyMuted>
-						Create a booking on behalf of a guest. They'll receive a confirmation
-						email.
+						Create a booking on behalf of a guest. They'll receive a
+						confirmation email.
 					</TypographyMuted>
 				</div>
 			</div>
@@ -576,23 +484,21 @@ export function NewBookingModule() {
 										)}
 									/>
 
-									{
-										!form.watch('unit_id') ? (
-											<div className="flex gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 dark:border-rose-900/40 dark:bg-rose-950/20">
-												<Info className="mt-0.5 size-4 shrink-0 text-yellow-600" />
-												<p className="text-xs text-yellow-700 dark:text-yellow-400">
-													Only available units are listed. If a unit is missing, make sure
-													it's not in draft or occupied state.{' '}
-													<a
-														href={`/properties/${propertyId}/assets/units`}
-														className="underline underline-offset-2"
-													>
-														Manage units
-													</a>
-												</p>
-											</div>
-										) : null
-									}
+									{!form.watch('unit_id') ? (
+										<div className="flex gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 dark:border-rose-900/40 dark:bg-rose-950/20">
+											<Info className="mt-0.5 size-4 shrink-0 text-yellow-600" />
+											<p className="text-xs text-yellow-700 dark:text-yellow-400">
+												Only available units are listed. If a unit is missing,
+												make sure it's not in draft or occupied state.{' '}
+												<a
+													href={`/properties/${propertyId}/assets/units`}
+													className="underline underline-offset-2"
+												>
+													Manage units
+												</a>
+											</p>
+										</div>
+									) : null}
 
 									{selectedUnitId ? (
 										<div className="space-y-3">
@@ -600,6 +506,7 @@ export function NewBookingModule() {
 												clientId={clientId}
 												propertyId={propertyId}
 												unitId={selectedUnitId}
+												paymentFrequency={frequency}
 												selectedRange={selectedRange}
 												onRangeSelect={handleRangeSelect}
 											/>
@@ -624,7 +531,11 @@ export function NewBookingModule() {
 									)}
 
 									{checkIn && checkOut && checkOut > checkIn ? (
-										<DateStatsStrip checkIn={checkIn} checkOut={checkOut} />
+										<DateStatsStrip
+											checkIn={checkIn}
+											checkOut={checkOut}
+											frequency={frequency}
+										/>
 									) : null}
 
 									<FormField
@@ -633,7 +544,7 @@ export function NewBookingModule() {
 										render={({ field }) => (
 											<FormItem>
 												<FormLabel>
-													Nightly rate (
+													{getBookingRateLabel(frequency)} (
 													{selectedUnit?.rent_fee_currency ?? 'GHS'})
 												</FormLabel>
 												<FormControl>
@@ -686,7 +597,7 @@ export function NewBookingModule() {
 										<button
 											type="button"
 											onClick={() => setGuestModalOpen(true)}
-											className="text-rose-600 hover:text-rose-700 text-sm flex items-center gap-1"
+											className="flex items-center gap-1 text-sm text-rose-600 hover:text-rose-700"
 										>
 											<Search className="size-3.5" />
 											Find existing guest
@@ -747,7 +658,7 @@ export function NewBookingModule() {
 												<FormItem>
 													<FormLabel>
 														Email{' '}
-														<span className="text-muted-foreground font-normal text-xs">
+														<span className="text-muted-foreground text-xs font-normal">
 															optional
 														</span>
 													</FormLabel>
@@ -766,7 +677,10 @@ export function NewBookingModule() {
 											render={({ field }) => (
 												<FormItem>
 													<FormLabel>Gender</FormLabel>
-													<Select value={field.value} onValueChange={field.onChange}>
+													<Select
+														value={field.value}
+														onValueChange={field.onChange}
+													>
 														<FormControl className="w-full">
 															<SelectTrigger>
 																<SelectValue placeholder="Select gender" />
@@ -788,7 +702,7 @@ export function NewBookingModule() {
 												<FormItem>
 													<FormLabel>
 														ID number{' '}
-														<span className="text-muted-foreground font-normal text-xs">
+														<span className="text-muted-foreground text-xs font-normal">
 															optional
 														</span>
 													</FormLabel>
@@ -799,7 +713,6 @@ export function NewBookingModule() {
 												</FormItem>
 											)}
 										/>
-
 									</div>
 								</CardContent>
 							</Card>
@@ -814,6 +727,7 @@ export function NewBookingModule() {
 								checkOut={checkOut}
 								rate={rate}
 								currency={currency}
+								frequency={frequency}
 								guestName={guestName}
 							/>
 						</div>

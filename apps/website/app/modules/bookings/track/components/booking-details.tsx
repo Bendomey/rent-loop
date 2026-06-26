@@ -19,6 +19,20 @@ const STATUS_LABELS: Record<BookingStatus, string> = {
 	CANCELLED: 'Cancelled',
 }
 
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+	MOMO: 'Mobile Money',
+	CARD: 'Card',
+	BANK_DIRECT: 'Bank Transfer',
+	OFFLINE: 'Offline',
+	CHECK: 'Cheque',
+}
+
+const PAYMENT_STATUS_CLASSES: Record<string, string> = {
+	SUCCESSFUL: 'bg-green-100 text-green-700',
+	PENDING: 'bg-yellow-100 text-yellow-700',
+	FAILED: 'bg-red-100 text-red-700',
+}
+
 interface Props {
 	booking: Booking
 }
@@ -30,15 +44,16 @@ export function BookingDetails({ booking }: Props) {
 	const units = calcUnits(frequency, checkIn, checkOut)
 	const unitLabel =
 		units === 1 ? UNIT_SINGULAR[frequency] : UNIT_PLURAL[frequency]
-	const total = units * booking.rate
 
 	const currentStepIndex = STATUS_STEPS.indexOf(
 		booking.status as Exclude<BookingStatus, 'CANCELLED'>,
 	)
 	const isCancelled = booking.status === 'CANCELLED'
-	const showCheckInCode = ['CONFIRMED', 'CHECKED_IN', 'COMPLETED'].includes(
-		booking.status,
-	)
+	const showCheckInCode = booking.status === 'CONFIRMED' && !!booking.check_in_code
+
+	const invoice = booking.invoice
+	const lineItems = invoice?.line_items ?? []
+	const payments = invoice?.payments ?? []
 
 	return (
 		<div className="min-h-dvh bg-zinc-50">
@@ -132,8 +147,8 @@ export function BookingDetails({ booking }: Props) {
 					</div>
 				) : null}
 
-				{/* Check-in code */}
-				{showCheckInCode && booking.check_in_code ? (
+				{/* Check-in code — only shown while CONFIRMED, hidden after check-in */}
+				{showCheckInCode ? (
 					<div className="rounded-xl border border-green-200 bg-green-50 p-6 text-center">
 						<p className="text-sm font-medium text-green-800">
 							Your Check-In Code
@@ -167,16 +182,96 @@ export function BookingDetails({ booking }: Props) {
 								{units} {unitLabel}
 							</dd>
 						</div>
-						<div className="border-t pt-2">
-							<div className="flex justify-between">
-								<dt className="text-zinc-500">Total</dt>
-								<dd className="font-semibold">
-									{formatAmount(convertPesewasToCedis(total))}
-								</dd>
-							</div>
-						</div>
 					</dl>
 				</div>
+
+				{/* Invoice */}
+				{invoice ? (
+					<div className="rounded-xl border bg-white p-6">
+						<div className="mb-4 flex items-center justify-between">
+							<h3 className="text-sm font-semibold text-zinc-900">Invoice</h3>
+							<span
+								className={[
+									'rounded-full px-2.5 py-0.5 text-xs font-medium',
+									invoice.status === 'PAID'
+										? 'bg-green-100 text-green-700'
+										: 'bg-yellow-100 text-yellow-700',
+								].join(' ')}
+							>
+								{invoice.status === 'PAID' ? 'Paid' : 'Unpaid'}
+							</span>
+						</div>
+
+						{lineItems.length > 0 ? (
+							<div className="space-y-2">
+								{lineItems.map((item) => (
+									<div key={item.id} className="flex items-start justify-between text-sm">
+										<div>
+											<p className="font-medium text-zinc-900">{item.label}</p>
+											{item.quantity > 1 && (
+												<p className="text-xs text-zinc-400">
+													{item.quantity} ×{' '}
+													{formatAmount(convertPesewasToCedis(item.unit_amount))}
+												</p>
+											)}
+										</div>
+										<p className="font-medium text-zinc-900">
+											{formatAmount(convertPesewasToCedis(item.total_amount))}
+										</p>
+									</div>
+								))}
+							</div>
+						) : null}
+
+						<div className="mt-4 border-t pt-3 flex justify-between text-sm">
+							<span className="font-semibold text-zinc-900">Total</span>
+							<span className="font-bold text-zinc-900">
+								{formatAmount(convertPesewasToCedis(invoice.total_amount))}
+							</span>
+						</div>
+					</div>
+				) : null}
+
+				{/* Payment records */}
+				{payments.length > 0 ? (
+					<div className="rounded-xl border bg-white p-6">
+						<h3 className="mb-4 text-sm font-semibold text-zinc-900">
+							Payments
+						</h3>
+						<div className="space-y-3">
+							{payments.map((p) => (
+								<div
+									key={p.id}
+									className="flex items-center justify-between text-sm"
+								>
+									<div>
+										<p className="font-medium text-zinc-900">
+											{PAYMENT_METHOD_LABELS[p.payment_method] ?? p.payment_method}
+										</p>
+										<p className="text-xs text-zinc-400">
+											{p.successful_at
+												? format(new Date(p.successful_at), 'MMM d, yyyy')
+												: format(new Date(p.created_at), 'MMM d, yyyy')}
+										</p>
+									</div>
+									<div className="flex items-center gap-2">
+										<span
+											className={[
+												'rounded-full px-2 py-0.5 text-xs font-medium',
+												PAYMENT_STATUS_CLASSES[p.status] ?? 'bg-zinc-100 text-zinc-500',
+											].join(' ')}
+										>
+											{p.status.charAt(0) + p.status.slice(1).toLowerCase()}
+										</span>
+										<span className="font-semibold text-zinc-900">
+											{formatAmount(convertPesewasToCedis(p.amount))}
+										</span>
+									</div>
+								</div>
+							))}
+						</div>
+					</div>
+				) : null}
 
 				{/* Property contact */}
 				{booking.unit?.property?.contact_email ? (

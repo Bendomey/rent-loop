@@ -27,8 +27,15 @@ export function Step2() {
 	const [resendCountdown, setResendCountdown] = useState(60)
 	const [resendAttempts, setResendAttempts] = useState(1)
 
-	const { goBack, goNext, goToPage, formData, updateFormData, allowEdit } =
-		useTenantApplicationContext()
+	const {
+		goBack,
+		goNext,
+		goToPage,
+		formData,
+		updateFormData,
+		allowEdit,
+		setOpenAddress,
+	} = useTenantApplicationContext()
 	const { sendOtp, isSendingOtp } = useSendOtp()
 
 	const isOtpComplete = otp.length === 6
@@ -135,16 +142,14 @@ export function Step2() {
 					relationship_to_emergency_contact:
 						tenant.relationship_to_emergency_contact,
 					emergency_contact_phone: tenant.emergency_contact_phone,
-					employer_type: tenant.employer_type,
-					occupation:
-						tenant.employer_type === 'STUDENT'
-							? tenant.employer_type
-							: tenant.occupation,
+					employer_type: tenant.occupation === 'STUDENT' ? 'STUDENT' : 'WORKER',
+					occupation: tenant.occupation,
 					employer: tenant.employer,
 					occupation_address: tenant.occupation_address,
 					proof_of_income_url: tenant.proof_of_income_url,
 				})
 				goToPage(6)
+				setOpenAddress(true)
 			},
 		})
 	}

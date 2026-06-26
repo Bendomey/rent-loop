@@ -134,13 +134,7 @@ export function InitialPaymentSetup({
 	}
 
 	if (existingInvoice) {
-		return (
-			<InvoiceDetails
-				invoice={existingInvoice}
-				applicationId={applicationId}
-				propertyId={propertyId}
-			/>
-		)
+		return <InvoiceDetails invoice={existingInvoice} propertyId={propertyId} />
 	}
 
 	const periods =

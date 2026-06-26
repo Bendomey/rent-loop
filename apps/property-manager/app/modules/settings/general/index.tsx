@@ -13,15 +13,12 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 import { useGetClientUser } from '~/api/client-users'
 import { useUpdateClient } from '~/api/clients'
-import { DatePickerInput } from '~/components/date-picker-input'
-import { ImageUpload } from '~/components/ui/image-upload'
-import { useUploadObject } from '~/hooks/use-upload-object'
-import { localizedDayjs } from '~/lib/date'
 import {
 	AddressInput,
 	AddressSchema,
 	type AddressInputSchema,
 } from '~/components/address-input'
+import { DatePickerInput } from '~/components/date-picker-input'
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -56,6 +53,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
+import { ImageUpload } from '~/components/ui/image-upload'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { Separator } from '~/components/ui/separator'
@@ -66,7 +64,9 @@ import {
 	TypographyH4,
 	TypographyMuted,
 } from '~/components/ui/typography'
+import { useUploadObject } from '~/hooks/use-upload-object'
 import { QUERY_KEYS } from '~/lib/constants'
+import { localizedDayjs } from '~/lib/date'
 import { getErrorMessage } from '~/lib/error-messages'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'

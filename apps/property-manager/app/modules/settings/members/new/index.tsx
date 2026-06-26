@@ -1,11 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Check, HelpCircle, Mail } from 'lucide-react'
 import { useEffect } from 'react'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { useFieldArray, useForm, useWatch } from 'react-hook-form'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 import { Link, useFetcher } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useGetMyProperties } from '~/api/properties'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { Button } from '~/components/ui/button'
 import { FieldGroup } from '~/components/ui/field'
 import {
@@ -45,8 +47,6 @@ import {
 	TypographyH4,
 	TypographyMuted,
 } from '~/components/ui/typography'
-import { isValidPhoneNumber } from 'react-phone-number-input'
-import { InternationalPhoneInput } from '~/components/international-phone'
 import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
@@ -98,6 +98,10 @@ export function NewMemberModule() {
 	})
 
 	const { handleSubmit, control, getValues } = rhfMethods
+	const propertyAssignments =
+		(useWatch({ control, name: 'property_assignments' }) as
+			| FormSchema['property_assignments']
+			| undefined) ?? []
 
 	const { fields, append, remove } = useFieldArray({
 		control,
@@ -132,7 +136,8 @@ export function NewMemberModule() {
 	const onSubmit = async (data: FormSchema) => {
 		const updatedData = { ...data }
 		if (data.phone) {
-			updatedData.phone = normalizeInternationalPhoneNumber(data.phone) ?? data.phone
+			updatedData.phone =
+				normalizeInternationalPhoneNumber(data.phone) ?? data.phone
 		}
 		await createFetcher.submit(
 			{
@@ -302,7 +307,7 @@ export function NewMemberModule() {
 								<div className="mt-4 flex flex-wrap gap-2">
 									{properties.map((item: ClientUserProperty) => {
 										if (!item.property) return null
-										const selected = fields.find(
+										const selected = propertyAssignments.find(
 											(f) => f.property_id === item.property_id,
 										)
 										const isSelected = Boolean(selected)
