@@ -3,7 +3,7 @@ import { Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
-import { usePayBookingInvoice, useUpdateBooking } from '~/api/bookings'
+import { usePayBookingInvoice } from '~/api/bookings'
 import {
 	useAddLineItem,
 	useRemoveLineItem,
@@ -342,11 +342,8 @@ export function PaymentCard({
 	const [payOpen, setPayOpen] = useState(false)
 
 	const { mutateAsync: addLineItem, isPending: isAdding } = useAddLineItem()
-	const { mutateAsync: updateLineItem, isPending: isUpdatingLineItem } = useUpdateLineItem()
-	const { mutateAsync: updateBookingRate, isPending: isUpdatingRate } = useUpdateBooking()
+	const { mutateAsync: updateLineItem, isPending: isUpdating } = useUpdateLineItem()
 	const { mutateAsync: removeLineItem, isPending: isRemoving } = useRemoveLineItem()
-
-	const isUpdating = isUpdatingLineItem || isUpdatingRate
 
 	const invalidate = () =>
 		queryClient.invalidateQueries({
@@ -359,14 +356,16 @@ export function PaymentCard({
 		booking.stay_frequency,
 	)
 	const rateLabel = getBookingRateLabel(booking.stay_frequency)
-	const totalCedis = convertPesewasToCedis(booking.rate)
-	const periodRate = count > 0 ? totalCedis / count : totalCedis
 
 	const invoice = booking.invoice
 	const lineItems = invoice?.line_items ?? []
+	const bookingFeeItem = lineItems.find((item) => item.category === 'BOOKING_FEE')
+	const currency = invoice?.currency ?? 'GHS'
+	const periodRate = convertPesewasToCedis(bookingFeeItem?.unit_amount ?? 0)
+
 	const invoiceTotal = invoice
 		? convertPesewasToCedis(invoice.total_amount)
-		: totalCedis
+		: convertPesewasToCedis(bookingFeeItem?.total_amount ?? 0)
 	const invoiceTaxes = invoice ? convertPesewasToCedis(invoice.taxes) : 0
 
 	// Status badge: PENDING booking always shows Draft; confirmed+ uses invoice status
@@ -400,7 +399,7 @@ export function PaymentCard({
 				quantity: values.quantity,
 				unit_amount: Math.round(values.unit_amount * 100),
 				total_amount: Math.round(values.quantity * values.unit_amount * 100),
-				currency: booking.currency,
+				currency: currency,
 			})
 			toast.success('Line item added')
 			void invalidate()
@@ -411,29 +410,19 @@ export function PaymentCard({
 	}
 
 	const handleUpdateLineItem = async (values: LineItemFormValues) => {
-		if (!editingItem) return
+		if (!editingItem || !invoice) return
 		try {
-			if (editingItem.category === 'BOOKING_FEE') {
-				await updateBookingRate({
-					clientId: resolvedClientId,
-					propertyId,
-					bookingId: booking.id,
-					data: { rate: Math.round(values.unit_amount * 100) },
-				})
-			} else {
-				if (!invoice) return
-				await updateLineItem({
-					client_id: resolvedClientId,
-					property_id: propertyId,
-					invoice_id: invoice.id,
-					line_item_id: editingItem.id,
-					label: values.label,
-					category: values.category,
-					quantity: values.quantity,
-					unit_amount: Math.round(values.unit_amount * 100),
-					total_amount: Math.round(values.quantity * values.unit_amount * 100),
-				})
-			}
+			await updateLineItem({
+				client_id: resolvedClientId,
+				property_id: propertyId,
+				invoice_id: invoice.id,
+				line_item_id: editingItem.id,
+				label: values.label,
+				category: values.category,
+				quantity: values.quantity,
+				unit_amount: Math.round(values.unit_amount * 100),
+				total_amount: Math.round(values.quantity * values.unit_amount * 100),
+			})
 			toast.success('Line item updated')
 			void invalidate()
 			setEditingItem(null)
@@ -503,7 +492,7 @@ export function PaymentCard({
 							Booking total
 						</p>
 						<TypographyH1 className="text-2xl font-light">
-							{formatAmount(invoiceTotal, booking.currency)}
+							{formatAmount(invoiceTotal, currency)}
 						</TypographyH1>
 					</div>
 
@@ -519,7 +508,7 @@ export function PaymentCard({
 									</span>
 									<div className="flex items-center gap-1">
 										<span className="text-xs font-medium">
-											{formatAmount(convertPesewasToCedis(item.total_amount), booking.currency)}
+											{formatAmount(convertPesewasToCedis(item.total_amount), currency)}
 										</span>
 										{editMode && (
 											<>
@@ -550,7 +539,7 @@ export function PaymentCard({
 									{rateLabel} × {count} {periodLabel}
 								</span>
 								<span className="text-xs font-medium">
-									{formatAmount(periodRate * count, booking.currency)}
+									{formatAmount(periodRate * count, currency)}
 								</span>
 							</div>
 						)}
@@ -559,7 +548,7 @@ export function PaymentCard({
 							<div className="flex items-center justify-between gap-4">
 								<span className="text-muted-foreground text-xs">Taxes</span>
 								<span className="text-xs font-medium">
-									{formatAmount(invoiceTaxes, booking.currency)}
+									{formatAmount(invoiceTaxes, currency)}
 								</span>
 							</div>
 						) : null}
@@ -582,7 +571,7 @@ export function PaymentCard({
 						<div className="flex items-center justify-between gap-4">
 							<span className="text-xs font-semibold">Total due</span>
 							<span className="text-xs font-bold">
-								{formatAmount(invoiceTotal, booking.currency)}
+								{formatAmount(invoiceTotal, currency)}
 							</span>
 						</div>
 					</div>
@@ -603,7 +592,7 @@ export function PaymentCard({
 			<LineItemDialog
 				open={addOpen}
 				onOpenChange={setAddOpen}
-				currency={booking.currency}
+				currency={currency}
 				onSave={(v) => void handleAddLineItem(v)}
 				isPending={isAdding}
 			/>
@@ -622,7 +611,7 @@ export function PaymentCard({
 						: undefined
 				}
 				isFeeItem={editingItem?.category === 'BOOKING_FEE'}
-				currency={booking.currency}
+				currency={currency}
 				onSave={(v) => void handleUpdateLineItem(v)}
 				isPending={isUpdating}
 			/>
