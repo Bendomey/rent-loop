@@ -3,9 +3,9 @@ import { Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
-import { usePayInvoice } from '~/api/invoices'
 import {
 	useAddLineItem,
+	useIssueInvoice,
 	useRemoveLineItem,
 	useUpdateLineItem,
 } from '~/api/invoices'
@@ -204,10 +204,10 @@ export function PaymentCard({
 	const [deletingItemId, setDeletingItemId] = useState<string | null>(null)
 	const [payOpen, setPayOpen] = useState(false)
 
-	const { mutateAsync: pay, isPending: isPaying } = usePayBookingInvoice()
 	const { mutateAsync: addLineItem, isPending: isAdding } = useAddLineItem()
 	const { mutateAsync: updateLineItem, isPending: isUpdating } = useUpdateLineItem()
 	const { mutateAsync: removeLineItem, isPending: isRemoving } = useRemoveLineItem()
+	const { mutateAsync: issueInvoice } = useIssueInvoice()
 
 	const invalidate = () =>
 		queryClient.invalidateQueries({
@@ -232,12 +232,12 @@ export function PaymentCard({
 		: convertPesewasToCedis(bookingFeeItem?.total_amount ?? 0)
 	const invoiceTaxes = invoice ? convertPesewasToCedis(invoice.taxes) : 0
 
-	// Status badge: PENDING booking always shows Draft; confirmed+ uses invoice status
+	// Status badge: unconfirmed → Draft; confirmed + paid → Paid; everything else → Unpaid
 	const statusCfg =
 		booking.status === 'PENDING'
 			? INVOICE_STATUS_CONFIG['DRAFT']
-			: invoice
-				? INVOICE_STATUS_CONFIG[invoice.status]
+			: invoice?.status === 'PAID'
+				? INVOICE_STATUS_CONFIG['PAID']
 				: INVOICE_STATUS_CONFIG['ISSUED']
 
 	const isPayable =
@@ -330,7 +330,7 @@ export function PaymentCard({
 									<Pencil className="size-3.5" />
 								</button>
 							)}
-							{editMode && (
+							{isEditable && editMode && (
 								<button
 									type="button"
 									onClick={() => setEditMode(false)}
@@ -467,11 +467,11 @@ export function PaymentCard({
 				initial={
 					editingItem
 						? {
-								label: editingItem.label,
-								category: editingItem.category,
-								quantity: editingItem.quantity,
-								unit_amount: convertPesewasToCedis(editingItem.unit_amount),
-							}
+							label: editingItem.label,
+							category: editingItem.category,
+							quantity: editingItem.quantity,
+							unit_amount: convertPesewasToCedis(editingItem.unit_amount),
+						}
 						: undefined
 				}
 				isFeeItem={editingItem?.category === 'BOOKING_FEE'}
@@ -486,21 +486,17 @@ export function PaymentCard({
 					onOpenChange={setPayOpen}
 					invoice={invoice}
 					clientId={resolvedClientId}
-					isPending={isPaying}
-					onConfirm={async ({ payment_account_id, provider, reference }) => {
-						try {
-							await pay({
-								clientId: resolvedClientId,
-								propertyId,
-								bookingId: booking.id,
-								invoiceId: invoice.id,
-								body: { amount: invoice.total_amount, payment_account_id, provider, reference },
+					propertyId={propertyId}
+					onSuccess={() => void invalidate()}
+					beforeConfirm={async () => {
+						// if the invoice is still DRAFT, we need to update it to ISSUED before recording payment
+						if (invoice.status === 'DRAFT') {
+							await issueInvoice({
+								client_id: resolvedClientId,
+								property_id: propertyId,
+								id: invoice.id,
 							})
-							toast.success('Payment recorded')
-							void invalidate()
-							setPayOpen(false)
-						} catch {
-							toast.error('Failed to record payment')
+
 						}
 					}}
 				/>

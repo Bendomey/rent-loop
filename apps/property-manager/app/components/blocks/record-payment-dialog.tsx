@@ -1,5 +1,9 @@
+import { AlertCircle } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
+import { usePayInvoice } from '~/api/invoices'
 import { useGetPaymentAccounts } from '~/api/payment-accounts'
+import { Alert, AlertDescription } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
 import {
 	Dialog,
@@ -24,7 +28,7 @@ import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 const RAIL_LABELS: Record<string, string> = {
 	MOMO: 'Mobile Money',
 	BANK_TRANSFER: 'Bank Transfer',
-	OFFLINE: 'Offline',
+	OFFLINE: 'Offline Payment',
 	CARD: 'Card',
 }
 
@@ -33,12 +37,9 @@ interface RecordPaymentDialogProps {
 	onOpenChange: (open: boolean) => void
 	invoice: Invoice
 	clientId: string
-	isPending: boolean
-	onConfirm: (args: {
-		payment_account_id: string
-		provider: string
-		reference?: string
-	}) => void
+	propertyId: string
+	beforeConfirm?: () => Promise<void>
+	onSuccess?: () => void
 }
 
 export function RecordPaymentDialog({
@@ -46,11 +47,15 @@ export function RecordPaymentDialog({
 	onOpenChange,
 	invoice,
 	clientId,
-	isPending,
-	onConfirm,
+	propertyId,
+	beforeConfirm,
+	onSuccess,
 }: RecordPaymentDialogProps) {
 	const [selectedAccountId, setSelectedAccountId] = useState('')
 	const [reference, setReference] = useState('')
+	const [isLoading, setIsLoading] = useState(false)
+	
+	const { mutateAsync: pay } = usePayInvoice()
 
 	const { data: accountsData } = useGetPaymentAccounts(clientId, {
 		pagination: { per: 100 },
@@ -75,13 +80,30 @@ export function RecordPaymentDialog({
 		onOpenChange(v)
 	}
 
-	const handleConfirm = () => {
+	const handleConfirm = async () => {
 		if (!selectedAccount) return
-		onConfirm({
-			payment_account_id: selectedAccountId,
-			provider: 'CASH', //selectedAccount.rail,
-			reference: reference || undefined,
-		})
+		try {
+			setIsLoading(true)
+			await beforeConfirm?.()
+			await pay({
+				client_id: clientId,
+				property_id: propertyId,
+				invoice_id: invoice.id,
+				body: {
+					amount: invoice.total_amount,
+					payment_account_id: selectedAccountId,
+					provider: selectedAccount.provider ?? 'CASH',
+					reference: reference || undefined,
+				},
+			})
+			toast.success('Payment recorded')
+			onSuccess?.()
+			handleOpenChange(false)
+		} catch {
+			toast.error('Failed to record payment')
+		} finally {
+			setIsLoading(false)
+		}
 	}
 
 	return (
@@ -90,7 +112,7 @@ export function RecordPaymentDialog({
 				<DialogHeader>
 					<DialogTitle>Record Payment</DialogTitle>
 					<DialogDescription>
-						Recording offline payment of{' '}
+						Recording payment of{' '}
 						<span className="text-foreground font-medium">
 							{formatAmount(
 								convertPesewasToCedis(invoice.total_amount),
@@ -101,6 +123,14 @@ export function RecordPaymentDialog({
 				</DialogHeader>
 
 				<div className="space-y-3">
+					<Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30">
+						<AlertCircle className="size-4 text-blue-500 dark:text-blue-400" />
+						<AlertDescription className="text-xs text-blue-700 dark:text-blue-300">
+							We only support offline payments for now. To enable online
+							payments, reach out to support.
+						</AlertDescription>
+					</Alert>
+
 					<div className="space-y-1.5">
 						<Label>Payment account</Label>
 						<Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
@@ -136,15 +166,15 @@ export function RecordPaymentDialog({
 						type="button"
 						variant="outline"
 						onClick={() => handleOpenChange(false)}
-						disabled={isPending}
+						disabled={isLoading}
 					>
 						Cancel
 					</Button>
 					<Button
-						onClick={handleConfirm}
-						disabled={isPending || !selectedAccountId}
+						onClick={() => void handleConfirm()}
+						disabled={isLoading || !selectedAccountId}
 					>
-						{isPending ? <Spinner /> : null}
+						{isLoading ? <Spinner /> : null}
 						Confirm payment
 					</Button>
 				</DialogFooter>

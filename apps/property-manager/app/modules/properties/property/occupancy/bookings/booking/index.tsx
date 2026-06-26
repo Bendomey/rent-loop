@@ -39,6 +39,11 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
+import {
+	InputOTP,
+	InputOTPGroup,
+	InputOTPSlot,
+} from '~/components/ui/input-otp'
 import { Spinner } from '~/components/ui/spinner'
 import { Textarea } from '~/components/ui/textarea'
 import { TypographyMuted } from '~/components/ui/typography'
@@ -152,6 +157,78 @@ function CancelDialog({
 					>
 						{isPending ? <Spinner /> : null}
 						Cancel Booking
+					</AlertDialogAction>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
+	)
+}
+
+function CheckInDialog({
+	open,
+	onOpenChange,
+	checkInCode,
+	isPending,
+	onConfirm,
+}: {
+	open: boolean
+	onOpenChange: (open: boolean) => void
+	checkInCode: Nullable<string>
+	isPending: boolean
+	onConfirm: () => void
+}) {
+	const [enteredCode, setEnteredCode] = useState('')
+
+	const handleOpenChange = (v: boolean) => {
+		if (!v) setEnteredCode('')
+		onOpenChange(v)
+	}
+
+	const handleConfirm = (e: React.MouseEvent) => {
+		if (enteredCode !== checkInCode) {
+			e.preventDefault()
+			toast.error('Incorrect check-in code. Please try again.')
+			return
+		}
+		onConfirm()
+	}
+
+	return (
+		<AlertDialog open={open} onOpenChange={handleOpenChange}>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>Check In Guest</AlertDialogTitle>
+					<AlertDialogDescription>
+						Enter the 5-digit check-in code sent to the guest to verify their
+						identity.
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+
+				<div>
+					<InputOTP
+						maxLength={5}
+						value={enteredCode}
+						onChange={setEnteredCode}
+					>
+						<InputOTPGroup>
+							<InputOTPSlot index={0} className="size-12 text-lg" />
+							<InputOTPSlot index={1} className="size-12 text-lg" />
+							<InputOTPSlot index={2} className="size-12 text-lg" />
+							<InputOTPSlot index={3} className="size-12 text-lg" />
+							<InputOTPSlot index={4} className="size-12 text-lg" />
+						</InputOTPGroup>
+					</InputOTP>
+				</div>
+
+				<AlertDialogFooter>
+					<AlertDialogCancel>Cancel</AlertDialogCancel>
+					<AlertDialogAction
+						className="bg-blue-600 text-white hover:bg-blue-700"
+						disabled={isPending || enteredCode.length < 5}
+						onClick={(e) => handleConfirm(e)}
+					>
+						{isPending ? <Spinner /> : null}
+						Check In
 					</AlertDialogAction>
 				</AlertDialogFooter>
 			</AlertDialogContent>
@@ -309,13 +386,10 @@ export function BookingDetailModule() {
 				isPending={isConfirming}
 				onConfirm={handleConfirm}
 			/>
-			<ActionDialog
+			<CheckInDialog
 				open={checkInOpen}
 				onOpenChange={setCheckInOpen}
-				title="Check In Guest"
-				description="Are you sure you want to check in this guest?"
-				confirmLabel="Check In"
-				confirmClassName="bg-blue-600 text-white hover:bg-blue-700"
+				checkInCode={booking.check_in_code}
 				isPending={isCheckingIn}
 				onConfirm={handleCheckIn}
 			/>

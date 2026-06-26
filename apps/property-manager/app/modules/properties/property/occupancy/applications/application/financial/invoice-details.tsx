@@ -10,7 +10,6 @@ import { useState } from 'react'
 import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { useDeleteInvoice, useVoidInvoice } from '~/api/invoices'
-import { usePayInvoice } from '~/api/invoices'
 import { RecordPaymentDialog } from '~/components/blocks/record-payment-dialog'
 import {
 	AlertDialog,
@@ -92,8 +91,6 @@ export function InvoiceDetails({
 
 	const { isPending: isVoiding, mutate: voidInvoiceMutation } = useVoidInvoice()
 	const { mutate: deleteInvoiceMutation } = useDeleteInvoice()
-	const { isPending: isRecordingPayment, mutate: payInvoiceMutation } =
-		usePayInvoice()
 
 	const handleVoidConfirm = () => {
 		voidInvoiceMutation(
@@ -127,35 +124,6 @@ export function InvoiceDetails({
 							},
 						},
 					)
-				},
-			},
-		)
-	}
-
-	const handleRecordPayment = ({
-		payment_account_id,
-		provider,
-		reference,
-	}: {
-		payment_account_id: string
-		provider: string
-		reference?: string
-	}) => {
-		payInvoiceMutation(
-			{
-				client_id: safeString(clientUser?.client_id),
-				property_id: propertyId,
-				invoice_id: invoice.id,
-				body: { amount: invoice.total_amount, payment_account_id, provider: provider as 'MTN' | 'VODAFONE' | 'AIRTELTIGO' | 'PAYSTACK' | 'BANK_API' | 'CASH', reference },
-			},
-			{
-				onError: () => {
-					toast.error('Failed to record payment. Please try again.')
-				},
-				onSuccess: () => {
-					toast.success('Payment recorded successfully.')
-					setShowPayDialog(false)
-					void revalidator.revalidate()
 				},
 			},
 		)
@@ -352,8 +320,8 @@ export function InvoiceDetails({
 				onOpenChange={setShowPayDialog}
 				invoice={invoice}
 				clientId={safeString(clientUser?.client_id)}
-				isPending={isRecordingPayment}
-				onConfirm={handleRecordPayment}
+				propertyId={propertyId}
+				onSuccess={() => void revalidator.revalidate()}
 			/>
 		</>
 	)
