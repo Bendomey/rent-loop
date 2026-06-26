@@ -35,9 +35,14 @@ func NewTenantAccountRouter(appCtx pkg.AppContext, handlers handlers.Handlers) f
 				"/v1/tenant-applications/code/{code}/otp:verify",
 				handlers.TenantApplicationHandler.VerifyTrackingOtp,
 			)
+			// TODO: remove this.
 			r.Post(
 				"/v1/tenant-applications/code/{code}/invoice/{invoice_id}/pay",
 				handlers.TenantApplicationHandler.PayTrackingInvoice,
+			)
+			r.Post(
+				"/v1/invoices/{invoice_id}/pay",
+				handlers.InvoiceHandler.PayInvoice,
 			)
 		})
 

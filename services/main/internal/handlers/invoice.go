@@ -888,3 +888,53 @@ func (h *InvoiceHandler) ManagerPayInvoice(w http.ResponseWriter, r *http.Reques
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// PayInvoice godoc
+//
+//	@Summary		Pay invoice (public)
+//	@Description	Records an offline payment (PENDING) for an invoice.
+//	@Tags			Invoice
+//	@Accept			json
+//	@Produce		json
+//	@Param			invoice_id	path		string										true	"Invoice ID"
+//	@Param			body		body		ManagerPayInvoiceRequest					true	"Payment body"
+//	@Success		201			{object}	object{data=transformations.OutputPayment}	"Payment recorded"
+//	@Failure		400			{object}	lib.HTTPError								"Invalid request"
+//	@Failure		404			{object}	lib.HTTPError								"Application or invoice not found"
+//	@Failure		422			{object}	lib.HTTPError								"Validation error"
+//	@Failure		500			{object}	string										"An unexpected error occurred"
+//	@Router			/api/v1/invoices/{invoice_id}/pay [post]
+func (h *InvoiceHandler) PayInvoice(w http.ResponseWriter, r *http.Request) {
+	invoiceID := chi.URLParam(r, "invoice_id")
+
+	var body ManagerPayInvoiceRequest
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
+		return
+	}
+
+	payment, createErr := h.services.PaymentService.CreateOfflinePayment(
+		r.Context(),
+		services.CreateOfflinePaymentInput{
+			PaymentAccountID: body.PaymentAccountID,
+			InvoiceID:        invoiceID,
+			Provider:         body.Provider,
+			Amount:           body.Amount,
+			Reference:        body.Reference,
+			Metadata:         body.Metadata,
+		},
+	)
+	if createErr != nil {
+		HandleErrorResponse(w, createErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBPaymentToRest(payment),
+	})
+}

@@ -13616,6 +13616,52 @@ paths:
       summary: Update an existing document
       tags:
       - Documents
+  /api/v1/invoices/{invoice_id}/pay:
+    post:
+      consumes:
+      - application/json
+      description: Records an offline payment (PENDING) for an invoice.
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      - description: Payment body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ManagerPayInvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Payment recorded
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputPayment'
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Application or invoice not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      summary: Pay invoice (public)
+      tags:
+      - Invoice
   /api/v1/leases:
     get:
       consumes:
