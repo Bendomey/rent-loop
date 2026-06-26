@@ -338,9 +338,8 @@ type UpdateInvoiceInput struct {
 
 func (s *invoiceService) UpdateInvoice(ctx context.Context, input UpdateInvoiceInput) (*models.Invoice, error) {
 	invoice, getErr := s.repo.GetByQuery(ctx, repository.GetInvoiceQuery{
-		Query: map[string]any{
-			"id": input.InvoiceID,
-		},
+		Query:    map[string]any{"id": input.InvoiceID},
+		Populate: &[]string{"LineItems"},
 	})
 	if getErr != nil {
 		if errors.Is(getErr, gorm.ErrRecordNotFound) {
