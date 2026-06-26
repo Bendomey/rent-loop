@@ -42,6 +42,7 @@ type InvoiceService interface {
 	UpdateLineItem(context context.Context, input UpdateLineItemInput) (*models.InvoiceLineItem, error)
 	RemoveLineItem(context context.Context, input RemoveLineItemInput) error
 	GetLineItems(context context.Context, invoiceID string) ([]models.InvoiceLineItem, error)
+	UpdateInvoicePaymentStatus(ctx context.Context, input UpdateInvoicePaymentStatusInput) (*models.Invoice, error)
 }
 
 type invoiceService struct {
@@ -438,6 +439,52 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, input UpdateInvoiceI
 			Metadata: map[string]string{
 				"function": "UpdateInvoice",
 				"action":   "updating invoice",
+			},
+		})
+	}
+
+	return invoice, nil
+}
+
+type UpdateInvoicePaymentStatusInput struct {
+	InvoiceID string
+	Status    string // PAID | PARTIALLY_PAID
+	PaidAt    *time.Time
+}
+
+func (s *invoiceService) UpdateInvoicePaymentStatus(
+	ctx context.Context,
+	input UpdateInvoicePaymentStatusInput,
+) (*models.Invoice, error) {
+	invoice, getErr := s.repo.GetByQuery(ctx, repository.GetInvoiceQuery{
+		Query: map[string]any{"id": input.InvoiceID},
+	})
+	if getErr != nil {
+		if errors.Is(getErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("InvoiceNotFound", &pkg.RentLoopErrorParams{Err: getErr})
+		}
+		return nil, pkg.InternalServerError(getErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getErr,
+			Metadata: map[string]string{
+				"function": "UpdateInvoicePaymentStatus",
+				"action":   "getting invoice",
+			},
+		})
+	}
+
+	invoice.Status = input.Status
+	if input.PaidAt != nil {
+		invoice.PaidAt = input.PaidAt
+	}
+
+	if updateErr := s.repo.Update(ctx, invoice); updateErr != nil {
+		return nil, pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateErr,
+			Metadata: map[string]string{
+				"function":   "UpdateInvoicePaymentStatus",
+				"action":     "updating invoice",
+				"invoice_id": input.InvoiceID,
+				"new_status": input.Status,
 			},
 		})
 	}

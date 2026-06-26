@@ -68,12 +68,13 @@ func NewPaymentService(deps PaymentServiceDeps) PaymentService {
 }
 
 type CreateOfflinePaymentInput struct {
-	PaymentAccountID string
-	InvoiceID        string
-	Provider         string
-	Amount           int64
-	Reference        *string
-	Metadata         *map[string]any
+	PaymentAccountID        string
+	InvoiceID               string
+	Provider                string
+	Amount                  int64
+	Reference               *string
+	Metadata                *map[string]any
+	InitiatedByClientUserID *string // set when a manager initiates; suppresses the submission notification
 }
 
 func (s *paymentService) CreateOfflinePayment(
@@ -229,6 +230,12 @@ func (s *paymentService) CreateOfflinePayment(
 		},
 	}
 
+	if input.InitiatedByClientUserID != nil {
+		initialMetadata["initiated_by"] = map[string]any{
+			"client_user_id": *input.InitiatedByClientUserID,
+		}
+	}
+
 	if input.Metadata != nil {
 		initialMetadata["offline_data"] = map[string]any{}
 
@@ -258,6 +265,10 @@ func (s *paymentService) CreateOfflinePayment(
 				"invoice_id": input.InvoiceID,
 			},
 		})
+	}
+
+	if input.InitiatedByClientUserID != nil {
+		return &payment, nil
 	}
 
 	go func() {
@@ -493,9 +504,9 @@ func (s *paymentService) VerifyOfflinePayment(
 			newInvoiceStatus = "PARTIALLY_PAID"
 		}
 
-		_, updateInvoiceErr := s.invoiceService.UpdateInvoice(transCtx, UpdateInvoiceInput{
+		_, updateInvoiceErr := s.invoiceService.UpdateInvoicePaymentStatus(transCtx, UpdateInvoicePaymentStatusInput{
 			InvoiceID: payment.Invoice.ID.String(),
-			Status:    &newInvoiceStatus,
+			Status:    newInvoiceStatus,
 			PaidAt:    paidAt,
 		})
 		if updateInvoiceErr != nil {

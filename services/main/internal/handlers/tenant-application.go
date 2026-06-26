@@ -1013,12 +1013,13 @@ func (h *TenantApplicationHandler) PayInvoice(w http.ResponseWriter, r *http.Req
 	}
 
 	payment, err := h.services.PaymentService.CreateOfflinePayment(r.Context(), services.CreateOfflinePaymentInput{
-		PaymentAccountID: body.PaymentAccountID,
-		InvoiceID:        invoiceID,
-		Provider:         body.Provider,
-		Amount:           body.Amount,
-		Reference:        body.Reference,
-		Metadata:         body.Metadata,
+		PaymentAccountID:        body.PaymentAccountID,
+		InvoiceID:               invoiceID,
+		Provider:                body.Provider,
+		Amount:                  body.Amount,
+		Reference:               body.Reference,
+		Metadata:                body.Metadata,
+		InitiatedByClientUserID: &clientUser.ID,
 	})
 	if err != nil {
 		HandleErrorResponse(w, err)
