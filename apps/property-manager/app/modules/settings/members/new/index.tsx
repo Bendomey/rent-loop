@@ -2,10 +2,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Check, HelpCircle, Mail } from 'lucide-react'
 import { useEffect } from 'react'
 import { useFieldArray, useForm, useWatch } from 'react-hook-form'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 import { Link, useFetcher } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useGetMyProperties } from '~/api/properties'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { Button } from '~/components/ui/button'
 import { FieldGroup } from '~/components/ui/field'
 import {
@@ -45,8 +47,6 @@ import {
 	TypographyH4,
 	TypographyMuted,
 } from '~/components/ui/typography'
-import { isValidPhoneNumber } from 'react-phone-number-input'
-import { InternationalPhoneInput } from '~/components/international-phone'
 import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'

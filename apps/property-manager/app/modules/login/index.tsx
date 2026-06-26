@@ -3,6 +3,7 @@ import { AlertCircleIcon, CheckCircle2Icon } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Link, useFetcher, useLoaderData } from 'react-router'
 import { z } from 'zod'
+import { ExternalLink } from '~/components/external-link'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 
 import { Button } from '~/components/ui/button'
@@ -19,7 +20,6 @@ import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
 import { TypographyH1, TypographyH3 } from '~/components/ui/typography'
 import { cn } from '~/lib/utils'
-import type { loader } from '~/routes/login'
 
 const ValidationSchema = z.object({
 	email: z.email('Invalid email address'),
@@ -141,21 +141,17 @@ export function LoginModule() {
 					</Form>
 					<FieldDescription className="px-6 text-center">
 						By clicking continue, you agree to our{' '}
-						<a
-							href={`${rentLoopWebsiteUrl}/terms`}
-							target="_blank"
-							rel="noopener noreferrer"
+						<ExternalLink
+							to={`${rentLoopWebsiteUrl}/terms`}
 						>
 							Terms of Service
-						</a>{' '}
+						</ExternalLink>{' '}
 						and{' '}
-						<a
-							href={`${rentLoopWebsiteUrl}/privacy-policy`}
-							target="_blank"
-							rel="noopener noreferrer"
+						<ExternalLink
+							to={`${rentLoopWebsiteUrl}/privacy-policy`}
 						>
 							Privacy Policy
-						</a>
+						</ExternalLink>
 						.
 					</FieldDescription>
 				</div>

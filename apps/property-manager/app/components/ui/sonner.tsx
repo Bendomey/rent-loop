@@ -30,6 +30,13 @@ const Toaster = ({ ...props }: ToasterProps) => {
 					'--border-radius': 'var(--radius)',
 				} as React.CSSProperties
 			}
+			toastOptions={{
+				classNames: {
+					error: '!bg-red-600 !text-white !border-red-700 [&_[data-icon]]:text-white',
+					success: '!bg-teal-600 !text-white !border-teal-700 [&_[data-icon]]:text-white',
+					warning: '!bg-amber-500 !text-white !border-amber-600 [&_[data-icon]]:text-white',
+				},
+			}}
 			{...props}
 		/>
 	)

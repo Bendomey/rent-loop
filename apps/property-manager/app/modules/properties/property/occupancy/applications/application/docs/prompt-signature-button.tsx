@@ -3,12 +3,14 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Check, Clipboard, Send } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 import { z } from 'zod'
 import {
 	useGenerateSigningToken,
 	useResendSigningToken,
 	useUpdateSigningToken,
 } from '~/api/signing'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { Button } from '~/components/ui/button'
 import {
 	Dialog,
@@ -26,10 +28,8 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
-import { InternationalPhoneInput } from '~/components/international-phone'
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
-import { isValidPhoneNumber } from 'react-phone-number-input'
 import { QUERY_KEYS } from '~/lib/constants'
 import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 import { safeString } from '~/lib/strings'
