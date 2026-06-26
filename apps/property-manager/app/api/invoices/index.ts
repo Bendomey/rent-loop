@@ -77,6 +77,59 @@ const voidInvoice = async ({
 export const useVoidInvoice = () => useMutation({ mutationFn: voidInvoice })
 
 /**
+ * Pay (record an offline payment for) an invoice.
+ */
+type PaymentProvider =
+	| 'MTN'
+	| 'VODAFONE'
+	| 'AIRTELTIGO'
+	| 'PAYSTACK'
+	| 'BANK_API'
+	| 'CASH'
+
+interface PayInvoiceInput {
+	client_id: string
+	property_id: string
+	invoice_id: string
+	body: {
+		amount: number
+		payment_account_id: string
+		provider: PaymentProvider
+		reference?: string
+		metadata?: Record<string, unknown>
+	}
+}
+
+const payInvoice = async ({
+	client_id,
+	property_id,
+	invoice_id,
+	body,
+}: PayInvoiceInput) => {
+	try {
+		await fetchClient(
+			`/v1/admin/clients/${client_id}/properties/${property_id}/invoices/${invoice_id}/pay`,
+			{
+				method: 'POST',
+				body: JSON.stringify(body),
+			},
+		)
+	} catch (error) {
+		if (error instanceof Response) {
+			const response = await error.json()
+			throw new Error(response.errors?.message || 'Unknown error')
+		}
+		if (error instanceof Error) {
+			throw error
+		}
+	}
+}
+
+export const usePayInvoice = () =>
+	useMutation({ mutationFn: payInvoice })
+
+
+/**
  * Delete an invoice (must be DRAFT or VOID status)
  */
 const deleteInvoice = async ({

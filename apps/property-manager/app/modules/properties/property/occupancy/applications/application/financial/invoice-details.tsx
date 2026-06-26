@@ -11,8 +11,8 @@ import { useState } from 'react'
 import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { useDeleteInvoice, useVoidInvoice } from '~/api/invoices'
+import { usePayInvoice } from '~/api/invoices'
 import { useGetPaymentAccounts } from '~/api/payment-accounts'
-import { usePayApplicationInvoice } from '~/api/tenant-applications'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 import {
 	AlertDialog,
@@ -96,13 +96,11 @@ const RAIL_LABELS: Record<PAYMENT_RAIL, string> = {
 
 interface InvoiceDetailsProps {
 	invoice: Invoice
-	applicationId: string
 	propertyId: string
 }
 
 export function InvoiceDetails({
 	invoice,
-	applicationId,
 	propertyId,
 }: InvoiceDetailsProps) {
 	const revalidator = useRevalidator()
@@ -129,7 +127,7 @@ export function InvoiceDetails({
 	const { isPending: isVoiding, mutate: voidInvoiceMutation } = useVoidInvoice()
 	const { mutate: deleteInvoiceMutation } = useDeleteInvoice()
 	const { isPending: isRecordingPayment, mutate: payInvoiceMutation } =
-		usePayApplicationInvoice()
+		usePayInvoice()
 
 	const handleVoidConfirm = () => {
 		voidInvoiceMutation(
@@ -174,7 +172,6 @@ export function InvoiceDetails({
 			{
 				client_id: safeString(clientUser?.client_id),
 				property_id: propertyId,
-				tenant_application_id: applicationId,
 				invoice_id: invoice.id,
 				body: {
 					amount: invoice.total_amount,

@@ -1333,7 +1333,7 @@ definitions:
     - email
     - password
     type: object
-  handlers.PayInvoiceRequest:
+  handlers.ManagerPayInvoiceRequest:
     properties:
       amount:
         example: 1000
@@ -8934,6 +8934,59 @@ paths:
       summary: Update line item on invoice (Admin)
       tags:
       - Invoice
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/pay:
+    post:
+      consumes:
+      - application/json
+      description: Creates an offline payment for the invoice and immediately verifies
+        it as successful.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Invoice ID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      - description: Pay invoice request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ManagerPayInvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Invoice paid successfully
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Pay an invoice (offline)
+      tags:
+      - Invoice
   /api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/void:
     patch:
       consumes:
@@ -11778,64 +11831,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Cancel a lease application (Admin)
-      tags:
-      - TenantApplication
-  /api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay:
-    post:
-      consumes:
-      - application/json
-      description: Pay an invoice for a lease application (security deposit and/or
-        initial deposit) (Admin)
-      parameters:
-      - description: Property ID
-        in: path
-        name: property_id
-        required: true
-        type: string
-      - description: lease application ID
-        in: path
-        name: tenant_application_id
-        required: true
-        type: string
-      - description: Invoice ID
-        in: path
-        name: invoice_id
-        required: true
-        type: string
-      - description: Pay invoice request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.PayInvoiceRequest'
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: Invoice paid successfully
-        "400":
-          description: Error occurred when paying invoice
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: lease application or invoice not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Pay an invoice for a lease application (Admin)
       tags:
       - TenantApplication
   /api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice:generate:

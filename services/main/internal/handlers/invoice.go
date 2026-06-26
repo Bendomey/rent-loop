@@ -804,3 +804,87 @@ func (h *InvoiceHandler) TenantListPaymentAccounts(w http.ResponseWriter, r *htt
 		"data": data,
 	})
 }
+
+type ManagerPayInvoiceRequest struct {
+	PaymentAccountID string          `json:"payment_account_id"  validate:"required,uuid4"                                                example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b" description:"ID of the payment account used"`
+	Amount           int64           `json:"amount"              validate:"required"                                                      example:"1000"                                 description:"Amount to pay for the invoice"`
+	Provider         string          `json:"provider"            validate:"required,oneof=MTN VODAFONE AIRTELTIGO PAYSTACK BANK_API CASH" example:"CASH"                                 description:"Offline payment provider/method"`
+	Reference        *string         `json:"reference,omitempty"                                                                          example:"RCP-2024-001"                         description:"Optional reference number for the payment"`
+	Metadata         *map[string]any `json:"metadata,omitempty"                                                                                                                          description:"Additional metadata for the payment"`
+}
+
+// PayInvoice godoc
+//
+//	@Summary		Pay an invoice (offline)
+//	@Description	Creates an offline payment for the invoice and immediately verifies it as successful.
+//	@Tags			Invoice
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			property_id	path	string						true	"Property ID"
+//	@Param			invoice_id	path	string						true	"Invoice ID"
+//	@Param			body		body	ManagerPayInvoiceRequest	true	"Pay invoice request body"
+//	@Success		204			"Invoice paid successfully"
+//	@Failure		400			{object}	lib.HTTPError
+//	@Failure		401			{object}	string
+//	@Failure		404			{object}	lib.HTTPError
+//	@Failure		422			{object}	lib.HTTPError
+//	@Failure		500			{object}	string
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/pay [post]
+func (h *InvoiceHandler) ManagerPayInvoice(w http.ResponseWriter, r *http.Request) {
+	clientUser, ok := lib.ClientUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	invoiceID := chi.URLParam(r, "invoice_id")
+
+	var body ManagerPayInvoiceRequest
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
+		return
+	}
+
+	_, getErr := h.service.GetByQuery(r.Context(), repository.GetInvoiceQuery{
+		Query: map[string]any{"id": invoiceID},
+	})
+	if getErr != nil {
+		HandleErrorResponse(w, getErr)
+		return
+	}
+
+	payment, createErr := h.services.PaymentService.CreateOfflinePayment(
+		r.Context(),
+		services.CreateOfflinePaymentInput{
+			PaymentAccountID:        body.PaymentAccountID,
+			InvoiceID:               invoiceID,
+			Provider:                body.Provider,
+			Amount:                  body.Amount,
+			Reference:               body.Reference,
+			Metadata:                body.Metadata,
+			InitiatedByClientUserID: &clientUser.ID,
+		},
+	)
+	if createErr != nil {
+		HandleErrorResponse(w, createErr)
+		return
+	}
+
+	_, verifyErr := h.services.PaymentService.VerifyOfflinePayment(r.Context(), services.VerifyOfflinePaymentInput{
+		PaymentID:    payment.ID.String(),
+		VerifiedByID: clientUser.ID,
+		IsSuccessful: true,
+		Metadata:     body.Metadata,
+	})
+
+	if verifyErr != nil {
+		HandleErrorResponse(w, verifyErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

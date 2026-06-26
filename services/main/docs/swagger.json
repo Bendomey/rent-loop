@@ -6870,6 +6870,86 @@
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/pay": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates an offline payment for the invoice and immediately verifies it as successful.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Pay an invoice (offline)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Pay invoice request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ManagerPayInvoiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Invoice paid successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}/void": {
             "patch": {
                 "security": [
@@ -11363,93 +11443,6 @@
                     },
                     "404": {
                         "description": "lease application not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/clients/{client_id}/properties/{property_id}/tenant-applications/{tenant_application_id}/invoice/{invoice_id}/pay": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Pay an invoice for a lease application (security deposit and/or initial deposit) (Admin)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "TenantApplication"
-                ],
-                "summary": "Pay an invoice for a lease application (Admin)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "lease application ID",
-                        "name": "tenant_application_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Invoice ID",
-                        "name": "invoice_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Pay invoice request body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.PayInvoiceRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Invoice paid successfully"
-                    },
-                    "400": {
-                        "description": "Error occurred when paying invoice",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "lease application or invoice not found",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -18345,7 +18338,7 @@
                 }
             }
         },
-        "handlers.PayInvoiceRequest": {
+        "handlers.ManagerPayInvoiceRequest": {
             "type": "object",
             "required": [
                 "amount",

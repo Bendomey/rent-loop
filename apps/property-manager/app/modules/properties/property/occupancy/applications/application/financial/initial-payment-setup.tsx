@@ -137,7 +137,6 @@ export function InitialPaymentSetup({
 		return (
 			<InvoiceDetails
 				invoice={existingInvoice}
-				applicationId={applicationId}
 				propertyId={propertyId}
 			/>
 		)
