@@ -244,12 +244,16 @@ export function PaymentCard({
 		booking.status !== 'PENDING' &&
 		!!invoice &&
 		invoice.status !== 'PAID' &&
-		invoice.status !== 'VOID'
+		invoice.status !== 'VOID' && 
+		booking.status !== 'CANCELLED' && 
+		booking.status !== 'COMPLETED';
 
 	const isEditable =
 		!!invoice &&
 		invoice.status !== 'PAID' &&
-		invoice.status !== 'VOID'
+		invoice.status !== 'VOID' && 
+		booking.status !== 'CANCELLED' && 
+		booking.status !== 'COMPLETED';
 
 	const handleAddLineItem = async (values: LineItemFormValues) => {
 		if (!invoice) return

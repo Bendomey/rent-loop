@@ -49,7 +49,7 @@ export function PropertyBookingsModule() {
 		useGetPropertyBookings(clientId, propertyId, {
 			filters: { status, unit_id },
 			pagination: { page, per },
-			populate: ['Tenant', 'Unit'],
+			populate: ['Tenant', 'Unit', 'Invoice', 'Invoice.LineItems'],
 			sorter: { sort: 'desc', sort_by: 'created_at' },
 		})
 
@@ -110,19 +110,26 @@ export function PropertyBookingsModule() {
 				},
 			},
 			{
-				accessorKey: 'rate',
+				id: 'rate',
 				header: 'Rate',
-				cell: ({ getValue, row }) => (
-					<span className="text-xs font-semibold">
-						{formatAmount(
-							convertPesewasToCedis(getValue<number>()),
-							row.original.unit?.rent_fee_currency,
-						)}
-						<span className="block text-xs font-light text-muted-foreground">
-							{getBookingRateFrequencySuffix(row.original.stay_frequency)}
+				cell: ({ row }) => {
+					const bookingFeeItem = row.original.invoice?.line_items?.find(
+						(item) => item.category === 'BOOKING_FEE',
+					)
+					return (
+						<span className="text-xs font-semibold">
+							{bookingFeeItem
+								? formatAmount(
+										convertPesewasToCedis(bookingFeeItem.unit_amount),
+										bookingFeeItem.currency,
+									)
+								: '—'}
+							<span className="block text-xs font-light text-muted-foreground">
+								{getBookingRateFrequencySuffix(row.original.stay_frequency)}
+							</span>
 						</span>
-					</span>
-				),
+					)
+				},
 			},
 			{
 				id: 'actions',
