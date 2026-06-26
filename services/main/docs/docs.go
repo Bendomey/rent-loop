@@ -16575,14 +16575,11 @@ const docTemplate = `{
                 "category": {
                     "type": "string",
                     "enum": [
-                        "RENT",
-                        "SECURITY_DEPOSIT",
-                        "INITIAL_DEPOSIT",
                         "MAINTENANCE_FEE",
-                        "SAAS_FEE",
-                        "EXPENSE"
+                        "EXPENSE",
+                        "OTHER"
                     ],
-                    "example": "RENT"
+                    "example": "OTHER"
                 },
                 "currency": {
                     "type": "string",
@@ -18729,7 +18726,24 @@ const docTemplate = `{
             }
         },
         "handlers.UpdateBookingRequest": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "check_in_date": {
+                    "type": "string"
+                },
+                "check_out_date": {
+                    "type": "string"
+                },
+                "meta": {
+                    "type": "object"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "requires_upfront_payment": {
+                    "type": "boolean"
+                }
+            }
         },
         "handlers.UpdateClientRequest": {
             "type": "object",
@@ -18848,6 +18862,10 @@ const docTemplate = `{
                         "BANK"
                     ]
                 },
+                "currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
                 "due_date": {
                     "type": "string"
                 }
@@ -18940,14 +18958,11 @@ const docTemplate = `{
                 "category": {
                     "type": "string",
                     "enum": [
-                        "RENT",
-                        "SECURITY_DEPOSIT",
-                        "INITIAL_DEPOSIT",
                         "MAINTENANCE_FEE",
-                        "SAAS_FEE",
-                        "EXPENSE"
+                        "EXPENSE",
+                        "OTHER"
                     ],
-                    "example": "RENT"
+                    "example": "OTHER"
                 },
                 "currency": {
                     "type": "string",

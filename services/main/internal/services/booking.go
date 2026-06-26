@@ -100,18 +100,6 @@ type CancelBookingInput struct {
 	CancellationReason string
 }
 
-type UpdateBookingInput struct {
-	BookingID string
-
-	Notes                  lib.Optional[string]
-	Rate                   lib.Optional[int64]
-	Currency               lib.Optional[string]
-	RequiresUpfrontPayment lib.Optional[bool]
-	CheckInDate            lib.Optional[time.Time]
-	CheckOutDate           lib.Optional[time.Time]
-	Meta                   lib.Optional[datatypes.JSON]
-}
-
 func (s *bookingService) CreateBooking(ctx context.Context, input CreateBookingInput) (*models.Booking, error) {
 	if !input.CheckOutDate.After(input.CheckInDate) {
 		return nil, errors.New("check_out_date must be after check_in_date")
@@ -150,8 +138,6 @@ func (s *bookingService) CreateBooking(ctx context.Context, input CreateBookingI
 		TenantID:              tenant.ID.String(),
 		CheckInDate:           input.CheckInDate,
 		CheckOutDate:          input.CheckOutDate,
-		Rate:                  input.Rate,
-		Currency:              input.Currency,
 		StayFrequency:         input.StayFrequency,
 		Status:                "PENDING",
 		BookingSource:         input.BookingSource,
@@ -254,9 +240,19 @@ func (s *bookingService) CreateBooking(ctx context.Context, input CreateBookingI
 		})
 	}
 
-	go s.sendBookingCreatedNotification(*bookingReloaded)
+	go s.sendBookingCreatedNotification(*bookingReloaded, totalRate, input.Currency)
 
 	return booking, nil
+}
+
+type UpdateBookingInput struct {
+	BookingID string
+
+	Notes                  lib.Optional[string]
+	RequiresUpfrontPayment lib.Optional[bool]
+	CheckInDate            lib.Optional[time.Time]
+	CheckOutDate           lib.Optional[time.Time]
+	Meta                   lib.Optional[datatypes.JSON]
 }
 
 func (s *bookingService) UpdateBooking(ctx context.Context, input UpdateBookingInput) (*models.Booking, error) {
@@ -281,12 +277,10 @@ func (s *bookingService) UpdateBooking(ctx context.Context, input UpdateBookingI
 		})
 	}
 
-	// These fields are locked once the booking is confirmed.
-	preConfirmOnly := input.Rate.IsSet || input.Currency.IsSet ||
-		input.CheckInDate.IsSet || input.CheckOutDate.IsSet
-	if preConfirmOnly && booking.Status != "PENDING" {
+	// Dates are locked once the booking is confirmed.
+	if (input.CheckInDate.IsSet || input.CheckOutDate.IsSet) && booking.Status != "PENDING" {
 		return nil, pkg.BadRequestError(
-			"rate, currency, dates, and invoice can only be changed before the booking is confirmed",
+			"dates can only be changed before the booking is confirmed",
 			&pkg.RentLoopErrorParams{
 				Err:      errors.New("booking already confirmed"),
 				Metadata: map[string]string{"function": "UpdateBooking"},
@@ -316,107 +310,20 @@ func (s *bookingService) UpdateBooking(ctx context.Context, input UpdateBookingI
 
 	if input.CheckInDate.IsSet || input.CheckOutDate.IsSet {
 		if !booking.CheckOutDate.After(booking.CheckInDate) {
+			transaction.Rollback()
 			return nil, pkg.BadRequestError("check_out_date must be after check_in_date", &pkg.RentLoopErrorParams{
 				Err:      errors.New("invalid date range"),
 				Metadata: map[string]string{"function": "UpdateBooking"},
 			})
 		}
-	}
-
-	if input.Rate.IsSet {
-		booking.Rate = *input.Rate.Value
-	}
-	if input.Currency.IsSet {
-		booking.Currency = *input.Currency.Value
-	}
-
-	// update invoice if updates affects pricing
-	if input.Rate.IsSet || input.CheckInDate.IsSet || input.CheckOutDate.IsSet || input.Currency.IsSet {
-		newBookingRate := booking.Rate
-
-		unit, unitErr := s.unitService.GetUnit(ctx, repository.GetUnitQuery{
-			PropertyID: booking.PropertyID,
-			UnitID:     booking.UnitID,
-		})
-
-		if unitErr != nil {
-			return nil, unitErr
-		}
-
-		// calculate the rate based on the unit's rent fee and the length of stay based on frequency: WEEKLY | DAILY | MONTHLY | HOURLY
-		hours := booking.CheckOutDate.Sub(booking.CheckInDate).Hours()
-		totalRate := int64(0)
-		quantity := int64(0)
-		paymentFrequency := "nights"
-		switch unit.PaymentFrequency {
-		case "HOURLY":
-			quantity = int64(math.Ceil(hours))
-			totalRate = quantity * newBookingRate
-			paymentFrequency = "hours"
-		case "DAILY":
-			quantity = int64(math.Ceil(hours / 24))
-			totalRate = quantity * newBookingRate
-			paymentFrequency = "nights"
-		case "WEEKLY":
-			quantity = int64(math.Ceil(hours / (24 * 7)))
-			totalRate = quantity * newBookingRate
-			paymentFrequency = "weeks"
-		case "MONTHLY":
-			quantity = int64(math.Ceil(hours / (24 * 30)))
-			totalRate = quantity * newBookingRate
-			paymentFrequency = "months"
-		}
-
-		if booking.Invoice == nil || booking.Invoice.ID.String() == "" {
-			return nil, pkg.InternalServerError("Booking invoice not loaded", &pkg.RentLoopErrorParams{
-				Err:      errors.New("invoice missing from booking"),
-				Metadata: map[string]string{"function": "UpdateBooking", "action": "resolving booking invoice"},
-			})
-		}
-
-		lineItems, lineItemsErr := s.invoiceService.GetLineItems(transCtx, booking.Invoice.ID.String())
-		if lineItemsErr != nil {
+		if err := s.recalculateBookingInvoice(transCtx, booking); err != nil {
 			transaction.Rollback()
-			return nil, pkg.InternalServerError(lineItemsErr.Error(), &pkg.RentLoopErrorParams{
-				Err: lineItemsErr,
-				Metadata: map[string]string{
-					"function": "UpdateBooking",
-					"action":   "fetching booking invoice line items",
-				},
-			})
-		}
-
-		var bookingLineItem *models.InvoiceLineItem
-		for i := range lineItems {
-			if lineItems[i].Category == "BOOKING_FEE" {
-				bookingLineItem = &lineItems[i]
-				break
-			}
-		}
-
-		if bookingLineItem == nil {
-			return nil, pkg.NotFoundError("BookingInvoiceLineItemNotFound", &pkg.RentLoopErrorParams{
-				Err:      errors.New("booking invoice line item not found"),
-				Metadata: map[string]string{"function": "UpdateBooking", "action": "finding booking fee line item"},
-			})
-		}
-
-		label := fmt.Sprintf("Booking for %s for %d %s", unit.Name, quantity, paymentFrequency)
-		if _, updateErr := s.invoiceService.UpdateLineItem(transCtx, UpdateLineItemInput{
-			InvoiceID:   booking.Invoice.ID.String(),
-			LineItemID:  bookingLineItem.ID.String(),
-			Label:       &label,
-			Quantity:    &quantity,
-			UnitAmount:  &newBookingRate,
-			TotalAmount: &totalRate,
-			Currency:    &booking.Currency,
-		}); updateErr != nil {
-			transaction.Rollback()
-			return nil, updateErr
+			return nil, err
 		}
 	}
 
 	if err := s.repo.Update(transCtx, booking); err != nil {
+		transaction.Rollback()
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
 			Err:      err,
 			Metadata: map[string]string{"function": "UpdateBooking", "action": "saving booking"},
@@ -431,6 +338,87 @@ func (s *bookingService) UpdateBooking(ctx context.Context, input UpdateBookingI
 	}
 
 	return booking, nil
+}
+
+// recalculateBookingInvoice recomputes the BOOKING_FEE line item totals based on
+// the current dates. The per-unit rate is read from the existing line item so no
+// rate field is needed on the booking model. Must be called within a transaction context.
+func (s *bookingService) recalculateBookingInvoice(ctx context.Context, booking *models.Booking) error {
+	if booking.Invoice == nil || booking.Invoice.ID.String() == "" {
+		return pkg.InternalServerError("booking invoice not loaded", &pkg.RentLoopErrorParams{
+			Err:      errors.New("invoice missing from booking"),
+			Metadata: map[string]string{"function": "recalculateBookingInvoice"},
+		})
+	}
+
+	lineItems, lineItemsErr := s.invoiceService.GetLineItems(ctx, booking.Invoice.ID.String())
+	if lineItemsErr != nil {
+		return pkg.InternalServerError(lineItemsErr.Error(), &pkg.RentLoopErrorParams{
+			Err:      lineItemsErr,
+			Metadata: map[string]string{"function": "recalculateBookingInvoice", "action": "fetching line items"},
+		})
+	}
+
+	var bookingLineItem *models.InvoiceLineItem
+	for i := range lineItems {
+		if lineItems[i].Category == "BOOKING_FEE" {
+			bookingLineItem = &lineItems[i]
+			break
+		}
+	}
+	if bookingLineItem == nil {
+		return pkg.NotFoundError("BookingInvoiceLineItemNotFound", &pkg.RentLoopErrorParams{
+			Err:      errors.New("booking invoice line item not found"),
+			Metadata: map[string]string{"function": "recalculateBookingInvoice"},
+		})
+	}
+
+	unit, unitErr := s.unitService.GetUnit(ctx, repository.GetUnitQuery{
+		PropertyID: booking.PropertyID,
+		UnitID:     booking.UnitID,
+	})
+	if unitErr != nil {
+		return unitErr
+	}
+
+	unitRate := bookingLineItem.UnitAmount
+	hours := booking.CheckOutDate.Sub(booking.CheckInDate).Hours()
+	totalRate := int64(0)
+	quantity := int64(0)
+	paymentFrequency := "nights"
+	switch unit.PaymentFrequency {
+	case "HOURLY":
+		quantity = int64(math.Ceil(hours))
+		totalRate = quantity * unitRate
+		paymentFrequency = "hours"
+	case "DAILY":
+		quantity = int64(math.Ceil(hours / 24))
+		totalRate = quantity * unitRate
+		paymentFrequency = "nights"
+	case "WEEKLY":
+		quantity = int64(math.Ceil(hours / (24 * 7)))
+		totalRate = quantity * unitRate
+		paymentFrequency = "weeks"
+	case "MONTHLY":
+		quantity = int64(math.Ceil(hours / (24 * 30)))
+		totalRate = quantity * unitRate
+		paymentFrequency = "months"
+	}
+
+	label := fmt.Sprintf("Booking for %s for %d %s", unit.Name, quantity, paymentFrequency)
+	if _, updateErr := s.invoiceService.UpdateLineItem(ctx, UpdateLineItemInput{
+		InvoiceID:   booking.Invoice.ID.String(),
+		LineItemID:  bookingLineItem.ID.String(),
+		Label:       &label,
+		Quantity:    &quantity,
+		UnitAmount:  &unitRate,
+		TotalAmount: &totalRate,
+		Currency:    &bookingLineItem.Currency,
+	}); updateErr != nil {
+		return updateErr
+	}
+
+	return nil
 }
 
 func (s *bookingService) ConfirmBooking(ctx context.Context, input ConfirmBookingInput) (*models.Booking, error) {
@@ -763,14 +751,14 @@ func (s *bookingService) removeBookingDateBlock(ctx context.Context, bookingID s
 	}
 }
 
-func (s *bookingService) sendBookingCreatedNotification(booking models.Booking) {
+func (s *bookingService) sendBookingCreatedNotification(booking models.Booking, totalRate int64, currency string) {
 	emailData := emailtemplates.BookingCreatedData{
 		GuestName:    booking.Tenant.FirstName,
 		UnitName:     booking.Unit.Name,
 		CheckInDate:  booking.CheckInDate.Format("January 2, 2006 3:04pm"),
 		CheckOutDate: booking.CheckOutDate.Format("January 2, 2006 3:04pm"),
-		Rate:         lib.FormatAmount(lib.PesewasToCedis(booking.Rate)),
-		Currency:     booking.Currency,
+		Rate:         lib.FormatAmount(lib.PesewasToCedis(totalRate)),
+		Currency:     currency,
 		TrackingCode: booking.Code,
 	}
 

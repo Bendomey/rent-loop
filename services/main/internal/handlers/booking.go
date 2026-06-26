@@ -52,13 +52,11 @@ type CreateBookingRequest struct {
 }
 
 type UpdateBookingRequest struct {
-	Notes                  lib.Optional[string]         `json:"notes"                    validate:"omitempty"`
-	Rate                   lib.Optional[int64]          `json:"rate"                     validate:"omitempty,gt=0"`
-	Currency               lib.Optional[string]         `json:"currency"                 validate:"omitempty"`
-	RequiresUpfrontPayment lib.Optional[bool]           `json:"requires_upfront_payment" validate:"omitempty"`
-	CheckInDate            lib.Optional[time.Time]      `json:"check_in_date"            validate:"omitempty"`
-	CheckOutDate           lib.Optional[time.Time]      `json:"check_out_date"           validate:"omitempty"`
-	Meta                   lib.Optional[datatypes.JSON] `json:"meta"                     validate:"omitempty"`
+	Notes                  lib.Optional[string]         `json:"notes"                    validate:"omitempty" swaggertype:"string"`
+	RequiresUpfrontPayment lib.Optional[bool]           `json:"requires_upfront_payment" validate:"omitempty" swaggertype:"boolean"`
+	CheckInDate            lib.Optional[time.Time]      `json:"check_in_date"            validate:"omitempty" swaggertype:"string"`
+	CheckOutDate           lib.Optional[time.Time]      `json:"check_out_date"           validate:"omitempty" swaggertype:"string"`
+	Meta                   lib.Optional[datatypes.JSON] `json:"meta"                     validate:"omitempty" swaggertype:"object"`
 }
 
 type CancelBookingRequest struct {
@@ -304,8 +302,6 @@ func (h *BookingHandler) UpdateBooking(w http.ResponseWriter, r *http.Request) {
 	booking, err := h.bookingService.UpdateBooking(r.Context(), services.UpdateBookingInput{
 		BookingID:              bookingID,
 		Notes:                  body.Notes,
-		Rate:                   body.Rate,
-		Currency:               body.Currency,
 		RequiresUpfrontPayment: body.RequiresUpfrontPayment,
 		CheckInDate:            body.CheckInDate,
 		CheckOutDate:           body.CheckOutDate,

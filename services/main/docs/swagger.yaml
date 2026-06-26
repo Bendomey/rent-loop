@@ -25,13 +25,10 @@ definitions:
     properties:
       category:
         enum:
-        - RENT
-        - SECURITY_DEPOSIT
-        - INITIAL_DEPOSIT
         - MAINTENANCE_FEE
-        - SAAS_FEE
         - EXPENSE
-        example: RENT
+        - OTHER
+        example: OTHER
         type: string
       currency:
         example: GHS
@@ -1600,6 +1597,17 @@ definitions:
         type: string
     type: object
   handlers.UpdateBookingRequest:
+    properties:
+      check_in_date:
+        type: string
+      check_out_date:
+        type: string
+      meta:
+        type: object
+      notes:
+        type: string
+      requires_upfront_payment:
+        type: boolean
     type: object
   handlers.UpdateClientRequest:
     properties:
@@ -1683,6 +1691,9 @@ definitions:
         items:
           type: string
         type: array
+      currency:
+        example: GHS
+        type: string
       due_date:
         type: string
     type: object
@@ -1748,13 +1759,10 @@ definitions:
     properties:
       category:
         enum:
-        - RENT
-        - SECURITY_DEPOSIT
-        - INITIAL_DEPOSIT
         - MAINTENANCE_FEE
-        - SAAS_FEE
         - EXPENSE
-        example: RENT
+        - OTHER
+        example: OTHER
         type: string
       currency:
         example: GHS
