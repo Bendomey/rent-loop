@@ -327,7 +327,8 @@ export function NewBookingModule() {
 	const { clientUser } = useClient()
 	const navigate = useNavigate()
 	const [guestModalOpen, setGuestModalOpen] = useState(false)
-	const [frequency, setFrequency] = useState<PropertyUnit['payment_frequency']>('DAILY')
+	const [frequency, setFrequency] =
+		useState<PropertyUnit['payment_frequency']>('DAILY')
 
 	const propertyId = clientUserProperty?.property_id ?? ''
 	const propertyName = clientUserProperty?.property?.name

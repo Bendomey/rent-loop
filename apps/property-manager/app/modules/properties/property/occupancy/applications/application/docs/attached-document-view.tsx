@@ -1,6 +1,7 @@
 import { CheckCircle, FileText, Pen, PenLine, X } from 'lucide-react'
 import React from 'react'
 import { Link, useParams } from 'react-router'
+import { en } from 'zod/v4/locales'
 import { PromptSignatureButton } from './prompt-signature-button'
 import { SigningStatusRow } from './signing-status-row'
 import { useSigningTokens } from '~/api/signing'
@@ -13,7 +14,6 @@ import { getWitnessNodesFromContent } from '~/lib/document.utils'
 import { safeString } from '~/lib/strings'
 import { cn } from '~/lib/utils'
 import { useClient } from '~/providers/client-provider'
-import { en } from 'zod/v4/locales'
 
 interface AttachedDocumentViewProps {
 	tenantApplication: TenantApplication
@@ -282,7 +282,11 @@ export function AttachedDocumentView({
 									tenantApplicationId={applicationId}
 									email={safeString(tenantApplication?.email)}
 									phone={safeString(tenantApplication?.phone)}
-									name={safeString(tenantApplication?.first_name + ' ' + tenantApplication?.last_name)}
+									name={safeString(
+										tenantApplication?.first_name +
+											' ' +
+											tenantApplication?.last_name,
+									)}
 								/>
 							)}
 
@@ -308,9 +312,13 @@ export function AttachedDocumentView({
 												propertyId={safeString(propertyId)}
 												{...(entry.role !== 'pm_witness'
 													? {
-														name: safeString(tenantApplication?.emergency_contact_name),
-														phone: safeString(tenantApplication?.emergency_contact_phone),
-													}
+															name: safeString(
+																tenantApplication?.emergency_contact_name,
+															),
+															phone: safeString(
+																tenantApplication?.emergency_contact_phone,
+															),
+														}
 													: {})}
 												role={
 													entry.role === 'pm_witness'

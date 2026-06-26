@@ -62,7 +62,9 @@ export function SigningHeader({
 							)}
 							<span
 								className={`text-xs ${
-									status.signed ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400 dark:text-zinc-500'
+									status.signed
+										? 'text-emerald-600 dark:text-emerald-400'
+										: 'text-zinc-400 dark:text-zinc-500'
 								}`}
 							>
 								{SIGNATURE_ROLE_LABELS[status.role]}

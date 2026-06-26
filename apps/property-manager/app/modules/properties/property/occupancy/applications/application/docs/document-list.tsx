@@ -138,7 +138,8 @@ export function DocumentList({
 						onClick={() => onSelectDocument?.(EMPTY_DOCUMENT_SENTINEL)}
 						className={cn(
 							'relative cursor-pointer shadow-none transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-700',
-							isEmptySelected && 'border-blue-500 bg-blue-50 hover:bg-blue-50 dark:border-blue-800 dark:bg-blue-950 dark:text-white dark:hover:bg-blue-900',
+							isEmptySelected &&
+								'border-blue-500 bg-blue-50 hover:bg-blue-50 dark:border-blue-800 dark:bg-blue-950 dark:text-white dark:hover:bg-blue-900',
 						)}
 					>
 						{isEmptySelected && (
@@ -151,7 +152,9 @@ export function DocumentList({
 								<Plus className="size-5 text-zinc-400 dark:text-zinc-500" />
 							</div>
 							<div className="flex flex-col items-center text-center">
-								<span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Empty Document</span>
+								<span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+									Empty Document
+								</span>
 								<span className="text-xs text-zinc-500 dark:text-zinc-400">
 									Start from scratch
 								</span>

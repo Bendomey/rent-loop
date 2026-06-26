@@ -125,9 +125,7 @@ const payInvoice = async ({
 	}
 }
 
-export const usePayInvoice = () =>
-	useMutation({ mutationFn: payInvoice })
-
+export const usePayInvoice = () => useMutation({ mutationFn: payInvoice })
 
 /**
  * Delete an invoice (must be DRAFT or VOID status)
@@ -297,7 +295,8 @@ const updateLineItem = async (input: UpdateLineItemInput) => {
 	}
 }
 
-export const useUpdateLineItem = () => useMutation({ mutationFn: updateLineItem })
+export const useUpdateLineItem = () =>
+	useMutation({ mutationFn: updateLineItem })
 
 /**
  * Remove a line item from an invoice
@@ -331,7 +330,8 @@ const removeLineItem = async ({
 	}
 }
 
-export const useRemoveLineItem = () => useMutation({ mutationFn: removeLineItem })
+export const useRemoveLineItem = () =>
+	useMutation({ mutationFn: removeLineItem })
 
 /**
  * Verify an offline payment — approve (is_successful: true) or decline (is_successful: false)

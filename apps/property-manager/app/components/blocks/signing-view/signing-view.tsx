@@ -82,7 +82,7 @@ export function SigningView({
 								contentEditable={
 									<ContentEditable
 										placeholder=""
-										className="relative block min-h-[60vh] overflow-auto px-12 py-8 focus:outline-none text-zinc-900 dark:text-zinc-100"
+										className="relative block min-h-[60vh] overflow-auto px-12 py-8 text-zinc-900 focus:outline-none dark:text-zinc-100"
 									/>
 								}
 								ErrorBoundary={LexicalErrorBoundary}

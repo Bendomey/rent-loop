@@ -88,10 +88,10 @@ export function PromptSignatureButton({
 	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
 	const propDefaults = {
-    signer_name: safeString(name),
-    signer_email: safeString(email),
-    signer_phone: safeString(phone),
-}
+		signer_name: safeString(name),
+		signer_email: safeString(email),
+		signer_phone: safeString(phone),
+	}
 
 	const rhfMethods = useForm<SigningRequestFormValues>({
 		resolver: zodResolver(SigningRequestSchema),

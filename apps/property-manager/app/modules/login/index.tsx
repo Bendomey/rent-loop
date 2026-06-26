@@ -141,15 +141,11 @@ export function LoginModule() {
 					</Form>
 					<FieldDescription className="px-6 text-center">
 						By clicking continue, you agree to our{' '}
-						<ExternalLink
-							to={`${rentLoopWebsiteUrl}/terms`}
-						>
+						<ExternalLink to={`${rentLoopWebsiteUrl}/terms`}>
 							Terms of Service
 						</ExternalLink>{' '}
 						and{' '}
-						<ExternalLink
-							to={`${rentLoopWebsiteUrl}/privacy-policy`}
-						>
+						<ExternalLink to={`${rentLoopWebsiteUrl}/privacy-policy`}>
 							Privacy Policy
 						</ExternalLink>
 						.

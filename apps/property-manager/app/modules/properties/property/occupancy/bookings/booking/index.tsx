@@ -205,11 +205,7 @@ function CheckInDialog({
 				</AlertDialogHeader>
 
 				<div>
-					<InputOTP
-						maxLength={5}
-						value={enteredCode}
-						onChange={setEnteredCode}
-					>
+					<InputOTP maxLength={5} value={enteredCode} onChange={setEnteredCode}>
 						<InputOTPGroup>
 							<InputOTPSlot index={0} className="size-12 text-lg" />
 							<InputOTPSlot index={1} className="size-12 text-lg" />

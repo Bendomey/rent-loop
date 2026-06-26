@@ -82,7 +82,7 @@ export function PropertyBookingsModule() {
 							<span className="text-xs">
 								{t ? `${t.first_name} ${t.last_name}` : '—'}
 							</span>
-							<span className="block font-light text-xs text-muted-foreground">
+							<span className="text-muted-foreground block text-xs font-light">
 								{t?.phone ?? t?.email}
 							</span>
 						</div>
@@ -124,7 +124,7 @@ export function PropertyBookingsModule() {
 										bookingFeeItem.currency,
 									)
 								: '—'}
-							<span className="block text-xs font-light text-muted-foreground">
+							<span className="text-muted-foreground block text-xs font-light">
 								{getBookingRateFrequencySuffix(row.original.stay_frequency)}
 							</span>
 						</span>
@@ -134,7 +134,9 @@ export function PropertyBookingsModule() {
 			{
 				id: 'actions',
 				cell: ({ row }) => (
-					<Link to={`/properties/${propertyId}/occupancy/bookings/${row.original.id}`}>
+					<Link
+						to={`/properties/${propertyId}/occupancy/bookings/${row.original.id}`}
+					>
 						<Button
 							variant="ghost"
 							className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
@@ -151,7 +153,7 @@ export function PropertyBookingsModule() {
 	)
 
 	return (
-		<div className="mx-auto my-6 flex max-w-4xl flex-col gap-4 sm:gap-6 px-6">
+		<div className="mx-auto my-6 flex max-w-4xl flex-col gap-4 px-6 sm:gap-6">
 			<div className="space-y-1">
 				<TypographyH4>Bookings</TypographyH4>
 				<TypographyMuted>All bookings for this property.</TypographyMuted>

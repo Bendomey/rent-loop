@@ -80,10 +80,7 @@ interface InvoiceDetailsProps {
 	propertyId: string
 }
 
-export function InvoiceDetails({
-	invoice,
-	propertyId,
-}: InvoiceDetailsProps) {
+export function InvoiceDetails({ invoice, propertyId }: InvoiceDetailsProps) {
 	const revalidator = useRevalidator()
 	const { clientUser } = useClient()
 	const [showReconfigureAlert, setShowReconfigureAlert] = useState(false)

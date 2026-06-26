@@ -99,9 +99,10 @@ export function BookingRangeCalendar({
 			return
 		}
 		if (isWeekly) {
-			const days = Math.round(
-				(range.to.getTime() - range.from.getTime()) / (1000 * 60 * 60 * 24),
-			) + 1
+			const days =
+				Math.round(
+					(range.to.getTime() - range.from.getTime()) / (1000 * 60 * 60 * 24),
+				) + 1
 			const weeks = Math.max(1, Math.ceil(days / 7))
 			onRangeSelect({
 				from: range.from,

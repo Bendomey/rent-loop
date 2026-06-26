@@ -1,10 +1,29 @@
-import { addMonths, endOfMonth, isSameMonth, startOfMonth, startOfToday } from 'date-fns'
+import {
+	addMonths,
+	endOfMonth,
+	isSameMonth,
+	startOfMonth,
+	startOfToday,
+} from 'date-fns'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '~/components/ui/button'
 import { cn } from '~/lib/utils'
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const MONTHS = [
+	'Jan',
+	'Feb',
+	'Mar',
+	'Apr',
+	'May',
+	'Jun',
+	'Jul',
+	'Aug',
+	'Sep',
+	'Oct',
+	'Nov',
+	'Dec',
+]
 
 interface Props {
 	chunkMonths: number
@@ -12,7 +31,11 @@ interface Props {
 	onRangeSelect: (range: { from: Date; to: Date } | null) => void
 }
 
-export function MonthRangePicker({ chunkMonths, selectedRange, onRangeSelect }: Props) {
+export function MonthRangePicker({
+	chunkMonths,
+	selectedRange,
+	onRangeSelect,
+}: Props) {
 	const today = startOfToday()
 	const [viewYear, setViewYear] = useState(today.getFullYear())
 	const [pendingFrom, setPendingFrom] = useState<Date | null>(null)
@@ -48,7 +71,8 @@ export function MonthRangePicker({ chunkMonths, selectedRange, onRangeSelect }: 
 		if (!selectedRange) return false
 		const d = new Date(viewYear, month, 1)
 		return (
-			d >= startOfMonth(selectedRange.from) && d <= startOfMonth(selectedRange.to)
+			d >= startOfMonth(selectedRange.from) &&
+			d <= startOfMonth(selectedRange.to)
 		)
 	}
 
@@ -111,10 +135,16 @@ export function MonthRangePicker({ chunkMonths, selectedRange, onRangeSelect }: 
 							disabled={past}
 							className={cn(
 								'rounded-lg px-2 py-3 text-sm font-medium transition-colors',
-								past && 'cursor-not-allowed text-muted-foreground/40',
+								past && 'text-muted-foreground/40 cursor-not-allowed',
 								!past && (start || end || pending) && 'bg-rose-500 text-white',
-								!past && inRange && !(start || end) && 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300',
-								!past && !inRange && !pending && 'border border-border bg-background text-foreground hover:bg-muted',
+								!past &&
+									inRange &&
+									!(start || end) &&
+									'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300',
+								!past &&
+									!inRange &&
+									!pending &&
+									'border-border bg-background text-foreground hover:bg-muted border',
 							)}
 						>
 							{name}
@@ -124,7 +154,7 @@ export function MonthRangePicker({ chunkMonths, selectedRange, onRangeSelect }: 
 			</div>
 
 			{pendingFrom ? (
-				<p className="mt-3 text-center text-xs text-muted-foreground">
+				<p className="text-muted-foreground mt-3 text-center text-xs">
 					Now pick an end month
 				</p>
 			) : null}

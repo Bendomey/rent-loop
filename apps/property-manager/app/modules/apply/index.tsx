@@ -64,9 +64,7 @@ import {
 import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
 import { APP_NAME } from '~/lib/constants'
 import { localizedDayjs } from '~/lib/date'
-import {
-	normalizeInternationalPhoneNumber,
-} from '~/lib/phone'
+import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 import { cn } from '~/lib/utils'
 import type { loader } from '~/routes/apply._index'
 

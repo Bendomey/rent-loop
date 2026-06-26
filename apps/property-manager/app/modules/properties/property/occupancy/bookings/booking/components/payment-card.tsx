@@ -97,19 +97,25 @@ function LineItemDialog({
 	onSave: (values: LineItemFormValues) => void
 	isPending: boolean
 }) {
-	const { register, handleSubmit, watch, reset } =
-		useForm<LineItemFormValues>({
-			defaultValues: initial ?? {
-				label: '',
-				category: 'OTHER',
-				quantity: 1,
-				unit_amount: 0,
-			},
-		})
+	const { register, handleSubmit, watch, reset } = useForm<LineItemFormValues>({
+		defaultValues: initial ?? {
+			label: '',
+			category: 'OTHER',
+			quantity: 1,
+			unit_amount: 0,
+		},
+	})
 
 	useEffect(() => {
 		if (open) {
-			reset(initial ?? { label: '', category: 'OTHER', quantity: 1, unit_amount: 0 })
+			reset(
+				initial ?? {
+					label: '',
+					category: 'OTHER',
+					quantity: 1,
+					unit_amount: 0,
+				},
+			)
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [open])
@@ -128,7 +134,11 @@ function LineItemDialog({
 			<DialogContent className="sm:max-w-sm">
 				<DialogHeader>
 					<DialogTitle>
-						{isFeeItem ? 'Edit booking fee' : initial ? 'Edit line item' : 'Add line item'}
+						{isFeeItem
+							? 'Edit booking fee'
+							: initial
+								? 'Edit line item'
+								: 'Add line item'}
 					</DialogTitle>
 				</DialogHeader>
 
@@ -176,7 +186,11 @@ function LineItemDialog({
 				</form>
 
 				<DialogFooter>
-					<Button type="button" variant="outline" onClick={() => handleOpen(false)}>
+					<Button
+						type="button"
+						variant="outline"
+						onClick={() => handleOpen(false)}
+					>
 						Cancel
 					</Button>
 					<Button type="submit" form="line-item-form" disabled={isPending}>
@@ -233,7 +247,11 @@ function VerifyPaymentDialog({
 				is_successful: isSuccessful,
 				metadata: reason ? { offline_response: { reason } } : undefined,
 			})
-			toast.success(isSuccessful ? 'Payment confirmed as received' : 'Payment marked as not received')
+			toast.success(
+				isSuccessful
+					? 'Payment confirmed as received'
+					: 'Payment marked as not received',
+			)
 			onSuccess?.()
 			handleOpenChange(false)
 		} catch {
@@ -255,7 +273,12 @@ function VerifyPaymentDialog({
 
 				{declineMode ? (
 					<div className="space-y-1.5">
-						<Label>Reason <span className="text-muted-foreground font-normal">(optional)</span></Label>
+						<Label>
+							Reason{' '}
+							<span className="text-muted-foreground font-normal">
+								(optional)
+							</span>
+						</Label>
 						<Textarea
 							placeholder="e.g. Payment amount was incorrect"
 							value={declineReason}
@@ -268,7 +291,10 @@ function VerifyPaymentDialog({
 						<div className="flex items-baseline justify-between">
 							<span className="text-muted-foreground text-xs">Amount</span>
 							<span className="text-base font-semibold">
-								{formatAmount(convertPesewasToCedis(payment.amount), payment.currency)}
+								{formatAmount(
+									convertPesewasToCedis(payment.amount),
+									payment.currency,
+								)}
 							</span>
 						</div>
 
@@ -278,7 +304,8 @@ function VerifyPaymentDialog({
 							<div className="flex items-center justify-between">
 								<span className="text-muted-foreground text-xs">Method</span>
 								<span className="text-xs font-medium">
-									{PAYMENT_METHOD_LABELS[payment.payment_method] ?? payment.payment_method}
+									{PAYMENT_METHOD_LABELS[payment.payment_method] ??
+										payment.payment_method}
 								</span>
 							</div>
 
@@ -291,7 +318,9 @@ function VerifyPaymentDialog({
 
 							{payment.email ? (
 								<div className="flex items-center justify-between gap-4">
-									<span className="text-muted-foreground shrink-0 text-xs">Email</span>
+									<span className="text-muted-foreground shrink-0 text-xs">
+										Email
+									</span>
 									<span className="truncate text-xs">{payment.email}</span>
 								</div>
 							) : null}
@@ -324,7 +353,9 @@ function VerifyPaymentDialog({
 								size="sm"
 								disabled={isPending}
 								className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
-								onClick={() => void handleVerify(false, declineReason || undefined)}
+								onClick={() =>
+									void handleVerify(false, declineReason || undefined)
+								}
 							>
 								{isPending ? <Spinner /> : null}
 								Confirm not received
@@ -353,22 +384,22 @@ function VerifyPaymentDialog({
 									Not received
 								</Button>
 								<Button
-										type="button"
-										size="sm"
-										disabled={isPending}
-										className="bg-teal-600 text-white hover:bg-teal-700"
-										onClick={() => void handleVerify(true)}
-									>
-										{isPending ? <Spinner /> : null}
-										Payment received
-									</Button>
-								</div>
-							</>
-						)}
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
-		)
+									type="button"
+									size="sm"
+									disabled={isPending}
+									className="bg-teal-600 text-white hover:bg-teal-700"
+									onClick={() => void handleVerify(true)}
+								>
+									{isPending ? <Spinner /> : null}
+									Payment received
+								</Button>
+							</div>
+						</>
+					)}
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
+	)
 }
 
 export function PaymentCard({
@@ -392,8 +423,10 @@ export function PaymentCard({
 	const [verifyOpen, setVerifyOpen] = useState(false)
 
 	const { mutateAsync: addLineItem, isPending: isAdding } = useAddLineItem()
-	const { mutateAsync: updateLineItem, isPending: isUpdating } = useUpdateLineItem()
-	const { mutateAsync: removeLineItem, isPending: isRemoving } = useRemoveLineItem()
+	const { mutateAsync: updateLineItem, isPending: isUpdating } =
+		useUpdateLineItem()
+	const { mutateAsync: removeLineItem, isPending: isRemoving } =
+		useRemoveLineItem()
 	const { mutateAsync: issueInvoice } = useIssueInvoice()
 
 	const invalidate = () =>
@@ -410,7 +443,9 @@ export function PaymentCard({
 
 	const invoice = booking.invoice
 	const lineItems = invoice?.line_items ?? []
-	const bookingFeeItem = lineItems.find((item) => item.category === 'BOOKING_FEE')
+	const bookingFeeItem = lineItems.find(
+		(item) => item.category === 'BOOKING_FEE',
+	)
 	const currency = invoice?.currency ?? 'GHS'
 	const periodRate = convertPesewasToCedis(bookingFeeItem?.unit_amount ?? 0)
 
@@ -427,24 +462,25 @@ export function PaymentCard({
 				? INVOICE_STATUS_CONFIG['PAID']
 				: INVOICE_STATUS_CONFIG['ISSUED']
 
-	const pendingOfflinePayment = invoice?.payments?.find(
-		(p) => p.status === 'PENDING' && p.payment_method === 'OFFLINE',
-	) ?? null
+	const pendingOfflinePayment =
+		invoice?.payments?.find(
+			(p) => p.status === 'PENDING' && p.payment_method === 'OFFLINE',
+		) ?? null
 
 	const isPayable =
 		booking.status !== 'PENDING' &&
 		!!invoice &&
 		invoice.status !== 'PAID' &&
-		invoice.status !== 'VOID' && 
-		booking.status !== 'CANCELLED' && 
-		booking.status !== 'COMPLETED';
+		invoice.status !== 'VOID' &&
+		booking.status !== 'CANCELLED' &&
+		booking.status !== 'COMPLETED'
 
 	const isEditable =
 		!!invoice &&
 		invoice.status !== 'PAID' &&
-		invoice.status !== 'VOID' && 
-		booking.status !== 'CANCELLED' && 
-		booking.status !== 'COMPLETED';
+		invoice.status !== 'VOID' &&
+		booking.status !== 'CANCELLED' &&
+		booking.status !== 'COMPLETED'
 
 	const handleAddLineItem = async (values: LineItemFormValues) => {
 		if (!invoice) return
@@ -560,14 +596,20 @@ export function PaymentCard({
 					<div className="space-y-2">
 						{lineItems.length > 0 ? (
 							lineItems.map((item) => (
-								<div key={item.id} className="flex items-center justify-between gap-2">
+								<div
+									key={item.id}
+									className="flex items-center justify-between gap-2"
+								>
 									<span className="text-muted-foreground min-w-0 flex-1 truncate text-xs">
 										{item.label}
 										{item.quantity > 1 ? ` ×${item.quantity}` : ''}
 									</span>
 									<div className="flex items-center gap-1">
 										<span className="text-xs font-medium">
-											{formatAmount(convertPesewasToCedis(item.total_amount), currency)}
+											{formatAmount(
+												convertPesewasToCedis(item.total_amount),
+												currency,
+											)}
 										</span>
 										{editMode && (
 											<>
@@ -670,15 +712,17 @@ export function PaymentCard({
 
 			<LineItemDialog
 				open={!!editingItem}
-				onOpenChange={(v) => { if (!v) setEditingItem(null) }}
+				onOpenChange={(v) => {
+					if (!v) setEditingItem(null)
+				}}
 				initial={
 					editingItem
 						? {
-							label: editingItem.label,
-							category: editingItem.category,
-							quantity: editingItem.quantity,
-							unit_amount: convertPesewasToCedis(editingItem.unit_amount),
-						}
+								label: editingItem.label,
+								category: editingItem.category,
+								quantity: editingItem.quantity,
+								unit_amount: convertPesewasToCedis(editingItem.unit_amount),
+							}
 						: undefined
 				}
 				isFeeItem={editingItem?.category === 'BOOKING_FEE'}
@@ -714,7 +758,6 @@ export function PaymentCard({
 								property_id: propertyId,
 								id: invoice.id,
 							})
-
 						}
 					}}
 				/>
@@ -722,7 +765,9 @@ export function PaymentCard({
 
 			<AlertDialog
 				open={!!deletingItemId}
-				onOpenChange={(v) => { if (!v) setDeletingItemId(null) }}
+				onOpenChange={(v) => {
+					if (!v) setDeletingItemId(null)
+				}}
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
@@ -734,7 +779,7 @@ export function PaymentCard({
 					<AlertDialogFooter>
 						<AlertDialogCancel>Cancel</AlertDialogCancel>
 						<AlertDialogAction
-							className="bg-destructive text-white hover:bg-destructive/90"
+							className="bg-destructive hover:bg-destructive/90 text-white"
 							disabled={isRemoving}
 							onClick={() => {
 								if (deletingItemId) void handleRemoveLineItem(deletingItemId)

@@ -1,8 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import {
-	AlertCircleIcon,
-	CheckCircle2Icon,
-} from 'lucide-react'
+import { AlertCircleIcon, CheckCircle2Icon } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Link, useFetcher, useLoaderData, useSearchParams } from 'react-router'
 
@@ -157,15 +154,11 @@ export function ResetYourPasswordModule() {
 					</Form>
 					<FieldDescription className="px-6 text-center">
 						By clicking continue, you agree to our{' '}
-						<ExternalLink
-							to={`${rentLoopWebsiteUrl}/terms`}
-						>
+						<ExternalLink to={`${rentLoopWebsiteUrl}/terms`}>
 							Terms of Service
 						</ExternalLink>{' '}
 						and{' '}
-						<ExternalLink
-							to={`${rentLoopWebsiteUrl}/privacy-policy`}
-						>
+						<ExternalLink to={`${rentLoopWebsiteUrl}/privacy-policy`}>
 							Privacy Policy
 						</ExternalLink>
 						.

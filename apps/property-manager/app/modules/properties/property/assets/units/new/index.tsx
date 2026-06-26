@@ -16,8 +16,9 @@ import { Link, useFetcher, useLoaderData } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { BlockNavigationDialog } from '~/components/block-navigation-dialog'
+import { ExternalLink } from '~/components/external-link'
 import { FeatureInput } from '~/components/feature'
-import { PropertyTagInput } from '~/components/property-tag'
+// import { PropertyTagInput } from '~/components/property-tag'
 import { BlockSelect } from '~/components/SingleSelect/block-select'
 import { Button } from '~/components/ui/button'
 import { FieldGroup } from '~/components/ui/field'
@@ -132,10 +133,28 @@ const unitTypes = [
 	},
 ]
 
-const statuses: Array<{ label: string; value: PropertyUnit['status'] }> = [
-	{ label: 'Draft', value: 'Unit.Status.Draft' },
-	{ label: 'Available', value: 'Unit.Status.Available' },
-	{ label: 'Maintenance', value: 'Unit.Status.Maintenance' },
+const statuses: Array<{
+	label: string
+	description: string
+	value: PropertyUnit['status']
+}> = [
+	{
+		label: 'Draft',
+		description:
+			'Not yet visible to tenants. Use this while setting up the unit.',
+		value: 'Unit.Status.Draft',
+	},
+	{
+		label: 'Available',
+		description: 'Ready to rent. Tenants can see and book this unit.',
+		value: 'Unit.Status.Available',
+	},
+	{
+		label: 'Maintenance',
+		description:
+			'Temporarily unavailable. Use when the unit is being repaired or serviced.',
+		value: 'Unit.Status.Maintenance',
+	},
 ]
 
 export function NewPropertyAssetUnitsModule() {
@@ -322,6 +341,18 @@ export function NewPropertyAssetUnitsModule() {
 							setValue('block', name)
 						}}
 					/>
+					<p className="text-muted-foreground mt-1.5 text-sm">
+						A block groups related units within a property — e.g., "Block A" or
+						"West Wing". If your property has only one section, select the
+						default <strong>Main</strong> block. Blocks are managed under{' '}
+						<ExternalLink
+							to={`/properties/${property_id}/assets/blocks`}
+							className="text-rose-600 hover:underline"
+						>
+							property blocks
+						</ExternalLink>
+						.
+					</p>
 					{formState.errors?.property_block_id && (
 						<TypographySmall className="text-destructive mt-2">
 							{formState.errors.property_block_id.message}
@@ -395,18 +426,24 @@ export function NewPropertyAssetUnitsModule() {
 
 				{/* Status */}
 				<div>
-					<Label>Status</Label>
-					<div className="mt-3 flex flex-wrap gap-3">
+					<div className="mb-3 space-y-1">
+						<Label>Status</Label>
+						<TypographyMuted>
+							Set the current availability of this unit.
+						</TypographyMuted>
+					</div>
+					<div className="flex flex-col gap-2">
 						{statuses.map((item) => {
 							const isSelected = watch('status') === item.value
 							return (
-								<Button
+								<button
 									type="button"
 									key={item.value}
-									variant={isSelected ? 'default' : 'outline'}
-									className={cn({
-										'bg-rose-600 text-white': isSelected,
-									})}
+									className={cn(
+										'flex flex-col gap-0.5 rounded-lg border px-4 py-3 text-left transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900',
+										isSelected &&
+											'border-rose-600 bg-rose-50/50 dark:bg-rose-950/30',
+									)}
 									onClick={() =>
 										setValue('status', item.value, {
 											shouldDirty: true,
@@ -414,8 +451,18 @@ export function NewPropertyAssetUnitsModule() {
 										})
 									}
 								>
-									{item.label}
-								</Button>
+									<p
+										className={cn(
+											'text-sm font-medium',
+											isSelected && 'text-rose-600',
+										)}
+									>
+										{item.label}
+									</p>
+									<p className="text-muted-foreground text-sm">
+										{item.description}
+									</p>
+								</button>
 							)
 						})}
 					</div>
@@ -495,11 +542,11 @@ export function NewPropertyAssetUnitsModule() {
 					/>
 
 					<FeatureInput />
-					<PropertyTagInput />
+					{/* <PropertyTagInput /> */}
 				</FieldGroup>
 
 				{/* Unit Specs */}
-				<div className="space-y-8">
+				{/* <div className="space-y-8">
 					<FormField
 						name="area"
 						control={rhfMethods.control}
@@ -527,7 +574,7 @@ export function NewPropertyAssetUnitsModule() {
 							</FormItem>
 						)}
 					/>
-				</div>
+				</div> */}
 
 				<hr />
 

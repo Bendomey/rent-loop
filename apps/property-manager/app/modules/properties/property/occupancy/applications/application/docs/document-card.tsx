@@ -26,7 +26,8 @@ export function DocumentCard({
 			onClick={onClick}
 			className={cn(
 				'relative cursor-pointer shadow-none transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-700',
-				isSelected && 'border-blue-500 bg-blue-50 hover:bg-blue-50 dark:border-blue-400 dark:bg-blue-950 dark:text-white dark:hover:bg-blue-900',
+				isSelected &&
+					'border-blue-500 bg-blue-50 hover:bg-blue-50 dark:border-blue-400 dark:bg-blue-950 dark:text-white dark:hover:bg-blue-900',
 			)}
 		>
 			{isSelected && (
@@ -40,7 +41,9 @@ export function DocumentCard({
 					className="flex h-12 w-12 flex-col bg-blue-100 p-1 dark:bg-blue-950 dark:text-blue-300"
 				>
 					<FileText className="h-full w-full text-blue-600" />
-					<span className="text-[8px] font-bold text-black dark:text-white">DOCX</span>
+					<span className="text-[8px] font-bold text-black dark:text-white">
+						DOCX
+					</span>
 				</Badge>
 				<div className="flex flex-col items-center text-center">
 					<span className="line-clamp-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">

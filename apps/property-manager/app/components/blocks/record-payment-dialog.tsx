@@ -54,7 +54,7 @@ export function RecordPaymentDialog({
 	const [selectedAccountId, setSelectedAccountId] = useState('')
 	const [reference, setReference] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
-	
+
 	const { mutateAsync: pay } = usePayInvoice()
 
 	const { data: accountsData } = useGetPaymentAccounts(clientId, {
@@ -133,7 +133,10 @@ export function RecordPaymentDialog({
 
 					<div className="space-y-1.5">
 						<Label>Payment account</Label>
-						<Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+						<Select
+							value={selectedAccountId}
+							onValueChange={setSelectedAccountId}
+						>
 							<SelectTrigger className="w-full">
 								<SelectValue placeholder="Select an account" />
 							</SelectTrigger>
@@ -151,7 +154,9 @@ export function RecordPaymentDialog({
 					<div className="space-y-1.5">
 						<Label>
 							Reference{' '}
-							<span className="text-muted-foreground font-normal">(optional)</span>
+							<span className="text-muted-foreground font-normal">
+								(optional)
+							</span>
 						</Label>
 						<Input
 							placeholder="e.g. RCP-2024-001"

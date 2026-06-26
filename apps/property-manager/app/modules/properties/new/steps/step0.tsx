@@ -14,6 +14,7 @@ import {
 	ItemHeader,
 	ItemTitle,
 } from '~/components/ui/item'
+import { Label } from '~/components/ui/label'
 import {
 	TypographyH2,
 	TypographyMuted,
@@ -57,10 +58,29 @@ const models = [
 	},
 ]
 
-const statusOptions: Array<{ label: string; value: Property['status'] }> = [
-	{ label: 'Active', value: 'Property.Status.Active' },
-	{ label: 'Inactive', value: 'Property.Status.Inactive' },
-	{ label: 'Maintenance', value: 'Property.Status.Maintenance' },
+const statusOptions: Array<{
+	label: string
+	description: string
+	value: Property['status']
+}> = [
+	{
+		label: 'Active',
+		description:
+			'Property is live and accepting bookings. Tenants can discover and book units.',
+		value: 'Property.Status.Active',
+	},
+	{
+		label: 'Inactive',
+		description:
+			'Property is hidden from tenants. Use when not accepting new bookings.',
+		value: 'Property.Status.Inactive',
+	},
+	{
+		label: 'Maintenance',
+		description:
+			'Temporarily unavailable. Use while the property is being repaired or renovated.',
+		value: 'Property.Status.Maintenance',
+	},
 ]
 
 const modeOptions: Array<{
@@ -201,25 +221,43 @@ export function Step0() {
 
 				{/* Status */}
 				<div>
-					<TypographyMuted>Status</TypographyMuted>
-					<div className="mt-3 flex space-x-3">
+					<div className="mb-3 space-y-1">
+						<Label>Status</Label>
+						<TypographyMuted>
+							Set the current availability of this property.
+						</TypographyMuted>
+					</div>
+					<div className="flex flex-col gap-2">
 						{statusOptions.map((s) => {
 							const isSelected = watch('status') === s.value
 							return (
-								<Button
+								<button
 									type="button"
+									key={s.value}
+									className={cn(
+										'flex flex-col gap-0.5 rounded-lg border px-4 py-3 text-left transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900',
+										isSelected &&
+											'border-rose-600 bg-rose-50/50 dark:bg-rose-950/30',
+									)}
 									onClick={() =>
 										setValue('status', s.value, {
 											shouldDirty: true,
 											shouldValidate: true,
 										})
 									}
-									key={s.value}
-									variant={isSelected ? 'default' : 'outline'}
-									className={cn({ 'bg-rose-600 text-white': isSelected })}
 								>
-									{s.label}
-								</Button>
+									<p
+										className={cn(
+											'text-sm font-medium',
+											isSelected && 'text-rose-600',
+										)}
+									>
+										{s.label}
+									</p>
+									<p className="text-muted-foreground text-sm">
+										{s.description}
+									</p>
+								</button>
 							)
 						})}
 					</div>
