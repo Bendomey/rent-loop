@@ -68,7 +68,7 @@ export function SigningView({
 					editorState: JSON.stringify(editorState),
 				}}
 			>
-				<div className="flex min-h-screen flex-col bg-zinc-100">
+				<div className="flex min-h-screen flex-col bg-zinc-100 dark:bg-zinc-900">
 					<SigningHeader
 						documentTitle={documentTitle}
 						applicationCode={applicationCode}
@@ -77,12 +77,12 @@ export function SigningView({
 					/>
 
 					<div className="mx-auto w-full max-w-4xl flex-1 py-8">
-						<div className="rounded-lg bg-white shadow-sm">
+						<div className="rounded-lg bg-white shadow-sm dark:bg-zinc-800 dark:shadow-zinc-900">
 							<RichTextPlugin
 								contentEditable={
 									<ContentEditable
 										placeholder=""
-										className="relative block min-h-[60vh] overflow-auto px-12 py-8 focus:outline-none"
+										className="relative block min-h-[60vh] overflow-auto px-12 py-8 focus:outline-none text-zinc-900 dark:text-zinc-100"
 									/>
 								}
 								ErrorBoundary={LexicalErrorBoundary}
