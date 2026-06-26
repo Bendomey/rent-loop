@@ -448,13 +448,13 @@ func (h *InvoiceHandler) RemoveLineItem(w http.ResponseWriter, r *http.Request) 
 }
 
 type UpdateLineItemRequest struct {
-	Label       *string         `json:"label,omitempty"        validate:"omitempty"                                     example:"January Rent" description:"Label for the line item"`
-	Category    *string         `json:"category,omitempty"     validate:"omitempty,oneof=MAINTENANCE_FEE EXPENSE OTHER" example:"OTHER"        description:"Category of line item"`
-	Quantity    *int64          `json:"quantity,omitempty"     validate:"omitempty,min=1"                               example:"1"            description:"Quantity"`
-	UnitAmount  *int64          `json:"unit_amount,omitempty"  validate:"omitempty,min=0"                               example:"100000"       description:"Unit amount in smallest currency unit"`
-	TotalAmount *int64          `json:"total_amount,omitempty" validate:"omitempty,min=0"                               example:"100000"       description:"Total amount in smallest currency unit"`
-	Currency    *string         `json:"currency,omitempty"     validate:"omitempty"                                     example:"GHS"          description:"Currency code"`
-	Metadata    *map[string]any `json:"metadata,omitempty"                                                                                     description:"Additional metadata"`
+	Label       *string         `json:"label,omitempty"        validate:"omitempty"                                                                                                example:"January Rent" description:"Label for the line item"`
+	Category    *string         `json:"category,omitempty"     validate:"omitempty,oneof=RENT SECURITY_DEPOSIT INITIAL_DEPOSIT MAINTENANCE_FEE SAAS_FEE EXPENSE BOOKING_FEE OTHER" example:"OTHER"        description:"Category of line item"`
+	Quantity    *int64          `json:"quantity,omitempty"     validate:"omitempty,min=1"                                                                                          example:"1"            description:"Quantity"`
+	UnitAmount  *int64          `json:"unit_amount,omitempty"  validate:"omitempty,min=0"                                                                                          example:"100000"       description:"Unit amount in smallest currency unit"`
+	TotalAmount *int64          `json:"total_amount,omitempty" validate:"omitempty,min=0"                                                                                          example:"100000"       description:"Total amount in smallest currency unit"`
+	Currency    *string         `json:"currency,omitempty"     validate:"omitempty"                                                                                                example:"GHS"          description:"Currency code"`
+	Metadata    *map[string]any `json:"metadata,omitempty"                                                                                                                                                description:"Additional metadata"`
 }
 
 // UpdateLineItem godoc

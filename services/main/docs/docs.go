@@ -18958,8 +18958,13 @@ const docTemplate = `{
                 "category": {
                     "type": "string",
                     "enum": [
+                        "RENT",
+                        "SECURITY_DEPOSIT",
+                        "INITIAL_DEPOSIT",
                         "MAINTENANCE_FEE",
+                        "SAAS_FEE",
                         "EXPENSE",
+                        "BOOKING_FEE",
                         "OTHER"
                     ],
                     "example": "OTHER"
