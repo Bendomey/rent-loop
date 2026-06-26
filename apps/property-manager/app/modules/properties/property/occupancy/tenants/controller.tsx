@@ -40,10 +40,10 @@ const AddTenantButton = ({
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">
 					<DropdownMenuItem asChild>
-						<Link to={`${base}/applications/new`}>New Application</Link>
+						<Link to={`${base}/applications/new`}>New Tenant Application</Link>
 					</DropdownMenuItem>
 					<DropdownMenuItem asChild>
-						<Link to={`${base}/bookings/new`}>New Booking</Link>
+						<Link to={`${base}/bookings/new`}>New Guest Booking</Link>
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
