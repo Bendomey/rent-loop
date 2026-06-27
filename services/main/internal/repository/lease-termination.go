@@ -35,7 +35,10 @@ type GetTerminatedLeaseQuery struct {
 	Populate *[]string
 }
 
-func (r *leaseTerminationRepository) GetOne(ctx context.Context, query GetTerminatedLeaseQuery) (*models.LeaseTermination, error) {
+func (r *leaseTerminationRepository) GetOne(
+	ctx context.Context,
+	query GetTerminatedLeaseQuery,
+) (*models.LeaseTermination, error) {
 	var termination models.LeaseTermination
 
 	db := r.DB.WithContext(ctx).Where("id = ? AND lease_id = ?", query.ID, query.LeaseID)
@@ -59,7 +62,10 @@ type ListLeaseTerminationsFilter struct {
 	Status  *string
 }
 
-func (r *leaseTerminationRepository) List(ctx context.Context, filter ListLeaseTerminationsFilter) (*[]models.LeaseTermination, error) {
+func (r *leaseTerminationRepository) List(
+	ctx context.Context,
+	filter ListLeaseTerminationsFilter,
+) (*[]models.LeaseTermination, error) {
 	var terminations []models.LeaseTermination
 
 	db := r.DB.WithContext(ctx).Scopes(

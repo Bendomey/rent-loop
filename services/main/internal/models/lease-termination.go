@@ -43,6 +43,8 @@ type LeaseTermination struct {
 	CancelledAt   *time.Time
 	CancelledById *string
 	CancelledBy   *ClientUser `gorm:"foreignKey:CancelledById"`
+
+	Invoices []Invoice `gorm:"foreignKey:ContextLeaseTerminationID;references:ID"` // invoices associated with this lease termination
 }
 
 func (t *LeaseTermination) BeforeCreate(tx *gorm.DB) error {

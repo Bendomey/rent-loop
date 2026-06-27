@@ -25,9 +25,17 @@ definitions:
     properties:
       category:
         enum:
+        - RENT
+        - SECURITY_DEPOSIT
+        - INITIAL_DEPOSIT
         - MAINTENANCE_FEE
+        - SAAS_FEE
+        - BOOKING_FEE
         - EXPENSE
-        - OTHER
+        - DEPOSIT_REFUND
+        - EARLY_TERMINATION_FEE
+        - DAMAGE_CHARGE
+        - RENT_REFUND
         example: OTHER
         type: string
       currency:
@@ -715,19 +723,43 @@ definitions:
     type: object
   handlers.CreateInvoiceRequest:
     properties:
+      context_lease_termination_id:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      context_type:
+        enum:
+        - LEASE_TERMINATION
+        example: LEASE_RENT
+        type: string
+      currency:
+        example: GHS
+        type: string
       due_date:
         example: "2024-07-01T00:00:00Z"
         type: string
       line_items:
         items:
-          $ref: '#/definitions/handlers.InvoiceLineItemRequest'
+          $ref: '#/definitions/handlers.AddLineItemRequest'
         minItems: 1
         type: array
+      payee_client_id:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      payee_tenant_id:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
       payee_type:
         enum:
         - PROPERTY_OWNER
         - TENANT
+        - EXTERNAL
         example: PROPERTY_OWNER
+        type: string
+      payer_client_id:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      payer_lease_id:
+        example: 123e4567-e89b-12d3-a456-426614174000
         type: string
       payer_type:
         enum:
@@ -736,6 +768,8 @@ definitions:
         example: TENANT
         type: string
     required:
+    - context_type
+    - currency
     - line_items
     - payee_type
     - payer_type
@@ -1311,45 +1345,6 @@ definitions:
     - document_id
     - role
     type: object
-  handlers.InvoiceLineItemRequest:
-    properties:
-      category:
-        enum:
-        - RENT
-        - SECURITY_DEPOSIT
-        - INITIAL_DEPOSIT
-        - MAINTENANCE_FEE
-        - SAAS_FEE
-        - EXPENSE
-        - DEPOSIT_REFUND
-        - EARLY_TERMINATION_FEE
-        - DAMAGE_CHARGE
-        example: RENT
-        type: string
-      currency:
-        example: GHS
-        type: string
-      label:
-        example: January Rent
-        type: string
-      metadata:
-        additionalProperties: {}
-        type: object
-      quantity:
-        example: 1
-        minimum: 1
-        type: integer
-      unit_amount:
-        example: 100000
-        minimum: 0
-        type: integer
-    required:
-    - category
-    - currency
-    - label
-    - quantity
-    - unit_amount
-    type: object
   handlers.LinkClientUserToPropertiesRequest:
     properties:
       property_ids:
@@ -1868,9 +1863,12 @@ definitions:
         - INITIAL_DEPOSIT
         - MAINTENANCE_FEE
         - SAAS_FEE
-        - EXPENSE
         - BOOKING_FEE
-        - OTHER
+        - EXPENSE
+        - DEPOSIT_REFUND
+        - EARLY_TERMINATION_FEE
+        - DAMAGE_CHARGE
+        - RENT_REFUND
         example: OTHER
         type: string
       currency:
@@ -8580,6 +8578,59 @@ paths:
       summary: Generate invoices from an expense
       tags:
       - Expenses
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/invoices:
+    post:
+      consumes:
+      - application/json
+      description: Create a new invoice (Admin)
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Create invoice request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateInvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Invoice created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputInvoice'
+            type: object
+        "400":
+          description: Error occurred when creating invoice
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Invalid or absent authentication token
+          schema:
+            type: string
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: An unexpected error occurred
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create invoice (Admin)
+      tags:
+      - Invoice
   /api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}:
     delete:
       consumes:
@@ -10550,73 +10601,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Complete lease termination (Admin)
-      tags:
-      - LeaseTermination
-  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/terminations/{termination_id}/invoices:
-    post:
-      consumes:
-      - application/json
-      description: Create a new invoice for a lease termination (Admin)
-      parameters:
-      - description: Client ID
-        in: path
-        name: client_id
-        required: true
-        type: string
-      - description: Property ID
-        in: path
-        name: property_id
-        required: true
-        type: string
-      - description: Lease ID
-        in: path
-        name: lease_id
-        required: true
-        type: string
-      - description: Termination ID
-        in: path
-        name: termination_id
-        required: true
-        type: string
-      - description: Create invoice request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.CreateInvoiceRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Invoice created successfully
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/transformations.OutputInvoice'
-            type: object
-        "400":
-          description: Error occurred when creating invoice
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "401":
-          description: Invalid or absent authentication token
-          schema:
-            type: string
-        "404":
-          description: Lease termination not found
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/lib.HTTPError'
-        "500":
-          description: An unexpected error occurred
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Create lease termination invoice (Admin)
       tags:
       - LeaseTermination
   /api/v1/admin/clients/{client_id}/properties/{property_id}/maintenance-requests:

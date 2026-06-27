@@ -60,7 +60,10 @@ type CreateLeaseTerminationInput struct {
 	InitiatedById string
 }
 
-func (s *leaseTerminationService) Create(ctx context.Context, input CreateLeaseTerminationInput) (*models.LeaseTermination, error) {
+func (s *leaseTerminationService) Create(
+	ctx context.Context,
+	input CreateLeaseTerminationInput,
+) (*models.LeaseTermination, error) {
 	lease, err := s.leaseRepo.GetOneWithPopulate(ctx, repository.GetLeaseQuery{ID: input.LeaseID})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -114,7 +117,10 @@ func (s *leaseTerminationService) Create(ctx context.Context, input CreateLeaseT
 	return termination, nil
 }
 
-func (s *leaseTerminationService) GetOne(ctx context.Context, query repository.GetTerminatedLeaseQuery) (*models.LeaseTermination, error) {
+func (s *leaseTerminationService) GetOne(
+	ctx context.Context,
+	query repository.GetTerminatedLeaseQuery,
+) (*models.LeaseTermination, error) {
 	termination, err := s.repo.GetOne(ctx, query)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -128,7 +134,10 @@ func (s *leaseTerminationService) GetOne(ctx context.Context, query repository.G
 	return termination, nil
 }
 
-func (s *leaseTerminationService) List(ctx context.Context, filter repository.ListLeaseTerminationsFilter) ([]models.LeaseTermination, error) {
+func (s *leaseTerminationService) List(
+	ctx context.Context,
+	filter repository.ListLeaseTerminationsFilter,
+) ([]models.LeaseTermination, error) {
 	result, err := s.repo.List(ctx, filter)
 	if err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
@@ -139,7 +148,10 @@ func (s *leaseTerminationService) List(ctx context.Context, filter repository.Li
 	return *result, nil
 }
 
-func (s *leaseTerminationService) Count(ctx context.Context, filter repository.ListLeaseTerminationsFilter) (int64, error) {
+func (s *leaseTerminationService) Count(
+	ctx context.Context,
+	filter repository.ListLeaseTerminationsFilter,
+) (int64, error) {
 	count, err := s.repo.Count(ctx, filter)
 	if err != nil {
 		return 0, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
@@ -162,7 +174,10 @@ type UpdateLeaseTerminationInput struct {
 	LeaseChecklistID lib.Optional[string]
 }
 
-func (s *leaseTerminationService) Update(ctx context.Context, input UpdateLeaseTerminationInput) (*models.LeaseTermination, error) {
+func (s *leaseTerminationService) Update(
+	ctx context.Context,
+	input UpdateLeaseTerminationInput,
+) (*models.LeaseTermination, error) {
 	termination, err := s.repo.GetOne(ctx, repository.GetTerminatedLeaseQuery{ID: input.ID, LeaseID: input.LeaseID})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

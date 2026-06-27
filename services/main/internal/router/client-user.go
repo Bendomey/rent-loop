@@ -299,8 +299,6 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 										Patch("/complete", handlers.LeaseTerminationHandler.CompleteLeaseTermination)
 									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 										Patch("/cancel", handlers.LeaseTerminationHandler.CancelLeaseTermination)
-									r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-										Post("/invoices", handlers.LeaseTerminationHandler.CreateLeaseTerminationInvoice)
 								})
 							})
 						})
@@ -340,6 +338,8 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 							r.Get("/", handlers.InvoiceHandler.ListInvoices)
 							r.Route("/{invoice_id}", func(r chi.Router) {
 								r.Get("/", handlers.InvoiceHandler.GetInvoiceByID)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Post("/", handlers.InvoiceHandler.CreateInvoice)
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 									Patch("/", handlers.InvoiceHandler.UpdateInvoice)
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).

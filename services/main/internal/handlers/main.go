@@ -78,7 +78,11 @@ func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 	expenseHandler := NewExpenseHandler(appCtx, services.ExpenseService)
 	agreementHandler := NewAgreementHandler(appCtx, services.AgreementService)
 	bookingHandler := NewBookingHandler(appCtx, services)
-	leaseTerminationHandler := NewLeaseTerminationHandler(appCtx, services.LeaseTerminationService, services.InvoiceService)
+	leaseTerminationHandler := NewLeaseTerminationHandler(
+		appCtx,
+		services.LeaseTerminationService,
+		services.InvoiceService,
+	)
 
 	return Handlers{
 		NotificationHandler:       notificationHandler,

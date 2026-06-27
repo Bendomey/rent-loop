@@ -29,6 +29,112 @@ func NewInvoiceHandler(appCtx pkg.AppContext, services services.Services) Invoic
 	}
 }
 
+type CreateInvoiceRequest struct {
+	ContextType               string  `json:"context_type"                 validate:"required,oneof=LEASE_TERMINATION"                          example:"LEASE_RENT"                           description:"The context of the invoice"`
+	ContextLeaseTerminationID *string `json:"context_lease_termination_id" validate:"required_if=ContextType LEASE_TERMINATION,omitempty,uuid4" example:"123e4567-e89b-12d3-a456-426614174000" description:"The ID of the lease termination associated with the invoice"`
+
+	PayerType     string  `json:"payer_type"                validate:"required,oneof=TENANT PROPERTY_OWNER" example:"TENANT"                               description:"Who pays the invoice"`
+	PayerLeaseID  *string `json:"payer_lease_id,omitempty"  validate:"omitempty,uuid4"                      example:"123e4567-e89b-12d3-a456-426614174000" description:"The ID of the lease associated with the payer (if applicable)"`
+	PayerClientID *string `json:"payer_client_id,omitempty" validate:"omitempty,uuid4"                      example:"123e4567-e89b-12d3-a456-426614174000" description:"The ID of the client(property manager) associated with the payer (if applicable)"`
+
+	PayeeType     string  `json:"payee_type"                validate:"required,oneof=PROPERTY_OWNER TENANT EXTERNAL" example:"PROPERTY_OWNER"                       description:"Who receives the invoice payment"`
+	PayeeTenantID *string `json:"payee_tenant_id,omitempty" validate:"omitempty,uuid4"                               example:"123e4567-e89b-12d3-a456-426614174000" description:"The ID of the tenant associated with the payee (if applicable)"`
+	PayeeClientID *string `json:"payee_client_id,omitempty" validate:"omitempty,uuid4"                               example:"123e4567-e89b-12d3-a456-426614174000" description:"The ID of the client(property manager) associated with the payee (if applicable)"`
+
+	Currency  string               `json:"currency"   validate:"required"            example:"GHS" description:"Currency code for the invoice"`
+	LineItems []AddLineItemRequest `json:"line_items" validate:"required,min=1,dive"               description:"Invoice line items"`
+
+	DueDate *time.Time `json:"due_date,omitempty" validate:"omitempty" example:"2024-07-01T00:00:00Z" description:"Optional due date for the invoice"`
+}
+
+// CreateInvoice godoc
+//
+//	@Summary		Create invoice (Admin)
+//	@Description	Create a new invoice (Admin)
+//	@Tags			Invoice
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			client_id	path		string										true	"Client ID"
+//	@Param			property_id	path		string										true	"Property ID"
+//	@Param			body		body		CreateInvoiceRequest						true	"Create invoice request body"
+//	@Success		201			{object}	object{data=transformations.OutputInvoice}	"Invoice created successfully"
+//	@Failure		400			{object}	lib.HTTPError								"Error occurred when creating invoice"
+//	@Failure		401			{object}	string										"Invalid or absent authentication token"
+//	@Failure		422			{object}	lib.HTTPError								"Validation error"
+//	@Failure		500			{object}	string										"An unexpected error occurred"
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices [post]
+func (h *InvoiceHandler) CreateInvoice(w http.ResponseWriter, r *http.Request) {
+	_, ok := lib.ClientUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	propertyID := chi.URLParam(r, "property_id")
+	clientID := chi.URLParam(r, "client_id")
+
+	var body CreateInvoiceRequest
+	if decodeErr := json.NewDecoder(r.Body).Decode(&body); decodeErr != nil {
+		http.Error(w, "Invalid JSON body", http.StatusUnprocessableEntity)
+		return
+	}
+
+	if !lib.ValidateRequest(h.appCtx.Validator, body, w) {
+		return
+	}
+
+	totalAmount := int64(0)
+	lineItems := make([]services.LineItemInput, len(body.LineItems))
+
+	for i, item := range body.LineItems {
+		totalForLineItem := item.UnitAmount * item.Quantity
+
+		lineItems[i] = services.LineItemInput{
+			Label:       item.Label,
+			Category:    item.Category,
+			Quantity:    item.Quantity,
+			UnitAmount:  item.UnitAmount,
+			TotalAmount: totalForLineItem,
+			Currency:    item.Currency,
+			Metadata:    item.Metadata,
+		}
+
+		totalAmount += totalForLineItem
+	}
+
+	input := services.CreateInvoiceInput{
+		ClientID:                  &clientID,
+		PropertyID:                &propertyID,
+		PayerType:                 body.PayerType,
+		PayerLeaseID:              body.PayerLeaseID,
+		PayerClientID:             body.PayerClientID,
+		PayeeType:                 body.PayeeType,
+		PayeeClientID:             body.PayeeClientID,
+		PayeeTenantID:             body.PayeeTenantID,
+		ContextType:               body.ContextType,
+		ContextLeaseTerminationID: body.ContextLeaseTerminationID,
+		TotalAmount:               totalAmount,
+		Taxes:                     0,
+		SubTotal:                  totalAmount,
+		Currency:                  body.Currency,
+		Status:                    "DRAFT",
+		DueDate:                   body.DueDate,
+		LineItems:                 lineItems,
+	}
+
+	invoice, err := h.service.CreateInvoice(r.Context(), input)
+	if err != nil {
+		HandleErrorResponse(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": transformations.DBInvoiceToRest(invoice),
+	})
+}
+
 type UpdateInvoiceRequest struct {
 	Currency            *string    `json:"currency,omitempty"              validate:"omitempty"                                   example:"GHS"       description:"Currency code"`
 	AllowedPaymentRails *[]string  `json:"allowed_payment_rails,omitempty" validate:"omitempty,dive,oneof=MOMO BANK OFFLINE CARD" example:"MOMO,BANK" description:"Allowed payment rails"`
@@ -219,33 +325,17 @@ func (h *InvoiceHandler) GetInvoiceByID(w http.ResponseWriter, r *http.Request) 
 	})
 }
 
-type InvoiceLineItemRequest struct {
-	Label      string          `json:"label"        validate:"required" example:"January Rent" description:"Line item label"`
-	Category   string          `json:"category"     validate:"required,oneof=RENT SECURITY_DEPOSIT INITIAL_DEPOSIT MAINTENANCE_FEE SAAS_FEE EXPENSE DEPOSIT_REFUND EARLY_TERMINATION_FEE DAMAGE_CHARGE" example:"RENT" description:"Line item category"`
-	Quantity   int64           `json:"quantity"     validate:"required,min=1" example:"1" description:"Quantity for the line item"`
-	UnitAmount int64           `json:"unit_amount"  validate:"required,min=0" example:"100000" description:"Unit amount in smallest currency unit"`
-	Currency   string          `json:"currency"     validate:"required" example:"GHS" description:"Currency code"`
-	Metadata   *map[string]any `json:"metadata,omitempty" description:"Optional line item metadata"`
-}
-
-type CreateInvoiceRequest struct {
-	PayerType string                   `json:"payer_type"  validate:"required,oneof=TENANT PROPERTY_OWNER" example:"TENANT" description:"Who pays the invoice"`
-	PayeeType string                   `json:"payee_type"  validate:"required,oneof=PROPERTY_OWNER TENANT" example:"PROPERTY_OWNER" description:"Who receives the invoice payment"`
-	LineItems []InvoiceLineItemRequest `json:"line_items"  validate:"required,min=1,dive" description:"Invoice line items"`
-	DueDate   *string                  `json:"due_date,omitempty" validate:"omitempty" example:"2024-07-01T00:00:00Z" description:"Optional due date for the invoice"`
-}
-
 type ListInvoicesQuery struct {
 	lib.FilterQueryInput
-	PayerType                 *string   `json:"payer_type"      query:"payer_type"`
-	PayerClientID             *string   `json:"payer_client_id" query:"payer_client_id"`
-	PayerLeaseID              *string   `json:"payer_lease_id"  query:"payer_lease_id"`
-	PayeeType                 *string   `json:"payee_type"      query:"payee_type"`
-	PayeeClientID             *string   `json:"payee_client_id" query:"payee_client_id"`
-	ContextType               *string   `json:"context_type"    query:"context_type"`
+	PayerType                 *string   `json:"payer_type"                   query:"payer_type"`
+	PayerClientID             *string   `json:"payer_client_id"              query:"payer_client_id"`
+	PayerLeaseID              *string   `json:"payer_lease_id"               query:"payer_lease_id"`
+	PayeeType                 *string   `json:"payee_type"                   query:"payee_type"`
+	PayeeClientID             *string   `json:"payee_client_id"              query:"payee_client_id"`
+	ContextType               *string   `json:"context_type"                 query:"context_type"`
 	ContextLeaseTerminationID *string   `json:"context_lease_termination_id" query:"context_lease_termination_id"`
-	Status                    *[]string `json:"status"          query:"status"          validate:"omitempty,dive,oneof=DRAFT ISSUED PARTIALLY_PAID PAID VOID"`
-	Active                    *bool     `json:"active"          query:"active"                                                                                description:"Filter invoices by active status. true for active invoices, false for VOID invoices"`
+	Status                    *[]string `json:"status"                       query:"status"                       validate:"omitempty,dive,oneof=DRAFT ISSUED PARTIALLY_PAID PAID VOID"`
+	Active                    *bool     `json:"active"                       query:"active"                                                                                             description:"Filter invoices by active status. true for active invoices, false for VOID invoices"`
 }
 
 func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
@@ -289,13 +379,13 @@ func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 }
 
 type AddLineItemRequest struct {
-	Label       string          `json:"label"              validate:"required"                                     example:"January Rent" description:"Label for the line item"`
-	Category    string          `json:"category"           validate:"required,oneof=MAINTENANCE_FEE EXPENSE OTHER" example:"OTHER"        description:"Category of line item"`
-	Quantity    int64           `json:"quantity"           validate:"required,min=1"                               example:"1"            description:"Quantity"`
-	UnitAmount  int64           `json:"unit_amount"        validate:"required,min=0"                               example:"100000"       description:"Unit amount in smallest currency unit"`
-	TotalAmount int64           `json:"total_amount"       validate:"required,min=0"                               example:"100000"       description:"Total amount in smallest currency unit"`
-	Currency    string          `json:"currency"           validate:"required"                                     example:"GHS"          description:"Currency code"`
-	Metadata    *map[string]any `json:"metadata,omitempty"                                                                                description:"Additional metadata"`
+	Label       string          `json:"label"              validate:"required"                                                                                                                                                         example:"January Rent" description:"Label for the line item"`
+	Category    string          `json:"category"           validate:"required,oneof=RENT SECURITY_DEPOSIT INITIAL_DEPOSIT MAINTENANCE_FEE SAAS_FEE BOOKING_FEE EXPENSE DEPOSIT_REFUND EARLY_TERMINATION_FEE DAMAGE_CHARGE RENT_REFUND" example:"OTHER"        description:"Category of line item"`
+	Quantity    int64           `json:"quantity"           validate:"required,min=1"                                                                                                                                                   example:"1"            description:"Quantity"`
+	UnitAmount  int64           `json:"unit_amount"        validate:"required,min=0"                                                                                                                                                   example:"100000"       description:"Unit amount in smallest currency unit"`
+	TotalAmount int64           `json:"total_amount"       validate:"required,min=0"                                                                                                                                                   example:"100000"       description:"Total amount in smallest currency unit"`
+	Currency    string          `json:"currency"           validate:"required"                                                                                                                                                         example:"GHS"          description:"Currency code"`
+	Metadata    *map[string]any `json:"metadata,omitempty"                                                                                                                                                                                                    description:"Additional metadata"`
 }
 
 // AddLineItem godoc
@@ -451,13 +541,13 @@ func (h *InvoiceHandler) RemoveLineItem(w http.ResponseWriter, r *http.Request) 
 }
 
 type UpdateLineItemRequest struct {
-	Label       *string         `json:"label,omitempty"        validate:"omitempty"                                                                                                example:"January Rent" description:"Label for the line item"`
-	Category    *string         `json:"category,omitempty"     validate:"omitempty,oneof=RENT SECURITY_DEPOSIT INITIAL_DEPOSIT MAINTENANCE_FEE SAAS_FEE EXPENSE BOOKING_FEE OTHER" example:"OTHER"        description:"Category of line item"`
-	Quantity    *int64          `json:"quantity,omitempty"     validate:"omitempty,min=1"                                                                                          example:"1"            description:"Quantity"`
-	UnitAmount  *int64          `json:"unit_amount,omitempty"  validate:"omitempty,min=0"                                                                                          example:"100000"       description:"Unit amount in smallest currency unit"`
-	TotalAmount *int64          `json:"total_amount,omitempty" validate:"omitempty,min=0"                                                                                          example:"100000"       description:"Total amount in smallest currency unit"`
-	Currency    *string         `json:"currency,omitempty"     validate:"omitempty"                                                                                                example:"GHS"          description:"Currency code"`
-	Metadata    *map[string]any `json:"metadata,omitempty"                                                                                                                                                description:"Additional metadata"`
+	Label       *string         `json:"label,omitempty"        validate:"omitempty"                                                                                                                                                         example:"January Rent" description:"Label for the line item"`
+	Category    *string         `json:"category,omitempty"     validate:"omitempty,oneof=RENT SECURITY_DEPOSIT INITIAL_DEPOSIT MAINTENANCE_FEE SAAS_FEE BOOKING_FEE EXPENSE DEPOSIT_REFUND EARLY_TERMINATION_FEE DAMAGE_CHARGE RENT_REFUND" example:"OTHER"        description:"Category of line item"`
+	Quantity    *int64          `json:"quantity,omitempty"     validate:"omitempty,min=1"                                                                                                                                                   example:"1"            description:"Quantity"`
+	UnitAmount  *int64          `json:"unit_amount,omitempty"  validate:"omitempty,min=0"                                                                                                                                                   example:"100000"       description:"Unit amount in smallest currency unit"`
+	TotalAmount *int64          `json:"total_amount,omitempty" validate:"omitempty,min=0"                                                                                                                                                   example:"100000"       description:"Total amount in smallest currency unit"`
+	Currency    *string         `json:"currency,omitempty"     validate:"omitempty"                                                                                                                                                         example:"GHS"          description:"Currency code"`
+	Metadata    *map[string]any `json:"metadata,omitempty"                                                                                                                                                                                                         description:"Additional metadata"`
 }
 
 // UpdateLineItem godoc

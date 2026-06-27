@@ -8,8 +8,8 @@ import (
 )
 
 type OutputLeaseTermination struct {
-	ID      string `json:"id"      example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
-	Code    string `json:"code"    example:"2606ABC123"`
+	ID      string `json:"id"       example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
+	Code    string `json:"code"     example:"2606ABC123"`
 	LeaseID string `json:"lease_id" example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 
 	Type   string `json:"type"   example:"MUTUAL_AGREEMENT"`
@@ -23,7 +23,7 @@ type OutputLeaseTermination struct {
 	DocumentUrl  *string `json:"document_url,omitempty"  example:"https://example.com/termination.pdf"`
 	DocumentID   *string `json:"document_id,omitempty"   example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 
-	InitiatedById string            `json:"initiated_by_id" example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"`
+	InitiatedById string            `json:"initiated_by_id"        example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"`
 	InitiatedBy   *OutputClientUser `json:"initiated_by,omitempty"`
 
 	CompletedAt   *time.Time        `json:"completed_at,omitempty"    example:"2024-12-01T10:00:00Z"`

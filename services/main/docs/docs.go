@@ -6066,6 +6066,88 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new invoice (Admin)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Create invoice (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "client_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Property ID",
+                        "name": "property_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Create invoice request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateInvoiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Invoice created successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/transformations.OutputInvoice"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error occurred when creating invoice",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or absent authentication token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/lib.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "An unexpected error occurred",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/clients/{client_id}/properties/{property_id}/invoices/{invoice_id}": {
             "get": {
                 "security": [
@@ -9068,108 +9150,6 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "An unexpected error occurred",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/terminations/{termination_id}/invoices": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a new invoice for a lease termination (Admin)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "LeaseTermination"
-                ],
-                "summary": "Create lease termination invoice (Admin)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Client ID",
-                        "name": "client_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Property ID",
-                        "name": "property_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Lease ID",
-                        "name": "lease_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Termination ID",
-                        "name": "termination_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Create invoice request body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.CreateInvoiceRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Invoice created successfully",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "$ref": "#/definitions/transformations.OutputInvoice"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error occurred when creating invoice",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid or absent authentication token",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Lease termination not found",
-                        "schema": {
-                            "$ref": "#/definitions/lib.HTTPError"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
                         "schema": {
                             "$ref": "#/definitions/lib.HTTPError"
                         }
@@ -17147,9 +17127,17 @@ const docTemplate = `{
                 "category": {
                     "type": "string",
                     "enum": [
+                        "RENT",
+                        "SECURITY_DEPOSIT",
+                        "INITIAL_DEPOSIT",
                         "MAINTENANCE_FEE",
+                        "SAAS_FEE",
+                        "BOOKING_FEE",
                         "EXPENSE",
-                        "OTHER"
+                        "DEPOSIT_REFUND",
+                        "EARLY_TERMINATION_FEE",
+                        "DAMAGE_CHARGE",
+                        "RENT_REFUND"
                     ],
                     "example": "OTHER"
                 },
@@ -18087,11 +18075,28 @@ const docTemplate = `{
         "handlers.CreateInvoiceRequest": {
             "type": "object",
             "required": [
+                "context_type",
+                "currency",
                 "line_items",
                 "payee_type",
                 "payer_type"
             ],
             "properties": {
+                "context_lease_termination_id": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "context_type": {
+                    "type": "string",
+                    "enum": [
+                        "LEASE_TERMINATION"
+                    ],
+                    "example": "LEASE_RENT"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "GHS"
+                },
                 "due_date": {
                     "type": "string",
                     "example": "2024-07-01T00:00:00Z"
@@ -18100,16 +18105,33 @@ const docTemplate = `{
                     "type": "array",
                     "minItems": 1,
                     "items": {
-                        "$ref": "#/definitions/handlers.InvoiceLineItemRequest"
+                        "$ref": "#/definitions/handlers.AddLineItemRequest"
                     }
+                },
+                "payee_client_id": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "payee_tenant_id": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
                 },
                 "payee_type": {
                     "type": "string",
                     "enum": [
                         "PROPERTY_OWNER",
-                        "TENANT"
+                        "TENANT",
+                        "EXTERNAL"
                     ],
                     "example": "PROPERTY_OWNER"
+                },
+                "payer_client_id": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "payer_lease_id": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
                 },
                 "payer_type": {
                     "type": "string",
@@ -18893,55 +18915,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.InvoiceLineItemRequest": {
-            "type": "object",
-            "required": [
-                "category",
-                "currency",
-                "label",
-                "quantity",
-                "unit_amount"
-            ],
-            "properties": {
-                "category": {
-                    "type": "string",
-                    "enum": [
-                        "RENT",
-                        "SECURITY_DEPOSIT",
-                        "INITIAL_DEPOSIT",
-                        "MAINTENANCE_FEE",
-                        "SAAS_FEE",
-                        "EXPENSE",
-                        "DEPOSIT_REFUND",
-                        "EARLY_TERMINATION_FEE",
-                        "DAMAGE_CHARGE"
-                    ],
-                    "example": "RENT"
-                },
-                "currency": {
-                    "type": "string",
-                    "example": "GHS"
-                },
-                "label": {
-                    "type": "string",
-                    "example": "January Rent"
-                },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": {}
-                },
-                "quantity": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "example": 1
-                },
-                "unit_amount": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "example": 100000
-                }
-            }
-        },
         "handlers.LinkClientUserToPropertiesRequest": {
             "type": "object",
             "required": [
@@ -19674,9 +19647,12 @@ const docTemplate = `{
                         "INITIAL_DEPOSIT",
                         "MAINTENANCE_FEE",
                         "SAAS_FEE",
-                        "EXPENSE",
                         "BOOKING_FEE",
-                        "OTHER"
+                        "EXPENSE",
+                        "DEPOSIT_REFUND",
+                        "EARLY_TERMINATION_FEE",
+                        "DAMAGE_CHARGE",
+                        "RENT_REFUND"
                     ],
                     "example": "OTHER"
                 },
