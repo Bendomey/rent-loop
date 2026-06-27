@@ -3,12 +3,14 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Check, Clipboard, Send } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 import { z } from 'zod'
 import {
 	useGenerateSigningToken,
 	useResendSigningToken,
 	useUpdateSigningToken,
 } from '~/api/signing'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { Button } from '~/components/ui/button'
 import {
 	Dialog,
@@ -26,10 +28,8 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
-import { InternationalPhoneInput } from '~/components/international-phone'
 import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
-import { isValidPhoneNumber } from 'react-phone-number-input'
 import { QUERY_KEYS } from '~/lib/constants'
 import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 import { safeString } from '~/lib/strings'
@@ -56,6 +56,9 @@ interface PromptSignatureButtonProps {
 	role: 'TENANT' | 'PM_WITNESS' | 'TENANT_WITNESS'
 	propertyId: string
 	tenantApplicationId?: string
+	email?: string
+	phone?: string
+	name?: string
 }
 
 export function PromptSignatureButton({
@@ -64,6 +67,9 @@ export function PromptSignatureButton({
 	role,
 	propertyId,
 	tenantApplicationId,
+	email,
+	phone,
+	name,
 }: PromptSignatureButtonProps) {
 	const queryClient = useQueryClient()
 	const { clientUser } = useClient()
@@ -81,9 +87,15 @@ export function PromptSignatureButton({
 	const [modalOpen, setModalOpen] = useState(false)
 	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+	const propDefaults = {
+		signer_name: safeString(name),
+		signer_email: safeString(email),
+		signer_phone: safeString(phone),
+	}
+
 	const rhfMethods = useForm<SigningRequestFormValues>({
 		resolver: zodResolver(SigningRequestSchema),
-		defaultValues: { signer_name: '', signer_email: '', signer_phone: '' },
+		defaultValues: propDefaults,
 	})
 
 	const isOnCooldown = countdown < COOLDOWN_SECONDS && countdown > 0
@@ -109,8 +121,8 @@ export function PromptSignatureButton({
 
 	const handleCloseModal = useCallback(() => {
 		setModalOpen(false)
-		rhfMethods.reset()
-	}, [rhfMethods])
+		rhfMethods.reset(propDefaults)
+	}, [rhfMethods, propDefaults])
 
 	const handleOpenModal = useCallback(
 		(
@@ -120,13 +132,13 @@ export function PromptSignatureButton({
 			>,
 		) => {
 			rhfMethods.reset({
-				signer_name: prefill?.signer_name ?? '',
-				signer_email: prefill?.signer_email ?? '',
-				signer_phone: prefill?.signer_phone ?? '',
+				signer_name: prefill?.signer_name ?? propDefaults.signer_name,
+				signer_email: prefill?.signer_email ?? propDefaults.signer_email,
+				signer_phone: prefill?.signer_phone ?? propDefaults.signer_phone,
 			})
 			setModalOpen(true)
 		},
-		[rhfMethods],
+		[rhfMethods, propDefaults],
 	)
 
 	const onSubmit = useCallback(

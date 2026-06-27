@@ -3,6 +3,7 @@ package queue
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/repository"
 	"github.com/Bendomey/rent-loop/services/main/internal/services"
@@ -57,6 +58,7 @@ func RegisterWorkers(redisURL string, appCtx pkg.AppContext, repo repository.Rep
 			AnnouncementHandlers(svcs.AnnouncementService),
 			LeaseInvoicingHandlers(repo.LeaseRepository, svcs.LeaseService),
 			InvoiceReminderHandlers(repo.InvoiceRepository, appCtx, svcs.NotificationService),
+			ForexSyncHandlers(svcs.ExchangeRateService),
 		)
 		if err := queueServer.Run(mux); err != nil {
 			raven.CaptureError(err, nil)
@@ -74,20 +76,34 @@ func RegisterScheduler(redisURL string) {
 		log.Fatal("failed to parse redis URI for scheduler:", err)
 	}
 
-	scheduler := asynq.NewScheduler(opt, nil)
+	scheduler := asynq.NewScheduler(opt, &asynq.SchedulerOpts{Location: time.UTC})
 
 	// TODO:  Hourly — catches Hourly leases on time;(bring this back when our redis resources support it)
 	// Every day at midnight longer-frequency leases are
 	// skipped naturally when NextBillingDate is still in the future.
-	if _, err = scheduler.Register("0 0 * * *", asynq.NewTask(TypeLeaseRentInvoiceGeneration, nil), asynq.MaxRetry(1)); err != nil {
+	if _, err = scheduler.Register(
+		"0 0 * * *",
+		asynq.NewTask(TypeLeaseRentInvoiceGeneration, nil),
+		asynq.MaxRetry(1),
+	); err != nil {
 		raven.CaptureError(err, nil)
 		log.Fatal("failed to register lease invoicing schedule:", err)
 	}
 
 	// Every day at midnight — reminders are day-granularity (pre_due_1d, overdue_Nd).
-	if _, err = scheduler.Register("0 0 * * *", asynq.NewTask(TypeInvoiceReminder, nil), asynq.MaxRetry(1)); err != nil {
+	if _, err = scheduler.Register(
+		"0 0 * * *",
+		asynq.NewTask(TypeInvoiceReminder, nil),
+		asynq.MaxRetry(1),
+	); err != nil {
 		raven.CaptureError(err, nil)
 		log.Fatal("failed to register invoice reminder schedule:", err)
+	}
+
+	// Daily at 02:00 UTC — fetch USD-base rates from OpenExchangeRates.
+	if _, err = scheduler.Register("0 2 * * *", asynq.NewTask(TypeForexSync, nil), asynq.MaxRetry(2)); err != nil {
+		raven.CaptureError(err, nil)
+		log.Fatal("failed to register forex sync schedule:", err)
 	}
 
 	go func() {

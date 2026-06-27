@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { ActivityCard } from './components/activity-card'
 import { BookingHeader } from './components/booking-header'
 import { BookingStatsStrip } from './components/booking-stats-strip'
+import { EditDatesModal } from './components/edit-dates-modal'
 import { GuestCard } from './components/guest-card'
 import { NotesCard } from './components/notes-card'
 import { PaymentCard } from './components/payment-card'
@@ -38,6 +39,11 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
+import {
+	InputOTP,
+	InputOTPGroup,
+	InputOTPSlot,
+} from '~/components/ui/input-otp'
 import { Spinner } from '~/components/ui/spinner'
 import { Textarea } from '~/components/ui/textarea'
 import { TypographyMuted } from '~/components/ui/typography'
@@ -158,6 +164,74 @@ function CancelDialog({
 	)
 }
 
+function CheckInDialog({
+	open,
+	onOpenChange,
+	checkInCode,
+	isPending,
+	onConfirm,
+}: {
+	open: boolean
+	onOpenChange: (open: boolean) => void
+	checkInCode: Nullable<string>
+	isPending: boolean
+	onConfirm: () => void
+}) {
+	const [enteredCode, setEnteredCode] = useState('')
+
+	const handleOpenChange = (v: boolean) => {
+		if (!v) setEnteredCode('')
+		onOpenChange(v)
+	}
+
+	const handleConfirm = (e: React.MouseEvent) => {
+		if (enteredCode !== checkInCode) {
+			e.preventDefault()
+			toast.error('Incorrect check-in code. Please try again.')
+			return
+		}
+		onConfirm()
+	}
+
+	return (
+		<AlertDialog open={open} onOpenChange={handleOpenChange}>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>Check In Guest</AlertDialogTitle>
+					<AlertDialogDescription>
+						Enter the 5-digit check-in code sent to the guest to verify their
+						identity.
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+
+				<div>
+					<InputOTP maxLength={5} value={enteredCode} onChange={setEnteredCode}>
+						<InputOTPGroup>
+							<InputOTPSlot index={0} className="size-12 text-lg" />
+							<InputOTPSlot index={1} className="size-12 text-lg" />
+							<InputOTPSlot index={2} className="size-12 text-lg" />
+							<InputOTPSlot index={3} className="size-12 text-lg" />
+							<InputOTPSlot index={4} className="size-12 text-lg" />
+						</InputOTPGroup>
+					</InputOTP>
+				</div>
+
+				<AlertDialogFooter>
+					<AlertDialogCancel>Cancel</AlertDialogCancel>
+					<AlertDialogAction
+						className="bg-blue-600 text-white hover:bg-blue-700"
+						disabled={isPending || enteredCode.length < 5}
+						onClick={(e) => handleConfirm(e)}
+					>
+						{isPending ? <Spinner /> : null}
+						Check In
+					</AlertDialogAction>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
+	)
+}
+
 export function BookingDetailModule() {
 	const params = useParams()
 	const loaderData = useLoaderData<typeof loader>()
@@ -180,6 +254,7 @@ export function BookingDetailModule() {
 	const [checkInOpen, setCheckInOpen] = useState(false)
 	const [completeOpen, setCompleteOpen] = useState(false)
 	const [cancelOpen, setCancelOpen] = useState(false)
+	const [editDatesOpen, setEditDatesOpen] = useState(false)
 
 	const invalidate = () =>
 		queryClient.invalidateQueries({
@@ -265,7 +340,14 @@ export function BookingDetailModule() {
 				/>
 			</PropertyPermissionGuard>
 
-			<BookingStatsStrip booking={booking} />
+			<BookingStatsStrip
+				booking={booking}
+				onEditDates={
+					booking.status === 'PENDING'
+						? () => setEditDatesOpen(true)
+						: undefined
+				}
+			/>
 
 			<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 				{/* Left column */}
@@ -276,7 +358,11 @@ export function BookingDetailModule() {
 
 				{/* Right column */}
 				<div className="space-y-4">
-					<PaymentCard booking={booking} />
+					<PaymentCard
+						booking={booking}
+						clientId={clientId}
+						propertyId={propertyId}
+					/>
 					<ActivityCard booking={booking} />
 					<NotesCard
 						booking={booking}
@@ -296,13 +382,10 @@ export function BookingDetailModule() {
 				isPending={isConfirming}
 				onConfirm={handleConfirm}
 			/>
-			<ActionDialog
+			<CheckInDialog
 				open={checkInOpen}
 				onOpenChange={setCheckInOpen}
-				title="Check In Guest"
-				description="Are you sure you want to check in this guest?"
-				confirmLabel="Check In"
-				confirmClassName="bg-blue-600 text-white hover:bg-blue-700"
+				checkInCode={booking.check_in_code}
 				isPending={isCheckingIn}
 				onConfirm={handleCheckIn}
 			/>
@@ -320,6 +403,13 @@ export function BookingDetailModule() {
 				isPending={isCancelling}
 				onOpenChange={setCancelOpen}
 				onConfirm={handleCancel}
+			/>
+			<EditDatesModal
+				open={editDatesOpen}
+				onOpenChange={setEditDatesOpen}
+				booking={booking}
+				clientId={clientId}
+				propertyId={propertyId}
 			/>
 		</div>
 	)

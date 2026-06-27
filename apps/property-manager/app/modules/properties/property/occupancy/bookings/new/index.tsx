@@ -1,18 +1,18 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import dayjs from 'dayjs'
 import { ArrowLeft, Info, MapPin, Search } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { isValidPhoneNumber } from 'react-phone-number-input'
 import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import { useCreateBooking, useGetUnitAvailability } from '~/api/bookings'
+import { BookingRangeCalendar } from './components/booking-range-calendar'
+import { useCreateBooking } from '~/api/bookings'
 import { useGetTenantByPhone } from '~/api/tenants'
 import { useGetPropertyUnits } from '~/api/units'
 import { InternationalPhoneInput } from '~/components/international-phone'
 import { Button } from '~/components/ui/button'
-import { Calendar } from '~/components/ui/calendar'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import {
 	Dialog,
@@ -40,7 +40,7 @@ import { Separator } from '~/components/ui/separator'
 import { Spinner } from '~/components/ui/spinner'
 import { Textarea } from '~/components/ui/textarea'
 import { TypographyH4, TypographyMuted } from '~/components/ui/typography'
-import { getBookingDuration } from '~/lib/booking.utils'
+import { getBookingDuration, getBookingRateLabel } from '~/lib/booking.utils'
 import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
@@ -74,114 +74,16 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>
 
-function useIsDesktop() {
-	const [isDesktop, setIsDesktop] = useState(() =>
-		typeof window !== 'undefined' ? window.innerWidth >= 1024 : true,
-	)
-	useEffect(() => {
-		const mq = window.matchMedia('(min-width: 1024px)')
-		const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches)
-		mq.addEventListener('change', handler)
-		return () => mq.removeEventListener('change', handler)
-	}, [])
-	return isDesktop
-}
-
-function blocksToDisabledDates(blocks: UnitDateBlock[]): Date[] {
-	const dates: Date[] = []
-	for (const block of blocks) {
-		const cursor = new Date(block.start_date)
-		const end = new Date(block.end_date)
-		while (cursor <= end) {
-			dates.push(new Date(cursor))
-			cursor.setDate(cursor.getDate() + 1)
-		}
-	}
-	return dates
-}
-
-function BookingRangeCalendar({
-	clientId,
-	propertyId,
-	unitId,
-	selectedRange,
-	onRangeSelect,
-}: {
-	clientId: string
-	propertyId: string
-	unitId: string
-	selectedRange: { from: Date; to: Date } | null
-	onRangeSelect: (range: { from: Date; to: Date } | null) => void
-}) {
-	const isDesktop = useIsDesktop()
-	const today = useMemo(() => {
-		const d = new Date()
-		d.setHours(0, 0, 0, 0)
-		return d
-	}, [])
-	const ninetyDaysOut = useMemo(() => {
-		const d = new Date(today)
-		d.setDate(d.getDate() + 90)
-		return d
-	}, [today])
-
-	const { data: blocks = [], isPending: loadingAvailability } =
-		useGetUnitAvailability(clientId, propertyId, unitId, today, ninetyDaysOut)
-
-	const disabledDates = useMemo(() => blocksToDisabledDates(blocks), [blocks])
-
-	const handleSelect = (range: { from?: Date; to?: Date } | undefined) => {
-		if (!range?.from || !range.to) {
-			onRangeSelect(null)
-			return
-		}
-		onRangeSelect({ from: range.from, to: range.to })
-	}
-
-	if (loadingAvailability) {
-		return <div className="bg-muted h-64 w-full animate-pulse rounded-xl" />
-	}
-
-	const blockedCount = blocks.length
-
-	return (
-		<div className="space-y-2">
-			{blockedCount > 0 ? (
-				<p className="text-muted-foreground text-xs">
-					{blockedCount} date block{blockedCount > 1 ? 's' : ''} — greyed out
-					dates are unavailable
-				</p>
-			) : (
-				<p className="text-muted-foreground text-xs">
-					All dates available for the next 90 days
-				</p>
-			)}
-			<Calendar
-				mode="range"
-				selected={selectedRange ?? undefined}
-				onSelect={handleSelect}
-				disabled={[
-					{ before: today },
-					{ after: ninetyDaysOut },
-					...disabledDates,
-				]}
-				startMonth={today}
-				endMonth={ninetyDaysOut}
-				numberOfMonths={isDesktop ? 2 : 1}
-				className="w-full [--cell-size:--spacing(9)]"
-			/>
-		</div>
-	)
-}
-
 function DateStatsStrip({
 	checkIn,
 	checkOut,
+	frequency,
 }: {
 	checkIn: Date
 	checkOut: Date
+	frequency: string
 }) {
-	const { count, label } = getBookingDuration(checkIn, checkOut, 'DAILY')
+	const { count, label } = getBookingDuration(checkIn, checkOut, frequency)
 	return (
 		<div className="bg-muted/40 rounded-lg border">
 			<div className="grid grid-cols-3 divide-x">
@@ -312,6 +214,7 @@ function LiveSummary({
 	checkOut,
 	rate,
 	currency,
+	frequency,
 	guestName,
 }: {
 	unit?: PropertyUnit
@@ -320,13 +223,14 @@ function LiveSummary({
 	checkOut?: Date
 	rate?: number
 	currency: string
+	frequency: string
 	guestName?: string
 }) {
-	const nights =
+	const { count, label: periodLabel } =
 		checkIn && checkOut
-			? getBookingDuration(checkIn, checkOut, 'DAILY').count
-			: 0
-	const total = rate && nights > 0 ? rate * nights : 0
+			? getBookingDuration(checkIn, checkOut, frequency)
+			: { count: 0, label: '' }
+	const total = rate && count > 0 ? rate * count : 0
 
 	return (
 		<div className="sticky top-6 space-y-4">
@@ -377,7 +281,7 @@ function LiveSummary({
 					<div className="space-y-2 text-sm">
 						<div className="flex justify-between">
 							<span className="text-muted-foreground">
-								{currency} {rate ?? 0} × {nights} nights
+								{currency} {rate ?? 0} × {count} {periodLabel}
 							</span>
 							<span>{formatAmount(total, currency)}</span>
 						</div>
@@ -423,6 +327,8 @@ export function NewBookingModule() {
 	const { clientUser } = useClient()
 	const navigate = useNavigate()
 	const [guestModalOpen, setGuestModalOpen] = useState(false)
+	const [frequency, setFrequency] =
+		useState<PropertyUnit['payment_frequency']>('DAILY')
 
 	const propertyId = clientUserProperty?.property_id ?? ''
 	const propertyName = clientUserProperty?.property?.name
@@ -472,6 +378,7 @@ export function NewBookingModule() {
 		if (unit) {
 			form.setValue('rate', convertPesewasToCedis(unit.rent_fee))
 			form.setValue('currency', unit.rent_fee_currency)
+			setFrequency(unit.payment_frequency)
 		}
 	}
 
@@ -599,6 +506,7 @@ export function NewBookingModule() {
 												clientId={clientId}
 												propertyId={propertyId}
 												unitId={selectedUnitId}
+												paymentFrequency={frequency}
 												selectedRange={selectedRange}
 												onRangeSelect={handleRangeSelect}
 											/>
@@ -623,7 +531,11 @@ export function NewBookingModule() {
 									)}
 
 									{checkIn && checkOut && checkOut > checkIn ? (
-										<DateStatsStrip checkIn={checkIn} checkOut={checkOut} />
+										<DateStatsStrip
+											checkIn={checkIn}
+											checkOut={checkOut}
+											frequency={frequency}
+										/>
 									) : null}
 
 									<FormField
@@ -632,7 +544,7 @@ export function NewBookingModule() {
 										render={({ field }) => (
 											<FormItem>
 												<FormLabel>
-													Nightly rate (
+													{getBookingRateLabel(frequency)} (
 													{selectedUnit?.rent_fee_currency ?? 'GHS'})
 												</FormLabel>
 												<FormControl>
@@ -815,6 +727,7 @@ export function NewBookingModule() {
 								checkOut={checkOut}
 								rate={rate}
 								currency={currency}
+								frequency={frequency}
 								guestName={guestName}
 							/>
 						</div>

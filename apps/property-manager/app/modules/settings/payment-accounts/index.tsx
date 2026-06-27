@@ -5,6 +5,7 @@ import {
 	Edit,
 	EllipsisVertical,
 	Eye,
+	Info,
 	RotateCw,
 	Trash2,
 } from 'lucide-react'
@@ -15,6 +16,7 @@ import DeletePaymentAccountModal from './delete'
 import SetPaymentAccountAsDefaultModal from './set-default'
 import { useGetPaymentAccounts } from '~/api/payment-accounts'
 import { DataTable } from '~/components/datatable'
+import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -240,6 +242,14 @@ export function PaymentAccountsModule() {
 					</Button>
 				</div>
 			</div>
+			<Alert>
+				<Info className="size-4" />
+				<AlertTitle>Payment accounts are managed by support</AlertTitle>
+				<AlertDescription>
+					You cannot add payment accounts manually. To add or update payment
+					accounts for online payments, please reach out to our support team.
+				</AlertDescription>
+			</Alert>
 			<PaymentAccountsController />
 			<div className="h-full w-full">
 				<DataTable

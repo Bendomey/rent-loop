@@ -32,6 +32,8 @@ type Repository struct {
 	AgreementRepository                    AgreementRepository
 	BookingRepository                      BookingRepository
 	UnitDateBlockRepository                UnitDateBlockRepository
+	LeaseTerminationRepository             LeaseTerminationRepository
+	ExchangeRateRepository                 ExchangeRateRepository
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -64,6 +66,8 @@ func NewRepository(db *gorm.DB) Repository {
 	agreementRepository := NewAgreementRepository(db)
 	bookingRepo := NewBookingRepository(db)
 	unitDateBlockRepo := NewUnitDateBlockRepository(db)
+	leaseTerminationRepo := NewLeaseTerminationRepository(db)
+	exchangeRateRepository := NewExchangeRateRepository(db)
 
 	return Repository{
 		AdminRepository:                        adminRepository,
@@ -95,5 +99,7 @@ func NewRepository(db *gorm.DB) Repository {
 		AgreementRepository:                    agreementRepository,
 		BookingRepository:                      bookingRepo,
 		UnitDateBlockRepository:                unitDateBlockRepo,
+		LeaseTerminationRepository:             leaseTerminationRepo,
+		ExchangeRateRepository:                 exchangeRateRepository,
 	}
 }

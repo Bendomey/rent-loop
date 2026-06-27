@@ -65,6 +65,7 @@ type GenerateTokenInput struct {
 	DocumentID          string
 	TenantApplicationID *string
 	LeaseID             *string
+	LeaseTerminationID  *string
 	Role                string
 	SignerName          *string
 	SignerEmail         *string
@@ -80,6 +81,7 @@ func (s *signingService) GenerateToken(
 		DocumentID:          input.DocumentID,
 		TenantApplicationID: input.TenantApplicationID,
 		LeaseID:             input.LeaseID,
+		LeaseTerminationID:  input.LeaseTerminationID,
 		Role:                input.Role,
 		SignerName:          input.SignerName,
 		SignerEmail:         input.SignerEmail,
@@ -239,6 +241,7 @@ type SignDocumentPMInput struct {
 	SignatureUrl        string
 	TenantApplicationID *string
 	LeaseID             *string
+	LeaseTerminationID  *string
 	SignedByID          string
 }
 
@@ -252,6 +255,7 @@ func (s *signingService) SignDocumentByPM(
 		"role":                  "PROPERTY_MANAGER",
 		"tenant_application_id": input.TenantApplicationID,
 		"lease_id":              input.LeaseID,
+		"lease_termination_id":  input.LeaseTerminationID,
 	})
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -273,6 +277,7 @@ func (s *signingService) SignDocumentByPM(
 		DocumentID:          input.DocumentID,
 		TenantApplicationID: input.TenantApplicationID,
 		LeaseID:             input.LeaseID,
+		LeaseTerminationID:  input.LeaseTerminationID,
 		Role:                "PROPERTY_MANAGER",
 		SignatureUrl:        input.SignatureUrl,
 		SignedByID:          &input.SignedByID,

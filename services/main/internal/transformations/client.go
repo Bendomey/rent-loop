@@ -52,6 +52,7 @@ func DBClientToRestClient(i *models.Client) interface{} {
 		"id_number":             i.IDNumber,
 		"id_expiry":             i.IDExpiry,
 		"id_document_url":       i.IDDocumentURL,
+		"currency":              i.Currency,
 		"client_application_id": i.ClientApplicationId,
 		"client_application":    DBClientApplicationToRestClientApplication(&i.ClientApplication),
 		"created_at":            i.CreatedAt,

@@ -36,6 +36,8 @@ type Services struct {
 	AgreementService          AgreementService
 	UnitDateBlockService      UnitDateBlockService
 	BookingService            BookingService
+	ExchangeRateService       ExchangeRateService
+	LeaseTerminationService   LeaseTerminationService
 }
 
 type INewServicesParams struct {
@@ -50,6 +52,7 @@ func NewServices(params INewServicesParams) Services {
 	invoiceService := NewInvoiceService(
 		params.AppCtx,
 		params.Repository.InvoiceRepository,
+		params.Repository.PaymentRepository,
 		accountingService,
 		notificationService,
 		params.Repository.TenantAccountRepository,
@@ -86,6 +89,7 @@ func NewServices(params INewServicesParams) Services {
 	unitService := NewUnitService(UnitServiceDependencies{
 		AppCtx:               params.AppCtx,
 		Repo:                 params.Repository.UnitRepository,
+		PropertyRepo:         params.Repository.PropertyRepository,
 		PropertyBlockService: propertyBlockService,
 	})
 
@@ -93,6 +97,7 @@ func NewServices(params INewServicesParams) Services {
 		PropertyServiceDependencies{
 			AppCtx:                    params.AppCtx,
 			Repo:                      params.Repository.PropertyRepository,
+			ClientService:             clientService,
 			ClientUserService:         clientUserService,
 			ClientUserPropertyService: clientUserPropertyService,
 			UnitService:               unitService,
@@ -188,6 +193,17 @@ func NewServices(params INewServicesParams) Services {
 		UnitDateBlockRepo:    params.Repository.UnitDateBlockRepository,
 		TenantService:        tenantService,
 		InvoiceService:       invoiceService,
+		UnitService:          unitService,
+	})
+
+	exchangeRateService := NewExchangeRateService(params.AppCtx, params.Repository.ExchangeRateRepository)
+
+	leaseTerminationService := NewLeaseTerminationService(LeaseTerminationServiceDeps{
+		AppCtx:              params.AppCtx,
+		Repo:                params.Repository.LeaseTerminationRepository,
+		LeaseRepo:           params.Repository.LeaseRepository,
+		UnitService:         unitService,
+		NotificationService: notificationService,
 	})
 
 	expenseService := NewExpenseService(ExpenseServiceDeps{
@@ -230,5 +246,7 @@ func NewServices(params INewServicesParams) Services {
 		AgreementService:          agreementService,
 		UnitDateBlockService:      unitDateBlockService,
 		BookingService:            bookingService,
+		ExchangeRateService:       exchangeRateService,
+		LeaseTerminationService:   leaseTerminationService,
 	}
 }

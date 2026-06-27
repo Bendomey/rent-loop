@@ -16,6 +16,8 @@ type OutputAdminSigningToken struct {
 	TenantApplication   *OutputAdminTenantApplication `json:"tenant_application,omitempty"`
 	LeaseID             *string                       `json:"lease_id,omitempty"              example:"770e8400-e29b-41d4-a716-446655440000"`
 	Lease               *OutputAdminLease             `json:"lease,omitempty"`
+	LeaseTerminationID  *string                       `json:"lease_termination_id,omitempty"  example:"880e8400-e29b-41d4-a716-446655440000"`
+	LeaseTermination    *OutputAdminLeaseTermination  `json:"lease_termination,omitempty"`
 	Role                string                        `json:"role"                            example:"TENANT"`
 	SignerName          *string                       `json:"signer_name,omitempty"           example:"Jane Doe"`
 	SignerEmail         *string                       `json:"signer_email,omitempty"          example:"jane@example.com"`
@@ -45,6 +47,8 @@ func DBAdminSigningTokenToRest(i *models.SigningToken) any {
 		"tenant_application":    DBAdminTenantApplicationToRest(i.TenantApplication),
 		"lease_id":              i.LeaseID,
 		"lease":                 DBAdminLeaseToRest(i.Lease),
+		"lease_termination_id":  i.LeaseTerminationID,
+		"lease_termination":     DBAdminLeaseTerminationToRest(i.LeaseTermination),
 		"role":                  i.Role,
 		"signer_name":           i.SignerName,
 		"signer_email":          i.SignerEmail,
@@ -72,6 +76,8 @@ type OutputSigningToken struct {
 	TenantApplication   *OutputTenantApplication `json:"tenant_application,omitempty"`
 	LeaseID             *string                  `json:"lease_id,omitempty"              example:"770e8400-e29b-41d4-a716-446655440000"`
 	Lease               *OutputLease             `json:"lease,omitempty"`
+	LeaseTerminationID  *string                  `json:"lease_termination_id,omitempty"  example:"880e8400-e29b-41d4-a716-446655440000"`
+	LeaseTermination    *OutputLeaseTermination  `json:"lease_termination,omitempty"`
 	Role                string                   `json:"role"                            example:"TENANT"`
 	SignerName          *string                  `json:"signer_name,omitempty"           example:"Jane Doe"`
 	SignerEmail         *string                  `json:"signer_email,omitempty"          example:"jane@example.com"`
@@ -99,6 +105,8 @@ func DBSigningTokenToRest(i *models.SigningToken) any {
 		"tenant_application":    DBTenantApplicationToRest(i.TenantApplication),
 		"lease_id":              i.LeaseID,
 		"lease":                 DBLeaseToRest(i.Lease),
+		"lease_termination_id":  i.LeaseTerminationID,
+		"lease_termination":     DBLeaseTerminationToRest(i.LeaseTermination),
 		"role":                  i.Role,
 		"signer_name":           i.SignerName,
 		"signer_email":          i.SignerEmail,

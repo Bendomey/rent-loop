@@ -16,6 +16,7 @@ type UpdateClientInput struct {
 	Type               *string
 	SubType            *string
 	Name               *string
+	Currency           *string
 	Description        lib.Optional[string]
 	RegistrationNumber lib.Optional[string]
 	WebsiteUrl         lib.Optional[string]
@@ -102,6 +103,13 @@ func (s *clientService) UpdateClient(ctx context.Context, input UpdateClientInpu
 				"action":   "fetching client by ID",
 			},
 		})
+	}
+
+	if input.Currency != nil {
+		if !lib.IsSupportedCurrency(*input.Currency) {
+			return nil, pkg.BadRequestError("UnsupportedCurrency", nil)
+		}
+		client.Currency = *input.Currency
 	}
 
 	if input.Name != nil {

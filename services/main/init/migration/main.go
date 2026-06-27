@@ -51,6 +51,8 @@ func updateMigration(db *gorm.DB) error {
 		&models.AgreementAcceptance{},
 		&models.Booking{},
 		&models.UnitDateBlock{},
+		&models.LeaseTermination{},
+		&models.ExchangeRate{},
 	)
 	return err
 }
@@ -105,6 +107,12 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddBookingConfirmedFields(),
 		jobs.AddBookingStayFrequency(),
 		jobs.MakeTenantCreatedByIdNullable(),
+		jobs.AddLeaseTerminationInProgressUniqueIndex(),
+		jobs.AddClientCurrency(),
+		jobs.AddPropertyCurrency(),
+		jobs.AddBookingInvoiceContextAssociation(),
+		jobs.DropBookingRateAndCurrency(),
+		jobs.AddLeaseTerminationContextFields(),
 	})
 	if err := m.Migrate(); err != nil {
 		return fmt.Errorf("[Migration.Migrate]: %v", err)

@@ -29,7 +29,7 @@ export function SigningHeader({
 	const totalCount = signatureStatuses.length
 
 	return (
-		<div className="border-b bg-white">
+		<div className="border-b border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
 			<div className="mx-auto flex max-w-4xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
 				<div className="flex items-center space-x-3">
 					<Button onClick={() => navigate(-1)} size="sm" variant="ghost">
@@ -41,7 +41,7 @@ export function SigningHeader({
 						<div className="flex items-center gap-2">
 							<span className="text-xs text-zinc-500">
 								Signing as{' '}
-								<span className="font-medium text-zinc-700">
+								<span className="font-medium text-zinc-700 dark:text-zinc-300">
 									{SIGNATURE_ROLE_LABELS[signerRole]}
 								</span>
 							</span>
@@ -58,11 +58,13 @@ export function SigningHeader({
 							{status.signed ? (
 								<CheckCircle className="size-4 text-emerald-500" />
 							) : (
-								<Circle className="size-4 text-zinc-300" />
+								<Circle className="size-4 text-zinc-300 dark:text-zinc-600" />
 							)}
 							<span
 								className={`text-xs ${
-									status.signed ? 'text-emerald-600' : 'text-zinc-400'
+									status.signed
+										? 'text-emerald-600 dark:text-emerald-400'
+										: 'text-zinc-400 dark:text-zinc-500'
 								}`}
 							>
 								{SIGNATURE_ROLE_LABELS[status.role]}
@@ -70,7 +72,7 @@ export function SigningHeader({
 						</div>
 					))}
 					<Separator orientation="vertical" className="!h-5" />
-					<span className="text-xs font-medium text-zinc-500">
+					<span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
 						{signedCount}/{totalCount} signed
 					</span>
 				</div>

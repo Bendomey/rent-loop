@@ -58,7 +58,7 @@ interface Booking {
 	canceled_at: Nullable<string>
 	cancellation_reason: Nullable<string>
 	invoice_id: Nullable<string>
-	invoice: unknown
+	invoice: Invoice
 	meta: unknown
 	created_at: string
 }

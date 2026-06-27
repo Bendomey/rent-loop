@@ -39,13 +39,16 @@ type InvoiceService interface {
 		tenantApplicationID *string,
 	) ([]repository.InvoiceStatusStat, error)
 	AddLineItem(context context.Context, input AddLineItemInput) (*models.InvoiceLineItem, error)
+	UpdateLineItem(context context.Context, input UpdateLineItemInput) (*models.InvoiceLineItem, error)
 	RemoveLineItem(context context.Context, input RemoveLineItemInput) error
 	GetLineItems(context context.Context, invoiceID string) ([]models.InvoiceLineItem, error)
+	UpdateInvoicePaymentStatus(ctx context.Context, input UpdateInvoicePaymentStatusInput) (*models.Invoice, error)
 }
 
 type invoiceService struct {
 	appCtx              pkg.AppContext
 	repo                repository.InvoiceRepository
+	paymentRepo         repository.PaymentRepository
 	accountingService   AccountingService
 	notificationService NotificationService
 	tenantAccountRepo   repository.TenantAccountRepository
@@ -55,6 +58,7 @@ type invoiceService struct {
 func NewInvoiceService(
 	appCtx pkg.AppContext,
 	repo repository.InvoiceRepository,
+	paymentRepo repository.PaymentRepository,
 	accountingService AccountingService,
 	notificationService NotificationService,
 	tenantAccountRepo repository.TenantAccountRepository,
@@ -63,6 +67,7 @@ func NewInvoiceService(
 	return &invoiceService{
 		appCtx:              appCtx,
 		repo:                repo,
+		paymentRepo:         paymentRepo,
 		accountingService:   accountingService,
 		notificationService: notificationService,
 		tenantAccountRepo:   tenantAccountRepo,
@@ -93,8 +98,10 @@ type CreateInvoiceInput struct {
 	ContextType                 string
 	ContextTenantApplicationID  *string
 	ContextLeaseID              *string
+	ContextBookingID            *string
 	ContextMaintenanceRequestID *string
 	ContextExpenseID            *string
+	ContextLeaseTerminationID   *string
 	TotalAmount                 int64
 	Taxes                       int64
 	SubTotal                    int64
@@ -171,8 +178,10 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 		ContextType:                 input.ContextType,
 		ContextTenantApplicationID:  input.ContextTenantApplicationID,
 		ContextLeaseID:              input.ContextLeaseID,
+		ContextBookingID:            input.ContextBookingID,
 		ContextMaintenanceRequestID: input.ContextMaintenanceRequestID,
 		ContextExpenseID:            input.ContextExpenseID,
+		ContextLeaseTerminationID:   input.ContextLeaseTerminationID,
 		TotalAmount:                 input.TotalAmount,
 		Taxes:                       input.Taxes,
 		SubTotal:                    input.SubTotal,
@@ -215,43 +224,21 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 	}
 
 	if input.Status == "ISSUED" {
-		// Build journal entry lines based on invoice context type
-		journalLines := buildJournalEntryForInvoice(&invoice, s.appCtx.Config.ChartOfAccounts)
-
-		if len(journalLines) > 0 {
-			transactionDate := invoice.CreatedAt.Format(time.RFC3339)
-
-			_, journalErr := s.accountingService.RecordInvoiceCreated(transCtx, accounting.CreateJournalEntryRequest{
-				Status:          string(accounting.JournalEntryStatusPosted),
-				Reference:       invoice.Code,
-				TransactionDate: &transactionDate,
-				Metadata: map[string]any{
-					"invoice_id":   invoice.ID.String(),
-					"invoice_code": invoice.Code,
-					"context_type": invoice.ContextType,
-					"payer_type":   invoice.PayerType,
-					"payee_type":   invoice.PayeeType,
-					"client_id":    lib.SafeString(invoice.ClientID),
-					"property_id":  lib.SafeString(invoice.PropertyID),
-				},
-				Lines: journalLines,
-			})
-			if journalErr != nil {
-				if !hasOuterTx {
-					transaction.Rollback()
-				}
-				return nil, pkg.InternalServerError(
-					"Failed to create journal entry for invoice",
-					&pkg.RentLoopErrorParams{
-						Err: journalErr,
-						Metadata: map[string]string{
-							"function":    "CreateInvoice",
-							"action":      "creating journal entry",
-							"invoiceCode": invoice.Code,
-						},
-					},
-				)
+		if journalErr := s.recordIssuanceEntry(transCtx, &invoice); journalErr != nil {
+			if !hasOuterTx {
+				transaction.Rollback()
 			}
+			return nil, pkg.InternalServerError(
+				"Failed to create journal entry for invoice",
+				&pkg.RentLoopErrorParams{
+					Err: journalErr,
+					Metadata: map[string]string{
+						"function":    "CreateInvoice",
+						"action":      "creating journal entry",
+						"invoiceCode": invoice.Code,
+					},
+				},
+			)
 		}
 	}
 
@@ -342,9 +329,8 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 type UpdateInvoiceInput struct {
 	InvoiceID           string
 	Status              *string
-	TotalAmount         *int64
+	Currency            *string
 	Taxes               *int64
-	SubTotal            *int64
 	DueDate             *time.Time
 	IssuedAt            *time.Time
 	PaidAt              *time.Time
@@ -354,9 +340,8 @@ type UpdateInvoiceInput struct {
 
 func (s *invoiceService) UpdateInvoice(ctx context.Context, input UpdateInvoiceInput) (*models.Invoice, error) {
 	invoice, getErr := s.repo.GetByQuery(ctx, repository.GetInvoiceQuery{
-		Query: map[string]any{
-			"id": input.InvoiceID,
-		},
+		Query:    map[string]any{"id": input.InvoiceID},
+		Populate: &[]string{"LineItems"},
 	})
 	if getErr != nil {
 		if errors.Is(getErr, gorm.ErrRecordNotFound) {
@@ -373,40 +358,82 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, input UpdateInvoiceI
 		})
 	}
 
+	// if the invoice is already issued, we can't continue
+	if invoice.Status == "ISSUED" {
+		return nil, pkg.BadRequestError(
+			"Cannot update an invoice that has already been issued",
+			&pkg.RentLoopErrorParams{
+				Metadata: map[string]string{
+					"function": "UpdateInvoice",
+					"action":   "checking invoice status",
+					"status":   invoice.Status,
+				},
+			},
+		)
+	}
+
+	issuingNow := input.Status != nil && *input.Status == "ISSUED" && invoice.Status == "DRAFT"
+
 	if input.Status != nil {
 		invoice.Status = *input.Status
 	}
 
-	if input.TotalAmount != nil {
-		invoice.TotalAmount = *input.TotalAmount
+	if input.Currency != nil {
+		invoice.Currency = *input.Currency
 	}
 
 	if input.Taxes != nil {
 		invoice.Taxes = *input.Taxes
 	}
 
-	if input.SubTotal != nil {
-		invoice.SubTotal = *input.SubTotal
-	}
-
 	if input.DueDate != nil {
 		invoice.DueDate = input.DueDate
 	}
 
-	if input.IssuedAt != nil {
+	if issuingNow && invoice.IssuedAt == nil {
+		now := time.Now()
+		invoice.IssuedAt = &now
+	} else if input.IssuedAt != nil {
 		invoice.IssuedAt = input.IssuedAt
-	}
-
-	if input.PaidAt != nil {
-		invoice.PaidAt = input.PaidAt
-	}
-
-	if input.VoidedAt != nil {
-		invoice.VoidedAt = input.VoidedAt
 	}
 
 	if input.AllowedPaymentRails != nil {
 		invoice.AllowedPaymentRails = pq.StringArray(*input.AllowedPaymentRails)
+	}
+
+	if issuingNow {
+		transaction := s.appCtx.DB.Begin()
+		transCtx := lib.WithTransaction(ctx, transaction)
+
+		if updateErr := s.repo.Update(transCtx, invoice); updateErr != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+				Err:      updateErr,
+				Metadata: map[string]string{"function": "UpdateInvoice", "action": "updating invoice to ISSUED"},
+			})
+		}
+
+		if journalErr := s.recordIssuanceEntry(transCtx, invoice); journalErr != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError("Failed to create journal entry for invoice", &pkg.RentLoopErrorParams{
+				Err: journalErr,
+				Metadata: map[string]string{
+					"function":    "UpdateInvoice",
+					"action":      "creating journal entry",
+					"invoiceCode": invoice.Code,
+				},
+			})
+		}
+
+		if commitErr := transaction.Commit().Error; commitErr != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+				Err:      commitErr,
+				Metadata: map[string]string{"function": "UpdateInvoice", "action": "committing transaction"},
+			})
+		}
+
+		return invoice, nil
 	}
 
 	updateErr := s.repo.Update(ctx, invoice)
@@ -416,6 +443,52 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, input UpdateInvoiceI
 			Metadata: map[string]string{
 				"function": "UpdateInvoice",
 				"action":   "updating invoice",
+			},
+		})
+	}
+
+	return invoice, nil
+}
+
+type UpdateInvoicePaymentStatusInput struct {
+	InvoiceID string
+	Status    string // PAID | PARTIALLY_PAID
+	PaidAt    *time.Time
+}
+
+func (s *invoiceService) UpdateInvoicePaymentStatus(
+	ctx context.Context,
+	input UpdateInvoicePaymentStatusInput,
+) (*models.Invoice, error) {
+	invoice, getErr := s.repo.GetByQuery(ctx, repository.GetInvoiceQuery{
+		Query: map[string]any{"id": input.InvoiceID},
+	})
+	if getErr != nil {
+		if errors.Is(getErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("InvoiceNotFound", &pkg.RentLoopErrorParams{Err: getErr})
+		}
+		return nil, pkg.InternalServerError(getErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getErr,
+			Metadata: map[string]string{
+				"function": "UpdateInvoicePaymentStatus",
+				"action":   "getting invoice",
+			},
+		})
+	}
+
+	invoice.Status = input.Status
+	if input.PaidAt != nil {
+		invoice.PaidAt = input.PaidAt
+	}
+
+	if updateErr := s.repo.Update(ctx, invoice); updateErr != nil {
+		return nil, pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateErr,
+			Metadata: map[string]string{
+				"function":   "UpdateInvoicePaymentStatus",
+				"action":     "updating invoice",
+				"invoice_id": input.InvoiceID,
+				"new_status": input.Status,
 			},
 		})
 	}
@@ -543,6 +616,37 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, input VoidInvoiceInput
 				"action":   "updating invoice status to VOID",
 			},
 		})
+	}
+
+	// delete all pending payments for the invoice
+	invoiceID := invoice.ID.String()
+	pendingPayments, pendingErr := s.paymentRepo.List(transCtx, repository.ListPaymentsFilter{
+		InvoiceID: &invoiceID,
+		Statuses:  &[]string{"PENDING"},
+	})
+	if pendingErr != nil {
+		transaction.Rollback()
+		return nil, pkg.InternalServerError(pendingErr.Error(), &pkg.RentLoopErrorParams{
+			Err: pendingErr,
+			Metadata: map[string]string{
+				"function":   "VoidInvoice",
+				"action":     "listing pending payments",
+				"invoice_id": invoiceID,
+			},
+		})
+	}
+	for i := range *pendingPayments {
+		if err := failOfflinePayment(transCtx, s.paymentRepo, &(*pendingPayments)[i], "invoice voided"); err != nil {
+			transaction.Rollback()
+			return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+				Metadata: map[string]string{
+					"function":   "VoidInvoice",
+					"action":     "failing pending payment",
+					"invoice_id": invoiceID,
+					"payment_id": (*pendingPayments)[i].ID.String(),
+				},
+			})
+		}
 	}
 
 	// Create reversing journal entry to undo the original accounting entries
@@ -826,8 +930,9 @@ func (s *invoiceService) AddLineItem(ctx context.Context, input AddLineItemInput
 		})
 	}
 
-	// Update invoice totals
-	invoice.SubTotal += input.TotalAmount
+	// Recalculate invoice totals
+	amountDifference := input.TotalAmount
+	invoice.SubTotal += amountDifference
 	invoice.TotalAmount = invoice.SubTotal + invoice.Taxes
 
 	updateErr := s.repo.Update(transCtx, invoice)
@@ -937,8 +1042,9 @@ func (s *invoiceService) RemoveLineItem(ctx context.Context, input RemoveLineIte
 		})
 	}
 
-	// Update invoice totals
-	invoice.SubTotal -= lineItem.TotalAmount
+	// Recalculate invoice totals
+	amountDifference := -lineItem.TotalAmount
+	invoice.SubTotal += amountDifference
 	invoice.TotalAmount = invoice.SubTotal + invoice.Taxes
 
 	updateErr := s.repo.Update(transCtx, invoice)
@@ -967,6 +1073,181 @@ func (s *invoiceService) RemoveLineItem(ctx context.Context, input RemoveLineIte
 	return nil
 }
 
+type UpdateLineItemInput struct {
+	InvoiceID   string
+	LineItemID  string
+	Label       *string
+	Category    *string
+	Quantity    *int64
+	UnitAmount  *int64
+	TotalAmount *int64
+	Currency    *string
+	Metadata    *map[string]any
+}
+
+func (s *invoiceService) UpdateLineItem(
+	ctx context.Context,
+	input UpdateLineItemInput,
+) (*models.InvoiceLineItem, error) {
+	// Get invoice to validate status
+	invoice, getErr := s.repo.GetByQuery(ctx, repository.GetInvoiceQuery{
+		Query: map[string]any{
+			"id": input.InvoiceID,
+		},
+	})
+	if getErr != nil {
+		if errors.Is(getErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("InvoiceNotFound", &pkg.RentLoopErrorParams{
+				Err: getErr,
+			})
+		}
+		return nil, pkg.InternalServerError(getErr.Error(), &pkg.RentLoopErrorParams{
+			Err: getErr,
+			Metadata: map[string]string{
+				"function": "UpdateLineItem",
+				"action":   "getting invoice",
+			},
+		})
+	}
+
+	// Only allow updating line items on DRAFT invoices
+	if invoice.Status != "DRAFT" {
+		return nil, pkg.BadRequestError("Can only update line items on draft invoices", &pkg.RentLoopErrorParams{
+			Metadata: map[string]string{
+				"function":       "UpdateLineItem",
+				"action":         "checking invoice status",
+				"current_status": invoice.Status,
+			},
+		})
+	}
+
+	// Get line item to verify it exists and belongs to the invoice
+	lineItem, lineItemErr := s.repo.GetLineItem(ctx, input.LineItemID)
+	if lineItemErr != nil {
+		if errors.Is(lineItemErr, gorm.ErrRecordNotFound) {
+			return nil, pkg.NotFoundError("LineItemNotFound", &pkg.RentLoopErrorParams{
+				Err: lineItemErr,
+			})
+		}
+		return nil, pkg.InternalServerError(lineItemErr.Error(), &pkg.RentLoopErrorParams{
+			Err: lineItemErr,
+			Metadata: map[string]string{
+				"function": "UpdateLineItem",
+				"action":   "getting line item",
+			},
+		})
+	}
+
+	// Verify line item belongs to the invoice
+	if lineItem.InvoiceID == nil || *lineItem.InvoiceID != input.InvoiceID {
+		return nil, pkg.BadRequestError("Line item does not belong to this invoice", &pkg.RentLoopErrorParams{
+			Metadata: map[string]string{
+				"function": "UpdateLineItem",
+				"action":   "verifying line item ownership",
+			},
+		})
+	}
+
+	// Store old amount for invoice total recalculation
+	oldTotalAmount := lineItem.TotalAmount
+
+	// Update line item fields if provided
+	if input.Label != nil {
+		lineItem.Label = *input.Label
+	}
+
+	if input.Category != nil {
+		lineItem.Category = *input.Category
+	}
+
+	if input.Quantity != nil {
+		lineItem.Quantity = *input.Quantity
+	}
+
+	if input.UnitAmount != nil {
+		lineItem.UnitAmount = *input.UnitAmount
+	}
+
+	if input.TotalAmount != nil {
+		lineItem.TotalAmount = *input.TotalAmount
+	}
+
+	if input.Currency != nil {
+		// Validate currency matches invoice currency
+		if *input.Currency != invoice.Currency {
+			return nil, pkg.BadRequestError("Line item currency must match invoice currency", &pkg.RentLoopErrorParams{
+				Metadata: map[string]string{
+					"function":         "UpdateLineItem",
+					"action":           "validating currency",
+					"invoice_currency": invoice.Currency,
+					"input_currency":   *input.Currency,
+				},
+			})
+		}
+		lineItem.Currency = *input.Currency
+	}
+
+	if input.Metadata != nil {
+		json, err := lib.InterfaceToJSON(*input.Metadata)
+		if err != nil {
+			return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{
+				Err: err,
+				Metadata: map[string]string{
+					"function": "UpdateLineItem",
+					"action":   "marshalling metadata",
+				},
+			})
+		}
+		lineItem.Metadata = json
+	}
+
+	transaction := s.appCtx.DB.Begin()
+	transCtx := lib.WithTransaction(ctx, transaction)
+
+	// Update line item
+	updateErr := s.repo.UpdateLineItem(transCtx, lineItem)
+	if updateErr != nil {
+		transaction.Rollback()
+		return nil, pkg.InternalServerError(updateErr.Error(), &pkg.RentLoopErrorParams{
+			Err: updateErr,
+			Metadata: map[string]string{
+				"function": "UpdateLineItem",
+				"action":   "updating line item",
+			},
+		})
+	}
+
+	// Recalculate invoice totals
+	amountDifference := lineItem.TotalAmount - oldTotalAmount
+	invoice.SubTotal += amountDifference
+	invoice.TotalAmount = invoice.SubTotal + invoice.Taxes
+
+	invoiceErr := s.repo.Update(transCtx, invoice)
+	if invoiceErr != nil {
+		transaction.Rollback()
+		return nil, pkg.InternalServerError(invoiceErr.Error(), &pkg.RentLoopErrorParams{
+			Err: invoiceErr,
+			Metadata: map[string]string{
+				"function": "UpdateLineItem",
+				"action":   "updating invoice totals",
+			},
+		})
+	}
+
+	if commitErr := transaction.Commit().Error; commitErr != nil {
+		transaction.Rollback()
+		return nil, pkg.InternalServerError(commitErr.Error(), &pkg.RentLoopErrorParams{
+			Err: commitErr,
+			Metadata: map[string]string{
+				"function": "UpdateLineItem",
+				"action":   "committing transaction",
+			},
+		})
+	}
+
+	return lineItem, nil
+}
+
 func (s *invoiceService) GetLineItems(ctx context.Context, invoiceID string) ([]models.InvoiceLineItem, error) {
 	lineItems, err := s.repo.GetLineItems(ctx, invoiceID)
 	if err != nil {
@@ -980,6 +1261,38 @@ func (s *invoiceService) GetLineItems(ctx context.Context, invoiceID string) ([]
 	}
 
 	return lineItems, nil
+}
+
+// recordIssuanceEntry posts the journal entry for an invoice being issued.
+// It is called both on create (status=ISSUED) and when a DRAFT invoice is issued later.
+func (s *invoiceService) recordIssuanceEntry(ctx context.Context, invoice *models.Invoice) error {
+	journalLines := buildJournalEntryForInvoice(invoice, s.appCtx.Config.ChartOfAccounts)
+	if len(journalLines) == 0 {
+		return nil
+	}
+
+	issuedAt := time.Now()
+	if invoice.IssuedAt != nil {
+		issuedAt = *invoice.IssuedAt
+	}
+	transactionDate := issuedAt.Format(time.RFC3339)
+
+	_, err := s.accountingService.RecordInvoiceCreated(ctx, accounting.CreateJournalEntryRequest{
+		Status:          string(accounting.JournalEntryStatusPosted),
+		Reference:       invoice.Code,
+		TransactionDate: &transactionDate,
+		Metadata: map[string]any{
+			"invoice_id":   invoice.ID.String(),
+			"invoice_code": invoice.Code,
+			"context_type": invoice.ContextType,
+			"payer_type":   invoice.PayerType,
+			"payee_type":   invoice.PayeeType,
+			"client_id":    lib.SafeString(invoice.ClientID),
+			"property_id":  lib.SafeString(invoice.PropertyID),
+		},
+		Lines: journalLines,
+	})
+	return err
 }
 
 // ============================================================================
@@ -1054,7 +1367,7 @@ func buildLeaseRentJournalEntry(
 	// Credit appropriate accounts based on line items
 	for _, lineItem := range invoice.LineItems {
 		switch lineItem.Category {
-		case "RENT":
+		case "RENT", "OTHER", "BOOKING_FEE":
 			lines = append(lines, accounting.CreateJournalEntryLineRequest{
 				AccountID: accounts.RentalIncomeID,
 				Debit:     0,
@@ -1158,7 +1471,7 @@ func buildJournalEntryForInvoice(
 	switch invoice.ContextType {
 	case "TENANT_APPLICATION":
 		return buildTenantApplicationJournalEntry(invoice, accounts)
-	case "LEASE_RENT":
+	case "LEASE_RENT", "BOOKING_FEE":
 		return buildLeaseRentJournalEntry(invoice, accounts)
 	case "SAAS_FEE":
 		return buildSaasJournalEntry(invoice, accounts)
@@ -1167,9 +1480,91 @@ func buildJournalEntryForInvoice(
 			invoice,
 			accounts,
 		)
+	case "LEASE_TERMINATION":
+		return buildLeaseTerminationJournalEntry(invoice, accounts)
 	default:
 		return []accounting.CreateJournalEntryLineRequest{}
 	}
+}
+
+// buildLeaseTerminationJournalEntry builds journal entry lines for lease termination invoices.
+// Each line item generates its own balanced debit/credit pair:
+//   - EARLY_TERMINATION_FEE: Debit AR / Credit Rental Income
+//   - DAMAGE_CHARGE:         Debit AR / Credit Maintenance Reimbursement
+//   - DEPOSIT_REFUND:        Debit Security Deposits Held / Credit Accounts Payable
+//   - RENT_REFUND:           Debit Rental Income / Credit Accounts Payable
+func buildLeaseTerminationJournalEntry(
+	invoice *models.Invoice,
+	accounts config.IChartOfAccounts,
+) []accounting.CreateJournalEntryLineRequest {
+	lines := []accounting.CreateJournalEntryLineRequest{}
+
+	for _, lineItem := range invoice.LineItems {
+		switch lineItem.Category {
+		case "EARLY_TERMINATION_FEE":
+			lines = append(lines,
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.AccountsReceivableID,
+					Debit:     lineItem.TotalAmount,
+					Credit:    0,
+					Notes:     lib.StringPointer(lineItem.Label),
+				},
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.RentalIncomeID,
+					Debit:     0,
+					Credit:    lineItem.TotalAmount,
+					Notes:     lib.StringPointer(lineItem.Label),
+				},
+			)
+		case "DAMAGE_CHARGE":
+			lines = append(lines,
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.AccountsReceivableID,
+					Debit:     lineItem.TotalAmount,
+					Credit:    0,
+					Notes:     lib.StringPointer(lineItem.Label),
+				},
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.MaintenanceReimbursementID,
+					Debit:     0,
+					Credit:    lineItem.TotalAmount,
+					Notes:     lib.StringPointer(lineItem.Label),
+				},
+			)
+		case "DEPOSIT_REFUND":
+			lines = append(lines,
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.SecurityDepositsHeldID,
+					Debit:     lineItem.TotalAmount,
+					Credit:    0,
+					Notes:     lib.StringPointer(lineItem.Label),
+				},
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.AccountsPayableID,
+					Debit:     0,
+					Credit:    lineItem.TotalAmount,
+					Notes:     lib.StringPointer(lineItem.Label),
+				},
+			)
+		case "RENT_REFUND":
+			lines = append(lines,
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.RentalIncomeID,
+					Debit:     lineItem.TotalAmount,
+					Credit:    0,
+					Notes:     lib.StringPointer(lineItem.Label),
+				},
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.AccountsPayableID,
+					Debit:     0,
+					Credit:    lineItem.TotalAmount,
+					Notes:     lib.StringPointer(lineItem.Label),
+				},
+			)
+		}
+	}
+
+	return lines
 }
 
 // buildReversingJournalEntry creates reversing journal entry lines by swapping debits and credits.
@@ -1198,18 +1593,8 @@ func buildReversingJournalEntry(
 	return reversedLines
 }
 
-// buildPaymentJournalLines builds journal entry lines for a payment verification.
-//
-// The settlement entry mirrors the invoice creation entry:
-//
-//   - EXTERNAL payer: no entry was created at invoice time, so none here either.
-//
-//   - Expense invoice with EXTERNAL payee (Shape B — platform pays vendor):
-//     invoice debited PropertyManagementExpense and credited AccountsPayable.
-//     Settlement clears the payable: Debit AP / Credit Cash.
-//
-//   - All other invoices (Shape A — platform collects):
-//     invoice debited AR. Settlement: Debit Cash / Credit AR.
+// buildPaymentJournalLines routes to the appropriate payment settlement builder
+// based on context type, mirroring the structure of buildJournalEntryForInvoice.
 func buildPaymentJournalLines(
 	invoice *models.Invoice,
 	paymentAmount int64,
@@ -1219,10 +1604,40 @@ func buildPaymentJournalLines(
 		return []accounting.CreateJournalEntryLineRequest{}
 	}
 
-	isExpenseContext := invoice.ContextType == "GENERAL_EXPENSE" || invoice.ContextType == "MAINTENANCE_EXPENSE"
+	switch invoice.ContextType {
+	case "GENERAL_EXPENSE", "MAINTENANCE_EXPENSE":
+		return buildExpensePaymentJournalLines(invoice, paymentAmount, accounts)
+	case "LEASE_TERMINATION":
+		return buildLeaseTerminationPaymentJournalLines(invoice, accounts)
+	default:
+		// TENANT_APPLICATION, LEASE_RENT, BOOKING_FEE, SAAS_FEE:
+		// cash received, AR cleared
+		return []accounting.CreateJournalEntryLineRequest{
+			{
+				AccountID: accounts.CashBankAccountID,
+				Debit:     paymentAmount,
+				Credit:    0,
+				Notes:     lib.StringPointer(fmt.Sprintf("Cash receipt for invoice %s", invoice.Code)),
+			},
+			{
+				AccountID: accounts.AccountsReceivableID,
+				Debit:     0,
+				Credit:    paymentAmount,
+				Notes:     lib.StringPointer(fmt.Sprintf("AR cleared on payment for invoice %s", invoice.Code)),
+			},
+		}
+	}
+}
 
-	if isExpenseContext && invoice.PayeeType == "EXTERNAL" {
-		// Platform disbursed to vendor — clear the accounts payable liability
+// buildExpensePaymentJournalLines settles an expense invoice.
+// Expense invoices with an EXTERNAL payee debited PropertyManagementExpense and
+// credited AccountsPayable at issuance. Settlement clears the payable with cash.
+func buildExpensePaymentJournalLines(
+	invoice *models.Invoice,
+	paymentAmount int64,
+	accounts config.IChartOfAccounts,
+) []accounting.CreateJournalEntryLineRequest {
+	if invoice.PayeeType == "EXTERNAL" {
 		return []accounting.CreateJournalEntryLineRequest{
 			{
 				AccountID: accounts.AccountsPayableID,
@@ -1238,20 +1653,66 @@ func buildPaymentJournalLines(
 			},
 		}
 	}
-
-	// Default: cash received, AR cleared
+	// Internal expense — standard cash-in / AR-clear
 	return []accounting.CreateJournalEntryLineRequest{
 		{
 			AccountID: accounts.CashBankAccountID,
 			Debit:     paymentAmount,
 			Credit:    0,
-			Notes:     lib.StringPointer(fmt.Sprintf("Cash receipt for invoice %s", invoice.Code)),
+			Notes:     lib.StringPointer(fmt.Sprintf("Cash receipt for expense invoice %s", invoice.Code)),
 		},
 		{
 			AccountID: accounts.AccountsReceivableID,
 			Debit:     0,
 			Credit:    paymentAmount,
-			Notes:     lib.StringPointer(fmt.Sprintf("AR reduction on payment for invoice %s", invoice.Code)),
+			Notes:     lib.StringPointer(fmt.Sprintf("AR cleared on payment for invoice %s", invoice.Code)),
 		},
 	}
+}
+
+// buildLeaseTerminationPaymentJournalLines settles a lease termination invoice per line item.
+// Fee categories (EARLY_TERMINATION_FEE, DAMAGE_CHARGE) clear AR with cash received.
+// Refund categories (DEPOSIT_REFUND, RENT_REFUND) clear AP with cash disbursed.
+func buildLeaseTerminationPaymentJournalLines(
+	invoice *models.Invoice,
+	accounts config.IChartOfAccounts,
+) []accounting.CreateJournalEntryLineRequest {
+	lines := []accounting.CreateJournalEntryLineRequest{}
+
+	for _, lineItem := range invoice.LineItems {
+		switch lineItem.Category {
+		case "EARLY_TERMINATION_FEE", "DAMAGE_CHARGE":
+			lines = append(lines,
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.CashBankAccountID,
+					Debit:     lineItem.TotalAmount,
+					Credit:    0,
+					Notes:     lib.StringPointer(fmt.Sprintf("Cash received: %s", lineItem.Label)),
+				},
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.AccountsReceivableID,
+					Debit:     0,
+					Credit:    lineItem.TotalAmount,
+					Notes:     lib.StringPointer(fmt.Sprintf("AR cleared: %s", lineItem.Label)),
+				},
+			)
+		case "DEPOSIT_REFUND", "RENT_REFUND":
+			lines = append(lines,
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.AccountsPayableID,
+					Debit:     lineItem.TotalAmount,
+					Credit:    0,
+					Notes:     lib.StringPointer(fmt.Sprintf("AP settled: %s", lineItem.Label)),
+				},
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.CashBankAccountID,
+					Debit:     0,
+					Credit:    lineItem.TotalAmount,
+					Notes:     lib.StringPointer(fmt.Sprintf("Cash disbursed: %s", lineItem.Label)),
+				},
+			)
+		}
+	}
+
+	return lines
 }

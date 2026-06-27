@@ -3,6 +3,7 @@ import { AlertCircleIcon, CheckCircle2Icon } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Link, useFetcher, useLoaderData } from 'react-router'
 import { z } from 'zod'
+import { ExternalLink } from '~/components/external-link'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 
 import { Button } from '~/components/ui/button'
@@ -30,7 +31,7 @@ const ValidationSchema = z.object({
 type FormSchema = z.infer<typeof ValidationSchema>
 
 export function LoginModule() {
-	const { error, success } = useLoaderData()
+	const { error, success, rentLoopWebsiteUrl } = useLoaderData()
 	const fetcher = useFetcher<{ error: string }>()
 
 	const rhfMethods = useForm<FormSchema>({
@@ -62,7 +63,9 @@ export function LoginModule() {
 									<TypographyH3 className="mt-4">Welcome back!</TypographyH3>
 									<FieldDescription>
 										Don&apos;t have an account?{' '}
-										<Link to="/apply">Apply as landlord/real estate</Link>
+										<Link to="/apply" className="font-semibold">
+											Apply as landlord/real estate
+										</Link>
 									</FieldDescription>
 								</div>
 
@@ -138,7 +141,14 @@ export function LoginModule() {
 					</Form>
 					<FieldDescription className="px-6 text-center">
 						By clicking continue, you agree to our{' '}
-						<a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+						<ExternalLink to={`${rentLoopWebsiteUrl}/terms`}>
+							Terms of Service
+						</ExternalLink>{' '}
+						and{' '}
+						<ExternalLink to={`${rentLoopWebsiteUrl}/privacy-policy`}>
+							Privacy Policy
+						</ExternalLink>
+						.
 					</FieldDescription>
 				</div>
 			</div>
