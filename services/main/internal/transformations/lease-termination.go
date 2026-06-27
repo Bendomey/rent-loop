@@ -23,6 +23,13 @@ type OutputLeaseTermination struct {
 	DocumentUrl  *string `json:"document_url,omitempty"  example:"https://example.com/termination.pdf"`
 	DocumentID   *string `json:"document_id,omitempty"   example:"4fce5dc8-8114-4ab2-a94b-b4536c27f43b"`
 
+	CreatedAt time.Time `json:"created_at" example:"2024-06-01T09:00:00Z"`
+	UpdatedAt time.Time `json:"updated_at" example:"2024-06-10T09:00:00Z"`
+}
+
+type OutputAdminLeaseTermination struct {
+	OutputLeaseTermination
+
 	InitiatedById string            `json:"initiated_by_id"        example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"`
 	InitiatedBy   *OutputClientUser `json:"initiated_by,omitempty"`
 
@@ -33,12 +40,9 @@ type OutputLeaseTermination struct {
 	CancelledAt   *time.Time        `json:"cancelled_at,omitempty"    example:"2024-12-01T10:00:00Z"`
 	CancelledById *string           `json:"cancelled_by_id,omitempty" example:"b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"`
 	CancelledBy   *OutputClientUser `json:"cancelled_by,omitempty"`
-
-	CreatedAt time.Time `json:"created_at" example:"2024-06-01T09:00:00Z"`
-	UpdatedAt time.Time `json:"updated_at" example:"2024-06-10T09:00:00Z"`
 }
 
-func DBLeaseTerminationToRest(t *models.LeaseTermination) any {
+func DBAdminLeaseTerminationToRest(t *models.LeaseTermination) any {
 	if t == nil || t.ID == uuid.Nil {
 		return nil
 	}
@@ -63,6 +67,28 @@ func DBLeaseTerminationToRest(t *models.LeaseTermination) any {
 		"cancelled_at":       t.CancelledAt,
 		"cancelled_by_id":    t.CancelledById,
 		"cancelled_by":       DBClientUserToRest(t.CancelledBy),
+		"created_at":         t.CreatedAt,
+		"updated_at":         t.UpdatedAt,
+	}
+}
+
+func DBLeaseTerminationToRest(t *models.LeaseTermination) any {
+	if t == nil || t.ID == uuid.Nil {
+		return nil
+	}
+
+	return map[string]any{
+		"id":                 t.ID,
+		"code":               t.Code,
+		"lease_id":           t.LeaseID,
+		"type":               t.Type,
+		"reason":             t.Reason,
+		"status":             t.Status,
+		"lease_checklist_id": t.LeaseChecklistID,
+		"lease_checklist":    DBLeaseChecklistToRest(t.LeaseChecklist),
+		"document_mode":      t.DocumentMode,
+		"document_url":       t.DocumentUrl,
+		"document_id":        t.DocumentID,
 		"created_at":         t.CreatedAt,
 		"updated_at":         t.UpdatedAt,
 	}

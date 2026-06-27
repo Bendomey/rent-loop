@@ -1327,6 +1327,8 @@ definitions:
         type: string
       lease_id:
         type: string
+      lease_termination_id:
+        type: string
       role:
         enum:
         - TENANT
@@ -1552,6 +1554,8 @@ definitions:
       document_id:
         type: string
       lease_id:
+        type: string
+      lease_termination_id:
         type: string
       signature_url:
         type: string
@@ -2728,12 +2732,12 @@ definitions:
       ip_address:
         example: 192.168.1.1
         type: string
+      lease_id:
+        description: TenantApplication   *OutputAdminTenantApplication `json:"tenant_application,omitempty"`
+        example: 770e8400-e29b-41d4-a716-446655440000
+        type: string
       role:
-        description: |-
-          TenantApplicationID *string                       `json:"tenant_application_id,omitempty" example:"660e8400-e29b-41d4-a716-446655440000"`
-          TenantApplication   *OutputAdminTenantApplication `json:"tenant_application,omitempty"`
-          LeaseID             *string                       `json:"lease_id,omitempty"              example:"770e8400-e29b-41d4-a716-446655440000"`
-          Lease               *OutputAdminLease             `json:"lease,omitempty"`
+        description: Lease               *OutputAdminLease             `json:"lease,omitempty"`
         example: TENANT
         type: string
       signature_url:
@@ -2746,6 +2750,9 @@ definitions:
         type: string
       signed_by_name:
         example: John Doe
+        type: string
+      tenant_application_id:
+        example: 660e8400-e29b-41d4-a716-446655440000
         type: string
       updated_at:
         example: "2024-06-10T09:00:00Z"
@@ -2866,6 +2873,68 @@ definitions:
         example: "2024-07-02T10:00:00Z"
         type: string
     type: object
+  transformations.OutputAdminLeaseTermination:
+    properties:
+      cancelled_at:
+        example: "2024-12-01T10:00:00Z"
+        type: string
+      cancelled_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      cancelled_by_id:
+        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
+        type: string
+      code:
+        example: 2606ABC123
+        type: string
+      completed_at:
+        example: "2024-12-01T10:00:00Z"
+        type: string
+      completed_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      completed_by_id:
+        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
+        type: string
+      created_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      document_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      document_mode:
+        example: MANUAL
+        type: string
+      document_url:
+        example: https://example.com/termination.pdf
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      initiated_by:
+        $ref: '#/definitions/transformations.OutputClientUser'
+      initiated_by_id:
+        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
+        type: string
+      lease_checklist:
+        $ref: '#/definitions/transformations.OutputLeaseChecklist'
+      lease_checklist_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      lease_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      reason:
+        example: Both parties agreed to end the tenancy
+        type: string
+      status:
+        example: LeaseTermination.Status.InProgress
+        type: string
+      type:
+        example: MUTUAL_AGREEMENT
+        type: string
+      updated_at:
+        example: "2024-06-10T09:00:00Z"
+        type: string
+    type: object
   transformations.OutputAdminSigningToken:
     properties:
       created_at:
@@ -2899,6 +2968,11 @@ definitions:
         $ref: '#/definitions/transformations.OutputAdminLease'
       lease_id:
         example: 770e8400-e29b-41d4-a716-446655440000
+        type: string
+      lease_termination:
+        $ref: '#/definitions/transformations.OutputAdminLeaseTermination'
+      lease_termination_id:
+        example: 880e8400-e29b-41d4-a716-446655440000
         type: string
       role:
         example: TENANT
@@ -3549,6 +3623,11 @@ definitions:
       lease_id:
         example: 770e8400-e29b-41d4-a716-446655440000
         type: string
+      lease_termination:
+        $ref: '#/definitions/transformations.OutputLeaseTermination'
+      lease_termination_id:
+        example: 880e8400-e29b-41d4-a716-446655440000
+        type: string
       role:
         example: TENANT
         type: string
@@ -3963,24 +4042,8 @@ definitions:
     type: object
   transformations.OutputLeaseTermination:
     properties:
-      cancelled_at:
-        example: "2024-12-01T10:00:00Z"
-        type: string
-      cancelled_by:
-        $ref: '#/definitions/transformations.OutputClientUser'
-      cancelled_by_id:
-        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
-        type: string
       code:
         example: 2606ABC123
-        type: string
-      completed_at:
-        example: "2024-12-01T10:00:00Z"
-        type: string
-      completed_by:
-        $ref: '#/definitions/transformations.OutputClientUser'
-      completed_by_id:
-        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
         type: string
       created_at:
         example: "2024-06-01T09:00:00Z"
@@ -3996,11 +4059,6 @@ definitions:
         type: string
       id:
         example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
-        type: string
-      initiated_by:
-        $ref: '#/definitions/transformations.OutputClientUser'
-      initiated_by_id:
-        example: b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456
         type: string
       lease_checklist:
         $ref: '#/definitions/transformations.OutputLeaseChecklist'
@@ -4338,6 +4396,11 @@ definitions:
         $ref: '#/definitions/transformations.OutputLease'
       lease_id:
         example: 770e8400-e29b-41d4-a716-446655440000
+        type: string
+      lease_termination:
+        $ref: '#/definitions/transformations.OutputLeaseTermination'
+      lease_termination_id:
+        example: 880e8400-e29b-41d4-a716-446655440000
         type: string
       role:
         example: TENANT
@@ -11632,6 +11695,9 @@ paths:
         type: array
       - in: query
         name: lease_id
+        type: string
+      - in: query
+        name: lease_termination_id
         type: string
       - enum:
         - asc

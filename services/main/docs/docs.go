@@ -10765,6 +10765,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "name": "lease_termination_id",
+                        "in": "query"
+                    },
+                    {
                         "enum": [
                             "asc",
                             "desc"
@@ -18893,6 +18898,9 @@ const docTemplate = `{
                 "lease_id": {
                     "type": "string"
                 },
+                "lease_termination_id": {
+                    "type": "string"
+                },
                 "role": {
                     "type": "string",
                     "enum": [
@@ -19208,6 +19216,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "lease_id": {
+                    "type": "string"
+                },
+                "lease_termination_id": {
                     "type": "string"
                 },
                 "signature_url": {
@@ -20854,8 +20865,13 @@ const docTemplate = `{
                     "type": "string",
                     "example": "192.168.1.1"
                 },
+                "lease_id": {
+                    "description": "TenantApplication   *OutputAdminTenantApplication ` + "`" + `json:\"tenant_application,omitempty\"` + "`" + `",
+                    "type": "string",
+                    "example": "770e8400-e29b-41d4-a716-446655440000"
+                },
                 "role": {
-                    "description": "TenantApplicationID *string                       ` + "`" + `json:\"tenant_application_id,omitempty\" example:\"660e8400-e29b-41d4-a716-446655440000\"` + "`" + `\nTenantApplication   *OutputAdminTenantApplication ` + "`" + `json:\"tenant_application,omitempty\"` + "`" + `\nLeaseID             *string                       ` + "`" + `json:\"lease_id,omitempty\"              example:\"770e8400-e29b-41d4-a716-446655440000\"` + "`" + `\nLease               *OutputAdminLease             ` + "`" + `json:\"lease,omitempty\"` + "`" + `",
+                    "description": "Lease               *OutputAdminLease             ` + "`" + `json:\"lease,omitempty\"` + "`" + `",
                     "type": "string",
                     "example": "TENANT"
                 },
@@ -20873,6 +20889,10 @@ const docTemplate = `{
                 "signed_by_name": {
                     "type": "string",
                     "example": "John Doe"
+                },
+                "tenant_application_id": {
+                    "type": "string",
+                    "example": "660e8400-e29b-41d4-a716-446655440000"
                 },
                 "updated_at": {
                     "type": "string",
@@ -21037,6 +21057,91 @@ const docTemplate = `{
                 }
             }
         },
+        "transformations.OutputAdminLeaseTermination": {
+            "type": "object",
+            "properties": {
+                "cancelled_at": {
+                    "type": "string",
+                    "example": "2024-12-01T10:00:00Z"
+                },
+                "cancelled_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "cancelled_by_id": {
+                    "type": "string",
+                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "2606ABC123"
+                },
+                "completed_at": {
+                    "type": "string",
+                    "example": "2024-12-01T10:00:00Z"
+                },
+                "completed_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "completed_by_id": {
+                    "type": "string",
+                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-06-01T09:00:00Z"
+                },
+                "document_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "document_mode": {
+                    "type": "string",
+                    "example": "MANUAL"
+                },
+                "document_url": {
+                    "type": "string",
+                    "example": "https://example.com/termination.pdf"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "initiated_by": {
+                    "$ref": "#/definitions/transformations.OutputClientUser"
+                },
+                "initiated_by_id": {
+                    "type": "string",
+                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
+                },
+                "lease_checklist": {
+                    "$ref": "#/definitions/transformations.OutputLeaseChecklist"
+                },
+                "lease_checklist_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "lease_id": {
+                    "type": "string",
+                    "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
+                },
+                "reason": {
+                    "type": "string",
+                    "example": "Both parties agreed to end the tenancy"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "LeaseTermination.Status.InProgress"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "MUTUAL_AGREEMENT"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-06-10T09:00:00Z"
+                }
+            }
+        },
         "transformations.OutputAdminSigningToken": {
             "type": "object",
             "properties": {
@@ -21083,6 +21188,13 @@ const docTemplate = `{
                 "lease_id": {
                     "type": "string",
                     "example": "770e8400-e29b-41d4-a716-446655440000"
+                },
+                "lease_termination": {
+                    "$ref": "#/definitions/transformations.OutputAdminLeaseTermination"
+                },
+                "lease_termination_id": {
+                    "type": "string",
+                    "example": "880e8400-e29b-41d4-a716-446655440000"
                 },
                 "role": {
                     "type": "string",
@@ -21970,6 +22082,13 @@ const docTemplate = `{
                     "type": "string",
                     "example": "770e8400-e29b-41d4-a716-446655440000"
                 },
+                "lease_termination": {
+                    "$ref": "#/definitions/transformations.OutputLeaseTermination"
+                },
+                "lease_termination_id": {
+                    "type": "string",
+                    "example": "880e8400-e29b-41d4-a716-446655440000"
+                },
                 "role": {
                     "type": "string",
                     "example": "TENANT"
@@ -22544,31 +22663,9 @@ const docTemplate = `{
         "transformations.OutputLeaseTermination": {
             "type": "object",
             "properties": {
-                "cancelled_at": {
-                    "type": "string",
-                    "example": "2024-12-01T10:00:00Z"
-                },
-                "cancelled_by": {
-                    "$ref": "#/definitions/transformations.OutputClientUser"
-                },
-                "cancelled_by_id": {
-                    "type": "string",
-                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
-                },
                 "code": {
                     "type": "string",
                     "example": "2606ABC123"
-                },
-                "completed_at": {
-                    "type": "string",
-                    "example": "2024-12-01T10:00:00Z"
-                },
-                "completed_by": {
-                    "$ref": "#/definitions/transformations.OutputClientUser"
-                },
-                "completed_by_id": {
-                    "type": "string",
-                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
                 },
                 "created_at": {
                     "type": "string",
@@ -22589,13 +22686,6 @@ const docTemplate = `{
                 "id": {
                     "type": "string",
                     "example": "4fce5dc8-8114-4ab2-a94b-b4536c27f43b"
-                },
-                "initiated_by": {
-                    "$ref": "#/definitions/transformations.OutputClientUser"
-                },
-                "initiated_by_id": {
-                    "type": "string",
-                    "example": "b3b2c9d0-6c8a-4e8b-9e7a-abcdef123456"
                 },
                 "lease_checklist": {
                     "$ref": "#/definitions/transformations.OutputLeaseChecklist"
@@ -23066,6 +23156,13 @@ const docTemplate = `{
                 "lease_id": {
                     "type": "string",
                     "example": "770e8400-e29b-41d4-a716-446655440000"
+                },
+                "lease_termination": {
+                    "$ref": "#/definitions/transformations.OutputLeaseTermination"
+                },
+                "lease_termination_id": {
+                    "type": "string",
+                    "example": "880e8400-e29b-41d4-a716-446655440000"
                 },
                 "role": {
                     "type": "string",

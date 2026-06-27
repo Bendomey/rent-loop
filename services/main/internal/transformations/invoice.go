@@ -99,6 +99,8 @@ func DBInvoiceToRest(i *models.Invoice) any {
 		"context_type":                   i.ContextType,
 		"context_tenant_application_id":  i.ContextTenantApplicationID,
 		"context_tenant_application":     DBAdminTenantApplicationToRest(i.ContextTenantApplication),
+		"context_lease_termination_id":   i.ContextLeaseTerminationID,
+		"context_lease_termination":      DBAdminLeaseTerminationToRest(i.ContextLeaseTermination),
 		"context_lease_id":               i.ContextLeaseID,
 		"context_lease":                  DBAdminLeaseToRest(i.ContextLease),
 		"context_maintenance_request_id": i.ContextMaintenanceRequestID,

@@ -81,7 +81,7 @@ func (h *LeaseTerminationHandler) CreateLeaseTermination(w http.ResponseWriter, 
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBLeaseTerminationToRest(termination),
+		"data": transformations.DBAdminLeaseTerminationToRest(termination),
 	})
 }
 
@@ -140,7 +140,7 @@ func (h *LeaseTerminationHandler) ListLeaseTerminations(w http.ResponseWriter, r
 
 	rows := make([]any, len(terminations))
 	for i, t := range terminations {
-		rows[i] = transformations.DBLeaseTerminationToRest(&t)
+		rows[i] = transformations.DBAdminLeaseTerminationToRest(&t)
 	}
 
 	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, rows, count))
@@ -179,7 +179,7 @@ func (h *LeaseTerminationHandler) GetLeaseTermination(w http.ResponseWriter, r *
 	}
 
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBLeaseTerminationToRest(termination),
+		"data": transformations.DBAdminLeaseTerminationToRest(termination),
 	})
 }
 
@@ -242,7 +242,7 @@ func (h *LeaseTerminationHandler) UpdateLeaseTermination(w http.ResponseWriter, 
 	}
 
 	json.NewEncoder(w).Encode(map[string]any{
-		"data": transformations.DBLeaseTerminationToRest(termination),
+		"data": transformations.DBAdminLeaseTerminationToRest(termination),
 	})
 }
 
