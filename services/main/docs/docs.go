@@ -8870,6 +8870,15 @@ const docTemplate = `{
                         "name": "termination_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "name": "populate",
+                        "in": "query"
                     }
                 ],
                 "responses": {

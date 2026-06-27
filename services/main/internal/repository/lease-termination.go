@@ -69,8 +69,12 @@ func (r *leaseTerminationRepository) List(
 	var terminations []models.LeaseTermination
 
 	db := r.DB.WithContext(ctx).Scopes(
+		IDsFilterScope("lease_terminations", filter.IDs),
 		leaseTerminationFilterScope("lease_id", filter.LeaseID),
 		leaseTerminationFilterScope("status", filter.Status),
+		DateRangeScope("lease_terminations", filter.DateRange),
+		SearchScope("lease_terminations", filter.Search),
+
 		PaginationScope(filter.Page, filter.PageSize),
 		OrderScope("lease_terminations", filter.OrderBy, filter.Order),
 	)
@@ -90,8 +94,11 @@ func (r *leaseTerminationRepository) List(
 func (r *leaseTerminationRepository) Count(ctx context.Context, filter ListLeaseTerminationsFilter) (int64, error) {
 	var count int64
 	result := r.DB.WithContext(ctx).Model(&models.LeaseTermination{}).Scopes(
+		IDsFilterScope("lease_terminations", filter.IDs),
 		leaseTerminationFilterScope("lease_id", filter.LeaseID),
 		leaseTerminationFilterScope("status", filter.Status),
+		DateRangeScope("lease_terminations", filter.DateRange),
+		SearchScope("lease_terminations", filter.Search),
 	).Count(&count)
 	if result.Error != nil {
 		return 0, result.Error

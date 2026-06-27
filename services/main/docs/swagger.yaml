@@ -10468,6 +10468,12 @@ paths:
         name: termination_id
         required: true
         type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: string
+        name: populate
+        type: array
       produces:
       - application/json
       responses:

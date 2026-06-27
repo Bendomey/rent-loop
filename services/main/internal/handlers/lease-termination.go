@@ -146,6 +146,10 @@ func (h *LeaseTerminationHandler) ListLeaseTerminations(w http.ResponseWriter, r
 	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, rows, count))
 }
 
+type GetLeaseTerminationQuery struct {
+	lib.GetOneQueryInput
+}
+
 // GetLeaseTermination godoc
 //
 //	@Summary		Get lease termination (Admin)
@@ -158,6 +162,7 @@ func (h *LeaseTerminationHandler) ListLeaseTerminations(w http.ResponseWriter, r
 //	@Param			property_id		path		string												true	"Property ID"
 //	@Param			lease_id		path		string												true	"Lease ID"
 //	@Param			termination_id	path		string												true	"Termination ID"
+//	@Param			q				query		GetLeaseTerminationQuery							true	"LeaseTerminations query parameters"
 //	@Success		200				{object}	object{data=transformations.OutputLeaseTermination}	"Termination"
 //	@Failure		401				{object}	string												"Invalid or absent authentication token"
 //	@Failure		404				{object}	lib.HTTPError										"Not found"
