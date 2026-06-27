@@ -101,6 +101,7 @@ type CreateInvoiceInput struct {
 	ContextBookingID            *string
 	ContextMaintenanceRequestID *string
 	ContextExpenseID            *string
+	ContextLeaseTerminationID   *string
 	TotalAmount                 int64
 	Taxes                       int64
 	SubTotal                    int64
@@ -180,6 +181,7 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, input CreateInvoiceI
 		ContextBookingID:            input.ContextBookingID,
 		ContextMaintenanceRequestID: input.ContextMaintenanceRequestID,
 		ContextExpenseID:            input.ContextExpenseID,
+		ContextLeaseTerminationID:   input.ContextLeaseTerminationID,
 		TotalAmount:                 input.TotalAmount,
 		Taxes:                       input.Taxes,
 		SubTotal:                    input.SubTotal,
@@ -1478,9 +1480,91 @@ func buildJournalEntryForInvoice(
 			invoice,
 			accounts,
 		)
+	case "LEASE_TERMINATION":
+		return buildLeaseTerminationJournalEntry(invoice, accounts)
 	default:
 		return []accounting.CreateJournalEntryLineRequest{}
 	}
+}
+
+// buildLeaseTerminationJournalEntry builds journal entry lines for lease termination invoices.
+// Each line item generates its own balanced debit/credit pair:
+//   - EARLY_TERMINATION_FEE: Debit AR / Credit Rental Income
+//   - DAMAGE_CHARGE:         Debit AR / Credit Maintenance Reimbursement
+//   - DEPOSIT_REFUND:        Debit Security Deposits Held / Credit Accounts Payable
+//   - RENT_REFUND:           Debit Rental Income / Credit Accounts Payable
+func buildLeaseTerminationJournalEntry(
+	invoice *models.Invoice,
+	accounts config.IChartOfAccounts,
+) []accounting.CreateJournalEntryLineRequest {
+	lines := []accounting.CreateJournalEntryLineRequest{}
+
+	for _, lineItem := range invoice.LineItems {
+		switch lineItem.Category {
+		case "EARLY_TERMINATION_FEE":
+			lines = append(lines,
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.AccountsReceivableID,
+					Debit:     lineItem.TotalAmount,
+					Credit:    0,
+					Notes:     lib.StringPointer(lineItem.Label),
+				},
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.RentalIncomeID,
+					Debit:     0,
+					Credit:    lineItem.TotalAmount,
+					Notes:     lib.StringPointer(lineItem.Label),
+				},
+			)
+		case "DAMAGE_CHARGE":
+			lines = append(lines,
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.AccountsReceivableID,
+					Debit:     lineItem.TotalAmount,
+					Credit:    0,
+					Notes:     lib.StringPointer(lineItem.Label),
+				},
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.MaintenanceReimbursementID,
+					Debit:     0,
+					Credit:    lineItem.TotalAmount,
+					Notes:     lib.StringPointer(lineItem.Label),
+				},
+			)
+		case "DEPOSIT_REFUND":
+			lines = append(lines,
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.SecurityDepositsHeldID,
+					Debit:     lineItem.TotalAmount,
+					Credit:    0,
+					Notes:     lib.StringPointer(lineItem.Label),
+				},
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.AccountsPayableID,
+					Debit:     0,
+					Credit:    lineItem.TotalAmount,
+					Notes:     lib.StringPointer(lineItem.Label),
+				},
+			)
+		case "RENT_REFUND":
+			lines = append(lines,
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.RentalIncomeID,
+					Debit:     lineItem.TotalAmount,
+					Credit:    0,
+					Notes:     lib.StringPointer(lineItem.Label),
+				},
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.AccountsPayableID,
+					Debit:     0,
+					Credit:    lineItem.TotalAmount,
+					Notes:     lib.StringPointer(lineItem.Label),
+				},
+			)
+		}
+	}
+
+	return lines
 }
 
 // buildReversingJournalEntry creates reversing journal entry lines by swapping debits and credits.
@@ -1509,18 +1593,8 @@ func buildReversingJournalEntry(
 	return reversedLines
 }
 
-// buildPaymentJournalLines builds journal entry lines for a payment verification.
-//
-// The settlement entry mirrors the invoice creation entry:
-//
-//   - EXTERNAL payer: no entry was created at invoice time, so none here either.
-//
-//   - Expense invoice with EXTERNAL payee (Shape B — platform pays vendor):
-//     invoice debited PropertyManagementExpense and credited AccountsPayable.
-//     Settlement clears the payable: Debit AP / Credit Cash.
-//
-//   - All other invoices (Shape A — platform collects):
-//     invoice debited AR. Settlement: Debit Cash / Credit AR.
+// buildPaymentJournalLines routes to the appropriate payment settlement builder
+// based on context type, mirroring the structure of buildJournalEntryForInvoice.
 func buildPaymentJournalLines(
 	invoice *models.Invoice,
 	paymentAmount int64,
@@ -1530,10 +1604,40 @@ func buildPaymentJournalLines(
 		return []accounting.CreateJournalEntryLineRequest{}
 	}
 
-	isExpenseContext := invoice.ContextType == "GENERAL_EXPENSE" || invoice.ContextType == "MAINTENANCE_EXPENSE"
+	switch invoice.ContextType {
+	case "GENERAL_EXPENSE", "MAINTENANCE_EXPENSE":
+		return buildExpensePaymentJournalLines(invoice, paymentAmount, accounts)
+	case "LEASE_TERMINATION":
+		return buildLeaseTerminationPaymentJournalLines(invoice, accounts)
+	default:
+		// TENANT_APPLICATION, LEASE_RENT, BOOKING_FEE, SAAS_FEE:
+		// cash received, AR cleared
+		return []accounting.CreateJournalEntryLineRequest{
+			{
+				AccountID: accounts.CashBankAccountID,
+				Debit:     paymentAmount,
+				Credit:    0,
+				Notes:     lib.StringPointer(fmt.Sprintf("Cash receipt for invoice %s", invoice.Code)),
+			},
+			{
+				AccountID: accounts.AccountsReceivableID,
+				Debit:     0,
+				Credit:    paymentAmount,
+				Notes:     lib.StringPointer(fmt.Sprintf("AR cleared on payment for invoice %s", invoice.Code)),
+			},
+		}
+	}
+}
 
-	if isExpenseContext && invoice.PayeeType == "EXTERNAL" {
-		// Platform disbursed to vendor — clear the accounts payable liability
+// buildExpensePaymentJournalLines settles an expense invoice.
+// Expense invoices with an EXTERNAL payee debited PropertyManagementExpense and
+// credited AccountsPayable at issuance. Settlement clears the payable with cash.
+func buildExpensePaymentJournalLines(
+	invoice *models.Invoice,
+	paymentAmount int64,
+	accounts config.IChartOfAccounts,
+) []accounting.CreateJournalEntryLineRequest {
+	if invoice.PayeeType == "EXTERNAL" {
 		return []accounting.CreateJournalEntryLineRequest{
 			{
 				AccountID: accounts.AccountsPayableID,
@@ -1549,20 +1653,66 @@ func buildPaymentJournalLines(
 			},
 		}
 	}
-
-	// Default: cash received, AR cleared
+	// Internal expense — standard cash-in / AR-clear
 	return []accounting.CreateJournalEntryLineRequest{
 		{
 			AccountID: accounts.CashBankAccountID,
 			Debit:     paymentAmount,
 			Credit:    0,
-			Notes:     lib.StringPointer(fmt.Sprintf("Cash receipt for invoice %s", invoice.Code)),
+			Notes:     lib.StringPointer(fmt.Sprintf("Cash receipt for expense invoice %s", invoice.Code)),
 		},
 		{
 			AccountID: accounts.AccountsReceivableID,
 			Debit:     0,
 			Credit:    paymentAmount,
-			Notes:     lib.StringPointer(fmt.Sprintf("AR reduction on payment for invoice %s", invoice.Code)),
+			Notes:     lib.StringPointer(fmt.Sprintf("AR cleared on payment for invoice %s", invoice.Code)),
 		},
 	}
+}
+
+// buildLeaseTerminationPaymentJournalLines settles a lease termination invoice per line item.
+// Fee categories (EARLY_TERMINATION_FEE, DAMAGE_CHARGE) clear AR with cash received.
+// Refund categories (DEPOSIT_REFUND, RENT_REFUND) clear AP with cash disbursed.
+func buildLeaseTerminationPaymentJournalLines(
+	invoice *models.Invoice,
+	accounts config.IChartOfAccounts,
+) []accounting.CreateJournalEntryLineRequest {
+	lines := []accounting.CreateJournalEntryLineRequest{}
+
+	for _, lineItem := range invoice.LineItems {
+		switch lineItem.Category {
+		case "EARLY_TERMINATION_FEE", "DAMAGE_CHARGE":
+			lines = append(lines,
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.CashBankAccountID,
+					Debit:     lineItem.TotalAmount,
+					Credit:    0,
+					Notes:     lib.StringPointer(fmt.Sprintf("Cash received: %s", lineItem.Label)),
+				},
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.AccountsReceivableID,
+					Debit:     0,
+					Credit:    lineItem.TotalAmount,
+					Notes:     lib.StringPointer(fmt.Sprintf("AR cleared: %s", lineItem.Label)),
+				},
+			)
+		case "DEPOSIT_REFUND", "RENT_REFUND":
+			lines = append(lines,
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.AccountsPayableID,
+					Debit:     lineItem.TotalAmount,
+					Credit:    0,
+					Notes:     lib.StringPointer(fmt.Sprintf("AP settled: %s", lineItem.Label)),
+				},
+				accounting.CreateJournalEntryLineRequest{
+					AccountID: accounts.CashBankAccountID,
+					Debit:     0,
+					Credit:    lineItem.TotalAmount,
+					Notes:     lib.StringPointer(fmt.Sprintf("Cash disbursed: %s", lineItem.Label)),
+				},
+			)
+		}
+	}
+
+	return lines
 }

@@ -11,6 +11,8 @@ type DocumentSignature struct {
 	TenantApplication   *TenantApplication
 	LeaseID             *string // nullable — links to the lease
 	Lease               *Lease
+	LeaseTerminationID  *string // nullable — links to the lease termination process
+	LeaseTermination    *LeaseTermination
 	Role                string // "PROPERTY_MANAGER" | "TENANT" | "PM_WITNESS" | "TENANT_WITNESS"
 	SignatureUrl        string // S3 URL of the drawn signature image
 	SignedByName        *string

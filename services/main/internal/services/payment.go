@@ -346,7 +346,12 @@ func (s *paymentService) VerifyOfflinePayment(
 	input VerifyOfflinePaymentInput,
 ) (*models.Payment, error) {
 	// Get payment with tenant info for notifications
-	populate := []string{"Invoice", "Invoice.PayerLease.Tenant.TenantAccount", "Invoice.ContextLease.Unit"}
+	populate := []string{
+		"Invoice",
+		"Invoice.LineItems",
+		"Invoice.PayerLease.Tenant.TenantAccount",
+		"Invoice.ContextLease.Unit",
+	}
 	payment, paymentErr := s.repo.GetByIDWithQuery(ctx, repository.GetPaymentQuery{
 		PaymentID: input.PaymentID,
 		Populate:  &populate,
