@@ -161,7 +161,7 @@ export function PropertyBookingsModule() {
 
 			<PropertyBookingsController isLoading={isLoading} refetch={refetch} />
 
-			<div className="bg-background space-y-4 rounded-lg border p-3 sm:p-5">
+			<div className="mb-4">
 				<DataTable
 					columns={columns}
 					isLoading={isLoading}
