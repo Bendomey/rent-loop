@@ -40,7 +40,7 @@ type Handlers struct {
 func NewHandlers(appCtx pkg.AppContext, services services.Services) Handlers {
 	notificationHandler := NewNotificationHandler(appCtx, services.NotificationService)
 	authHandler := NewAuthHandler(appCtx, services.AuthService)
-	analyticsHandler := NewAnalyticsHandler(appCtx)
+	analyticsHandler := NewAnalyticsHandler(appCtx, services.ClientService)
 	adminHandler := NewAdminHandler(appCtx, services.AdminService)
 	userHandler := NewUserHandler(appCtx, services.UserService)
 	clientApplicationHandler := NewClientApplicationHandler(appCtx, services.ClientApplicationService)

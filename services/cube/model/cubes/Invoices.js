@@ -28,6 +28,30 @@ cube(`Invoices`, {
       title: `Total Invoice Amount (pesewas)`,
     },
 
+    totalAmountConverted: {
+      sql: `${CUBE}.total_amount *
+        COALESCE(
+          (SELECT er.rate FROM exchange_rates er
+           WHERE er.base_currency = 'USD'
+             AND er.quote_currency = '${COMPILE_CONTEXT.securityContext?.reportingCurrency ?? 'GHS'}'
+             AND er.effective_date <= ${CUBE}.issued_at::date
+           ORDER BY er.effective_date DESC LIMIT 1),
+          1
+        ) / NULLIF(
+          COALESCE(
+            (SELECT er.rate FROM exchange_rates er
+             WHERE er.base_currency = 'USD'
+               AND er.quote_currency = ${CUBE}.currency
+               AND er.effective_date <= ${CUBE}.issued_at::date
+             ORDER BY er.effective_date DESC LIMIT 1),
+            1
+          ),
+          0
+        )`,
+      type: `sum`,
+      title: `Total Invoice Amount (converted to reporting currency)`,
+    },
+
     // Sum of total_amount for invoices in PAID status
     paidAmount: {
       sql: `total_amount`,
@@ -36,11 +60,65 @@ cube(`Invoices`, {
       filters: [{ sql: `${CUBE}.status = 'PAID'` }],
     },
 
+    paidAmountConverted: {
+      sql: `${CUBE}.total_amount *
+        COALESCE(
+          (SELECT er.rate FROM exchange_rates er
+           WHERE er.base_currency = 'USD'
+             AND er.quote_currency = '${COMPILE_CONTEXT.securityContext?.reportingCurrency ?? 'GHS'}'
+             AND er.effective_date <= ${CUBE}.paid_at::date
+           ORDER BY er.effective_date DESC LIMIT 1),
+          1
+        ) / NULLIF(
+          COALESCE(
+            (SELECT er.rate FROM exchange_rates er
+             WHERE er.base_currency = 'USD'
+               AND er.quote_currency = ${CUBE}.currency
+               AND er.effective_date <= ${CUBE}.paid_at::date
+             ORDER BY er.effective_date DESC LIMIT 1),
+            1
+          ),
+          0
+        )`,
+      type: `sum`,
+      title: `Paid Amount (converted to reporting currency)`,
+      filters: [{ sql: `${CUBE}.status = 'PAID'` }],
+    },
+
     // Sum of total_amount for invoices in ISSUED or PARTIALLY_PAID status (outstanding)
     outstandingAmount: {
       sql: `total_amount`,
       type: `sum`,
       title: `Outstanding Amount (pesewas)`,
+      filters: [
+        {
+          sql: `${CUBE}.status IN ('ISSUED', 'PARTIALLY_PAID')`,
+        },
+      ],
+    },
+
+    outstandingAmountConverted: {
+      sql: `${CUBE}.total_amount *
+        COALESCE(
+          (SELECT er.rate FROM exchange_rates er
+           WHERE er.base_currency = 'USD'
+             AND er.quote_currency = '${COMPILE_CONTEXT.securityContext?.reportingCurrency ?? 'GHS'}'
+             AND er.effective_date <= ${CUBE}.issued_at::date
+           ORDER BY er.effective_date DESC LIMIT 1),
+          1
+        ) / NULLIF(
+          COALESCE(
+            (SELECT er.rate FROM exchange_rates er
+             WHERE er.base_currency = 'USD'
+               AND er.quote_currency = ${CUBE}.currency
+               AND er.effective_date <= ${CUBE}.issued_at::date
+             ORDER BY er.effective_date DESC LIMIT 1),
+            1
+          ),
+          0
+        )`,
+      type: `sum`,
+      title: `Outstanding Amount (converted to reporting currency)`,
       filters: [
         {
           sql: `${CUBE}.status IN ('ISSUED', 'PARTIALLY_PAID')`,

@@ -998,6 +998,14 @@ const docTemplate = `{
                     "Analytics"
                 ],
                 "summary": "Get Cube.js analytics token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Reporting currency override (e.g. GHS, USD). Defaults to the client's configured currency.",
+                        "name": "currency",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Signed Cube.js JWT",
@@ -1008,6 +1016,12 @@ const docTemplate = `{
                                     "$ref": "#/definitions/handlers.analyticsTokenResponse"
                                 }
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Unsupported currency",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "401": {

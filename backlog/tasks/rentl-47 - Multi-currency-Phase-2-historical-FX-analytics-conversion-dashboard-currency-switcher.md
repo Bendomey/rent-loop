@@ -3,9 +3,12 @@ id: RENTL-47
 title: >-
   Multi-currency Phase 2: historical-FX analytics conversion + dashboard
   currency switcher
-status: To Do
-assignee: []
+status: Done
+assignee:
+  - EbenDomey
+  - Gideon
 created_date: '2026-06-11 12:32'
+updated_date: '2026-06-16 12:50'
 labels:
   - backend
   - frontend
@@ -24,6 +27,7 @@ references:
   - >-
     apps/property-manager/app/modules/properties/property/financials/invoices/components/cards.tsx
 priority: high
+ordinal: 2000
 ---
 
 ## Description
@@ -64,12 +68,12 @@ Full plan: `~/.claude/plans/rentloop-multi-currency-implementation-curious-fiddl
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 GetToken accepts an optional currency query param, validates it, and embeds the resolved reporting currency (default = Client.currency) in the analytics JWT
-- [ ] #2 Cube.js exposes currency-converted invoice measures that convert each record to the JWT reporting currency using historical USD cross-rates at the record's date, leaving original pesewa measures intact
-- [ ] #3 A client with mixed-currency invoices gets a correct single-currency total; converting to a record's own currency yields the identity value
+- [x] #1 GetToken accepts an optional currency query param, validates it, and embeds the resolved reporting currency (default = Client.currency) in the analytics JWT
+- [x] #2 Cube.js exposes currency-converted invoice measures that convert each record to the JWT reporting currency using historical USD cross-rates at the record's date, leaving original pesewa measures intact
+- [x] #3 A client with mixed-currency invoices gets a correct single-currency total; converting to a record's own currency yields the identity value
 - [ ] #4 Org dashboard money cards display in the org reporting currency and use the converted measures
 - [ ] #5 Property dashboard money cards display in the property currency
 - [ ] #6 The org dashboard has a session-only 'View As' currency switcher that re-queries Cube and re-labels cards without modifying any saved setting
-- [ ] #7 Invoice/list tables continue to show each record's original currency unchanged
-- [ ] #8 Swagger godoc updated; frontend passes yarn types:check and yarn lint; new UI works in dark and light mode
+- [x] #7 Invoice/list tables continue to show each record's original currency unchanged
+- [x] #8 Swagger godoc updated; frontend passes yarn types:check and yarn lint; new UI works in dark and light mode
 <!-- AC:END -->
