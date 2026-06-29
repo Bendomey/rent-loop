@@ -12,7 +12,6 @@ import { toast } from 'sonner'
 import {
 	useCancelLeaseTermination,
 	useCompleteLeaseTermination,
-	useGetLeaseTermination,
 } from '~/api/lease-terminations'
 import { useGetInvoices } from '~/api/invoices'
 import {
@@ -27,7 +26,6 @@ import {
 } from '~/components/ui/alert-dialog'
 import { Button } from '~/components/ui/button'
 import { Separator } from '~/components/ui/separator'
-import { Skeleton } from '~/components/ui/skeleton'
 import { Spinner } from '~/components/ui/spinner'
 import { cn } from '~/lib/utils'
 import { safeString } from '~/lib/strings'
@@ -98,7 +96,7 @@ function SummaryCard({
 interface Props {
 	lease: Lease
 	propertyId: string
-	terminationId: string
+	leaseTermination?: LeaseTermination
 	onBack: () => void
 	onDone: () => void
 }
@@ -106,22 +104,16 @@ interface Props {
 export function StepConfirm({
 	lease,
 	propertyId,
-	terminationId,
+	leaseTermination,
 	onBack,
 	onDone,
 }: Props) {
 	const { clientUser } = useClient()
 	const clientId = safeString(clientUser?.client_id)
+	const terminationId = safeString(leaseTermination?.id)
 
 	const [completeOpen, setCompleteOpen] = useState(false)
 	const [cancelOpen, setCancelOpen] = useState(false)
-
-	const { data: termination, isLoading } = useGetLeaseTermination(
-		clientId,
-		propertyId,
-		lease.id,
-		terminationId,
-	)
 
 	const { data: invoicesData } = useGetInvoices(clientId, propertyId, {
 		filters: { context_lease_termination_id: terminationId },
@@ -135,9 +127,9 @@ export function StepConfirm({
 	const { mutateAsync: cancel, isPending: isCancelling } =
 		useCancelLeaseTermination()
 
-	const hasReason = Boolean(termination?.type && termination?.reason)
-	const hasInspection = Boolean(termination?.lease_checklist_id)
-	const hasDocument = Boolean(termination?.document_mode)
+	const hasReason = Boolean(leaseTermination?.type && leaseTermination?.reason)
+	const hasInspection = Boolean(leaseTermination?.lease_checklist_id)
+	const hasDocument = Boolean(leaseTermination?.document_mode)
 	const hasInvoices = invoiceCount > 0
 
 	const canComplete = hasReason
@@ -178,18 +170,6 @@ export function StepConfirm({
 		}
 	}
 
-	if (isLoading) {
-		return (
-			<div className="space-y-4 p-8">
-				<Skeleton className="h-6 w-48" />
-				<Skeleton className="h-16 w-full" />
-				<Skeleton className="h-16 w-full" />
-				<Skeleton className="h-16 w-full" />
-				<Skeleton className="h-16 w-full" />
-			</div>
-		)
-	}
-
 	return (
 		<div className="flex flex-col gap-8 p-8">
 			<div>
@@ -209,8 +189,8 @@ export function StepConfirm({
 					done={hasReason}
 					required
 					description={
-						hasReason && termination?.type
-							? `${TYPE_LABELS[termination.type]} — reason recorded`
+						hasReason && leaseTermination?.type
+							? `${TYPE_LABELS[leaseTermination.type]} — reason recorded`
 							: 'Required — go back to Step 1 to complete'
 					}
 				/>
@@ -228,7 +208,7 @@ export function StepConfirm({
 					done={hasDocument}
 					description={
 						hasDocument
-							? termination?.document_mode === 'MANUAL'
+							? leaseTermination?.document_mode === 'MANUAL'
 								? 'External document attached'
 								: 'Library document linked'
 							: 'Optional — no document attached'

@@ -45,50 +45,6 @@ export const useGetLeaseTerminations = (
 		enabled: !!leaseId && !!propertyId && !!clientId,
 	})
 
-const getLeaseTermination = async (
-	clientId: string,
-	propertyId: string,
-	leaseId: string,
-	terminationId: string,
-) => {
-	try {
-		const response = await fetchClient<ApiResponse<LeaseTermination>>(
-			`${BASE(clientId, propertyId, leaseId)}/${terminationId}?populate=Lease&populate=LeaseChecklist&populate=Document&populate=InitiatedBy&populate=CompletedBy&populate=CancelledBy`,
-		)
-		return response.parsedBody.data
-	} catch (error: unknown) {
-		if (error instanceof Response) {
-			const response = await error.json()
-			throw new Error(response.errors?.message || 'Unknown error')
-		}
-		if (error instanceof Error) throw error
-	}
-}
-
-export const useGetLeaseTermination = (
-	clientId: string,
-	propertyId: string,
-	leaseId: string,
-	terminationId: string | null,
-) =>
-	useQuery({
-		queryKey: [
-			QUERY_KEYS.LEASE_TERMINATIONS,
-			clientId,
-			propertyId,
-			leaseId,
-			terminationId,
-		],
-		queryFn: () =>
-			getLeaseTermination(
-				clientId,
-				propertyId,
-				leaseId,
-				terminationId as string,
-			),
-		enabled: !!terminationId && !!leaseId && !!propertyId && !!clientId,
-	})
-
 export interface CreateLeaseTerminationInput {
 	client_id: string
 	property_id: string
@@ -317,7 +273,7 @@ const createTerminationInvoice = async ({
 }: CreateTerminationInvoiceInput) => {
 	try {
 		const response = await fetchClient<ApiResponse<Invoice>>(
-			`${BASE(client_id, property_id, lease_id)}/${termination_id}/invoices`,
+			`/v1/admin/clients/${client_id}/properties/${property_id}/invoices`,
 			{ method: 'POST', body: JSON.stringify(body) },
 		)
 		return response.parsedBody.data

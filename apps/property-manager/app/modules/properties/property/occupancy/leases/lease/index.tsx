@@ -44,6 +44,7 @@ import { toFirstUpperCase } from '~/lib/strings'
 import { LEASE_DETAIL_TOUR_STEPS, TOUR_KEYS } from '~/lib/tours'
 import { useProperty } from '~/providers/property-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId.occupancy.leases.$leaseId'
+import { TerminateLeaseModal } from './components/terminate-modal'
 
 function DetailRow({
 	label,
@@ -79,6 +80,8 @@ export function LeaseDetailModule() {
 		roles: ['MANAGER'],
 	})
 	const [startLeaseOpen, setStartLeaseOpen] = useState(false)
+	const [openStartTerminationModal, setOpenStartTerminationModal] =
+		useState(false)
 	const { startTour, hasCompletedTour } = useTour(
 		TOUR_KEYS.LEASE_DETAIL,
 		LEASE_DETAIL_TOUR_STEPS,
@@ -95,7 +98,9 @@ export function LeaseDetailModule() {
 		safeString(clientUser?.client_id),
 		propertyId,
 		lease?.id ?? '',
-		{ filters: { status: 'InProgress' }, pagination: { page: 1, per: 1 } },
+		{
+			pagination: { page: 1, per: 1 },
+		},
 	)
 	const hasInProgressTermination = Boolean(terminationsData?.rows?.[0])
 
@@ -135,7 +140,7 @@ export function LeaseDetailModule() {
 									/>
 								</div>
 							)}
-							<CardHeader className="flex items-start justify-between gap-2">
+							<CardHeader className="flex items-start justify-between gap-2 pt-3">
 								<div className="flex items-center gap-2">
 									<ScrollText className="text-muted-foreground size-5" />
 									<CardTitle className="text-base">{lease.code}</CardTitle>
@@ -243,15 +248,23 @@ export function LeaseDetailModule() {
 							<CardFooter className="flex justify-end gap-2 border-t pt-4">
 								{isTerminable && (
 									<PropertyPermissionGuard roles={['MANAGER']}>
-										<Button variant="destructive" size="sm" asChild>
-											<Link
-												to={`/properties/${propertyId}/occupancy/leases/${lease.id}/terminate`}
+										{hasInProgressTermination ? (
+											<Button variant="destructive" size="sm" asChild>
+												<Link
+													to={`/properties/${propertyId}/occupancy/leases/${lease.id}/terminate/${terminationsData?.rows?.[0]?.id}`}
+												>
+													Continue Termination
+												</Link>
+											</Button>
+										) : (
+											<Button
+												variant="destructive"
+												size="sm"
+												onClick={() => setOpenStartTerminationModal(true)}
 											>
-												{hasInProgressTermination
-													? 'Continue Termination'
-													: 'Terminate Lease'}
-											</Link>
-										</Button>
+												Terminate Lease
+											</Button>
+										)}
 									</PropertyPermissionGuard>
 								)}
 								{isPending && (
@@ -778,6 +791,12 @@ export function LeaseDetailModule() {
 				propertyId={propertyId}
 				opened={startLeaseOpen}
 				setOpened={setStartLeaseOpen}
+			/>
+			<TerminateLeaseModal
+				opened={openStartTerminationModal}
+				setOpened={setOpenStartTerminationModal}
+				lease={lease}
+				propertyId={safeString(clientUserProperty?.property_id)}
 			/>
 		</>
 	)

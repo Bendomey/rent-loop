@@ -1,4 +1,5 @@
-import type { Route } from './+types/_auth.properties.$propertyId.occupancy.leases.$leaseId_.terminate'
+import { getTerminateLeaseForServer } from '~/api/lease-terminations/server'
+import type { Route } from './+types/_auth.properties.$propertyId.occupancy.leases.$leaseId_.terminate.$terminateId'
 import { getLeaseForServer } from '~/api/leases/server'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
@@ -21,9 +22,19 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 			{ lease_id: params.leaseId, property_id: params.propertyId },
 			{ authToken, baseUrl },
 		)
+		const terminateLease = await getTerminateLeaseForServer(
+			clientId,
+			{
+				lease_id: params.leaseId,
+				property_id: params.propertyId,
+				terminationId: params.terminateId,
+			},
+			{ authToken, baseUrl },
+		)
 		return {
 			origin: getDomainUrl(request),
 			lease,
+			terminateLease,
 			clientUserProperty,
 		}
 	} catch {

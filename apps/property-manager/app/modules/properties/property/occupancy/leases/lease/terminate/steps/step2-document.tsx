@@ -13,10 +13,7 @@ import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useGetDocuments } from '~/api/documents'
-import {
-	useGetLeaseTermination,
-	useUpdateLeaseTermination,
-} from '~/api/lease-terminations'
+import { useUpdateLeaseTermination } from '~/api/lease-terminations'
 import { useSigningTokens } from '~/api/signing'
 import { SigningStatusRow } from '~/modules/properties/property/occupancy/applications/application/docs/signing-status-row'
 import { PromptSignatureButton } from '~/modules/properties/property/occupancy/applications/application/docs/prompt-signature-button'
@@ -47,7 +44,7 @@ type ManualFormValues = z.infer<typeof manualSchema>
 interface Props {
 	lease: Lease
 	propertyId: string
-	terminationId: string
+	leaseTermination?: LeaseTermination
 	onBack: () => void
 	onNext: () => void
 }
@@ -55,15 +52,13 @@ interface Props {
 export function StepDocument({
 	lease,
 	propertyId,
-	terminationId,
+	leaseTermination,
 	onBack,
 	onNext,
 }: Props) {
 	const { clientUser } = useClient()
 	const clientId = safeString(clientUser?.client_id)
-
-	const { data: termination, isLoading: isLoadingTermination } =
-		useGetLeaseTermination(clientId, propertyId, lease.id, terminationId)
+	const terminationId = safeString(leaseTermination?.id)
 
 	const { mutateAsync: updateTermination, isPending: isUpdating } =
 		useUpdateLeaseTermination()
@@ -82,23 +77,26 @@ export function StepDocument({
 	})
 
 	useEffect(() => {
-		if (!termination) return
-		if (termination.document_mode === 'MANUAL' && termination.document_url) {
+		if (!leaseTermination) return
+		if (
+			leaseTermination.document_mode === 'MANUAL' &&
+			leaseTermination.document_url
+		) {
 			setActiveTab('manual')
-			form.setValue('document_url', termination.document_url)
+			form.setValue('document_url', leaseTermination.document_url)
 		} else if (
-			termination.document_mode === 'ONLINE' &&
-			termination.document_id
+			leaseTermination.document_mode === 'ONLINE' &&
+			leaseTermination.document_id
 		) {
 			setActiveTab('online')
-			setSelectedDocId(termination.document_id)
+			setSelectedDocId(leaseTermination.document_id)
 		}
-	}, [termination, form])
+	}, [leaseTermination, form])
 
 	const { data: signingTokens, isPending: isLoadingTokens } = useSigningTokens(
 		clientId,
 		propertyId,
-		{ filters: { document_id: termination?.document_id ?? undefined } },
+		{ filters: { document_id: leaseTermination?.document_id ?? undefined } },
 	)
 	const tenantToken =
 		signingTokens?.rows?.find((t) => t.role === 'TENANT') ?? null
@@ -106,7 +104,7 @@ export function StepDocument({
 	const documents = documentsData?.rows ?? []
 	const selectedDoc =
 		documents.find((d) => d.id === selectedDocId) ??
-		termination?.document ??
+		leaseTermination?.document ??
 		null
 
 	// PM signing is done via direct signing (not a token) — not tracked here
@@ -152,20 +150,11 @@ export function StepDocument({
 		}
 	}
 
-	if (isLoadingTermination) {
-		return (
-			<div className="space-y-4 p-8">
-				<Skeleton className="h-6 w-48" />
-				<Skeleton className="h-10 w-full" />
-				<Skeleton className="h-40 w-full" />
-			</div>
-		)
-	}
-
 	const isOnlineSaved =
-		termination?.document_mode === 'ONLINE' && termination.document_id
+		leaseTermination?.document_mode === 'ONLINE' && leaseTermination.document_id
 	const isManualSaved =
-		termination?.document_mode === 'MANUAL' && termination.document_url
+		leaseTermination?.document_mode === 'MANUAL' &&
+		leaseTermination.document_url
 
 	return (
 		<div className="flex flex-col gap-8 p-8">
@@ -204,7 +193,7 @@ export function StepDocument({
 									<div>
 										<p className="text-sm font-medium">External Document</p>
 										<a
-											href={termination?.document_url ?? '#'}
+											href={leaseTermination?.document_url ?? '#'}
 											target="_blank"
 											rel="noopener noreferrer"
 											className="mt-0.5 flex items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400"
@@ -332,7 +321,7 @@ export function StepDocument({
 										{!pmSigned && (
 											<Button size="sm" asChild>
 												<Link
-													to={`/properties/${propertyId}/occupancy/applications/${lease.tenant_application_id}/signing/${termination?.document_id}`}
+													to={`/properties/${propertyId}/occupancy/applications/${lease.tenant_application_id}/signing/${leaseTermination?.document_id}`}
 													target="_blank"
 												>
 													<Pen className="size-4" />
@@ -349,7 +338,7 @@ export function StepDocument({
 										/>
 										<PromptSignatureButton
 											existingToken={tenantToken}
-											documentId={safeString(termination?.document_id)}
+											documentId={safeString(leaseTermination?.document_id)}
 											role="TENANT"
 											propertyId={propertyId}
 										/>

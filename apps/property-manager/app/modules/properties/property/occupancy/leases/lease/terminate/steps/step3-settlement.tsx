@@ -76,7 +76,7 @@ const INVOICE_STATUS_CLASSES: Record<Invoice['status'], string> = {
 interface Props {
 	lease: Lease
 	propertyId: string
-	terminationId: string
+	leaseTermination?: LeaseTermination
 	onBack: () => void
 	onNext: () => void
 }
@@ -84,12 +84,13 @@ interface Props {
 export function StepSettlement({
 	lease,
 	propertyId,
-	terminationId,
+	leaseTermination,
 	onBack,
 	onNext,
 }: Props) {
 	const { clientUser } = useClient()
 	const clientId = safeString(clientUser?.client_id)
+	const terminationId = safeString(leaseTermination?.id)
 	const [showForm, setShowForm] = useState(false)
 
 	const { data: invoicesData, isLoading: isLoadingInvoices } = useGetInvoices(

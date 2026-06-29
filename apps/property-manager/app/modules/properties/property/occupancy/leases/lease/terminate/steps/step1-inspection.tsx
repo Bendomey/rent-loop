@@ -5,10 +5,7 @@ import {
 	useCreateLeaseChecklist,
 	useGetLeaseChecklists,
 } from '~/api/lease-checklists'
-import {
-	useGetLeaseTermination,
-	useUpdateLeaseTermination,
-} from '~/api/lease-terminations'
+import { useUpdateLeaseTermination } from '~/api/lease-terminations'
 import { ChecklistModal } from '../../components/checklist-modal'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
@@ -25,7 +22,7 @@ import { useClient } from '~/providers/client-provider'
 interface Props {
 	lease: Lease
 	propertyId: string
-	terminationId: string
+	leaseTermination?: LeaseTermination
 	onBack: () => void
 	onNext: () => void
 }
@@ -33,20 +30,14 @@ interface Props {
 export function StepInspection({
 	lease,
 	propertyId,
-	terminationId,
+	leaseTermination,
 	onBack,
 	onNext,
 }: Props) {
 	const { clientUser } = useClient()
 	const clientId = safeString(clientUser?.client_id)
+	const terminationId = safeString(leaseTermination?.id)
 	const [viewChecklistId, setViewChecklistId] = useState<string | null>(null)
-
-	const { data: terminationData } = useGetLeaseTermination(
-		clientId,
-		propertyId,
-		lease.id,
-		terminationId,
-	)
 
 	const { data: checklistsData, isLoading: isLoadingChecklists } =
 		useGetLeaseChecklists(clientId, propertyId, lease.id, {
@@ -61,7 +52,7 @@ export function StepInspection({
 
 	const checkOutChecklist =
 		checklistsData?.rows?.find((c) => c.type === 'CHECK_OUT') ?? null
-	const linkedChecklistId = terminationData?.lease_checklist_id ?? null
+	const linkedChecklistId = leaseTermination?.lease_checklist_id ?? null
 	const linkedChecklist =
 		checklistsData?.rows?.find((c) => c.id === linkedChecklistId) ?? null
 	const viewChecklist =

@@ -3,8 +3,6 @@ import { createContext, useContext, useState } from 'react'
 interface LeaseTerminateContextType {
 	step: number
 	setStep: (step: number) => void
-	terminationId: string | null
-	setTerminationId: (id: string | null) => void
 	next: () => void
 	back: () => void
 }
@@ -25,9 +23,7 @@ export function LeaseTerminateProvider({
 	const back = () => setStep((s) => Math.max(s - 1, 0))
 
 	return (
-		<LeaseTerminateContext.Provider
-			value={{ step, setStep, terminationId, setTerminationId, next, back }}
-		>
+		<LeaseTerminateContext.Provider value={{ step, setStep, next, back }}>
 			{children}
 		</LeaseTerminateContext.Provider>
 	)

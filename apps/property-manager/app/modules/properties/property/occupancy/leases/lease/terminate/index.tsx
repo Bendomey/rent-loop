@@ -7,11 +7,9 @@ import { StepDocument } from './steps/step2-document'
 import { StepInspection } from './steps/step1-inspection'
 import { StepReason } from './steps/step0-reason'
 import { StepSettlement } from './steps/step3-settlement'
-import { useGetLeaseTerminations } from '~/api/lease-terminations'
 import { Badge } from '~/components/ui/badge'
 import { safeString } from '~/lib/strings'
-import { useClient } from '~/providers/client-provider'
-import type { loader } from '~/routes/_auth.properties.$propertyId.occupancy.leases.$leaseId_.terminate'
+import type { loader } from '~/routes/_auth.properties.$propertyId.occupancy.leases.$leaseId_.terminate.$terminateId'
 
 const STEPS = [
 	{ label: 'Reason' },
@@ -28,26 +26,21 @@ function LeaseTerminateContent({
 	lease: Lease
 	propertyId: string
 }) {
-	const { clientUser } = useClient()
-	const clientId = safeString(clientUser?.client_id)
 	const navigate = useNavigate()
-	const { step, setStep, terminationId, setTerminationId, next, back } =
-		useLeaseTerminate()
-
-	const { data: terminationsData } = useGetLeaseTerminations(
-		clientId,
-		propertyId,
-		lease.id,
-		{ filters: { status: 'InProgress' }, pagination: { page: 1, per: 1 } },
-	)
-
-	const existingInProgress = terminationsData?.rows?.[0] ?? null
+	const { terminateLease } = useLoaderData<typeof loader>()
+	const { step, setStep, next, back } = useLeaseTerminate()
 
 	useEffect(() => {
-		if (existingInProgress && !terminationId) {
-			setTerminationId(existingInProgress.id)
+		if (terminateLease?.document_id) {
+			setStep(3)
+		} else if (terminateLease?.lease_checklist_id) {
+			setStep(2)
+		} else if (terminateLease?.type) {
+			setStep(1)
 		}
-	}, [existingInProgress, terminationId, setTerminationId])
+	}, [terminateLease])
+
+	const terminationId = safeString(terminateLease?.id)
 
 	const backToLease = `/properties/${propertyId}/occupancy/leases/${lease.id}`
 
@@ -117,8 +110,7 @@ function LeaseTerminateContent({
 						<StepReason
 							lease={lease}
 							propertyId={propertyId}
-							terminationId={terminationId}
-							onTerminationCreated={setTerminationId}
+							leaseTermination={terminateLease}
 							onNext={next}
 						/>
 					)}
@@ -126,7 +118,7 @@ function LeaseTerminateContent({
 						<StepInspection
 							lease={lease}
 							propertyId={propertyId}
-							terminationId={terminationId}
+							leaseTermination={terminateLease}
 							onBack={back}
 							onNext={next}
 						/>
@@ -135,7 +127,7 @@ function LeaseTerminateContent({
 						<StepDocument
 							lease={lease}
 							propertyId={propertyId}
-							terminationId={terminationId}
+							leaseTermination={terminateLease}
 							onBack={back}
 							onNext={next}
 						/>
@@ -144,7 +136,7 @@ function LeaseTerminateContent({
 						<StepSettlement
 							lease={lease}
 							propertyId={propertyId}
-							terminationId={terminationId}
+							leaseTermination={terminateLease}
 							onBack={back}
 							onNext={next}
 						/>
@@ -153,7 +145,7 @@ function LeaseTerminateContent({
 						<StepConfirm
 							lease={lease}
 							propertyId={propertyId}
-							terminationId={terminationId}
+							leaseTermination={terminateLease}
 							onBack={back}
 							onDone={() => void navigate(backToLease)}
 						/>

@@ -1,14 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight, DoorOpen, Gavel, Handshake } from 'lucide-react'
-import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
+import { useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import {
-	useCreateLeaseTermination,
-	useGetLeaseTermination,
-	useUpdateLeaseTermination,
-} from '~/api/lease-terminations'
+import { useUpdateLeaseTermination } from '~/api/lease-terminations'
 import { Button } from '~/components/ui/button'
 import {
 	Form,
@@ -20,8 +16,8 @@ import {
 } from '~/components/ui/form'
 import { Spinner } from '~/components/ui/spinner'
 import { Textarea } from '~/components/ui/textarea'
-import { cn } from '~/lib/utils'
 import { safeString } from '~/lib/strings'
+import { cn } from '~/lib/utils'
 import { useClient } from '~/providers/client-provider'
 
 const schema = z.object({
@@ -62,77 +58,56 @@ const TYPE_OPTIONS: {
 interface Props {
 	lease: Lease
 	propertyId: string
-	terminationId: string | null
-	onTerminationCreated: (id: string) => void
+	leaseTermination?: LeaseTermination
 	onNext: () => void
 }
 
 export function StepReason({
 	lease,
 	propertyId,
-	terminationId,
-	onTerminationCreated,
+	leaseTermination,
 	onNext,
 }: Props) {
 	const { clientUser } = useClient()
 	const clientId = safeString(clientUser?.client_id)
+	const terminationId = safeString(leaseTermination?.id)
+	const { revalidate } = useRevalidator()
 
-	const { data: existingTermination } = useGetLeaseTermination(
-		clientId,
-		propertyId,
-		lease.id,
-		terminationId,
-	)
-
-	const { mutateAsync: create, isPending: isCreating } =
-		useCreateLeaseTermination()
-	const { mutateAsync: update, isPending: isUpdating } =
-		useUpdateLeaseTermination()
+	const { mutateAsync: update, isPending } = useUpdateLeaseTermination()
 
 	const form = useForm<FormValues>({
 		resolver: zodResolver(schema),
-		defaultValues: { type: undefined, reason: '' },
+		defaultValues: {
+			type: leaseTermination?.type as LeaseTerminationType,
+			reason: safeString(leaseTermination?.reason),
+		},
 	})
 
-	useEffect(() => {
-		if (existingTermination) {
-			form.reset({
-				type: existingTermination.type ?? undefined,
-				reason: existingTermination.reason ?? '',
-			})
-		}
-	}, [existingTermination, form])
-
 	const reason = form.watch('reason')
+	const {
+		formState: { isDirty },
+	} = form
 
 	const onSubmit = async (values: FormValues) => {
+		if (!isDirty) {
+			onNext()
+			return
+		}
 		try {
-			if (terminationId) {
-				await update({
-					client_id: clientId,
-					property_id: propertyId,
-					lease_id: lease.id,
-					termination_id: terminationId,
-					type: values.type,
-					reason: values.reason,
-				})
-			} else {
-				const created = await create({
-					client_id: clientId,
-					property_id: propertyId,
-					lease_id: lease.id,
-					type: values.type,
-					reason: values.reason,
-				})
-				if (created) onTerminationCreated(created.id)
-			}
+			await update({
+				client_id: clientId,
+				property_id: propertyId,
+				lease_id: lease.id,
+				termination_id: safeString(terminationId),
+				type: values.type,
+				reason: values.reason,
+			})
+			void revalidate()
 			onNext()
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Failed to save reason')
 		}
 	}
-
-	const isPending = isCreating || isUpdating
 
 	return (
 		<Form {...form}>
