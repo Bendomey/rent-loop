@@ -50,9 +50,7 @@ const AddTenantButton = ({
 		)
 	}
 
-	const to = hasBooking
-		? `${base}/bookings/new`
-		: `${base}/applications/new`
+	const to = hasBooking ? `${base}/bookings/new` : `${base}/applications/new`
 
 	return (
 		<Link to={to}>
@@ -108,7 +106,10 @@ export const PropertyTenantsController = ({
 				</div>
 				<div className="flex items-center justify-end gap-2">
 					<PropertyPermissionGuard roles={['MANAGER']}>
-						<AddTenantButton propertyId={clientUserProperty?.property_id} modes={clientUserProperty?.property?.modes} />
+						<AddTenantButton
+							propertyId={clientUserProperty?.property_id}
+							modes={clientUserProperty?.property?.modes}
+						/>
 					</PropertyPermissionGuard>
 
 					<Button

@@ -70,8 +70,6 @@ export * from './properties/property/occupancy/applications/application/tenant'
 export * from './properties/property/occupancy/applications/application/move-in'
 export * from './properties/property/occupancy/applications/application/financial'
 export * from './properties/property/occupancy/applications/application/docs'
-export * from './properties/property/occupancy/applications/application/docs/lease-editor'
-export * from './properties/property/occupancy/applications/application/docs/lease-signing'
 
 export * from './public-signing'
 
@@ -100,3 +98,6 @@ export * from './properties/property/occupancy/bookings'
 export * from './properties/property/occupancy/bookings/new'
 export * from './properties/property/occupancy/bookings/booking'
 export * from './properties/property/occupancy/availability'
+
+export * from './documents/document-editor'
+export * from './documents/document-signing'

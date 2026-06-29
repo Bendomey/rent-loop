@@ -1,12 +1,12 @@
 import { type SerializedEditorState } from 'lexical'
 import { CheckCircle2, Lock, PenLine } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useLoaderData, useNavigate, useRevalidator } from 'react-router'
+import { useLoaderData, useNavigate, useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 
 import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
+import { DocumentMenuBar } from '~/components/blocks/template-editor/document-menu-bar'
 import { Editor } from '~/components/blocks/template-editor/editor'
-import { LeaseMenuBar } from '~/components/blocks/template-editor/lease-menu-bar'
 import { Button } from '~/components/ui/button'
 import {
 	Dialog,
@@ -18,7 +18,7 @@ import {
 } from '~/components/ui/dialog'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
-import type { loader } from '~/routes/_auth.properties.$propertyId_.occupancy.applications.$applicationId.editor.$documentId'
+import type { loader } from '~/routes/_auth.properties.$propertyId_.documents.$documentId.editor'
 
 const initialValue = {
 	root: {
@@ -40,8 +40,9 @@ const initialValue = {
 	},
 } as unknown as SerializedEditorState
 
-export function LeaseDocumentModule() {
-	const { document, tenantApplication } = useLoaderData<typeof loader>()
+export function DocumentEditorModule() {
+	const { document, tenantApplication, returnUrl } =
+		useLoaderData<typeof loader>()
 	const updateTenantApplication = useAdminUpdateTenantApplication()
 	const revalidator = useRevalidator()
 	const navigate = useNavigate()
@@ -51,10 +52,18 @@ export function LeaseDocumentModule() {
 		document?.content ? JSON.parse(document.content) : initialValue,
 	)
 
-	if (!document || !tenantApplication) return null
+	if (!document) return null
+
+	const goBack = () => {
+		if (returnUrl) {
+			void navigate(returnUrl)
+		} else {
+			void navigate(-1)
+		}
+	}
 
 	const handleFinalize = () => {
-		if (updateTenantApplication.isPending) return
+		if (!tenantApplication || updateTenantApplication.isPending) return
 		updateTenantApplication.mutate(
 			{
 				client_id: safeString(clientUser?.client_id),
@@ -66,19 +75,15 @@ export function LeaseDocumentModule() {
 				onSuccess: () => {
 					toast.success('Document finalized')
 					void revalidator.revalidate()
-					void navigate(
-						`/properties/${tenantApplication.desired_unit.property_id}/occupancy/applications/${tenantApplication.id}/docs`,
-					)
+					goBack()
 				},
-				onError: () => {
-					toast.error('Failed to finalize')
-				},
+				onError: () => toast.error('Failed to finalize'),
 			},
 		)
 	}
 
 	const handleRevertToDraft = () => {
-		if (updateTenantApplication.isPending) return
+		if (!tenantApplication || updateTenantApplication.isPending) return
 		updateTenantApplication.mutate(
 			{
 				client_id: safeString(clientUser?.client_id),
@@ -91,15 +96,23 @@ export function LeaseDocumentModule() {
 					toast.success('Reverted to draft')
 					void revalidator.revalidate()
 				},
-				onError: () => {
-					toast.error('Failed to revert')
-				},
+				onError: () => toast.error('Failed to revert'),
 			},
 		)
 	}
 
-	const docStatus = tenantApplication.lease_agreement_document_status
-	const isReadOnly = docStatus !== 'DRAFT'
+	const docStatus = tenantApplication?.lease_agreement_document_status ?? null
+
+	const subtitle = tenantApplication
+		? [
+				[tenantApplication.first_name, tenantApplication.last_name]
+					.filter(Boolean)
+					.join(' '),
+				tenantApplication.desired_unit?.name,
+			]
+				.filter(Boolean)
+				.join(' / ') + ` • #${tenantApplication.code}`
+		: undefined
 
 	const readOnlyConfig = {
 		FINALIZED: {
@@ -109,11 +122,9 @@ export function LeaseDocumentModule() {
 				'This document has been finalized and is ready for signing. You cannot make edits in this state.',
 			action: (
 				<div className="space-x-2">
-					<Link
-						to={`/properties/${tenantApplication.desired_unit.property_id}/occupancy/applications/${tenantApplication.id}/docs`}
-					>
-						<Button variant="outline">Go Back</Button>
-					</Link>
+					<Button variant="outline" onClick={goBack}>
+						Go Back
+					</Button>
 					<Button
 						disabled={updateTenantApplication.isPending}
 						onClick={handleRevertToDraft}
@@ -139,7 +150,11 @@ export function LeaseDocumentModule() {
 		},
 	} as const
 
-	const config = isReadOnly && docStatus ? readOnlyConfig[docStatus] : null
+	const isReadOnly = docStatus != null && docStatus !== 'DRAFT'
+	const config =
+		isReadOnly && docStatus
+			? (readOnlyConfig[docStatus as keyof typeof readOnlyConfig] ?? null)
+			: null
 
 	return (
 		<>
@@ -169,9 +184,11 @@ export function LeaseDocumentModule() {
 				editorSerializedState={editorState}
 				onSerializedChange={(value) => setEditorState(value)}
 				menuBar={
-					<LeaseMenuBar
+					<DocumentMenuBar
 						document={document}
-						tenantApplication={tenantApplication}
+						docStatus={docStatus}
+						subtitle={subtitle}
+						returnUrl={returnUrl}
 						onFinalize={handleFinalize}
 						onRevertToDraft={handleRevertToDraft}
 					/>
