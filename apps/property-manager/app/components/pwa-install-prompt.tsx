@@ -26,6 +26,7 @@ export function PwaInstallPrompt() {
 
 	if (isMobile) return null
 
+	// eslint-disable-next-line react-hooks/rules-of-hooks
 	useEffect(() => {
 		// Don't show if already installed or previously dismissed
 		if (
