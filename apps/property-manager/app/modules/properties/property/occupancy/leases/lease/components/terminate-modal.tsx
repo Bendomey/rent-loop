@@ -112,7 +112,7 @@ export function TerminateLeaseModal({
 							void navigate(
 								`/properties/${propertyId}/occupancy/leases/${lease.id}/terminate/${res?.id}`,
 							)
-						}, 1000)
+						}, 500)
 						setOpened(false)
 					},
 				},

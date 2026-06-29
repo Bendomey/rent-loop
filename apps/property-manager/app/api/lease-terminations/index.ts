@@ -257,18 +257,19 @@ export interface CreateTerminationInvoiceInput {
 	client_id: string
 	property_id: string
 	lease_id: string
-	termination_id: string
+	context_lease_termination_id: string
 	payer_type: 'TENANT' | 'PROPERTY_OWNER'
 	payee_type: 'PROPERTY_OWNER' | 'TENANT'
 	line_items: TerminationInvoiceLineItem[]
 	due_date?: string
+	currency: string
+	context_type: Invoice['context_type']
 }
 
 const createTerminationInvoice = async ({
 	client_id,
 	property_id,
 	lease_id,
-	termination_id,
 	...body
 }: CreateTerminationInvoiceInput) => {
 	try {

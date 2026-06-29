@@ -96,7 +96,12 @@ export function StepDocument({
 	const { data: signingTokens, isPending: isLoadingTokens } = useSigningTokens(
 		clientId,
 		propertyId,
-		{ filters: { document_id: leaseTermination?.document_id ?? undefined } },
+		{
+			filters: {
+				document_id: leaseTermination?.document_id ?? undefined,
+				tenant_application_id: lease.tenant_application_id,
+			},
+		},
 	)
 	const tenantToken =
 		signingTokens?.rows?.find((t) => t.role === 'TENANT') ?? null
@@ -341,6 +346,7 @@ export function StepDocument({
 											documentId={safeString(leaseTermination?.document_id)}
 											role="TENANT"
 											propertyId={propertyId}
+											tenantApplicationId={lease.tenant_application_id}
 										/>
 									</div>
 								)}

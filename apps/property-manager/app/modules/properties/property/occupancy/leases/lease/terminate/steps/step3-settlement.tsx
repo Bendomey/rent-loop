@@ -45,7 +45,13 @@ const lineItemSchema = z.object({
 		'EARLY_TERMINATION_FEE',
 		'DAMAGE_CHARGE',
 	]),
-	unit_amount: z.string().min(1, 'Amount required'),
+	unit_amount: z
+		.string()
+		.trim()
+		.min(1, 'Amount required')
+		.refine((v) => Number.isFinite(Number(v)) && Number(v) >= 0, {
+			message: 'Enter a valid amount',
+		}),
 })
 
 const invoiceSchema = z.object({
@@ -132,6 +138,7 @@ export function StepSettlement({
 					category: item.category as InvoiceLineItemCategory,
 					quantity: 1,
 					unit_amount: Math.round(parseFloat(item.unit_amount) * 100),
+					total_amount: Math.round(parseFloat(item.unit_amount) * 100),
 					currency: 'GHS',
 				}),
 			)
@@ -140,10 +147,12 @@ export function StepSettlement({
 				client_id: clientId,
 				property_id: propertyId,
 				lease_id: lease.id,
-				termination_id: terminationId,
+				context_lease_termination_id: terminationId,
 				payer_type: values.payer_type,
 				payee_type: values.payee_type,
 				line_items: lineItems,
+				currency: 'GHS',
+				context_type: 'LEASE_TERMINATION',
 			})
 
 			toast.success('Invoice created')

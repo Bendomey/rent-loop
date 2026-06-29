@@ -31,11 +31,7 @@ function LeaseTerminateContent({
 	const { step, setStep, next, back } = useLeaseTerminate()
 
 	useEffect(() => {
-		if (terminateLease?.document_id) {
-			setStep(3)
-		} else if (terminateLease?.lease_checklist_id) {
-			setStep(2)
-		} else if (terminateLease?.type) {
+		if (terminateLease?.type) {
 			setStep(1)
 		}
 	}, [terminateLease])

@@ -18,6 +18,9 @@ import {
 } from '~/lib/lease-checklist.utils'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
+import { useQueryClient } from '@tanstack/react-query'
+import { QUERY_KEYS } from '~/lib/constants'
+import { useRevalidator } from 'react-router'
 
 interface Props {
 	lease: Lease
@@ -35,6 +38,8 @@ export function StepInspection({
 	onNext,
 }: Props) {
 	const { clientUser } = useClient()
+	const queryClient = useQueryClient()
+	const { revalidate } = useRevalidator()
 	const clientId = safeString(clientUser?.client_id)
 	const terminationId = safeString(leaseTermination?.id)
 	const [viewChecklistId, setViewChecklistId] = useState<string | null>(null)
@@ -75,6 +80,10 @@ export function StepInspection({
 				termination_id: terminationId,
 				lease_checklist_id: checklist.id,
 			})
+			void queryClient.invalidateQueries({
+				queryKey: [QUERY_KEYS.LEASE_CHECKLISTS],
+			})
+			void revalidate()
 		} catch (err) {
 			toast.error(
 				err instanceof Error ? err.message : 'Failed to create inspection',
