@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { isMobile } from 'react-device-detect'
 
 interface BeforeInstallPromptEvent extends Event {
 	prompt(): Promise<void>
@@ -22,6 +23,8 @@ export function PwaInstallPrompt() {
 		useState<BeforeInstallPromptEvent | null>(null)
 	const [showIosHint, setShowIosHint] = useState(false)
 	const [dismissed, setDismissed] = useState(false)
+
+	if (isMobile) return null
 
 	useEffect(() => {
 		// Don't show if already installed or previously dismissed
