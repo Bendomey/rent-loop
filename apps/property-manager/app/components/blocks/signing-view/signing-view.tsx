@@ -26,7 +26,7 @@ interface SignatureStatus {
 
 interface SigningViewProps {
 	documentTitle: string
-	applicationCode: string
+	applicationCode?: string
 	editorState: SerializedEditorState
 	signerRole: SignatureRole
 	signerName: string

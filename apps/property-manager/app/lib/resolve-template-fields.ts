@@ -3,16 +3,55 @@ import type { SerializedEditorState } from 'lexical'
 
 import { formatAmount, formatAmountWithoutCurrency } from '~/lib/format-amount'
 
-/**
- * Build a map of template field names to their resolved values
- * from a TenantApplication (with populated relations).
- *
- * Fields whose source is null/undefined are omitted from the map,
- * so the token stays as `#FieldName` in the document.
- */
-export function buildTemplateFieldMap(
+export type DocumentTemplateFieldMap = {
+	// Landlord
+	LandlordName?: string
+	LandlordEmail?: string
+	LandlordPhoneNumber?: string
+	// Tenant
+	TenantName?: string
+	TenantAddress?: string
+	TenantEmail?: string
+	TenantPhoneNumber?: string
+	TenantIDType?: string
+	TenantIDNumber?: string
+	TenantDateOfBirth?: string
+	TenantNationality?: string
+	TenantOccupation?: string
+	TenantEmployer?: string
+	TenantEmergencyContactName?: string
+	TenantEmergencyContactPhone?: string
+	// Property
+	PropertyName?: string
+	PropertyAddress?: string
+	PropertyCity?: string
+	PropertyRegion?: string
+	PropertyGPSAddress?: string
+	// Unit
+	UnitNumber?: string
+	UnitType?: string
+	// Lease terms
+	ApplicationCode?: string
+	LeaseStartDate?: string
+	LeaseDuration?: string
+	LeaseEndDate?: string
+	RentAmount?: string
+	RentAmountInWords?: string
+	RentFrequency?: string
+	SecurityDeposit?: string
+	InitialDeposit?: string
+	// Signing timestamps
+	LandlordSignedOn?: string
+	TenantSignedOn?: string
+	LandlordWitnessName?: string
+	LandlordWitnessSignedOn?: string
+	TenantWitnessName?: string
+	TenantWitnessSignedOn?: string
+}
+
+export function buildTenantApplicationFieldMap(
 	app: TenantApplication,
-): Record<string, string> {
+): DocumentTemplateFieldMap {
 	const map: Record<string, string> = {}
 	const signatures = app.lease_agreement_document_signatures ?? []
 
@@ -146,16 +185,18 @@ export function buildTemplateFieldMap(
  */
 export function resolveTemplateFields(
 	state: SerializedEditorState,
-	fieldMap: Record<string, string>,
+	fieldMap: DocumentTemplateFieldMap,
 ): SerializedEditorState {
 	const cloned = JSON.parse(JSON.stringify(state)) as SerializedEditorState
+
+	const fieldMapRecord = fieldMap as Record<string, string | undefined>
 
 	function walk(node: Record<string, unknown>) {
 		if (node.type === 'hashtag' && typeof node.text === 'string') {
 			const fieldName = node.text.replace(/^#/, '')
-			if (fieldMap[fieldName]) {
+			if (fieldMapRecord[fieldName]) {
 				node.type = 'text'
-				node.text = fieldMap[fieldName]
+				node.text = fieldMapRecord[fieldName]
 			}
 		}
 		if (Array.isArray(node.children)) {

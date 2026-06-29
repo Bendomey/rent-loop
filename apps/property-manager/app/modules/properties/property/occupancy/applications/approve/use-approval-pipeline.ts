@@ -11,7 +11,7 @@ import {
 import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
 import { QUERY_KEYS } from '~/lib/constants'
 import {
-	buildTemplateFieldMap,
+	buildTenantApplicationFieldMap,
 	resolveTemplateFields,
 } from '~/lib/resolve-template-fields'
 import { safeString } from '~/lib/strings'
@@ -163,7 +163,7 @@ export function useApprovalPipeline({
 
 				// Step 1: Generate PDF
 				beginStep('GENERATE_PDF')
-				const templateFieldMap = buildTemplateFieldMap(application)
+				const templateFieldMap = buildTenantApplicationFieldMap(application)
 				const parsedEditorState = JSON.parse(doc.content) as Parameters<
 					typeof resolveTemplateFields
 				>[0]
