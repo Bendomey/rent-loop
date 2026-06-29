@@ -336,10 +336,10 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 
 						r.Route("/invoices", func(r chi.Router) {
 							r.Get("/", handlers.InvoiceHandler.ListInvoices)
+							r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+								Post("/", handlers.InvoiceHandler.CreateInvoice)
 							r.Route("/{invoice_id}", func(r chi.Router) {
 								r.Get("/", handlers.InvoiceHandler.GetInvoiceByID)
-								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
-									Post("/", handlers.InvoiceHandler.CreateInvoice)
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
 									Patch("/", handlers.InvoiceHandler.UpdateInvoice)
 								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
