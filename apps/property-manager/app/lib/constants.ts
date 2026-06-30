@@ -35,6 +35,8 @@ export const QUERY_KEYS = {
 	BOOKINGS: 'bookings',
 	DATE_BLOCKS: 'date-blocks',
 	LEASE_AGREEMENT_DOCUMENT: 'lease-agreement-document',
+	NOTIFICATIONS: 'notifications',
+	NOTIFICATION_UNREAD_COUNT: 'notification-unread-count',
 } as const
 
 export const PermissionState = {

@@ -52,6 +52,14 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 			})
 
 			// client-scoped routes — require valid client membership
+
+			r.Route("/v1/notifications", func(r chi.Router) {
+				r.Get("/unread-count", handlers.NotificationHandler.PMGetUnreadCount)
+				r.Post("/read-all", handlers.NotificationHandler.PMMarkAllRead)
+				r.Get("/", handlers.NotificationHandler.PMListNotifications)
+				r.Post("/{notification_id}/read", handlers.NotificationHandler.PMMarkNotificationRead)
+			})
+			
 			r.Route("/v1/admin/clients/{client_id}", func(r chi.Router) {
 				r.Use(middlewares.ValidateClientMembershipMiddleware(appCtx))
 

@@ -48,7 +48,11 @@ type INewServicesParams struct {
 }
 
 func NewServices(params INewServicesParams) Services {
-	notificationService := NewNotificationService(params.AppCtx, params.Repository.FcmTokenRepository)
+	notificationService := NewNotificationService(
+		params.AppCtx,
+		params.Repository.FcmTokenRepository,
+		params.Repository.NotificationRepository,
+	)
 	accountingService := NewAccountingService(params.AppCtx)
 	invoiceService := NewInvoiceService(
 		params.AppCtx,
