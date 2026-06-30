@@ -56,6 +56,7 @@ interface PromptSignatureButtonProps {
 	role: 'TENANT' | 'PM_WITNESS' | 'TENANT_WITNESS'
 	propertyId: string
 	tenantApplicationId?: string
+	leaseId?: string
 	email?: string
 	phone?: string
 	name?: string
@@ -67,6 +68,7 @@ export function PromptSignatureButton({
 	role,
 	propertyId,
 	tenantApplicationId,
+	leaseId,
 	email,
 	phone,
 	name,
@@ -179,6 +181,7 @@ export function PromptSignatureButton({
 						document_id: documentId,
 						role,
 						tenant_application_id: tenantApplicationId,
+						lease_id: leaseId,
 						signer_name: values.signer_name,
 						signer_email: values.signer_email || undefined,
 						signer_phone: normalizedPhone,
@@ -210,6 +213,7 @@ export function PromptSignatureButton({
 			documentId,
 			role,
 			tenantApplicationId,
+			leaseId,
 		],
 	)
 

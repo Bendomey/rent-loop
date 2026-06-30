@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Critical Rules
+
+- **Never commit anything.** Do not run `git commit` under any circumstances — not for code, not for docs, not for specs. Leave all changes unstaged for the user to commit.
+
 ## Project Overview
 
 Rent-Loop is a property rental management platform consisting of a Go backend API, React Router v7 frontend applications, and a Flutter mobile app.

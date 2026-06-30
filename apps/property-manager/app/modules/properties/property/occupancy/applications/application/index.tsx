@@ -87,7 +87,7 @@ export function PropertyTenantApplicationContainer() {
 	)
 
 	// eslint-disable-next-line react-hooks/rules-of-hooks
-	const { progress } = useCalculateChecklist(tenantApplication)
+	const { canApprove } = useCalculateChecklist(tenantApplication)
 
 	return (
 		<div className="m-5 grid grid-cols-12 gap-4">
@@ -124,7 +124,7 @@ export function PropertyTenantApplicationContainer() {
 								)}
 							</Tooltip>
 							<Button
-								disabled={progress !== 100}
+								disabled={!canApprove}
 								onClick={() => setOpenApproveModal(true)}
 							>
 								Approve

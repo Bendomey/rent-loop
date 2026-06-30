@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import type { SerializedEditorState } from 'lexical'
 import { useState } from 'react'
 import { useLoaderData, useParams, useRevalidator } from 'react-router'
@@ -6,6 +7,7 @@ import { toast } from 'sonner'
 import { useAdminUpdateDocument } from '~/api/documents'
 import { useSignDocumentDirect } from '~/api/signing'
 import { useAdminUpdateTenantApplication } from '~/api/tenant-applications'
+import { QUERY_KEYS } from '~/lib/constants'
 import { SigningView } from '~/components/blocks/signing-view/signing-view'
 import type { SignatureRole } from '~/components/editor/nodes/signature-node'
 import {
@@ -22,14 +24,18 @@ import { useClient } from '~/providers/client-provider'
 import type { loader } from '~/routes/_auth.properties.$propertyId_.documents.$documentId.signing'
 
 export function DocumentSigningModule() {
-	const { document, tenantApplication } = useLoaderData<typeof loader>()
+	const { document, tenantApplication, leaseId } =
+		useLoaderData<typeof loader>()
 	const { clientUser } = useClient()
 	const { propertyId } = useParams()
 	const signDocumentDirect = useSignDocumentDirect()
 	const updateDocument = useAdminUpdateDocument()
 	const updateTenantApplication = useAdminUpdateTenantApplication()
+	const queryClient = useQueryClient()
 	const revalidator = useRevalidator()
 	const [isSigning, setIsSigning] = useState(false)
+
+	const isLeaseFlow = !!leaseId
 
 	if (!document || !propertyId) return null
 
@@ -87,6 +93,7 @@ export function DocumentSigningModule() {
 				...(tenantApplication
 					? { tenant_application_id: tenantApplication.id }
 					: {}),
+				...(isLeaseFlow ? { lease_id: leaseId } : {}),
 			})
 
 			const signedAt = new Date().toISOString()
@@ -115,6 +122,13 @@ export function DocumentSigningModule() {
 					data: {
 						lease_agreement_document_status: allSigned ? 'SIGNED' : 'SIGNING',
 					},
+				})
+			}
+
+			if (isLeaseFlow) {
+				await queryClient.refetchQueries({
+					queryKey: [QUERY_KEYS.LEASE_AGREEMENT_DOCUMENT],
+					type: 'all',
 				})
 			}
 

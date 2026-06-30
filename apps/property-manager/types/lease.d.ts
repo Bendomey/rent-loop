@@ -28,7 +28,8 @@ interface Lease {
 	utility_transfers_date: Nullable<Date>
 
 	lease_agreement_document_mode: Nullable<'MANUAL' | 'ONLINE'>
-	lease_agreement_document_url: string
+	lease_agreement_document_url: Nullable<string>
+	lease_agreement_document: Nullable<LeaseAgreementDocument>
 
 	termination_agreement_document_url: Nullable<string>
 	termination_agreement_document_property_manager_signed_at: Nullable<Date>

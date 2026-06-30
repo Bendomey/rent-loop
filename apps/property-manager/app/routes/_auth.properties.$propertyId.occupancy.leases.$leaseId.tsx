@@ -1,6 +1,7 @@
 import type { Route } from './+types/_auth.properties.$propertyId.occupancy.leases.$leaseId'
 import { getLeaseForServer } from '~/api/leases/server'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
+import { getDocumentTemplates } from '~/lib/actions/document-templates.server'
 import { environmentVariables } from '~/lib/actions/env.server'
 import { propertyContext } from '~/lib/actions/property.context.server'
 import { getDisplayUrl, getDomainUrl } from '~/lib/misc'
@@ -25,6 +26,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 			origin: getDomainUrl(request),
 			lease,
 			clientUserProperty,
+			documentTemplates: getDocumentTemplates(),
 		}
 	} catch {
 		throw new Response(null, { status: 404, statusText: 'Not Found' })

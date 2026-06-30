@@ -1,5 +1,6 @@
-import { AlertTriangle, CheckCircle2, ShieldCheck } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, FileX, ShieldCheck } from 'lucide-react'
 import type { Dispatch, SetStateAction } from 'react'
+import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
 import { useApprovalPipeline } from './use-approval-pipeline'
@@ -63,6 +64,7 @@ function ApprovalModalContent({
 	onClose: () => void
 	propertyId: string
 }) {
+	const navigate = useNavigate()
 	const name = [data.first_name, data.other_names, data.last_name]
 		.filter(Boolean)
 		.join(' ')
@@ -73,7 +75,7 @@ function ApprovalModalContent({
 			propertyId,
 			onSuccess: () => {
 				toast.success(`${name}'s application was approved successfully.`)
-				onClose()
+				void navigate(`/properties/${propertyId}/occupancy/leases`)
 			},
 		})
 
@@ -85,6 +87,11 @@ function ApprovalModalContent({
 
 	// ── IDLE ─────────────────────────────────────
 	if (state.status === 'IDLE') {
+		const docsSkipped = !data.lease_agreement_document_mode
+		const hasOnlineDoc =
+			data.lease_agreement_document_mode === 'ONLINE' &&
+			data.lease_agreement_document?.content != null
+
 		return (
 			<>
 				<DialogHeader className="items-center text-center">
@@ -93,10 +100,30 @@ function ApprovalModalContent({
 					</div>
 					<DialogTitle>Approve Application</DialogTitle>
 					<DialogDescription className="text-center">
-						This will generate the lease agreement PDF, securely store it, and
-						approve the lease application. This action cannot be undone.
+						{hasOnlineDoc
+							? 'This will generate the lease agreement PDF, securely store it, and approve the lease application.'
+							: 'This will approve the lease application and create the lease.'}{' '}
+						This action cannot be undone.
 					</DialogDescription>
 				</DialogHeader>
+
+				{docsSkipped && (
+					<div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
+						<div className="flex gap-2">
+							<FileX className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+							<div className="space-y-0.5">
+								<p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+									Documentation skipped
+								</p>
+								<p className="text-xs text-amber-700 dark:text-amber-400">
+									No lease agreement document was set up. You can always add and
+									manage it from the lease page after the lease is created.
+								</p>
+							</div>
+						</div>
+					</div>
+				)}
+
 				<div className="flex justify-end gap-3 pt-2">
 					<Button variant="outline" onClick={handleClose}>
 						Cancel

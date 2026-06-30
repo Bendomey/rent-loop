@@ -1028,10 +1028,6 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 	if tenantApplication.StayDuration == nil {
 		return pkg.BadRequestError("ApplicationMissingStayDuration", nil)
 	}
-	if tenantApplication.LeaseAgreementDocumentUrl == nil {
-		return pkg.BadRequestError("ApplicationMissingLeaseAgreementDocument", nil)
-	}
-
 	unit, getUnitErr := s.unitService.GetUnitByID(ctx, *tenantApplication.DesiredUnitId)
 	if getUnitErr != nil {
 		return getUnitErr
@@ -1126,7 +1122,7 @@ func (s *tenantApplicationService) ApproveTenantApplication(
 		MoveInDate:                *tenantApplication.DesiredMoveInDate,
 		StayDurationFrequency:     *tenantApplication.StayDurationFrequency,
 		StayDuration:              *tenantApplication.StayDuration,
-		LeaseAgreementDocumentUrl: *tenantApplication.LeaseAgreementDocumentUrl,
+		LeaseAgreementDocumentUrl: tenantApplication.LeaseAgreementDocumentUrl, // *string, nil if not set
 	}
 	_, createLeaseErr := s.leaseService.CreateLease(transCtx, leaseInput)
 	if createLeaseErr != nil {
