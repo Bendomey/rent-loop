@@ -4,12 +4,15 @@ import { toast } from 'sonner'
 import type { CreatePropertyTenantApplicationInput } from '~/api/tenant-applications'
 import { BlockNavigationDialog } from '~/components/block-navigation-dialog'
 import { useNavigationBlocker } from '~/hooks/use-navigation-blocker'
+import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 
 interface CreateNewPropertyTenantApplicationContextType {
 	stepCount: number
 	goToPage: (page: number) => void
 	goBack: () => void
 	goNext: () => void
+	setTenantExists: (value: boolean) => void
+	isExistingTenant: boolean
 	updateFormData: (data: Partial<CreatePropertyTenantApplicationInput>) => void
 	formData: Partial<CreatePropertyTenantApplicationInput>
 	isSubmitting: boolean
@@ -29,6 +32,7 @@ export function CreateNewPropertyTenantApplicationProvider({
 }) {
 	const createFetcher = useFetcher<{ error: string }>()
 	const [stepCount, setStepCount] = useState(0)
+	const [isExistingTenant, setisExistingTenant] = useState(false)
 	const [formData, setFormData] = useState<
 		Partial<CreatePropertyTenantApplicationInput>
 	>({})
@@ -36,6 +40,7 @@ export function CreateNewPropertyTenantApplicationProvider({
 	const goBack = () => setStepCount((prev) => (prev > 0 ? prev - 1 : prev))
 	const goNext = () => setStepCount((prev) => prev + 1)
 	const goToPage = (page: number) => setStepCount(page)
+	const setTenantExists = (value: boolean) => setisExistingTenant(value)
 
 	// where there is an error in the action data, show an error toast
 	useEffect(() => {
@@ -64,11 +69,7 @@ export function CreateNewPropertyTenantApplicationProvider({
 		const updatedData = { ...data }
 
 		if (formData.phone) {
-			updatedData.phone = `+233${formData.phone.slice(-9)}`
-		}
-
-		if (formData.emergency_contact_phone) {
-			updatedData.emergency_contact_phone = `+233${formData.emergency_contact_phone.slice(-9)}`
+			updatedData.phone = normalizeInternationalPhoneNumber(formData.phone)
 		}
 
 		await createFetcher.submit(updatedData, {
@@ -86,6 +87,8 @@ export function CreateNewPropertyTenantApplicationProvider({
 		formData,
 		onSubmit,
 		isSubmitting,
+		setTenantExists,
+		isExistingTenant,
 	}
 
 	return (

@@ -97,7 +97,9 @@ export function UnitSelect({
 				}}
 			>
 				<SelectTrigger className="w-full">
-					<SelectValue placeholder="Select Unit..." />
+					<SelectValue
+						placeholder={isPending ? 'Loading...' : 'Select Unit...'}
+					/>
 				</SelectTrigger>
 
 				<SelectContent>
