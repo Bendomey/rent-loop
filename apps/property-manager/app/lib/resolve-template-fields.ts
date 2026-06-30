@@ -49,6 +49,123 @@ export type DocumentTemplateFieldMap = {
 	TenantWitnessSignedOn?: string
 }
 
+export function buildLeaseFieldMap(
+	lease: Lease,
+	signatures: RentloopDocumentSignature[] = [],
+): DocumentTemplateFieldMap {
+	const map: Record<string, string> = {}
+
+	const set = (key: string, value: unknown) => {
+		if (value != null && value !== '') {
+			map[key] = String(value)
+		}
+	}
+
+	// Landlord — from the application's created_by
+	const createdBy = lease.tenant_application?.created_by
+	set('LandlordName', createdBy?.user?.name)
+	set('LandlordEmail', createdBy?.user?.email)
+	set('LandlordPhoneNumber', createdBy?.user?.phone_number)
+
+	// Tenant
+	const tenant = lease.tenant
+	if (tenant) {
+		const tenantName = [tenant.first_name, tenant.last_name]
+			.filter(Boolean)
+			.join(' ')
+		set('TenantName', tenantName)
+		set('TenantAddress', tenant.current_address)
+		set('TenantEmail', tenant.email)
+		set('TenantPhoneNumber', tenant.phone)
+		set('TenantIDType', tenant.id_type)
+		set('TenantIDNumber', tenant.id_number)
+		if (tenant.date_of_birth) {
+			set(
+				'TenantDateOfBirth',
+				dayjs(tenant.date_of_birth).format('MMM D, YYYY'),
+			)
+		}
+		set('TenantNationality', tenant.nationality)
+		set('TenantOccupation', tenant.occupation)
+		set('TenantEmployer', tenant.employer)
+		set('TenantEmergencyContactName', tenant.emergency_contact_name)
+		set('TenantEmergencyContactPhone', tenant.emergency_contact_phone)
+	}
+
+	// Property
+	const property = lease.unit?.property
+	set('PropertyName', property?.name)
+	set('PropertyAddress', property?.address)
+	set('PropertyCity', property?.city)
+	set('PropertyRegion', property?.region)
+	set('PropertyGPSAddress', property?.gps_address)
+
+	// Unit
+	set('UnitNumber', lease.unit?.name)
+	set('UnitType', lease.unit?.type)
+
+	// Lease terms
+	set('ApplicationCode', lease.tenant_application?.code)
+	if (lease.move_in_date) {
+		set('LeaseStartDate', dayjs(lease.move_in_date).format('MMM D, YYYY'))
+	}
+	if (lease.stay_duration && lease.stay_duration_frequency) {
+		set(
+			'LeaseDuration',
+			`${lease.stay_duration} ${lease.stay_duration_frequency.toLowerCase()}`,
+		)
+		const unit = frequencyToDayjsUnit(lease.stay_duration_frequency)
+		if (unit && lease.move_in_date) {
+			set(
+				'LeaseEndDate',
+				dayjs(lease.move_in_date)
+					.add(lease.stay_duration, unit)
+					.format('MMM D, YYYY'),
+			)
+		}
+	}
+	if (lease.rent_fee) {
+		set('RentAmount', formatAmountWithoutCurrency(lease.rent_fee))
+		set('RentAmountInWords', numberToWords(lease.rent_fee))
+	}
+	if (lease.payment_frequency) {
+		set('RentFrequency', lease.payment_frequency.toLowerCase())
+	}
+
+	// Signing timestamps
+	const pmSig = signatures.find((s) => s.role === 'PROPERTY_MANAGER')
+	const tenantSig = signatures.find((s) => s.role === 'TENANT')
+	const pmWitnessSig = signatures.find((s) => s.role === 'PM_WITNESS')
+	const tenantWitnessSig = signatures.find((s) => s.role === 'TENANT_WITNESS')
+
+	if (pmSig?.created_at) {
+		set('LandlordSignedOn', dayjs(pmSig.created_at).format('MMM D, YYYY'))
+	}
+	if (tenantSig?.created_at) {
+		set('TenantSignedOn', dayjs(tenantSig.created_at).format('MMM D, YYYY'))
+	}
+	if (pmWitnessSig?.signed_by_name) {
+		set('LandlordWitnessName', pmWitnessSig.signed_by_name)
+	}
+	if (pmWitnessSig?.created_at) {
+		set(
+			'LandlordWitnessSignedOn',
+			dayjs(pmWitnessSig.created_at).format('MMM D, YYYY'),
+		)
+	}
+	if (tenantWitnessSig?.signed_by_name) {
+		set('TenantWitnessName', tenantWitnessSig.signed_by_name)
+	}
+	if (tenantWitnessSig?.created_at) {
+		set(
+			'TenantWitnessSignedOn',
+			dayjs(tenantWitnessSig.created_at).format('MMM D, YYYY'),
+		)
+	}
+
+	return map
+}
+
 export function buildTenantApplicationFieldMap(
 	app: TenantApplication,
 ): DocumentTemplateFieldMap {

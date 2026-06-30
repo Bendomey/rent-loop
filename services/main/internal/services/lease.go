@@ -94,7 +94,7 @@ type CreateLeaseInput struct {
 	KeyHandoverDate                 *time.Time
 	UtilityTransfersDate            *time.Time
 	PropertyInspectionDate          *time.Time
-	LeaseAgreementDocumentUrl       string
+	LeaseAgreementDocumentUrl       *string // nullable — may not be set at creation time
 	TerminationAgreementDocumentUrl *string
 	ParentLeaseId                   *string
 }
@@ -232,7 +232,7 @@ func (s *leaseService) UpdateLease(ctx context.Context, input UpdateLeaseInput) 
 	}
 
 	if input.LeaseAgreementDocumentUrl != nil {
-		lease.LeaseAgreementDocumentUrl = *input.LeaseAgreementDocumentUrl
+		lease.LeaseAgreementDocumentUrl = input.LeaseAgreementDocumentUrl
 	}
 
 	if input.Meta != nil {

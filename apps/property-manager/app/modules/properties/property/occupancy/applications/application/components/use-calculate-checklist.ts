@@ -18,14 +18,21 @@ export function useCalculateChecklist(application: TenantApplication) {
 		financialItems,
 		docsItems,
 	]
-	const sectionsComplete = checklistSections.filter((items) =>
-		items.every((i) => i.done),
+	// Display progress: all 5 sections, empty sections count as incomplete.
+	const sectionsComplete = checklistSections.filter(
+		(items) => items.length > 0 && items.every((i) => i.done),
 	).length
-
 	const progress = (sectionsComplete / checklistSections.length) * 100
+
+	// Approval gate: only sections that have items (docs is optional when unset).
+	const requiredSections = checklistSections.filter((items) => items.length > 0)
+	const canApprove =
+		requiredSections.length === 0 ||
+		requiredSections.every((items) => items.every((i) => i.done))
 
 	return {
 		progress,
+		canApprove,
 		unitItems,
 		tenantDetailItems,
 		moveInItems,

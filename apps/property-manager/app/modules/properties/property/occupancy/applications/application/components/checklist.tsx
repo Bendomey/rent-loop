@@ -105,7 +105,7 @@ function MenuItem({ label, subItems, href }: MenuItemProps) {
 
 	const isActive = pathname === href
 	const doneCount = subItems.filter((i) => i.done).length
-	const allDone = doneCount === subItems.length
+	const allDone = subItems.length > 0 && doneCount === subItems.length
 
 	return (
 		<Link to={href} className="cursor-pointer">

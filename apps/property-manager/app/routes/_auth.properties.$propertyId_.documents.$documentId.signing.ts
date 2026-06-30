@@ -1,6 +1,7 @@
 import { redirect } from 'react-router'
 import type { Route } from './+types/_auth.properties.$propertyId_.documents.$documentId.signing'
 import { getDocument } from '~/api/documents'
+import { getLeaseAgreementDocumentForServer } from '~/api/lease-agreement-document/server'
 import { getAdminPropertyTenantApplicationForServer } from '~/api/tenant-applications'
 import { getAuthSession } from '~/lib/actions/auth.session.server'
 import { environmentVariables } from '~/lib/actions/env.server'
@@ -18,33 +19,49 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 	const clientId = safeString(authSession.get('selectedClientId'))
 	const url = new URL(request.url)
 	const applicationId = url.searchParams.get('applicationId')
+	const leaseId = url.searchParams.get('leaseId')
 
 	try {
-		const [document, tenantApplication] = await Promise.all([
-			getDocument(clientId, params.documentId, { authToken, baseUrl }),
-			applicationId
-				? getAdminPropertyTenantApplicationForServer(
-						clientId,
-						{
-							id: applicationId,
-							property_id: params.propertyId,
-							populate: [
-								'DesiredUnit',
-								'CreatedBy',
-								'CreatedBy.User',
-								'LeaseAgreementDocumentSignatures',
-								'LeaseAgreementDocument',
-							],
-						},
-						{ baseUrl, authToken },
-					)
-				: Promise.resolve(null),
-		])
+		const [document, tenantApplication, leaseAgreementDocument] =
+			await Promise.all([
+				getDocument(clientId, params.documentId, { authToken, baseUrl }),
+				applicationId
+					? getAdminPropertyTenantApplicationForServer(
+							clientId,
+							{
+								id: applicationId,
+								property_id: params.propertyId,
+								populate: [
+									'DesiredUnit',
+									'CreatedBy',
+									'CreatedBy.User',
+									'LeaseAgreementDocumentSignatures',
+									'LeaseAgreementDocument',
+								],
+							},
+							{ baseUrl, authToken },
+						)
+					: Promise.resolve(null),
+				leaseId
+					? getLeaseAgreementDocumentForServer(
+							clientId,
+							params.propertyId,
+							leaseId,
+							{
+								authToken,
+								baseUrl,
+							},
+						).catch(() => null)
+					: Promise.resolve(null),
+			])
 
 		return {
 			origin: getDomainUrl(request),
 			document,
 			tenantApplication,
+			leaseAgreementDocument: leaseAgreementDocument ?? null,
+			leaseId,
+			propertyId: params.propertyId,
 		}
 	} catch {
 		throw new Response(null, { status: 404, statusText: 'Not Found' })

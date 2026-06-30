@@ -301,6 +301,20 @@ func NewClientUserRouter(appCtx pkg.AppContext, handlers handlers.Handlers) func
 										Patch("/cancel", handlers.LeaseTerminationHandler.CancelLeaseTermination)
 								})
 							})
+
+							r.Route("/agreement-documents", func(r chi.Router) {
+								r.Get("/", handlers.LeaseAgreementDocumentHandler.GetLeaseAgreementDocument)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Post("/", handlers.LeaseAgreementDocumentHandler.CreateLeaseAgreementDocument)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Patch("/", handlers.LeaseAgreementDocumentHandler.UpdateLeaseAgreementDocument)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Delete("/", handlers.LeaseAgreementDocumentHandler.DeleteLeaseAgreementDocument)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Post("/finalize", handlers.LeaseAgreementDocumentHandler.FinalizeLeaseAgreementDocument)
+								r.With(middlewares.ValidateRoleClientUserPropertyMiddleware(appCtx, "MANAGER")).
+									Post("/draft", handlers.LeaseAgreementDocumentHandler.RevertLeaseAgreementDocumentToDraft)
+							})
 						})
 
 						r.Route("/tenants/{tenant_id}", func(r chi.Router) {
