@@ -7,6 +7,53 @@ import (
 	"gorm.io/datatypes"
 )
 
+// Notification channels. Pass into CreateNotificationInput.Channels.
+const (
+	// NotificationChannelInApp shows the notification in the recipient's in-app
+	// notification centre. No delivery record is created for this channel.
+	NotificationChannelInApp = "IN_APP"
+	// NotificationChannelEmail creates a delivery record and queues an email dispatch.
+	// RecipientEmail must be set on CreateNotificationInput.
+	NotificationChannelEmail = "EMAIL"
+	// NotificationChannelSMS creates a delivery record and queues an SMS dispatch.
+	// RecipientPhone must be set on CreateNotificationInput.
+	NotificationChannelSMS = "SMS"
+	// NotificationChannelPush creates a delivery record and queues a push dispatch.
+	// FCM tokens are resolved from the database at delivery time.
+	NotificationChannelPush = "PUSH"
+)
+
+// Notification visibility values stored on the Notification model.
+const (
+	NotificationVisibilityInApp  = "IN_APP"
+	NotificationVisibilityHidden = "HIDDEN"
+)
+
+// Recipient type values stored on the Notification model.
+const (
+	NotificationRecipientTypeClientUser    = "CLIENT_USER"
+	NotificationRecipientTypeTenantAccount = "TENANT_ACCOUNT"
+)
+
+// Notification-level status values.
+const (
+	NotificationStatusPending    = "PENDING"
+	NotificationStatusProcessing = "PROCESSING"
+	NotificationStatusCompleted  = "COMPLETED"
+	NotificationStatusPartial    = "PARTIAL"
+	NotificationStatusFailed     = "FAILED"
+)
+
+// Delivery-level status values.
+const (
+	DeliveryStatusQueued     = "QUEUED"
+	DeliveryStatusProcessing = "PROCESSING"
+	DeliveryStatusSent       = "SENT"
+	DeliveryStatusDelivered  = "DELIVERED"
+	DeliveryStatusFailed     = "FAILED"
+	DeliveryStatusRetrying   = "RETRYING"
+)
+
 // Notification is the source-of-truth record for every notification event.
 // visibility = IN_APP  → shown in the user's notification centre.
 // visibility = HIDDEN  → stored for audit/delivery tracking only; never returned to users.

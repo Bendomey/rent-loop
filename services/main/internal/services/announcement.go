@@ -23,6 +23,8 @@ type RentloopQueue interface {
 	EnqueueAnnouncementExpire(ctx context.Context, announcementID string, at time.Time) error
 	CancelAnnouncementPublish(ctx context.Context, announcementID string) error
 	RescheduleAnnouncementExpire(ctx context.Context, announcementID string, at time.Time) error
+	// EnqueueNotificationDeliver enqueues a task to dispatch one NotificationDelivery record.
+	EnqueueNotificationDeliver(ctx context.Context, deliveryID string) error
 }
 
 type AnnouncementService interface {

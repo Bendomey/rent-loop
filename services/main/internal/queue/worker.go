@@ -24,7 +24,7 @@ func NewServer(redisURL string) (*asynq.Server, error) {
 	}
 	return asynq.NewServer(opt, asynq.Config{
 		Concurrency: 10,
-		Queues:      map[string]int{"default": 1},
+		Queues:      map[string]int{"default": 1, "notifications": 3},
 		ErrorHandler: asynq.ErrorHandlerFunc(func(ctx context.Context, task *asynq.Task, err error) {
 			log.WithError(err).WithField("task_type", task.Type()).Error("[Queue] task failed")
 		}),
@@ -59,6 +59,7 @@ func RegisterWorkers(redisURL string, appCtx pkg.AppContext, repo repository.Rep
 			LeaseInvoicingHandlers(repo.LeaseRepository, svcs.LeaseService),
 			InvoiceReminderHandlers(repo.InvoiceRepository, appCtx, svcs.NotificationService),
 			ForexSyncHandlers(svcs.ExchangeRateService),
+			NotificationHandlers(repo.NotificationRepository, repo.FcmTokenRepository, appCtx),
 		)
 		if err := queueServer.Run(mux); err != nil {
 			raven.CaptureError(err, nil)
