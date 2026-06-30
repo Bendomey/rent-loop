@@ -153,7 +153,7 @@ export function PropertyBookingsModule() {
 	)
 
 	return (
-		<div className="mx-auto my-6 flex max-w-4xl flex-col gap-4 px-6 sm:gap-6">
+		<div className="mx-auto my-6 flex max-w-4xl flex-col gap-4 sm:gap-6">
 			<div className="space-y-1">
 				<TypographyH4>Bookings</TypographyH4>
 				<TypographyMuted>All bookings for this property.</TypographyMuted>
@@ -161,7 +161,7 @@ export function PropertyBookingsModule() {
 
 			<PropertyBookingsController isLoading={isLoading} refetch={refetch} />
 
-			<div className="bg-background space-y-4 rounded-lg border p-3 sm:p-5">
+			<div className="mb-4">
 				<DataTable
 					columns={columns}
 					isLoading={isLoading}

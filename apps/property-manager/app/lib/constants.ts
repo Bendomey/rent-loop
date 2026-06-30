@@ -34,6 +34,7 @@ export const QUERY_KEYS = {
 	AGREEMENTS: 'agreements',
 	BOOKINGS: 'bookings',
 	DATE_BLOCKS: 'date-blocks',
+	LEASE_TERMINATIONS: 'lease-terminations',
 	LEASE_AGREEMENT_DOCUMENT: 'lease-agreement-document',
 	NOTIFICATIONS: 'notifications',
 	NOTIFICATION_UNREAD_COUNT: 'notification-unread-count',
