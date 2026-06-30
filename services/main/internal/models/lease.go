@@ -49,7 +49,8 @@ type Lease struct {
 	PropertyInspectionDate *time.Time // a move-in checklist can be created in the process.
 
 	// docs setup
-	LeaseAgreementDocumentUrl string
+	LeaseAgreementDocumentUrl *string                 // nullable — set when document pipeline finalizes or on direct upload
+	LeaseAgreementDocument    *LeaseAgreementDocument `gorm:"foreignKey:LeaseID"`
 
 	TerminationAgreementDocumentUrl *string
 

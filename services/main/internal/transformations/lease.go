@@ -30,7 +30,8 @@ type OutputAdminLease struct {
 	UtilityTransfersDate   *time.Time `json:"utility_transfers_date"   example:"2024-07-02T10:00:00Z"`
 	PropertyInspectionDate *time.Time `json:"property_inspection_date" example:"2024-06-30T15:00:00Z"`
 
-	LeaseAgreementDocumentUrl string `json:"lease_agreement_document_url" example:"https://example.com/lease.pdf"`
+	LeaseAgreementDocumentUrl *string                            `json:"lease_agreement_document_url,omitempty" example:"https://example.com/lease.pdf"`
+	LeaseAgreementDocument    *OutputAdminLeaseAgreementDocument `json:"lease_agreement_document,omitempty"`
 
 	TerminationAgreementDocumentUrl                       *string    `json:"termination_agreement_document_url,omitempty"                           example:"https://example.com/termination.pdf"`
 	TerminationAgreementDocumentPropertyManagerSignedAt   *time.Time `json:"termination_agreement_document_property_manager_signed_at,omitempty"    example:"2024-12-01T10:00:00Z"`
@@ -86,6 +87,7 @@ func DBAdminLeaseToRest(i *models.Lease) any {
 		"utility_transfers_date":             i.UtilityTransfersDate,
 		"property_inspection_date":           i.PropertyInspectionDate,
 		"lease_agreement_document_url":       i.LeaseAgreementDocumentUrl,
+		"lease_agreement_document":           DBAdminLeaseAgreementDocumentToRest(i.LeaseAgreementDocument),
 		"termination_agreement_document_url": i.TerminationAgreementDocumentUrl,
 		"activated_at":                       i.ActivatedAt,
 		"activated_by_id":                    i.ActivatedById,
@@ -130,7 +132,7 @@ type OutputLease struct {
 	UtilityTransfersDate   *time.Time `json:"utility_transfers_date"   example:"2024-07-02T10:00:00Z"`
 	PropertyInspectionDate *time.Time `json:"property_inspection_date" example:"2024-06-30T15:00:00Z"`
 
-	LeaseAgreementDocumentUrl string `json:"lease_agreement_document_url" example:"https://example.com/lease.pdf"`
+	LeaseAgreementDocumentUrl *string `json:"lease_agreement_document_url,omitempty" example:"https://example.com/lease.pdf"`
 
 	TerminationAgreementDocumentUrl                     *string    `json:"termination_agreement_document_url,omitempty"                        example:"https://example.com/termination.pdf"`
 	TerminationAgreementDocumentPropertyManagerSignedAt *time.Time `json:"termination_agreement_document_property_manager_signed_at,omitempty" example:"2024-12-01T10:00:00Z"`

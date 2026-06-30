@@ -29,6 +29,8 @@ import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 import { useUploadObject } from '~/hooks/use-upload-object'
 import { localizedDayjs } from '~/lib/date'
 import { safeString } from '~/lib/strings'
+import { isValidPhoneNumber } from 'react-phone-number-input'
+import { InternationalPhoneInput } from '~/components/international-phone'
 
 const ValidationSchema = z.object({
 	on_boarding_method: z.enum(['SELF', 'ADMIN'], {
@@ -48,7 +50,9 @@ const ValidationSchema = z.object({
 		.or(z.literal('')),
 	phone: z
 		.string({ error: 'Phone Number is required' })
-		.min(9, 'Please enter a valid phone number'),
+		.refine(isValidPhoneNumber, {
+			message: 'Please enter a valid phone number',
+		}),
 	profile_photo_url: z.url('Please upload a logo').optional(),
 	date_of_birth: z
 		.date()
@@ -93,6 +97,7 @@ export function Step1() {
 		resolver: zodResolver(ValidationSchema),
 		defaultValues: {
 			on_boarding_method: formData.on_boarding_method,
+			phone: formData.phone,
 			marital_status: formData.marital_status || 'SINGLE',
 			gender: formData.gender || 'MALE',
 		},
@@ -159,13 +164,6 @@ export function Step1() {
 			})
 		}
 
-		if (formData.phone) {
-			setValue('phone', formData.phone, {
-				shouldDirty: true,
-				shouldValidate: true,
-			})
-		}
-
 		if (formData.current_address) {
 			setValue('current_address', formData.current_address, {
 				shouldDirty: true,
@@ -194,7 +192,6 @@ export function Step1() {
 			other_names: data.other_names,
 			last_name: data.last_name,
 			email: data.email,
-			phone: data.phone,
 			current_address: data.current_address,
 			profile_photo_url: data.profile_photo_url,
 			date_of_birth: data.date_of_birth?.toISOString(),
@@ -307,13 +304,19 @@ export function Step1() {
 						<FormField
 							name="phone"
 							control={control}
-							render={({ field }) => (
+							render={({ field, fieldState }) => (
 								<FormItem>
 									<FormLabel>
 										Phone <span className="text-red-500">*</span>
 									</FormLabel>
 									<FormControl>
-										<Input {...field} type="text" />
+										<InternationalPhoneInput
+											value={field.value}
+											onChange={field.onChange}
+											error={!!fieldState.error}
+											disabled
+											description="We'll use this to send notifications"
+										/>
 									</FormControl>
 									<FormDescription>
 										We'll send notifications to this number

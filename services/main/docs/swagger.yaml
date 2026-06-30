@@ -774,6 +774,23 @@ definitions:
     - payee_type
     - payer_type
     type: object
+  handlers.CreateLeaseAgreementDocumentRequest:
+    properties:
+      document_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      document_url:
+        example: https://example.com/lease.pdf
+        type: string
+      mode:
+        enum:
+        - MANUAL
+        - ONLINE
+        example: ONLINE
+        type: string
+    required:
+    - mode
+    type: object
   handlers.CreateLeaseChecklistItemRequest:
     properties:
       description:
@@ -1776,6 +1793,18 @@ definitions:
         example: GHS
         type: string
       due_date:
+        type: string
+    type: object
+  handlers.UpdateLeaseAgreementDocumentRequest:
+    properties:
+      document_id:
+        type: string
+      document_url:
+        type: string
+      mode:
+        enum:
+        - MANUAL
+        - ONLINE
         type: string
     type: object
   handlers.UpdateLeaseChecklistItemRequest:
@@ -2796,6 +2825,8 @@ definitions:
       key_handover_date:
         example: "2024-07-01T09:00:00Z"
         type: string
+      lease_agreement_document:
+        $ref: '#/definitions/transformations.OutputAdminLeaseAgreementDocument'
       lease_agreement_document_url:
         example: https://example.com/lease.pdf
         type: string
@@ -2871,6 +2902,38 @@ definitions:
         type: string
       utility_transfers_date:
         example: "2024-07-02T10:00:00Z"
+        type: string
+    type: object
+  transformations.OutputAdminLeaseAgreementDocument:
+    properties:
+      created_at:
+        example: "2024-06-01T09:00:00Z"
+        type: string
+      document:
+        $ref: '#/definitions/transformations.OutputAdminDocument'
+      document_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      document_url:
+        example: https://example.com/lease.pdf
+        type: string
+      id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      lease_id:
+        example: 4fce5dc8-8114-4ab2-a94b-b4536c27f43b
+        type: string
+      mode:
+        example: ONLINE
+        type: string
+      signatures:
+        items: {}
+        type: array
+      status:
+        example: DRAFT
+        type: string
+      updated_at:
+        example: "2024-06-10T09:00:00Z"
         type: string
     type: object
   transformations.OutputAdminLeaseTermination:
@@ -9459,6 +9522,295 @@ paths:
       summary: Update lease (Admin)
       tags:
       - Lease
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/agreement-documents:
+    delete:
+      consumes:
+      - application/json
+      description: Remove the agreement document pipeline record. Allowed in any status
+        while the PDF has not yet been saved to the lease.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete lease agreement document
+      tags:
+      - Lease
+    get:
+      consumes:
+      - application/json
+      description: Fetch the agreement document pipeline record for a lease, with
+        signatures.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminLeaseAgreementDocument'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get lease agreement document
+      tags:
+      - Lease
+    patch:
+      consumes:
+      - application/json
+      description: Update mode, document_id, or document_url. Only allowed when status
+        is DRAFT.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateLeaseAgreementDocumentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminLeaseAgreementDocument'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update lease agreement document
+      tags:
+      - Lease
+    post:
+      consumes:
+      - application/json
+      description: Start the document pipeline for a lease. Status is set to DRAFT.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateLeaseAgreementDocumentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminLeaseAgreementDocument'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create lease agreement document
+      tags:
+      - Lease
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/agreement-documents/draft:
+    post:
+      consumes:
+      - application/json
+      description: Revert a FINALIZED document back to DRAFT so edits can be made.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminLeaseAgreementDocument'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Revert lease agreement document to draft
+      tags:
+      - Lease
+  /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/agreement-documents/finalize:
+    post:
+      consumes:
+      - application/json
+      description: Lock the document content and advance status from DRAFT to FINALIZED.
+      parameters:
+      - description: Property ID
+        in: path
+        name: property_id
+        required: true
+        type: string
+      - description: Lease ID
+        in: path
+        name: lease_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/transformations.OutputAdminLeaseAgreementDocument'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Finalize lease agreement document
+      tags:
+      - Lease
   /api/v1/admin/clients/{client_id}/properties/{property_id}/leases/{lease_id}/checklists:
     get:
       consumes:
@@ -15179,6 +15531,141 @@ paths:
       summary: List payment accounts for a lease's property manager (Tenant)
       tags:
       - PaymentAccount
+  /api/v1/notifications:
+    get:
+      consumes:
+      - application/json
+      description: Returns paginated in-app notifications for the authenticated client
+        user, newest first.
+      parameters:
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Page size (default 20, max 50)
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    type: object
+                  rows:
+                    items:
+                      type: object
+                    type: array
+                type: object
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Unexpected error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List in-app notifications (Property Manager)
+      tags:
+      - Notifications
+  /api/v1/notifications/{notification_id}/read:
+    post:
+      consumes:
+      - application/json
+      description: Marks a single in-app notification as read for the authenticated
+        client user.
+      parameters:
+      - description: Notification ID (UUID)
+        in: path
+        name: notification_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Unexpected error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Mark notification as read (Property Manager)
+      tags:
+      - Notifications
+  /api/v1/notifications/read-all:
+    post:
+      consumes:
+      - application/json
+      description: Marks all unread in-app notifications as read for the authenticated
+        client user.
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Unexpected error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Mark all notifications as read (Property Manager)
+      tags:
+      - Notifications
+  /api/v1/notifications/unread-count:
+    get:
+      consumes:
+      - application/json
+      description: Returns the count of unread in-app notifications for the authenticated
+        client user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Unread count
+          schema:
+            properties:
+              data:
+                properties:
+                  count:
+                    type: integer
+                type: object
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Unexpected error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get unread notification count (Property Manager)
+      tags:
+      - Notifications
   /api/v1/payments/offline:
     post:
       consumes:
@@ -15518,6 +16005,141 @@ paths:
       summary: Get my tenant account (Tenant)
       tags:
       - TenantAccount
+  /api/v1/tenant-accounts/notifications:
+    get:
+      consumes:
+      - application/json
+      description: Returns paginated in-app notifications for the authenticated tenant
+        account, newest first.
+      parameters:
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Page size (default 20, max 50)
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  meta:
+                    type: object
+                  rows:
+                    items:
+                      type: object
+                    type: array
+                type: object
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Unexpected error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: List in-app notifications (Tenant)
+      tags:
+      - Notifications
+  /api/v1/tenant-accounts/notifications/{notification_id}/read:
+    post:
+      consumes:
+      - application/json
+      description: Marks a single in-app notification as read for the authenticated
+        tenant account.
+      parameters:
+      - description: Notification ID (UUID)
+        in: path
+        name: notification_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Unexpected error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Mark notification as read (Tenant)
+      tags:
+      - Notifications
+  /api/v1/tenant-accounts/notifications/read-all:
+    post:
+      consumes:
+      - application/json
+      description: Marks all unread in-app notifications as read for the authenticated
+        tenant account.
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Unexpected error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Mark all notifications as read (Tenant)
+      tags:
+      - Notifications
+  /api/v1/tenant-accounts/notifications/unread-count:
+    get:
+      consumes:
+      - application/json
+      description: Returns the count of unread in-app notifications for the authenticated
+        tenant account.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Unread count
+          schema:
+            properties:
+              data:
+                properties:
+                  count:
+                    type: integer
+                type: object
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/lib.HTTPError'
+        "500":
+          description: Unexpected error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get unread notification count (Tenant)
+      tags:
+      - Notifications
   /api/v1/tenant-applications:
     post:
       consumes:

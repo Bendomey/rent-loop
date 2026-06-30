@@ -1,8 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, Save } from 'lucide-react'
 import { useForm } from 'react-hook-form'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 import { z } from 'zod'
 import { DatePickerInput } from '~/components/date-picker-input'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { Button } from '~/components/ui/button'
 import {
 	Form,
@@ -23,7 +25,9 @@ import {
 import { TypographyH2, TypographyMuted } from '~/components/ui/typography'
 
 const Schema = z.object({
-	phone: z.string({ error: 'Phone is required' }).min(9, 'Phone is required'),
+	phone: z
+		.string({ error: 'Phone is required' })
+		.refine(isValidPhoneNumber, { message: 'Phone is required' }),
 	first_name: z.string().optional(),
 	last_name: z.string().optional(),
 	email: z.string().email('Invalid email').optional().or(z.literal('')),
@@ -89,13 +93,17 @@ export function WizardStep2({
 					<FormField
 						control={form.control}
 						name="phone"
-						render={({ field }) => (
+						render={({ field, fieldState }) => (
 							<FormItem>
 								<FormLabel>
 									Phone <span className="text-destructive">*</span>
 								</FormLabel>
 								<FormControl>
-									<Input placeholder="+233201234567" {...field} />
+									<InternationalPhoneInput
+										value={field.value}
+										onChange={field.onChange}
+										error={!!fieldState.error}
+									/>
 								</FormControl>
 								<FormMessage />
 							</FormItem>

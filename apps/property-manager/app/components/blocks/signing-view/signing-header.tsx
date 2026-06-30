@@ -13,7 +13,7 @@ interface SignatureStatus {
 
 interface SigningHeaderProps {
 	documentTitle: string
-	applicationCode: string
+	applicationCode?: string
 	signerRole: SignatureRole
 	signatureStatuses: SignatureStatus[]
 }
@@ -45,9 +45,11 @@ export function SigningHeader({
 									{SIGNATURE_ROLE_LABELS[signerRole]}
 								</span>
 							</span>
-							<Badge variant="outline" className="px-1.5 py-0 text-[10px]">
-								#{applicationCode}
-							</Badge>
+							{applicationCode && (
+								<Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+									#{applicationCode}
+								</Badge>
+							)}
 						</div>
 					</div>
 				</div>

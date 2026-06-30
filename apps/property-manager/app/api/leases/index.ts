@@ -68,6 +68,7 @@ export interface UpdateLeaseInput {
 	propertyId: string
 	leaseId: string
 	utility_transfers_date?: Date
+	lease_agreement_document_url?: string | null
 }
 
 const updateLease = async (props: UpdateLeaseInput) => {
@@ -75,6 +76,8 @@ const updateLease = async (props: UpdateLeaseInput) => {
 		const body: Record<string, unknown> = {}
 		if (props.utility_transfers_date)
 			body.utility_transfers_date = props.utility_transfers_date.toISOString()
+		if (props.lease_agreement_document_url !== undefined)
+			body.lease_agreement_document_url = props.lease_agreement_document_url
 
 		const response = await fetchClient<ApiResponse<Lease>>(
 			`/v1/admin/clients/${props.clientId}/properties/${props.propertyId}/leases/${props.leaseId}`,

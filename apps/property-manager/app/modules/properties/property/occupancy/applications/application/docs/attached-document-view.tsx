@@ -197,21 +197,21 @@ export function AttachedDocumentView({
 				</div>
 			) : (
 				<div className="space-y-3">
-					{tenantApplication.lease_agreement_document_status ===
-						'FINALIZED' && (
-						<div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-							<p className="text-xs text-amber-700">
-								Need to make changes?{' '}
-								<Link
-									to={`/properties/${propertyId}/occupancy/applications/${applicationId}/editor/${tenantApplication.lease_agreement_document_id}`}
-									className="font-medium underline underline-offset-2"
-								>
-									Open the editor
-								</Link>{' '}
-								and revert the document to draft.
-							</p>
-						</div>
-					)}
+					{tenantApplication.lease_agreement_document_status === 'FINALIZED' &&
+						signatures.length === 0 && (
+							<div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+								<p className="text-xs text-amber-700">
+									Need to make changes?{' '}
+									<Link
+										to={`/properties/${propertyId}/occupancy/applications/${applicationId}/editor/${tenantApplication.lease_agreement_document_id}`}
+										className="font-medium underline underline-offset-2"
+									>
+										Open the editor
+									</Link>{' '}
+									and revert the document to draft.
+								</p>
+							</div>
+						)}
 
 					{['SIGNING', 'SIGNED'].includes(
 						safeString(tenantApplication.lease_agreement_document_status),

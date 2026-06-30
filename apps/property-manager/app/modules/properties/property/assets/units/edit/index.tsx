@@ -282,7 +282,7 @@ export function EditPropertyAssetUnitModule() {
 			>
 				{/* Header */}
 				<div className="space-y-2">
-					<TypographyH2>Edit {unit ? unit.name : 'Unit'}</TypographyH2>
+					<TypographyH2>{unit ? unit.name : 'Unit'}</TypographyH2>
 					<TypographyMuted>
 						Update the details for this property unit.
 					</TypographyMuted>

@@ -72,17 +72,7 @@ export function CreateNewPropertyTenantApplicationProvider({
 	const onSubmit = async (
 		data: Partial<CreatePropertyTenantApplicationInput>,
 	) => {
-		const updatedData = { ...data }
-
-		if (formData.phone) {
-			updatedData.phone = `+233${formData.phone.slice(-9)}`
-		}
-
-		if (formData.emergency_contact_phone) {
-			updatedData.emergency_contact_phone = `+233${formData.emergency_contact_phone.slice(-9)}`
-		}
-
-		await createFetcher.submit(updatedData, {
+		await createFetcher.submit(data, {
 			method: 'POST',
 			action: `/tenants/apply`,
 		})

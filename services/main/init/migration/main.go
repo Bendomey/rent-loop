@@ -52,7 +52,10 @@ func updateMigration(db *gorm.DB) error {
 		&models.Booking{},
 		&models.UnitDateBlock{},
 		&models.LeaseTermination{},
+		&models.LeaseAgreementDocument{},
 		&models.ExchangeRate{},
+		&models.Notification{},
+		&models.NotificationDelivery{},
 	)
 	return err
 }
@@ -113,6 +116,9 @@ func ServiceAutoMigration(db *gorm.DB) error {
 		jobs.AddBookingInvoiceContextAssociation(),
 		jobs.DropBookingRateAndCurrency(),
 		jobs.AddLeaseTerminationContextFields(),
+		jobs.AddLeaseAgreementDocument(),
+		jobs.FixLADLeaseIDPartialUniqueIndex(),
+		jobs.AddNotificationTables(),
 	})
 	if err := m.Migrate(); err != nil {
 		return fmt.Errorf("[Migration.Migrate]: %v", err)

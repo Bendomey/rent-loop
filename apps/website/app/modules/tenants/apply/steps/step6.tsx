@@ -10,6 +10,7 @@ import {
 	TypographyMuted,
 	TypographyP,
 } from '~/components/ui/typography'
+import { getIdTypeLabel } from '~/lib/tenant.utils'
 
 const renderPreviewField = (
 	label: string,
@@ -178,7 +179,7 @@ export function Step6() {
 				>
 					<div className="grid grid-cols-2 gap-x-4 gap-y-0">
 						{renderPreviewField('Nationality', formData.nationality)}
-						{renderPreviewField('ID Type', formData.id_type)}
+						{renderPreviewField('ID Type', getIdTypeLabel(formData.id_type))}
 						<div className="col-span-2">
 							{renderPreviewField('ID Number', formData.id_number)}
 						</div>

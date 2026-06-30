@@ -19,7 +19,7 @@ import {
 } from '~/components/ui/typography'
 import { useSendOtp } from '~/hooks/use-send-otp'
 import { getErrorMessage } from '~/lib/error-messages'
-import { formatPhoneWithCountryCode } from '~/lib/misc'
+import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 
 export function Step2() {
 	const [otp, setOtp] = useState('')
@@ -80,7 +80,7 @@ export function Step2() {
 		mutate(
 			{
 				code: otp,
-				phone: formatPhoneWithCountryCode(formData.phone, '+233', 9),
+				phone: normalizeInternationalPhoneNumber(formData.phone),
 			},
 			{
 				onError: (e: unknown) => {
@@ -105,7 +105,7 @@ export function Step2() {
 		useGetTenantByPhone()
 
 	const tenantLookUpByPhoneAndFormUpdate = async () => {
-		const phone = formatPhoneWithCountryCode(formData.phone, '+233', 9)
+		const phone = normalizeInternationalPhoneNumber(formData.phone)
 		getTenantMutate(phone, {
 			onError: () => {
 				allowEdit(true)
@@ -167,8 +167,7 @@ export function Step2() {
 					<TypographyMuted className="leading-relaxed">
 						Enter the 6-digit code sent to{' '}
 						<span className="font-medium text-zinc-900">
-							{formatPhoneWithCountryCode(formData.phone, '+233', 9) ||
-								'your phone'}
+							{formData.phone || 'your phone'}
 						</span>
 					</TypographyMuted>
 				</div>

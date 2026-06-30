@@ -17,7 +17,7 @@ import {
 	injectSignatureIntoState,
 } from '~/lib/lexical.utils'
 import {
-	buildTemplateFieldMap,
+	buildTenantApplicationFieldMap,
 	resolveTemplateFields,
 } from '~/lib/resolve-template-fields'
 import { dataUrlToBlob } from '~/lib/utils'
@@ -91,7 +91,7 @@ export function PublicSigningModule() {
 	const resolvedEditorState = tenantApplication
 		? resolveTemplateFields(
 				editorState,
-				buildTemplateFieldMap(tenantApplication),
+				buildTenantApplicationFieldMap(tenantApplication),
 			)
 		: editorState
 

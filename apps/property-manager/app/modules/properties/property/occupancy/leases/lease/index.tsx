@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLoaderData } from 'react-router'
 import { ChecklistAlerts } from './components/checklist-alerts'
 import { ChecklistSection } from './components/checklist-section'
+import { LeaseAgreementDocumentSetup } from './components/lease-agreement-document-setup'
 import { StartLeaseDialog } from './components/start-lease-dialog'
 import { LeaseExpensesTab } from './expenses-tab'
 import { useGetLeaseTerminations } from '~/api/lease-terminations'
@@ -73,7 +74,8 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 }
 
 export function LeaseDetailModule() {
-	const { lease, clientUserProperty } = useLoaderData<typeof loader>()
+	const { lease, clientUserProperty, documentTemplates } =
+		useLoaderData<typeof loader>()
 	const { clientUserProperty: ctxProp } = useProperty()
 	const { clientUser } = useClient()
 	const { hasPermissions: managerPermission } = useHasPropertyPermissions({
@@ -652,7 +654,7 @@ export function LeaseDetailModule() {
 										<div className="space-y-3">
 											<SectionHeading>Lease Agreement</SectionHeading>
 											{lease.lease_agreement_document_url ? (
-												<div className="space-y-4 text-sm">
+												<div className="space-y-2 text-sm">
 													<a
 														href={lease.lease_agreement_document_url}
 														target="_blank"
@@ -662,79 +664,23 @@ export function LeaseDetailModule() {
 														<ExternalLink className="size-3.5" />
 														View Document
 													</a>
-													{application?.lease_agreement_document_signatures &&
-													application.lease_agreement_document_signatures
-														.length > 0 ? (
-														<div className="space-y-2">
-															{application.lease_agreement_document_signatures
-																.filter(
-																	(sig) =>
-																		sig.document_id ===
-																		application.lease_agreement_document_id,
-																)
-																.map((sig) => {
-																	const role = sig.role
-																	const roleLabel: Record<typeof role, string> =
-																		{
-																			PROPERTY_MANAGER: 'Property Manager',
-																			TENANT: 'Tenant',
-																			PM_WITNESS: 'PM Witness',
-																			TENANT_WITNESS: 'Tenant Witness',
-																		}
-																	return (
-																		<div
-																			key={role}
-																			className="flex items-center justify-between rounded-md border px-3 py-2"
-																		>
-																			<div>
-																				<p className="text-xs font-medium">
-																					{roleLabel[role]}
-																				</p>
-																				{sig?.signed_by_name && (
-																					<p className="text-muted-foreground text-xs">
-																						{sig.signed_by_name}
-																					</p>
-																				)}
-																			</div>
-																			{sig ? (
-																				<div className="flex items-center gap-2">
-																					<Badge
-																						variant="outline"
-																						className="bg-teal-500 px-1.5 text-white dark:bg-teal-900"
-																					>
-																						Signed{' '}
-																						{localizedDayjs(
-																							sig.created_at,
-																						).format('LLL')}
-																					</Badge>
-																				</div>
-																			) : (
-																				<Badge
-																					variant="outline"
-																					className="bg-zinc-400 px-1.5 text-white"
-																				>
-																					Not signed
-																				</Badge>
-																			)}
-																		</div>
-																	)
-																})}
-														</div>
-													) : (
-														<p className="text-muted-foreground text-xs">
-															No signature records available.
-														</p>
-													)}
 												</div>
 											) : (
-												<p className="text-muted-foreground text-sm">N/A</p>
+												<LeaseAgreementDocumentSetup
+													leaseId={lease.id}
+													propertyId={propertyId}
+													lease={lease}
+													tenant={tenant}
+													documentTemplates={documentTemplates}
+													isManager={canEditChecklist}
+												/>
 											)}
 										</div>
 
 										{/* Termination Agreement */}
-										<div className="space-y-3">
-											<SectionHeading>Termination Agreement</SectionHeading>
-											{lease.termination_agreement_document_url ? (
+										{lease.termination_agreement_document_url && (
+											<div className="space-y-3">
+												<SectionHeading>Termination Agreement</SectionHeading>
 												<div className="space-y-2 text-sm">
 													<a
 														href={lease.termination_agreement_document_url}
@@ -764,10 +710,8 @@ export function LeaseDetailModule() {
 														</p>
 													</div>
 												</div>
-											) : (
-												<p className="text-muted-foreground text-sm">N/A</p>
-											)}
-										</div>
+											</div>
+										)}
 									</CardContent>
 								</Card>
 							</TabsContent>

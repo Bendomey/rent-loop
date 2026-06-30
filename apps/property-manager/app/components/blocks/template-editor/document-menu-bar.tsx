@@ -29,19 +29,23 @@ import { TypographyMuted } from '~/components/ui/typography'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
 
-interface LeaseMenuBarProps {
+interface DocumentMenuBarProps {
 	document: RentloopDocument
-	tenantApplication: TenantApplication
+	docStatus: string | null
+	subtitle?: string
+	returnUrl?: string | null
 	onFinalize?: () => void
 	onRevertToDraft?: () => void
 }
 
-export function LeaseMenuBar({
+export function DocumentMenuBar({
 	document,
-	tenantApplication,
+	docStatus,
+	subtitle,
+	returnUrl,
 	onFinalize,
 	onRevertToDraft,
-}: LeaseMenuBarProps) {
+}: DocumentMenuBarProps) {
 	const navigate = useNavigate()
 	const [editor] = useLexicalComposerContext()
 	const { clientUser } = useClient()
@@ -58,8 +62,6 @@ export function LeaseMenuBar({
 			const currentContent = JSON.stringify(editorState.toJSON())
 
 			if (isFirstUpdateRef.current) {
-				// Lexical normalizes the state on hydration (field ordering, node IDs,
-				// defaults), so re-baseline the ref to avoid a false hasChanges=true.
 				savedContentRef.current = currentContent
 				isFirstUpdateRef.current = false
 			} else {
@@ -93,24 +95,19 @@ export function LeaseMenuBar({
 					toast.success('Draft saved')
 				},
 				onError: (error) => {
-					toast.error('Failed to save', {
-						description: error.message,
-					})
+					toast.error('Failed to save', { description: error.message })
 				},
 			},
 		)
 	}
 
-	const docStatus = tenantApplication.lease_agreement_document_status
-
-	const applicantName = [
-		tenantApplication.first_name,
-		tenantApplication.last_name,
-	]
-		.filter(Boolean)
-		.join(' ')
-
-	const unitName = tenantApplication.desired_unit?.name
+	const handleBack = () => {
+		if (returnUrl) {
+			void navigate(returnUrl)
+		} else {
+			void navigate(-1)
+		}
+	}
 
 	const canFinalize = hasPmSignature && hasTenantSignature
 
@@ -167,30 +164,18 @@ export function LeaseMenuBar({
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
+
 			<div className="flex flex-col justify-between gap-2 border-b py-3 md:flex-row md:items-center md:px-3">
 				<div className="flex items-center space-x-2">
-					<Button onClick={() => navigate(-1)} size="sm" variant="ghost">
+					<Button onClick={handleBack} size="sm" variant="ghost">
 						<ArrowLeft />
 					</Button>
 					<Separator orientation="vertical" className="!h-5" />
 					<div className="flex flex-col">
 						<h1 className="text-sm font-medium">{document.title}</h1>
-						<div className="flex items-center gap-1.5">
-							<TypographyMuted className="text-xs">
-								{applicantName}
-							</TypographyMuted>
-							{unitName && (
-								<>
-									<span className="text-xs text-zinc-300">/</span>
-									<TypographyMuted className="text-xs">
-										{unitName}
-									</TypographyMuted>
-								</>
-							)}
-							<Badge variant="outline" className="ml-1 px-1.5 py-0 text-[10px]">
-								#{tenantApplication.code}
-							</Badge>
-						</div>
+						{subtitle && (
+							<TypographyMuted className="text-xs">{subtitle}</TypographyMuted>
+						)}
 					</div>
 				</div>
 
