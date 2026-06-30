@@ -18,6 +18,7 @@ type InternationalPhoneInputProps = {
 	description?: string
 	className?: string
 	defaultCountry?: CountryCode
+	disabled?: boolean
 }
 
 export function InternationalPhoneInput({
@@ -28,6 +29,7 @@ export function InternationalPhoneInput({
 	description,
 	className,
 	defaultCountry = 'GH',
+	disabled,
 }: InternationalPhoneInputProps) {
 	return (
 		<div
@@ -35,6 +37,7 @@ export function InternationalPhoneInput({
 				'bg-background flex items-center rounded-md border px-3',
 				'focus-within:ring-ring focus-within:ring-2',
 				error && 'border-destructive focus-within:ring-destructive/20',
+				disabled && 'cursor-not-allowed opacity-60',
 				className,
 			)}
 		>
@@ -45,13 +48,16 @@ export function InternationalPhoneInput({
 				value={value}
 				onChange={(value) => onChange(value ?? '')}
 				placeholder={placeholder}
+				disabled={disabled}
 				className="flex h-10 w-full items-center gap-2"
 				numberInputProps={{
 					className:
 						'flex-1 border-0 bg-transparent px-2 py-2 text-sm shadow-none focus-visible:!ring-0 focus-visible:!outline-none focus-visible:!ring-offset-0',
+					disabled,
 				}}
 				countrySelectProps={{
 					className: 'border-0 bg-transparent text-sm shadow-none focus:ring-0',
+					disabled,
 				}}
 			/>
 

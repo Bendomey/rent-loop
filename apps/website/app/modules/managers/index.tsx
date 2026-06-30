@@ -7,11 +7,9 @@ import {
 	Eyebrow,
 	FeatureCard,
 	MarketingPage,
-	Placeholder,
 	RL,
 	Section,
 	SectionHeader,
-	SubHead,
 } from '~/components/marketing'
 import { BOOK_DEMO_URL, PROPERTY_MANAGER_APP_URL } from '~/lib/constants'
 

@@ -49,7 +49,8 @@ export function BookingDetails({ booking }: Props) {
 		booking.status as Exclude<BookingStatus, 'CANCELLED'>,
 	)
 	const isCancelled = booking.status === 'CANCELLED'
-	const showCheckInCode = booking.status === 'CONFIRMED' && !!booking.check_in_code
+	const showCheckInCode =
+		booking.status === 'CONFIRMED' && !!booking.check_in_code
 
 	const invoice = booking.invoice
 	const lineItems = invoice?.line_items ?? []
@@ -205,13 +206,18 @@ export function BookingDetails({ booking }: Props) {
 						{lineItems.length > 0 ? (
 							<div className="space-y-2">
 								{lineItems.map((item) => (
-									<div key={item.id} className="flex items-start justify-between text-sm">
+									<div
+										key={item.id}
+										className="flex items-start justify-between text-sm"
+									>
 										<div>
 											<p className="font-medium text-zinc-900">{item.label}</p>
 											{item.quantity > 1 && (
 												<p className="text-xs text-zinc-400">
 													{item.quantity} ×{' '}
-													{formatAmount(convertPesewasToCedis(item.unit_amount))}
+													{formatAmount(
+														convertPesewasToCedis(item.unit_amount),
+													)}
 												</p>
 											)}
 										</div>
@@ -223,7 +229,7 @@ export function BookingDetails({ booking }: Props) {
 							</div>
 						) : null}
 
-						<div className="mt-4 border-t pt-3 flex justify-between text-sm">
+						<div className="mt-4 flex justify-between border-t pt-3 text-sm">
 							<span className="font-semibold text-zinc-900">Total</span>
 							<span className="font-bold text-zinc-900">
 								{formatAmount(convertPesewasToCedis(invoice.total_amount))}
@@ -246,7 +252,8 @@ export function BookingDetails({ booking }: Props) {
 								>
 									<div>
 										<p className="font-medium text-zinc-900">
-											{PAYMENT_METHOD_LABELS[p.payment_method] ?? p.payment_method}
+											{PAYMENT_METHOD_LABELS[p.payment_method] ??
+												p.payment_method}
 										</p>
 										<p className="text-xs text-zinc-400">
 											{p.successful_at
@@ -258,7 +265,8 @@ export function BookingDetails({ booking }: Props) {
 										<span
 											className={[
 												'rounded-full px-2 py-0.5 text-xs font-medium',
-												PAYMENT_STATUS_CLASSES[p.status] ?? 'bg-zinc-100 text-zinc-500',
+												PAYMENT_STATUS_CLASSES[p.status] ??
+													'bg-zinc-100 text-zinc-500',
 											].join(' ')}
 										>
 											{p.status.charAt(0) + p.status.slice(1).toLowerCase()}

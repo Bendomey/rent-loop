@@ -1,6 +1,6 @@
 import { toast } from 'sonner'
 import { useGetOtpCode } from '~/api/auth'
-import { formatPhoneWithCountryCode } from '~/lib/misc'
+import { normalizeInternationalPhoneNumber } from '~/lib/phone'
 
 type UseSendOtpOptions = {
 	onSuccess?: () => void
@@ -11,7 +11,7 @@ export const useSendOtp = (options?: UseSendOtpOptions) => {
 	const { mutate, isPending } = useGetOtpCode()
 
 	const sendOtp = (phone?: string) => {
-		const formattedPhone = formatPhoneWithCountryCode(phone, '+233', 9)
+		const formattedPhone = normalizeInternationalPhoneNumber(phone)
 
 		if (!formattedPhone) {
 			toast.error('Invalid phone number')

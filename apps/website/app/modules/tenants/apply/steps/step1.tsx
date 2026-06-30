@@ -2,8 +2,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { AlertCircleIcon, ArrowLeft, ArrowRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 import { z } from 'zod'
 import { useTenantApplicationContext } from '../context'
+import { InternationalPhoneInput } from '~/components/international-phone'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { Button } from '~/components/ui/button'
 import {
@@ -15,7 +17,6 @@ import {
 	FormLabel,
 	FormMessage,
 } from '~/components/ui/form'
-import { Input } from '~/components/ui/input'
 import { Spinner } from '~/components/ui/spinner'
 import { TypographyH2 } from '~/components/ui/typography'
 import { useSendOtp } from '~/hooks/use-send-otp'
@@ -23,7 +24,9 @@ import { useSendOtp } from '~/hooks/use-send-otp'
 const ValidationSchema = z.object({
 	phone: z
 		.string({ error: 'Phone number is required' })
-		.min(9, 'Please enter a valid phone number'),
+		.refine(isValidPhoneNumber, {
+			message: 'Please enter a valid phone number',
+		}),
 })
 
 type FormSchema = z.infer<typeof ValidationSchema>
@@ -99,17 +102,22 @@ export function Step1() {
 						<FormField
 							name="phone"
 							control={control}
-							render={({ field }) => (
+							render={({ field, fieldState }) => (
 								<FormItem>
 									<FormLabel>
 										Phone number <span className="text-red-500">*</span>
 									</FormLabel>
 									<FormControl>
-										<Input {...field} type="text" placeholder="201234567" />
+										<InternationalPhoneInput
+											value={field.value}
+											onChange={field.onChange}
+											error={!!fieldState.error}
+										/>
 									</FormControl>
 									<FormDescription>
-										We may send a verification code to confirm it’s you. Please
-										use a phone number you can access.
+										We may send a verification code to confirm it's you. Enter
+										your number in international format, e.g.{' '}
+										<span className="font-medium">+233 201 234 567</span>.
 									</FormDescription>
 									<FormMessage />
 								</FormItem>
