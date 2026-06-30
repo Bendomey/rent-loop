@@ -27,6 +27,8 @@ type NotificationRepository interface {
 	MarkAllAsRead(ctx context.Context, recipientID, recipientType string) error
 	// GetUnreadCount returns the count of unread IN_APP notifications for a recipient.
 	GetUnreadCount(ctx context.Context, recipientID, recipientType string) (int64, error)
+	// GetDeliveryByID fetches a NotificationDelivery with its parent Notification preloaded.
+	GetDeliveryByID(ctx context.Context, id string) (*models.NotificationDelivery, error)
 }
 
 type notificationRepository struct {
@@ -92,6 +94,17 @@ func (r *notificationRepository) MarkAllAsRead(ctx context.Context, recipientID,
 		Model(&models.Notification{}).
 		Where("recipient_id = ? AND recipient_type = ? AND visibility = 'IN_APP' AND read_at IS NULL", recipientID, recipientType).
 		Update("read_at", gorm.Expr("NOW()")).Error
+}
+
+func (r *notificationRepository) GetDeliveryByID(ctx context.Context, id string) (*models.NotificationDelivery, error) {
+	var d models.NotificationDelivery
+	err := r.DB.WithContext(ctx).
+		Preload("Notification").
+		First(&d, "id = ?", id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &d, nil
 }
 
 func (r *notificationRepository) GetUnreadCount(ctx context.Context, recipientID, recipientType string) (int64, error) {

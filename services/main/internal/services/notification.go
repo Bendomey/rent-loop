@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/Bendomey/rent-loop/services/main/internal/clients/fcm"
 	"github.com/Bendomey/rent-loop/services/main/internal/models"
@@ -43,17 +44,20 @@ type notificationService struct {
 	appCtx           pkg.AppContext
 	fcmTokenRepo     repository.FcmTokenRepository
 	notificationRepo repository.NotificationRepository
+	enqueuer         RentloopQueue
 }
 
 func NewNotificationService(
 	appCtx pkg.AppContext,
 	fcmTokenRepo repository.FcmTokenRepository,
 	notificationRepo repository.NotificationRepository,
+	enqueuer RentloopQueue,
 ) NotificationService {
 	return &notificationService{
 		appCtx:           appCtx,
 		fcmTokenRepo:     fcmTokenRepo,
 		notificationRepo: notificationRepo,
+		enqueuer:         enqueuer,
 	}
 }
 
@@ -61,18 +65,6 @@ type RegisterFcmTokenInput struct {
 	TenantAccountID string
 	Token           string
 	Platform        string // "ios" or "android"
-}
-
-type CreateNotificationInput struct {
-	OrganizationID string
-	RecipientID    string
-	RecipientType  string // "CLIENT_USER" | "TENANT_ACCOUNT"
-	Event          string
-	Category       *string
-	Visibility     string // "IN_APP" | "HIDDEN"
-	Title          string
-	Body           string
-	Data           map[string]any
 }
 
 func (s *notificationService) RegisterToken(ctx context.Context, input RegisterFcmTokenInput) error {
@@ -151,6 +143,31 @@ func (s *notificationService) SendToTenantAccount(
 	return nil
 }
 
+// CreateNotificationInput describes a notification event and its delivery channels.
+//
+// Channels drives both visibility and external delivery:
+//   - "IN_APP" — stores the notification visibly in the recipient's notification centre (no delivery record)
+//   - "EMAIL"  — creates a delivery record and queues an email dispatch; requires RecipientEmail
+//   - "SMS"    — creates a delivery record and queues an SMS dispatch; requires RecipientPhone
+//   - "PUSH"   — creates a delivery record and queues a push dispatch; FCM tokens resolved at delivery time
+//
+// Visibility is derived automatically: if "IN_APP" is present → IN_APP, otherwise → HIDDEN.
+// Omit "IN_APP" to store the notification for audit/delivery only without showing it in the centre.
+type CreateNotificationInput struct {
+	OrganizationID string
+	RecipientID    string
+	RecipientType  string // "CLIENT_USER" | "TENANT_ACCOUNT"
+	Event          string
+	Category       *string
+	Title          string
+	Body           string
+	Data           map[string]any
+	// Channels to activate. "IN_APP" controls visibility; the rest create delivery records.
+	Channels       []string // "IN_APP" | "EMAIL" | "SMS" | "PUSH"
+	RecipientEmail *string  // required when "EMAIL" is in Channels
+	RecipientPhone *string  // required when "SMS" is in Channels
+}
+
 func (s *notificationService) CreateNotification(
 	ctx context.Context,
 	input CreateNotificationInput,
@@ -167,22 +184,74 @@ func (s *notificationService) CreateNotification(
 		dataJSON = datatypes.JSON(raw)
 	}
 
+	visibility := models.NotificationVisibilityHidden
+	for _, ch := range input.Channels {
+		if ch == models.NotificationChannelInApp {
+			visibility = models.NotificationVisibilityInApp
+			break
+		}
+	}
+
 	n := &models.Notification{
 		OrganizationID: input.OrganizationID,
 		RecipientID:    input.RecipientID,
 		RecipientType:  input.RecipientType,
 		Event:          input.Event,
 		Category:       input.Category,
-		Visibility:     input.Visibility,
+		Visibility:     visibility,
 		Title:          &input.Title,
 		Body:           &input.Body,
 		Data:           dataJSON,
-		Status:         "PENDING",
+		Status:         models.NotificationStatusPending,
 	}
 
 	if err := s.notificationRepo.Create(ctx, n); err != nil {
 		return nil, pkg.InternalServerError(err.Error(), &pkg.RentLoopErrorParams{Err: err})
 	}
+
+	// Create a delivery record for each external channel and enqueue a dispatch task.
+	// IN_APP is handled via the visibility field above — no delivery record needed.
+	now := time.Now()
+	for _, channel := range input.Channels {
+		if channel == models.NotificationChannelInApp {
+			continue
+		}
+
+		var recipientAddress *string
+		switch channel {
+		case models.NotificationChannelEmail:
+			recipientAddress = input.RecipientEmail
+		case models.NotificationChannelSMS:
+			recipientAddress = input.RecipientPhone
+			// PUSH: address resolved from FCM token table at delivery time — no address needed here
+		}
+
+		delivery := &models.NotificationDelivery{
+			NotificationID:   n.ID,
+			Channel:          channel,
+			RecipientAddress: recipientAddress,
+			Status:           models.DeliveryStatusQueued,
+			QueuedAt:         now,
+		}
+		if err := s.notificationRepo.CreateDelivery(ctx, delivery); err != nil {
+			log.WithError(err).WithFields(log.Fields{
+				"notification_id": n.ID,
+				"channel":         channel,
+			}).Error("[Notification] failed to create delivery record")
+			continue
+		}
+
+		if s.enqueuer != nil {
+			if err := s.enqueuer.EnqueueNotificationDeliver(ctx, delivery.ID.String()); err != nil {
+				log.WithError(err).WithFields(log.Fields{
+					"notification_id": n.ID,
+					"delivery_id":     delivery.ID,
+					"channel":         channel,
+				}).Error("[Notification] failed to enqueue delivery task")
+			}
+		}
+	}
+
 	return n, nil
 }
 
