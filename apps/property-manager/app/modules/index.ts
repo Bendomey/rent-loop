@@ -55,6 +55,7 @@ export * from './properties/property/occupancy/tenants'
 export * from './properties/property/occupancy/tenants/tenant'
 export * from './properties/property/occupancy/tenants/tenant/profile'
 export * from './properties/property/occupancy/tenants/tenant/leases'
+export * from './properties/property/occupancy/tenants/tenant/bookings'
 
 export * from './properties/property/occupancy/leases'
 export * from './properties/property/occupancy/leases/bulk-onboard'

@@ -75,7 +75,7 @@ const filters: Array<Filter> = [
 		value: {
 			options: [
 				{ label: 'Active', value: 'ACTIVE' },
-				{ label: 'Expired', value: 'EXPIRED' },
+				{ label: 'Inactive', value: 'EXPIRED' },
 			],
 			urlParam: 'status',
 			defaultValues: [],

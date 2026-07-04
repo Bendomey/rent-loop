@@ -37,7 +37,7 @@ function InfoRow({
 export function TenantProfileModule({ tenant }: { tenant: Tenant }) {
 	return (
 		<div className="mt-3 space-y-3">
-			<div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
+			<div className="grid grid-cols-2 gap-2 lg:grid-cols-2">
 				<Card className="@container/card col-span-2 shadow-none lg:col-span-1">
 					<CardHeader>
 						<CardDescription>Total Payments</CardDescription>
@@ -46,33 +46,43 @@ export function TenantProfileModule({ tenant }: { tenant: Tenant }) {
 						</CardTitle>
 					</CardHeader>
 				</Card>
-				<Card className="@container/card shadow-none">
-					<CardHeader>
-						<CardDescription>Total Leases</CardDescription>
-						<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-							1
-						</CardTitle>
-					</CardHeader>
-				</Card>
-				<Card className="@container/card shadow-none">
-					<CardHeader>
-						<CardDescription>Total Requests</CardDescription>
-						<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-							10
-						</CardTitle>
-					</CardHeader>
-				</Card>
+				<div className='grid grid-cols-2 gap-2 lg:grid-cols-2'>
+					<Card className="@container/card shadow-none col-span-2 lg:col-span-1">
+						<CardHeader>
+							<CardDescription>Total Leases</CardDescription>
+							<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+								1
+							</CardTitle>
+						</CardHeader>
+					</Card>
+					<Card className="@container/card shadow-none col-span-2 lg:col-span-1">
+						<CardHeader>
+							<CardDescription>Total Bookings</CardDescription>
+							<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+								1
+							</CardTitle>
+						</CardHeader>
+					</Card>
+					<Card className="@container/card shadow-none col-span-2 lg:col-span-1">
+						<CardHeader>
+							<CardDescription>Total Requests</CardDescription>
+							<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+								10
+							</CardTitle>
+						</CardHeader>
+					</Card>
+				</div>
 			</div>
 			<Card className="shadow-none">
 				<CardHeader>
 					<CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
 						Basic Information
 					</CardTitle>
-					<CardAction>
+					{/* <CardAction>
 						<Button variant="ghost" size="icon">
 							<Filter className="h-4 w-4" />
 						</Button>
-					</CardAction>
+					</CardAction> */}
 				</CardHeader>
 
 				<CardContent className="space-y-4">

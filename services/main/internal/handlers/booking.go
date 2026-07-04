@@ -234,6 +234,69 @@ func (h *BookingHandler) ListBookings(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, rows, count))
 }
 
+// ListBookingsByTenant godoc
+//
+//	@Summary		List bookings by tenant (Admin)
+//	@Description	List a tenant's booking history for a property. This endpoint is intended for manager use to view a specific tenant's full booking history.
+//	@Tags			Booking
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			q			query		ListBookingsFilterRequest	false	"Filters"
+//
+//	@Param			client_id	path		string						true	"Client ID"
+//
+//	@Param			property_id	path		string						true	"Property ID"
+//	@Param			tenant_id	path		string						true	"Tenant ID"
+//	@Success		200			{object}	object{data=object{rows=[]transformations.AdminOutputBooking,meta=lib.HTTPReturnPaginatedMetaResponse}}
+//	@Failure		400			{object}	lib.HTTPError
+//	@Failure		401			{object}	string
+//	@Failure		500			{object}	string
+//	@Router			/api/v1/admin/clients/{client_id}/properties/{property_id}/tenants/{tenant_id}/bookings [get]
+func (h *BookingHandler) ListBookingsByTenant(w http.ResponseWriter, r *http.Request) {
+	propertyID := chi.URLParam(r, "property_id")
+	tenantID := chi.URLParam(r, "tenant_id")
+
+	filters := ListBookingsFilterRequest{
+		Status: lib.NullOrString(r.URL.Query().Get("status")),
+		UnitID: lib.NullOrString(r.URL.Query().Get("unit_id")),
+	}
+	if !lib.ValidateRequest(h.appCtx.Validator, filters, w) {
+		return
+	}
+
+	filterQuery, filterErr := lib.GenerateQuery(r.URL.Query())
+	if filterErr != nil {
+		HandleErrorResponse(w, filterErr)
+		return
+	}
+
+	input := repository.ListBookingsFilter{
+		PropertyID: &propertyID,
+		TenantID:   &tenantID,
+		Status:     filters.Status,
+		UnitID:     filters.UnitID,
+	}
+
+	bookings, listErr := h.bookingService.ListBookings(r.Context(), *filterQuery, input)
+	if listErr != nil {
+		HandleErrorResponse(w, listErr)
+		return
+	}
+
+	count, countErr := h.bookingService.CountBookings(r.Context(), *filterQuery, input)
+	if countErr != nil {
+		HandleErrorResponse(w, countErr)
+		return
+	}
+
+	rows := make([]interface{}, len(bookings))
+	for i := range bookings {
+		rows[i] = transformations.DBBookingToRest(&bookings[i])
+	}
+
+	json.NewEncoder(w).Encode(lib.ReturnListResponse(filterQuery, rows, count))
+}
+
 // GetBooking godoc
 //
 //	@Summary		Get a booking by ID

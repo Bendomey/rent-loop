@@ -29,6 +29,7 @@ func NewBookingRepository(db *gorm.DB) BookingRepository {
 type ListBookingsFilter struct {
 	PropertyID *string
 	UnitID     *string
+	TenantID   *string
 	Status     *string
 	lib.FilterQuery
 }
@@ -96,6 +97,7 @@ func (r *bookingRepository) List(
 			SearchScope("bookings", filterQuery.Search),
 			bookingPropertyIDScope(filters.PropertyID),
 			bookingUnitIDScope(filters.UnitID),
+			bookingTenantIDScope(filters.TenantID),
 			bookingStatusScope(filters.Status),
 			PaginationScope(filterQuery.Page, filterQuery.PageSize),
 			OrderScope("bookings", filterQuery.OrderBy, filterQuery.Order),
@@ -127,6 +129,7 @@ func (r *bookingRepository) Count(
 			SearchScope("bookings", filterQuery.Search),
 			bookingPropertyIDScope(filters.PropertyID),
 			bookingUnitIDScope(filters.UnitID),
+			bookingTenantIDScope(filters.TenantID),
 			bookingStatusScope(filters.Status),
 		)
 
@@ -173,6 +176,15 @@ func bookingStatusScope(status *string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if status != nil {
 			return db.Where("status = ?", *status)
+		}
+		return db
+	}
+}
+
+func bookingTenantIDScope(tenantID *string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if tenantID != nil {
+			return db.Where("tenant_id = ?", *tenantID)
 		}
 		return db
 	}
