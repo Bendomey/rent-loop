@@ -978,17 +978,31 @@ func releaseUnitIfNoActiveLease(
 
 // leaseEndDate calculates the expected end date from a lease's move-in date, duration, and frequency.
 // Mirrors the backfill migration logic. Falls back to 2099-01-01 for open-ended leases.
+// leaseEndDate computes MoveOutDate from MoveInDate + (duration × frequency).
+// frequency is stored using the same HOURLY/DAILY/WEEKLY/MONTHLY/QUARTERLY/
+// BIANNUALLY/ANNUALLY vocabulary as PaymentFrequency (StayDurationFrequency
+// defaults from unit.PaymentFrequency on tenant application creation), not the
+// "Hours/Days/Months" duration-unit words — those are accepted too for
+// backward compatibility with any rows written using that vocabulary.
 func leaseEndDate(moveIn time.Time, duration int64, frequency string) time.Time {
 	if duration == 0 || frequency == "" {
 		return time.Date(2099, 1, 1, 0, 0, 0, 0, time.UTC)
 	}
 	switch strings.ToLower(frequency) {
-	case "hours", "hour":
+	case "hourly", "hours", "hour":
 		return moveIn.Add(time.Duration(duration) * time.Hour)
-	case "days", "day":
+	case "daily", "days", "day":
 		return moveIn.AddDate(0, 0, int(duration))
-	case "months", "month":
+	case "weekly", "weeks", "week":
+		return moveIn.AddDate(0, 0, int(duration)*7)
+	case "monthly", "months", "month":
 		return moveIn.AddDate(0, int(duration), 0)
+	case "quarterly":
+		return moveIn.AddDate(0, int(duration)*3, 0)
+	case "biannually":
+		return moveIn.AddDate(0, int(duration)*6, 0)
+	case "annually", "yearly", "years", "year":
+		return moveIn.AddDate(int(duration), 0, 0)
 	default:
 		return time.Date(2099, 1, 1, 0, 0, 0, 0, time.UTC)
 	}

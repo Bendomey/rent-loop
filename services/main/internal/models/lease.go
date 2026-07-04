@@ -42,7 +42,7 @@ type Lease struct {
 
 	// move in details
 	MoveInDate            time.Time
-	StayDurationFrequency string // hours, days, months
+	StayDurationFrequency string // HOURLY, DAILY, MONTHLY, etc.
 	StayDuration          int64
 
 	// move out details
