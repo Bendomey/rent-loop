@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Outlet, useLoaderData } from 'react-router'
+import { Link, Outlet, useLoaderData } from 'react-router'
 import ApproveTenantApplicationModal from '../approve'
 import CancelTenantApplicationModal from '../cancel'
 import DeleteTenantApplicationModal from '../delete'
@@ -90,49 +90,66 @@ export function PropertyTenantApplicationContainer() {
 	const { canApprove } = useCalculateChecklist(tenantApplication)
 
 	return (
-		<div className="m-5 grid grid-cols-12 gap-4">
-			<div className="order-2 col-span-12 lg:order-1 lg:col-span-8">
-				<div className="max-lg:hidden">{applicationHeaderInfo}</div>
-				<div className="mt-5">
-					<Outlet context={{ tenantApplication }} />
-				</div>
-			</div>
-			<div className="order-1 col-span-12 flex flex-col gap-3 lg:order-2 lg:col-span-4 lg:mt-2 lg:gap-6">
-				<div className="lg:hidden">{applicationHeaderInfo}</div>
-				{tenantApplication?.status === 'TenantApplication.Status.InProgress' ? (
-					<PropertyPermissionGuard roles={['MANAGER']}>
-						<div
-							id="application-actions"
-							className="mb-2 flex w-full flex-row items-center justify-end space-x-2 lg:mb-3"
+		<div>
+			{tenantApplication?.status === 'TenantApplication.Status.Completed' && (
+				<div className="m-5 rounded-md bg-blue-100 p-4 dark:bg-blue-950">
+					<p className="text-sm text-blue-700 dark:text-blue-300">
+						This application has been completed. You cannot update the details
+						here. Please go to the{' '}
+						<Link
+							to={`/properties/${safeString(clientUserProperty?.property_id)}/occupancy/tenants`}
+							className="font-medium underline hover:no-underline"
 						>
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<span>
-										<Button
-											variant="secondary"
-											disabled={isInvoicePaid}
-											onClick={() => setOpenCancelModal(true)}
-										>
-											Cancel
-										</Button>
-									</span>
-								</TooltipTrigger>
-								{isInvoicePaid && (
-									<TooltipContent>
-										Cannot cancel after invoice payments have been made
-									</TooltipContent>
-								)}
-							</Tooltip>
-							<Button
-								disabled={!canApprove}
-								onClick={() => setOpenApproveModal(true)}
+							tenants page
+						</Link>{' '}
+						to update any details.
+					</p>
+				</div>
+			)}
+			<div className="m-5 grid grid-cols-12 gap-4">
+				<div className="order-2 col-span-12 lg:order-1 lg:col-span-8">
+					<div className="max-lg:hidden">{applicationHeaderInfo}</div>
+					<div className="mt-5">
+						<Outlet context={{ tenantApplication }} />
+					</div>
+				</div>
+				<div className="order-1 col-span-12 flex flex-col gap-3 lg:order-2 lg:col-span-4 lg:mt-2 lg:gap-6">
+					<div className="lg:hidden">{applicationHeaderInfo}</div>
+					{tenantApplication?.status ===
+					'TenantApplication.Status.InProgress' ? (
+						<PropertyPermissionGuard roles={['MANAGER']}>
+							<div
+								id="application-actions"
+								className="mb-2 flex w-full flex-row items-center justify-end space-x-2 lg:mb-3"
 							>
-								Approve
-							</Button>
-						</div>
-					</PropertyPermissionGuard>
-				) : null}
-				{/* tenantApplication.status ===
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<span>
+											<Button
+												variant="secondary"
+												disabled={isInvoicePaid}
+												onClick={() => setOpenCancelModal(true)}
+											>
+												Cancel
+											</Button>
+										</span>
+									</TooltipTrigger>
+									{isInvoicePaid && (
+										<TooltipContent>
+											Cannot cancel after invoice payments have been made
+										</TooltipContent>
+									)}
+								</Tooltip>
+								<Button
+									disabled={!canApprove}
+									onClick={() => setOpenApproveModal(true)}
+								>
+									Approve
+								</Button>
+							</div>
+						</PropertyPermissionGuard>
+					) : null}
+					{/* tenantApplication.status ===
 				  'TenantApplication.Status.Cancelled' ? (
 					<PropertyPermissionGuard roles={['MANAGER']}>
 						<div
@@ -148,31 +165,32 @@ export function PropertyTenantApplicationContainer() {
 						</div>
 					</PropertyPermissionGuard>
 				) : null} */}
-				<div id="application-checklist">
-					<PropertyTenantApplicationChecklist
-						propertyId={safeString(clientUserProperty?.property_id)}
-						application={tenantApplication}
-					/>
+					<div id="application-checklist">
+						<PropertyTenantApplicationChecklist
+							propertyId={safeString(clientUserProperty?.property_id)}
+							application={tenantApplication}
+						/>
+					</div>
 				</div>
+				<CancelTenantApplicationModal
+					opened={openCancelModal}
+					setOpened={setOpenCancelModal}
+					data={tenantApplication}
+					propertyId={safeString(clientUserProperty?.property_id)}
+				/>
+				<ApproveTenantApplicationModal
+					opened={openApproveModal}
+					setOpened={setOpenApproveModal}
+					data={tenantApplication}
+					propertyId={safeString(clientUserProperty?.property_id)}
+				/>
+				<DeleteTenantApplicationModal
+					opened={openDeleteModal}
+					setOpened={setOpenDeleteModal}
+					data={tenantApplication}
+					propertyId={safeString(clientUserProperty?.property_id)}
+				/>
 			</div>
-			<CancelTenantApplicationModal
-				opened={openCancelModal}
-				setOpened={setOpenCancelModal}
-				data={tenantApplication}
-				propertyId={safeString(clientUserProperty?.property_id)}
-			/>
-			<ApproveTenantApplicationModal
-				opened={openApproveModal}
-				setOpened={setOpenApproveModal}
-				data={tenantApplication}
-				propertyId={safeString(clientUserProperty?.property_id)}
-			/>
-			<DeleteTenantApplicationModal
-				opened={openDeleteModal}
-				setOpened={setOpenDeleteModal}
-				data={tenantApplication}
-				propertyId={safeString(clientUserProperty?.property_id)}
-			/>
 		</div>
 	)
 }
