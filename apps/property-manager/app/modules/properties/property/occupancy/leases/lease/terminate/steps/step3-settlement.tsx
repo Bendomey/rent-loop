@@ -1,5 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ExternalLink, Plus, Receipt, SkipForward, Trash2 } from 'lucide-react'
+import {
+	CreditCard,
+	ExternalLink,
+	Plus,
+	Receipt,
+	SkipForward,
+	Trash2,
+} from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { useFieldArray, useForm } from 'react-hook-form'
@@ -9,7 +16,7 @@ import {
 	type TerminationInvoiceLineItem,
 	useCreateTerminationInvoice,
 } from '~/api/lease-terminations'
-import { useGetInvoices } from '~/api/invoices'
+import { useGetInvoices, useIssueInvoice } from '~/api/invoices'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import {
@@ -36,6 +43,9 @@ import { convertPesewasToCedis, formatAmount } from '~/lib/format-amount'
 import { getInvoiceStatusLabel } from '~/lib/invoice'
 import { safeString } from '~/lib/strings'
 import { useClient } from '~/providers/client-provider'
+import { RecordPaymentDialog } from '~/components/blocks/record-payment-dialog'
+import { useQueryClient } from '@tanstack/react-query'
+import { QUERY_KEYS } from '~/lib/constants'
 
 const lineItemSchema = z.object({
 	label: z.string().min(1, 'Label required'),
@@ -87,6 +97,10 @@ interface Props {
 	onNext: () => void
 }
 
+function isInvoiceActive(invoice: Invoice) {
+	return invoice.status === 'ISSUED' || invoice.status === 'PARTIALLY_PAID'
+}
+
 export function StepSettlement({
 	lease,
 	propertyId,
@@ -95,19 +109,25 @@ export function StepSettlement({
 	onNext,
 }: Props) {
 	const { clientUser } = useClient()
+	const queryClient = useQueryClient()
 	const clientId = safeString(clientUser?.client_id)
 	const terminationId = safeString(leaseTermination?.id)
 	const [showForm, setShowForm] = useState(false)
 
-	const { data: invoicesData, isLoading: isLoadingInvoices } = useGetInvoices(
-		clientId,
-		propertyId,
-		{
-			filters: { context_lease_termination_id: terminationId },
-			pagination: { page: 1, per: 50 },
-			populate: ['LineItems'],
-		},
-	)
+	const [selectedInvoice, setSelectedInvoice] = useState<Invoice>()
+	const [showPayDialog, setShowPayDialog] = useState(false)
+
+	const {
+		data: invoicesData,
+		isLoading: isLoadingInvoices,
+		refetch: refetchInvoices,
+	} = useGetInvoices(clientId, propertyId, {
+		filters: { context_lease_termination_id: terminationId },
+		pagination: { page: 1, per: 50 },
+		populate: ['LineItems'],
+	})
+
+	const { mutateAsync: issueInvoice, isPending: isIssuing } = useIssueInvoice()
 
 	const { mutateAsync: createInvoice, isPending: isCreating } =
 		useCreateTerminationInvoice()
@@ -143,7 +163,7 @@ export function StepSettlement({
 				}),
 			)
 
-			await createInvoice({
+			const invoice = await createInvoice({
 				client_id: clientId,
 				property_id: propertyId,
 				lease_id: lease.id,
@@ -154,6 +174,15 @@ export function StepSettlement({
 				currency: 'GHS',
 				context_type: 'LEASE_TERMINATION',
 			})
+
+			if (invoice) {
+				await issueInvoice({
+					client_id: clientId,
+					property_id: propertyId,
+					id: invoice.id,
+				})
+			}
+			await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVOICES] })
 
 			toast.success('Invoice created')
 			form.reset()
@@ -196,43 +225,76 @@ export function StepSettlement({
 							Add Another
 						</Button>
 					</div>
-					{invoices.map((invoice) => (
-						<Link
-							key={invoice.id}
-							to={`/properties/${propertyId}/financials/invoices/${invoice.id}`}
-							className="hover:bg-muted/40 group flex items-center justify-between rounded-xl border p-4 transition-colors"
-						>
-							<div className="flex min-w-0 items-center gap-3">
-								<div className="bg-muted flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-									<Receipt className="text-muted-foreground size-5" />
+					{invoices.map((invoice) => {
+						const active = isInvoiceActive(invoice)
+						return (
+							<div
+								key={invoice.id}
+								className="group hover:bg-muted/40 rounded-xl border transition-colors"
+							>
+								<div className="flex items-center justify-between gap-4 p-4">
+									<Link
+										to={`/properties/${propertyId}/financials/invoices/${invoice.id}`}
+										className="flex min-w-0 flex-1 items-center gap-3"
+									>
+										<div className="bg-muted flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+											<Receipt className="text-muted-foreground size-5" />
+										</div>
+										<div className="min-w-0">
+											<p className="text-sm font-medium">{invoice.code}</p>
+											<p className="text-muted-foreground mt-0.5 text-xs">
+												{invoice.payer_type === 'TENANT'
+													? 'Tenant pays'
+													: 'Landlord pays'}{' '}
+												·{' '}
+												{localizedDayjs(invoice.created_at).format(
+													'MMM D, YYYY',
+												)}
+											</p>
+										</div>
+									</Link>
+
+									<div className="flex shrink-0 items-center gap-3">
+										<div className="text-right">
+											<p className="text-sm font-semibold">
+												{formatAmount(
+													convertPesewasToCedis(invoice.total_amount),
+													invoice.currency,
+												)}
+											</p>
+											<Badge
+												variant="outline"
+												className={`mt-0.5 text-xs ${INVOICE_STATUS_CLASSES[invoice.status]}`}
+											>
+												{getInvoiceStatusLabel(invoice.status)}
+											</Badge>
+										</div>
+										<Link
+											to={`/properties/${propertyId}/financials/invoices/${invoice.id}`}
+											className="text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+										>
+											<ExternalLink className="size-4" />
+										</Link>
+									</div>
 								</div>
-								<div className="min-w-0">
-									<p className="text-sm font-medium">{invoice.code}</p>
-									<p className="text-muted-foreground mt-0.5 text-xs">
-										{invoice.payer_type === 'TENANT'
-											? 'Tenant pays'
-											: 'Landlord pays'}{' '}
-										· {localizedDayjs(invoice.created_at).format('MMM D, YYYY')}
-									</p>
-								</div>
+
+								{active && (
+									<div className="flex items-center justify-end border-t px-4 py-3">
+										<Button
+											size="sm"
+											onClick={() => {
+												setSelectedInvoice(invoice)
+												setShowPayDialog(true)
+											}}
+										>
+											<CreditCard className="size-4" />
+											Record Payment
+										</Button>
+									</div>
+								)}
 							</div>
-							<div className="flex shrink-0 items-center gap-3">
-								<p className="text-sm font-semibold">
-									{formatAmount(
-										convertPesewasToCedis(invoice.total_amount),
-										invoice.currency,
-									)}
-								</p>
-								<Badge
-									variant="outline"
-									className={`text-xs ${INVOICE_STATUS_CLASSES[invoice.status]}`}
-								>
-									{getInvoiceStatusLabel(invoice.status)}
-								</Badge>
-								<ExternalLink className="text-muted-foreground size-4 opacity-0 transition-opacity group-hover:opacity-100" />
-							</div>
-						</Link>
-					))}
+						)
+					})}
 				</div>
 			) : (
 				!showForm && (
@@ -449,8 +511,8 @@ export function StepSettlement({
 								>
 									Cancel
 								</Button>
-								<Button type="submit" disabled={isCreating}>
-									{isCreating ? <Spinner /> : null}
+								<Button type="submit" disabled={isCreating || isIssuing}>
+									{isCreating || isIssuing ? <Spinner /> : null}
 									Create Invoice
 								</Button>
 							</div>
@@ -473,6 +535,17 @@ export function StepSettlement({
 					{invoices.length > 0 && <Button onClick={onNext}>Continue</Button>}
 				</div>
 			</div>
+
+			{selectedInvoice && (
+				<RecordPaymentDialog
+					open={showPayDialog}
+					onOpenChange={setShowPayDialog}
+					invoice={selectedInvoice}
+					clientId={safeString(clientUser?.client_id)}
+					propertyId={propertyId}
+					onSuccess={() => void void refetchInvoices()}
+				/>
+			)}
 		</div>
 	)
 }

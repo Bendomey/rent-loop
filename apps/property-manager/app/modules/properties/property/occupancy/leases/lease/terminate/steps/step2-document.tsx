@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link } from 'react-router'
+import { Link, useRevalidator } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { useGetDocuments } from '~/api/documents'
@@ -59,6 +59,7 @@ export function StepDocument({
 	const { clientUser } = useClient()
 	const clientId = safeString(clientUser?.client_id)
 	const terminationId = safeString(leaseTermination?.id)
+	const { revalidate } = useRevalidator()
 
 	const { mutateAsync: updateTermination, isPending: isUpdating } =
 		useUpdateLeaseTermination()
@@ -126,6 +127,7 @@ export function StepDocument({
 				document_url: values.document_url,
 				document_id: null,
 			})
+			await revalidate()
 			toast.success('Document URL saved')
 			onNext()
 		} catch (err) {
@@ -147,6 +149,7 @@ export function StepDocument({
 				document_id: selectedDocId,
 				document_url: null,
 			})
+			await revalidate()
 			toast.success('Document linked')
 		} catch (err) {
 			toast.error(
@@ -227,7 +230,9 @@ export function StepDocument({
 												termination_id: terminationId,
 												document_mode: null,
 												document_url: null,
-											}).catch(() => toast.error('Failed to clear document'))
+											})
+												.then(() => revalidate())
+												.catch(() => toast.error('Failed to clear document'))
 										}
 									>
 										Change
@@ -299,6 +304,7 @@ export function StepDocument({
 											document_mode: null,
 											document_id: null,
 										})
+											.then(() => revalidate())
 											.then(() => setSelectedDocId(null))
 											.catch(() => toast.error('Failed to clear document'))
 									}

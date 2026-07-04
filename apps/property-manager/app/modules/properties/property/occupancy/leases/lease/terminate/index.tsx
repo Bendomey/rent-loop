@@ -19,6 +19,21 @@ const STEPS = [
 	{ label: 'Confirm' },
 ]
 
+function getResumeStep(termination?: LeaseTermination | null): number {
+	if (!termination) return 0
+
+	const hasDocument =
+		(termination.document_mode === 'ONLINE' && !!termination.document_id) ||
+		(termination.document_mode === 'MANUAL' && !!termination.document_url)
+	const hasInspection = !!termination.lease_checklist_id
+	const hasReason = !!termination.type && !!termination.reason
+
+	if (hasDocument) return 3
+	if (hasInspection) return 2
+	if (hasReason) return 1
+	return 0
+}
+
 function LeaseTerminateContent({
 	lease,
 	propertyId,
@@ -29,12 +44,6 @@ function LeaseTerminateContent({
 	const navigate = useNavigate()
 	const { terminateLease } = useLoaderData<typeof loader>()
 	const { step, setStep, next, back } = useLeaseTerminate()
-
-	useEffect(() => {
-		if (terminateLease?.type) {
-			setStep(1)
-		}
-	}, [terminateLease])
 
 	const terminationId = safeString(terminateLease?.id)
 
@@ -153,13 +162,14 @@ function LeaseTerminateContent({
 }
 
 export function LeaseTerminateModule() {
-	const { lease, clientUserProperty } = useLoaderData<typeof loader>()
+	const { lease, clientUserProperty, terminateLease } =
+		useLoaderData<typeof loader>()
 	const propertyId = safeString(clientUserProperty?.property_id)
 
 	if (!lease) return null
 
 	return (
-		<LeaseTerminateProvider>
+		<LeaseTerminateProvider initialStep={getResumeStep(terminateLease)}>
 			<LeaseTerminateContent lease={lease} propertyId={propertyId} />
 		</LeaseTerminateProvider>
 	)

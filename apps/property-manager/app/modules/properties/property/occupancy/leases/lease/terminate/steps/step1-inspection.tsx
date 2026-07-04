@@ -43,6 +43,7 @@ export function StepInspection({
 	const clientId = safeString(clientUser?.client_id)
 	const terminationId = safeString(leaseTermination?.id)
 	const [viewChecklistId, setViewChecklistId] = useState<string | null>(null)
+	const [isProcessing, setIsProcessing] = useState(false)
 
 	const { data: checklistsData, isLoading: isLoadingChecklists } =
 		useGetLeaseChecklists(clientId, propertyId, lease.id, {
@@ -64,6 +65,7 @@ export function StepInspection({
 		checklistsData?.rows?.find((c) => c.id === viewChecklistId) ?? null
 
 	const handleCreateAndLink = async () => {
+		setIsProcessing(true)
 		try {
 			const checklist = await createChecklist({
 				client_id: clientId,
@@ -80,19 +82,24 @@ export function StepInspection({
 				termination_id: terminationId,
 				lease_checklist_id: checklist.id,
 			})
-			void queryClient.invalidateQueries({
-				queryKey: [QUERY_KEYS.LEASE_CHECKLISTS],
-			})
-			void revalidate()
+			await Promise.all([
+				queryClient.invalidateQueries({
+					queryKey: [QUERY_KEYS.LEASE_CHECKLISTS],
+				}),
+				revalidate(),
+			])
 		} catch (err) {
 			toast.error(
 				err instanceof Error ? err.message : 'Failed to create inspection',
 			)
+		} finally {
+			setIsProcessing(false)
 		}
 	}
 
 	const handleLinkExisting = async () => {
 		if (!checkOutChecklist) return
+		setIsProcessing(true)
 		try {
 			await updateTermination({
 				client_id: clientId,
@@ -101,10 +108,18 @@ export function StepInspection({
 				termination_id: terminationId,
 				lease_checklist_id: checkOutChecklist.id,
 			})
+			await Promise.all([
+				queryClient.invalidateQueries({
+					queryKey: [QUERY_KEYS.LEASE_CHECKLISTS],
+				}),
+				revalidate(),
+			])
 		} catch (err) {
 			toast.error(
 				err instanceof Error ? err.message : 'Failed to link inspection',
 			)
+		} finally {
+			setIsProcessing(false)
 		}
 	}
 
@@ -118,7 +133,7 @@ export function StepInspection({
 				</p>
 			</div>
 
-			{isLoadingChecklists ? (
+			{isLoadingChecklists || isProcessing ? (
 				<div className="space-y-3">
 					<Skeleton className="h-20 w-full" />
 					<Skeleton className="h-20 w-full" />

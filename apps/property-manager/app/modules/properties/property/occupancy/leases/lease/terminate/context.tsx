@@ -13,11 +13,12 @@ const LeaseTerminateContext = createContext<
 
 export function LeaseTerminateProvider({
 	children,
+	initialStep = 0,
 }: {
 	children: React.ReactNode
+	initialStep?: number
 }) {
-	const [step, setStep] = useState(0)
-	const [terminationId, setTerminationId] = useState<string | null>(null)
+	const [step, setStep] = useState(initialStep)
 
 	const next = () => setStep((s) => Math.min(s + 1, 4))
 	const back = () => setStep((s) => Math.max(s - 1, 0))
