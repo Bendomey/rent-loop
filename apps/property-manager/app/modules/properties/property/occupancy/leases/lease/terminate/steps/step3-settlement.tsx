@@ -6,6 +6,7 @@ import {
 	Receipt,
 	SkipForward,
 	Trash2,
+	XCircle,
 } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
@@ -46,6 +47,7 @@ import { useClient } from '~/providers/client-provider'
 import { RecordPaymentDialog } from '~/components/blocks/record-payment-dialog'
 import { useQueryClient } from '@tanstack/react-query'
 import { QUERY_KEYS } from '~/lib/constants'
+import { CancelPaymentDialog } from '~/components/blocks/void-payment-dialog'
 
 const lineItemSchema = z.object({
 	label: z.string().min(1, 'Label required'),
@@ -97,10 +99,6 @@ interface Props {
 	onNext: () => void
 }
 
-function isInvoiceActive(invoice: Invoice) {
-	return invoice.status === 'ISSUED' || invoice.status === 'PARTIALLY_PAID'
-}
-
 export function StepSettlement({
 	lease,
 	propertyId,
@@ -116,6 +114,7 @@ export function StepSettlement({
 
 	const [selectedInvoice, setSelectedInvoice] = useState<Invoice>()
 	const [showPayDialog, setShowPayDialog] = useState(false)
+	const [showCancelPayDialog, setShowCancelPayDialog] = useState(false)
 
 	const {
 		data: invoicesData,
@@ -226,7 +225,14 @@ export function StepSettlement({
 						</Button>
 					</div>
 					{invoices.map((invoice) => {
-						const active = isInvoiceActive(invoice)
+						const isActive =
+							invoice.status === 'ISSUED' || invoice.status === 'PARTIALLY_PAID'
+
+						const canCancelInvoice =
+							invoice.status === 'DRAFT' ||
+							invoice.status === 'ISSUED' ||
+							invoice.status === 'PARTIALLY_PAID'
+
 						return (
 							<div
 								key={invoice.id}
@@ -278,18 +284,35 @@ export function StepSettlement({
 									</div>
 								</div>
 
-								{active && (
-									<div className="flex items-center justify-end border-t px-4 py-3">
-										<Button
-											size="sm"
-											onClick={() => {
-												setSelectedInvoice(invoice)
-												setShowPayDialog(true)
-											}}
-										>
-											<CreditCard className="size-4" />
-											Record Payment
-										</Button>
+								{(canCancelInvoice || isActive) && (
+									<div className="flex items-center justify-between border-t px-4 py-3">
+										<div>
+											{canCancelInvoice && (
+												<Button
+													variant="outline"
+													size="sm"
+													onClick={() => {
+														setSelectedInvoice(invoice)
+														setShowCancelPayDialog(true)
+													}}
+												>
+													<XCircle className="size-4" />
+													Cancel Invoice
+												</Button>
+											)}
+										</div>
+										{isActive && (
+											<Button
+												size="sm"
+												onClick={() => {
+													setSelectedInvoice(invoice)
+													setShowPayDialog(true)
+												}}
+											>
+												<CreditCard className="size-4" />
+												Record Payment
+											</Button>
+										)}
 									</div>
 								)}
 							</div>
@@ -543,7 +566,17 @@ export function StepSettlement({
 					invoice={selectedInvoice}
 					clientId={safeString(clientUser?.client_id)}
 					propertyId={propertyId}
-					onSuccess={() => void void refetchInvoices()}
+					onSuccess={() => void refetchInvoices()}
+				/>
+			)}
+			{selectedInvoice && (
+				<CancelPaymentDialog
+					opened={showCancelPayDialog}
+					setOpened={setShowCancelPayDialog}
+					invoice={selectedInvoice}
+					clientId={safeString(clientUser?.client_id)}
+					propertyId={propertyId}
+					onSuccess={() => void refetchInvoices()}
 				/>
 			)}
 		</div>
